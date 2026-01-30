@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../api/axios';
 import { ShieldAlert, Upload, CheckCircle, AlertCircle, Calendar as CalendarIcon, Search } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
