@@ -10,10 +10,28 @@ import {
     AlertTriangle,
     User as UserIcon,
     RefreshCw,
-    X
+    X,
+    Plus,
+    Trash2,
+    Droplets,
+    ZapOff,
+    Disc,
+    Wrench,
+    Hammer,
+    HelpCircle,
+    ChevronLeft
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
+
+const QUICK_ISSUES = [
+    { id: 'wash', label: 'Car Wash', icon: Droplets, color: '#3cc7f5' },
+    { id: 'light', label: 'Light Issue', icon: ZapOff, color: '#f59e0b' },
+    { id: 'tyre', label: 'Puncture', icon: Disc, color: '#f43f5e' },
+    { id: 'mechanic', label: 'Mechanical', icon: Wrench, color: '#10b981' },
+    { id: 'dent', label: 'Accident/Dent', icon: Hammer, color: '#9f1239' },
+    { id: 'other', label: 'Other', icon: HelpCircle, color: '#94a3b8' }
+];
 
 const CameraModal = ({ side, onCapture, onClose }) => {
     const videoRef = useRef(null);
@@ -64,7 +82,6 @@ const CameraModal = ({ side, onCapture, onClose }) => {
             canvas.height = video.videoHeight;
             const ctx = canvas.getContext('2d');
             ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
             canvas.toBlob((blob) => {
                 const file = new File([blob], `${side}.jpg`, { type: 'image/jpeg' });
                 onCapture(file, canvas.toDataURL('image/jpeg'));
@@ -75,47 +92,35 @@ const CameraModal = ({ side, onCapture, onClose }) => {
     };
 
     return (
-        <div style={{ position: 'fixed', inset: 0, background: 'black', zIndex: 3000, display: 'flex', flexDirection: 'column' }}>
-            <div style={{ padding: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', color: 'white' }}>
-                <h3>
-                    {side === 'selfie' ? 'Take Selfie' :
-                        side === 'km' ? 'Capture KM Meter' :
-                            side === 'car' ? 'Take Car Selfie' :
-                                side === 'fuel' ? 'Refill Slip Photo' :
-                                    side === 'parking' ? 'Parking Slip Photo' : 'Capture Photo'}
-                </h3>
-                <button onClick={() => { stopCamera(); onClose(); }} style={{ background: 'none', color: 'white', cursor: 'pointer' }}><X /></button>
-            </div>
-
-            <div style={{ flex: 1, position: 'relative', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {error ? (
-                    <div style={{ color: 'white', textAlign: 'center', padding: '20px' }}>
-                        <AlertTriangle size={48} color="#f43f5e" style={{ marginBottom: '10px' }} />
-                        <p>{error}</p>
-                    </div>
-                ) : (
-                    <video
-                        ref={videoRef}
-                        autoPlay
-                        playsInline
-                        muted
-                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                )}
-            </div>
-
-            <div style={{ padding: '40px 20px', display: 'flex', justifyContent: 'center', gap: '20px' }}>
-                {!error && (
+        <div className="modal-overlay">
+            <div className="modal-content glass-card">
+                <div className="modal-header">
+                    <h3 className="modal-title">
+                        {side === 'selfie' ? 'Take Selfie' : side === 'km' ? 'Capture KM Meter' : side === 'car' ? 'Take Car Selfie' : side === 'fuel' ? 'Refill Slip Photo' : side === 'parking' ? 'Parking Slip Photo' : 'Capture Photo'}
+                    </h3>
                     <button
-                        onClick={capture}
-                        style={{
-                            width: '70px', height: '70px', borderRadius: '50%', border: '5px solid white',
-                            background: 'rgba(255,255,255,0.2)', cursor: 'pointer'
+                        onClick={() => {
+                            stopCamera();
+                            onClose();
                         }}
-                    />
+                        className="modal-close-btn"
+                    >
+                        <X size={20} />
+                    </button>
+                </div>
+                {error ? (
+                    <div style={{ padding: '40px', textAlign: 'center', color: '#f43f5e' }}>{error}</div>
+                ) : (
+                    <video ref={videoRef} autoPlay playsInline style={{ width: '100%', borderRadius: '12px', background: '#000' }} />
+                )}
+                <canvas ref={canvasRef} style={{ display: 'none' }} />
+                {!error && (
+                    <button onClick={capture} className="btn-primary" style={{ width: '100%', marginTop: '20px', padding: '16px' }}>
+                        <Camera size={20} style={{ display: 'inline', marginRight: '8px' }} />
+                        Capture
+                    </button>
                 )}
             </div>
-            <canvas ref={canvasRef} style={{ display: 'none' }} />
         </div>
     );
 };
@@ -136,13 +141,10 @@ const DriverPortal = () => {
 
     // Question states (for Punch-Out)
     const [fuelFilled, setFuelFilled] = useState(false);
-    const [fuelAmount, setFuelAmount] = useState('');
-    const [fuelSlip, setFuelSlip] = useState(null);
-    const [fuelSlipPreview, setFuelSlipPreview] = useState(null);
-
+    const [fuelEntries, setFuelEntries] = useState([{ amount: '', km: '', slip: null, preview: null }]);
     const [parkingPaid, setParkingPaid] = useState(false);
     const [parkingEntries, setParkingEntries] = useState([{ amount: '', slip: null, preview: null }]);
-
+    const [activeIndex, setActiveIndex] = useState(0);
     const [outsideTripOccurred, setOutsideTripOccurred] = useState(false);
     const [outsideTripTypes, setOutsideTripTypes] = useState([]);
 
@@ -151,13 +153,11 @@ const DriverPortal = () => {
     const [allowanceTA, setAllowanceTA] = useState(false);
     const [nightStay, setNightStay] = useState(false);
     const [otherRemarks, setOtherRemarks] = useState('');
-
     const [remarks, setRemarks] = useState('');
 
     // Camera Modal states
-    const [activeCamera, setActiveCamera] = useState(null); // 'selfie', 'km', 'car', 'fuel', 'parking'
+    const [activeCamera, setActiveCamera] = useState(null);
 
-    const [location, setLocation] = useState({ latitude: null, longitude: null, address: 'Detecting location...' });
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showPunchOutForm, setShowPunchOutForm] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -165,7 +165,6 @@ const DriverPortal = () => {
 
     useEffect(() => {
         fetchDashboard();
-        detectLocation();
     }, []);
 
     const fetchDashboard = async () => {
@@ -184,33 +183,6 @@ const DriverPortal = () => {
         }
     };
 
-    const detectLocation = () => {
-        if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
-                async (pos) => {
-                    const { latitude, longitude } = pos.coords;
-                    setLocation(prev => ({ ...prev, latitude, longitude, address: 'Precision Location Found ✅' }));
-
-                    try {
-                        const response = await fetch(`/api/utils/geocode?lat=${latitude}&lon=${longitude}`);
-                        const data = await response.json();
-                        setLocation(prev => ({ ...prev, address: data.display_name || `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` }));
-                    } catch (err) {
-                        setLocation(prev => ({ ...prev, address: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}` }));
-                    }
-                },
-                (err) => {
-                    console.error("Location error:", err);
-                    let msg = "Location Access Denied ❌. Please Allow Location in browser and reload.";
-                    if (err.code === 3) msg = "Location Timeout. Please check internet/signal.";
-                    setLocation(prev => ({ ...prev, address: msg }));
-                },
-                { enableHighAccuracy: false, timeout: 10000, maximumAge: 0 }
-            );
-        } else {
-            setLocation(prev => ({ ...prev, address: 'Geolocation not supported' }));
-        }
-    };
 
     const handlePunch = async (type) => {
         if (!km || !selfie || !kmPhoto || !carSelfie) {
@@ -219,9 +191,12 @@ const DriverPortal = () => {
         }
 
         if (type === 'punch-out') {
-            if (fuelFilled && (!fuelAmount || !fuelSlip)) {
-                setMessage({ type: 'error', text: 'Fuel amount and slip photo are required' });
-                return;
+            if (fuelFilled) {
+                const invalid = fuelEntries.some(e => !e.amount || !e.slip || !e.km);
+                if (invalid) {
+                    setMessage({ type: 'error', text: 'All fuel entries must have amount, KM and slip photo' });
+                    return;
+                }
             }
             if (parkingPaid) {
                 const invalid = parkingEntries.some(e => !e.amount || !e.slip);
@@ -240,33 +215,32 @@ const DriverPortal = () => {
         formData.append('selfie', selfie);
         formData.append('kmPhoto', kmPhoto);
         formData.append('carSelfie', carSelfie);
-        formData.append('latitude', location.latitude || 0);
-        formData.append('longitude', location.longitude || 0);
-        formData.append('address', location.address);
+        formData.append('latitude', 0);
+        formData.append('longitude', 0);
+        formData.append('address', 'Location Disabled');
+
         if (type === 'punch-in') {
             formData.append('vehicleId', selectedVehicleId);
         }
 
         if (type === 'punch-out') {
-            // TRIP & REMARKS
             formData.append('remarks', remarks);
             formData.append('otherRemarks', otherRemarks);
-
-            // FUEL
             formData.append('fuelFilled', fuelFilled);
-            formData.append('fuelAmount', fuelFilled ? fuelAmount : 0);
-            if (fuelFilled && fuelSlip) formData.append('fuelSlip', fuelSlip);
-
-            // PARKING
+            if (fuelFilled) {
+                fuelEntries.forEach(entry => {
+                    formData.append('fuelAmounts', entry.amount);
+                    formData.append('fuelKMs', entry.km);
+                    formData.append('fuelSlips', entry.slip);
+                });
+            }
             formData.append('parkingPaid', parkingPaid);
             if (parkingPaid) {
                 parkingEntries.forEach((entry) => {
                     formData.append('parkingAmounts', entry.amount);
-                    formData.append('parkingSlip', entry.slip);
+                    formData.append('parkingSlips', entry.slip);
                 });
             }
-
-            // OUTSIDE TRIP
             formData.append('outsideTripOccurred', outsideTripOccurred);
             if (outsideTripOccurred) {
                 formData.append('outsideTripType', outsideTripTypes.join(','));
@@ -280,15 +254,25 @@ const DriverPortal = () => {
                     'Content-Type': 'multipart/form-data'
                 }
             });
+
             setMessage({ type: 'success', text: `Successfully ${type === 'punch-in' ? 'Punched In' : 'Punched Out'}!` });
+
+            // Reset all states
             setKm('');
-            setSelfie(null); setSelfiePreview(null);
-            setKmPhoto(null); setKmPreview(null);
-            setCarSelfie(null); setCarPreview(null);
-            setFuelFilled(false); setFuelAmount(''); setFuelSlip(null); setFuelSlipPreview(null);
-            setParkingPaid(false); setParkingEntries([{ amount: '', slip: null, preview: null }]);
+            setSelfie(null);
+            setSelfiePreview(null);
+            setKmPhoto(null);
+            setKmPreview(null);
+            setCarSelfie(null);
+            setCarPreview(null);
+            setFuelFilled(false);
+            setFuelEntries([{ amount: '', km: '', slip: null, preview: null }]);
+            setParkingPaid(false);
+            setParkingEntries([{ amount: '', slip: null, preview: null }]);
+            setActiveIndex(0);
             setOutsideTripOccurred(false);
             setRemarks('');
+            setOtherRemarks('');
             setShowPunchOutForm(false);
             fetchDashboard();
         } catch (err) {
@@ -313,467 +297,601 @@ const DriverPortal = () => {
         }
     };
 
-    if (loading) return <div style={{ color: 'white', padding: '40px' }}>Loading...</div>;
+    if (loading) return <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}><div className="spinner"></div></div>;
 
     const todayAttendance = dashboardData?.todayAttendance;
     const isPunchedIn = !!todayAttendance?.punchIn?.time;
-    // local check for today's punch out (visuals only)
     const isPunchedOut = !!todayAttendance?.punchOut?.time;
-
-    // Check global trip status
-    const tripStatus = dashboardData?.driver?.tripStatus; // approved, active, completed, pending_approval
-
-    // Determine current UI state
-    // 1. If tripStatus is 'pending_approval', show WAITING screen.
-    // 2. If tripStatus is 'completed', show START NEW TRIP button.
-    // 3. If tripStatus is 'approved', show PUNCH IN form (if not already punched in today or if start new is allowed).
-    // 4. If tripStatus is 'active', show PUNCH OUT form. (This matches isPunchedIn true).
-
+    const tripStatus = dashboardData?.driver?.tripStatus;
     const showPunchIn = tripStatus === 'approved';
     const showPunchOut = tripStatus === 'active';
 
     return (
-        <div style={{ maxWidth: '600px', margin: '0 auto', padding: '20px' }}>
-            <SEO title="Driver Attendance Portal" description="Mandatory morning punch-in and night punch-out portal for drivers. Track trip KM and expenses." />
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                <div>
-                    <h1 style={{ color: 'white', fontSize: '24px', fontWeight: '700' }}>{dashboardData?.driver?.company?.name}</h1>
-                    <p style={{ color: 'var(--text-muted)' }}>Welcome, {user.name}</p>
-                </div>
-                <button
-                    onClick={logout}
-                    style={{ background: 'rgba(244, 63, 94, 0.1)', color: 'var(--accent)', padding: '10px', borderRadius: '12px' }}
-                >
-                    <LogOut size={20} />
-                </button>
-            </header>
-
-            {(!dashboardData?.vehicle && !showPunchIn && tripStatus !== 'completed' && tripStatus !== 'pending_approval') ? (
-                <div className="glass-card" style={{ padding: '30px', textAlign: 'center' }}>
-                    <AlertTriangle size={48} color="#f59e0b" style={{ marginBottom: '15px' }} />
-                    <h3 style={{ color: 'white' }}>No Vehicle Active</h3>
-                    <p style={{ color: 'var(--text-muted)', marginTop: '10px' }}>Please start your duty to select a vehicle.</p>
-                </div>
-            ) : (
-                <div style={{ display: 'grid', gap: '20px' }}>
-                    {/* Vehicle Info */}
-                    {dashboardData?.vehicle && (
-                        <div className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <div style={{ background: 'var(--primary)', padding: '10px', borderRadius: '12px' }}>
-                                <Car color="white" />
+        <div className="admin-layout-wrapper">
+            <SEO title="Driver Portal" />
+            <div className="main-content">
+                <div className="container-fluid">
+                    <header className="dashboard-header" style={{ marginBottom: '24px' }}>
+                        <div className="header-logo-section">
+                            <div className="header-logo-container">
+                                <Car size={24} color="#0f172a" />
                             </div>
                             <div>
-                                <p style={{ fontSize: '12px', color: 'var(--text-muted)' }}>Assigned Vehicle</p>
-                                <h3 style={{ color: 'white', fontWeight: '700' }}>{dashboardData.vehicle.carNumber}</h3>
-                                <p style={{ fontSize: '13px', color: 'var(--text-muted)' }}>{dashboardData.vehicle.model}</p>
+                                <h1 className="header-title">{dashboardData?.driver?.company?.name}</h1>
+                                <p className="header-subtitle">{user.name}</p>
                             </div>
                         </div>
-                    )}
+                        <button onClick={logout} style={{ background: 'rgba(244,63,94,0.1)', color: '#f43f5e', padding: '10px 20px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <LogOut size={16} /> Logout
+                        </button>
+                    </header>
 
-                    {/* Status Tracker */}
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <div className="glass-card" style={{ flex: 1, padding: '15px', textAlign: 'center', opacity: isPunchedIn ? 1 : 0.5 }}>
-                            <div style={{ color: isPunchedIn ? '#10b981' : 'var(--text-muted)', marginBottom: '5px' }}>
-                                <CheckCircle size={20} style={{ margin: '0 auto' }} />
-                            </div>
-                            <p style={{ fontSize: '12px', color: 'white' }}>Punch In</p>
-                            <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{isPunchedIn ? new Date(todayAttendance.punchIn.time).toLocaleTimeString() : '--:--'}</p>
-                        </div>
-                        {isPunchedIn && (
-                            <div className="glass-card" style={{ flex: 1, padding: '15px', textAlign: 'center', opacity: isPunchedOut ? 1 : 0.5 }}>
-                                <div style={{ color: isPunchedOut ? '#10b981' : 'var(--text-muted)', marginBottom: '5px' }}>
-                                    <CheckCircle size={20} style={{ margin: '0 auto' }} />
-                                </div>
-                                <p style={{ fontSize: '12px', color: 'white' }}>Punch Out</p>
-                                <p style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{isPunchedOut ? new Date(todayAttendance.punchOut.time).toLocaleTimeString() : '--:--'}</p>
-                            </div>
-                        )}
-                    </div>
-
-
-
-                    {/* Working Closed Screen */}
-                    {tripStatus === 'completed' && (
-                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-card" style={{ padding: '40px', textAlign: 'center', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
-                            <div style={{ background: 'rgba(244, 63, 94, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                                <CheckCircle size={32} color="#10b981" />
-                            </div>
-                            <h2 style={{ color: 'white', marginBottom: '10px' }}>Working Closed</h2>
-                            <p style={{ color: 'var(--text-muted)', marginBottom: '30px' }}>Your duty reports have been submitted. You are off-duty for this trip.</p>
-                            <button
-                                onClick={handleRequestNewTrip}
-                                className="btn-primary"
-                                style={{ width: '100%' }}
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? 'Processing...' : 'Start Duty Today'}
-                            </button>
-                        </motion.div>
-                    )}
-
-                    {/* Waiting for Approval Screen */}
-                    {tripStatus === 'pending_approval' && (
+                    {(!dashboardData?.vehicle && !showPunchIn && tripStatus !== 'completed' && tripStatus !== 'pending_approval') ? (
                         <div className="glass-card" style={{ padding: '40px', textAlign: 'center' }}>
-                            <RefreshCw className="spin" size={48} color="var(--primary)" style={{ marginBottom: '20px', margin: '0 auto' }} />
-                            <h2 style={{ color: 'white', marginBottom: '10px' }}>Waiting for Approval</h2>
-                            <p style={{ color: 'var(--text-muted)' }}>Admin is reviewing your request for a new trip.</p>
+                            <AlertTriangle size={48} color="#f59e0b" style={{ margin: '0 auto 16px' }} />
+                            <h2 style={{ color: 'white', marginBottom: '8px' }}>No Vehicle Active</h2>
+                            <p style={{ color: 'var(--text-muted)' }}>Please start your duty to select a vehicle.</p>
                         </div>
-                    )}
-
-                    {/* On Duty Screen (Intermediate) */}
-                    {showPunchOut && !showPunchOutForm && (
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '40px', textAlign: 'center', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                            <div style={{ background: 'rgba(16, 185, 129, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                                <Car size={32} color="#10b981" />
-                            </div>
-                            <h2 style={{ color: 'white', marginBottom: '10px' }}>You are On Duty</h2>
-                            <p style={{ color: 'var(--text-muted)', marginBottom: '30px' }}>Drive safely! Click below to finish your trip and report expenses.</p>
-                            <button
-                                onClick={() => setShowPunchOutForm(true)}
-                                className="btn-primary"
-                                style={{ width: '100%', background: 'var(--accent)' }}
-                            >
-                                End Duty (Punch Out)
-                            </button>
-                        </motion.div>
-                    )}
-
-                    {(showPunchIn || (showPunchOut && showPunchOutForm)) && (
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card" style={{ padding: '25px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    {showPunchOut && (
-                                        <button onClick={() => setShowPunchOutForm(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '5px', borderRadius: '8px' }}>
-                                            <X size={18} />
-                                        </button>
-                                    )}
-                                    <h2 style={{ color: 'white', fontSize: '20px' }}>{showPunchIn ? 'Start Duty (Punch In)' : 'End Duty (Punch Out)'}</h2>
-                                </div>
-                                <div style={{ padding: '5px 12px', borderRadius: '20px', background: showPunchIn ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)', color: showPunchIn ? '#10b981' : 'var(--accent)', fontSize: '12px' }}>
-                                    {showPunchIn ? 'Ready to Start' : 'On Duty'}
-                                </div>
-                            </div>
-
-                            <div style={{ marginBottom: '20px' }}>
-                                <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-muted)', marginBottom: '8px' }}>KM Meter Reading</label>
-                                <input
-                                    type="number"
-                                    className="input-field"
-                                    placeholder="Enter current KM"
-                                    value={km}
-                                    onChange={(e) => setKm(e.target.value)}
-                                />
-                            </div>
-
-                            {showPunchIn && (
-                                <div style={{ marginBottom: '20px' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-muted)', marginBottom: '8px' }}>Select Vehicle</label>
-                                    <select
-                                        className="input-field"
-                                        value={selectedVehicleId}
-                                        onChange={(e) => setSelectedVehicleId(e.target.value)}
-                                        style={{
-                                            background: 'rgba(255,255,255,0.05)',
-                                            color: 'white',
-                                            cursor: 'pointer',
-                                            fontWeight: '600'
-                                        }}
-                                    >
-                                        <option value="" style={{ background: '#1e293b', color: 'white' }}>-- Select Available Car --</option>
-                                        {dashboardData?.availableVehicles?.map(v => (
-                                            <option key={v._id} value={v._id} style={{ background: '#1e293b', color: 'white' }}>
-                                                {v.carNumber} - {v.model}
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                            )}
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '15px', marginBottom: '25px' }}>
-                                {/* Selfie Capture */}
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>1. Driver Selfie</label>
-                                    {!selfiePreview ? (
-                                        <div
-                                            onClick={() => setActiveCamera('selfie')}
-                                            style={{
-                                                padding: '20px', border: '2px dashed var(--border)',
-                                                borderRadius: '12px', textAlign: 'center', cursor: 'pointer', height: '100px', display: 'flex', flexDirection: 'column', justifyContent: 'center'
-                                            }}
-                                        >
-                                            <UserIcon size={20} color="var(--primary)" style={{ margin: '0 auto 5px' }} />
-                                            <p style={{ fontSize: '12px', color: 'white' }}>Take Selfie</p>
-                                        </div>
-                                    ) : (
-                                        <div style={{ position: 'relative' }}>
-                                            <img src={selfiePreview} alt="Selfie" style={{ width: '100%', borderRadius: '12px', height: '100px', objectFit: 'cover' }} />
-                                            <button onClick={() => { setSelfie(null); setSelfiePreview(null); }} style={{ position: 'absolute', top: '5px', right: '5px', background: 'rgba(244,63,94,0.8)', color: 'white', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><RefreshCw size={12} /></button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* KM Photo Capture */}
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>2. KM Photo</label>
-                                    {!kmPreview ? (
-                                        <div
-                                            onClick={() => setActiveCamera('km')}
-                                            style={{
-                                                padding: '20px', border: '2px dashed var(--border)',
-                                                borderRadius: '12px', textAlign: 'center', cursor: 'pointer', height: '100px', display: 'flex', flexDirection: 'column', justifyContent: 'center'
-                                            }}
-                                        >
-                                            <Camera size={20} color="var(--primary)" style={{ margin: '0 auto 5px' }} />
-                                            <p style={{ fontSize: '12px', color: 'white' }}>Take KM Photo</p>
-                                        </div>
-                                    ) : (
-                                        <div style={{ position: 'relative' }}>
-                                            <img src={kmPreview} alt="KM Meter" style={{ width: '100%', borderRadius: '12px', height: '100px', objectFit: 'cover' }} />
-                                            <button onClick={() => { setKmPhoto(null); setKmPreview(null); }} style={{ position: 'absolute', top: '5px', right: '5px', background: 'rgba(244,63,94,0.8)', color: 'white', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><RefreshCw size={12} /></button>
-                                        </div>
-                                    )}
-                                </div>
-
-                                {/* Car Selfie Capture */}
-                                <div>
-                                    <label style={{ display: 'block', fontSize: '13px', color: 'var(--text-muted)', marginBottom: '8px' }}>3. Car Selfie</label>
-                                    {!carPreview ? (
-                                        <div
-                                            onClick={() => setActiveCamera('car')}
-                                            style={{
-                                                padding: '20px', border: '2px dashed var(--border)',
-                                                borderRadius: '12px', textAlign: 'center', cursor: 'pointer', height: '100px', display: 'flex', flexDirection: 'column', justifyContent: 'center'
-                                            }}
-                                        >
-                                            <Car size={20} color="var(--primary)" style={{ margin: '0 auto 5px' }} />
-                                            <p style={{ fontSize: '12px', color: 'white' }}>Take Car Photo</p>
-                                        </div>
-                                    ) : (
-                                        <div style={{ position: 'relative' }}>
-                                            <img src={carPreview} alt="Car Selfie" style={{ width: '100%', borderRadius: '12px', height: '100px', objectFit: 'cover' }} />
-                                            <button onClick={() => { setCarSelfie(null); setCarPreview(null); }} style={{ position: 'absolute', top: '5px', right: '5px', background: 'rgba(244,63,94,0.8)', color: 'white', width: '22px', height: '22px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><RefreshCw size={12} /></button>
-                                        </div>
-                                    )}
-                                </div>
-                            </div>
-
-                            {/* Punch-Out Questions */}
-                            {showPunchOut && (
-                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '16px', border: '1px solid var(--border)', marginBottom: '25px' }}>
-                                    <h4 style={{ color: 'white', marginBottom: '15px' }}>Expenditure & Trip Details</h4>
-
-                                    {/* Fuel Question */}
-                                    <div style={{ marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '15px' }}>
-                                        <p style={{ color: 'white', fontSize: '14px', marginBottom: '10px' }}>1. Did you refill Petrol/Diesel in the car?</p>
-                                        <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
-                                            <button onClick={() => setFuelFilled(true)} style={{ background: fuelFilled ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white', padding: '8px 25px', borderRadius: '8px' }}>Yes</button>
-                                            <button onClick={() => { setFuelFilled(false); setFuelSlip(null); setFuelSlipPreview(null); setFuelAmount(''); }} style={{ background: !fuelFilled ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white', padding: '8px 25px', borderRadius: '8px' }}>No</button>
-                                        </div>
-                                        {fuelFilled && (
-                                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginTop: '10px' }}>
-                                                <input type="number" placeholder="Enter amount" className="input-field" value={fuelAmount} onChange={(e) => setFuelAmount(e.target.value)} />
-                                                <div onClick={() => setActiveCamera('fuel')} style={{ border: '1px dashed var(--border)', borderRadius: '8px', textAlign: 'center', padding: '10px', cursor: 'pointer' }}>
-                                                    {fuelSlipPreview ? <img src={fuelSlipPreview} style={{ width: '100%', height: '40px', objectFit: 'cover' }} /> : <p style={{ fontSize: '11px', color: 'white' }}>Upload Slip</p>}
-                                                </div>
-                                            </motion.div>
-                                        )}
-                                    </div>
-
-                                    {/* Parking Question */}
-                                    <div style={{ marginBottom: '20px', borderBottom: '1px solid var(--border)', paddingBottom: '15px' }}>
-                                        <p style={{ color: 'white', fontSize: '14px', marginBottom: '10px' }}>2. Did you pay for parking?</p>
-                                        <div style={{ display: 'flex', gap: '20px', marginBottom: '15px' }}>
-                                            <button onClick={() => setParkingPaid(true)} style={{ background: parkingPaid ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white', padding: '8px 25px', borderRadius: '8px' }}>Yes</button>
-                                            <button onClick={() => { setParkingPaid(false); setParkingEntries([{ amount: '', slip: null, preview: null }]); }} style={{ background: !parkingPaid ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white', padding: '8px 25px', borderRadius: '8px' }}>No</button>
-                                        </div>
-                                        {parkingPaid && (
-                                            <div style={{ display: 'grid', gap: '15px' }}>
-                                                {parkingEntries.map((entry, index) => (
-                                                    <motion.div key={index} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                        <div style={{ flex: 1 }}>
-                                                            <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '5px' }}>Entry {index + 1}</p>
-                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                                                <input
-                                                                    type="number"
-                                                                    placeholder="Amount"
-                                                                    className="input-field"
-                                                                    value={entry.amount}
-                                                                    style={{ padding: '8px' }}
-                                                                    onChange={(e) => {
-                                                                        const newEntries = [...parkingEntries];
-                                                                        newEntries[index].amount = e.target.value;
-                                                                        setParkingEntries(newEntries);
-                                                                    }}
-                                                                />
-                                                                <div
-                                                                    onClick={() => setActiveCamera(`parking-${index}`)}
-                                                                    style={{ border: '1px dashed var(--border)', borderRadius: '8px', textAlign: 'center', padding: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                >
-                                                                    {entry.preview ? <img src={entry.preview} style={{ width: '100%', height: '30px', objectFit: 'cover' }} /> : <p style={{ fontSize: '11px', color: 'white' }}>Take Receipt</p>}
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                        {parkingEntries.length > 1 && (
-                                                            <button
-                                                                onClick={() => setParkingEntries(parkingEntries.filter((_, i) => i !== index))}
-                                                                style={{ color: '#f43f5e', background: 'rgba(244,63,94,0.1)', width: '30px', height: '30px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                            >
-                                                                <X size={16} />
-                                                            </button>
-                                                        )}
-                                                    </motion.div>
-                                                ))}
-                                                <button
-                                                    onClick={() => setParkingEntries([...parkingEntries, { amount: '', slip: null, preview: null }])}
-                                                    style={{ border: '1px solid var(--primary)', color: 'var(--primary)', padding: '8px', borderRadius: '8px', fontSize: '12px', fontWeight: 'bold', background: 'none' }}
-                                                >
-                                                    + Add Another Parking
-                                                </button>
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Outside Trip Question */}
-                                    <div style={{ marginBottom: '10px' }}>
-                                        <p style={{ color: 'white', fontSize: '14px', marginBottom: '10px' }}>3. Did you take the car outside the city?</p>
-                                        <div style={{ display: 'flex', gap: '20px', marginBottom: '10px' }}>
-                                            <button onClick={() => setOutsideTripOccurred(true)} style={{ background: outsideTripOccurred ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white', padding: '8px 25px', borderRadius: '8px' }}>Yes</button>
-                                            <button onClick={() => setOutsideTripOccurred(false)} style={{ background: !outsideTripOccurred ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white', padding: '8px 25px', borderRadius: '8px' }}>No</button>
-                                        </div>
-                                        {outsideTripOccurred && (
-                                            <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} style={{ marginTop: '15px' }}>
-                                                <div style={{ display: 'flex', gap: '15px' }}>
-                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', background: 'rgba(255,255,255,0.05)', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', flex: 1 }}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={outsideTripTypes.includes('Same Day')}
-                                                            onChange={(e) => {
-                                                                if (e.target.checked) setOutsideTripTypes([...outsideTripTypes, 'Same Day']);
-                                                                else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Same Day'));
-                                                            }}
-                                                            style={{ width: '18px', height: '18px' }}
-                                                        />
-                                                        <span>Same Day (Bonus 100)</span>
-                                                    </label>
-
-                                                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', background: 'rgba(255,255,255,0.05)', padding: '10px 15px', borderRadius: '8px', cursor: 'pointer', flex: 1 }}>
-                                                        <input
-                                                            type="checkbox"
-                                                            checked={outsideTripTypes.includes('Night Stay')}
-                                                            onChange={(e) => {
-                                                                if (e.target.checked) setOutsideTripTypes([...outsideTripTypes, 'Night Stay']);
-                                                                else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Night Stay'));
-                                                            }}
-                                                            style={{ width: '18px', height: '18px' }}
-                                                        />
-                                                        <span>Night Stay (Bonus 500)</span>
-                                                    </label>
-                                                </div>
-                                                <div style={{ height: '20px' }} />
-                                            </motion.div>
-                                        )}
+                    ) : (
+                        <div className="form-section-wrapper">
+                            {/* Vehicle Info */}
+                            {dashboardData?.vehicle && (
+                                <div className="glass-card" style={{ padding: 'clamp(16px, 4vw, 24px)' }}>
+                                    <div style={{ marginBottom: '12px' }}>
+                                        <p className="section-subtitle">YOUR ASSIGNED VEHICLE</p>
+                                        <h2 style={{ fontSize: 'clamp(18px, 4.5vw, 24px)', color: 'white', fontWeight: '800', marginBottom: '6px' }}>{dashboardData.vehicle.carNumber}</h2>
+                                        <p style={{ color: 'var(--text-muted)', fontSize: 'clamp(12px, 3vw, 14px)' }}>{dashboardData.vehicle.model}</p>
                                     </div>
                                 </div>
                             )}
 
-                            {showPunchOut && (
-                                <div style={{ marginBottom: '25px' }}>
-                                    <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-muted)', marginBottom: '8px' }}>Trip Details / Remarks</label>
-                                    <textarea
-                                        className="input-field"
-                                        placeholder="Where did the car go today? Enter route or trip details..."
-                                        rows="3"
-                                        value={remarks}
-                                        onChange={(e) => setRemarks(e.target.value)}
-                                        style={{ resize: 'none', padding: '12px', marginBottom: '15px' }}
-                                    ></textarea>
-
-                                    {/* Other Remarks (Puncture etc) */}
+                            {/* Status Tracker */}
+                            <div className="glass-card" style={{ padding: 'clamp(16px, 4vw, 24px)' }}>
+                                <div className="modal-grid-2">
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '14px', color: 'var(--text-muted)', marginBottom: '8px' }}>Other Issues (Optional)</label>
+                                        <p className="section-subtitle">PUNCH IN</p>
+                                        <p style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: '800', color: isPunchedIn ? '#10b981' : 'var(--text-muted)' }}>
+                                            {isPunchedIn ? new Date(todayAttendance.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                        </p>
+                                    </div>
+                                    <div>
+                                        <p className="section-subtitle">PUNCH OUT</p>
+                                        <p style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: '800', color: isPunchedOut ? '#f43f5e' : 'var(--text-muted)' }}>
+                                            {isPunchedOut ? new Date(todayAttendance.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Working Closed Screen */}
+                            {tripStatus === 'completed' && (
+                                <div className="glass-card" style={{ padding: 'clamp(24px, 6vw, 40px)', textAlign: 'center' }}>
+                                    <CheckCircle size={56} color="#10b981" style={{ margin: '0 auto 16px' }} />
+                                    <h2 style={{ color: 'white', fontSize: 'clamp(18px, 4.5vw, 22px)', marginBottom: '8px', fontWeight: '800' }}>Duty Completed</h2>
+                                    <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: 'clamp(13px, 3.2vw, 14px)' }}>Your reports are submitted. You are now off-duty.</p>
+                                    <button onClick={handleRequestNewTrip} disabled={isSubmitting} className="btn-primary" style={{ width: '100%', maxWidth: '300px', margin: '0 auto', display: 'block' }}>
+                                        {isSubmitting ? 'Processing...' : 'Start New Duty'}
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Waiting for Approval Screen */}
+                            {tripStatus === 'pending_approval' && (
+                                <div className="glass-card" style={{ padding: 'clamp(24px, 6vw, 40px)', textAlign: 'center' }}>
+                                    <RefreshCw size={56} color="#0ea5e9" style={{ margin: '0 auto 16px' }} className="spinner" />
+                                    <h2 style={{ color: 'white', fontSize: 'clamp(18px, 4.5vw, 22px)', marginBottom: '8px', fontWeight: '800' }}>Waiting for Admin</h2>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: 'clamp(13px, 3.2vw, 14px)' }}>Your request is under review. Please wait.</p>
+                                </div>
+                            )}
+
+                            {/* On Duty Screen */}
+                            {showPunchOut && !showPunchOutForm && (
+                                <div className="glass-card" style={{ padding: 'clamp(24px, 6vw, 40px)', textAlign: 'center' }}>
+                                    <Car size={56} color="#10b981" style={{ margin: '0 auto 16px' }} />
+                                    <h2 style={{ color: 'white', fontSize: 'clamp(18px, 4.5vw, 22px)', marginBottom: '8px', fontWeight: '800' }}>You are On Duty</h2>
+                                    <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: 'clamp(13px, 3.2vw, 14px)' }}>Drive safely! Close duty only after reaching parking.</p>
+                                    <button
+                                        onClick={() => setShowPunchOutForm(true)}
+                                        className="btn-primary"
+                                        style={{ width: '100%', background: 'var(--accent)', padding: '14px', boxShadow: '0 8px 20px rgba(244, 63, 94, 0.2)' }}
+                                    >
+                                        Submit Reports & End Duty
+                                    </button>
+                                </div>
+                            )}
+
+                            {/* Main Form */}
+                            {(showPunchIn || (showPunchOut && showPunchOutForm)) && (
+                                <div className="glass-card" style={{ padding: 'clamp(16px, 4vw, 24px)' }}>
+                                    <div className="modal-header" style={{ marginBottom: 'clamp(16px, 4vw, 24px)' }}>
+                                        {showPunchOut && (
+                                            <button onClick={() => setShowPunchOutForm(false)} style={{ background: 'rgba(255,255,255,0.08)', color: 'white', padding: '6px', borderRadius: '8px' }}>
+                                                <ChevronLeft size={20} />
+                                            </button>
+                                        )}
+                                        <div>
+                                            <h2 className="modal-title">{showPunchIn ? 'Duty Punch-In' : 'Duty Punch-Out'}</h2>
+                                            <p className="section-subtitle">{showPunchIn ? 'START' : 'END'}</p>
+                                        </div>
+                                    </div>
+
+
+                                    {/* KM Reading */}
+                                    <div className="input-wrapper-full" style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
+                                        <label className="input-label">CURRENT KM METER READING</label>
                                         <input
-                                            type="text"
+                                            type="number"
                                             className="input-field"
-                                            placeholder="e.g. Tyre Puncture"
-                                            value={otherRemarks}
-                                            onChange={(e) => setOtherRemarks(e.target.value)}
+                                            placeholder="Enter KM"
+                                            value={km}
+                                            onChange={(e) => setKm(e.target.value)}
                                         />
                                     </div>
+
+                                    {/* Vehicle Selection (Punch-In only) */}
+                                    {showPunchIn && (
+                                        <div className="input-wrapper-full" style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
+                                            <label className="input-label">Select Assigned Vehicle</label>
+                                            <select
+                                                className="input-field"
+                                                value={selectedVehicleId}
+                                                onChange={(e) => setSelectedVehicleId(e.target.value)}
+                                                style={{ background: 'rgba(255,255,255,0.05)', color: 'white', cursor: 'pointer', fontWeight: '700', fontSize: '14px', padding: '12px' }}
+                                            >
+                                                <option value="">-- Select Available Car --</option>
+                                                {dashboardData?.availableVehicles?.map(v => (
+                                                    <option key={v._id} value={v._id}>
+                                                        {v.carNumber} ({v.model})
+                                                    </option>
+                                                ))}
+                                            </select>
+                                        </div>
+                                    )}
+
+                                    {/* Photo Captures */}
+                                    <div className="photo-capture-grid" style={{ marginBottom: 'clamp(20px, 5vw, 28px)' }}>
+                                        {/* Selfie */}
+                                        <div>
+                                            <p className="input-label" style={{ marginBottom: '8px' }}>1. DRIVER SELFIE</p>
+                                            {!selfiePreview ? (
+                                                <div
+                                                    onClick={() => setActiveCamera('selfie')}
+                                                    className="photo-capture-button"
+                                                >
+                                                    <Camera size={24} color="var(--primary)" />
+                                                    <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>Take Selfie</span>
+                                                </div>
+                                            ) : (
+                                                <div className="photo-preview-container">
+                                                    <img src={selfiePreview} alt="Selfie" className="photo-preview-image" />
+                                                    <button
+                                                        onClick={() => {
+                                                            setSelfie(null);
+                                                            setSelfiePreview(null);
+                                                        }}
+                                                        className="photo-delete-button"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* KM Photo */}
+                                        <div>
+                                            <p className="input-label" style={{ marginBottom: '8px' }}>2. KM PHOTO</p>
+                                            {!kmPreview ? (
+                                                <div
+                                                    onClick={() => setActiveCamera('km')}
+                                                    className="photo-capture-button"
+                                                >
+                                                    <Camera size={24} color="var(--primary)" />
+                                                    <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>Take KM Photo</span>
+                                                </div>
+                                            ) : (
+                                                <div className="photo-preview-container">
+                                                    <img src={kmPreview} alt="KM" className="photo-preview-image" />
+                                                    <button
+                                                        onClick={() => {
+                                                            setKmPhoto(null);
+                                                            setKmPreview(null);
+                                                        }}
+                                                        className="photo-delete-button"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {/* Car Selfie */}
+                                        <div>
+                                            <p className="input-label" style={{ marginBottom: '8px' }}>3. CAR SELFIE</p>
+                                            {!carPreview ? (
+                                                <div
+                                                    onClick={() => setActiveCamera('car')}
+                                                    className="photo-capture-button"
+                                                >
+                                                    <Camera size={24} color="var(--primary)" />
+                                                    <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>Take Car Photo</span>
+                                                </div>
+                                            ) : (
+                                                <div className="photo-preview-container">
+                                                    <img src={carPreview} alt="Car" className="photo-preview-image" />
+                                                    <button
+                                                        onClick={() => {
+                                                            setCarSelfie(null);
+                                                            setCarPreview(null);
+                                                        }}
+                                                        className="photo-delete-button"
+                                                    >
+                                                        <X size={14} />
+                                                    </button>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    {/* Punch-Out Specific Questions */}
+                                    {showPunchOut && (
+                                        <div style={{ marginBottom: 'clamp(20px, 5vw, 28px)' }}>
+                                            <h3 className="section-title">EXPENDITURE & TRIP DETAILS</h3>
+
+                                            {/* Fuel Question */}
+                                            <div style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
+                                                <p className="input-label" style={{ marginBottom: '10px' }}>1. Did you refill Petrol/Diesel?</p>
+                                                <div className="yes-no-button-group">
+                                                    <button
+                                                        onClick={() => setFuelFilled(true)}
+                                                        className="yes-no-button"
+                                                        style={{ background: fuelFilled ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
+                                                    >
+                                                        Yes
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setFuelFilled(false);
+                                                            setFuelEntries([{ amount: '', km: '', slip: null, preview: null }]);
+                                                        }}
+                                                        className="yes-no-button"
+                                                        style={{ background: !fuelFilled ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
+                                                    >
+                                                        No
+                                                    </button>
+                                                </div>
+
+                                                {fuelFilled && (
+                                                    <div style={{ marginTop: '16px', display: 'grid', gap: 'clamp(12px, 3vw, 16px)' }}>
+                                                        {fuelEntries.map((entry, index) => (
+                                                            <div key={index} className="entry-card">
+                                                                <div className="entry-card-header">
+                                                                    <p className="entry-card-title">REFILL NO. {index + 1}</p>
+                                                                    {index > 0 && (
+                                                                        <button
+                                                                            onClick={() => setFuelEntries(fuelEntries.filter((_, i) => i !== index))}
+                                                                            style={{ color: '#f43f5e', background: 'none', padding: '4px' }}
+                                                                        >
+                                                                            <Trash2 size={16} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+
+                                                                <div className="input-grid-2">
+                                                                    <div className="input-wrapper-full">
+                                                                        <label className="input-label">Amount (₹)</label>
+                                                                        <input
+                                                                            type="number"
+                                                                            className="input-field"
+                                                                            placeholder="₹"
+                                                                            value={entry.amount}
+                                                                            onChange={(e) => {
+                                                                                const news = [...fuelEntries];
+                                                                                news[index].amount = e.target.value;
+                                                                                setFuelEntries(news);
+                                                                            }}
+                                                                            style={{ marginBottom: 0, fontSize: '13px', padding: '10px' }}
+                                                                        />
+                                                                    </div>
+
+                                                                    <div className="input-wrapper-full">
+                                                                        <label className="input-label">Meter KM</label>
+                                                                        <input
+                                                                            type="number"
+                                                                            className="input-field"
+                                                                            placeholder="KM"
+                                                                            value={entry.km}
+                                                                            onChange={(e) => {
+                                                                                const news = [...fuelEntries];
+                                                                                news[index].km = e.target.value;
+                                                                                setFuelEntries(news);
+                                                                            }}
+                                                                            style={{ marginBottom: 0, fontSize: '13px', padding: '10px' }}
+                                                                        />
+                                                                    </div>
+                                                                </div>
+
+                                                                <div
+                                                                    onClick={() => {
+                                                                        setActiveIndex(index);
+                                                                        setActiveCamera('fuel');
+                                                                    }}
+                                                                    className="photo-capture-button"
+                                                                    style={{ minHeight: '70px' }}
+                                                                >
+                                                                    {entry.preview ? (
+                                                                        <img src={entry.preview} alt="Fuel Slip" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '8px' }} />
+                                                                    ) : (
+                                                                        <>
+                                                                            <Camera size={20} color="var(--primary)" />
+                                                                            <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>Capture Slip</span>
+                                                                        </>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+
+                                                        <button
+                                                            onClick={() => setFuelEntries([...fuelEntries, { amount: '', km: '', slip: null, preview: null }])}
+                                                            className="add-another-button"
+                                                        >
+                                                            <Plus size={16} /> Add Another Bill
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Parking Question */}
+                                            <div style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
+                                                <p className="input-label" style={{ marginBottom: '10px' }}>2. Did you pay for parking?</p>
+                                                <div className="yes-no-button-group">
+                                                    <button
+                                                        onClick={() => setParkingPaid(true)}
+                                                        className="yes-no-button"
+                                                        style={{ background: parkingPaid ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
+                                                    >
+                                                        Yes
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            setParkingPaid(false);
+                                                            setParkingEntries([{ amount: '', slip: null, preview: null }]);
+                                                        }}
+                                                        className="yes-no-button"
+                                                        style={{ background: !parkingPaid ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
+                                                    >
+                                                        No
+                                                    </button>
+                                                </div>
+
+                                                {parkingPaid && (
+                                                    <div style={{ marginTop: '16px', display: 'grid', gap: 'clamp(12px, 3vw, 16px)' }}>
+                                                        {parkingEntries.map((entry, index) => (
+                                                            <div key={index} className="entry-card">
+                                                                <div className="modal-grid-2" style={{ alignItems: 'end' }}>
+                                                                    <div className="input-wrapper-full">
+                                                                        <label className="input-label">AMOUNT (₹)</label>
+                                                                        <input
+                                                                            type="number"
+                                                                            className="input-field"
+                                                                            placeholder="₹"
+                                                                            value={entry.amount}
+                                                                            onChange={(e) => {
+                                                                                const newEntries = [...parkingEntries];
+                                                                                newEntries[index].amount = e.target.value;
+                                                                                setParkingEntries(newEntries);
+                                                                            }}
+                                                                        />
+                                                                    </div>
+
+                                                                    <div
+                                                                        onClick={() => {
+                                                                            setActiveIndex(index);
+                                                                            setActiveCamera('parking');
+                                                                        }}
+                                                                        className="photo-capture-button"
+                                                                        style={{ width: '100%', minHeight: '50px' }}
+                                                                    >
+                                                                        {entry.preview ? (
+                                                                            <img src={entry.preview} alt="Parking" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '6px' }} />
+                                                                        ) : (
+                                                                            <>
+                                                                                <Camera size={18} color="var(--primary)" />
+                                                                                <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700' }}>Receipt</span>
+                                                                            </>
+                                                                        )}
+                                                                    </div>
+
+                                                                    {parkingEntries.length > 1 && (
+                                                                        <button
+                                                                            onClick={() => setParkingEntries(parkingEntries.filter((_, i) => i !== index))}
+                                                                            style={{ color: '#f43f5e', background: 'rgba(244,63,94,0.1)', width: '30px', height: '30px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        >
+                                                                            <Trash2 size={14} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            </div>
+                                                        ))}
+
+                                                        <button
+                                                            onClick={() => setParkingEntries([...parkingEntries, { amount: '', slip: null, preview: null }])}
+                                                            className="add-another-button"
+                                                        >
+                                                            <Plus size={16} /> Add Another Parking
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            {/* Outside Trip Question */}
+                                            <div style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
+                                                <p className="input-label" style={{ marginBottom: '10px' }}>3. Did you go outside city?</p>
+                                                <div className="yes-no-button-group">
+                                                    <button
+                                                        onClick={() => setOutsideTripOccurred(true)}
+                                                        className="yes-no-button"
+                                                        style={{ background: outsideTripOccurred ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
+                                                    >
+                                                        Yes
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setOutsideTripOccurred(false)}
+                                                        className="yes-no-button"
+                                                        style={{ background: !outsideTripOccurred ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
+                                                    >
+                                                        No
+                                                    </button>
+                                                </div>
+
+                                                {outsideTripOccurred && (
+                                                    <div className="checkbox-group" style={{ marginTop: '12px' }}>
+                                                        <div className="checkbox-item">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="checkbox-input"
+                                                                checked={outsideTripTypes.includes('Same Day')}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) setOutsideTripTypes([...outsideTripTypes, 'Same Day']);
+                                                                    else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Same Day'));
+                                                                }}
+                                                            />
+                                                            <label className="checkbox-label">SAME DAY (+100)</label>
+                                                        </div>
+
+                                                        <div className="checkbox-item">
+                                                            <input
+                                                                type="checkbox"
+                                                                className="checkbox-input"
+                                                                checked={outsideTripTypes.includes('Night Stay')}
+                                                                onChange={(e) => {
+                                                                    if (e.target.checked) setOutsideTripTypes([...outsideTripTypes, 'Night Stay']);
+                                                                    else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Night Stay'));
+                                                                }}
+                                                            />
+                                                            <label className="checkbox-label">NIGHT STAY (+500)</label>
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Maintenance Issues (Punch-Out only) */}
+                                    {showPunchOut && (
+                                        <div style={{ marginBottom: 'clamp(20px, 5vw, 28px)' }}>
+                                            <h3 className="section-title">MAINTENANCE ISSUES (OPTIONAL)</h3>
+
+                                            <div className="quick-issues-grid">
+                                                {QUICK_ISSUES.map((issue) => {
+                                                    const isActive = otherRemarks.split(',').map(s => s.trim()).includes(issue.label);
+                                                    const Icon = issue.icon;
+                                                    return (
+                                                        <div
+                                                            key={issue.id}
+                                                            onClick={() => {
+                                                                setOtherRemarks(prev => {
+                                                                    const currentIssues = prev ? prev.split(',').map(s => s.trim()).filter(Boolean) : [];
+                                                                    if (currentIssues.includes(issue.label)) {
+                                                                        return currentIssues.filter(item => item !== issue.label).join(', ');
+                                                                    } else {
+                                                                        return [...currentIssues, issue.label].join(', ');
+                                                                    }
+                                                                });
+                                                            }}
+                                                            className="quick-issue-button"
+                                                            style={{
+                                                                background: isActive ? 'rgba(255,255,255,0.1)' : 'rgba(255,255,255,0.03)',
+                                                                border: isActive ? `1.5px solid ${issue.color}` : '1px solid rgba(255,255,255,0.05)'
+                                                            }}
+                                                        >
+                                                            <Icon className="quick-issue-icon" color={issue.color} />
+                                                            <span>{issue.label}</span>
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+
+                                            {/* Route Details (Moved here) */}
+                                            <div className="input-wrapper-full" style={{ marginTop: '16px' }}>
+                                                <label className="input-label">ROUTE DETAILS (e.g. Local/Outstation)</label>
+                                                <textarea
+                                                    className="input-field"
+                                                    placeholder="Enter route details..."
+                                                    value={remarks}
+                                                    onChange={(e) => setRemarks(e.target.value)}
+                                                    style={{ marginBottom: '15px', resize: 'vertical', minHeight: '60px' }}
+                                                />
+                                            </div>
+
+                                            <div className="input-wrapper-full" style={{ marginTop: '4px' }}>
+                                                <label className="input-label">OTHER REMARKS / MAINTENANCE</label>
+                                                <textarea
+                                                    className="input-field"
+                                                    placeholder="Describe any other issues..."
+                                                    value={otherRemarks}
+                                                    onChange={(e) => setOtherRemarks(e.target.value)}
+                                                    style={{ fontSize: '14px', resize: 'vertical', minHeight: '60px' }}
+                                                />
+                                            </div>
+                                        </div>
+                                    )}
+
+
+                                    {/* Message */}
+                                    {message.text && (
+                                        <div style={{ padding: '12px', background: message.type === 'error' ? 'rgba(244,63,94,0.1)' : 'rgba(16,185,129,0.1)', borderRadius: '10px', marginBottom: '16px' }}>
+                                            <p style={{ color: message.type === 'error' ? '#f43f5e' : '#10b981', fontSize: 'clamp(12px, 3vw, 13px)', fontWeight: '600', margin: 0 }}>{message.text}</p>
+                                        </div>
+                                    )}
+
+                                    {/* Submit Button */}
+                                    <button
+                                        onClick={() => {
+                                            if (showPunchIn && !selectedVehicleId) return setMessage({ type: 'error', text: 'Please select a vehicle' });
+                                            handlePunch(showPunchOut ? 'punch-out' : 'punch-in');
+                                        }}
+                                        disabled={isSubmitting}
+                                        className="btn-primary"
+                                        style={{ width: '100%', padding: '16px', fontSize: 'clamp(14px, 3.5vw, 16px)', fontWeight: '800' }}
+                                    >
+                                        {isSubmitting ? 'PROCESSING...' : (showPunchOut ? 'SUBMIT DAILY REPORT' : 'START MY DUTY')}
+                                    </button>
                                 </div>
                             )}
-
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'flex-start',
-                                gap: '8px',
-                                marginBottom: '25px',
-                                fontSize: '13px',
-                                color: 'var(--text-muted)',
-                                background: 'rgba(255,255,255,0.03)',
-                                padding: '12px',
-                                borderRadius: '8px'
-                            }}>
-                                <MapPin size={16} color={location.latitude ? '#10b981' : '#f43f5e'} style={{ marginTop: '2px' }} />
-                                <span style={{ lineHeight: '1.4' }}>{location.address}</span>
-                            </div>
-
-                            {message.text && (
-                                <div style={{
-                                    padding: '12px', borderRadius: '8px', marginBottom: '20px', fontSize: '14px',
-                                    background: message.type === 'error' ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                                    color: message.type === 'error' ? 'var(--accent)' : '#10b981'
-                                }}>
-                                    {message.text}
-                                </div>
-                            )}
-
-                            <button
-                                className="btn-primary"
-                                style={{ width: '100%' }}
-                                onClick={() => {
-                                    if (showPunchIn && !selectedVehicleId) {
-                                        return setMessage({ type: 'error', text: 'Please select a vehicle first' });
-                                    }
-                                    handlePunch(showPunchOut ? 'punch-out' : 'punch-in');
-                                }}
-                                disabled={isSubmitting}
-                            >
-                                {isSubmitting ? 'Processing...' : (showPunchOut ? 'Submit Punch-Out' : 'Submit Punch-In')}
-                            </button>
-                        </motion.div>
+                        </div>
                     )}
                 </div>
-            )}
+            </div>
 
-            <AnimatePresence>
-                {activeCamera && (
-                    <CameraModal
-                        side={activeCamera}
-                        onCapture={(file, preview) => {
-                            if (activeCamera === 'selfie') {
-                                setSelfie(file);
-                                setSelfiePreview(preview);
-                            } else if (activeCamera === 'km') {
-                                setKmPhoto(file);
-                                setKmPreview(preview);
-                            } else if (activeCamera === 'car') {
-                                setCarSelfie(file);
-                                setCarPreview(preview);
-                            } else if (activeCamera === 'fuel') {
-                                setFuelSlip(file);
-                                setFuelSlipPreview(preview);
-                            } else if (activeCamera.startsWith('parking')) {
-                                const index = parseInt(activeCamera.split('-')[1]);
-                                const newEntries = [...parkingEntries];
-                                newEntries[index].slip = file;
-                                newEntries[index].preview = preview;
-                                setParkingEntries(newEntries);
-                            }
-                        }}
-                        onClose={() => setActiveCamera(null)}
-                    />
-                )}
-            </AnimatePresence>
+            {/* Camera Modal */}
+            {activeCamera && (
+                <CameraModal
+                    side={activeCamera}
+                    onCapture={(file, preview) => {
+                        if (activeCamera === 'selfie') {
+                            setSelfie(file);
+                            setSelfiePreview(preview);
+                        } else if (activeCamera === 'km') {
+                            setKmPhoto(file);
+                            setKmPreview(preview);
+                        } else if (activeCamera === 'car') {
+                            setCarSelfie(file);
+                            setCarPreview(preview);
+                        } else if (activeCamera === 'fuel') {
+                            const newEntries = [...fuelEntries];
+                            newEntries[activeIndex].slip = file;
+                            newEntries[activeIndex].preview = preview;
+                            setFuelEntries(newEntries);
+                        } else if (activeCamera === 'parking') {
+                            const newEntries = [...parkingEntries];
+                            newEntries[activeIndex].slip = file;
+                            newEntries[activeIndex].preview = preview;
+                            setParkingEntries(newEntries);
+                        }
+                    }}
+                    onClose={() => setActiveCamera(null)}
+                />
+            )}
         </div>
     );
 };

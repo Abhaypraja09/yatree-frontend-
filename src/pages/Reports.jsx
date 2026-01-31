@@ -82,14 +82,33 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
                 <div className="glass-card" style={{ padding: '20px', background: 'rgba(255,255,255,0.02)' }}>
                     <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '15px', fontWeight: '800', textTransform: 'uppercase' }}>Fuel Management</p>
                     {item.fuel?.filled ? (
-                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                            {item.fuel.slipPhoto ? (
-                                <img src={item.fuel.slipPhoto} style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
-                            ) : null}
-                            <div>
-                                <p style={{ color: 'white', fontWeight: '800', fontSize: '18px', margin: 0 }}>₹{item.fuel.amount}</p>
-                                <p style={{ fontSize: '11px', color: '#10b981', margin: '4px 0 0 0', fontWeight: '700' }}>Refilled & Verified</p>
-                            </div>
+                        <div style={{ display: 'grid', gap: '15px' }}>
+                            {(item.fuel.entries && item.fuel.entries.length > 0) ? (
+                                item.fuel.entries.map((entry, idx) => (
+                                    <div key={idx} style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <img src={entry.slipPhoto} onClick={() => window.open(entry.slipPhoto)} style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', cursor: 'pointer' }} />
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                                                <p style={{ color: 'white', fontWeight: '800', fontSize: '15px', margin: 0 }}>₹{entry.amount}</p>
+                                                <p style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '11px', margin: 0 }}>{entry.km} KM</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                    {item.fuel.slipPhoto ? (
+                                        <img src={item.fuel.slipPhoto} onClick={() => window.open(item.fuel.slipPhoto)} style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                    ) : null}
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                                            <p style={{ color: 'white', fontWeight: '800', fontSize: '18px', margin: 0 }}>₹{item.fuel.amount}</p>
+                                            <p style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '12px', margin: 0 }}>{item.fuel.km || '--'} KM</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+                            {item.fuel.entries?.length > 1 && <p style={{ margin: 0, fontSize: '12px', color: '#10b981', fontWeight: '900', textAlign: 'right', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '10px' }}>TOTAL FUEL: ₹{item.fuel.amount}</p>}
                         </div>
                     ) : <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: 0 }}>No fuel entries recorded</p>}
                 </div>
@@ -134,14 +153,7 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
                         </div>
                     ) : null}
 
-                    {borderTaxRecords.filter(b => b.date === item.date && b.vehicle?._id === item.vehicle?._id).length > 0 && (
-                        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>BORDER TAX:</span>
-                                <span style={{ color: '#10b981', fontWeight: '800', fontSize: '15px' }}>₹{borderTaxRecords.filter(b => b.date === item.date && b.vehicle?._id === item.vehicle?._id).reduce((sum, b) => sum + b.amount, 0)}</span>
-                            </div>
-                        </div>
-                    )}
+
 
                     {!(item.punchOut?.allowanceTA > 0 || item.punchOut?.nightStayAmount > 0 || item.outsideTrip?.occurred || borderTaxRecords.filter(b => b.date === item.date && b.vehicle?._id === item.vehicle?._id).length > 0) && (
                         <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: 0 }}>No extra expenses</p>
@@ -169,15 +181,6 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
                 <div className="glass-card" style={{ padding: '20px', flex: '1', minWidth: '150px', textAlign: 'center', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent)' }}>
                     <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: '800' }}>NET TRIP DISTANCE</p>
                     <h3 style={{ color: '#10b981', margin: 0, fontSize: '24px', fontWeight: '900' }}>{item.totalKM || '0'} KM</h3>
-                </div>
-                <div className="glass-card" style={{ padding: '20px', flex: '2', minWidth: '250px', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.02)' }}>
-                    <div style={{ background: 'rgba(14, 165, 233, 0.1)', padding: '12px', borderRadius: '12px' }}>
-                        <MapPin size={22} color="var(--primary)" />
-                    </div>
-                    <div>
-                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '4px', fontWeight: '800' }}>LAST RECORDED COORD</p>
-                        <p style={{ fontSize: '12px', color: 'white', margin: 0, fontWeight: '600', lineHeight: '1.4' }}>{item.punchOut?.location?.address || item.punchIn?.location?.address || 'Location data unavailable'}</p>
-                    </div>
                 </div>
             </div>
         </motion.div>
@@ -281,12 +284,15 @@ const Reports = () => {
                 'Out': punchOutTime,
                 'KM': r.totalKM || 0,
                 'Route': r.punchOut?.remarks || r.punchIn?.remarks || '',
-                'Company': (r.vehicle?.isOutsideCar || r.driver?.isFreelancer) ? 'FREELANCER' : selectedCompany.name,
                 'Daily': dailySalary,
                 'T/P': r.punchOut?.tollParkingAmount || (r.parking || []).reduce((sum, p) => sum + (p.amount || 0), 0),
                 'Night': r.punchOut?.nightStayAmount || (r.outsideTrip?.tripType === 'Night Stay' ? 500 : 0),
                 'T/A': r.punchOut?.allowanceTA || (r.outsideTrip?.tripType === 'Same Day' ? 100 : 0),
                 'Fuel': r.fuel?.amount || 0,
+                'Fuel KM': (r.fuel?.entries && r.fuel.entries.length > 0)
+                    ? r.fuel.entries.map(e => e.km).join(', ')
+                    : (r.fuel?.km || 0),
+                'Company': (r.vehicle?.isOutsideCar || r.driver?.isFreelancer) ? 'FREELANCER' : selectedCompany.name,
                 'Remarks': r.punchOut?.otherRemarks || ''
             };
         });
@@ -578,41 +584,7 @@ const Reports = () => {
                 </table>
             </div>
 
-            {/* BORDER TAX SECTION */}
-            {borderTaxRecords.length > 0 && (
-                <div style={{ marginTop: '50px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '25px' }}>
-                        <div style={{ width: '6px', height: '24px', background: 'var(--primary)', borderRadius: '10px', boxShadow: '0 0 15px var(--primary)' }}></div>
-                        <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Border Tax Ledger</h2>
-                    </div>
-                    <div className="glass-card" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white', minWidth: '900px' }}>
-                            <thead>
-                                <tr style={{ background: 'rgba(255,255,255,0.02)', textAlign: 'left' }}>
-                                    <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Date</th>
-                                    <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Vehicle No</th>
-                                    <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Border Point</th>
-                                    <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Tax Amount</th>
-                                    <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Operator</th>
-                                    <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Audit Note</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {borderTaxRecords.map((b) => (
-                                    <tr key={b._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                        <td style={{ padding: '18px 25px', fontSize: '14px', fontWeight: '600' }}>{b.date.split('-').reverse().join('-')}</td>
-                                        <td style={{ padding: '18px 25px', fontWeight: '800', fontSize: '15px' }}>{b.vehicle?.carNumber}</td>
-                                        <td style={{ padding: '18px 25px', fontSize: '14px' }}>{b.borderName}</td>
-                                        <td style={{ padding: '18px 25px', color: '#10b981', fontWeight: '900', fontSize: '16px' }}>₹{b.amount.toLocaleString()}</td>
-                                        <td style={{ padding: '18px 25px', fontSize: '14px' }}>{b.driver?.name || 'N/A'}</td>
-                                        <td style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '12px', fontStyle: 'italic' }}>{b.remarks || '---'}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            )}
+
 
             <AnimatePresence>
                 {selectedItem && (

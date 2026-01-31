@@ -32,7 +32,7 @@ const AdminLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+    <div className="with-sidebar" style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
       {/* Mobile Header */}
       <div style={{
         display: 'none',

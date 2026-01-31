@@ -191,14 +191,24 @@ const Vehicles = () => {
                 <div style={{ marginBottom: '30px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f59e0b', marginBottom: '15px' }}>
                         <AlertCircle size={18} />
-                        <h2 style={{ fontSize: '16px', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Expiry Alerts (Last 30 Days)</h2>
+                        <h2 style={{ fontSize: '16px', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Critical Expiry Alerts</h2>
                     </div>
                     <div style={{ display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '10px', scrollbarWidth: 'none' }}>
                         {alerts.map((alert, idx) => (
-                            <div key={idx} className="glass-card" style={{ minWidth: '260px', padding: '16px', borderLeft: `4px solid ${alert.status === 'Expired' ? '#f43f5e' : '#f59e0b'}`, background: alert.status === 'Expired' ? 'rgba(244, 63, 94, 0.05)' : 'rgba(245, 158, 11, 0.05)' }}>
+                            <div key={idx} className="glass-card" style={{ minWidth: '260px', padding: '16px', borderLeft: `4px solid ${alert.daysLeft < 0 ? '#f43f5e' : (alert.daysLeft === 0 ? '#0ea5e9' : '#f59e0b')}`, background: alert.daysLeft < 0 ? 'rgba(244, 63, 94, 0.05)' : 'rgba(245, 158, 11, 0.05)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                     <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>{alert.identifier}</span>
-                                    <span style={{ fontSize: '10px', color: alert.status === 'Expired' ? '#f43f5e' : '#f59e0b', fontWeight: '800', textTransform: 'uppercase' }}>{alert.status}</span>
+                                    <span style={{
+                                        fontSize: '10px',
+                                        color: 'white',
+                                        padding: '2px 8px',
+                                        borderRadius: '4px',
+                                        background: alert.daysLeft < 0 ? '#f43f5e' : (alert.daysLeft === 0 ? '#0ea5e9' : '#f59e0b'),
+                                        fontWeight: '800',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        {alert.daysLeft < 0 ? `${Math.abs(alert.daysLeft)} Days Ago` : (alert.daysLeft === 0 ? 'Today' : `${alert.daysLeft} Days Left`)}
+                                    </span>
                                 </div>
                                 <p style={{ color: 'white', fontWeight: '800', margin: '0 0 4px 0', fontSize: '15px' }}>{alert.documentType}</p>
                                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
@@ -426,8 +436,19 @@ const Vehicles = () => {
                                             <ExternalLink size={20} color="white" />
                                         </div>
                                     </div>
-                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '500' }}>
-                                        Expiry: <span style={{ color: 'white', fontWeight: '700' }}>{new Date(doc.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '500' }}>
+                                            Expiry: <span style={{ color: 'white', fontWeight: '700' }}>{new Date(doc.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                        </div>
+                                        <a
+                                            href={`https://wa.me/91${JSON.parse(localStorage.getItem('userInfo'))?.mobile || '9660953135'}?text=${encodeURIComponent(`ALERT: Vehicle ${showDocsModal.carNumber} document (${doc.documentType}) is expiring on ${new Date(doc.expiryDate).toLocaleDateString()}. Please take action.`)}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            style={{ color: '#25D366', opacity: 0.8 }}
+                                            title="Send WhatsApp Reminder"
+                                        >
+                                            💬
+                                        </a>
                                     </div>
                                 </div>
                             ))}
