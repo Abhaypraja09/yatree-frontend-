@@ -8,12 +8,14 @@ import SEO from '../components/SEO';
 const BorderTax = () => {
     const { selectedCompany } = useCompany();
     const [vehicles, setVehicles] = useState([]);
+    const [drivers, setDrivers] = useState([]);
     const [formData, setFormData] = useState({
         vehicleId: '',
         borderName: '',
         amount: '',
         date: new Date().toISOString().split('T')[0],
-        remarks: ''
+        remarks: '',
+        driverId: ''
     });
     const [receiptPhoto, setReceiptPhoto] = useState(null);
     const [preview, setPreview] = useState(null);
@@ -36,9 +38,13 @@ const BorderTax = () => {
             const vehRes = await axios.get(`/api/admin/vehicles/${selectedCompany._id}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+            const dvrRes = await axios.get(`/api/admin/drivers/${selectedCompany._id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
             setVehicles(vehRes.data.vehicles || []);
+            setDrivers(dvrRes.data.drivers || []);
         } catch (err) {
-            console.error('Error fetching vehicles', err);
+            console.error('Error fetching data', err);
         }
     };
 
@@ -102,6 +108,20 @@ const BorderTax = () => {
         }
     };
 
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this entry?')) return;
+        try {
+            const token = JSON.parse(localStorage.getItem('userInfo')).token;
+            await axios.delete(`/api/admin/border-tax/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setMessage({ type: 'success', text: 'Entry deleted successfully' });
+            fetchEntries();
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Failed to delete entry' });
+        }
+    };
+
     const filteredEntries = entries.filter(e =>
         e.borderName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         e.vehicle?.carNumber.toLowerCase().includes(searchTerm.toLowerCase())
@@ -154,15 +174,29 @@ const BorderTax = () => {
                         </div>
 
                         <div>
-                            <label style={{ color: 'var(--text-muted)', fontSize: '12px', display: 'block', marginBottom: '8px' }}>Border Name</label>
+                            <label style={{ color: 'var(--text-muted)', fontSize: '12px', display: 'block', marginBottom: '8px' }}>Border Crossed</label>
                             <input
                                 type="text"
                                 className="input-field"
-                                placeholder="e.g. Delhi-Haryana Border"
+                                placeholder="e.g. Delhi-UP Border"
                                 required
                                 value={formData.borderName}
                                 onChange={(e) => setFormData({ ...formData, borderName: e.target.value })}
                             />
+                        </div>
+
+                        <div>
+                            <label style={{ color: 'var(--text-muted)', fontSize: '12px', display: 'block', marginBottom: '8px' }}>Select Driver (Optional)</label>
+                            <select
+                                className="input-field"
+                                value={formData.driverId}
+                                onChange={(e) => setFormData({ ...formData, driverId: e.target.value })}
+                            >
+                                <option value="">Select Driver</option>
+                                {drivers.map(d => (
+                                    <option key={d._id} value={d._id}>{d.name}</option>
+                                ))}
+                            </select>
                         </div>
 
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
@@ -187,6 +221,17 @@ const BorderTax = () => {
                                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                 />
                             </div>
+                        </div>
+
+                        <div>
+                            <label style={{ color: 'var(--text-muted)', fontSize: '12px', display: 'block', marginBottom: '8px' }}>Remarks / Notes (Optional)</label>
+                            <textarea
+                                className="input-field"
+                                style={{ height: '70px', paddingTop: '10px' }}
+                                placeholder="Any additional information..."
+                                value={formData.remarks}
+                                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                            />
                         </div>
 
                         <div>
@@ -369,6 +414,14 @@ const BorderTax = () => {
                                             {entry.amount.toLocaleString('en-IN')}
                                         </p>
                                     </div>
+                                    <button
+                                        onClick={() => handleDelete(entry._id)}
+                                        style={{ marginTop: '15px', color: '#f43f5e', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px', opacity: 0.5, background: 'none', border: 'none', cursor: 'pointer' }}
+                                        onMouseEnter={(e) => e.target.style.opacity = 1}
+                                        onMouseLeave={(e) => e.target.style.opacity = 0.5}
+                                    >
+                                        Delete Record
+                                    </button>
                                 </div>
                             </motion.div>
                         ))}

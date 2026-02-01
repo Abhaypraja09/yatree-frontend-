@@ -153,6 +153,16 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
                         </div>
                     ) : null}
 
+                    {borderTaxRecords.filter(b => b.date === item.date && b.vehicle?._id === item.vehicle?._id).map((bt, idx) => (
+                        <div key={idx} style={{ marginTop: '10px', padding: '10px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '10px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ color: 'white', fontSize: '12px', fontWeight: '700' }}>{bt.borderName}</span>
+                                <span style={{ color: '#10b981', fontSize: '14px', fontWeight: '900' }}>₹{bt.amount}</span>
+                            </div>
+                            {bt.remarks && <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', margin: '4px 0 0 0', fontStyle: 'italic' }}>"{bt.remarks}"</p>}
+                        </div>
+                    ))}
+
 
 
                     {!(item.punchOut?.allowanceTA > 0 || item.punchOut?.nightStayAmount > 0 || item.outsideTrip?.occurred || borderTaxRecords.filter(b => b.date === item.date && b.vehicle?._id === item.vehicle?._id).length > 0) && (

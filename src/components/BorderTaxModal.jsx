@@ -105,6 +105,20 @@ const BorderTaxModal = ({ isOpen, onClose, selectedCompany }) => {
         }
     };
 
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this entry?')) return;
+        try {
+            const token = JSON.parse(localStorage.getItem('userInfo')).token;
+            await axios.delete(`/api/admin/border-tax/${id}`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            setMessage({ type: 'success', text: 'Entry deleted successfully' });
+            fetchEntries();
+        } catch (err) {
+            setMessage({ type: 'error', text: 'Failed to delete entry' });
+        }
+    };
+
     if (!isOpen) return null;
 
     return (
@@ -140,6 +154,14 @@ const BorderTaxModal = ({ isOpen, onClose, selectedCompany }) => {
                                     {entry.receiptPhoto && (
                                         <a href={entry.receiptPhoto} target="_blank" rel="noreferrer" style={{ fontSize: '11px', color: '#10b981', textDecoration: 'underline' }}>View Receipt</a>
                                     )}
+                                    <button
+                                        onClick={() => handleDelete(entry._id)}
+                                        style={{ float: 'right', color: '#f43f5e', opacity: 0.6 }}
+                                        onMouseEnter={(e) => e.target.style.opacity = 1}
+                                        onMouseLeave={(e) => e.target.style.opacity = 0.6}
+                                    >
+                                        <Trash2 size={16} />
+                                    </button>
                                 </div>
                             ))}
                         </div>
@@ -165,6 +187,17 @@ const BorderTaxModal = ({ isOpen, onClose, selectedCompany }) => {
                                 >
                                     <option value="">Select Car</option>
                                     {vehicles.map(v => <option key={v._id} value={v._id}>{v.carNumber}</option>)}
+                                </select>
+                            </div>
+                            <div>
+                                <label style={{ color: 'var(--text-muted)', fontSize: '12px', display: 'block', marginBottom: '5px' }}>Select Driver (Optional)</label>
+                                <select
+                                    className="input-field"
+                                    value={formData.driverId}
+                                    onChange={(e) => setFormData({ ...formData, driverId: e.target.value })}
+                                >
+                                    <option value="">Select Driver</option>
+                                    {drivers.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -203,6 +236,17 @@ const BorderTaxModal = ({ isOpen, onClose, selectedCompany }) => {
                                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                 />
                             </div>
+                        </div>
+
+                        <div>
+                            <label style={{ color: 'var(--text-muted)', fontSize: '12px', display: 'block', marginBottom: '5px' }}>Remarks / Notes (Optional)</label>
+                            <textarea
+                                className="input-field"
+                                style={{ height: '70px', paddingTop: '10px' }}
+                                placeholder="Any additional details..."
+                                value={formData.remarks}
+                                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                            />
                         </div>
 
                         <div>
