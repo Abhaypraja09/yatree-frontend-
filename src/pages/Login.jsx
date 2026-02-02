@@ -93,14 +93,14 @@ const Login = () => {
 
                 <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', color: 'var(--text-muted)' }}>Mobile Number</label>
+                        <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', color: 'var(--text-muted)' }}>Username or Mobile</label>
                         <div style={{ position: 'relative' }}>
                             <Phone size={18} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
                             <input
-                                type="tel"
+                                type="text"
                                 className="input-field"
                                 style={{ paddingLeft: '40px' }}
-                                placeholder="9876543210"
+                                placeholder="Username or Mobile"
                                 value={mobile}
                                 onChange={(e) => setMobile(e.target.value)}
                                 required

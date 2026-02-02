@@ -14,13 +14,14 @@ const Drivers = () => {
     // Form State
     const [name, setName] = useState('');
     const [mobile, setMobile] = useState('');
+    const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [licenseNumber, setLicenseNumber] = useState('');
     const [isFreelancer, setIsFreelancer] = useState(false);
 
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingDriver, setEditingDriver] = useState(null);
-    const [editForm, setEditForm] = useState({ name: '', mobile: '', password: '', licenseNumber: '' });
+    const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '' });
 
 
     const logoMap = {
@@ -53,14 +54,14 @@ const Drivers = () => {
         e.preventDefault();
         try {
             await axios.post('/api/admin/drivers', {
-                name, mobile, password, licenseNumber, companyId: selectedCompany._id, isFreelancer
+                name, mobile, username, password, licenseNumber, companyId: selectedCompany._id, isFreelancer
             }, {
                 headers: {
                     Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}`
                 }
             });
             setShowModal(false);
-            setName(''); setMobile(''); setPassword(''); setLicenseNumber(''); setIsFreelancer(false);
+            setName(''); setMobile(''); setUsername(''); setPassword(''); setLicenseNumber(''); setIsFreelancer(false);
             fetchDrivers();
         } catch (err) {
             alert(err.response?.data?.message || 'Error creating driver');
@@ -95,6 +96,7 @@ const Drivers = () => {
             const updateData = {
                 name: editForm.name,
                 mobile: editForm.mobile,
+                username: editForm.username,
                 licenseNumber: editForm.licenseNumber
             };
             if (editForm.password) {
@@ -119,6 +121,7 @@ const Drivers = () => {
         setEditForm({
             name: driver.name,
             mobile: driver.mobile,
+            username: driver.username || '',
             licenseNumber: driver.licenseNumber || '',
             password: '' // Don't show old password
         });
@@ -131,7 +134,8 @@ const Drivers = () => {
     const filteredDrivers = drivers.filter(d =>
         !d.isFreelancer && (
             d.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            d.mobile?.includes(searchTerm)
+            d.mobile?.includes(searchTerm) ||
+            d.username?.toLowerCase().includes(searchTerm.toLowerCase())
         )
     );
 
@@ -204,6 +208,7 @@ const Drivers = () => {
                                             <span style={{ fontSize: '9px', background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(99, 102, 241, 0.2)', fontWeight: '800', textTransform: 'uppercase' }}>Freelancer</span>
                                         )}
                                     </div>
+                                    <div style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: '600', opacity: 0.8 }}>@{driver.username || 'no-username'}</div>
                                 </td>
                                 <td style={{ padding: '18px 25px' }}>
                                     <div style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>{driver.mobile}</div>
@@ -296,6 +301,10 @@ const Drivers = () => {
                                     <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Mobile Number *</label>
                                     <input className="input-field" placeholder="10 Digit Mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} required />
                                 </div>
+                                <div>
+                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Login Username</label>
+                                    <input className="input-field" placeholder="unique_username (optional)" value={username} onChange={(e) => setUsername(e.target.value)} />
+                                </div>
                             </div>
                             <div style={{ marginBottom: '20px' }}>
                                 <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Login Password *</label>
@@ -337,6 +346,10 @@ const Drivers = () => {
                                     <div>
                                         <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Mobile Number *</label>
                                         <input className="input-field" value={editForm.mobile} onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })} required />
+                                    </div>
+                                    <div>
+                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Login Username</label>
+                                        <input className="input-field" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} />
                                     </div>
                                 </div>
                                 <div style={{ marginBottom: '20px' }}>
