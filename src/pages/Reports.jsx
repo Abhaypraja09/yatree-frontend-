@@ -189,6 +189,10 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
 
             <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '15px' }}>
                 <div className="glass-card" style={{ padding: '20px', flex: '1', minWidth: '150px', textAlign: 'center', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent)' }}>
+                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: '800' }}>DAILY SALARY</p>
+                    <h3 style={{ color: '#10b981', margin: 0, fontSize: '24px', fontWeight: '900' }}>₹{(item.dailyWage || item.driver?.dailyWage || item.vehicle?.dutyAmount || 500).toLocaleString()}</h3>
+                </div>
+                <div className="glass-card" style={{ padding: '20px', flex: '1', minWidth: '150px', textAlign: 'center', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), transparent)' }}>
                     <p style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '8px', fontWeight: '800' }}>NET TRIP DISTANCE</p>
                     <h3 style={{ color: '#10b981', margin: 0, fontSize: '24px', fontWeight: '900' }}>{item.totalKM || '0'} KM</h3>
                 </div>
@@ -282,7 +286,7 @@ const Reports = () => {
             const driverDayKey = `${r.driver?._id}_${reportDate}`;
             let dailySalary = 0;
             if (r.driver && !paidDriversOnDate.has(driverDayKey)) {
-                dailySalary = r.vehicle?.dutyAmount || 400;
+                dailySalary = r.dailyWage || r.driver?.dailyWage || r.vehicle?.dutyAmount || 500;
                 paidDriversOnDate.add(driverDayKey);
             }
 
@@ -502,7 +506,7 @@ const Reports = () => {
                                 const driverDayKey = `${report.driver?._id}_${report.date}`;
                                 let showSalary = 0;
                                 if (report.driver && !paidInUI.has(driverDayKey)) {
-                                    showSalary = report.vehicle?.dutyAmount || 400;
+                                    showSalary = report.dailyWage || report.driver?.dailyWage || report.vehicle?.dutyAmount || 500;
                                     paidInUI.add(driverDayKey);
                                 }
                                 return (

@@ -17,11 +17,12 @@ const Drivers = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [licenseNumber, setLicenseNumber] = useState('');
+    const [dailyWage, setDailyWage] = useState(500);
     const [isFreelancer, setIsFreelancer] = useState(false);
 
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingDriver, setEditingDriver] = useState(null);
-    const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '' });
+    const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: 500 });
 
 
     const logoMap = {
@@ -54,14 +55,14 @@ const Drivers = () => {
         e.preventDefault();
         try {
             await axios.post('/api/admin/drivers', {
-                name, mobile, username, password, licenseNumber, companyId: selectedCompany._id, isFreelancer
+                name, mobile, username, password, licenseNumber, companyId: selectedCompany._id, isFreelancer, dailyWage
             }, {
                 headers: {
                     Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}`
                 }
             });
             setShowModal(false);
-            setName(''); setMobile(''); setUsername(''); setPassword(''); setLicenseNumber(''); setIsFreelancer(false);
+            setName(''); setMobile(''); setUsername(''); setPassword(''); setLicenseNumber(''); setIsFreelancer(false); setDailyWage(500);
             fetchDrivers();
         } catch (err) {
             alert(err.response?.data?.message || 'Error creating driver');
@@ -97,7 +98,8 @@ const Drivers = () => {
                 name: editForm.name,
                 mobile: editForm.mobile,
                 username: editForm.username,
-                licenseNumber: editForm.licenseNumber
+                licenseNumber: editForm.licenseNumber,
+                dailyWage: editForm.dailyWage
             };
             if (editForm.password) {
                 updateData.password = editForm.password;
@@ -108,7 +110,7 @@ const Drivers = () => {
             });
             setShowEditModal(false);
             setEditingDriver(null);
-            setEditForm({ name: '', mobile: '', password: '', licenseNumber: '' });
+            setEditForm({ name: '', mobile: '', password: '', licenseNumber: '', dailyWage: 500 });
             fetchDrivers();
             alert('Driver updated successfully');
         } catch (err) {
@@ -123,6 +125,7 @@ const Drivers = () => {
             mobile: driver.mobile,
             username: driver.username || '',
             licenseNumber: driver.licenseNumber || '',
+            dailyWage: driver.dailyWage || 500,
             password: '' // Don't show old password
         });
         setShowEditModal(true);
@@ -316,6 +319,37 @@ const Drivers = () => {
                                 <input className="input-field" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="DL-XXX-XXXX" />
                             </div>
 
+                            <div style={{ marginBottom: '30px' }}>
+                                <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Daily Salary (Rate)</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                                    {[300, 400, 500].map(val => (
+                                        <button
+                                            key={val}
+                                            type="button"
+                                            onClick={() => setDailyWage(val)}
+                                            style={{
+                                                padding: '10px',
+                                                borderRadius: '10px',
+                                                border: '1px solid ' + (dailyWage === val ? 'var(--primary)' : 'rgba(255,255,255,0.1)'),
+                                                background: dailyWage === val ? 'rgba(14, 165, 233, 0.1)' : 'transparent',
+                                                color: 'white',
+                                                fontWeight: '800'
+                                            }}
+                                        >
+                                            ₹{val}
+                                        </button>
+                                    ))}
+                                    <input
+                                        type="number"
+                                        placeholder="Custom"
+                                        className="input-field"
+                                        style={{ marginBottom: 0, padding: '10px', height: 'auto', textAlign: 'center' }}
+                                        value={![300, 400, 500].includes(dailyWage) ? dailyWage : ''}
+                                        onChange={(e) => setDailyWage(Number(e.target.value))}
+                                    />
+                                </div>
+                            </div>
+
                             <div style={{ display: 'flex', gap: '12px' }}>
                                 <button type="button" className="glass-card" style={{ flex: 1, padding: '14px', color: 'white', fontWeight: '700' }} onClick={() => setShowModal(false)}>Cancel</button>
                                 <button type="submit" className="btn-primary" style={{ flex: 1, padding: '14px' }}>Register Driver</button>
@@ -360,6 +394,37 @@ const Drivers = () => {
                                 <div style={{ marginBottom: '30px' }}>
                                     <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>License Number</label>
                                     <input className="input-field" value={editForm.licenseNumber} onChange={(e) => setEditForm({ ...editForm, licenseNumber: e.target.value })} placeholder="DL-XXX-XXXX" />
+                                </div>
+
+                                <div style={{ marginBottom: '30px' }}>
+                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Daily Salary (Rate)</label>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                                        {[300, 400, 500].map(val => (
+                                            <button
+                                                key={val}
+                                                type="button"
+                                                onClick={() => setEditForm({ ...editForm, dailyWage: val })}
+                                                style={{
+                                                    padding: '10px',
+                                                    borderRadius: '10px',
+                                                    border: '1px solid ' + (editForm.dailyWage === val ? 'var(--primary)' : 'rgba(255,255,255,0.1)'),
+                                                    background: editForm.dailyWage === val ? 'rgba(14, 165, 233, 0.1)' : 'transparent',
+                                                    color: 'white',
+                                                    fontWeight: '800'
+                                                }}
+                                            >
+                                                ₹{val}
+                                            </button>
+                                        ))}
+                                        <input
+                                            type="number"
+                                            placeholder="Custom"
+                                            className="input-field"
+                                            style={{ marginBottom: 0, padding: '10px', height: 'auto', textAlign: 'center' }}
+                                            value={![300, 400, 500].includes(editForm.dailyWage) ? editForm.dailyWage : ''}
+                                            onChange={(e) => setEditForm({ ...editForm, dailyWage: Number(e.target.value) })}
+                                        />
+                                    </div>
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '12px' }}>
