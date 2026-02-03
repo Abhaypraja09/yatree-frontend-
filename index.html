@@ -10,12 +10,23 @@
     content="Professional Taxi & Fleet Management CRM. Manage your vehicles, drivers, and daily reports efficiently." />
   <meta name="keywords" content="fleet management, taxi crm, taxi software, driver management" />
   <meta name="author" content="FleetCRM" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#1e3a8a" />
   <title>FleetCRM | Smart Fleet Management Solution</title>
 </head>
 
 <body>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then(reg => console.log('Service Worker Registered'))
+          .catch(err => console.log('Service Worker Failed', err));
+      });
+    }
+  </script>
 </body>
 
 </html>
