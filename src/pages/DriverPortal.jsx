@@ -21,19 +21,20 @@ import {
     HelpCircle,
     ChevronLeft
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { useLanguage } from '../context/LanguageContext';
 import SEO from '../components/SEO';
 
-const QUICK_ISSUES = [
-    { id: 'wash', label: 'Car Wash', icon: Droplets, color: '#3cc7f5' },
-    { id: 'light', label: 'Light Issue', icon: ZapOff, color: '#f59e0b' },
-    { id: 'tyre', label: 'Puncture', icon: Disc, color: '#f43f5e' },
-    { id: 'mechanic', label: 'Mechanical', icon: Wrench, color: '#10b981' },
-    { id: 'dent', label: 'Accident/Dent', icon: Hammer, color: '#9f1239' },
-    { id: 'other', label: 'Other', icon: HelpCircle, color: '#94a3b8' }
+const QUICK_ISSUES = (t) => [
+    { id: 'wash', label: t('carWash'), value: 'Car Wash', icon: Droplets, color: '#3cc7f5' },
+    { id: 'light', label: t('lightIssue'), value: 'Light Issue', icon: ZapOff, color: '#f59e0b' },
+    { id: 'tyre', label: t('puncture'), value: 'Puncture', icon: Disc, color: '#f43f5e' },
+    { id: 'mechanic', label: t('mechanical'), value: 'Mechanical', icon: Wrench, color: '#10b981' },
+    { id: 'dent', label: t('accident'), value: 'Accident/Dent', icon: Hammer, color: '#9f1239' },
+    { id: 'other', label: t('other'), value: 'Other', icon: HelpCircle, color: '#94a3b8' }
 ];
 
 const CameraModal = ({ side, onCapture, onClose }) => {
+    const { t } = useLanguage();
     const videoRef = useRef(null);
     const canvasRef = useRef(null);
     const streamRef = useRef(null);
@@ -60,7 +61,7 @@ const CameraModal = ({ side, onCapture, onClose }) => {
             }
         } catch (err) {
             console.error("Camera error:", err);
-            setError("Could not access camera. Please ensure you have given permission or are using HTTPS.");
+            setError(t('cameraError'));
         }
     };
 
@@ -96,7 +97,11 @@ const CameraModal = ({ side, onCapture, onClose }) => {
             <div className="modal-content glass-card">
                 <div className="modal-header">
                     <h3 className="modal-title">
-                        {side === 'selfie' ? 'Take Selfie' : side === 'km' ? 'Capture KM Meter' : side === 'car' ? 'Take Car Selfie' : side === 'fuel' ? 'Refill Slip Photo' : side === 'parking' ? 'Parking Slip Photo' : 'Capture Photo'}
+                        {side === 'selfie' ? t('modalTakeSelfie') :
+                            side === 'km' ? t('modalCaptureKm') :
+                                side === 'car' ? t('modalTakeCarSelfie') :
+                                    side === 'fuel' ? t('modalFuelSlip') :
+                                        side === 'parking' ? t('modalParkingSlip') : t('modalCapturePhoto')}
                     </h3>
                     <button
                         onClick={() => {
@@ -117,7 +122,7 @@ const CameraModal = ({ side, onCapture, onClose }) => {
                 {!error && (
                     <button onClick={capture} className="btn-primary" style={{ width: '100%', marginTop: '20px', padding: '16px' }}>
                         <Camera size={20} style={{ display: 'inline', marginRight: '8px' }} />
-                        Capture
+                        {t('capture')}
                     </button>
                 )}
             </div>
@@ -127,6 +132,7 @@ const CameraModal = ({ side, onCapture, onClose }) => {
 
 const DriverPortal = () => {
     const { user, logout } = useAuth();
+    const { language, setLanguage, t } = useLanguage();
     const [dashboardData, setDashboardData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [km, setKm] = useState('');
@@ -186,7 +192,7 @@ const DriverPortal = () => {
 
     const handlePunch = async (type) => {
         if (!km || !selfie || !kmPhoto || !carSelfie) {
-            setMessage({ type: 'error', text: 'KM, Selfie, KM Photo, and Car Selfie are mandatory' });
+            setMessage({ type: 'error', text: t('mandatoryFields') });
             return;
         }
 
@@ -194,14 +200,14 @@ const DriverPortal = () => {
             if (fuelFilled) {
                 const invalid = fuelEntries.some(e => !e.amount || !e.slip || !e.km);
                 if (invalid) {
-                    setMessage({ type: 'error', text: 'All fuel entries must have amount, KM and slip photo' });
+                    setMessage({ type: 'error', text: t('fuelValidation') });
                     return;
                 }
             }
             if (parkingPaid) {
                 const invalid = parkingEntries.some(e => !e.amount || !e.slip);
                 if (invalid) {
-                    setMessage({ type: 'error', text: 'All parking entries must have amount and receipt' });
+                    setMessage({ type: 'error', text: t('parkingValidation') });
                     return;
                 }
             }
@@ -255,7 +261,7 @@ const DriverPortal = () => {
                 }
             });
 
-            setMessage({ type: 'success', text: `Successfully ${type === 'punch-in' ? 'Punched In' : 'Punched Out'}!` });
+            setMessage({ type: 'success', text: t(type === 'punch-in' ? 'punchInSuccess' : 'punchOutSuccess') });
 
             // Reset all states
             setKm('');
@@ -288,10 +294,10 @@ const DriverPortal = () => {
             await axios.post('/api/driver/request-trip', {}, {
                 headers: { Authorization: `Bearer ${user.token}` }
             });
-            setMessage({ type: 'success', text: 'Request sent to Admin. Waiting for approval.' });
+            setMessage({ type: 'success', text: t('requestSent') });
             fetchDashboard();
         } catch (err) {
-            setMessage({ type: 'error', text: 'Failed to send request' });
+            setMessage({ type: 'error', text: t('requestFailed') });
         } finally {
             setIsSubmitting(false);
         }
@@ -321,16 +327,46 @@ const DriverPortal = () => {
                                 <p className="header-subtitle">{user.name}</p>
                             </div>
                         </div>
-                        <button onClick={logout} style={{ background: 'rgba(244,63,94,0.1)', color: '#f43f5e', padding: '10px 20px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <LogOut size={16} /> Logout
-                        </button>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div className="language-switcher" style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '10px', padding: '4px', display: 'flex' }}>
+                                <button
+                                    onClick={() => setLanguage('en')}
+                                    style={{
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        fontSize: '12px',
+                                        fontWeight: '700',
+                                        background: language === 'en' ? 'var(--primary)' : 'transparent',
+                                        color: language === 'en' ? 'white' : 'var(--text-muted)'
+                                    }}
+                                >
+                                    EN
+                                </button>
+                                <button
+                                    onClick={() => setLanguage('hi')}
+                                    style={{
+                                        padding: '6px 12px',
+                                        borderRadius: '8px',
+                                        fontSize: '12px',
+                                        fontWeight: '700',
+                                        background: language === 'hi' ? 'var(--primary)' : 'transparent',
+                                        color: language === 'hi' ? 'white' : 'var(--text-muted)'
+                                    }}
+                                >
+                                    हिन्दी
+                                </button>
+                            </div>
+                            <button onClick={logout} style={{ background: 'rgba(244,63,94,0.1)', color: '#f43f5e', padding: '10px 20px', borderRadius: '10px', fontWeight: '700', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <LogOut size={16} /> {t('logout')}
+                            </button>
+                        </div>
                     </header>
 
                     {(!dashboardData?.vehicle && !showPunchIn && tripStatus !== 'completed' && tripStatus !== 'pending_approval') ? (
                         <div className="glass-card" style={{ padding: '40px', textAlign: 'center' }}>
                             <AlertTriangle size={48} color="#f59e0b" style={{ margin: '0 auto 16px' }} />
-                            <h2 style={{ color: 'white', marginBottom: '8px' }}>No Vehicle Active</h2>
-                            <p style={{ color: 'var(--text-muted)' }}>Please start your duty to select a vehicle.</p>
+                            <h2 style={{ color: 'white', marginBottom: '8px' }}>{t('noVehicle')}</h2>
+                            <p style={{ color: 'var(--text-muted)' }}>{t('startDutyMessage')}</p>
                         </div>
                     ) : (
                         <div className="form-section-wrapper">
@@ -338,7 +374,7 @@ const DriverPortal = () => {
                             {dashboardData?.vehicle && (
                                 <div className="glass-card" style={{ padding: 'clamp(16px, 4vw, 24px)' }}>
                                     <div style={{ marginBottom: '12px' }}>
-                                        <p className="section-subtitle">YOUR ASSIGNED VEHICLE</p>
+                                        <p className="section-subtitle">{t('assignedVehicle')}</p>
                                         <h2 style={{ fontSize: 'clamp(18px, 4.5vw, 24px)', color: 'white', fontWeight: '800', marginBottom: '6px' }}>{dashboardData.vehicle.carNumber}</h2>
                                         <p style={{ color: 'var(--text-muted)', fontSize: 'clamp(12px, 3vw, 14px)' }}>{dashboardData.vehicle.model}</p>
                                     </div>
@@ -349,13 +385,13 @@ const DriverPortal = () => {
                             <div className="glass-card" style={{ padding: 'clamp(16px, 4vw, 24px)' }}>
                                 <div className="modal-grid-2">
                                     <div>
-                                        <p className="section-subtitle">PUNCH IN</p>
+                                        <p className="section-subtitle">{t('punchIn')}</p>
                                         <p style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: '800', color: isPunchedIn ? '#10b981' : 'var(--text-muted)' }}>
                                             {isPunchedIn ? new Date(todayAttendance.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                         </p>
                                     </div>
                                     <div>
-                                        <p className="section-subtitle">PUNCH OUT</p>
+                                        <p className="section-subtitle">{t('punchOut')}</p>
                                         <p style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: '800', color: isPunchedOut ? '#f43f5e' : 'var(--text-muted)' }}>
                                             {isPunchedOut ? new Date(todayAttendance.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
                                         </p>
@@ -367,10 +403,10 @@ const DriverPortal = () => {
                             {tripStatus === 'completed' && (
                                 <div className="glass-card" style={{ padding: 'clamp(24px, 6vw, 40px)', textAlign: 'center' }}>
                                     <CheckCircle size={56} color="#10b981" style={{ margin: '0 auto 16px' }} />
-                                    <h2 style={{ color: 'white', fontSize: 'clamp(18px, 4.5vw, 22px)', marginBottom: '8px', fontWeight: '800' }}>Duty Completed</h2>
-                                    <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: 'clamp(13px, 3.2vw, 14px)' }}>Your reports are submitted. You are now off-duty.</p>
+                                    <h2 style={{ color: 'white', fontSize: 'clamp(18px, 4.5vw, 22px)', marginBottom: '8px', fontWeight: '800' }}>{t('dutyCompleted')}</h2>
+                                    <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: 'clamp(13px, 3.2vw, 14px)' }}>{t('offDutyMessage')}</p>
                                     <button onClick={handleRequestNewTrip} disabled={isSubmitting} className="btn-primary" style={{ width: '100%', maxWidth: '300px', margin: '0 auto', display: 'block' }}>
-                                        {isSubmitting ? 'Processing...' : 'Start New Duty'}
+                                        {isSubmitting ? t('processing') : t('startNewDuty')}
                                     </button>
                                 </div>
                             )}
@@ -379,8 +415,8 @@ const DriverPortal = () => {
                             {tripStatus === 'pending_approval' && (
                                 <div className="glass-card" style={{ padding: 'clamp(24px, 6vw, 40px)', textAlign: 'center' }}>
                                     <RefreshCw size={56} color="#0ea5e9" style={{ margin: '0 auto 16px' }} className="spinner" />
-                                    <h2 style={{ color: 'white', fontSize: 'clamp(18px, 4.5vw, 22px)', marginBottom: '8px', fontWeight: '800' }}>Waiting for Admin</h2>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: 'clamp(13px, 3.2vw, 14px)' }}>Your request is under review. Please wait.</p>
+                                    <h2 style={{ color: 'white', fontSize: 'clamp(18px, 4.5vw, 22px)', marginBottom: '8px', fontWeight: '800' }}>{t('waitingAdmin')}</h2>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: 'clamp(13px, 3.2vw, 14px)' }}>{t('reviewMessage')}</p>
                                 </div>
                             )}
 
@@ -388,14 +424,14 @@ const DriverPortal = () => {
                             {showPunchOut && !showPunchOutForm && (
                                 <div className="glass-card" style={{ padding: 'clamp(24px, 6vw, 40px)', textAlign: 'center' }}>
                                     <Car size={56} color="#10b981" style={{ margin: '0 auto 16px' }} />
-                                    <h2 style={{ color: 'white', fontSize: 'clamp(18px, 4.5vw, 22px)', marginBottom: '8px', fontWeight: '800' }}>You are On Duty</h2>
-                                    <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: 'clamp(13px, 3.2vw, 14px)' }}>Drive safely! Close duty only after reaching parking.</p>
+                                    <h2 style={{ color: 'white', fontSize: 'clamp(18px, 4.5vw, 22px)', marginBottom: '8px', fontWeight: '800' }}>{t('onDuty')}</h2>
+                                    <p style={{ color: 'var(--text-muted)', marginBottom: '24px', fontSize: 'clamp(13px, 3.2vw, 14px)' }}>{t('driveSafely')}</p>
                                     <button
                                         onClick={() => setShowPunchOutForm(true)}
                                         className="btn-primary"
                                         style={{ width: '100%', background: 'var(--accent)', padding: '14px', boxShadow: '0 8px 20px rgba(244, 63, 94, 0.2)' }}
                                     >
-                                        Submit Reports & End Duty
+                                        {t('submitReports')}
                                     </button>
                                 </div>
                             )}
@@ -410,19 +446,18 @@ const DriverPortal = () => {
                                             </button>
                                         )}
                                         <div>
-                                            <h2 className="modal-title">{showPunchIn ? 'Duty Punch-In' : 'Duty Punch-Out'}</h2>
-                                            <p className="section-subtitle">{showPunchIn ? 'START' : 'END'}</p>
+                                            <h2 className="modal-title">{showPunchIn ? t('dutyPunchIn') : t('dutyPunchOut')}</h2>
+                                            <p className="section-subtitle">{showPunchIn ? t('start') : t('end')}</p>
                                         </div>
                                     </div>
 
 
-                                    {/* KM Reading */}
                                     <div className="input-wrapper-full" style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
-                                        <label className="input-label">CURRENT KM METER READING</label>
+                                        <label className="input-label">{t('currentKm')}</label>
                                         <input
                                             type="number"
                                             className="input-field"
-                                            placeholder="Enter KM"
+                                            placeholder={t('enterKm')}
                                             value={km}
                                             onChange={(e) => setKm(e.target.value)}
                                         />
@@ -431,14 +466,14 @@ const DriverPortal = () => {
                                     {/* Vehicle Selection (Punch-In only) */}
                                     {showPunchIn && (
                                         <div className="input-wrapper-full" style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
-                                            <label className="input-label">Select Assigned Vehicle</label>
+                                            <label className="input-label">{t('selectVehicle')}</label>
                                             <select
                                                 className="input-field"
                                                 value={selectedVehicleId}
                                                 onChange={(e) => setSelectedVehicleId(e.target.value)}
                                                 style={{ background: 'rgba(255,255,255,0.05)', color: 'white', cursor: 'pointer', fontWeight: '700', fontSize: '14px', padding: '12px' }}
                                             >
-                                                <option value="">-- Select Available Car --</option>
+                                                <option value="">{t('selectCar')}</option>
                                                 {dashboardData?.availableVehicles?.map(v => (
                                                     <option key={v._id} value={v._id}>
                                                         {v.carNumber} ({v.model})
@@ -452,14 +487,14 @@ const DriverPortal = () => {
                                     <div className="photo-capture-grid" style={{ marginBottom: 'clamp(20px, 5vw, 28px)' }}>
                                         {/* Selfie */}
                                         <div>
-                                            <p className="input-label" style={{ marginBottom: '8px' }}>1. DRIVER SELFIE</p>
+                                            <p className="input-label" style={{ marginBottom: '8px' }}>{t('driverSelfie')}</p>
                                             {!selfiePreview ? (
                                                 <div
                                                     onClick={() => setActiveCamera('selfie')}
                                                     className="photo-capture-button"
                                                 >
                                                     <Camera size={24} color="var(--primary)" />
-                                                    <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>Take Selfie</span>
+                                                    <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>{t('takeSelfie')}</span>
                                                 </div>
                                             ) : (
                                                 <div className="photo-preview-container">
@@ -479,14 +514,14 @@ const DriverPortal = () => {
 
                                         {/* KM Photo */}
                                         <div>
-                                            <p className="input-label" style={{ marginBottom: '8px' }}>2. KM PHOTO</p>
+                                            <p className="input-label" style={{ marginBottom: '8px' }}>{t('kmPhoto')}</p>
                                             {!kmPreview ? (
                                                 <div
                                                     onClick={() => setActiveCamera('km')}
                                                     className="photo-capture-button"
                                                 >
                                                     <Camera size={24} color="var(--primary)" />
-                                                    <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>Take KM Photo</span>
+                                                    <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>{t('takeKmPhoto')}</span>
                                                 </div>
                                             ) : (
                                                 <div className="photo-preview-container">
@@ -506,14 +541,14 @@ const DriverPortal = () => {
 
                                         {/* Car Selfie */}
                                         <div>
-                                            <p className="input-label" style={{ marginBottom: '8px' }}>3. CAR SELFIE</p>
+                                            <p className="input-label" style={{ marginBottom: '8px' }}>{t('carSelfie')}</p>
                                             {!carPreview ? (
                                                 <div
                                                     onClick={() => setActiveCamera('car')}
                                                     className="photo-capture-button"
                                                 >
                                                     <Camera size={24} color="var(--primary)" />
-                                                    <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>Take Car Photo</span>
+                                                    <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>{t('takeCarPhoto')}</span>
                                                 </div>
                                             ) : (
                                                 <div className="photo-preview-container">
@@ -535,18 +570,18 @@ const DriverPortal = () => {
                                     {/* Punch-Out Specific Questions */}
                                     {showPunchOut && (
                                         <div style={{ marginBottom: 'clamp(20px, 5vw, 28px)' }}>
-                                            <h3 className="section-title">EXPENDITURE & TRIP DETAILS</h3>
+                                            <h3 className="section-title">{t('expenditureDetails')}</h3>
 
                                             {/* Fuel Question */}
                                             <div style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
-                                                <p className="input-label" style={{ marginBottom: '10px' }}>1. Did you refill Petrol/Diesel?</p>
+                                                <p className="input-label" style={{ marginBottom: '10px' }}>{t('fuelQuestion')}</p>
                                                 <div className="yes-no-button-group">
                                                     <button
                                                         onClick={() => setFuelFilled(true)}
                                                         className="yes-no-button"
                                                         style={{ background: fuelFilled ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
                                                     >
-                                                        Yes
+                                                        {t('yes')}
                                                     </button>
                                                     <button
                                                         onClick={() => {
@@ -556,7 +591,7 @@ const DriverPortal = () => {
                                                         className="yes-no-button"
                                                         style={{ background: !fuelFilled ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
                                                     >
-                                                        No
+                                                        {t('no')}
                                                     </button>
                                                 </div>
 
@@ -565,7 +600,7 @@ const DriverPortal = () => {
                                                         {fuelEntries.map((entry, index) => (
                                                             <div key={index} className="entry-card">
                                                                 <div className="entry-card-header">
-                                                                    <p className="entry-card-title">REFILL NO. {index + 1}</p>
+                                                                    <p className="entry-card-title">{t('refillNo')} {index + 1}</p>
                                                                     {index > 0 && (
                                                                         <button
                                                                             onClick={() => setFuelEntries(fuelEntries.filter((_, i) => i !== index))}
@@ -578,7 +613,7 @@ const DriverPortal = () => {
 
                                                                 <div className="input-grid-2">
                                                                     <div className="input-wrapper-full">
-                                                                        <label className="input-label">Amount (₹)</label>
+                                                                        <label className="input-label">{t('amount')}</label>
                                                                         <input
                                                                             type="number"
                                                                             className="input-field"
@@ -594,7 +629,7 @@ const DriverPortal = () => {
                                                                     </div>
 
                                                                     <div className="input-wrapper-full">
-                                                                        <label className="input-label">Meter KM</label>
+                                                                        <label className="input-label">{t('meterKm')}</label>
                                                                         <input
                                                                             type="number"
                                                                             className="input-field"
@@ -623,7 +658,7 @@ const DriverPortal = () => {
                                                                     ) : (
                                                                         <>
                                                                             <Camera size={20} color="var(--primary)" />
-                                                                            <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>Capture Slip</span>
+                                                                            <span style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', color: 'var(--text-muted)', fontWeight: '700' }}>{t('captureSlip')}</span>
                                                                         </>
                                                                     )}
                                                                 </div>
@@ -634,7 +669,7 @@ const DriverPortal = () => {
                                                             onClick={() => setFuelEntries([...fuelEntries, { amount: '', km: '', slip: null, preview: null }])}
                                                             className="add-another-button"
                                                         >
-                                                            <Plus size={16} /> Add Another Bill
+                                                            <Plus size={16} /> {t('addAnotherBill')}
                                                         </button>
                                                     </div>
                                                 )}
@@ -642,14 +677,14 @@ const DriverPortal = () => {
 
                                             {/* Parking Question */}
                                             <div style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
-                                                <p className="input-label" style={{ marginBottom: '10px' }}>2. Did you pay for parking?</p>
+                                                <p className="input-label" style={{ marginBottom: '10px' }}>{t('parkingQuestion')}</p>
                                                 <div className="yes-no-button-group">
                                                     <button
                                                         onClick={() => setParkingPaid(true)}
                                                         className="yes-no-button"
                                                         style={{ background: parkingPaid ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
                                                     >
-                                                        Yes
+                                                        {t('yes')}
                                                     </button>
                                                     <button
                                                         onClick={() => {
@@ -659,7 +694,7 @@ const DriverPortal = () => {
                                                         className="yes-no-button"
                                                         style={{ background: !parkingPaid ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
                                                     >
-                                                        No
+                                                        {t('no')}
                                                     </button>
                                                 </div>
 
@@ -669,7 +704,7 @@ const DriverPortal = () => {
                                                             <div key={index} className="entry-card">
                                                                 <div className="modal-grid-2" style={{ alignItems: 'end' }}>
                                                                     <div className="input-wrapper-full">
-                                                                        <label className="input-label">AMOUNT (₹)</label>
+                                                                        <label className="input-label">{t('amount')}</label>
                                                                         <input
                                                                             type="number"
                                                                             className="input-field"
@@ -696,7 +731,7 @@ const DriverPortal = () => {
                                                                         ) : (
                                                                             <>
                                                                                 <Camera size={18} color="var(--primary)" />
-                                                                                <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700' }}>Receipt</span>
+                                                                                <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '700' }}>{t('receipt')}</span>
                                                                             </>
                                                                         )}
                                                                     </div>
@@ -717,7 +752,7 @@ const DriverPortal = () => {
                                                             onClick={() => setParkingEntries([...parkingEntries, { amount: '', slip: null, preview: null }])}
                                                             className="add-another-button"
                                                         >
-                                                            <Plus size={16} /> Add Another Parking
+                                                            <Plus size={16} /> {t('addAnotherParking')}
                                                         </button>
                                                     </div>
                                                 )}
@@ -725,21 +760,21 @@ const DriverPortal = () => {
 
                                             {/* Outside Trip Question */}
                                             <div style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
-                                                <p className="input-label" style={{ marginBottom: '10px' }}>3. Did you go outside city?</p>
+                                                <p className="input-label" style={{ marginBottom: '10px' }}>{t('outsideCityQuestion')}</p>
                                                 <div className="yes-no-button-group">
                                                     <button
                                                         onClick={() => setOutsideTripOccurred(true)}
                                                         className="yes-no-button"
                                                         style={{ background: outsideTripOccurred ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
                                                     >
-                                                        Yes
+                                                        {t('yes')}
                                                     </button>
                                                     <button
                                                         onClick={() => setOutsideTripOccurred(false)}
                                                         className="yes-no-button"
                                                         style={{ background: !outsideTripOccurred ? 'var(--primary)' : 'rgba(255,255,255,0.1)', color: 'white' }}
                                                     >
-                                                        No
+                                                        {t('no')}
                                                     </button>
                                                 </div>
 
@@ -755,7 +790,7 @@ const DriverPortal = () => {
                                                                     else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Same Day'));
                                                                 }}
                                                             />
-                                                            <label className="checkbox-label">SAME DAY (+100)</label>
+                                                            <label className="checkbox-label">{t('sameDay')}</label>
                                                         </div>
 
                                                         <div className="checkbox-item">
@@ -768,7 +803,7 @@ const DriverPortal = () => {
                                                                     else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Night Stay'));
                                                                 }}
                                                             />
-                                                            <label className="checkbox-label">NIGHT STAY (+500)</label>
+                                                            <label className="checkbox-label">{t('nightStay')}</label>
                                                         </div>
                                                     </div>
                                                 )}
@@ -779,11 +814,11 @@ const DriverPortal = () => {
                                     {/* Maintenance Issues (Punch-Out only) */}
                                     {showPunchOut && (
                                         <div style={{ marginBottom: 'clamp(20px, 5vw, 28px)' }}>
-                                            <h3 className="section-title">MAINTENANCE ISSUES (OPTIONAL)</h3>
+                                            <h3 className="section-title">{t('maintenanceIssues')}</h3>
 
                                             <div className="quick-issues-grid">
-                                                {QUICK_ISSUES.map((issue) => {
-                                                    const isActive = otherRemarks.split(',').map(s => s.trim()).includes(issue.label);
+                                                {QUICK_ISSUES(t).map((issue) => {
+                                                    const isActive = otherRemarks.split(',').map(s => s.trim()).includes(issue.value);
                                                     const Icon = issue.icon;
                                                     return (
                                                         <div
@@ -791,10 +826,10 @@ const DriverPortal = () => {
                                                             onClick={() => {
                                                                 setOtherRemarks(prev => {
                                                                     const currentIssues = prev ? prev.split(',').map(s => s.trim()).filter(Boolean) : [];
-                                                                    if (currentIssues.includes(issue.label)) {
-                                                                        return currentIssues.filter(item => item !== issue.label).join(', ');
+                                                                    if (currentIssues.includes(issue.value)) {
+                                                                        return currentIssues.filter(item => item !== issue.value).join(', ');
                                                                     } else {
-                                                                        return [...currentIssues, issue.label].join(', ');
+                                                                        return [...currentIssues, issue.value].join(', ');
                                                                     }
                                                                 });
                                                             }}
@@ -813,10 +848,10 @@ const DriverPortal = () => {
 
                                             {/* Route Details (Moved here) */}
                                             <div className="input-wrapper-full" style={{ marginTop: '16px' }}>
-                                                <label className="input-label">ROUTE DETAILS (e.g. Local/Outstation)</label>
+                                                <label className="input-label">{t('remarksAdmin')}</label>
                                                 <textarea
                                                     className="input-field"
-                                                    placeholder="Enter route details..."
+                                                    placeholder={t('enterRemarks')}
                                                     value={remarks}
                                                     onChange={(e) => setRemarks(e.target.value)}
                                                     style={{ marginBottom: '15px', resize: 'vertical', minHeight: '60px' }}
@@ -824,10 +859,10 @@ const DriverPortal = () => {
                                             </div>
 
                                             <div className="input-wrapper-full" style={{ marginTop: '4px' }}>
-                                                <label className="input-label">OTHER REMARKS / MAINTENANCE</label>
+                                                <label className="input-label">{t('otherRemarks')}</label>
                                                 <textarea
                                                     className="input-field"
-                                                    placeholder="Describe any other issues..."
+                                                    placeholder={t('explainOptional')}
                                                     value={otherRemarks}
                                                     onChange={(e) => setOtherRemarks(e.target.value)}
                                                     style={{ fontSize: '14px', resize: 'vertical', minHeight: '60px' }}
@@ -854,7 +889,7 @@ const DriverPortal = () => {
                                         className="btn-primary"
                                         style={{ width: '100%', padding: '16px', fontSize: 'clamp(14px, 3.5vw, 16px)', fontWeight: '800' }}
                                     >
-                                        {isSubmitting ? 'PROCESSING...' : (showPunchOut ? 'SUBMIT DAILY REPORT' : 'START MY DUTY')}
+                                        {isSubmitting ? t('processing').toUpperCase() : (showPunchOut ? t('submitPunchOut').toUpperCase() : t('submitPunchIn').toUpperCase())}
                                     </button>
                                 </div>
                             )}

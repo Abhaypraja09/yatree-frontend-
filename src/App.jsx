@@ -98,41 +98,45 @@ const Placeholder = ({ title }) => (
   </div>
 );
 
+import { LanguageProvider } from './context/LanguageContext';
+
 function App() {
   return (
     <Router>
-      <AuthProvider>
-        <Routes>
-          <Route path="/login" element={<Login />} />
+      <LanguageProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<Login />} />
 
-          <Route path="/admin/*" element={
-            <ProtectedRoute role="Admin">
-              <CompanyProvider>
-                <AdminLayout>
-                  <Routes>
-                    <Route index element={<AdminDashboard />} />
-                    <Route path="drivers" element={<Drivers />} />
-                    <Route path="freelancers" element={<Freelancers />} />
-                    <Route path="vehicles" element={<Vehicles />} />
-                    <Route path="outside-cars" element={<OutsideCars />} />
-                    <Route path="fastag" element={<Fastag />} />
-                    <Route path="border-tax" element={<BorderTax />} />
-                    <Route path="reports" element={<Reports />} />
-                  </Routes>
-                </AdminLayout>
-              </CompanyProvider>
-            </ProtectedRoute>
-          } />
+            <Route path="/admin/*" element={
+              <ProtectedRoute role="Admin">
+                <CompanyProvider>
+                  <AdminLayout>
+                    <Routes>
+                      <Route index element={<AdminDashboard />} />
+                      <Route path="drivers" element={<Drivers />} />
+                      <Route path="freelancers" element={<Freelancers />} />
+                      <Route path="vehicles" element={<Vehicles />} />
+                      <Route path="outside-cars" element={<OutsideCars />} />
+                      <Route path="fastag" element={<Fastag />} />
+                      <Route path="border-tax" element={<BorderTax />} />
+                      <Route path="reports" element={<Reports />} />
+                    </Routes>
+                  </AdminLayout>
+                </CompanyProvider>
+              </ProtectedRoute>
+            } />
 
-          <Route path="/driver/*" element={
-            <ProtectedRoute role="Driver">
-              <DriverPortal />
-            </ProtectedRoute>
-          } />
+            <Route path="/driver/*" element={
+              <ProtectedRoute role="Driver">
+                <DriverPortal />
+              </ProtectedRoute>
+            } />
 
-          <Route path="/" element={<Navigate to="/login" />} />
-        </Routes>
-      </AuthProvider>
+            <Route path="/" element={<Navigate to="/login" />} />
+          </Routes>
+        </AuthProvider>
+      </LanguageProvider>
     </Router>
   );
 }
