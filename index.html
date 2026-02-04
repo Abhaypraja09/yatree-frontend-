@@ -16,8 +16,20 @@
 </head>
 
 <body>
-  <!-- Version: React 18 Fix - Cache Bust 2026-02-04-V2 -->
-  <script>window.SITE_VERSION = "1.0.2-FIX"; console.log("Site Version:", window.SITE_VERSION);</script>
+  <script>
+    window.SITE_VERSION = "1.0.3-SUPER-FIX";
+    console.log("Forcing Service Worker Cleanup...");
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (registrations) {
+        for (let registration of registrations) {
+          registration.unregister().then(() => {
+            console.log("Old SW Nuked! Reloading...");
+            window.location.reload(true);
+          });
+        }
+      });
+    }
+  </script>
   <div id="root"></div>
   <script type="module" src="/src/main.jsx"></script>
   <script>
