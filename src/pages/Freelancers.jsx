@@ -24,7 +24,7 @@ const Freelancers = () => {
     const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: 500 });
     const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: 500 });
     const [punchInData, setPunchInData] = useState({ vehicleId: '', km: '', time: new Date().toISOString().slice(0, 16) });
-    const [punchOutData, setPunchOutData] = useState({ km: '', time: new Date().toISOString().slice(0, 16), fuelAmount: '0', parkingAmount: '0', review: '' });
+    const [punchOutData, setPunchOutData] = useState({ km: '', time: new Date().toISOString().slice(0, 16), fuelAmount: '0', parkingAmount: '0', review: '', dailyWage: 500 });
 
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -105,7 +105,7 @@ const Freelancers = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setShowPunchOutModal(false);
-            setPunchOutData({ km: '', time: new Date().toISOString().slice(0, 16), fuelAmount: '0', parkingAmount: '0', review: '' });
+            setPunchOutData({ km: '', time: new Date().toISOString().slice(0, 16), fuelAmount: '0', parkingAmount: '0', review: '', dailyWage: 500 });
             fetchFreelancers();
             fetchVehicles();
         } catch (err) { alert(err.response?.data?.message || 'Error'); }
@@ -427,6 +427,36 @@ const Freelancers = () => {
                             <div className="modal-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 <Field label="Fuel Spent (₹)" type="number" value={punchOutData.fuelAmount} onChange={v => setPunchOutData({ ...punchOutData, fuelAmount: v })} />
                                 <Field label="Parking/Toll (₹)" type="number" value={punchOutData.parkingAmount} onChange={v => setPunchOutData({ ...punchOutData, parkingAmount: v })} />
+                            </div>
+                            <div>
+                                <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Duty Salary (Wage) *</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                                    {[300, 400, 500].map(val => (
+                                        <button
+                                            key={val}
+                                            type="button"
+                                            onClick={() => setPunchOutData({ ...punchOutData, dailyWage: val })}
+                                            style={{
+                                                padding: '10px',
+                                                borderRadius: '10px',
+                                                border: '1px solid ' + (punchOutData.dailyWage === val ? 'var(--primary)' : 'rgba(255,255,255,0.1)'),
+                                                background: punchOutData.dailyWage === val ? 'rgba(14, 165, 233, 0.1)' : 'transparent',
+                                                color: 'white',
+                                                fontWeight: '800'
+                                            }}
+                                        >
+                                            ₹{val}
+                                        </button>
+                                    ))}
+                                    <input
+                                        type="number"
+                                        placeholder="Other"
+                                        className="input-field"
+                                        style={{ marginBottom: 0, padding: '10px', height: 'auto', textAlign: 'center' }}
+                                        value={![300, 400, 500].includes(punchOutData.dailyWage) ? punchOutData.dailyWage : ''}
+                                        onChange={(e) => setPunchOutData({ ...punchOutData, dailyWage: Number(e.target.value) })}
+                                    />
+                                </div>
                             </div>
                             <div>
                                 <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Admin Remarks / Performance Review</label>
