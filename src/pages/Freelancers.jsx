@@ -14,12 +14,15 @@ const Freelancers = () => {
 
     // Modals State
     const [showAddModal, setShowAddModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
     const [showPunchInModal, setShowPunchInModal] = useState(false);
     const [showPunchOutModal, setShowPunchOutModal] = useState(false);
     const [selectedDriver, setSelectedDriver] = useState(null);
+    const [editingDriver, setEditingDriver] = useState(null);
 
     // Form States
-    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '' });
+    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: 500 });
+    const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: 500 });
     const [punchInData, setPunchInData] = useState({ vehicleId: '', km: '', time: new Date().toISOString().slice(0, 16) });
     const [punchOutData, setPunchOutData] = useState({ km: '', time: new Date().toISOString().slice(0, 16), fuelAmount: '0', parkingAmount: '0', review: '' });
 
@@ -68,7 +71,7 @@ const Freelancers = () => {
             setMessage({ type: 'success', text: 'Freelancer added successfully!' });
             setTimeout(() => {
                 setShowAddModal(false);
-                setFormData({ name: '', mobile: '', licenseNumber: '' });
+                setFormData({ name: '', mobile: '', licenseNumber: '', dailyWage: 500 });
                 setMessage({ type: '', text: '' });
                 fetchFreelancers();
             }, 1000);
@@ -107,6 +110,37 @@ const Freelancers = () => {
             fetchVehicles();
         } catch (err) { alert(err.response?.data?.message || 'Error'); }
         finally { setSubmitting(false); }
+    };
+
+    const handleUpdate = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.put(`/api/admin/drivers/${editingDriver._id}`, editForm, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setMessage({ type: 'success', text: 'Freelancer updated successfully!' });
+            setTimeout(() => {
+                setShowEditModal(false);
+                setEditingDriver(null);
+                setMessage({ type: '', text: '' });
+                fetchFreelancers();
+            }, 1000);
+        } catch (err) {
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Update failed' });
+        } finally { setSubmitting(false); }
+    };
+
+    const openEditModal = (driver) => {
+        setEditingDriver(driver);
+        setEditForm({
+            name: driver.name,
+            mobile: driver.mobile,
+            licenseNumber: driver.licenseNumber || '',
+            dailyWage: driver.dailyWage || 500
+        });
+        setShowEditModal(true);
     };
 
     const handleDelete = async (id) => {
@@ -172,6 +206,7 @@ const Freelancers = () => {
                                     <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Driver</th>
                                     <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Contact</th>
                                     <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Assigned Vehicle</th>
+                                    <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Daily Wage</th>
                                     <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Start Odo</th>
                                     <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
                                 </tr>
@@ -183,6 +218,9 @@ const Freelancers = () => {
                                         <td style={{ padding: '18px 25px', fontSize: '14px' }}>{d.mobile}</td>
                                         <td style={{ padding: '18px 25px' }}>
                                             <div style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '14px' }}>{d.assignedVehicle?.carNumber}</div>
+                                        </td>
+                                        <td style={{ padding: '18px 25px' }}>
+                                            <div style={{ color: '#10b981', fontWeight: '800', fontSize: '14px' }}>₹{d.dailyWage || 500}</div>
                                         </td>
                                         <td style={{ padding: '18px 25px', fontSize: '14px', color: 'var(--text-muted)' }}>{d.activeAttendance?.punchIn?.km || '-'} KM</td>
                                         <td style={{ padding: '18px 25px', textAlign: 'right' }}>
@@ -214,6 +252,7 @@ const Freelancers = () => {
                             <tr style={{ background: 'rgba(255,255,255,0.02)', textAlign: 'left' }}>
                                 <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Name</th>
                                 <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Mobile</th>
+                                <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Rate (₹)</th>
                                 <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>License</th>
                                 <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
                             </tr>
@@ -237,6 +276,9 @@ const Freelancers = () => {
                                 <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                     <td style={{ padding: '18px 25px', fontWeight: '700', fontSize: '15px' }}>{d.name}</td>
                                     <td style={{ padding: '18px 25px', fontSize: '14px' }}>{d.mobile}</td>
+                                    <td style={{ padding: '18px 25px' }}>
+                                        <div style={{ color: '#10b981', fontWeight: '800', fontSize: '14px' }}>₹{d.dailyWage || 500}</div>
+                                    </td>
                                     <td style={{ padding: '18px 25px', fontSize: '13px', color: 'var(--text-muted)' }}>{d.licenseNumber || 'Not Provided'}</td>
                                     <td style={{ padding: '18px 25px', textAlign: 'right' }}>
                                         <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
@@ -246,6 +288,13 @@ const Freelancers = () => {
                                                 style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.1)', padding: '8px 16px', fontSize: '12px', fontWeight: '800', textTransform: 'uppercase' }}
                                             >
                                                 Assign Duty
+                                            </button>
+                                            <button
+                                                onClick={() => openEditModal(d)}
+                                                className="btn-primary"
+                                                style={{ background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', border: '1px solid rgba(14, 165, 233, 0.1)', padding: '8px 12px', fontSize: '12px', fontWeight: '800' }}
+                                            >
+                                                Edit
                                             </button>
                                             <button onClick={() => handleDelete(d._id)} style={{ color: '#f43f5e', background: 'rgba(244, 63, 94, 0.05)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.1)' }}>
                                                 <Trash2 size={16} />
@@ -270,7 +319,81 @@ const Freelancers = () => {
                                 <Field label="Mobile Number *" value={formData.mobile} onChange={v => setFormData({ ...formData, mobile: v })} required />
                                 <Field label="License Number" value={formData.licenseNumber} onChange={v => setFormData({ ...formData, licenseNumber: v })} />
                             </div>
+                            <div>
+                                <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Daily Salary (Wage) *</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                                    {[300, 400, 500].map(val => (
+                                        <button
+                                            key={val}
+                                            type="button"
+                                            onClick={() => setFormData({ ...formData, dailyWage: val })}
+                                            style={{
+                                                padding: '10px',
+                                                borderRadius: '10px',
+                                                border: '1px solid ' + (formData.dailyWage === val ? 'var(--primary)' : 'rgba(255,255,255,0.1)'),
+                                                background: formData.dailyWage === val ? 'rgba(14, 165, 233, 0.1)' : 'transparent',
+                                                color: 'white',
+                                                fontWeight: '800'
+                                            }}
+                                        >
+                                            ₹{val}
+                                        </button>
+                                    ))}
+                                    <input
+                                        type="number"
+                                        placeholder="Other"
+                                        className="input-field"
+                                        style={{ marginBottom: 0, padding: '10px', height: 'auto', textAlign: 'center' }}
+                                        value={![300, 400, 500].includes(formData.dailyWage) ? formData.dailyWage : ''}
+                                        onChange={(e) => setFormData({ ...formData, dailyWage: Number(e.target.value) })}
+                                    />
+                                </div>
+                            </div>
                             <SubmitButton disabled={submitting} text="Register Freelancer" message={message} />
+                        </form>
+                    </Modal>
+                )}
+
+                {/* Edit Freelancer Modal */}
+                {showEditModal && (
+                    <Modal title={`Edit Freelancer: ${editingDriver?.name}`} onClose={() => setShowEditModal(false)}>
+                        <form onSubmit={handleUpdate} style={{ display: 'grid', gap: '20px' }}>
+                            <Field label="Full Name *" value={editForm.name} onChange={v => setEditForm({ ...editForm, name: v })} required />
+                            <div className="modal-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <Field label="Mobile Number *" value={editForm.mobile} onChange={v => setEditForm({ ...editForm, mobile: v })} required />
+                                <Field label="License Number" value={editForm.licenseNumber} onChange={v => setEditForm({ ...editForm, licenseNumber: v })} />
+                            </div>
+                            <div>
+                                <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Daily Salary (Wage) *</label>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                                    {[300, 400, 500].map(val => (
+                                        <button
+                                            key={val}
+                                            type="button"
+                                            onClick={() => setEditForm({ ...editForm, dailyWage: val })}
+                                            style={{
+                                                padding: '10px',
+                                                borderRadius: '10px',
+                                                border: '1px solid ' + (editForm.dailyWage === val ? 'var(--primary)' : 'rgba(255,255,255,0.1)'),
+                                                background: editForm.dailyWage === val ? 'rgba(14, 165, 233, 0.1)' : 'transparent',
+                                                color: 'white',
+                                                fontWeight: '800'
+                                            }}
+                                        >
+                                            ₹{val}
+                                        </button>
+                                    ))}
+                                    <input
+                                        type="number"
+                                        placeholder="Other"
+                                        className="input-field"
+                                        style={{ marginBottom: 0, padding: '10px', height: 'auto', textAlign: 'center' }}
+                                        value={![300, 400, 500].includes(editForm.dailyWage) ? editForm.dailyWage : ''}
+                                        onChange={(e) => setEditForm({ ...editForm, dailyWage: Number(e.target.value) })}
+                                    />
+                                </div>
+                            </div>
+                            <SubmitButton disabled={submitting} text="Update Freelancer" message={message} />
                         </form>
                     </Modal>
                 )}
