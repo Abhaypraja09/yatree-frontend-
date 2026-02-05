@@ -319,36 +319,6 @@ const Freelancers = () => {
                                 <Field label="Mobile Number *" value={formData.mobile} onChange={v => setFormData({ ...formData, mobile: v })} required />
                                 <Field label="License Number" value={formData.licenseNumber} onChange={v => setFormData({ ...formData, licenseNumber: v })} />
                             </div>
-                            <div>
-                                <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Daily Salary (Wage) *</label>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                                    {[300, 400, 500].map(val => (
-                                        <button
-                                            key={val}
-                                            type="button"
-                                            onClick={() => setFormData({ ...formData, dailyWage: val })}
-                                            style={{
-                                                padding: '10px',
-                                                borderRadius: '10px',
-                                                border: '1px solid ' + (formData.dailyWage === val ? 'var(--primary)' : 'rgba(255,255,255,0.1)'),
-                                                background: formData.dailyWage === val ? 'rgba(14, 165, 233, 0.1)' : 'transparent',
-                                                color: 'white',
-                                                fontWeight: '800'
-                                            }}
-                                        >
-                                            ₹{val}
-                                        </button>
-                                    ))}
-                                    <input
-                                        type="number"
-                                        placeholder="Other"
-                                        className="input-field"
-                                        style={{ marginBottom: 0, padding: '10px', height: 'auto', textAlign: 'center' }}
-                                        value={![300, 400, 500].includes(formData.dailyWage) ? formData.dailyWage : ''}
-                                        onChange={(e) => setFormData({ ...formData, dailyWage: Number(e.target.value) })}
-                                    />
-                                </div>
-                            </div>
                             <SubmitButton disabled={submitting} text="Register Freelancer" message={message} />
                         </form>
                     </Modal>
@@ -362,36 +332,6 @@ const Freelancers = () => {
                             <div className="modal-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                 <Field label="Mobile Number *" value={editForm.mobile} onChange={v => setEditForm({ ...editForm, mobile: v })} required />
                                 <Field label="License Number" value={editForm.licenseNumber} onChange={v => setEditForm({ ...editForm, licenseNumber: v })} />
-                            </div>
-                            <div>
-                                <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Daily Salary (Wage) *</label>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                                    {[300, 400, 500].map(val => (
-                                        <button
-                                            key={val}
-                                            type="button"
-                                            onClick={() => setEditForm({ ...editForm, dailyWage: val })}
-                                            style={{
-                                                padding: '10px',
-                                                borderRadius: '10px',
-                                                border: '1px solid ' + (editForm.dailyWage === val ? 'var(--primary)' : 'rgba(255,255,255,0.1)'),
-                                                background: editForm.dailyWage === val ? 'rgba(14, 165, 233, 0.1)' : 'transparent',
-                                                color: 'white',
-                                                fontWeight: '800'
-                                            }}
-                                        >
-                                            ₹{val}
-                                        </button>
-                                    ))}
-                                    <input
-                                        type="number"
-                                        placeholder="Other"
-                                        className="input-field"
-                                        style={{ marginBottom: 0, padding: '10px', height: 'auto', textAlign: 'center' }}
-                                        value={![300, 400, 500].includes(editForm.dailyWage) ? editForm.dailyWage : ''}
-                                        onChange={(e) => setEditForm({ ...editForm, dailyWage: Number(e.target.value) })}
-                                    />
-                                </div>
                             </div>
                             <SubmitButton disabled={submitting} text="Update Freelancer" message={message} />
                         </form>
