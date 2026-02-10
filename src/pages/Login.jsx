@@ -22,6 +22,8 @@ const Login = () => {
             const user = await login(mobile, password);
             if (user.role === 'Admin') {
                 navigate('/admin');
+            } else if (user.role === 'Executive') {
+                navigate('/admin/freelancers');
             } else {
                 navigate('/driver');
             }
@@ -61,15 +63,12 @@ const Login = () => {
                     alignItems: 'center',
                     marginBottom: '30px'
                 }}>
-                    <div style={{
-                        background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
-                        padding: '15px',
-                        borderRadius: '20px',
-                        marginBottom: '15px'
-                    }}>
-                        <Car size={32} color="white" />
-                    </div>
-                    <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'white' }}>Fleet CRM</h1>
+                    <img
+                        src="/logos/logo.png"
+                        alt="Yatree Destination"
+                        style={{ width: '120px', height: 'auto', marginBottom: '20px' }}
+                    />
+                    <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'white' }}>Yatree Destination</h1>
                     <p style={{ color: 'var(--text-muted)', marginTop: '5px' }}>Management Portal</p>
                 </div>
 

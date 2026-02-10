@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import {
     Users,
@@ -7,33 +8,88 @@ import {
     TrendingUp,
     CreditCard,
     X,
-    ShieldAlert
+    ShieldAlert,
+    ChevronLeft,
+    ChevronRight,
+    Calendar,
+    UserCheck,
+    Wallet,
+    Fuel,
+    Wrench
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
+import { useLanguage } from '../context/LanguageContext';
+import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
 
-const StatCard = ({ icon: Icon, label, value, color, loading }) => (
-    <div className={`stat-card glass-card ${loading ? 'stale-card' : ''}`}>
-        <div className="stat-card-header">
-            <div className="stat-card-icon" style={{ background: `${color}15`, color: color }}>
-                <Icon size={16} />
+const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick }) => (
+    <motion.div
+        whileHover={{ y: -5, scale: 1.01 }}
+        onClick={onClick}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={`stat-card glass-card ${loading ? 'stale-card' : ''}`}
+        style={{
+            background: `linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%)`,
+            border: '1px solid rgba(255,255,255,0.06)',
+            position: 'relative',
+            overflow: 'hidden',
+            padding: 'clamp(15px, 2.5vw, 24px)',
+            cursor: 'pointer'
+        }}
+    >
+        <div style={{
+            position: 'absolute',
+            top: '-20%',
+            left: '-10%',
+            width: '120px',
+            height: '120px',
+            background: color,
+            filter: 'blur(60px)',
+            opacity: 0.07,
+            pointerEvents: 'none'
+        }} />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <div style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '12px',
+                background: `${color}15`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: `1px solid ${color}30`,
+                color: color,
+                boxShadow: `0 8px 16px -4px ${color}20`
+            }}>
+                <Icon size={20} />
             </div>
-            <p className="stat-card-label">{label}</p>
+            <div>
+                <p style={{
+                    fontSize: '11px',
+                    fontWeight: '800',
+                    color: 'rgba(255,255,255,0.4)',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1.5px',
+                    marginBottom: '4px'
+                }}>{label}</p>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                    <h3 style={{ fontSize: '26px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>
+                        {loading ? '...' : value || 0}
+                    </h3>
+                    {trend && (
+                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px' }}>
+                            <TrendingUp size={10} /> LIVE
+                        </span>
+                    )}
+                </div>
+            </div>
         </div>
-        <div className="stat-card-body">
-            <h3 className="stat-card-value">
-                {loading ? (
-                    <span className="loading-dots">...</span>
-                ) : (
-                    value || 0
-                )}
-            </h3>
-        </div>
-    </div>
+    </motion.div>
 );
 
-const AttendanceModal = ({ item, onClose }) => {
+const AttendanceModal = ({ item, onClose, onApproveReject }) => {
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         return () => {
@@ -61,15 +117,15 @@ const AttendanceModal = ({ item, onClose }) => {
                 <div className="modal-grid-2">
                     {/* Punch In */}
                     <div>
-                        <h3 className="modal-section-title" style={{ color: '#10b981' }}>
-                            Punch In
+                        <h3 className="modal-section-title" style={{ color: '#10b981', borderLeft: '4px solid #10b981', paddingLeft: '12px' }}>
+                            Duty Started
                         </h3>
                         <div className="photo-grid">
                             <div>
                                 <p className="photo-label">SELFIE</p>
                                 <img
                                     src={item.punchIn?.selfie}
-                                    alt="Punch In Selfie"
+                                    alt="Start Duty Selfie"
                                     className="photo-thumbnail"
                                     loading="lazy"
                                 />
@@ -97,8 +153,8 @@ const AttendanceModal = ({ item, onClose }) => {
 
                     {/* Punch Out */}
                     <div>
-                        <h3 className="modal-section-title" style={{ color: '#f43f5e' }}>
-                            Punch Out
+                        <h3 className="modal-section-title" style={{ color: '#f43f5e', borderLeft: '4px solid #f43f5e', paddingLeft: '12px' }}>
+                            Duty Ended
                         </h3>
                         {item.punchOut?.time ? (
                             <div className="photo-grid">
@@ -106,7 +162,7 @@ const AttendanceModal = ({ item, onClose }) => {
                                     <p className="photo-label">SELFIE</p>
                                     <img
                                         src={item.punchOut?.selfie}
-                                        alt="Punch Out Selfie"
+                                        alt="Duty Ended Selfie"
                                         className="photo-thumbnail"
                                         loading="lazy"
                                     />
@@ -152,208 +208,7 @@ const AttendanceModal = ({ item, onClose }) => {
                     </div>
                 </div>
 
-                {/* Expenditure Section - Improved Grid */}
-                <div style={{
-                    marginTop: 'clamp(20px, 4vw, 25px)',
-                    display: 'grid',
-                    gap: 'clamp(12px, 2.5vw, 20px)'
-                }} className="modal-grid-2">
-                    {/* Fuel Card */}
-                    <div className="glass-card" style={{ padding: 'clamp(12px, 2.5vw, 15px)', border: '1px solid rgba(255,255,255,0.03)' }}>
-                        <p style={{
-                            fontSize: 'clamp(9px, 2.2vw, 10px)',
-                            color: 'var(--text-muted)',
-                            marginBottom: '12px',
-                            fontWeight: '800',
-                            letterSpacing: '0.5px'
-                        }}>
-                            FUEL REFILL
-                        </p>
-                        {item.fuel?.filled ? (
-                            <div style={{ display: 'grid', gap: '10px' }}>
-                                {(item.fuel.entries && item.fuel.entries.length > 0) ? (
-                                    item.fuel.entries.map((entry, idx) => (
-                                        <div
-                                            key={idx}
-                                            style={{
-                                                display: 'flex',
-                                                gap: '10px',
-                                                alignItems: 'center',
-                                                background: 'rgba(255,255,255,0.03)',
-                                                padding: '8px',
-                                                borderRadius: '8px'
-                                            }}
-                                        >
-                                            <img
-                                                src={entry.slipPhoto}
-                                                onClick={() => window.open(entry.slipPhoto)}
-                                                alt="Fuel slip"
-                                                style={{
-                                                    width: '35px',
-                                                    height: '35px',
-                                                    borderRadius: '6px',
-                                                    objectFit: 'cover',
-                                                    cursor: 'pointer'
-                                                }}
-                                            />
-                                            <div style={{ flex: 1 }}>
-                                                <div style={{
-                                                    display: 'flex',
-                                                    justifyContent: 'space-between',
-                                                    fontSize: 'clamp(11px, 2.8vw, 12px)'
-                                                }}>
-                                                    <span style={{ color: 'white', fontWeight: '800' }}>
-                                                        ₹{entry.amount}
-                                                    </span>
-                                                    <span style={{ color: 'var(--primary)', fontWeight: '700' }}>
-                                                        {entry.km} KM
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    ))
-                                ) : (
-                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                        {item.fuel.slipPhoto && (
-                                            <img
-                                                src={item.fuel.slipPhoto}
-                                                onClick={() => window.open(item.fuel.slipPhoto)}
-                                                alt="Fuel slip"
-                                                style={{
-                                                    width: '40px',
-                                                    height: '40px',
-                                                    borderRadius: '6px',
-                                                    objectFit: 'cover',
-                                                    cursor: 'pointer'
-                                                }}
-                                            />
-                                        )}
-                                        <div>
-                                            <p style={{
-                                                color: 'white',
-                                                fontWeight: '800',
-                                                fontSize: 'clamp(13px, 3.2vw, 15px)',
-                                                margin: 0
-                                            }}>
-                                                ₹{item.fuel.amount}
-                                            </p>
-                                            <p style={{
-                                                color: 'var(--primary)',
-                                                fontWeight: '700',
-                                                fontSize: 'clamp(10px, 2.5vw, 11px)',
-                                                margin: 0
-                                            }}>
-                                                {item.fuel.km || '--'} KM
-                                            </p>
-                                        </div>
-                                    </div>
-                                )}
-                                {item.fuel.entries?.length > 1 && (
-                                    <p style={{
-                                        margin: 0,
-                                        fontSize: 'clamp(10px, 2.5vw, 11px)',
-                                        color: '#10b981',
-                                        fontWeight: '800',
-                                        textAlign: 'right'
-                                    }}>
-                                        Total: ₹{item.fuel.amount}
-                                    </p>
-                                )}
-                            </div>
-                        ) : (
-                            <p style={{ color: 'var(--text-muted)', fontSize: 'clamp(12px, 2.8vw, 13px)', margin: 0 }}>
-                                -
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Parking & Toll Card */}
-                    <div className="glass-card" style={{ padding: 'clamp(12px, 2.5vw, 15px)', border: '1px solid rgba(255,255,255,0.03)' }}>
-                        <p style={{
-                            fontSize: 'clamp(9px, 2.2vw, 10px)',
-                            color: 'var(--text-muted)',
-                            marginBottom: '12px',
-                            fontWeight: '800',
-                            letterSpacing: '0.5px'
-                        }}>
-                            PARKING & TOLL
-                        </p>
-                        {item.parking && item.parking.length > 0 ? (
-                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                {item.parking.map((p, idx) => (
-                                    <div
-                                        key={idx}
-                                        style={{
-                                            padding: '4px 10px',
-                                            borderRadius: '6px',
-                                            background: 'rgba(255,255,255,0.05)',
-                                            border: '1px solid rgba(255,255,255,0.05)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '4px'
-                                        }}
-                                    >
-                                        <span style={{
-                                            color: 'white',
-                                            fontWeight: '700',
-                                            fontSize: 'clamp(10px, 2.3vw, 11px)'
-                                        }}>
-                                            ₹{p.amount}
-                                        </span>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : (
-                            <p style={{ color: 'var(--text-muted)', fontSize: 'clamp(12px, 2.8vw, 13px)', margin: 0 }}>
-                                ₹ 0
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Allowances Card */}
-                    <div className="glass-card" style={{ padding: 'clamp(12px, 2.5vw, 15px)', border: '1px solid rgba(255,255,255,0.03)' }}>
-                        <p style={{
-                            fontSize: 'clamp(9px, 2.2vw, 10px)',
-                            color: 'var(--text-muted)',
-                            marginBottom: '12px',
-                            fontWeight: '800',
-                            letterSpacing: '0.5px'
-                        }}>
-                            ALLOWANCES
-                        </p>
-                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                            {item.punchOut?.allowanceTA > 0 && (
-                                <span style={{
-                                    padding: '4px 10px',
-                                    borderRadius: '6px',
-                                    background: 'rgba(16, 185, 129, 0.1)',
-                                    color: '#10b981',
-                                    fontSize: 'clamp(10px, 2.3vw, 11px)',
-                                    fontWeight: '700'
-                                }}>
-                                    TA: ₹{item.punchOut.allowanceTA}
-                                </span>
-                            )}
-                            {item.punchOut?.nightStayAmount > 0 && (
-                                <span style={{
-                                    padding: '4px 10px',
-                                    borderRadius: '6px',
-                                    background: 'rgba(16, 185, 129, 0.1)',
-                                    color: '#10b981',
-                                    fontSize: 'clamp(10px, 2.3vw, 11px)',
-                                    fontWeight: '700'
-                                }}>
-                                    Stay: ₹{item.punchOut.nightStayAmount}
-                                </span>
-                            )}
-                            {(!item.punchOut?.allowanceTA && !item.punchOut?.nightStayAmount) && (
-                                <p style={{ color: 'var(--text-muted)', fontSize: 'clamp(12px, 2.8vw, 13px)', margin: 0 }}>
-                                    -
-                                </p>
-                            )}
-                        </div>
-                    </div>
-                </div>
+                {/* Expenditure Section removed as per user request */}
 
                 {/* Remarks Section */}
                 {item.punchOut?.remarks && (
@@ -409,6 +264,99 @@ const AttendanceModal = ({ item, onClose }) => {
                     </div>
                 )}
 
+                {item.pendingExpenses && item.pendingExpenses.length > 0 && (
+                    <div style={{ marginTop: 'clamp(18px, 4vw, 25px)' }}>
+                        <h3 className="modal-section-title" style={{ color: '#f59e0b', borderLeft: '4px solid #f59e0b', paddingLeft: '12px' }}>
+                            Awaiting Slips
+                        </h3>
+                        <div style={{ display: 'grid', gap: '12px', marginTop: '12px' }}>
+                            {item.pendingExpenses.map((exp, idx) => (
+                                <div key={exp._id} className="glass-card" style={{
+                                    padding: '12px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    background: 'rgba(255,255,255,0.02)',
+                                    border: '1px solid rgba(255,255,255,0.05)'
+                                }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{
+                                            width: '45px',
+                                            height: '45px',
+                                            borderRadius: '8px',
+                                            overflow: 'hidden',
+                                            cursor: exp.slipPhoto ? 'pointer' : 'default',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center'
+                                        }} onClick={() => exp.slipPhoto && window.open(exp.slipPhoto, '_blank')}>
+                                            {exp.slipPhoto ? (
+                                                <img src={exp.slipPhoto} alt="Slip" style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
+                                            ) : (
+                                                <Camera size={20} style={{ opacity: 0.3 }} />
+                                            )}
+                                        </div>
+                                        <div>
+                                            <p style={{ color: 'white', fontSize: '14px', fontWeight: '700', margin: 0, textTransform: 'capitalize' }}>
+                                                {exp.type} - ₹{exp.amount}
+                                            </p>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: 0 }}>
+                                                {exp.type === 'fuel' ? `${exp.km} KM` : 'Parking Slip'}
+                                            </p>
+                                        </div>
+                                    </div>
+
+                                    {exp.status === 'pending' ? (
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                onClick={() => onApproveReject(item._id, exp._id, 'approved')}
+                                                style={{
+                                                    background: 'rgba(16, 185, 129, 0.15)',
+                                                    color: '#10b981',
+                                                    padding: '6px 12px',
+                                                    borderRadius: '8px',
+                                                    fontSize: '11px',
+                                                    fontWeight: '800',
+                                                    border: '1px solid rgba(16, 185, 129, 0.2)'
+                                                }}
+                                            >
+                                                APPROVE
+                                            </button>
+                                            <button
+                                                onClick={() => onApproveReject(item._id, exp._id, 'rejected')}
+                                                style={{
+                                                    background: 'rgba(244, 63, 94, 0.15)',
+                                                    color: '#f43f5e',
+                                                    padding: '6px 12px',
+                                                    borderRadius: '8px',
+                                                    fontSize: '11px',
+                                                    fontWeight: '800',
+                                                    border: '1px solid rgba(244, 63, 94, 0.2)'
+                                                }}
+                                            >
+                                                REJECT
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <span style={{
+                                            fontSize: '11px',
+                                            fontWeight: '800',
+                                            color: exp.status === 'approved' ? '#10b981' : '#f43f5e',
+                                            textTransform: 'uppercase',
+                                            padding: '4px 8px',
+                                            borderRadius: '6px',
+                                            background: exp.status === 'approved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)'
+                                        }}>
+                                            {exp.status}
+                                        </span>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
                 {/* Distance Summary */}
                 <div style={{
                     marginTop: 'clamp(18px, 4vw, 25px)',
@@ -445,14 +393,24 @@ const AttendanceModal = ({ item, onClose }) => {
 };
 
 const AdminDashboard = () => {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+    const { t } = useLanguage();
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState(null);
+    const dateInputRef = useRef(null);
 
-    const logoMap = {
-        'YatreeDestination': '/logos/YD.Logo.webp',
-        'GoGetGo': '/logos/gogetgo.webp'
+
+    const getTodayLocal = () => {
+        return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format
+    };
+
+    const formatDate = (dateStr) => {
+        if (!dateStr) return '';
+        const d = new Date(dateStr);
+        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
     };
 
     useEffect(() => {
@@ -483,77 +441,218 @@ const AdminDashboard = () => {
         };
     }, [selectedCompany, selectedDate]);
 
+    const handleApproveRejectExpense = async (attendanceId, expenseId, status) => {
+        try {
+            const userInfoRaw = localStorage.getItem('userInfo');
+            const userInfo = JSON.parse(userInfoRaw);
+            await axios.patch(`/api/admin/attendance/${attendanceId}/expense/${expenseId}`, { status }, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            // Refresh stats to show updated status
+            const { data } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}?date=${selectedDate}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setStats(data);
+            // Also update selectedItem if it's the one we are viewing
+            if (selectedItem && selectedItem._id === attendanceId) {
+                const updatedItem = data.attendanceDetails.find(a => a._id === attendanceId);
+                setSelectedItem(updatedItem);
+            }
+        } catch (err) {
+            console.error('Error processing expense', err);
+            alert('Failed to process expense');
+        }
+    };
+
     return (
-        <div className="container-fluid admin-layout-wrapper">
+        <div className="container-fluid admin-layout-wrapper" style={{
+            padding: 'clamp(12px, 2vw, 20px)',
+            maxWidth: '100vw',
+            overflow: 'hidden'
+        }}>
             <SEO
                 title={`${selectedCompany?.name || 'Admin'} Dashboard`}
                 description={`Real-time stats and activity for ${selectedCompany?.name || 'your fleet'}.`}
             />
 
-            <header className="dashboard-header">
-                <div className="header-logo-section">
-                    <div className="header-logo-container">
-                        <img
-                            src={logoMap[selectedCompany?.name]}
-                            alt={`${selectedCompany?.name} Logo`}
-                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
-                        />
-                    </div>
-                    <div>
-                        <h1 className="header-title text-gradient">Intel Center</h1>
-                        <p className="header-subtitle text-gradient-blue" style={{ fontWeight: '600' }}>
-                            {selectedCompany?.name}
-                        </p>
-                    </div>
-                </div>
-
-                <div className="date-selector-container">
-                    <div className="date-selector-inner">
-                        <button
-                            onClick={() => {
-                                const d = new Date(selectedDate);
-                                d.setDate(d.getDate() - 1);
-                                setSelectedDate(d.toISOString().split('T')[0]);
-                            }}
-                            className="glass-card-hover-effect"
-                            title="Previous Day"
-                        >
-                            ←
-                        </button>
-
-                        <input
-                            type="date"
-                            value={selectedDate}
-                            onChange={(e) => {
-                                if (e.target.value) {
-                                    setSelectedDate(e.target.value);
-                                }
-                            }}
-                        />
-
-                        <button
-                            onClick={() => {
-                                const d = new Date(selectedDate);
-                                d.setDate(d.getDate() + 1);
-                                setSelectedDate(d.toISOString().split('T')[0]);
-                            }}
-                            className="glass-card-hover-effect"
-                            title="Next Day"
-                        >
-                            →
-                        </button>
-
-                        <button
-                            onClick={() => {
-                                const today = new Date().toISOString().split('T')[0];
-                                setSelectedDate(today);
+            <div style={{
+                background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, transparent 100%)',
+                borderRadius: 'clamp(12px, 3vw, 24px)',
+                padding: 'clamp(15px, 3vw, 24px)',
+                border: '1px solid rgba(255,255,255,0.05)',
+                marginBottom: 'clamp(15px, 3vw, 30px)',
+                width: '100%',
+                boxSizing: 'border-box'
+            }}>
+                <header style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: 'clamp(15px, 3vw, 20px)',
+                    width: '100%'
+                }}>
+                    <div className="header-logo-section">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            style={{
+                                width: ' clamp(44px, 10vw, 56px)',
+                                height: 'clamp(44px, 10vw, 56px)',
+                                background: 'white',
+                                borderRadius: '14px',
+                                padding: '8px',
+                                boxShadow: '0 12px 24px -6px rgba(0,0,0,0.4)',
+                                border: '1px solid rgba(255,255,255,0.1)'
                             }}
                         >
-                            Today
-                        </button>
+                            <img
+                                src="/logos/logo.png"
+                                alt="Yatree Destination Logo"
+                                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                            />
+                        </motion.div>
+                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
+                                <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Fleet Overview</span>
+                            </div>
+                            <h1 style={{
+                                fontSize: 'clamp(18px, 4.5vw, 24px)',
+                                fontWeight: '900',
+                                color: 'white',
+                                margin: '2px 0 0 0',
+                                letterSpacing: '-0.5px'
+                            }}>
+                                Yatree Destination <span className="hide-mobile">Dashboard</span>
+                            </h1>
+                        </div>
                     </div>
-                </div>
-            </header>
+
+                    <div style={{ width: '100%' }}>
+                        <div style={{
+                            display: 'flex',
+                            gap: '8px',
+                            alignItems: 'center',
+                            background: 'rgba(0,0,0,0.2)',
+                            padding: '6px',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            width: '100%',
+                            flexWrap: 'wrap'
+                        }}>
+                            <div style={{ display: 'flex', gap: '2px' }}>
+                                <button
+                                    onClick={() => {
+                                        const d = new Date(selectedDate);
+                                        d.setDate(d.getDate() - 1);
+                                        setSelectedDate(d.toISOString().split('T')[0]);
+                                    }}
+                                    style={{
+                                        width: '36px',
+                                        height: '36px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderRadius: '8px',
+                                        background: '#334155',
+                                        color: '#ffffff',
+                                        cursor: 'pointer',
+                                        border: '1px solid rgba(255,255,255,0.2)',
+                                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                                    }}
+                                >
+                                    <ChevronLeft size={20} strokeWidth={3} />
+                                </button>
+
+                                <div
+                                    style={{ position: 'relative', flex: 1, cursor: 'pointer' }}
+                                    onClick={() => {
+                                        if (dateInputRef.current) {
+                                            if (typeof dateInputRef.current.showPicker === 'function') {
+                                                dateInputRef.current.showPicker();
+                                            } else {
+                                                dateInputRef.current.click();
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <div
+                                        style={{
+                                            height: '36px',
+                                            padding: '0 15px',
+                                            background: '#334155',
+                                            borderRadius: '8px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '10px',
+                                            border: '1px solid rgba(255,255,255,0.2)',
+                                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
+                                            whiteSpace: 'nowrap',
+                                            pointerEvents: 'none'
+                                        }}
+                                    >
+                                        <Calendar size={16} color="#ffffff" />
+                                        <span style={{ color: '#ffffff', fontSize: '14px', fontWeight: '700' }}>{formatDate(selectedDate)}</span>
+                                    </div>
+                                    <input
+                                        type="date"
+                                        ref={dateInputRef}
+                                        value={selectedDate}
+                                        onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+                                        style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            opacity: 0,
+                                            pointerEvents: 'none'
+                                        }}
+                                    />
+                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        const d = new Date(selectedDate);
+                                        d.setDate(d.getDate() + 1);
+                                        setSelectedDate(d.toISOString().split('T')[0]);
+                                    }}
+                                    style={{
+                                        width: '36px',
+                                        height: '36px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        borderRadius: '8px',
+                                        background: '#334155',
+                                        color: '#ffffff',
+                                        cursor: 'pointer',
+                                        border: '1px solid rgba(255,255,255,0.2)',
+                                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                                    }}
+                                >
+                                    <ChevronRight size={20} strokeWidth={3} />
+                                </button>
+                            </div>
+
+                            <button
+                                onClick={() => setSelectedDate(getTodayLocal())}
+                                style={{
+                                    padding: '0 12px',
+                                    height: '30px',
+                                    borderRadius: '8px',
+                                    background: selectedDate === getTodayLocal() ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                                    color: 'white',
+                                    fontWeight: '800',
+                                    fontSize: '10px',
+                                    textTransform: 'uppercase'
+                                }}
+                            >
+                                Today
+                            </button>
+                        </div>
+                    </div>
+                </header>
+            </div>
 
             <div style={{ position: 'relative', minHeight: '600px' }}>
                 <AnimatePresence>
@@ -587,19 +686,32 @@ const AdminDashboard = () => {
                         className="dashboard-main-container"
                     >
                         {/* Stats Grid */}
-                        <div className="stats-grid">
-                            <StatCard icon={Car} label="Fleet" value={stats.totalVehicles} color="#0ea5e9" loading={loading} />
-                            <StatCard icon={Users} label="Drivers" value={stats.totalDrivers} color="#6366f1" loading={loading} />
-                            <StatCard icon={CreditCard} label="Fastag" value={`₹${stats.totalFastagBalance?.toLocaleString() || 0}`} color="#10b981" loading={loading} />
-                            <StatCard icon={Clock} label="Punch-In" value={stats.countPunchIns} color="#8b5cf6" loading={loading} />
-                            <StatCard icon={TrendingUp} label="Finished" value={stats.countPunchOuts} color="#f59e0b" loading={loading} />
+                        <div className="stats-grid" style={{
+                            marginBottom: 'clamp(20px, 4vw, 40px)',
+                            width: '100%'
+                        }}>
+                            <StatCard icon={Car} label="FLEET SIZE" value={stats.totalVehicles} color="#0ea5e9" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
+                            <StatCard icon={Users} label="TOTAL DRIVERS" value={stats.totalDrivers} color="#6366f1" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/freelancers' : '/admin/drivers')} />
+                            {user?.role === 'Admin' && (
+                                <>
+                                    <StatCard icon={CreditCard} label="FASTAG BALANCE" value={`₹${stats.totalFastagBalance?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/fastag')} />
+                                    <StatCard icon={Wallet} label="DRIVER ADVANCES" value={`₹${stats.totalAdvancePending?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/advances')} />
+                                    <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
+                                </>
+                            )}
+                            <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/maintenance')} />
+                            <StatCard icon={Clock} label="ON ACTIVE DUTY" value={stats.countPunchIns} color="#8b5cf6" loading={loading} trend={true} onClick={() => navigate('/admin/reports')} />
+                            <StatCard icon={TrendingUp} label="DUTY CONCLUDED" value={stats.countPunchOuts} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/reports')} />
                         </div>
 
                         {/* Expiry Alerts */}
                         {stats.expiringAlerts && stats.expiringAlerts.length > 0 && (
                             <div className="glass-card" style={{
                                 border: '1px solid rgba(244, 63, 94, 0.2)',
-                                background: 'linear-gradient(145deg, rgba(244, 63, 94, 0.05), rgba(15, 23, 42, 0.2))'
+                                background: 'linear-gradient(145deg, rgba(244, 63, 94, 0.05), rgba(15, 23, 42, 0.2))',
+                                marginBottom: 'clamp(20px, 4vw, 30px)',
+                                width: '100%',
+                                boxSizing: 'border-box'
                             }}>
                                 <div style={{
                                     display: 'flex',
@@ -720,15 +832,19 @@ const AdminDashboard = () => {
                             </div>
                         )}
 
-                        {/* Activity Table */}
-                        <div className="glass-card" style={{ border: '1px solid rgba(255,255,255,0.05)' }}>
+                        {/* Activity Feed - Responsive */}
+                        <div className="glass-card" style={{
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            width: '100%',
+                            boxSizing: 'border-box'
+                        }}>
                             <div style={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
                                 marginBottom: 'clamp(16px, 3.5vw, 20px)',
                                 flexWrap: 'wrap',
-                                gap: '10px'
+                                gap: '10px',
                             }}>
                                 <h3 style={{
                                     fontSize: 'clamp(14px, 3.2vw, 16px)',
@@ -757,7 +873,8 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
 
-                            <div className="activity-table-wrapper">
+                            {/* Desktop/Tablet Table View */}
+                            <div className="activity-table-wrapper hide-mobile">
                                 <table className="activity-table">
                                     <thead>
                                         <tr>
@@ -771,8 +888,13 @@ const AdminDashboard = () => {
                                         {stats.attendanceDetails?.map((item) => (
                                             <tr key={item._id} className="hover-row">
                                                 <td>
-                                                    <div className="driver-name">{item.driver?.name}</div>
-                                                    <div className="driver-mobile">{item.driver?.mobile}</div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div>
+                                                            <div className="driver-name" style={{ fontWeight: '800', color: 'white' }}>{item.driver?.name}</div>
+                                                            <div className="driver-mobile" style={{ fontSize: '11px', opacity: 0.6 }}>{item.driver?.mobile}</div>
+                                                        </div>
+
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <span className="vehicle-badge">
@@ -780,16 +902,20 @@ const AdminDashboard = () => {
                                                     </span>
                                                 </td>
                                                 <td>
-                                                    <span className="status-pill" style={{
+                                                    <span className="status-pill staff-badge" style={{
                                                         background: item.status === 'completed'
                                                             ? 'rgba(16, 185, 129, 0.1)'
-                                                            : 'rgba(245, 158, 11, 0.1)',
-                                                        color: item.status === 'completed' ? '#10b981' : '#f59e0b',
+                                                            : 'rgba(56, 189, 248, 0.1)',
+                                                        color: item.status === 'completed' ? '#10b981' : '#38bdf8',
                                                         border: `1px solid ${item.status === 'completed'
                                                             ? 'rgba(16, 185, 129, 0.2)'
-                                                            : 'rgba(245, 158, 11, 0.2)'}`
+                                                            : 'rgba(56, 189, 248, 0.2)'}`,
+                                                        fontWeight: '800',
+                                                        textTransform: 'uppercase',
+                                                        fontSize: '10px',
+                                                        letterSpacing: '0.5px'
                                                     }}>
-                                                        {item.status === 'completed' ? 'Duty Ended' : 'On Trip'}
+                                                        {item.status === 'completed' ? 'Duty Concluded' : 'On Active Duty'}
                                                     </span>
                                                 </td>
                                                 <td style={{ textAlign: 'right' }}>
@@ -819,13 +945,105 @@ const AdminDashboard = () => {
                                     </tbody>
                                 </table>
                             </div>
+
+                            {/* Mobile Card View */}
+                            <div className="show-mobile">
+                                {(!stats.attendanceDetails || stats.attendanceDetails.length === 0) ? (
+                                    <div className="glass-card" style={{
+                                        padding: '40px 20px',
+                                        textAlign: 'center',
+                                        color: 'var(--text-muted)'
+                                    }}>
+                                        <Users size={32} style={{ opacity: 0.15, marginBottom: '12px', margin: '0 auto' }} />
+                                        <p style={{ fontSize: '14px', margin: 0 }}>
+                                            No activity recorded for this date
+                                        </p>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'grid', gap: '15px' }}>
+                                        {stats.attendanceDetails.map((item) => (
+                                            <div key={item._id} className="glass-card" style={{
+                                                padding: '15px',
+                                                border: '1px solid rgba(255,255,255,0.08)'
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                        <div style={{
+                                                            width: '40px',
+                                                            height: '40px',
+                                                            borderRadius: '10px',
+                                                            background: 'rgba(56, 189, 248, 0.1)',
+                                                            color: '#38bdf8',
+                                                            display: 'flex',
+                                                            justifyContent: 'center',
+                                                            alignItems: 'center',
+                                                            flexShrink: 0
+                                                        }}>
+                                                            <Users size={20} />
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '15px', lineHeight: '1.2' }}>{item.driver?.name}</div>
+                                                            <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '2px' }}>{item.vehicle?.carNumber}</div>
+                                                        </div>
+                                                    </div>
+                                                    <span className="status-pill" style={{
+                                                        background: item.status === 'completed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(56, 189, 248, 0.1)',
+                                                        color: item.status === 'completed' ? '#10b981' : '#38bdf8',
+                                                        border: `1px solid ${item.status === 'completed' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(56, 189, 248, 0.2)'}`,
+                                                        fontSize: '10px',
+                                                        padding: '4px 8px',
+                                                        fontWeight: '800'
+                                                    }}>
+                                                        {item.status === 'completed' ? 'DONE' : 'ACTIVE'}
+                                                    </span>
+                                                </div>
+
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    {item.driverPendingAdvance > 0 ? (
+                                                        <div style={{
+                                                            color: '#f43f5e',
+                                                            background: 'rgba(244, 63, 94, 0.1)',
+                                                            padding: '4px 10px',
+                                                            borderRadius: '8px',
+                                                            fontSize: '11px',
+                                                            fontWeight: '800',
+                                                            border: '1px solid rgba(244, 63, 94, 0.2)'
+                                                        }}>
+                                                            ADV: ₹{item.driverPendingAdvance}
+                                                        </div>
+                                                    ) : <span></span>}
+
+                                                    <button
+                                                        onClick={() => setSelectedItem(item)}
+                                                        style={{
+                                                            background: 'rgba(14, 165, 233, 0.1)',
+                                                            color: '#0ea5e9',
+                                                            border: '1px solid rgba(14, 165, 233, 0.2)',
+                                                            padding: '8px 20px',
+                                                            borderRadius: '10px',
+                                                            fontSize: '12px',
+                                                            fontWeight: '800',
+                                                            letterSpacing: '0.5px'
+                                                        }}
+                                                    >
+                                                        VIEW DETAILS
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </div>
                     </motion.div>
                 )}
-
                 <AnimatePresence>
                     {selectedItem && (
-                        <AttendanceModal item={selectedItem} onClose={() => setSelectedItem(null)} />
+                        <AttendanceModal
+                            item={selectedItem}
+                            onClose={() => setSelectedItem(null)}
+                            onApproveReject={handleApproveRejectExpense}
+                        />
                     )}
                 </AnimatePresence>
             </div>

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert } from 'lucide-react';
+import { Plus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, User as UserIcon } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 
 const Drivers = () => {
+    const navigate = useNavigate();
     const { selectedCompany } = useCompany();
     const [drivers, setDrivers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -25,10 +27,6 @@ const Drivers = () => {
     const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: 500 });
 
 
-    const logoMap = {
-        'YatreeDestination': '/logos/YD.Logo.webp',
-        'GoGetGo': '/logos/gogetgo.webp'
-    };
 
     useEffect(() => {
         if (selectedCompany) {
@@ -142,294 +140,509 @@ const Drivers = () => {
         )
     );
 
+    const totalDrivers = drivers.length;
+    const activeDrivers = drivers.filter(d => d.status === 'active').length;
+    const blockedDrivers = drivers.filter(d => d.status === 'blocked').length;
+    const freelancersCount = drivers.filter(d => d.isFreelancer).length;
+
     return (
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
             <SEO title="Manage Drivers" description="View and manage all registered drivers in your fleet management system." />
-            <header style={{
-                display: 'flex',
+
+            {/* Header Section */}
+            <header className="flex-resp" style={{
                 justifyContent: 'space-between',
-                alignItems: 'center',
-                padding: '30px 0',
+                flexWrap: 'wrap',
                 gap: '20px',
-                flexWrap: 'wrap'
+                padding: '30px 0',
+                marginBottom: '10px'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{
-                        width: '50px',
-                        height: '50px',
-                        background: 'white',
-                        borderRadius: '12px',
-                        padding: '6px',
+                        width: 'clamp(40px, 10vw, 50px)',
+                        height: 'clamp(40px, 10vw, 50px)',
+                        background: 'linear-gradient(135deg, white, #f8fafc)',
+                        borderRadius: '16px',
+                        padding: '8px',
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
                     }}>
-                        <img src={logoMap[selectedCompany?.name]} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                        <img src="/logos/logo.png" alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                     </div>
                     <div>
-                        <h1 style={{ color: 'white', fontSize: '28px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' }}>Fleet Drivers</h1>
-                        <p style={{ color: 'var(--text-muted)', margin: '4px 0 0 0', fontSize: '13px' }}>Managing personnel for {selectedCompany?.name || '...'}</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 8px #f43f5e' }}></div>
+                            <span style={{ fontSize: 'clamp(9px, 2.5vw, 10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Personnel Hub</span>
+                        </div>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
+                            Fleet <span className="text-gradient-blue">Drivers</span>
+                        </h1>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap', minWidth: '300px' }}>
-                    <div style={{ position: 'relative', flex: '1', maxWidth: '350px', minWidth: '200px' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '12px', top: '15px', color: 'var(--text-muted)' }} />
+                <div className="mobile-search-row" style={{ display: 'flex', gap: '10px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+
+                    <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '100%', maxWidth: '380px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 auto' }}>
+                        <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
                         <input
                             type="text"
-                            placeholder="Search name or mobile..."
+                            placeholder="Search drivers..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input-field"
-                            style={{ paddingLeft: '40px', marginBottom: 0, height: '48px', fontSize: '14px' }}
+                            style={{
+                                background: 'transparent',
+                                border: 'none',
+                                color: 'white',
+                                height: '52px',
+                                width: '100%',
+                                outline: 'none',
+                                fontSize: '14px',
+                                fontWeight: '500',
+                                minWidth: 0
+                            }}
                         />
                     </div>
-                    <button className="btn-primary" onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 25px', borderRadius: '12px' }}>
-                        <Plus size={20} /> <span className="mobile-hide">Register Driver</span><span className="mobile-only">Add</span>
+                    <button
+                        className="glass-card-hover-effect btn-primary"
+                        onClick={() => setShowModal(true)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            height: '52px',
+                            padding: '0 25px',
+                            borderRadius: '14px',
+                            fontWeight: '800',
+                            fontSize: '14px',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            flexShrink: 0
+                        }}
+                    >
+                        <Plus size={20} /> <span className="hide-mobile">Register</span><span className="show-mobile">Add</span>
                     </button>
                 </div>
             </header>
 
-            <div className="glass-card" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white', minWidth: '700px' }}>
+            {/* Stats Grid */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '20px',
+                marginBottom: '30px'
+            }}>
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: 'clamp(15px, 2.5vw, 20px)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.03)', cursor: 'default' }}>
+                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><UserIcon size={22} /></div>
+                    <div>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Total Workforce</p>
+                        <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{totalDrivers}</h3>
+                    </div>
+                </motion.div>
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: 'clamp(15px, 2.5vw, 20px)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.03)', cursor: 'default' }}>
+                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ width: '10px', height: '10px', background: '#10b981', borderRadius: '50%' }}></div></div>
+                    <div>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Active Logins</p>
+                        <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{activeDrivers}</h3>
+                    </div>
+                </motion.div>
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: 'clamp(15px, 2.5vw, 20px)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.03)', cursor: 'default' }}>
+                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><ShieldAlert size={22} /></div>
+                    <div>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Blocked / Inactive</p>
+                        <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{blockedDrivers}</h3>
+                    </div>
+                </motion.div>
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="glass-card glass-card-hover-effect" style={{ padding: 'clamp(15px, 2.5vw, 20px)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.03)', cursor: 'pointer' }} onClick={() => navigate('/admin/freelancers')}>
+                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ fontSize: '18px', fontWeight: '900' }}>F</div></div>
+                    <div>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Freelancers</p>
+                        <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{freelancersCount}</h3>
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* Desktop Table */}
+            <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
                     <thead>
-                        <tr style={{ background: 'rgba(255,255,255,0.02)', textAlign: 'left' }}>
-                            <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Personnel</th>
-                            <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Contact</th>
-                            <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>License No</th>
-                            <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Account Status</th>
-                            <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Actions</th>
+                        <tr style={{ textAlign: 'left' }}>
+                            <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Personnel Profile</th>
+                            <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Contact Info</th>
+                            <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Credentials</th>
+                            <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
+                            <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {filteredDrivers.map(driver => (
-                            <tr key={driver._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }} className="hover-row">
-                                <td style={{ padding: '18px 25px' }}>
-                                    <div style={{ fontWeight: '700', fontSize: '15px', color: 'white', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        {driver.name}
-                                        {driver.isFreelancer && (
-                                            <span style={{ fontSize: '9px', background: 'rgba(99, 102, 241, 0.1)', color: '#6366f1', padding: '2px 6px', borderRadius: '4px', border: '1px solid rgba(99, 102, 241, 0.2)', fontWeight: '800', textTransform: 'uppercase' }}>Freelancer</span>
-                                        )}
+                        <AnimatePresence>
+                            {filteredDrivers.length === 0 ? (
+                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '80px 0' }}>
+                                    <div style={{ background: 'rgba(255,255,255,0.02)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 20px' }}>
+                                        <Search size={32} style={{ opacity: 0.3, color: 'white' }} />
                                     </div>
-                                    <div style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: '600', opacity: 0.8 }}>@{driver.username || 'no-username'}</div>
-                                </td>
-                                <td style={{ padding: '18px 25px' }}>
-                                    <div style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>{driver.mobile}</div>
-                                </td>
-                                <td style={{ padding: '18px 25px' }}>
-                                    <div style={{ color: 'white', fontSize: '13px', opacity: 0.8 }}>{driver.licenseNumber || 'Not Provided'}</div>
-                                </td>
-
-                                <td style={{ padding: '18px 25px' }}>
-                                    <span style={{
-                                        display: 'inline-flex',
-                                        alignItems: 'center',
-                                        gap: '6px',
-                                        padding: '4px 12px',
-                                        borderRadius: '20px',
-                                        fontSize: '11px',
-                                        fontWeight: '700',
-                                        textTransform: 'uppercase',
-                                        background: driver.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-                                        color: driver.status === 'active' ? '#10b981' : '#f43f5e'
-                                    }}>
-                                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: driver.status === 'active' ? '#10b981' : '#f43f5e' }}></span>
-                                        {driver.status}
-                                    </span>
-                                </td>
-                                <td style={{ padding: '18px 25px' }}>
-                                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                        <button
-                                            onClick={() => openEditModal(driver)}
-                                            style={{ background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(14, 165, 233, 0.1)' }}
-                                            title="Edit Info"
-                                        >
-                                            <Edit2 size={16} />
-                                        </button>
-                                        <button
-                                            onClick={() => toggleStatus(driver._id, driver.status)}
-                                            style={{
-                                                background: driver.status === 'active' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                                                color: driver.status === 'active' ? '#f59e0b' : '#10b981',
+                                    <h3 style={{ color: 'white', fontWeight: '800', margin: '0 0 5px' }}>No Personnel Found</h3>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '14px' }}>Try adjusting your search criteria or add a new driver.</p>
+                                </td></tr>
+                            ) : (
+                                filteredDrivers.map((driver, idx) => (
+                                    <motion.tr
+                                        key={driver._id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, scale: 0.95 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        className="glass-card-hover-effect"
+                                        style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}
+                                    >
+                                        <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                <div style={{
+                                                    width: '40px', height: '40px', borderRadius: '10px',
+                                                    background: driver.isFreelancer ? 'linear-gradient(135deg, #8b5cf6, #d8b4fe)' : 'linear-gradient(135deg, #3b82f6, #93c5fd)',
+                                                    display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                                    color: 'white', fontWeight: '800', fontSize: '16px'
+                                                }}>
+                                                    {driver.name.charAt(0).toUpperCase()}
+                                                </div>
+                                                <div>
+                                                    <div style={{ color: 'white', fontWeight: '800', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        {driver.name}
+                                                        {driver.isFreelancer && (
+                                                            <span style={{ fontSize: '9px', background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(139, 92, 246, 0.3)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Freelancer</span>
+                                                        )}
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '500' }}>@{driver.username || 'no-username'}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '20px 25px' }}>
+                                            <div style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>{driver.mobile}</div>
+                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Mobile Number</div>
+                                        </td>
+                                        <td style={{ padding: '20px 25px' }}>
+                                            <div style={{ color: 'white', fontSize: '13px', fontFamily: 'monospace', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px', display: 'inline-block' }}>{driver.licenseNumber || 'NOT PROVIDED'}</div>
+                                        </td>
+                                        <td style={{ padding: '20px 25px' }}>
+                                            <span style={{
+                                                display: 'inline-flex',
+                                                alignItems: 'center',
+                                                gap: '6px',
+                                                padding: '6px 14px',
+                                                borderRadius: '20px',
                                                 fontSize: '11px',
-                                                fontWeight: '700',
-                                                padding: '8px 12px',
-                                                borderRadius: '8px',
-                                                border: `1px solid ${driver.status === 'active' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)'}`,
-                                                textTransform: 'uppercase'
-                                            }}
-                                        >
-                                            {driver.status === 'active' ? 'Block' : 'Unblock'}
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(driver._id)}
-                                            style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '8px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.1)' }}
-                                            title="Remove Driver"
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        ))}
-                        {filteredDrivers.length === 0 && (
-                            <tr>
-                                <td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
-                                    <div style={{ background: 'rgba(255,255,255,0.02)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 15px' }}>
-                                        <Search size={24} style={{ opacity: 0.3 }} />
-                                    </div>
-                                    <p style={{ fontSize: '14px', margin: 0 }}>No drivers matching your search.</p>
-                                </td>
-                            </tr>
-                        )}
+                                                fontWeight: '800',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.5px',
+                                                background: driver.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+                                                color: driver.status === 'active' ? '#10b981' : '#f43f5e',
+                                                border: driver.status === 'active' ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(244, 63, 94, 0.2)'
+                                            }}>
+                                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'currentColor', boxShadow: '0 0 5px currentColor' }}></span>
+                                                {driver.status}
+                                            </span>
+                                        </td>
+                                        <td style={{ padding: '20px 25px', textAlign: 'right', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                <button
+                                                    onClick={() => openEditModal(driver)}
+                                                    className="glass-card-hover-effect"
+                                                    style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', width: '36px', height: '36px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                                    title="Edit Profile"
+                                                >
+                                                    <Edit2 size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => toggleStatus(driver._id, driver.status)}
+                                                    className="glass-card-hover-effect"
+                                                    style={{
+                                                        background: driver.status === 'active' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                                                        color: driver.status === 'active' ? '#f59e0b' : '#10b981',
+                                                        width: '36px', height: '36px',
+                                                        borderRadius: '8px',
+                                                        border: `1px solid ${driver.status === 'active' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
+                                                        display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer'
+                                                    }}
+                                                    title={driver.status === 'active' ? 'Block Access' : 'Activate Access'}
+                                                >
+                                                    <ShieldAlert size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(driver._id)}
+                                                    className="glass-card-hover-effect"
+                                                    style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', width: '36px', height: '36px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                                    title="Delete Record"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </motion.tr>
+                                ))
+                            )}
+                        </AnimatePresence>
                     </tbody>
                 </table>
             </div>
 
-            {/* Add Driver Modal */}
-            {showModal && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '15px' }}>
-                    <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card modal-content" style={{ padding: '25px', width: '100%', maxWidth: '550px', maxHeight: '95vh', overflowY: 'auto' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-                            <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '800' }}>Add New Driver</h2>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
+            {/* Mobile Card View */}
+            <div className="show-mobile">
+                <AnimatePresence>
+                    {filteredDrivers.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.05)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 15px' }}>
+                                <Search size={24} style={{ opacity: 0.3, color: 'white' }} />
+                            </div>
+                            <h3 style={{ color: 'white', fontWeight: '800', margin: '0 0 5px', fontSize: '16px' }}>No Drivers Found</h3>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Try adjusting your search criteria.</p>
                         </div>
-                        <form onSubmit={handleCreateDriver}>
-                            <div className="modal-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Full Name *</label>
-                                    <input className="input-field" placeholder="John Doe" value={name} onChange={(e) => setName(e.target.value)} required />
-                                </div>
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Mobile Number *</label>
-                                    <input className="input-field" placeholder="10 Digit Mobile" value={mobile} onChange={(e) => setMobile(e.target.value)} required />
-                                </div>
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Login Username</label>
-                                    <input className="input-field" placeholder="unique_username (optional)" value={username} onChange={(e) => setUsername(e.target.value)} />
-                                </div>
-                            </div>
-                            <div style={{ marginBottom: '20px' }}>
-                                <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Login Password *</label>
-                                <input type="password" className="input-field" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required />
-                            </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            {filteredDrivers.map((driver, idx) => (
+                                <motion.div
+                                    key={driver._id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    className="glass-card"
+                                    style={{ padding: '15px', background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(255,255,255,0.06)' }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                            <div style={{
+                                                width: '40px', height: '40px', borderRadius: '10px',
+                                                background: driver.isFreelancer ? 'linear-gradient(135deg, #8b5cf6, #d8b4fe)' : 'linear-gradient(135deg, #3b82f6, #93c5fd)',
+                                                display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                                color: 'white', fontWeight: '800', fontSize: '16px'
+                                            }}>
+                                                {driver.name.charAt(0).toUpperCase()}
+                                            </div>
+                                            <div>
+                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>{driver.name}</div>
+                                                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>@{driver.username || 'no-username'}</div>
+                                            </div>
+                                        </div>
+                                        <span style={{
+                                            display: 'inline-flex',
+                                            alignItems: 'center',
+                                            gap: '4px',
+                                            padding: '4px 10px',
+                                            borderRadius: '20px',
+                                            fontSize: '10px',
+                                            fontWeight: '800',
+                                            textTransform: 'uppercase',
+                                            background: driver.status === 'active' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+                                            color: driver.status === 'active' ? '#10b981' : '#f43f5e',
+                                            border: driver.status === 'active' ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(244, 63, 94, 0.2)'
+                                        }}>
+                                            {driver.status}
+                                        </span>
+                                    </div>
 
-                            <div style={{ marginBottom: '30px' }}>
-                                <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Driving License No</label>
-                                <input className="input-field" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="DL-XXX-XXXX" />
-                            </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
+                                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
+                                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '4px' }}>MOBILE</div>
+                                            <div style={{ color: 'white', fontWeight: '600', fontSize: '13px' }}>{driver.mobile}</div>
+                                        </div>
+                                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
+                                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '4px' }}>LICENSE</div>
+                                            <div style={{ color: 'white', fontWeight: '600', fontSize: '13px', fontFamily: 'monospace' }}>{driver.licenseNumber || 'N/A'}</div>
+                                        </div>
+                                    </div>
 
-                            <div style={{ marginBottom: '30px' }}>
-                                <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Daily Salary (Rate)</label>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                                    {[300, 400, 500].map(val => (
+                                    <div style={{ display: 'flex', gap: '10px' }}>
                                         <button
-                                            key={val}
-                                            type="button"
-                                            onClick={() => setDailyWage(val)}
-                                            style={{
-                                                padding: '10px',
-                                                borderRadius: '10px',
-                                                border: '1px solid ' + (dailyWage === val ? 'var(--primary)' : 'rgba(255,255,255,0.1)'),
-                                                background: dailyWage === val ? 'rgba(14, 165, 233, 0.1)' : 'transparent',
-                                                color: 'white',
-                                                fontWeight: '800'
-                                            }}
+                                            onClick={() => openEditModal(driver)}
+                                            style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
                                         >
-                                            ₹{val}
+                                            Edit
                                         </button>
-                                    ))}
-                                    <input
-                                        type="number"
-                                        placeholder="Custom"
-                                        className="input-field"
-                                        style={{ marginBottom: 0, padding: '10px', height: 'auto', textAlign: 'center' }}
-                                        value={![300, 400, 500].includes(dailyWage) ? dailyWage : ''}
-                                        onChange={(e) => setDailyWage(Number(e.target.value))}
-                                    />
+                                        <button
+                                            onClick={() => toggleStatus(driver._id, driver.status)}
+                                            style={{ flex: 1, padding: '10px', borderRadius: '8px', background: driver.status === 'active' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: driver.status === 'active' ? '#f59e0b' : '#10b981', border: `1px solid ${driver.status === 'active' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`, fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                        >
+                                            {driver.status === 'active' ? 'Block' : 'Activate'}
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(driver._id)}
+                                            style={{ width: '40px', padding: '0', display: 'flex', justifyContent: 'center', alignItems: 'center', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', cursor: 'pointer' }}
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            {/* Add Driver Modal */}
+            <AnimatePresence>
+
+                {showModal && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '15px' }}>
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="glass-card"
+                            style={{ padding: '0', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a' }}
+                        >
+                            <div style={{ padding: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to right, rgba(255,255,255,0.02), transparent)' }}>
+                                <div>
+                                    <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Onboard New Driver</h2>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: '4px 0 0 0' }}>Enter personnel details to generate profile credential.</p>
                                 </div>
+                                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <button type="button" className="glass-card" style={{ flex: 1, padding: '14px', color: 'white', fontWeight: '700' }} onClick={() => setShowModal(false)}>Cancel</button>
-                                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '14px' }}>Register Driver</button>
-                            </div>
-                        </form>
-                    </motion.div>
-                </div>
-            )}
+                            <form onSubmit={handleCreateDriver} style={{ padding: '25px' }}>
+                                <div style={{ marginBottom: '20px' }}>
+                                    <p style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Identity & Access</p>
+                                    <div className="form-grid-2" style={{ marginBottom: '15px' }}>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Full Name *</label>
+                                            <input className="input-field" placeholder="e.g. Rahul Kumar" value={name} onChange={(e) => setName(e.target.value)} required style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                        </div>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Mobile Number *</label>
+                                            <input className="input-field" placeholder="10-digit number" value={mobile} onChange={(e) => setMobile(e.target.value)} required style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                        </div>
+                                    </div>
+                                    <div className="form-grid-2">
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>System Username</label>
+                                            <input className="input-field" placeholder="unique_username" value={username} onChange={(e) => setUsername(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                        </div>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Password *</label>
+                                            <input type="password" className="input-field" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ marginBottom: '25px', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <p style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Contract & Details</p>
+
+                                    <div style={{ marginBottom: '15px' }}>
+                                        <label className="input-label" style={{ marginBottom: '6px' }}>Driving License</label>
+                                        <input className="input-field" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="DL No. (Optional)" style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                    </div>
+
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '15px' }}>
+                                    <button
+                                        type="button"
+                                        className="glass-card-hover-effect"
+                                        style={{ flex: '1', padding: '14px', background: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: '700', borderRadius: '12px', border: 'none', cursor: 'pointer' }}
+                                        onClick={() => setShowModal(false)}
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="glass-card-hover-effect"
+                                        style={{
+                                            flex: '2',
+                                            padding: '14px',
+                                            background: 'linear-gradient(135deg, var(--secondary), var(--primary))',
+                                            color: 'white',
+                                            fontWeight: '800',
+                                            borderRadius: '12px',
+                                            border: 'none',
+                                            boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Create Profile
+                                    </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* Edit Driver Modal */}
             <AnimatePresence>
                 {showEditModal && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '15px' }}>
-                        <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.95, opacity: 0 }} className="glass-card modal-content" style={{ padding: '25px', width: '100%', maxWidth: '550px', maxHeight: '95vh', overflowY: 'auto' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '15px' }}>
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="glass-card"
+                            style={{ padding: '0', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a' }}
+                        >
+                            <div style={{ padding: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to right, rgba(255,255,255,0.02), transparent)' }}>
                                 <div>
-                                    <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '800', margin: 0 }}>Edit Driver</h2>
-                                    <p style={{ color: 'var(--primary)', fontSize: '13px', margin: 0, fontWeight: '600' }}>{editingDriver?.name}</p>
+                                    <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Update Profile</h2>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: '4px 0 0 0' }}>Editing details for <span style={{ color: 'var(--primary)', fontWeight: '700' }}>{editingDriver?.name}</span></p>
                                 </div>
-                                <button onClick={() => { setShowEditModal(false); setEditingDriver(null); }} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
+                                <button onClick={() => { setShowEditModal(false); setEditingDriver(null); }} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
                             </div>
-                            <form onSubmit={handleUpdateDriver}>
-                                <div className="modal-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Full Name *</label>
-                                        <input className="input-field" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required />
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Mobile Number *</label>
-                                        <input className="input-field" value={editForm.mobile} onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })} required />
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Login Username</label>
-                                        <input className="input-field" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} />
-                                    </div>
-                                </div>
+                            <form onSubmit={handleUpdateDriver} style={{ padding: '25px' }}>
                                 <div style={{ marginBottom: '20px' }}>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>New Password</label>
-                                    <input type="password" className="input-field" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} placeholder="Leave blank to keep current" />
-                                </div>
-
-                                <div style={{ marginBottom: '30px' }}>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>License Number</label>
-                                    <input className="input-field" value={editForm.licenseNumber} onChange={(e) => setEditForm({ ...editForm, licenseNumber: e.target.value })} placeholder="DL-XXX-XXXX" />
-                                </div>
-
-                                <div style={{ marginBottom: '30px' }}>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Daily Salary (Rate)</label>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
-                                        {[300, 400, 500].map(val => (
-                                            <button
-                                                key={val}
-                                                type="button"
-                                                onClick={() => setEditForm({ ...editForm, dailyWage: val })}
-                                                style={{
-                                                    padding: '10px',
-                                                    borderRadius: '10px',
-                                                    border: '1px solid ' + (editForm.dailyWage === val ? 'var(--primary)' : 'rgba(255,255,255,0.1)'),
-                                                    background: editForm.dailyWage === val ? 'rgba(14, 165, 233, 0.1)' : 'transparent',
-                                                    color: 'white',
-                                                    fontWeight: '800'
-                                                }}
-                                            >
-                                                ₹{val}
-                                            </button>
-                                        ))}
-                                        <input
-                                            type="number"
-                                            placeholder="Custom"
-                                            className="input-field"
-                                            style={{ marginBottom: 0, padding: '10px', height: 'auto', textAlign: 'center' }}
-                                            value={![300, 400, 500].includes(editForm.dailyWage) ? editForm.dailyWage : ''}
-                                            onChange={(e) => setEditForm({ ...editForm, dailyWage: Number(e.target.value) })}
-                                        />
+                                    <p style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Identity & Access</p>
+                                    <div className="form-grid-2" style={{ marginBottom: '15px' }}>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Full Name *</label>
+                                            <input className="input-field" value={editForm.name} onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} required style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                        </div>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Mobile Number *</label>
+                                            <input className="input-field" value={editForm.mobile} onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })} required style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                        </div>
+                                    </div>
+                                    <div className="form-grid-2">
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Username</label>
+                                            <input className="input-field" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                        </div>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>New Password</label>
+                                            <input type="password" className="input-field" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} placeholder="Leave blank to keep" style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    <button type="button" className="glass-card" style={{ flex: 1, padding: '14px', color: 'white', fontWeight: '700' }} onClick={() => { setShowEditModal(false); setEditingDriver(null); }}>Discard</button>
-                                    <button type="submit" className="btn-primary" style={{ flex: 1, padding: '14px' }}>Save Changes</button>
+                                <div style={{ marginBottom: '25px', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <p style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Contract & Details</p>
+
+                                    <div style={{ marginBottom: '15px' }}>
+                                        <label className="input-label" style={{ marginBottom: '6px' }}>Driving License</label>
+                                        <input className="input-field" value={editForm.licenseNumber} onChange={(e) => setEditForm({ ...editForm, licenseNumber: e.target.value })} placeholder="DL No. (Optional)" style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                    </div>
+
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '15px' }}>
+                                    <button
+                                        type="button"
+                                        className="glass-card-hover-effect"
+                                        style={{ flex: '1', padding: '14px', background: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: '700', borderRadius: '12px', border: 'none', cursor: 'pointer' }}
+                                        onClick={() => { setShowEditModal(false); setEditingDriver(null); }}
+                                    >
+                                        Discard
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="glass-card-hover-effect"
+                                        style={{
+                                            flex: '2',
+                                            padding: '14px',
+                                            background: 'linear-gradient(135deg, var(--secondary), var(--primary))',
+                                            color: 'white',
+                                            fontWeight: '800',
+                                            borderRadius: '12px',
+                                            border: 'none',
+                                            boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)',
+                                            cursor: 'pointer'
+                                        }}
+                                    >
+                                        Save Changes
+                                    </button>
                                 </div>
                             </form>
                         </motion.div>

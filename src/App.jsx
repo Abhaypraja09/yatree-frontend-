@@ -1,18 +1,44 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import Login from './pages/Login';
-import AdminDashboard from './pages/AdminDashboard';
-import DriverPortal from './pages/DriverPortal';
-import Drivers from './pages/Drivers';
-import Vehicles from './pages/Vehicles';
-import Reports from './pages/Reports';
-import Freelancers from './pages/Freelancers';
-import OutsideCars from './pages/OutsideCars';
-import Fastag from './pages/Fastag';
-import BorderTax from './pages/BorderTax';
+
+// Lazy load pages for better performance
+const Login = lazy(() => import('./pages/Login'));
+const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
+const DriverPortal = lazy(() => import('./pages/DriverPortal'));
+const Drivers = lazy(() => import('./pages/Drivers'));
+const Vehicles = lazy(() => import('./pages/Vehicles'));
+const Reports = lazy(() => import('./pages/Reports'));
+const Freelancers = lazy(() => import('./pages/Freelancers'));
+const OutsideCars = lazy(() => import('./pages/OutsideCars'));
+const Fastag = lazy(() => import('./pages/Fastag'));
+const BorderTax = lazy(() => import('./pages/BorderTax'));
+const Maintenance = lazy(() => import('./pages/Maintenance'));
+const Fuel = lazy(() => import('./pages/Fuel'));
+const Parking = lazy(() => import('./pages/Parking'));
+const Advances = lazy(() => import('./pages/Advances'));
+const Admins = lazy(() => import('./pages/Admins'));
 import Sidebar from './components/Sidebar';
 import { CompanyProvider } from './context/CompanyContext';
+
+const LoadingFallback = () => (
+  <div style={{
+    minHeight: '100vh',
+    display: 'flex',
+    flexDirection: 'column',
+    justifyContent: 'center',
+    alignItems: 'center',
+    background: 'radial-gradient(circle at top right, #1e293b, #0f172a)',
+    color: 'white'
+  }}>
+    <div className="spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', borderRadius: '50%' }}></div>
+    <p style={{ marginTop: '16px', fontWeight: '600', opacity: 0.6 }}>Loading...</p>
+    <style>{`
+            .spinner { animation: spin 0.8s linear infinite; }
+            @keyframes spin { to { transform: rotate(360deg); } }
+        `}</style>
+  </div>
+);
 
 // Protected Route Component
 const ProtectedRoute = ({ children, role }) => {
@@ -21,8 +47,12 @@ const ProtectedRoute = ({ children, role }) => {
   if (loading) return <div style={{ color: 'white', padding: '20px' }}>Loading...</div>;
   if (!user) return <Navigate to="/login" />;
 
-  if (role && user.role !== role) {
-    return <Navigate to={user.role === 'Admin' ? '/admin' : '/driver'} />;
+  const isAdminOrExecutive = user.role === 'Admin' || user.role === 'Executive';
+
+  if (role === 'Admin') {
+    if (!isAdminOrExecutive) return <Navigate to="/driver" />;
+  } else if (role === 'Driver') {
+    if (user.role !== 'Driver') return <Navigate to="/admin" />;
   }
 
   return children;
@@ -33,31 +63,31 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="with-sidebar" style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
-      {/* Mobile Header */}
+      {/* Mobile Top Bar */}
       <div style={{
         display: 'none',
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
-        height: '50px',
+        height: '64px',
         background: 'rgba(15, 23, 42, 0.8)',
-        backdropFilter: 'blur(15px)',
-        borderBottom: '1px solid var(--border)',
+        backdropFilter: 'blur(20px)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
         zIndex: 90,
-        padding: '0 15px',
+        padding: '0 20px',
         alignItems: 'center',
         justifyContent: 'space-between'
-      }} className="mobile-only-flex">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{ width: '24px', height: '24px', background: 'var(--primary)', borderRadius: '6px' }}></div>
-          <h2 style={{ fontSize: '16px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px' }}>FleetCRM</h2>
+      }} className="show-mobile-flex">
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <img src="/logos/logo.png" alt="Logo" style={{ width: '30px', height: 'auto' }} />
+          <h2 style={{ fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>Yatree Destination</h2>
         </div>
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-          style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '6px', borderRadius: '8px' }}
+          style={{ width: '40px', height: '40px', background: 'rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}
         >
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
         </button>
       </div>
 
@@ -67,11 +97,12 @@ const AdminLayout = ({ children }) => {
       {isSidebarOpen && (
         <div
           onClick={() => setIsSidebarOpen(false)}
-          className="mobile-only"
+          className="show-mobile"
           style={{
             position: 'fixed',
             inset: 0,
-            background: 'rgba(0,0,0,0.5)',
+            background: 'rgba(0,0,0,0.6)',
+            backdropFilter: 'blur(4px)',
             zIndex: 95
           }}
         />
@@ -80,14 +111,68 @@ const AdminLayout = ({ children }) => {
       <main
         className="main-content"
         style={{
-          transition: 'margin 0.3s ease'
+          transition: 'padding 0.3s ease',
+          padding: '0'
         }}
       >
-        <div style={{ padding: '0' }}>
+        <div className="responsive-main-padding">
           {children}
         </div>
       </main>
+
+      <style>
+        {`
+          @media (max-width: 1024px) {
+            .responsive-main-padding {
+              padding-top: 84px !important;
+              padding-left: 15px !important;
+              padding-right: 15px !important;
+            }
+            .show-mobile-flex { display: flex !important; }
+          }
+        `}
+      </style>
     </div>
+  );
+};
+
+const AdminRoutes = () => {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'Admin';
+
+  return (
+    <Routes>
+      <Route index element={user?.role === 'Executive' ? <Navigate to="freelancers" /> : <AdminDashboard />} />
+      <Route path="freelancers" element={<Freelancers />} />
+      <Route path="outside-cars" element={<OutsideCars />} />
+      <Route path="maintenance" element={<Maintenance />} />
+      <Route path="parking" element={<Parking />} />
+      <Route path="reports" element={<Reports />} />
+
+      {isAdmin && (
+        <>
+          <Route path="drivers" element={<Drivers />} />
+          <Route path="advances" element={<Advances />} />
+          <Route path="vehicles" element={<Vehicles />} />
+          <Route path="fastag" element={<Fastag />} />
+          <Route path="border-tax" element={<BorderTax />} />
+          <Route path="fuel" element={<Fuel />} />
+          <Route path="admins" element={<Admins />} />
+        </>
+      )}
+
+      {/* Redirect unauthorized access */}
+      {!isAdmin && (
+        <>
+          <Route path="drivers" element={<Navigate to="/admin" />} />
+          <Route path="advances" element={<Navigate to="/admin" />} />
+          <Route path="vehicles" element={<Navigate to="/admin" />} />
+          <Route path="fastag" element={<Navigate to="/admin" />} />
+          <Route path="border-tax" element={<Navigate to="/admin" />} />
+          <Route path="fuel" element={<Navigate to="/admin" />} />
+        </>
+      )}
+    </Routes>
   );
 };
 
@@ -102,39 +187,32 @@ import { LanguageProvider } from './context/LanguageContext';
 
 function App() {
   return (
-    <Router>
+    <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <LanguageProvider>
         <AuthProvider>
-          <Routes>
-            <Route path="/login" element={<Login />} />
+          <Suspense fallback={<LoadingFallback />}>
+            <Routes>
+              <Route path="/login" element={<Login />} />
 
-            <Route path="/admin/*" element={
-              <ProtectedRoute role="Admin">
-                <CompanyProvider>
-                  <AdminLayout>
-                    <Routes>
-                      <Route index element={<AdminDashboard />} />
-                      <Route path="drivers" element={<Drivers />} />
-                      <Route path="freelancers" element={<Freelancers />} />
-                      <Route path="vehicles" element={<Vehicles />} />
-                      <Route path="outside-cars" element={<OutsideCars />} />
-                      <Route path="fastag" element={<Fastag />} />
-                      <Route path="border-tax" element={<BorderTax />} />
-                      <Route path="reports" element={<Reports />} />
-                    </Routes>
-                  </AdminLayout>
-                </CompanyProvider>
-              </ProtectedRoute>
-            } />
+              <Route path="/admin/*" element={
+                <ProtectedRoute role="Admin">
+                  <CompanyProvider>
+                    <AdminLayout>
+                      <AdminRoutes />
+                    </AdminLayout>
+                  </CompanyProvider>
+                </ProtectedRoute>
+              } />
 
-            <Route path="/driver/*" element={
-              <ProtectedRoute role="Driver">
-                <DriverPortal />
-              </ProtectedRoute>
-            } />
+              <Route path="/driver/*" element={
+                <ProtectedRoute role="Driver">
+                  <DriverPortal />
+                </ProtectedRoute>
+              } />
 
-            <Route path="/" element={<Navigate to="/login" />} />
-          </Routes>
+              <Route path="/" element={<Navigate to="/login" />} />
+            </Routes>
+          </Suspense>
         </AuthProvider>
       </LanguageProvider>
     </Router>

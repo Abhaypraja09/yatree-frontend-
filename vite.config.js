@@ -17,7 +17,14 @@ export default defineConfig({
     }
   },
   build: {
-    chunkSizeWarningLimit: 1600,
-    sourcemap: true
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom', 'react-router-dom', 'framer-motion', 'lucide-react'],
+          excel: ['xlsx', 'xlsx-js-style']
+        }
+      }
+    }
   }
 })

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Plus, Car, AlertCircle, Trash2, Calendar, ExternalLink, Search } from 'lucide-react';
+import { Plus, Car, AlertCircle, Trash2, Calendar, ExternalLink, Search, Wallet, Shield, MapPin, Clock, CheckCircle2, XCircle, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
@@ -35,10 +35,6 @@ const Vehicles = () => {
     const [uploadingDoc, setUploadingDoc] = useState(false);
 
 
-    const logoMap = {
-        'YatreeDestination': '/logos/YD.Logo.webp',
-        'GoGetGo': '/logos/gogetgo.webp'
-    };
 
     useEffect(() => {
         if (selectedCompany) {
@@ -221,98 +217,177 @@ const Vehicles = () => {
             )}
 
             <header style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
                 padding: '30px 0',
                 gap: '20px',
                 flexWrap: 'wrap'
-            }}>
+            }} className="flex-resp">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{
                         width: '50px',
                         height: '50px',
-                        background: 'white',
-                        borderRadius: '12px',
-                        padding: '6px',
+                        background: 'rgba(255,255,255,0.03)',
+                        borderRadius: '14px',
+                        padding: '8px',
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
                     }}>
-                        <img src={logoMap[selectedCompany?.name]} alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                        <img src="/logos/logo.png" alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                     </div>
                     <div>
-                        <h1 style={{ color: 'white', fontSize: '28px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' }}>Fleet Vehicles</h1>
-                        <p style={{ color: 'var(--text-muted)', margin: '4px 0 0 0', fontSize: '13px' }}>Managing primary assets for {selectedCompany?.name || '...'}</p>
+                        <h1 className="resp-title" style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0 }}>Fleet Vehicles</h1>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></div>
+                            <p className="resp-subtitle" style={{ color: 'var(--text-muted)', margin: 0 }}>{vehicles.length} Total Assets Registered</p>
+                        </div>
                     </div>
                 </div>
-                <div style={{ display: 'flex', gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap', minWidth: '300px' }}>
-                    <div style={{ position: 'relative', flex: '1', maxWidth: '350px', minWidth: '200px' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '12px', top: '15px', color: 'var(--text-muted)' }} />
+                <div className="mobile-search-row" style={{ display: 'flex', gap: '10px', flex: '1 1 auto', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', flex: '1 1 auto', maxWidth: '380px', minWidth: '0' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                         <input
                             type="text"
-                            placeholder="Search by car number or model..."
+                            placeholder="Find vehicle..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="input-field"
-                            style={{ paddingLeft: '40px', marginBottom: 0, height: '48px', fontSize: '14px' }}
+                            style={{ paddingLeft: '48px', marginBottom: 0, height: '52px', fontSize: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', width: '100%' }}
                         />
                     </div>
-                    <button className="btn-primary" onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 25px', borderRadius: '12px' }}>
-                        <Plus size={20} /> <span className="mobile-hide">Add Vehicle</span><span className="mobile-only">Add</span>
+                    <button className="btn-primary" onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '52px', padding: '0 20px', borderRadius: '12px', fontSize: '14px', fontWeight: '800', whiteSpace: 'nowrap', flexShrink: 0 }}>
+                        <Plus size={20} /> <span className="hide-mobile">Add Vehicle</span><span className="show-mobile">Add</span>
                     </button>
                 </div>
             </header>
 
-            <div className="grid-responsive" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', paddingBottom: '40px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', paddingBottom: '40px' }}>
                 {filteredVehicles.length > 0 ? (
-                    filteredVehicles.map(v => (
-                        <motion.div key={v._id} whileHover={{ y: -5 }} className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px', alignItems: 'flex-start' }}>
-                                <div style={{ background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', padding: '10px', borderRadius: '12px', color: 'var(--primary)' }}>
-                                    <Car size={22} />
+                    filteredVehicles.map((v, index) => (
+                        <motion.div
+                            key={v._id}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: index * 0.05 }}
+                            whileHover={{ y: -8, boxShadow: '0 12px 24px rgba(0,0,0,0.2)' }}
+                            className="glass-card"
+                            style={{ padding: '24px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}
+                        >
+                            {/* Accent Background */}
+                            <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: '120px', height: '120px', background: 'var(--primary)', filter: 'blur(80px)', opacity: 0.1, zIndex: 0 }}></div>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
+                                <div style={{ background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', padding: '12px', borderRadius: '14px', color: 'var(--primary)', boxShadow: '0 4px 12px rgba(14, 165, 233, 0.1)' }}>
+                                    <Car size={24} />
                                 </div>
-                                <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', border: '1px solid var(--border)', padding: '3px 8px', borderRadius: '6px', fontWeight: '700', textTransform: 'uppercase' }}>{v.permitType}</span>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{v.carType || 'SUV'}</span>
+                                    </div>
                                     <button
                                         onClick={() => handleDelete(v._id)}
-                                        style={{ background: 'rgba(244, 63, 94, 0.05)', color: '#f43f5e', padding: '6px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.1)' }}
+                                        style={{ background: 'rgba(244, 63, 94, 0.05)', color: '#f43f5e', padding: '8px', borderRadius: '10px', border: '1px solid rgba(244, 63, 94, 0.1)', transition: '0.2s' }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.15)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.05)'}
                                     >
                                         <Trash2 size={16} />
                                     </button>
                                 </div>
                             </div>
 
-                            <div style={{ flex: 1 }}>
-                                <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: '0 0 2px 0' }}>{v.carNumber}</h3>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginBottom: '20px' }}>{v.model}</p>
+                            <div style={{ flex: 1, position: 'relative', zIndex: 1 }}>
+                                <h3 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>{v.carNumber}</h3>
+                                <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px', fontWeight: '500' }}>{v.model}</p>
+
+                                <div style={{ display: 'flex', gap: '8px', marginBottom: '25px', flexWrap: 'wrap' }}>
+                                    {['RC', 'PUC', 'INS'].map(type => {
+                                        const doc = v.documents?.find(d => d.documentType === type) ||
+                                            v.documents?.find(d => d.documentType === (type === 'INS' ? 'INSURANCE' : type));
+                                        const isExpired = doc ? new Date(doc.expiryDate) < new Date() : true;
+                                        return (
+                                            <div key={type} style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '5px',
+                                                fontSize: '10px',
+                                                fontWeight: '800',
+                                                padding: '4px 8px',
+                                                borderRadius: '6px',
+                                                background: !doc ? 'rgba(255,255,255,0.03)' : (isExpired ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)'),
+                                                color: !doc ? 'var(--text-muted)' : (isExpired ? '#f43f5e' : '#10b981'),
+                                                border: `1px solid ${!doc ? 'rgba(255,255,255,0.05)' : (isExpired ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)')}`
+                                            }}>
+                                                {!doc ? <Clock size={10} /> : (isExpired ? <XCircle size={10} /> : <CheckCircle2 size={10} />)}
+                                                {type}
+                                            </div>
+                                        );
+                                    })}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '10px', fontWeight: '800', padding: '4px 8px', borderRadius: '6px', background: 'rgba(14, 165, 233, 0.05)', color: 'var(--primary)', border: '1px solid rgba(14, 165, 233, 0.1)' }}>
+                                        <MapPin size={10} /> {v.permitType}
+                                    </div>
+                                </div>
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                <div>
-                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '2px' }}>Current Driver</p>
-                                    <p style={{ color: v.currentDriver ? '#10b981' : 'white', fontSize: '13px', fontWeight: '700', margin: 0 }}>
-                                        {v.currentDriver?.name || 'In Yard'}
-                                    </p>
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', zIndex: 1 }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', gap: '15px' }}>
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: v.currentDriver ? '#10b981' : '#f59e0b' }}></div>
+                                                <p style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.4px', margin: 0 }}>Driver</p>
+                                            </div>
+                                            <p style={{ color: 'white', fontSize: '14px', fontWeight: '700', margin: 0 }}>
+                                                {v.currentDriver?.name || 'Available / Yard'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowDocsModal(v)}
+                                        style={{
+                                            background: 'linear-gradient(135deg, var(--primary), #0284c7)',
+                                            color: 'white',
+                                            border: 'none',
+                                            padding: '8px 18px',
+                                            borderRadius: '10px',
+                                            fontSize: '12px',
+                                            fontWeight: '800',
+                                            boxShadow: '0 4px 12px rgba(14, 165, 233, 0.2)',
+                                            transition: '0.3s'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                                    >
+                                        Manage
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => setShowDocsModal(v)}
-                                    style={{ background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', border: '1px solid rgba(14, 165, 233, 0.2)', padding: '6px 14px', borderRadius: '8px', fontSize: '12px', fontWeight: '700' }}
-                                >
-                                    Docs
-                                </button>
+                                <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '12px', paddingTop: '12px', justifyContent: 'space-between' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Wallet size={14} style={{ color: 'var(--text-muted)' }} />
+                                        <div>
+                                            <span style={{ fontSize: '12px', color: 'white', fontWeight: '800' }}>₹{v.fastagBalance || 0}</span>
+                                            <span style={{ fontSize: '9px', color: 'var(--text-muted)', marginLeft: '4px' }}>Fastag</span>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <Shield size={14} style={{ color: 'var(--text-muted)' }} />
+                                        <div>
+                                            <span style={{ fontSize: '12px', color: 'white', fontWeight: '800' }}>₹{v.dutyAmount || 0}</span>
+                                            <span style={{ fontSize: '9px', color: 'var(--text-muted)', marginLeft: '4px' }}>Base Rate</span>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </motion.div>
                     ))
                 ) : (
-                    <div className="glass-card" style={{ gridColumn: '1/-1', padding: '60px 20px', textAlign: 'center' }}>
-                        <div style={{ background: 'rgba(255,255,255,0.02)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 20px' }}>
-                            <Car size={32} style={{ color: 'var(--text-muted)', opacity: 0.5 }} />
+                    <div className="glass-card" style={{ gridColumn: '1/-1', padding: '80px 20px', textAlign: 'center', border: '2px dashed rgba(255,255,255,0.05)', background: 'transparent' }}>
+                        <div style={{ background: 'rgba(255,255,255,0.02)', width: '90px', height: '90px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 25px' }}>
+                            <Car size={36} style={{ color: 'var(--text-muted)', opacity: 0.3 }} />
                         </div>
-                        <h3 style={{ color: 'white', marginBottom: '8px', fontSize: '20px' }}>No vehicles found</h3>
-                        <p style={{ color: 'var(--text-muted)', marginBottom: '25px', maxWidth: '400px', margin: '0 auto 25px' }}>Create your first vehicle entry to start tracking documents and attendance.</p>
-                        <button className="btn-primary" onClick={() => setShowModal(true)}>Add Your First Vehicle</button>
+                        <h3 style={{ color: 'white', marginBottom: '10px', fontSize: '22px', fontWeight: '800' }}>No vehicles matched your search</h3>
+                        <p style={{ color: 'var(--text-muted)', marginBottom: '30px', maxWidth: '400px', margin: '0 auto 30px', fontSize: '15px' }}>Check for typos or add a new vehicle if it's missing from the fleet.</p>
+                        <button className="btn-primary" onClick={() => setShowModal(true)} style={{ padding: '12px 30px' }}>Add New Fleet Vehicle</button>
                     </div>
                 )}
             </div>
@@ -324,8 +399,9 @@ const Vehicles = () => {
                             <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '700' }}>Add New Vehicle</h2>
                             <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
                         </div>
+
                         <form onSubmit={handleCreateVehicle}>
-                            <div className="modal-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                            <div className="form-grid-2">
                                 <div>
                                     <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Car Number *</label>
                                     <input className="input-field" placeholder="DL-01-AB-1234" value={carNumber} onChange={(e) => setCarNumber(e.target.value)} required />
@@ -336,7 +412,7 @@ const Vehicles = () => {
                                 </div>
                             </div>
 
-                            <div className="modal-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                            <div className="form-grid-2">
                                 <div>
                                     <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Permit Category</label>
                                     <select className="input-field" value={permitType} onChange={(e) => setPermitType(e.target.value)}>
@@ -380,7 +456,7 @@ const Vehicles = () => {
                                 <h3 style={{ color: 'white', fontSize: '15px', fontWeight: '700', marginBottom: '15px' }}>Initial Documents (Optional)</h3>
                                 <div style={{ display: 'grid', gap: '12px' }}>
                                     {['rc', 'insurance', 'puc', 'fitness', 'permit'].map(type => (
-                                        <div key={type} className="modal-grid-2" style={{ display: 'grid', gridTemplateColumns: '100px 1.5fr 1fr', gap: '15px', alignItems: 'center' }}>
+                                        <div key={type} className="doc-upload-grid">
                                             <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>{type}</label>
                                             <input
                                                 type="file"
@@ -421,7 +497,7 @@ const Vehicles = () => {
                             <button onClick={() => setShowDocsModal(null)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
                         </div>
 
-                        <div className="grid-responsive" style={{ gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px', marginBottom: '35px' }}>
+                        <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px', marginBottom: '35px' }}>
                             {showDocsModal.documents?.map((doc, idx) => (
                                 <div key={idx} className="glass-card" style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
@@ -436,18 +512,25 @@ const Vehicles = () => {
                                             <ExternalLink size={20} color="white" />
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '500' }}>
-                                            Expiry: <span style={{ color: 'white', fontWeight: '700' }}>{new Date(doc.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>
+                                            {(() => {
+                                                const isExpired = new Date(doc.expiryDate) < new Date();
+                                                return (
+                                                    <>
+                                                        Expires: <span style={{ color: isExpired ? '#f43f5e' : 'white', fontWeight: '800' }}>{new Date(doc.expiryDate).toLocaleDateString('en-IN')}</span>
+                                                    </>
+                                                );
+                                            })()}
                                         </div>
                                         <a
                                             href={`https://wa.me/91${JSON.parse(localStorage.getItem('userInfo'))?.mobile || '9660953135'}?text=${encodeURIComponent(`ALERT: Vehicle ${showDocsModal.carNumber} document (${doc.documentType}) is expiring on ${new Date(doc.expiryDate).toLocaleDateString()}. Please take action.`)}`}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            style={{ color: '#25D366', opacity: 0.8 }}
+                                            style={{ color: '#25D366', background: 'rgba(37, 211, 102, 0.1)', padding: '6px', borderRadius: '8px', fontSize: '14px', textDecoration: 'none' }}
                                             title="Send WhatsApp Reminder"
                                         >
-                                            💬
+                                            WA
                                         </a>
                                     </div>
                                 </div>
@@ -461,7 +544,7 @@ const Vehicles = () => {
 
                         <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '25px' }}>
                             <h3 style={{ color: 'white', fontSize: '16px', fontWeight: '700', marginBottom: '15px' }}>Quick Upload</h3>
-                            <div className="modal-grid-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', alignItems: 'flex-end' }}>
+                            <div className="quick-upload-grid">
                                 <div>
                                     <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px' }}>Type</label>
                                     <select className="input-field" value={docToUpload.type} onChange={(e) => setDocToUpload({ ...docToUpload, type: e.target.value })} style={{ marginBottom: 0, height: '42px', fontSize: '13px', fontWeight: '600' }}>

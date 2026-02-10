@@ -32,16 +32,7 @@ export const CompanyProvider = ({ children }) => {
             });
             setCompanies(data);
 
-            // Check if there's a stored company ID
-            const storedCompanyId = localStorage.getItem('selectedCompanyId');
-            if (storedCompanyId) {
-                const found = data.find(c => c._id === storedCompanyId);
-                if (found) {
-                    setSelectedCompany(found);
-                } else {
-                    setSelectedCompany(data[0]);
-                }
-            } else if (data.length > 0) {
+            if (data.length > 0) {
                 setSelectedCompany(data[0]);
             }
         } catch (err) {
@@ -52,10 +43,8 @@ export const CompanyProvider = ({ children }) => {
     };
 
     const changeCompany = (company) => {
+        // No-op or just set it
         setSelectedCompany(company);
-        if (company) {
-            localStorage.setItem('selectedCompanyId', company._id);
-        }
     };
 
     return (

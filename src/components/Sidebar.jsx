@@ -10,7 +10,11 @@ import {
     ChevronRight,
     Building2,
     ChevronDown,
-    ShieldAlert
+    ShieldAlert,
+    Wrench,
+    Fuel,
+    CreditCard,
+    MapPin
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
@@ -19,19 +23,29 @@ const Sidebar = ({ isOpen, onClose }) => {
     const { logout, user } = useAuth();
     const { companies, selectedCompany, setSelectedCompany } = useCompany();
 
-    const menuItems = [
+    const allMenuItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/admin/drivers', icon: Users, label: 'Drivers' },
         { path: '/admin/freelancers', icon: Users, label: 'Freelancers' },
+        { path: '/admin/advances', icon: CreditCard, label: 'Advances' },
         { path: '/admin/vehicles', icon: Car, label: 'Vehicles' },
         { path: '/admin/outside-cars', icon: Car, label: 'Outside Cars' },
         { path: '/admin/border-tax', icon: ShieldAlert, label: 'Border Tax' },
         { path: '/admin/fastag', icon: ClipboardList, label: 'Fastag' },
+        { path: '/admin/maintenance', icon: Wrench, label: 'Maintenance' },
+        { path: '/admin/fuel', icon: Fuel, label: 'Fuel' },
+        { path: '/admin/parking', icon: MapPin, label: 'Parking' },
         { path: '/admin/reports', icon: ClipboardList, label: 'Daily Reports' },
+        { path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins' },
     ];
 
+    const menuItems = user.role === 'Executive'
+        ? allMenuItems.filter(item => ['Freelancers', 'Outside Cars', 'Maintenance', 'Parking', 'Daily Reports'].includes(item.label))
+        : allMenuItems;
+
     const logoMap = {
-        'YatreeDestination': '/logos/YD.Logo.webp',
+        'YatreeDestination': '/logos/logo.png',
+        'Yatree Destination': '/logos/logo.png',
         'GoGetGo': '/logos/gogetgo.webp'
     };
 
@@ -87,8 +101,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                         />
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>FleetCRM</h2>
-                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>Professional Edition</p>
+                        <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>Yatree Destination</h2>
+                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>Automotive Excellence</p>
                     </div>
                 </div>
                 {/* Close Button for Mobile */}
@@ -101,44 +115,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 </button>
             </div>
 
-            {/* Rest of the sidebar content */}
-            <div style={{ marginBottom: '35px', padding: '0 5px' }}>
-                <label style={{ fontSize: '11px', fontWeight: '700', color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', display: 'block' }}>Active Company</label>
-                <div style={{ position: 'relative' }}>
-                    <select
-                        value={selectedCompany?._id || ''}
-                        onChange={(e) => {
-                            setSelectedCompany(companies.find(c => c._id === e.target.value));
-                            if (window.innerWidth < 1025) onClose();
-                        }}
-                        style={{
-                            width: '100%',
-                            appearance: 'none',
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid var(--border)',
-                            borderRadius: '12px',
-                            padding: '12px 15px 12px 40px',
-                            color: 'white',
-                            fontSize: '14px',
-                            fontWeight: '600',
-                            cursor: 'pointer',
-                            outline: 'none'
-                        }}
-                    >
-                        {companies.map(c => (
-                            <option key={c._id} value={c._id} style={{ background: '#1e293b' }}>{c.name}</option>
-                        ))}
-                    </select>
-                    {logoMap[selectedCompany?.name] ? (
-                        <div style={{ position: 'absolute', left: '12px', top: '12px', width: '20px', height: '20px', background: 'white', borderRadius: '4px', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <img src={logoMap[selectedCompany?.name]} style={{ width: '80%', height: '80%', objectFit: 'contain' }} />
-                        </div>
-                    ) : (
-                        <Building2 size={16} style={{ position: 'absolute', left: '15px', top: '15px', color: 'var(--primary)' }} />
-                    )}
-                    <ChevronDown size={16} style={{ position: 'absolute', right: '15px', top: '15px', color: 'var(--text-muted)', pointerEvents: 'none' }} />
-                </div>
-            </div>
+            {/* Active Company section removed */}
 
             <nav style={{ flex: 1, overflowY: 'auto', paddingRight: '5px' }} className="sidebar-nav-scroll">
                 {menuItems.map((item) => (
