@@ -840,7 +840,7 @@ const Reports = () => {
                                                     <UserIcon size={18} color="white" />
                                                 </div>
                                                 <div>
-                                                    <p style={{ fontWeight: '800', fontSize: '14px', margin: 0 }}>{report.driver?.name || report.driver || 'N/A'}</p>
+                                                    <p style={{ fontWeight: '800', fontSize: '14px', margin: 0 }}>{report.driver?.name || (typeof report.driver === 'string' ? report.driver : 'N/A')}</p>
                                                     <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{report.driver?.mobile || '-'}</p>
                                                 </div>
                                             </div>
@@ -958,8 +958,8 @@ const Reports = () => {
                                                     <UserIcon size={18} color="var(--primary)" />
                                                 </div>
                                                 <div>
-                                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>{report.driver?.name || report.driver || 'N/A'}</div>
-                                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{report.vehicle?.carNumber?.split('#')[0] || report.carNumber || '--'}</div>
+                                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>{report.driver?.name || (typeof report.driver === 'string' ? report.driver : 'N/A')}</div>
+                                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{report.vehicle?.carNumber?.split('#')[0] || (typeof report.carNumber === 'string' ? report.carNumber : '--')}</div>
                                                     <div style={{ marginTop: '4px' }}>
                                                         <span style={{
                                                             fontSize: '10px',
