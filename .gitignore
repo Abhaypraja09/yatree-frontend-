@@ -23,7 +23,7 @@ yarn-error.log
 # -----------------------------
 # Build / Dist folders
 # -----------------------------
-dist/
+# dist/
 build/
 .next/
 out/
@@ -66,4 +66,4 @@ server_debug.log
 *.sqlite
 public/uploads/
 backend/uploads/
-client/dist/
+# client/dist/
