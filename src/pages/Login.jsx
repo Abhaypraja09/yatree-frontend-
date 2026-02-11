@@ -24,6 +24,8 @@ const Login = () => {
                 navigate('/admin');
             } else if (user.role === 'Executive') {
                 navigate('/admin/freelancers');
+            } else if (user.role === 'Staff') {
+                navigate('/staff');
             } else {
                 navigate('/driver');
             }

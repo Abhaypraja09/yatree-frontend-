@@ -18,6 +18,8 @@ const Fuel = lazy(() => import('./pages/Fuel'));
 const Parking = lazy(() => import('./pages/Parking'));
 const Advances = lazy(() => import('./pages/Advances'));
 const Admins = lazy(() => import('./pages/Admins'));
+const Staff = lazy(() => import('./pages/Staff'));
+const StaffPortal = lazy(() => import('./pages/StaffPortal'));
 import Sidebar from './components/Sidebar';
 import { CompanyProvider } from './context/CompanyContext';
 
@@ -53,6 +55,8 @@ const ProtectedRoute = ({ children, role }) => {
     if (!isAdminOrExecutive) return <Navigate to="/driver" />;
   } else if (role === 'Driver') {
     if (user.role !== 'Driver') return <Navigate to="/admin" />;
+  } else if (role === 'Staff') {
+    if (user.role !== 'Staff') return <Navigate to="/admin" />;
   }
 
   return children;
@@ -158,6 +162,7 @@ const AdminRoutes = () => {
           <Route path="border-tax" element={<BorderTax />} />
           <Route path="fuel" element={<Fuel />} />
           <Route path="admins" element={<Admins />} />
+          <Route path="staff" element={<Staff />} />
         </>
       )}
 
@@ -207,6 +212,12 @@ function App() {
               <Route path="/driver/*" element={
                 <ProtectedRoute role="Driver">
                   <DriverPortal />
+                </ProtectedRoute>
+              } />
+
+              <Route path="/staff/*" element={
+                <ProtectedRoute role="Staff">
+                  <StaffPortal />
                 </ProtectedRoute>
               } />
 

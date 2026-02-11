@@ -82,27 +82,16 @@ const OutsideCars = () => {
 
     const handleCarNumberChange = (val) => {
         const upVal = val.toUpperCase();
-        const targetDate = formData.date || getToday();
-        const internalId = `${upVal}#${targetDate}`;
-        const existingToday = vehicles.find(v => v.carNumber === internalId);
+        // Just find any existing vehicle with this number to auto-fill common fields
         const overallExisting = vehicles.find(v => v.carNumber?.split('#')[0] === upVal);
 
-        if (existingToday) {
-            setFormData(prev => ({
-                ...prev,
-                carNumber: upVal,
-                model: existingToday.model || prev.model,
-                ownerName: existingToday.ownerName || prev.ownerName,
-                dutyAmount: existingToday.dutyAmount,
-                isDuplicateToday: true
-            }));
-        } else if (overallExisting) {
+        if (overallExisting) {
             setFormData(prev => ({
                 ...prev,
                 carNumber: upVal,
                 model: overallExisting.model || prev.model,
                 ownerName: overallExisting.ownerName || prev.ownerName,
-                isDuplicateToday: false
+                isDuplicateToday: false // Never block duplicates now
             }));
         } else {
             setFormData(prev => ({ ...prev, carNumber: upVal, isDuplicateToday: false }));
@@ -124,38 +113,44 @@ const OutsideCars = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             if (!selectedCompany?._id) return alert("Select a company first!");
-            const internalCarNumber = `${formData.carNumber}#${formData.date}`;
-            const existingCar = vehicles.find(v => v.carNumber === internalCarNumber);
+
+            let internalCarNumber = `${formData.carNumber}#${formData.date}`;
+
+            // Add a unique suffix for new entries or when carNumber/date changes in edit mode to avoid collisions
+            if (!editMode) {
+                internalCarNumber += `#${Math.random().toString(36).substring(2, 7)}`;
+            } else if (selectedId) {
+                const originalVehicle = vehicles.find(v => v._id === selectedId);
+                const oldParts = originalVehicle?.carNumber?.split('#') || [];
+                // If the plate and date are the same as before, keep the old unique suffix
+                if (formData.carNumber === oldParts[0] && formData.date === oldParts[1] && oldParts[2]) {
+                    internalCarNumber += `#${oldParts[2]}`;
+                } else {
+                    // Plate or date changed, generate new suffix to be safe
+                    internalCarNumber += `#${Math.random().toString(36).substring(2, 7)}`;
+                }
+            }
 
             let payload = {
                 carNumber: internalCarNumber,
-                model: formData.model,
-                property: formData.property,
-                dutyType: formData.dutyType || '',
-                ownerName: formData.ownerName,
+                model: formData.model?.trim(),
+                property: formData.property?.trim(),
+                dutyType: formData.dutyType?.trim() || '',
+                ownerName: formData.ownerName?.trim(),
                 dutyAmount: Number(formData.dutyAmount) || 0,
-                dropLocation: formData.dropLocation || '',
+                dropLocation: formData.dropLocation?.trim() || '',
                 companyId: selectedCompany._id,
                 isOutsideCar: true,
                 status: 'active',
-                createdAt: new Date(formData.date) // Set createdAt to match the selected date for sorting/reports
+                createdAt: new Date(formData.date)
             };
 
-            if (!editMode && existingCar) {
-                payload = {
-                    ...payload,
-                    dutyAmount: Number(existingCar.dutyAmount) + (Number(formData.dutyAmount) || 0),
-                    dutyType: existingCar.dutyType ? `${existingCar.dutyType} + ${formData.dutyType}` : formData.dutyType,
-                    dropLocation: existingCar.dropLocation ? `${existingCar.dropLocation} | ${formData.dropLocation}` : formData.dropLocation
-                };
-                await axios.put(`/api/admin/vehicles/${existingCar._id}`, payload, {
-                    headers: { Authorization: `Bearer ${userInfo.token}` }
-                });
-            } else if (editMode && selectedId) {
+            if (editMode && selectedId) {
                 await axios.put(`/api/admin/vehicles/${selectedId}`, payload, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
             } else {
+                // Always create a new entry for outside cars now (no merging)
                 const data = new FormData();
                 Object.keys(payload).forEach(key => data.append(key, payload[key]));
                 data.append('permitType', 'Contract');
@@ -217,11 +212,11 @@ const OutsideCars = () => {
     const totalDutiesCount = filtered.reduce((sum, v) => sum + (v.dutyType?.split(' + ').length || 0), 0);
 
     // Cascading unique drivers based on proprietor selection
-    const uniqueOwners = [...new Set(vehicles.map(v => v.ownerName).filter(Boolean))].sort();
+    const uniqueOwners = [...new Set(vehicles.map(v => v.ownerName?.trim()).filter(Boolean))].sort();
     const uniqueProperties = [...new Set(
         vehicles
-            .filter(v => ownerFilter === 'All' || v.ownerName === ownerFilter)
-            .map(v => v.property)
+            .filter(v => ownerFilter === 'All' || v.ownerName?.trim() === ownerFilter)
+            .map(v => v.property?.trim())
             .filter(Boolean)
     )].sort();
 
