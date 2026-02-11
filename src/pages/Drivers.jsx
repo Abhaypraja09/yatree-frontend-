@@ -25,6 +25,7 @@ const Drivers = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingDriver, setEditingDriver] = useState(null);
     const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: 500 });
+    const [driverTypeFilter, setDriverTypeFilter] = useState('Regular');
 
 
 
@@ -132,13 +133,15 @@ const Drivers = () => {
 
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredDrivers = drivers.filter(d =>
-        !d.isFreelancer && (
-            d.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const filteredDrivers = drivers.filter(d => {
+        const matchesSearch = d.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             d.mobile?.includes(searchTerm) ||
-            d.username?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
-    );
+            d.username?.toLowerCase().includes(searchTerm.toLowerCase());
+
+        if (driverTypeFilter === 'All') return matchesSearch;
+        if (driverTypeFilter === 'Freelancer') return d.isFreelancer && matchesSearch;
+        return !d.isFreelancer && matchesSearch;
+    });
 
     const totalDrivers = drivers.length;
     const activeDrivers = drivers.filter(d => d.status === 'active').length;
@@ -183,6 +186,27 @@ const Drivers = () => {
                 </div>
                 <div className="mobile-search-row" style={{ display: 'flex', gap: '10px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
 
+                    <div style={{ position: 'relative', flex: '1', minWidth: '150px', maxWidth: '180px' }}>
+                        <Filter size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 1 }} />
+                        <select
+                            value={driverTypeFilter}
+                            onChange={(e) => setDriverTypeFilter(e.target.value)}
+                            className="input-field"
+                            style={{
+                                height: '52px',
+                                paddingLeft: '44px',
+                                marginBottom: 0,
+                                fontSize: '13px',
+                                appearance: 'auto',
+                                background: 'rgba(255,255,255,0.03)',
+                                cursor: 'pointer'
+                            }}
+                        >
+                            <option value="Regular" style={{ color: '#1e293b' }}>Regular Only</option>
+                            <option value="Freelancer" style={{ color: '#1e293b' }}>Freelancers Only</option>
+                            <option value="All" style={{ color: '#1e293b' }}>All Types</option>
+                        </select>
+                    </div>
                     <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '100%', maxWidth: '380px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 auto' }}>
                         <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
                         <input

@@ -11,8 +11,14 @@ instance.interceptors.request.use(
     (config) => {
         const userInfo = localStorage.getItem('userInfo');
         if (userInfo) {
-            const { token } = JSON.parse(userInfo);
-            config.headers.Authorization = `Bearer ${token}`;
+            try {
+                const parsed = JSON.parse(userInfo);
+                if (parsed && parsed.token) {
+                    config.headers.Authorization = `Bearer ${parsed.token}`;
+                }
+            } catch (e) {
+                console.error('Error parsing userInfo from localStorage', e);
+            }
         }
         return config;
     },

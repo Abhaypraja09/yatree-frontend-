@@ -66,7 +66,7 @@ const AdminLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
 
   return (
-    <div className="with-sidebar" style={{ display: 'flex', minHeight: '100vh', position: 'relative' }}>
+    <div className="with-sidebar" style={{ display: 'flex', minHeight: '100vh', position: 'relative', maxWidth: '100vw', overflowX: 'hidden' }}>
       {/* Mobile Top Bar */}
       <div style={{
         display: 'none',
@@ -75,13 +75,14 @@ const AdminLayout = ({ children }) => {
         left: 0,
         right: 0,
         height: '64px',
-        background: 'rgba(15, 23, 42, 0.8)',
+        background: 'rgba(15, 23, 42, 0.9)',
         backdropFilter: 'blur(20px)',
         borderBottom: '1px solid rgba(255,255,255,0.08)',
         zIndex: 90,
         padding: '0 20px',
         alignItems: 'center',
-        justifyContent: 'space-between'
+        justifyContent: 'space-between',
+        width: '100vw'
       }} className="show-mobile-flex">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img src="/logos/logo.png" alt="Logo" style={{ width: '30px', height: 'auto' }} />
@@ -115,11 +116,15 @@ const AdminLayout = ({ children }) => {
       <main
         className="main-content"
         style={{
+          flex: '1',
+          width: '100%',
+          maxWidth: '100vw',
+          overflowX: 'hidden',
           transition: 'padding 0.3s ease',
           padding: '0'
         }}
       >
-        <div className="responsive-main-padding">
+        <div className="responsive-main-padding" style={{ width: '100%', maxWidth: '100%' }}>
           {children}
         </div>
       </main>
@@ -129,10 +134,11 @@ const AdminLayout = ({ children }) => {
           @media (max-width: 1024px) {
             .responsive-main-padding {
               padding-top: 84px !important;
-              padding-left: 15px !important;
-              padding-right: 15px !important;
+              padding-left: 0 !important;
+              padding-right: 0 !important;
             }
             .show-mobile-flex { display: flex !important; }
+            .main-content { margin-left: 0 !important; width: 100% !important; }
           }
         `}
       </style>

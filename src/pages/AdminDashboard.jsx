@@ -15,7 +15,8 @@ import {
     UserCheck,
     Wallet,
     Fuel,
-    Wrench
+    Wrench,
+    Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -702,6 +703,12 @@ const AdminDashboard = () => {
                             <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/maintenance')} />
                             <StatCard icon={Clock} label="ON ACTIVE DUTY" value={stats.countPunchIns} color="#8b5cf6" loading={loading} trend={true} onClick={() => navigate('/admin/reports')} />
                             <StatCard icon={TrendingUp} label="DUTY CONCLUDED" value={stats.countPunchOuts} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/reports')} />
+                            {user?.role === 'Admin' && (
+                                <>
+                                    <StatCard icon={Briefcase} label="TOTAL STAFF" value={stats.totalStaff} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/staff')} />
+                                    <StatCard icon={UserCheck} label="STAFF PRESENT" value={stats.countStaffPresent} color="#10b981" loading={loading} onClick={() => navigate('/admin/staff')} />
+                                </>
+                            )}
                         </div>
 
                         {/* Expiry Alerts */}

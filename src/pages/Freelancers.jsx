@@ -203,6 +203,7 @@ const Freelancers = () => {
     };
 
     const baseDrivers = drivers.filter(d => driverFilter === 'All' || d._id === driverFilter);
+
     const onDutyDrivers = baseDrivers.filter(d => d.tripStatus === 'active');
     const availableDrivers = baseDrivers.filter(d => d.tripStatus !== 'active').filter(d =>
         d.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -249,88 +250,108 @@ const Freelancers = () => {
     return (
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
             <SEO title="Freelancer Fleet Network" description="Onboard and manage freelance drivers for temporary duties and peak demand management." />
-            <header style={{
-                padding: '25px 0',
-                marginBottom: '30px',
-                borderBottom: '1px solid rgba(255,255,255,0.05)'
-            }}>
-                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px', flexWrap: 'wrap' }}>
-                    <div style={{ minWidth: '200px', flex: 1 }}>
+            <header style={{ paddingBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
+                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
+                    <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                             <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px #6366f1' }}></div>
-                            <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>External Asset Logistics</span>
+                            <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>External Personnel</span>
                         </div>
-                        <h1 className="resp-title" style={{ margin: 0, fontWeight: '900', letterSpacing: '-1.5px', fontSize: 'clamp(24px, 5vw, 32px)' }}>
+                        <h1 className="resp-title" style={{ margin: 0, fontWeight: '900', letterSpacing: '-1.5px', fontSize: 'clamp(28px, 5vw, 36px)' }}>
                             Freelancer <span style={{ color: 'var(--secondary)' }}>Net</span>
                         </h1>
-                        <p className="resp-subtitle" style={{ marginTop: '8px', fontSize: '13px' }}>
-                            External personnel management
+                        <p className="resp-subtitle" style={{ marginTop: '4px', fontSize: '13px' }}>
+                            Network of <b>{drivers.length}</b> verified external professionals
                         </p>
                     </div>
 
-                    <div className="freelancer-header-controls">
-                        <div style={{ position: 'relative', width: '100%', flex: 1 }}>
+                    <div className="flex-resp" style={{ gap: '12px', flex: 1, justifyContent: 'flex-end', maxWidth: '800px' }}>
+                        <div style={{ position: 'relative', flex: '1', minWidth: '180px' }}>
+                            <Filter size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                             <select
                                 value={driverFilter}
                                 onChange={(e) => setDriverFilter(e.target.value)}
                                 className="input-field"
-                                style={{ height: '52px', fontSize: '13px', appearance: 'auto', marginBottom: 0, width: '100%' }}
+                                style={{ height: '48px', paddingLeft: '44px', marginBottom: 0, fontSize: '13px', appearance: 'auto', background: 'rgba(255,255,255,0.03)' }}
                             >
-                                <option value="All">All Drivers</option>
-                                {drivers.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                                <option value="All" style={{ color: '#1e293b' }}>All Drivers</option>
+                                {drivers.map(d => <option key={d._id} value={d._id} style={{ color: '#1e293b' }}>{d.name}</option>)}
                             </select>
                         </div>
-                        <div style={{ position: 'relative', width: '100%', flex: 1 }}>
+                        <div style={{ position: 'relative', flex: '1', minWidth: '180px' }}>
+                            <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                             <input
                                 type="text"
-                                placeholder="Search..."
+                                placeholder="Search driver..."
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
                                 className="input-field"
-                                style={{ paddingLeft: '40px', marginBottom: 0, height: '52px', fontSize: '14px', width: '100%' }}
+                                style={{ paddingLeft: '44px', marginBottom: 0, height: '48px', fontSize: '13px', background: 'rgba(255,255,255,0.03)' }}
                             />
-                            <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                         </div>
                     </div>
                 </div>
 
-                <div className="flex-resp" style={{ marginTop: '20px', justifyContent: 'flex-end', gap: '10px', flexWrap: 'wrap' }}>
-                    <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="input-field" style={{ height: '45px', marginBottom: 0, width: '100%', flex: 1, minWidth: '140px', padding: '0 15px', fontSize: '13px' }} />
-                    <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="input-field" style={{ height: '45px', marginBottom: 0, width: '100%', flex: 1, minWidth: '140px', padding: '0 15px', fontSize: '13px' }} />
-                    <div style={{ display: 'flex', gap: '10px', width: '100%', flex: 1, minWidth: '280px' }}>
-                        <button onClick={handleDownloadExcel} className="btn-primary" style={{ height: '45px', padding: '0 20px', display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.1)', flex: 1, justifyContent: 'center' }} title="Export Excel">
-                            <Download size={20} />
-                            <span className="hide-mobile" style={{ fontSize: '12px', fontWeight: '900' }}>EXCEL</span>
+                <div className="flex-resp" style={{ marginTop: '20px', justifyContent: 'space-between', gap: '15px', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', gap: '10px', flex: '1', width: '100%', flexWrap: 'wrap' }}>
+                        <div style={{ flex: 1, minWidth: '130px' }}>
+                            <label style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', marginBottom: '5px', display: 'block' }}>FROM</label>
+                            <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="input-field" style={{ height: '44px', marginBottom: 0, fontSize: '12px', width: '100%' }} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: '130px' }}>
+                            <label style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', marginBottom: '5px', display: 'block' }}>TO</label>
+                            <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="input-field" style={{ height: '44px', marginBottom: 0, fontSize: '12px', width: '100%' }} />
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', width: '100%', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+                        <button onClick={handleDownloadExcel} className="btn-primary" style={{ height: '48px', padding: '0 15px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.1)', fontWeight: '800', fontSize: '12px', flex: 1, minWidth: '120px' }}>
+                            <Download size={18} /> <span className="hide-mobile">EXCEL</span>
                         </button>
-                        <button onClick={() => setShowAddModal(true)} className="btn-primary" style={{ height: '45px', padding: '0 25px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'center' }}>
-                            <Plus size={20} /> <span className="hide-mobile">ADD NEW</span><span className="show-mobile">ADD</span>
+                        <button onClick={() => setShowAddModal(true)} className="btn-primary" style={{ height: '48px', padding: '0 20px', fontWeight: '800', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '6px', flex: 1, minWidth: '130px' }}>
+                            <Plus size={18} /> <span style={{ whiteSpace: 'nowrap' }}>Add Driver</span>
                         </button>
                     </div>
                 </div>
             </header>
 
             {/* Settlement Summary Card */}
-            {(driverFilter !== 'All') && (
-                <div className="glass-card" style={{ marginBottom: '30px', padding: '25px', display: 'flex', flexWrap: 'wrap', gap: '20px', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(30, 41, 59, 0.7) 100%)', borderLeft: '5px solid var(--primary)', boxShadow: '0 10px 30px -10px rgba(0,0,0,0.3)' }}>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></div>
-                            <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                Full History: {filterDriverName}
-                            </span>
+            {driverFilter !== 'All' && (
+                <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="glass-card"
+                    style={{
+                        marginBottom: '35px',
+                        padding: '24px',
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '20px',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(30, 41, 59, 0.8) 100%)',
+                        borderLeft: '4px solid #6366f1',
+                        borderRadius: '20px'
+                    }}
+                >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+                        <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                            <UserIcon size={28} />
                         </div>
-                        <div style={{ color: 'white', fontSize: '15px', marginLeft: '16px', opacity: 0.8, maxWidth: '300px' }}>
-                            Showing total lifetime earnings and duties for this driver
+                        <div>
+                            <div style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px' }}>
+                                Accumulated Ledger
+                            </div>
+                            <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>{filterDriverName}</h2>
                         </div>
                     </div>
-                    <div style={{ textAlign: 'right', minWidth: '140px' }}>
-                        <div style={{ fontSize: '32px', fontWeight: '900', color: 'var(--primary)', letterSpacing: '-1px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '5px' }}>
-                            <span style={{ fontSize: '20px', opacity: 0.8 }}>₹</span>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '800', letterSpacing: '1px', marginBottom: '4px' }}>TOTAL WAGE PAYABLE</div>
+                        <div style={{ fontSize: '32px', fontWeight: '900', color: '#6366f1', letterSpacing: '-1px' }}>
+                            <span style={{ fontSize: '20px', marginRight: '4px', opacity: 0.6 }}>₹</span>
                             {totalSettlement.toLocaleString('en-IN')}
                         </div>
-                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '800', letterSpacing: '0.5px' }}>TOTAL PAYABLE WAGE</div>
                     </div>
-                </div>
+                </motion.div>
             )}
 
 
@@ -578,12 +599,12 @@ const Freelancers = () => {
 
             {/* COMPLETED DUTIES SECTION */}
             <div style={{ marginTop: '40px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }} />
-                    <h2 style={{ color: 'white', fontSize: '16px', fontWeight: '800', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Recent Completed Duties</h2>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                    <div style={{ width: '4px', height: '16px', background: 'var(--secondary)', borderRadius: '2px' }}></div>
+                    <h2 style={{ fontSize: '18px', fontWeight: '900', margin: 0, letterSpacing: '0.5px' }}>Recent Completed Duties</h2>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                <div className="grid-1-2-2-3" style={{ gap: '20px' }}>
                     {filteredAttendance.filter(a => a.status === 'completed').slice(0, 10).map(a => (
                         <motion.div
                             key={a._id}

@@ -196,8 +196,8 @@ const OutsideCars = () => {
             v.ownerName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             v.property?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        const matchesOwner = ownerFilter === 'All' || v.ownerName === ownerFilter;
-        const matchesProperty = propertyFilter === 'All' || v.property === propertyFilter;
+        const matchesOwner = ownerFilter === 'All' || v.ownerName?.trim() === ownerFilter?.trim();
+        const matchesProperty = propertyFilter === 'All' || v.property?.trim() === propertyFilter?.trim();
 
         // Date Range Logic
         const dutyTagDateStr = v.carNumber?.split('#')[1];
@@ -208,14 +208,14 @@ const OutsideCars = () => {
         return matchesSearch && matchesOwner && matchesProperty && matchesDate;
     });
 
-    const totalPayable = filtered.reduce((sum, v) => sum + (Number(v.dutyAmount) || 0), 0);
-    const totalDutiesCount = filtered.reduce((sum, v) => sum + (v.dutyType?.split(' + ').length || 0), 0);
+    const totalPayable = filtered.reduce((sum, v) => sum + (v ? (Number(v.dutyAmount) || 0) : 0), 0);
+    const totalDutiesCount = filtered.reduce((sum, v) => sum + (v?.dutyType ? v.dutyType.split(' + ').filter(Boolean).length : 0), 0);
 
     // Cascading unique drivers based on proprietor selection
     const uniqueOwners = [...new Set(vehicles.map(v => v.ownerName?.trim()).filter(Boolean))].sort();
     const uniqueProperties = [...new Set(
         vehicles
-            .filter(v => ownerFilter === 'All' || v.ownerName?.trim() === ownerFilter)
+            .filter(v => ownerFilter === 'All' || v.ownerName?.trim() === ownerFilter?.trim())
             .map(v => v.property?.trim())
             .filter(Boolean)
     )].sort();
@@ -232,34 +232,34 @@ const OutsideCars = () => {
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Outside Fleet Command" description="Manage external vehicles and freelancer drivers for specific duties." />
 
-            <header style={{ padding: '30px 0', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
-                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: '25px' }}>
-                    <div style={{ flex: 1 }}>
+            <header style={{ paddingBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
+                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
+                    <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px #6366f1' }}></div>
-                            <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>External Asset Logistics</span>
+                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--secondary)', boxShadow: '0 0 10px var(--secondary)' }}></div>
+                            <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>Logistics Monitor</span>
                         </div>
                         <h1 className="resp-title" style={{ margin: 0, fontWeight: '900', letterSpacing: '-1.5px' }}>
                             Outside <span style={{ color: 'var(--secondary)' }}>Fleet</span>
                         </h1>
-                        <p className="resp-subtitle" style={{ marginTop: '8px' }}>
-                            Settling records from <b style={{ color: 'white' }}>{formatDateDisplay(fromDate)}</b> to <b style={{ color: 'white' }}>{formatDateDisplay(toDate)}</b>
+                        <p className="resp-subtitle" style={{ marginTop: '4px', fontSize: '13px' }}>
+                            External assets from <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
                         </p>
                     </div>
 
-                    <div className="flex-resp" style={{ gap: '15px' }}>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '15px 25px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px' }}>
-                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#6366f1', letterSpacing: '1px', textTransform: 'uppercase' }}>Range Payable</span>
-                            <span style={{ color: 'white', fontSize: '20px', fontWeight: '900', letterSpacing: '-0.5px' }}>₹ {totalPayable.toLocaleString()}</span>
+                    <div className="flex-resp" style={{ gap: '12px' }}>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#818cf8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Range Payable</span>
+                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{totalPayable.toLocaleString()}</span>
                         </motion.div>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '15px 25px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px' }}>
-                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase' }}>Duties Logged</span>
-                            <span style={{ color: 'white', fontSize: '20px', fontWeight: '900', letterSpacing: '-0.5px' }}>{totalDutiesCount} Logs</span>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#34d399', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Duties Logged</span>
+                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{totalDutiesCount} Records</span>
                         </motion.div>
                     </div>
                 </div>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '15px', marginTop: '30px' }}>
+                <div className="grid-1-2-2-4" style={{ marginTop: '30px', gap: '15px' }}>
                     <div className="input-field-group">
                         <label className="input-label">From Date</label>
                         <input
@@ -267,7 +267,7 @@ const OutsideCars = () => {
                             className="input-field"
                             value={fromDate}
                             onChange={(e) => setFromDate(e.target.value)}
-                            style={{ height: '52px' }}
+                            style={{ height: '48px', marginBottom: 0 }}
                         />
                     </div>
                     <div className="input-field-group">
@@ -277,7 +277,7 @@ const OutsideCars = () => {
                             className="input-field"
                             value={toDate}
                             onChange={(e) => setToDate(e.target.value)}
-                            style={{ height: '52px' }}
+                            style={{ height: '48px', marginBottom: 0 }}
                         />
                     </div>
                     <div className="input-field-group">
@@ -286,7 +286,7 @@ const OutsideCars = () => {
                             value={ownerFilter}
                             onChange={(e) => handleOwnerChange(e.target.value)}
                             className="input-field"
-                            style={{ height: '52px', appearance: 'auto', border: ownerFilter === 'All' ? '1px dashed rgba(255,255,255,0.2)' : '1px solid var(--primary)' }}
+                            style={{ height: '48px', marginBottom: 0, appearance: 'auto' }}
                         >
                             <option value="All">All Owners</option>
                             {uniqueOwners.map(owner => (
@@ -300,11 +300,7 @@ const OutsideCars = () => {
                             value={propertyFilter}
                             onChange={(e) => setPropertyFilter(e.target.value)}
                             className="input-field"
-                            style={{
-                                height: '52px',
-                                appearance: 'auto',
-                                border: propertyFilter === 'All' ? '1px dashed rgba(255,255,255,0.2)' : '1px solid var(--primary)'
-                            }}
+                            style={{ height: '48px', marginBottom: 0, appearance: 'auto' }}
                         >
                             <option value="All">All Properties</option>
                             {uniqueProperties.map(p => (
@@ -312,108 +308,109 @@ const OutsideCars = () => {
                             ))}
                         </select>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'flex-end', gap: '10px', paddingBottom: '2px', flexWrap: 'wrap' }}>
-                        <button
-                            onClick={async () => {
-                                const XLSX = await import('xlsx-js-style');
-                                const reportData = filtered.map(v => ({
-                                    'Property': v.property || '',
-                                    'Owner': v.ownerName || '',
-                                    'Date': new Date(v.createdAt).toLocaleDateString('en-IN'),
-                                    'Vehicle Details': `${v.model || ''} - ${v.carNumber?.split('#')[0] || ''}`,
-                                    'Drop Location': v.dropLocation?.replace(/ \| /g, ' ➜ ') || '',
-                                    'Service Type': v.dutyType || '',
-                                    'Amount': Number(v.dutyAmount) || 0
-                                }));
+                </div>
 
-                                // Add Total Row
-                                const totalAmount = reportData.reduce((sum, row) => sum + row.Amount, 0);
-                                reportData.push({
-                                    'Property': '',
-                                    'Owner': '',
-                                    'Date': '',
-                                    'Vehicle Details': '',
-                                    'Drop Location': '',
-                                    'Service Type': 'TOTAL PAYABLE',
-                                    'Amount': totalAmount
-                                });
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
+                    <button
+                        onClick={async () => {
+                            const XLSX = await import('xlsx-js-style');
+                            const reportData = filtered.map(v => ({
+                                'Property': v.property || '',
+                                'Owner': v.ownerName || '',
+                                'Date': new Date(v.createdAt).toLocaleDateString('en-IN'),
+                                'Vehicle Details': `${v.model || ''} - ${v.carNumber?.split('#')[0] || ''}`,
+                                'Drop Location': v.dropLocation?.replace(/ \| /g, ' ➜ ') || '',
+                                'Service Type': v.dutyType || '',
+                                'Amount': Number(v.dutyAmount) || 0
+                            }));
 
-                                const ws = XLSX.utils.json_to_sheet(reportData);
+                            // Add Total Row
+                            const totalAmount = reportData.reduce((sum, row) => sum + row.Amount, 0);
+                            reportData.push({
+                                'Property': '',
+                                'Owner': '',
+                                'Date': '',
+                                'Vehicle Details': '',
+                                'Drop Location': '',
+                                'Service Type': 'TOTAL PAYABLE',
+                                'Amount': totalAmount
+                            });
 
-                                // Styling
-                                const range = XLSX.utils.decode_range(ws['!ref']);
-                                for (let C = range.s.c; C <= range.e.c; ++C) {
-                                    let maxWidth = 10;
-                                    for (let R = range.s.r; R <= range.e.r; ++R) {
-                                        const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
-                                        if (!cell) continue;
+                            const ws = XLSX.utils.json_to_sheet(reportData);
 
-                                        cell.s = { alignment: { horizontal: 'center', vertical: 'center' }, font: { name: 'Arial', sz: 10 } };
+                            // Styling
+                            const range = XLSX.utils.decode_range(ws['!ref']);
+                            for (let C = range.s.c; C <= range.e.c; ++C) {
+                                let maxWidth = 10;
+                                for (let R = range.s.r; R <= range.e.r; ++R) {
+                                    const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+                                    if (!cell) continue;
 
-                                        // Header Styling
-                                        if (R === 0) {
-                                            cell.s.font.bold = true;
-                                            cell.s.fill = { fgColor: { rgb: "4F46E5" } }; // Indigo-600
-                                            cell.s.font.color = { rgb: "FFFFFF" };
-                                        }
+                                    cell.s = { alignment: { horizontal: 'center', vertical: 'center' }, font: { name: 'Arial', sz: 10 } };
 
-                                        // Data Alignment
-                                        if (C === 6) cell.s.alignment.horizontal = 'right'; // Amount column
-
-                                        // Total Row Styling
-                                        if (R === range.e.r) {
-                                            cell.s.font.bold = true;
-                                            cell.s.fill = { fgColor: { rgb: "E0E7FF" } }; // Indigo-100
-                                        }
-
-                                        if (cell.v) maxWidth = Math.max(maxWidth, cell.v.toString().length + 5);
+                                    // Header Styling
+                                    if (R === 0) {
+                                        cell.s.font.bold = true;
+                                        cell.s.fill = { fgColor: { rgb: "4F46E5" } }; // Indigo-600
+                                        cell.s.font.color = { rgb: "FFFFFF" };
                                     }
-                                    if (!ws['!cols']) ws['!cols'] = [];
-                                    ws['!cols'][C] = { wch: maxWidth };
-                                }
 
-                                const wb = XLSX.utils.book_new();
-                                XLSX.utils.book_append_sheet(wb, ws, "Outside Fleet Log");
-                                XLSX.writeFile(wb, `Outside_Fleet_Report_${fromDate}_to_${toDate}.xlsx`);
-                            }}
-                            className="glass-card-hover-effect"
-                            style={{
-                                height: '52px',
-                                padding: '0 20px',
-                                background: 'rgba(16, 185, 129, 0.1)',
-                                border: '1px solid rgba(16, 185, 129, 0.2)',
-                                color: '#10b981',
-                                fontWeight: '800',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                borderRadius: '12px'
-                            }}
-                        >
-                            <Save size={20} /> Excel
-                        </button>
-                        <button
-                            onClick={handleOpenLogDuty}
-                            className="glass-card-hover-effect"
-                            style={{
-                                height: '52px',
-                                padding: '0 25px',
-                                background: 'linear-gradient(135deg, var(--secondary), var(--primary))',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '12px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
-                                fontWeight: '800',
-                                fontSize: '14px',
-                                letterSpacing: '0.5px'
-                            }}
-                        >
-                            <Plus size={20} /> Add Entry
-                        </button>
-                    </div>
+                                    // Data Alignment
+                                    if (C === 6) cell.s.alignment.horizontal = 'right'; // Amount column
+
+                                    // Total Row Styling
+                                    if (R === range.e.r) {
+                                        cell.s.font.bold = true;
+                                        cell.s.fill = { fgColor: { rgb: "E0E7FF" } }; // Indigo-100
+                                    }
+
+                                    if (cell.v) maxWidth = Math.max(maxWidth, cell.v.toString().length + 5);
+                                }
+                                if (!ws['!cols']) ws['!cols'] = [];
+                                ws['!cols'][C] = { wch: maxWidth };
+                            }
+
+                            const wb = XLSX.utils.book_new();
+                            XLSX.utils.book_append_sheet(wb, ws, "Outside Fleet Log");
+                            XLSX.writeFile(wb, `Outside_Fleet_Report_${fromDate}_to_${toDate}.xlsx`);
+                        }}
+                        className="glass-card-hover-effect"
+                        style={{
+                            height: '52px',
+                            padding: '0 20px',
+                            background: 'rgba(16, 185, 129, 0.1)',
+                            border: '1px solid rgba(16, 185, 129, 0.2)',
+                            color: '#10b981',
+                            fontWeight: '800',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            borderRadius: '12px'
+                        }}
+                    >
+                        <Save size={20} /> Excel
+                    </button>
+                    <button
+                        onClick={handleOpenLogDuty}
+                        className="glass-card-hover-effect"
+                        style={{
+                            height: '52px',
+                            padding: '0 25px',
+                            background: 'linear-gradient(135deg, var(--secondary), var(--primary))',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+                            fontWeight: '800',
+                            fontSize: '14px',
+                            letterSpacing: '0.5px'
+                        }}
+                    >
+                        <Plus size={20} /> Add Entry
+                    </button>
                 </div>
             </header>
 
@@ -500,66 +497,91 @@ const OutsideCars = () => {
             {/* Mobile Card View */}
             <div className="show-mobile">
                 {loading ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '40px' }}><div className="spinner"></div></div>
+                    <div style={{ display: 'flex', justifyContent: 'center', padding: '100px 0' }}>
+                        <div className="spinner"></div>
+                    </div>
                 ) : filtered.length === 0 ? (
-                    <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
-                        <Car size={40} style={{ opacity: 0.2, marginBottom: '10px' }} />
-                        <p>No outside fleet records found.</p>
+                    <div className="glass-card" style={{ textAlign: 'center', padding: '120px 20px', border: '2px dashed rgba(255,255,255,0.05)', background: 'transparent' }}>
+                        <Car size={60} style={{ opacity: 0.1, color: 'var(--secondary)', marginBottom: '20px', margin: '0 auto' }} />
+                        <h3 style={{ color: 'white', fontWeight: '800' }}>No Duties Logged</h3>
+                        <p style={{ color: 'var(--text-muted)' }}>The fleet is currently idle for the selected filters.</p>
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                        {filtered.map(v => (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                        {filtered.map((v, idx) => (
                             <motion.div
                                 key={v._id}
-                                initial={{ opacity: 0, y: 10 }}
+                                initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: idx * 0.05 }}
                                 className="glass-card"
-                                style={{ padding: '16px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}
+                                style={{
+                                    padding: '20px',
+                                    background: 'rgba(30, 41, 59, 0.4)',
+                                    borderRadius: '18px',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    position: 'relative',
+                                    overflow: 'hidden'
+                                }}
                             >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                                <div style={{ position: 'absolute', top: 0, right: 0, width: '80px', height: '80px', background: 'var(--secondary)', filter: 'blur(60px)', opacity: 0.05 }}></div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
                                     <div>
-                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '18px', letterSpacing: '0.5px' }}>{v.carNumber?.split('#')[0]}</div>
-                                        <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>{v.model}</div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                            <span style={{ fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '0.5px' }}>{v.carNumber?.split('#')[0]}</span>
+                                            {v.dutyType?.includes(' + ') && (
+                                                <span style={{ fontSize: '8px', background: 'rgba(99, 102, 241, 0.2)', color: '#a5b4fc', padding: '2px 6px', borderRadius: '4px', fontWeight: '900', textTransform: 'uppercase' }}>Combined</span>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: '600' }}>{v.model}</div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <div style={{ color: '#10b981', fontWeight: '900', fontSize: '18px' }}>₹{v.dutyAmount?.toLocaleString()}</div>
-                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Payable</div>
+                                        <div style={{ color: '#10b981', fontWeight: '900', fontSize: '20px' }}>₹{v.dutyAmount?.toLocaleString()}</div>
+                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase' }}>Payout</div>
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '10px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
                                     <div>
-                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>Property</div>
+                                        <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', marginBottom: '2px' }}>Client Property</div>
                                         <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{v.property || 'N/A'}</div>
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>Owner</div>
+                                        <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', marginBottom: '2px' }}>Owner</div>
                                         <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: '600' }}>{v.ownerName}</div>
                                     </div>
                                 </div>
 
-                                <div style={{ marginBottom: '12px' }}>
-                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', marginBottom: '4px' }}>Service Details</div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                <div style={{ marginBottom: '15px' }}>
+                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', marginBottom: '6px' }}>Duty Timeline</div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         {v.dutyType?.split(' + ').map((type, i) => (
-                                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px' }}>
-                                                <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--secondary)' }}></div>
-                                                <span style={{ color: 'white' }}>{type}</span>
-                                                {v.dropLocation?.split(' | ')[i] && (
-                                                    <span style={{ color: 'rgba(255,255,255,0.4)' }}>➜ {v.dropLocation.split(' | ')[i]}</span>
-                                                )}
+                                            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
+                                                <div style={{ marginTop: '4px', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--secondary)' }}></div>
+                                                <div>
+                                                    <div style={{ fontSize: '13px', color: 'white', fontWeight: '700' }}>{type}</div>
+                                                    {v.dropLocation?.split(' | ')[i] && (
+                                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>➜ {v.dropLocation.split(' | ')[i]}</div>
+                                                    )}
+                                                </div>
                                             </div>
                                         ))}
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>
-                                        {new Date(v.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} • {new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                        <div style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', fontSize: '11px', color: 'white', fontWeight: '700' }}>
+                                            {new Date(v.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                        </div>
+                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
+                                            {new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                        </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button onClick={() => handleEdit(v)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)' }}><Search size={14} /></button>
-                                        <button onClick={() => handleDelete(v._id)} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '8px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.1)' }}><Trash2 size={14} /></button>
+                                        <button onClick={() => handleEdit(v)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)' }}><Search size={16} /></button>
+                                        <button onClick={() => handleDelete(v._id)} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '10px', borderRadius: '10px', border: '1px solid rgba(244, 63, 94, 0.1)' }}><Trash2 size={16} /></button>
                                     </div>
                                 </div>
                             </motion.div>
@@ -640,7 +662,7 @@ const OutsideCars = () => {
                     </div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 

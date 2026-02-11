@@ -27,9 +27,7 @@ export const CompanyProvider = ({ children }) => {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             if (!userInfo) return;
 
-            const { data } = await axios.get('/api/auth/companies', {
-                headers: { Authorization: `Bearer ${userInfo.token}` }
-            });
+            const { data } = await axios.get('/api/auth/companies');
             setCompanies(data);
 
             if (data.length > 0) {

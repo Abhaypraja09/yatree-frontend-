@@ -187,11 +187,23 @@ const Vehicles = () => {
                 <div style={{ marginBottom: '30px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f59e0b', marginBottom: '15px' }}>
                         <AlertCircle size={18} />
-                        <h2 style={{ fontSize: '16px', fontWeight: '700', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Critical Expiry Alerts</h2>
+                        <h2 style={{ fontSize: '14px', fontWeight: '800', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>System Critical Alerts</h2>
                     </div>
-                    <div style={{ display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '10px', scrollbarWidth: 'none' }}>
+                    <div className="scroll-x" style={{ display: 'flex', gap: '15px', paddingBottom: '10px' }}>
                         {alerts.map((alert, idx) => (
-                            <div key={idx} className="glass-card" style={{ minWidth: '260px', padding: '16px', borderLeft: `4px solid ${alert.daysLeft < 0 ? '#f43f5e' : (alert.daysLeft === 0 ? '#0ea5e9' : '#f59e0b')}`, background: alert.daysLeft < 0 ? 'rgba(244, 63, 94, 0.05)' : 'rgba(245, 158, 11, 0.05)' }}>
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.1 }}
+                                className="glass-card"
+                                style={{
+                                    minWidth: '260px',
+                                    padding: '16px',
+                                    borderLeft: `4px solid ${alert.daysLeft < 0 ? '#f43f5e' : (alert.daysLeft === 0 ? '#0ea5e9' : '#f59e0b')}`,
+                                    background: alert.daysLeft < 0 ? 'rgba(244, 63, 94, 0.05)' : 'rgba(245, 158, 11, 0.05)'
+                                }}
+                            >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                                     <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>{alert.identifier}</span>
                                     <span style={{
@@ -208,61 +220,56 @@ const Vehicles = () => {
                                 </div>
                                 <p style={{ color: 'white', fontWeight: '800', margin: '0 0 4px 0', fontSize: '15px' }}>{alert.documentType}</p>
                                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                    Expires on: <span style={{ color: 'white' }}>{new Date(alert.expiryDate).toLocaleDateString('en-IN')}</span>
+                                    Expires on: <span style={{ color: 'white' }}>{new Date(alert.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                 </div>
-                            </div>
+                            </motion.div>
                         ))}
                     </div>
                 </div>
             )}
 
-            <header style={{
-                padding: '30px 0',
-                gap: '20px',
-                flexWrap: 'wrap'
-            }} className="flex-resp">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{
-                        width: '50px',
-                        height: '50px',
-                        background: 'rgba(255,255,255,0.03)',
-                        borderRadius: '14px',
-                        padding: '8px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                        boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
-                    }}>
-                        <img src="/logos/logo.png" alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
-                    </div>
-                    <div>
-                        <h1 className="resp-title" style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0 }}>Fleet Vehicles</h1>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></div>
-                            <p className="resp-subtitle" style={{ color: 'var(--text-muted)', margin: 0 }}>{vehicles.length} Total Assets Registered</p>
+            <header style={{ paddingBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
+                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{
+                            width: '45px',
+                            height: '45px',
+                            background: 'rgba(14, 165, 233, 0.1)',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            border: '1px solid rgba(14, 165, 233, 0.2)',
+                            color: 'var(--primary)'
+                        }}>
+                            <Car size={24} />
+                        </div>
+                        <div>
+                            <h1 className="resp-title" style={{ margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>Fleet Assets</h1>
+                            <p className="resp-subtitle" style={{ fontSize: '13px', margin: 0 }}>{vehicles.length} Active vehicles in operation</p>
                         </div>
                     </div>
-                </div>
-                <div className="mobile-search-row" style={{ display: 'flex', gap: '10px', flex: '1 1 auto', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
-                    <div style={{ position: 'relative', flex: '1 1 auto', maxWidth: '380px', minWidth: '0' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
-                        <input
-                            type="text"
-                            placeholder="Find vehicle..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input-field"
-                            style={{ paddingLeft: '48px', marginBottom: 0, height: '52px', fontSize: '14px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', width: '100%' }}
-                        />
+
+                    <div className="mobile-stack" style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: '1', justifyContent: 'flex-end', maxWidth: '600px', flexWrap: 'wrap' }}>
+                        <div style={{ position: 'relative', flex: '1', minWidth: '140px' }}>
+                            <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+                            <input
+                                type="text"
+                                placeholder="Search..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="input-field"
+                                style={{ paddingLeft: '48px', marginBottom: 0, height: '48px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', width: '100%' }}
+                            />
+                        </div>
+                        <button className="btn-primary" onClick={() => setShowModal(true)} style={{ height: '48px', padding: '0 15px', borderRadius: '12px', fontWeight: '800', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                            <Plus size={20} /> <span className="hide-mobile">Add Vehicle</span><span className="show-mobile">Add</span>
+                        </button>
                     </div>
-                    <button className="btn-primary" onClick={() => setShowModal(true)} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '52px', padding: '0 20px', borderRadius: '12px', fontSize: '14px', fontWeight: '800', whiteSpace: 'nowrap', flexShrink: 0 }}>
-                        <Plus size={20} /> <span className="hide-mobile">Add Vehicle</span><span className="show-mobile">Add</span>
-                    </button>
                 </div>
             </header>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px', paddingBottom: '40px' }}>
+            <div className="grid-1-2-2-3" style={{ paddingBottom: '40px' }}>
                 {filteredVehicles.length > 0 ? (
                     filteredVehicles.map((v, index) => (
                         <motion.div
