@@ -24,8 +24,8 @@ const Freelancers = () => {
     const [attendance, setAttendance] = useState([]);
 
     // Form States
-    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: 500 });
-    const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: 500 });
+    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '' });
+    const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '' });
     const [punchInData, setPunchInData] = useState({
         vehicleId: '',
         km: '',
@@ -33,7 +33,7 @@ const Freelancers = () => {
         time: new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16),
         pickUpLocation: ''
     });
-    const [punchOutData, setPunchOutData] = useState({ km: '', time: new Date().toISOString().slice(0, 16), fuelAmount: '0', parkingAmount: '0', review: '', dailyWage: 500, dropLocation: '' });
+    const [punchOutData, setPunchOutData] = useState({ km: '', time: new Date().toISOString().slice(0, 16), fuelAmount: '0', parkingAmount: '0', review: '', dailyWage: '', dropLocation: '' });
 
     const getOneEightyDaysAgo = () => {
         const d = new Date();
@@ -107,7 +107,7 @@ const Freelancers = () => {
             setMessage({ type: 'success', text: 'Freelancer added successfully!' });
             setTimeout(() => {
                 setShowAddModal(false);
-                setFormData({ name: '', mobile: '', licenseNumber: '', dailyWage: 500 });
+                setFormData({ name: '', mobile: '', licenseNumber: '', dailyWage: '' });
                 setMessage({ type: '', text: '' });
                 fetchFreelancers();
             }, 1000);
@@ -154,7 +154,7 @@ const Freelancers = () => {
             });
             setShowPunchOutModal(false);
             const now = new Date().toISOString().slice(0, 16);
-            setPunchOutData({ km: '', time: now, fuelAmount: '0', parkingAmount: '0', review: '', dailyWage: 500, dropLocation: '' });
+            setPunchOutData({ km: '', time: now, fuelAmount: '0', parkingAmount: '0', review: '', dailyWage: '', dropLocation: '' });
             fetchFreelancers();
             fetchVehicles();
             fetchAttendance();
@@ -188,7 +188,7 @@ const Freelancers = () => {
             name: driver.name,
             mobile: driver.mobile,
             licenseNumber: driver.licenseNumber || '',
-            dailyWage: driver.dailyWage || 500
+            dailyWage: driver.dailyWage || ''
         });
         setShowEditModal(true);
     };
@@ -487,7 +487,7 @@ const Freelancers = () => {
                                     <td style={{ padding: '18px 25px', fontWeight: '700', fontSize: '15px' }}>{d.name}</td>
                                     <td style={{ padding: '18px 25px', fontSize: '14px' }}>{d.mobile}</td>
                                     <td style={{ padding: '18px 25px' }}>
-                                        <div style={{ color: '#10b981', fontWeight: '800', fontSize: '14px' }}>₹{d.dailyWage || 500}</div>
+                                        <div style={{ color: '#10b981', fontWeight: '800', fontSize: '14px' }}>₹{d.dailyWage || 0}</div>
                                     </td>
                                     <td style={{ padding: '18px 25px', fontSize: '13px', color: 'var(--text-muted)' }}>{d.licenseNumber || 'Not Provided'}</td>
                                     <td style={{ padding: '18px 25px', textAlign: 'right' }}>
@@ -554,7 +554,7 @@ const Freelancers = () => {
                                             <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{d.mobile}</div>
                                         </div>
                                         <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: '800' }}>
-                                            ₹{d.dailyWage || 500}
+                                            ₹{d.dailyWage || 0}
                                         </div>
                                     </div>
                                     <div style={{ fontSize: '12px', color: 'var(--text-muted)', marginBottom: '15px' }}>

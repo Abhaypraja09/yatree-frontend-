@@ -19,12 +19,12 @@ const Drivers = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [licenseNumber, setLicenseNumber] = useState('');
-    const [dailyWage, setDailyWage] = useState(500);
+    const [dailyWage, setDailyWage] = useState('');
     const [isFreelancer, setIsFreelancer] = useState(false);
 
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingDriver, setEditingDriver] = useState(null);
-    const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: 500 });
+    const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '' });
     const [driverTypeFilter, setDriverTypeFilter] = useState('Regular');
 
 
@@ -61,7 +61,7 @@ const Drivers = () => {
                 }
             });
             setShowModal(false);
-            setName(''); setMobile(''); setUsername(''); setPassword(''); setLicenseNumber(''); setIsFreelancer(false); setDailyWage(500);
+            setName(''); setMobile(''); setUsername(''); setPassword(''); setLicenseNumber(''); setIsFreelancer(false); setDailyWage('');
             fetchDrivers();
         } catch (err) {
             alert(err.response?.data?.message || 'Error creating driver');
@@ -98,7 +98,8 @@ const Drivers = () => {
                 mobile: editForm.mobile,
                 username: editForm.username,
                 licenseNumber: editForm.licenseNumber,
-                dailyWage: editForm.dailyWage
+                dailyWage: editForm.dailyWage,
+                isFreelancer: editForm.isFreelancer
             };
             if (editForm.password) {
                 updateData.password = editForm.password;
@@ -109,7 +110,7 @@ const Drivers = () => {
             });
             setShowEditModal(false);
             setEditingDriver(null);
-            setEditForm({ name: '', mobile: '', password: '', licenseNumber: '', dailyWage: 500 });
+            setEditForm({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '', isFreelancer: false });
             fetchDrivers();
             alert('Driver updated successfully');
         } catch (err) {
@@ -124,8 +125,9 @@ const Drivers = () => {
             mobile: driver.mobile,
             username: driver.username || '',
             licenseNumber: driver.licenseNumber || '',
-            dailyWage: driver.dailyWage || 500,
-            password: '' // Don't show old password
+            dailyWage: driver.dailyWage || '',
+            isFreelancer: driver.isFreelancer || false,
+            password: ''
         });
         setShowEditModal(true);
     };
@@ -540,7 +542,7 @@ const Drivers = () => {
                                         </div>
                                         <div>
                                             <label className="input-label" style={{ marginBottom: '6px' }}>Password *</label>
-                                            <input type="password" className="input-field" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                            <input type="password" className="input-field" placeholder="••••••••" value={password} onChange={(e) => setPassword(e.target.value)} required={!isFreelancer} style={{ background: 'rgba(0,0,0,0.2)' }} />
                                         </div>
                                     </div>
                                 </div>
@@ -548,7 +550,21 @@ const Drivers = () => {
                                 <div style={{ marginBottom: '25px', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <p style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Contract & Details</p>
 
-                                    <div style={{ marginBottom: '15px' }}>
+                                    <div className="form-grid-2" style={{ marginBottom: '15px' }}>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Daily Wage (Salary)</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>₹</span>
+                                                <input type="number" className="input-field" value={dailyWage} onChange={(e) => setDailyWage(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '100%', paddingTop: '25px' }}>
+                                            <input type="checkbox" id="freelancerCheck" checked={isFreelancer} onChange={(e) => setIsFreelancer(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                            <label htmlFor="freelancerCheck" style={{ color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Set as Freelancer</label>
+                                        </div>
+                                    </div>
+
+                                    <div>
                                         <label className="input-label" style={{ marginBottom: '6px' }}>Driving License</label>
                                         <input className="input-field" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="DL No. (Optional)" style={{ background: 'rgba(0,0,0,0.2)' }} />
                                     </div>
@@ -634,11 +650,24 @@ const Drivers = () => {
                                 <div style={{ marginBottom: '25px', padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <p style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Contract & Details</p>
 
-                                    <div style={{ marginBottom: '15px' }}>
+                                    <div className="form-grid-2" style={{ marginBottom: '15px' }}>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Daily Wage (Salary)</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>₹</span>
+                                                <input type="number" className="input-field" value={editForm.dailyWage} onChange={(e) => setEditForm({ ...editForm, dailyWage: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
+                                            </div>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '100%', paddingTop: '25px' }}>
+                                            <input type="checkbox" id="editFreelancerCheck" checked={editForm.isFreelancer} onChange={(e) => setEditForm({ ...editForm, isFreelancer: e.target.checked })} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
+                                            <label htmlFor="editFreelancerCheck" style={{ color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Freelancer Profile</label>
+                                        </div>
+                                    </div>
+
+                                    <div>
                                         <label className="input-label" style={{ marginBottom: '6px' }}>Driving License</label>
                                         <input className="input-field" value={editForm.licenseNumber} onChange={(e) => setEditForm({ ...editForm, licenseNumber: e.target.value })} placeholder="DL No. (Optional)" style={{ background: 'rgba(0,0,0,0.2)' }} />
                                     </div>
-
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '15px' }}>
