@@ -206,6 +206,11 @@ const OutsideCars = () => {
         const matchesDate = dutyTagDateStr >= fromDate && dutyTagDateStr <= toDate;
 
         return matchesSearch && matchesOwner && matchesProperty && matchesDate;
+    }).sort((a, b) => {
+        const dateA = a.carNumber?.split('#')[1] || '';
+        const dateB = b.carNumber?.split('#')[1] || '';
+        if (dateA !== dateB) return dateB.localeCompare(dateA);
+        return new Date(b.createdAt) - new Date(a.createdAt);
     });
 
     const totalPayable = filtered.reduce((sum, v) => sum + (v ? (Number(v.dutyAmount) || 0) : 0), 0);
@@ -317,7 +322,7 @@ const OutsideCars = () => {
                             const reportData = filtered.map(v => ({
                                 'Property': v.property || '',
                                 'Owner': v.ownerName || '',
-                                'Date': new Date(v.createdAt).toLocaleDateString('en-IN'),
+                                'Date': v.carNumber?.split('#')[1] || new Date(v.createdAt).toLocaleDateString('en-IN'),
                                 'Vehicle Details': `${v.model || ''} - ${v.carNumber?.split('#')[0] || ''}`,
                                 'Drop Location': v.dropLocation?.replace(/ \| /g, ' ➜ ') || '',
                                 'Service Type': v.dutyType || '',
@@ -448,7 +453,17 @@ const OutsideCars = () => {
                                 style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '16px' }}
                             >
                                 <td style={{ padding: '20px 25px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
-                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '16px', letterSpacing: '-0.5px' }}>{new Date(v.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</div>
+                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '16px', letterSpacing: '-0.5px' }}>
+                                        {(() => {
+                                            const parts = v.carNumber?.split('#');
+                                            if (parts && parts[1]) {
+                                                const [y, m, d] = parts[1].split('-');
+                                                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
+                                            }
+                                            return new Date(v.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                                        })()}
+                                    </div>
                                     <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Entry: {new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                 </td>
                                 <td style={{ padding: '20px 25px' }}>
@@ -573,10 +588,18 @@ const OutsideCars = () => {
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                         <div style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', fontSize: '11px', color: 'white', fontWeight: '700' }}>
-                                            {new Date(v.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                                            {(() => {
+                                                const parts = v.carNumber?.split('#');
+                                                if (parts && parts[1]) {
+                                                    const [y, m, d] = parts[1].split('-');
+                                                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                    return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
+                                                }
+                                                return new Date(v.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                                            })()}
                                         </div>
                                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-                                            {new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            Entry Time: {new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '8px' }}>
