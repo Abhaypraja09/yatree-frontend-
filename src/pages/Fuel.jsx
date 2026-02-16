@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
@@ -7,6 +7,80 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+
+
+const CameraModal = ({ onCapture, onClose }) => {
+    const videoRef = useRef(null);
+    const canvasRef = useRef(null);
+    const streamRef = useRef(null);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        startCamera();
+        return () => stopCamera();
+    }, []);
+
+    const startCamera = async () => {
+        try {
+            const constraints = {
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
+            const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+            streamRef.current = newStream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = newStream;
+            }
+        } catch (err) {
+            console.error("Camera error:", err);
+            setError("Could not access camera. Please allow permissions.");
+        }
+    };
+
+    const stopCamera = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+    };
+
+    const capture = () => {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (video && canvas) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+                const file = new File([blob], "fuel_slip.jpg", { type: 'image/jpeg' });
+                onCapture(file);
+                stopCamera();
+                onClose();
+            }, 'image/jpeg', 0.8);
+        }
+    };
+
+    return (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <div style={{ background: '#1e293b', padding: '20px', borderRadius: '16px', width: '90%', maxWidth: '500px', position: 'relative' }}>
+                <button type="button" onClick={() => { stopCamera(); onClose(); }} style={{ position: 'absolute', top: '10px', right: '10px', background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
+                <h3 style={{ color: 'white', marginBottom: '20px', textAlign: 'center', marginTop: '10px' }}>Take Photo</h3>
+                {error ? <div style={{ color: '#f43f5e', textAlign: 'center', padding: '20px' }}>{error}</div> :
+                    <video ref={videoRef} autoPlay playsInline style={{ width: '100%', borderRadius: '12px', background: '#000', marginBottom: '20px', maxHeight: '60vh', objectFit: 'cover' }} />}
+                <canvas ref={canvasRef} style={{ display: 'none' }} />
+                {!error && (
+                    <button type="button" onClick={capture} style={{ width: '100%', padding: '16px', background: '#10b981', color: 'white', border: 'none', borderRadius: '12px', fontWeight: 'bold', fontSize: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', cursor: 'pointer' }}>
+                        <ImageIcon size={20} /> Capture Photo
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
 
 const FuelPage = () => {
     const { selectedCompany } = useCompany();
@@ -50,6 +124,7 @@ const FuelPage = () => {
     const [editingId, setEditingId] = useState(null);
     const [showImageModal, setShowImageModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState('');
+    const [activeCamera, setActiveCamera] = useState(false);
 
     useEffect(() => {
         if (selectedCompany) {
@@ -179,6 +254,27 @@ const FuelPage = () => {
             });
             console.log('File successfully uploaded, URL:', res.data.url);
             // Ensure previous state is preserved and only slipPhoto is updated.
+            setFormData(prev => ({ ...prev, slipPhoto: res.data.url }));
+        } catch (err) {
+            console.error('Upload failed:', err);
+            alert('Image upload failed. Please try again.');
+        }
+    };
+
+    const handleCameraCapture = async (file) => {
+        if (!file) return;
+        const uploadData = new FormData();
+        uploadData.append('file', file);
+        uploadData.append('upload_preset', 'yatreedestination');
+
+        try {
+            const userInfoStr = localStorage.getItem('userInfo');
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+
+            const res = await axios.post('/api/admin/upload', uploadData, {
+                headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${userInfo?.token}` }
+            });
+            console.log('Camera capture uploaded, URL:', res.data.url);
             setFormData(prev => ({ ...prev, slipPhoto: res.data.url }));
         } catch (err) {
             console.error('Upload failed:', err);
@@ -800,14 +896,13 @@ const FuelPage = () => {
                                                 <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                                             </div>
                                         ) : (
-                                            <label style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                                <Plus size={20} color="var(--text-muted)" />
-                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Upload</span>
-                                                <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
+                                            <label onClick={() => setActiveCamera(true)} style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                                <ImageIcon size={20} color="var(--text-muted)" />
+                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Camera</span>
                                             </label>
                                         )}
                                         <div style={{ flex: 1 }}>
-                                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0 }}>Upload a photo of the fuel bill for verification.</p>
+                                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0 }}>Snap a photo of the fuel bill.</p>
                                             <p style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: '4px' }}>Max size: 5MB (JPG, PNG)</p>
                                         </div>
                                     </div>
@@ -933,10 +1028,9 @@ const FuelPage = () => {
                                                 <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                                             </div>
                                         ) : (
-                                            <label style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                            <label onClick={() => setActiveCamera(true)} style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
                                                 <Plus size={20} color="var(--text-muted)" />
                                                 <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Upload</span>
-                                                <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
                                             </label>
                                         )}
                                         <div style={{ flex: 1 }}>
@@ -965,6 +1059,12 @@ const FuelPage = () => {
                     </div>
                 )}
             </AnimatePresence >
+            {activeCamera && (
+                <CameraModal
+                    onCapture={handleCameraCapture}
+                    onClose={() => setActiveCamera(false)}
+                />
+            )}
         </div >
     );
 };
