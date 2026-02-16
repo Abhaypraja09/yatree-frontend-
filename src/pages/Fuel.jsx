@@ -86,7 +86,9 @@ const FuelPage = () => {
     const { selectedCompany } = useCompany();
     const getImageUrl = (path) => {
         if (!path) return '';
-        if (path.startsWith('http')) return path;
+        if (path.startsWith('http')) {
+            return path.replace(/^http:\/\//i, 'https://');
+        }
         const baseUrl = import.meta.env.VITE_API_URL || '';
         return `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
     };
@@ -113,7 +115,6 @@ const FuelPage = () => {
         quantity: '',
         rate: '',
         odometer: '',
-        stationName: '',
         stationName: '',
         paymentMode: 'Cash',
         paymentSource: 'Yatree Office',
@@ -225,7 +226,6 @@ const FuelPage = () => {
             quantity: entry.quantity || '',
             rate: entry.rate || '',
             odometer: entry.odometer || '',
-            stationName: entry.stationName || '',
             stationName: entry.stationName || '',
             paymentMode: entry.paymentMode || 'Cash',
             paymentSource: entry.paymentSource || 'Yatree Office',
@@ -343,7 +343,6 @@ const FuelPage = () => {
             quantity: '',
             rate: '',
             odometer: '',
-            stationName: '',
             stationName: '',
             paymentMode: 'Cash',
             paymentSource: 'Yatree Office',
