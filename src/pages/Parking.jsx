@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
-    MapPin, Plus, Search, Trash2, Calendar, History, Car, User, Shield, FileSpreadsheet, Edit, IndianRupee
+    MapPin, Plus, Search, Trash2, Calendar, History, Car, User, Shield, FileSpreadsheet, Edit, IndianRupee, Eye, X, Image as ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -10,6 +10,12 @@ import SEO from '../components/SEO';
 
 const ParkingPage = () => {
     const { selectedCompany } = useCompany();
+    const getImageUrl = (path) => {
+        if (!path) return '';
+        if (path.startsWith('http')) return path;
+        const baseUrl = import.meta.env.VITE_API_URL || '';
+        return `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+    };
     const [entries, setEntries] = useState([]);
     const [vehicles, setVehicles] = useState([]);
     const [pendingEntries, setPendingEntries] = useState([]);
@@ -24,14 +30,14 @@ const ParkingPage = () => {
 
     // Form State
     const [formData, setFormData] = useState({
-        vehicleId: '',
         driver: '',
         amount: '',
-        location: '',
-        remark: '',
         date: new Date().toISOString().split('T')[0],
+        receiptPhoto: ''
     });
     const [submitting, setSubmitting] = useState(false);
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [selectedImage, setSelectedImage] = useState('');
 
     useEffect(() => {
         if (selectedCompany) {
@@ -144,14 +150,46 @@ const ParkingPage = () => {
         }
     };
 
+    const handleEdit = (entry) => {
+        setFormData({
+            vehicleId: entry.vehicle?._id || '',
+            driver: entry.driver || '',
+            amount: entry.amount || '',
+            date: new Date(entry.date).toISOString().split('T')[0],
+            receiptPhoto: entry.receiptPhoto || ''
+        });
+        setShowModal(true);
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const uploadData = new FormData();
+        uploadData.append('file', file);
+        uploadData.append('upload_preset', 'yatreedestination');
+
+        try {
+            const userInfoStr = localStorage.getItem('userInfo');
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+
+            const res = await axios.post('/api/admin/upload', uploadData, {
+                headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${userInfo?.token}` }
+            });
+            setFormData({ ...formData, receiptPhoto: res.data.url });
+        } catch (err) {
+            console.error('Upload failed:', err);
+            alert('Image upload failed. Please try again.');
+        }
+    };
+
     const resetForm = () => {
         setFormData({
             vehicleId: '',
             driver: '',
             amount: '',
-            location: '',
-            remark: '',
             date: new Date().toISOString().split('T')[0],
+            receiptPhoto: ''
         });
     };
 
@@ -161,8 +199,6 @@ const ParkingPage = () => {
             'Vehicle': e.vehicle?.carNumber || 'N/A',
             'Driver': e.driver || 'N/A',
             'Amount (₹)': e.amount,
-            'Location': e.location || 'N/A',
-            'Remark': e.remark || '',
             'Source': e.source || 'Admin'
         }));
 
@@ -174,7 +210,6 @@ const ParkingPage = () => {
 
     const filteredEntries = entries.filter(e => {
         const matchesSearch = (e.vehicle?.carNumber?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
-            e.location?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
             e.driver?.toLowerCase()?.includes(searchTerm.toLowerCase()));
         const matchesVehicle = filterVehicle === 'All' || e.vehicle?._id === filterVehicle;
         return matchesSearch && matchesVehicle;
@@ -385,15 +420,18 @@ const ParkingPage = () => {
                                     {entry.slipPhoto ? (
                                         <div style={{ position: 'relative' }}>
                                             <img
-                                                src={entry.slipPhoto}
-                                                onClick={() => window.open(entry.slipPhoto, '_blank')}
+                                                src={getImageUrl(entry.slipPhoto)}
+                                                onClick={() => { setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
                                                 style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
                                             />
                                             <div style={{ position: 'absolute', bottom: '-8px', right: '-8px', background: '#f43f5e', color: 'white', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '900' }}>SLIP</div>
                                         </div>
                                     ) : (
-                                        <div style={{ width: '64px', height: '64px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                            <MapPin size={24} color="rgba(255,255,255,0.2)" />
+                                        <div
+                                            onClick={() => { setSelectedImage(''); setShowImageModal(true); }}
+                                            style={{ width: '64px', height: '64px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                        >
+                                            <Eye size={24} color="rgba(255,255,255,0.2)" />
                                         </div>
                                     )}
                                     <div style={{ flex: 1 }}>
@@ -517,7 +555,6 @@ const ParkingPage = () => {
                                         <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Date & Vehicle</th>
                                         <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
                                         <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
-                                        <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Location/Remark</th>
                                         <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Source</th>
                                         <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right', letterSpacing: '1px' }}>Actions</th>
                                     </tr>
@@ -543,10 +580,6 @@ const ParkingPage = () => {
                                                 <div style={{ color: '#34d399', fontWeight: '800', fontSize: '16px' }}>₹{e.amount}</div>
                                             </td>
                                             <td style={{ padding: '18px 25px' }}>
-                                                <div style={{ color: 'white', fontSize: '14px', fontWeight: '500' }}>{e.location || '---'}</div>
-                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '2px' }}>{e.remark || 'No extra remarks'}</div>
-                                            </td>
-                                            <td style={{ padding: '18px 25px' }}>
                                                 <span style={{
                                                     fontSize: '9px',
                                                     padding: '4px 10px',
@@ -562,26 +595,67 @@ const ParkingPage = () => {
                                                 </span>
                                             </td>
                                             <td style={{ padding: '18px 25px', textAlign: 'right' }}>
-                                                <button
-                                                    onClick={() => handleDelete(e._id)}
-                                                    style={{
-                                                        width: '36px',
-                                                        height: '36px',
-                                                        borderRadius: '10px',
-                                                        background: 'rgba(244,63,94,0.1)',
-                                                        color: '#f43f5e',
-                                                        border: '1px solid rgba(244,63,94,0.2)',
-                                                        cursor: 'pointer',
-                                                        display: 'inline-flex',
-                                                        alignItems: 'center',
-                                                        justifyContent: 'center',
-                                                        transition: 'all 0.2s ease'
-                                                    }}
-                                                    onMouseOver={(e) => { e.currentTarget.style.background = '#f43f5e'; e.currentTarget.style.color = 'white'; }}
-                                                    onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(244,63,94,0.1)'; e.currentTarget.style.color = '#f43f5e'; }}
-                                                >
-                                                    <Trash2 size={16} />
-                                                </button>
+                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                    <button
+                                                        onClick={() => { setSelectedImage(e.receiptPhoto || ''); setShowImageModal(true); }}
+                                                        style={{
+                                                            width: '36px',
+                                                            height: '36px',
+                                                            borderRadius: '10px',
+                                                            background: e.receiptPhoto ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.05)',
+                                                            color: e.receiptPhoto ? '#10b981' : '#f43f5e',
+                                                            border: '1px solid rgba(16, 185, 129, 0.2)',
+                                                            cursor: 'pointer',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            transition: 'all 0.2s ease',
+                                                            opacity: e.receiptPhoto ? 1 : 0.6
+                                                        }}
+                                                        title={e.receiptPhoto ? "View Receipt" : "Receipt Missing"}
+                                                    >
+                                                        <Eye size={16} style={{ opacity: e.receiptPhoto ? 1 : 0.5 }} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleEdit(e)}
+                                                        style={{
+                                                            width: '36px',
+                                                            height: '36px',
+                                                            borderRadius: '10px',
+                                                            background: 'rgba(99, 102, 241, 0.1)',
+                                                            color: '#818cf8',
+                                                            border: '1px solid rgba(99, 102, 241, 0.2)',
+                                                            cursor: 'pointer',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            transition: 'all 0.2s ease'
+                                                        }}
+                                                        title="Edit Entry"
+                                                    >
+                                                        <Edit size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(e._id)}
+                                                        style={{
+                                                            width: '36px',
+                                                            height: '36px',
+                                                            borderRadius: '10px',
+                                                            background: 'rgba(244,63,94,0.1)',
+                                                            color: '#f43f5e',
+                                                            border: '1px solid rgba(244,63,94,0.2)',
+                                                            cursor: 'pointer',
+                                                            display: 'inline-flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            transition: 'all 0.2s ease'
+                                                        }}
+                                                        onMouseOver={(e) => { e.currentTarget.style.background = '#f43f5e'; e.currentTarget.style.color = 'white'; }}
+                                                        onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(244,63,94,0.1)'; e.currentTarget.style.color = '#f43f5e'; }}
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
                                             </td>
                                         </tr>
                                     ))}
@@ -644,7 +718,7 @@ const ParkingPage = () => {
 
                                     <div style={{
                                         display: 'grid',
-                                        gridTemplateColumns: '1fr 1fr',
+                                        gridTemplateColumns: '1fr',
                                         gap: '12px',
                                         marginBottom: '16px',
                                         padding: '12px',
@@ -655,10 +729,6 @@ const ParkingPage = () => {
                                         <div>
                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: '800', marginBottom: '2px' }}>Driver</div>
                                             <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{e.driver}</div>
-                                        </div>
-                                        <div>
-                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', fontWeight: '800', marginBottom: '2px' }}>Location</div>
-                                            <div style={{ color: 'white', fontSize: '13px', fontWeight: '700', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{e.location || '---'}</div>
                                         </div>
                                     </div>
 
@@ -673,22 +743,42 @@ const ParkingPage = () => {
                                         }}>
                                             <History size={12} /> {e.remark || 'No additional remarks'}
                                         </div>
-                                        <button
-                                            onClick={() => handleDelete(e._id)}
-                                            style={{
-                                                width: '32px',
-                                                height: '32px',
-                                                borderRadius: '8px',
-                                                background: 'rgba(244,63,94,0.1)',
-                                                color: '#f43f5e',
-                                                border: '1px solid rgba(244,63,94,0.2)',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                justifyContent: 'center'
-                                            }}
-                                        >
-                                            <Trash2 size={14} />
-                                        </button>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            {e.receiptPhoto && (
+                                                <button
+                                                    onClick={() => { setSelectedImage(e.receiptPhoto); setShowImageModal(true); }}
+                                                    style={{
+                                                        width: '32px',
+                                                        height: '32px',
+                                                        borderRadius: '8px',
+                                                        background: 'rgba(16, 185, 129, 0.1)',
+                                                        color: '#10b981',
+                                                        border: '1px solid rgba(16, 185, 129, 0.2)',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center'
+                                                    }}
+                                                >
+                                                    <Eye size={14} />
+                                                </button>
+                                            )}
+                                            <button
+                                                onClick={() => handleDelete(e._id)}
+                                                style={{
+                                                    width: '32px',
+                                                    height: '32px',
+                                                    borderRadius: '8px',
+                                                    background: 'rgba(244,63,94,0.1)',
+                                                    color: '#f43f5e',
+                                                    border: '1px solid rgba(244,63,94,0.2)',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center'
+                                                }}
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+                                        </div>
                                     </div>
                                 </motion.div>
                             ))}
@@ -796,26 +886,31 @@ const ParkingPage = () => {
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Location</label>
-                                    <input
-                                        placeholder="e.g. Airport, Mall, Warehouse..."
-                                        className="input-field"
-                                        style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', outline: 'none' }}
-                                        value={formData.location}
-                                        onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                                    />
+                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Receipt Photo</label>
+                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                        {formData.receiptPhoto ? (
+                                            <div style={{ position: 'relative' }}>
+                                                <img src={getImageUrl(formData.receiptPhoto)} alt="Receipt" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover' }} />
+                                                <button type="button" onClick={() => setFormData({ ...formData, receiptPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                                            </div>
+                                        ) : (
+                                            <label style={{
+                                                width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '2px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.3s ease'
+                                            }}
+                                                onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
+                                                onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                                            >
+                                                <Plus size={20} color="var(--text-muted)" />
+                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '800' }}>Upload</span>
+                                                <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
+                                            </label>
+                                        )}
+                                        <div style={{ flex: 1 }}>
+                                            <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Upload a clear photo of the parking receipt.</p>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Remark (Optional)</label>
-                                    <input
-                                        placeholder="Add any additional details..."
-                                        className="input-field"
-                                        style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', outline: 'none' }}
-                                        value={formData.remark}
-                                        onChange={(e) => setFormData({ ...formData, remark: e.target.value })}
-                                    />
-                                </div>
 
                                 <button
                                     type="submit"
@@ -839,6 +934,40 @@ const ParkingPage = () => {
                                     {submitting ? 'Saving...' : 'Save Record'}
                                 </button>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+                {showImageModal && (
+                    <div
+                        style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(20px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '20px' }}
+                        onClick={() => setShowImageModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            style={{ position: 'relative', maxWidth: 'min(700px, 90vw)', width: '100%', display: 'flex', justifyContent: 'center' }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            {selectedImage ? (
+                                <img
+                                    src={getImageUrl(selectedImage)}
+                                    alt="Parking Receipt"
+                                    style={{ width: '100%', height: 'auto', maxHeight: '85vh', objectFit: 'contain', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
+                                />
+                            ) : (
+                                <div style={{ background: 'rgba(255,255,255,0.05)', padding: '50px', borderRadius: '20px', textAlign: 'center', width: '100%' }}>
+                                    <ImageIcon size={48} style={{ opacity: 0.2, marginBottom: '15px' }} />
+                                    <p style={{ color: 'white', fontWeight: '700' }}>No receipt image available.</p>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '10px' }}>To fix this: Click the Edit (Pen) icon on the entry and upload the receipt manually.</p>
+                                </div>
+                            )}
+                            <button
+                                onClick={() => setShowImageModal(false)}
+                                style={{ position: 'absolute', top: '-15px', right: '-15px', background: '#f43f5e', color: 'white', border: 'none', width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 15px rgba(244, 63, 94, 0.4)', zIndex: 100 }}
+                            >
+                                <X size={20} />
+                            </button>
                         </motion.div>
                     </div>
                 )}

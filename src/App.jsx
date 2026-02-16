@@ -159,6 +159,8 @@ const AdminRoutes = () => {
       <Route path="parking" element={<Parking />} />
       <Route path="reports" element={<Reports />} />
 
+      <Route path="fuel" element={<Fuel />} />
+
       {isAdmin && (
         <>
           <Route path="drivers" element={<Drivers />} />
@@ -166,11 +168,11 @@ const AdminRoutes = () => {
           <Route path="vehicles" element={<Vehicles />} />
           <Route path="fastag" element={<Fastag />} />
           <Route path="border-tax" element={<BorderTax />} />
-          <Route path="fuel" element={<Fuel />} />
           <Route path="admins" element={<Admins />} />
-          <Route path="staff" element={<Staff />} />
         </>
       )}
+
+      <Route path="staff" element={<Staff />} />
 
       {/* Redirect unauthorized access */}
       {!isAdmin && (
@@ -180,7 +182,6 @@ const AdminRoutes = () => {
           <Route path="vehicles" element={<Navigate to="/admin" />} />
           <Route path="fastag" element={<Navigate to="/admin" />} />
           <Route path="border-tax" element={<Navigate to="/admin" />} />
-          <Route path="fuel" element={<Navigate to="/admin" />} />
         </>
       )}
     </Routes>

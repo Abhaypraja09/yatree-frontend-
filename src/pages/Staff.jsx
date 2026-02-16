@@ -15,7 +15,9 @@ import {
     ArrowUpRight,
     ArrowDownLeft,
     Download,
-    Filter
+    Filter,
+    Trash2,
+    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -61,8 +63,8 @@ const Staff = () => {
     };
 
     const fetchAttendance = async () => {
+        if (!selectedCompany?._id) return;
         try {
-            // Updated to support date filtering if backend provides it, otherwise filter frontend
             const { data } = await axios.get(`/api/admin/staff-attendance/${selectedCompany._id}`);
             setAttendanceList(data);
             setLoading(false);
@@ -101,6 +103,16 @@ const Staff = () => {
             fetchStaff();
         } catch (error) {
             alert(error.response?.data?.message || 'Error adding staff');
+        }
+    };
+
+    const handleDeleteStaff = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this staff member?')) return;
+        try {
+            await axios.delete(`/api/admin/staff/${id}`);
+            fetchStaff();
+        } catch (error) {
+            alert(error.response?.data?.message || 'Error deleting staff');
         }
     };
 
@@ -265,6 +277,27 @@ const Staff = () => {
                                     <p style={{ fontSize: '9px', color: 'var(--text-muted)', margin: '0 0 4px 0', textTransform: 'uppercase', fontWeight: '900', letterSpacing: '0.5px' }}>Salary</p>
                                     <p style={{ margin: 0, color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{staff.salary?.toLocaleString()}</p>
                                 </div>
+                            </div>
+
+                            <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'flex-end' }}>
+                                <button
+                                    onClick={() => handleDeleteStaff(staff._id)}
+                                    style={{
+                                        background: 'rgba(244, 63, 94, 0.1)',
+                                        color: '#f43f5e',
+                                        border: 'none',
+                                        padding: '8px',
+                                        borderRadius: '8px',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        fontSize: '11px',
+                                        fontWeight: '800'
+                                    }}
+                                >
+                                    <Trash2 size={14} /> DELETE STAFF
+                                </button>
                             </div>
                         </motion.div>
                     ))}

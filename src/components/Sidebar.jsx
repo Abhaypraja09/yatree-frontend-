@@ -41,7 +41,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     ];
 
     const menuItems = user.role === 'Executive'
-        ? allMenuItems.filter(item => ['Freelancers', 'Outside Cars', 'Maintenance', 'Parking', 'Daily Reports'].includes(item.label))
+        ? allMenuItems.filter(item => ['Freelancers', 'Outside Cars', 'Maintenance', 'Fuel', 'Parking', 'Daily Reports', 'Staff Management'].includes(item.label))
         : allMenuItems;
 
     const logoMap = {

@@ -144,7 +144,7 @@ const DriverPortal = () => {
     const [fuelFilled, setFuelFilled] = useState(false);
     const [fuelEntries, setFuelEntries] = useState([{ amount: '', km: '', fuelType: 'Diesel', slip: null, preview: null }]);
     // Use quantity in expenseEntries for fuel
-    const [expenseEntries, setExpenseEntries] = useState([{ type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', slip: null, preview: null }]);
+    const [expenseEntries, setExpenseEntries] = useState([{ type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', paymentSource: 'Yatree Office', slip: null, preview: null }]);
     const [parkingPaid, setParkingPaid] = useState(false);
     const [parkingEntries, setParkingEntries] = useState([{ amount: '', slip: null, preview: null }]);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -346,6 +346,7 @@ const DriverPortal = () => {
             formData.append('fuelTypes', entry.fuelType || '');
             formData.append('fuelQuantities', entry.quantity || 0);
             formData.append('fuelRates', entry.rate || 0);
+            formData.append('paymentSources', entry.paymentSource || 'Yatree Office');
             if (entry.slip) {
                 // Important: Use the index from the activeEntries array
                 formData.append(`slip_${index}`, entry.slip);
@@ -471,7 +472,7 @@ const DriverPortal = () => {
                                     )}
                                     <button
                                         onClick={() => {
-                                            setExpenseEntries([{ type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', slip: null, preview: null }]);
+                                            setExpenseEntries([{ type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', paymentSource: 'Yatree Office', slip: null, preview: null }]);
                                             setExpenseModalType('fuel');
                                             setShowExpenseModal(true);
                                         }}
@@ -1124,7 +1125,7 @@ const DriverPortal = () => {
                                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                                         {expenseModalType === 'fuel' && (
                                                             <button
-                                                                onClick={() => setExpenseEntries([{ type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', slip: null, preview: null }])}
+                                                                onClick={() => setExpenseEntries([{ type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', paymentSource: 'Yatree Office', slip: null, preview: null }])}
                                                                 className="btn-primary"
                                                                 style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}
                                                             >
@@ -1249,35 +1250,67 @@ const DriverPortal = () => {
                                                             </div>
 
                                                             {entry.type === 'fuel' && (
-                                                                <div className="input-wrapper-full" style={{ marginTop: '4px', marginBottom: '16px' }}>
-                                                                    <label className="input-label" style={{ fontSize: '10px', marginBottom: '6px' }}>{t('fuelType')}</label>
-                                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                                                                        {['Diesel', 'Petrol', 'CNG'].map((type) => (
-                                                                            <button
-                                                                                key={type}
-                                                                                type="button"
-                                                                                onClick={() => {
-                                                                                    const newEntries = [...expenseEntries];
-                                                                                    newEntries[index].fuelType = type;
-                                                                                    setExpenseEntries(newEntries);
-                                                                                }}
-                                                                                style={{
-                                                                                    padding: '8px 4px',
-                                                                                    borderRadius: '8px',
-                                                                                    fontSize: '11px',
-                                                                                    fontWeight: '800',
-                                                                                    border: '1px solid',
-                                                                                    borderColor: entry.fuelType === type ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
-                                                                                    background: entry.fuelType === type ? 'rgba(14, 165, 233, 0.15)' : 'rgba(255,255,255,0.02)',
-                                                                                    color: entry.fuelType === type ? 'var(--primary)' : 'var(--text-muted)',
-                                                                                    transition: 'all 0.2s ease'
-                                                                                }}
-                                                                            >
-                                                                                {t(type.toLowerCase())}
-                                                                            </button>
-                                                                        ))}
+                                                                <>
+                                                                    <div className="input-wrapper-full" style={{ marginTop: '4px', marginBottom: '16px' }}>
+                                                                        <label className="input-label" style={{ fontSize: '10px', marginBottom: '6px' }}>{t('fuelType')}</label>
+                                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                                                                            {['Diesel', 'Petrol', 'CNG'].map((type) => (
+                                                                                <button
+                                                                                    key={type}
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        const newEntries = [...expenseEntries];
+                                                                                        newEntries[index].fuelType = type;
+                                                                                        setExpenseEntries(newEntries);
+                                                                                    }}
+                                                                                    style={{
+                                                                                        padding: '8px 4px',
+                                                                                        borderRadius: '8px',
+                                                                                        fontSize: '11px',
+                                                                                        fontWeight: '800',
+                                                                                        border: '1px solid',
+                                                                                        borderColor: entry.fuelType === type ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
+                                                                                        background: entry.fuelType === type ? 'rgba(14, 165, 233, 0.15)' : 'rgba(255,255,255,0.02)',
+                                                                                        color: entry.fuelType === type ? 'var(--primary)' : 'var(--text-muted)',
+                                                                                        transition: 'all 0.2s ease'
+                                                                                    }}
+                                                                                >
+                                                                                    {t(type.toLowerCase())}
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
                                                                     </div>
-                                                                </div>
+
+                                                                    <div className="input-wrapper-full" style={{ marginTop: '4px', marginBottom: '16px' }}>
+                                                                        <label className="input-label" style={{ fontSize: '10px', marginBottom: '6px' }}>{t('paymentSource') || 'Payment Source'}</label>
+                                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                                                            {['Yatree Office', 'Guest'].map((source) => (
+                                                                                <button
+                                                                                    key={source}
+                                                                                    type="button"
+                                                                                    onClick={() => {
+                                                                                        const newEntries = [...expenseEntries];
+                                                                                        newEntries[index].paymentSource = source;
+                                                                                        setExpenseEntries(newEntries);
+                                                                                    }}
+                                                                                    style={{
+                                                                                        padding: '8px 4px',
+                                                                                        borderRadius: '8px',
+                                                                                        fontSize: '11px',
+                                                                                        fontWeight: '800',
+                                                                                        border: '1px solid',
+                                                                                        borderColor: (entry.paymentSource || 'Yatree Office') === source ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
+                                                                                        background: (entry.paymentSource || 'Yatree Office') === source ? 'rgba(14, 165, 233, 0.15)' : 'rgba(255,255,255,0.02)',
+                                                                                        color: (entry.paymentSource || 'Yatree Office') === source ? 'var(--primary)' : 'var(--text-muted)',
+                                                                                        transition: 'all 0.2s ease'
+                                                                                    }}
+                                                                                >
+                                                                                    {source}
+                                                                                </button>
+                                                                            ))}
+                                                                        </div>
+                                                                    </div>
+                                                                </>
                                                             )}
 
                                                             {entry.type === 'other' && (
@@ -1351,7 +1384,7 @@ const DriverPortal = () => {
                                                     <div style={{ display: 'flex', justifyContent: 'center', marginTop: '12px' }}>
                                                         {expenseModalType === 'fuel' && (
                                                             <button
-                                                                onClick={() => setExpenseEntries([...expenseEntries, { type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', slip: null, preview: null }])}
+                                                                onClick={() => setExpenseEntries([...expenseEntries, { type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', paymentSource: 'Yatree Office', slip: null, preview: null }])}
                                                                 className="action-button glass-card-hover-effect"
                                                                 style={{ border: '1px dashed rgba(14, 165, 233, 0.3)', color: '#0ea5e9', background: 'rgba(14, 165, 233, 0.05)', padding: '12px 24px', display: 'flex', alignItems: 'center', gap: '8px', borderRadius: '12px', fontSize: '13px', fontWeight: '800' }}
                                                             >

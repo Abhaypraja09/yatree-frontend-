@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
-    Fuel, Plus, Search, Trash2, Calendar, MapPin, Gauge, Droplets, CreditCard, History, Car, Filter, ChevronDown, User, ArrowUpRight, TrendingUp, Edit, Shield, FileSpreadsheet
+    Fuel, Plus, Search, Trash2, Calendar, MapPin, Gauge, Droplets, CreditCard, History, Car, Filter, ChevronDown, User, ArrowUpRight, TrendingUp, Edit, Shield, FileSpreadsheet, Eye, X, Image as ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -10,6 +10,12 @@ import SEO from '../components/SEO';
 
 const FuelPage = () => {
     const { selectedCompany } = useCompany();
+    const getImageUrl = (path) => {
+        if (!path) return '';
+        if (path.startsWith('http')) return path;
+        const baseUrl = import.meta.env.VITE_API_URL || '';
+        return `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+    };
     const [entries, setEntries] = useState([]);
     const [vehicles, setVehicles] = useState([]);
     const [pendingEntries, setPendingEntries] = useState([]);
@@ -34,11 +40,16 @@ const FuelPage = () => {
         rate: '',
         odometer: '',
         stationName: '',
+        stationName: '',
         paymentMode: 'Cash',
-        driver: ''
+        paymentSource: 'Yatree Office',
+        driver: '',
+        slipPhoto: ''
     });
     const [submitting, setSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [selectedImage, setSelectedImage] = useState('');
 
     useEffect(() => {
         if (selectedCompany) {
@@ -133,17 +144,46 @@ const FuelPage = () => {
         setEditingId(entry._id);
         setFormData({
             vehicleId: entry.vehicle?._id || '',
-            fuelType: entry.fuelType,
+            fuelType: entry.fuelType || 'Diesel',
             date: new Date(entry.date).toISOString().split('T')[0],
-            amount: entry.amount,
-            quantity: entry.quantity,
-            rate: entry.rate,
-            odometer: entry.odometer,
+            amount: entry.amount || '',
+            quantity: entry.quantity || '',
+            rate: entry.rate || '',
+            odometer: entry.odometer || '',
+            stationName: entry.stationName || '',
             stationName: entry.stationName || '',
             paymentMode: entry.paymentMode || 'Cash',
-            driver: entry.driver || ''
+            paymentSource: entry.paymentSource || 'Yatree Office',
+            driver: entry.driver || '',
+            slipPhoto: entry.slipPhoto || ''
         });
         setShowModal(true);
+    };
+
+    const handleFileUpload = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const uploadData = new FormData();
+        uploadData.append('file', file);
+        uploadData.append('upload_preset', 'yatreedestination'); // Replace with your setup or use your backend upload
+
+        try {
+            // Using existing axios with base url? Probably better to use a dedicated upload route or direct cloudinary
+            // For now, let's assume we have a generic upload endpoint or use a standard pattern
+            const userInfoStr = localStorage.getItem('userInfo');
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+
+            const res = await axios.post('/api/admin/upload', uploadData, {
+                headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${userInfo?.token}` }
+            });
+            console.log('File successfully uploaded, URL:', res.data.url);
+            // Ensure previous state is preserved and only slipPhoto is updated.
+            setFormData(prev => ({ ...prev, slipPhoto: res.data.url }));
+        } catch (err) {
+            console.error('Upload failed:', err);
+            alert('Image upload failed. Please try again.');
+        }
     };
 
     const handleDelete = async (id) => {
@@ -208,8 +248,11 @@ const FuelPage = () => {
             rate: '',
             odometer: '',
             stationName: '',
+            stationName: '',
             paymentMode: 'Cash',
-            driver: ''
+            paymentSource: 'Yatree Office',
+            driver: '',
+            slipPhoto: ''
         });
     };
 
@@ -224,6 +267,7 @@ const FuelPage = () => {
             'Odometer (KM)': e.odometer,
             'Distance (KM)': e.distance || 0,
             'Mileage (KM/L)': e.mileage || 0,
+            'Payment Source': e.paymentSource || 'Yatree Office',
             'Payment Mode': e.paymentMode,
             'Station': e.stationName || 'N/A',
             'Driver': e.driver || 'N/A',
@@ -351,13 +395,16 @@ const FuelPage = () => {
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             {entry.slipPhoto ? (
                                                 <img
-                                                    src={entry.slipPhoto}
-                                                    onClick={() => window.open(entry.slipPhoto, '_blank')}
+                                                    src={getImageUrl(entry.slipPhoto)}
+                                                    onClick={() => { setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
                                                     style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
                                                 />
                                             ) : (
-                                                <div style={{ width: '50px', height: '50px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                    <Fuel size={20} color="var(--text-muted)" />
+                                                <div
+                                                    onClick={() => { setSelectedImage(''); setShowImageModal(true); }}
+                                                    style={{ width: '50px', height: '50px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                                >
+                                                    <Eye size={20} color="var(--text-muted)" style={{ opacity: 0.5 }} />
                                                 </div>
                                             )}
                                             <div>
@@ -375,10 +422,10 @@ const FuelPage = () => {
 
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                         <button
-                                            onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'approved')}
+                                            onClick={() => openApprovalModal(entry)}
                                             style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '800', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
                                         >
-                                            Approve
+                                            Review & Approve
                                         </button>
                                         <button
                                             onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'rejected')}
@@ -470,6 +517,7 @@ const FuelPage = () => {
                                     <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Fuel Details</th>
                                     <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Odometer & Trip</th>
                                     <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Efficiency</th>
+                                    <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Payment Source</th>
                                     <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Total Amount</th>
                                     <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
                                 </tr>
@@ -515,6 +563,9 @@ const FuelPage = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
+                                            <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{e.paymentSource || 'Yatree Office'}</div>
+                                        </td>
+                                        <td style={{ padding: '20px 25px' }}>
                                             <div style={{ color: 'white', fontWeight: '800', fontSize: '16px' }}>₹{e.amount.toLocaleString()}</div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
                                                 {e.source === 'Driver' ? <User size={10} color="#0ea5e9" /> : <Shield size={10} color="#f59e0b" />}
@@ -526,6 +577,26 @@ const FuelPage = () => {
                                         </td>
                                         <td style={{ padding: '20px 25px', textAlign: 'right' }}>
                                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                <button
+                                                    onClick={() => { setSelectedImage(e.slipPhoto || ''); setShowImageModal(true); }}
+                                                    className="glass-card-hover-effect"
+                                                    style={{
+                                                        width: '36px',
+                                                        height: '36px',
+                                                        borderRadius: '10px',
+                                                        background: e.slipPhoto ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.05)',
+                                                        color: e.slipPhoto ? '#10b981' : '#f43f5e',
+                                                        border: 'none',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center',
+                                                        opacity: e.slipPhoto ? 1 : 0.6
+                                                    }}
+                                                    title={e.slipPhoto ? "View Slip" : "Slip Missing"}
+                                                >
+                                                    <Eye size={16} style={{ opacity: e.slipPhoto ? 1 : 0.5 }} />
+                                                </button>
                                                 <button
                                                     onClick={() => handleEdit(e)}
                                                     className="glass-card-hover-effect"
@@ -608,6 +679,19 @@ const FuelPage = () => {
                                         <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.8)', fontWeight: '600' }}>{e.driver}</span>
                                     </div>
                                     <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button
+                                            onClick={() => { setSelectedImage(e.slipPhoto || ''); setShowImageModal(true); }}
+                                            style={{
+                                                background: e.slipPhoto ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.05)',
+                                                color: e.slipPhoto ? '#10b981' : '#f43f5e',
+                                                padding: '8px',
+                                                borderRadius: '8px',
+                                                border: '1px solid rgba(16, 185, 129, 0.2)',
+                                                opacity: e.slipPhoto ? 1 : 0.6
+                                            }}
+                                        >
+                                            <Eye size={14} style={{ opacity: e.slipPhoto ? 1 : 0.5 }} />
+                                        </button>
                                         <button onClick={() => handleEdit(e)} style={{ background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', padding: '8px', borderRadius: '8px', border: '1px solid rgba(14, 165, 233, 0.2)' }}><Edit size={14} /></button>
                                         <button onClick={() => handleDelete(e._id)} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '8px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.2)' }}><Trash2 size={14} /></button>
                                     </div>
@@ -632,7 +716,7 @@ const FuelPage = () => {
                                     <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '800', margin: 0 }}>{editingId ? 'Edit Fuel Entry' : 'Add Fuel Entry'}</h2>
                                     <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '4px 0 0' }}>Log petrol/diesel refill and calculate mileage.</p>
                                 </div>
-                                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
+                                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}><X size={20} /></button>
                             </div>
 
                             <form onSubmit={handleCreate} style={{ padding: '30px' }}>
@@ -688,12 +772,10 @@ const FuelPage = () => {
                                         <input type="number" className="input-field" placeholder="Current Reading" value={formData.odometer} onChange={(e) => setFormData({ ...formData, odometer: e.target.value })} required />
                                     </div>
                                     <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Payment Mode</label>
-                                        <select className="input-field" value={formData.paymentMode} onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}>
-                                            <option value="Cash" style={{ background: '#1e293b' }}>Cash</option>
-                                            <option value="UPI" style={{ background: '#1e293b' }}>UPI / GPay</option>
-                                            <option value="FASTag" style={{ background: '#1e293b' }}>FASTag</option>
-                                            <option value="Card" style={{ background: '#1e293b' }}>Card</option>
+                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Payment Source</label>
+                                        <select className="input-field" value={formData.paymentSource} onChange={(e) => setFormData({ ...formData, paymentSource: e.target.value })}>
+                                            <option value="Yatree Office" style={{ background: '#1e293b' }}>Yatree Office (Default)</option>
+                                            <option value="Guest / Client" style={{ background: '#1e293b' }}>Guest / Client</option>
                                         </select>
                                     </div>
                                 </div>
@@ -709,7 +791,29 @@ const FuelPage = () => {
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '15px' }}>
+                                <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)', marginTop: '20px' }}>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px' }}>Fuel Slip / Receipt Photo</p>
+                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                        {formData.slipPhoto ? (
+                                            <div style={{ position: 'relative' }}>
+                                                <img src={getImageUrl(formData.slipPhoto)} alt="Slip" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover' }} />
+                                                <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                                            </div>
+                                        ) : (
+                                            <label style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                                <Plus size={20} color="var(--text-muted)" />
+                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Upload</span>
+                                                <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
+                                            </label>
+                                        )}
+                                        <div style={{ flex: 1 }}>
+                                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0 }}>Upload a photo of the fuel bill for verification.</p>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: '4px' }}>Max size: 5MB (JPG, PNG)</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
                                     <button
                                         type="submit" disabled={submitting} className="btn-primary"
                                         style={{ flex: 2, height: '60px', borderRadius: '16px', fontSize: '16px', fontWeight: '900', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', border: 'none' }}
@@ -726,8 +830,141 @@ const FuelPage = () => {
                             </form>
                         </motion.div>
                     </div>
+                )
+                }
+                {
+                    showImageModal && (
+                        <div
+                            style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.95)', backdropFilter: 'blur(20px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 9999, padding: '20px' }}
+                            onClick={() => setShowImageModal(false)}
+                        >
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0 }}
+                                animate={{ scale: 1, opacity: 1 }}
+                                exit={{ scale: 0.9, opacity: 0 }}
+                                style={{ position: 'relative', maxWidth: 'min(700px, 90vw)', width: '100%', display: 'flex', justifyContent: 'center' }}
+                                onClick={(e) => e.stopPropagation()}
+                            >
+                                {selectedImage ? (
+                                    <img
+                                        src={getImageUrl(selectedImage)}
+                                        alt="Fuel Slip"
+                                        style={{ width: '100%', height: 'auto', maxHeight: '85vh', objectFit: 'contain', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
+                                    />
+                                ) : (
+                                    <div style={{ background: 'rgba(255,255,255,0.05)', padding: '50px', borderRadius: '20px', textAlign: 'center', width: '100%' }}>
+                                        <ImageIcon size={48} style={{ opacity: 0.2, marginBottom: '15px' }} />
+                                        <p style={{ color: 'white', fontWeight: '700' }}>No slip image available.</p>
+                                        <p style={{ color: 'var(--text-muted)', fontSize: '13px', marginTop: '10px' }}>To fix this: Click the Edit (Pen) icon on the entry and upload the slip manually.</p>
+                                    </div>
+                                )}
+                                <button
+                                    onClick={() => setShowImageModal(false)}
+                                    style={{ position: 'absolute', top: '-15px', right: '-15px', background: '#f43f5e', color: 'white', border: 'none', width: '36px', height: '36px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 5px 15px rgba(244, 63, 94, 0.4)', zIndex: 100 }}
+                                >
+                                    <X size={20} />
+                                </button>
+                            </motion.div>
+                        </div>
+                    )
+                }
+            </AnimatePresence >
+
+            {/* Approval Modal */}
+            < AnimatePresence >
+                {showApprovalModal && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                            className="glass-card"
+                            style={{ padding: '0', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)' }}
+                        >
+                            <div style={{ padding: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '800', margin: 0 }}>Review Fuel Entry</h2>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '4px 0 0' }}>Verify details and slip before approving.</p>
+                                </div>
+                                <button onClick={() => setShowApprovalModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}><X size={20} /></button>
+                            </div>
+
+                            <div style={{ padding: '30px' }}>
+                                <div style={{ display: 'flex', gap: '20px', marginBottom: '20px', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '12px' }}>
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>Driver</div>
+                                        <div style={{ color: 'white', fontWeight: '700' }}>{selectedPending?.driver}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>Vehicle</div>
+                                        <div style={{ color: 'white', fontWeight: '700' }}>{selectedPending?.carNumber}</div>
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>Date</div>
+                                        <div style={{ color: 'white', fontWeight: '700' }}>{new Date(selectedPending?.date).toLocaleDateString()}</div>
+                                    </div>
+                                </div>
+
+                                <div className="form-grid-2">
+                                    <div>
+                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Amount (₹)</label>
+                                        <input type="number" className="input-field" value={formData.amount} readOnly style={{ opacity: 0.7 }} />
+                                    </div>
+                                    <div>
+                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Quantity (L)</label>
+                                        <input type="number" step="0.01" className="input-field" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} />
+                                    </div>
+                                </div>
+                                <div className="form-grid-2" style={{ marginTop: '15px' }}>
+                                    <div>
+                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Rate (₹/L)</label>
+                                        <input type="number" step="0.01" className="input-field" value={formData.rate} onChange={(e) => setFormData({ ...formData, rate: e.target.value })} />
+                                    </div>
+                                    <div>
+                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Odometer</label>
+                                        <input type="number" className="input-field" value={formData.odometer} onChange={(e) => setFormData({ ...formData, odometer: e.target.value })} />
+                                    </div>
+                                </div>
+
+                                <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)', marginTop: '20px' }}>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px' }}>Slip Image Verification</p>
+                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                        {formData.slipPhoto ? (
+                                            <div style={{ position: 'relative' }}>
+                                                <img src={getImageUrl(formData.slipPhoto)} alt="Slip" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover' }} />
+                                                <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                                            </div>
+                                        ) : (
+                                            <label style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                                <Plus size={20} color="var(--text-muted)" />
+                                                <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Upload</span>
+                                                <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
+                                            </label>
+                                        )}
+                                        <div style={{ flex: 1 }}>
+                                            {!formData.slipPhoto && <p style={{ color: '#f59e0b', fontSize: '12px', margin: 0, fontWeight: '700' }}>⚠ No slip attached!</p>}
+                                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: '4px 0 0' }}>Upload the slip if it's missing or incorrect.</p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
+                                    <button
+                                        onClick={() => handleApproveReject(selectedPending.attendanceId, selectedPending._id, 'approved', { quantity: formData.quantity, rate: formData.rate, odometer: formData.odometer, slipPhoto: formData.slipPhoto })}
+                                        style={{ flex: 2, height: '50px', borderRadius: '12px', fontSize: '15px', fontWeight: '800', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer' }}
+                                    >
+                                        Confirm Approval
+                                    </button>
+                                    <button
+                                        onClick={() => handleApproveReject(selectedPending.attendanceId, selectedPending._id, 'rejected')}
+                                        style={{ flex: 1, background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', borderRadius: '12px', fontWeight: '800', cursor: 'pointer' }}
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence >
         </div >
     );
 };

@@ -142,7 +142,7 @@ const OutsideCars = () => {
                 companyId: selectedCompany._id,
                 isOutsideCar: true,
                 status: 'active',
-                createdAt: new Date(formData.date)
+                createdAt: formData.date
             };
 
             if (editMode && selectedId) {
@@ -197,7 +197,9 @@ const OutsideCars = () => {
             v.property?.toLowerCase().includes(searchTerm.toLowerCase());
 
         const matchesOwner = ownerFilter === 'All' || v.ownerName?.trim() === ownerFilter?.trim();
-        const matchesProperty = propertyFilter === 'All' || v.property?.trim() === propertyFilter?.trim();
+        const currentProperty = v.property?.trim().toLowerCase().replace(/\s+/g, ' ');
+        const filterProperty = propertyFilter === 'All' ? 'All' : propertyFilter.trim().toLowerCase().replace(/\s+/g, ' ');
+        const matchesProperty = propertyFilter === 'All' || currentProperty === filterProperty;
 
         // Date Range Logic
         const dutyTagDateStr = v.carNumber?.split('#')[1];
@@ -218,12 +220,20 @@ const OutsideCars = () => {
 
     // Cascading unique drivers based on proprietor selection
     const uniqueOwners = [...new Set(vehicles.map(v => v.ownerName?.trim()).filter(Boolean))].sort();
-    const uniqueProperties = [...new Set(
-        vehicles
-            .filter(v => ownerFilter === 'All' || v.ownerName?.trim() === ownerFilter?.trim())
-            .map(v => v.property?.trim())
-            .filter(Boolean)
-    )].sort();
+
+    // Create unique properties list, normalizing to avoid duplicates in dropdown but keeping original casing for display
+    const uniqueProperties = Object.values(vehicles
+        .filter(v => ownerFilter === 'All' || v.ownerName?.trim() === ownerFilter?.trim())
+        .reduce((acc, v) => {
+            const prop = v.property?.trim();
+            if (prop) {
+                // Key is normalized (lowercase, single spaces) to dedup
+                const key = prop.toLowerCase().replace(/\s+/g, ' ');
+                // Value is the first occurrence's formatting (or arguably the most common, but first is simpler)
+                if (!acc[key]) acc[key] = prop;
+            }
+            return acc;
+        }, {})).sort();
 
     const carNumberSuggestions = [...new Set(vehicles.map(v => v.carNumber?.split('#')[0]).filter(Boolean))];
     const dutyTypeSuggestions = [...new Set(vehicles.map(v => v.dutyType).filter(Boolean))];
@@ -322,7 +332,12 @@ const OutsideCars = () => {
                             const reportData = filtered.map(v => ({
                                 'Property': v.property || '',
                                 'Owner': v.ownerName || '',
-                                'Date': v.carNumber?.split('#')[1] || new Date(v.createdAt).toLocaleDateString('en-IN'),
+                                'Date': (() => {
+                                    const rawDate = v.carNumber?.split('#')[1] || v.createdAt;
+                                    if (!rawDate) return '';
+                                    const d = new Date(rawDate);
+                                    return d.toLocaleDateString('en-GB'); // dd/mm/yyyy
+                                })(),
                                 'Vehicle Details': `${v.model || ''} - ${v.carNumber?.split('#')[0] || ''}`,
                                 'Drop Location': v.dropLocation?.replace(/ \| /g, ' ➜ ') || '',
                                 'Service Type': v.dutyType || '',
@@ -464,7 +479,6 @@ const OutsideCars = () => {
                                             return new Date(v.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
                                         })()}
                                     </div>
-                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Entry: {new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
                                 </td>
                                 <td style={{ padding: '20px 25px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
