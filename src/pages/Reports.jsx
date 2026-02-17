@@ -255,6 +255,7 @@ const Reports = () => {
 
     const reportOptions = [
         { id: 'drivers', label: 'Staff Drivers', icon: UserIcon, color: '#10b981' },
+        { id: 'freelancers', label: 'Freelancers', icon: Users, color: '#8b5cf6' },
         { id: 'vehicles', label: 'Vehicle Fleet', icon: LayoutGrid, color: '#0ea5e9' },
         { id: 'outsideCars', label: 'Outside Cars', icon: Car, color: '#f59e0b' },
         { id: 'fuel', label: 'Fuel Logs', icon: Fuel, color: '#22c55e' },
@@ -502,7 +503,8 @@ const Reports = () => {
             XLSX.utils.book_append_sheet(wb, ws, sheetName);
         };
 
-        if (selectedReports.includes('drivers')) createAttendanceSheet("Staff Drivers", r => !(r.vehicle?.isOutsideCar || r.isOutsideCar));
+        if (selectedReports.includes('drivers')) createAttendanceSheet("Staff Drivers", r => !((r.vehicle?.isOutsideCar || r.isOutsideCar) || (r.isFreelancer || r.driver?.isFreelancer)));
+        if (selectedReports.includes('freelancers')) createAttendanceSheet("Freelancers", r => (r.isFreelancer || r.driver?.isFreelancer) && !(r.vehicle?.isOutsideCar || r.isOutsideCar));
         if (selectedReports.includes('outsideCars')) createAttendanceSheet("Outside Cars", r => (r.vehicle?.isOutsideCar || r.isOutsideCar));
 
         if (selectedReports.includes('vehicles')) {
@@ -634,12 +636,15 @@ const Reports = () => {
         console.log('Combined Debug - Reports:', reports.length, 'Selected:', selectedReports);
 
         // 1. Attendance
-        if (selectedReports.includes('drivers') || selectedReports.includes('outsideCars') || selectedReports.includes('vehicles')) {
+        if (selectedReports.includes('drivers') || selectedReports.includes('freelancers') || selectedReports.includes('outsideCars') || selectedReports.includes('vehicles')) {
             const filteredAtt = reports.filter(r => {
                 const isOutside = r.vehicle?.isOutsideCar || r.isOutsideCar;
+                const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
+
                 if (selectedReports.includes('outsideCars') && isOutside) return true;
-                if (selectedReports.includes('drivers') && !isOutside) return true;
-                if (selectedReports.includes('vehicles') && !isOutside) return true;
+                if (selectedReports.includes('freelancers') && isFreelancer && !isOutside) return true;
+                if (selectedReports.includes('drivers') && !isOutside && !isFreelancer) return true;
+                if (selectedReports.includes('vehicles') && !isOutside) return true; // Vehicles report includes all non-outside cars
                 return false;
             });
             combined = [...combined, ...filteredAtt.map(r => ({ ...r, entryType: 'attendance' }))];
@@ -1021,7 +1026,13 @@ const Reports = () => {
                                                         <Eye size={14} /> VIEW
                                                     </button>
                                                 )}
-
+                                                <button
+                                                    onClick={() => handleDelete(report)}
+                                                    className="glass-card"
+                                                    style={{ padding: '8px 15px', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.1)', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '800' }}
+                                                >
+                                                    <Trash2 size={14} /> DELETE
+                                                </button>
                                             </div>
                                         </td>
                                     </motion.tr>

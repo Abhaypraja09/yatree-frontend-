@@ -34,13 +34,14 @@ const Sidebar = ({ isOpen, onClose }) => {
         { path: '/admin/maintenance', icon: Wrench, label: 'Maintenance' },
         { path: '/admin/fuel', icon: Fuel, label: 'Fuel' },
         { path: '/admin/parking', icon: MapPin, label: 'Parking' },
+        { path: '/admin/freelancers', icon: Users, label: 'Freelancers' },
         { path: '/admin/staff', icon: Users, label: 'Staff Management' },
         { path: '/admin/reports', icon: ClipboardList, label: 'Daily Reports' },
         { path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins' },
     ];
 
     const menuItems = user.role === 'Executive'
-        ? allMenuItems.filter(item => ['Outside Cars', 'Maintenance', 'Fuel', 'Parking', 'Daily Reports', 'Staff Management'].includes(item.label))
+        ? allMenuItems.filter(item => ['Freelancers', 'Outside Cars', 'Maintenance', 'Fuel', 'Parking', 'Daily Reports', 'Staff Management'].includes(item.label))
         : allMenuItems;
 
     const logoMap = {

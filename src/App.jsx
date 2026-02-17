@@ -9,6 +9,7 @@ const DriverPortal = lazy(() => import('./pages/DriverPortal'));
 const Drivers = lazy(() => import('./pages/Drivers'));
 const Vehicles = lazy(() => import('./pages/Vehicles'));
 const Reports = lazy(() => import('./pages/Reports'));
+const Freelancers = lazy(() => import('./pages/Freelancers'));
 const OutsideCars = lazy(() => import('./pages/OutsideCars'));
 const Fastag = lazy(() => import('./pages/Fastag'));
 const BorderTax = lazy(() => import('./pages/BorderTax'));
@@ -155,6 +156,7 @@ const AdminRoutes = () => {
       <Route path="outside-cars" element={<OutsideCars />} />
       <Route path="maintenance" element={<Maintenance />} />
       <Route path="parking" element={<Parking />} />
+      <Route path="freelancers" element={<Freelancers />} />
       <Route path="reports" element={<Reports />} />
 
       <Route path="fuel" element={<Fuel />} />

@@ -25,7 +25,7 @@ const Drivers = () => {
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingDriver, setEditingDriver] = useState(null);
     const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '' });
-    const [driverTypeFilter, setDriverTypeFilter] = useState('Regular');
+    const [driverTypeFilter, setDriverTypeFilter] = useState('All');
 
     // Manual Duty State
     const [showManualModal, setShowManualModal] = useState(false);
