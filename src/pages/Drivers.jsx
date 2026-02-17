@@ -27,6 +27,86 @@ const Drivers = () => {
     const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '' });
     const [driverTypeFilter, setDriverTypeFilter] = useState('Regular');
 
+    // Manual Duty State
+    const [showManualModal, setShowManualModal] = useState(false);
+    const [selectedDriverForManual, setSelectedDriverForManual] = useState(null);
+    const [vehicles, setVehicles] = useState([]);
+    const [submitting, setSubmitting] = useState(false);
+    const [manualDutyForm, setManualDutyForm] = useState({
+        date: new Date().toISOString().split('T')[0],
+        vehicleId: '',
+        punchInKM: '',
+        punchOutKM: '',
+        punchInTime: '',
+        punchOutTime: '',
+        fuelAmount: '',
+        parkingAmount: '',
+        pickUpLocation: '',
+        dropLocation: '',
+        dailyWage: '',
+        review: ''
+    });
+
+    const fetchVehicles = async () => {
+        if (!selectedCompany?._id) return;
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setVehicles(data.vehicles || []);
+        } catch (err) { console.error(err); }
+    };
+
+    useEffect(() => {
+        if (showManualModal) fetchVehicles();
+    }, [showManualModal]);
+
+    const handleManualDutySubmission = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.post('/api/admin/manual-duty', {
+                ...manualDutyForm,
+                driverId: selectedDriverForManual._id,
+                companyId: selectedCompany._id
+            }, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setShowManualModal(false);
+            setManualDutyForm({
+                date: new Date().toISOString().split('T')[0],
+                vehicleId: '',
+                punchInKM: '',
+                punchOutKM: '',
+                punchInTime: '',
+                punchOutTime: '',
+                fuelAmount: '',
+                parkingAmount: '',
+                pickUpLocation: '',
+                dropLocation: '',
+                dailyWage: '',
+                review: ''
+            });
+            alert('Manual duty entry added successfully');
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error adding manual duty');
+        } finally {
+            setSubmitting(false);
+        }
+    };
+
+    const openManualDutyModal = (driver) => {
+        setSelectedDriverForManual(driver);
+        setManualDutyForm(prev => ({
+            ...prev,
+            dailyWage: driver.dailyWage || '',
+            date: new Date().toISOString().split('T')[0]
+        }));
+        setShowManualModal(true);
+    };
+
 
 
     useEffect(() => {
@@ -394,6 +474,14 @@ const Drivers = () => {
                                                     <ShieldAlert size={16} />
                                                 </button>
                                                 <button
+                                                    onClick={() => openManualDutyModal(driver)}
+                                                    className="glass-card-hover-effect"
+                                                    style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#a78bfa', width: '36px', height: '36px', borderRadius: '8px', border: '1px solid rgba(139, 92, 246, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                                    title="Insert Past Duty"
+                                                >
+                                                    <Plus size={16} />
+                                                </button>
+                                                <button
                                                     onClick={() => handleDelete(driver._id)}
                                                     className="glass-card-hover-effect"
                                                     style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', width: '36px', height: '36px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
@@ -487,6 +575,12 @@ const Drivers = () => {
                                             style={{ flex: 1, padding: '10px', borderRadius: '8px', background: driver.status === 'active' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: driver.status === 'active' ? '#f59e0b' : '#10b981', border: `1px solid ${driver.status === 'active' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`, fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
                                         >
                                             {driver.status === 'active' ? 'Block' : 'Activate'}
+                                        </button>
+                                        <button
+                                            onClick={() => openManualDutyModal(driver)}
+                                            style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(139, 92, 246, 0.1)', color: '#a78bfa', border: '1px solid rgba(139, 92, 246, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                        >
+                                            Duty +
                                         </button>
                                         <button
                                             onClick={() => handleDelete(driver._id)}
@@ -696,6 +790,111 @@ const Drivers = () => {
                                     >
                                         Save Changes
                                     </button>
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Manual Duty Entry Modal */}
+            <AnimatePresence>
+                {showManualModal && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '15px' }}>
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                            className="glass-card"
+                            style={{ padding: '0', width: '100%', maxWidth: '600px', maxHeight: '95vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a' }}
+                        >
+                            <div style={{ padding: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to right, rgba(139, 92, 246, 0.05), transparent)' }}>
+                                <div>
+                                    <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Insert Past Duty Record</h2>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: '4px 0 0 0' }}>Manually adding duty for <span style={{ color: '#a78bfa', fontWeight: '700' }}>{selectedDriverForManual?.name}</span></p>
+                                </div>
+                                <button onClick={() => setShowManualModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
+                            </div>
+
+                            <form onSubmit={handleManualDutySubmission} style={{ padding: '25px' }}>
+                                <div className="form-grid-2" style={{ marginBottom: '20px' }}>
+                                    <div>
+                                        <label className="input-label">Duty Date *</label>
+                                        <input type="date" className="input-field" value={manualDutyForm.date} onChange={(e) => setManualDutyForm({ ...manualDutyForm, date: e.target.value })} required />
+                                    </div>
+                                    <div>
+                                        <label className="input-label">Vehicle *</label>
+                                        <select className="input-field" value={manualDutyForm.vehicleId} onChange={(e) => setManualDutyForm({ ...manualDutyForm, vehicleId: e.target.value })} required style={{ appearance: 'auto' }}>
+                                            <option value="">Select Vehicle</option>
+                                            {vehicles.map(v => (
+                                                <option key={v._id} value={v._id} style={{ color: 'black' }}>{v.carNumber} ({v.model})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <p style={{ color: '#a78bfa', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Kilometer & Time Tracking</p>
+                                    <div className="form-grid-2" style={{ marginBottom: '15px' }}>
+                                        <div>
+                                            <label className="input-label">Punch-In KM</label>
+                                            <input type="number" className="input-field" value={manualDutyForm.punchInKM} onChange={(e) => setManualDutyForm({ ...manualDutyForm, punchInKM: e.target.value })} placeholder="Opening KM" />
+                                        </div>
+                                        <div>
+                                            <label className="input-label">Punch-Out KM</label>
+                                            <input type="number" className="input-field" value={manualDutyForm.punchOutKM} onChange={(e) => setManualDutyForm({ ...manualDutyForm, punchOutKM: e.target.value })} placeholder="Closing KM" />
+                                        </div>
+                                    </div>
+                                    <div className="form-grid-2">
+                                        <div>
+                                            <label className="input-label">Punch-In Time</label>
+                                            <input type="datetime-local" className="input-field" value={manualDutyForm.punchInTime} onChange={(e) => setManualDutyForm({ ...manualDutyForm, punchInTime: e.target.value })} />
+                                        </div>
+                                        <div>
+                                            <label className="input-label">Punch-Out Time</label>
+                                            <input type="datetime-local" className="input-field" value={manualDutyForm.punchOutTime} onChange={(e) => setManualDutyForm({ ...manualDutyForm, punchOutTime: e.target.value })} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <p style={{ color: '#10b981', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Expenses & Financials</p>
+                                    <div className="form-grid-2" style={{ marginBottom: '15px' }}>
+                                        <div>
+                                            <label className="input-label">Fuel Amount (₹)</label>
+                                            <input type="number" className="input-field" value={manualDutyForm.fuelAmount} onChange={(e) => setManualDutyForm({ ...manualDutyForm, fuelAmount: e.target.value })} placeholder="0" />
+                                        </div>
+                                        <div>
+                                            <label className="input-label">Parking Amount (₹)</label>
+                                            <input type="number" className="input-field" value={manualDutyForm.parkingAmount} onChange={(e) => setManualDutyForm({ ...manualDutyForm, parkingAmount: e.target.value })} placeholder="0" />
+                                        </div>
+                                    </div>
+                                    <div className="form-grid-2">
+                                        <div>
+                                            <label className="input-label">Daily Wage (Salary)</label>
+                                            <input type="number" className="input-field" value={manualDutyForm.dailyWage} onChange={(e) => setManualDutyForm({ ...manualDutyForm, dailyWage: e.target.value })} />
+                                        </div>
+                                        <div>
+                                            <label className="input-label">Duty Type / Remark</label>
+                                            <input type="text" className="input-field" value={manualDutyForm.review} onChange={(e) => setManualDutyForm({ ...manualDutyForm, review: e.target.value })} placeholder="e.g. Local, Outstation" />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="form-grid-2" style={{ marginBottom: '25px' }}>
+                                    <div>
+                                        <label className="input-label">Pick-up Location</label>
+                                        <input type="text" className="input-field" value={manualDutyForm.pickUpLocation} onChange={(e) => setManualDutyForm({ ...manualDutyForm, pickUpLocation: e.target.value })} placeholder="e.g. Office" />
+                                    </div>
+                                    <div>
+                                        <label className="input-label">Drop Location</label>
+                                        <input type="text" className="input-field" value={manualDutyForm.dropLocation} onChange={(e) => setManualDutyForm({ ...manualDutyForm, dropLocation: e.target.value })} placeholder="e.g. Office" />
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '15px' }}>
+                                    <button type="button" className="glass-card-hover-effect" style={{ flex: '1', padding: '14px', background: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: '700', borderRadius: '12px', border: 'none', cursor: 'pointer' }} onClick={() => setShowManualModal(false)}>Cancel</button>
+                                    <button type="submit" disabled={submitting} className="glass-card-hover-effect" style={{ flex: '2', padding: '14px', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: 'white', fontWeight: '800', borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)', cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1 }}>{submitting ? 'Saving Record...' : 'Save Duty Record'}</button>
                                 </div>
                             </form>
                         </motion.div>
