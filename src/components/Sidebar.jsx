@@ -26,7 +26,6 @@ const Sidebar = ({ isOpen, onClose }) => {
     const allMenuItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/admin/drivers', icon: Users, label: 'Drivers' },
-        { path: '/admin/freelancers', icon: Users, label: 'Freelancers' },
         { path: '/admin/advances', icon: CreditCard, label: 'Advances' },
         { path: '/admin/vehicles', icon: Car, label: 'Vehicles' },
         { path: '/admin/outside-cars', icon: Car, label: 'Outside Cars' },
@@ -41,7 +40,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     ];
 
     const menuItems = user.role === 'Executive'
-        ? allMenuItems.filter(item => ['Freelancers', 'Outside Cars', 'Maintenance', 'Fuel', 'Parking', 'Daily Reports', 'Staff Management'].includes(item.label))
+        ? allMenuItems.filter(item => ['Outside Cars', 'Maintenance', 'Fuel', 'Parking', 'Daily Reports', 'Staff Management'].includes(item.label))
         : allMenuItems;
 
     const logoMap = {

@@ -112,7 +112,7 @@ const Drivers = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             if (!userInfo) return;
-            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}`, {
+            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setDrivers(data.drivers || []);

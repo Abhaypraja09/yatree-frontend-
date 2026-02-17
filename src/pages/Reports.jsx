@@ -18,7 +18,8 @@ import {
     CheckCircle2,
     Fuel,
     Wrench,
-    IndianRupee
+    IndianRupee,
+    Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -41,144 +42,184 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
             style={{ width: '100%', maxWidth: '900px', maxHeight: '92vh', overflowY: 'auto' }}
         >
             <div className="modal-header" style={{ position: 'sticky', top: 0, background: 'var(--bg-dark)', zIndex: 10, margin: '-20px -20px 20px -20px', padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <h2 className="modal-title">Report Detail: {item.driver?.name}</h2>
+                <h2 className="modal-title">Report Detail: {item.driver?.name || item.driverName || 'Report'}</h2>
                 <button onClick={onClose} className="modal-close-btn"><X size={18} /></button>
             </div>
 
-            <div className="grid-1-2-2-3" style={{ gap: '20px' }}>
-                {/* Punch In */}
-                <div>
-                    <h3 className="modal-section-title" style={{ borderColor: '#10b981' }}>Punch In Details</h3>
-                    <div className="photo-grid">
+            {item.entryType === 'attendance' ? (
+                <>
+                    <div className="grid-1-2-2-3" style={{ gap: '20px' }}>
+                        {/* Punch In */}
                         <div>
-                            <p className="photo-label">SELFIE</p>
-                            <img src={item.punchIn?.selfie} className="photo-thumbnail" onClick={() => window.open(item.punchIn?.selfie)} loading="lazy" />
+                            <h3 className="modal-section-title" style={{ borderColor: '#10b981' }}>Punch In Details</h3>
+                            <div className="photo-grid">
+                                <div>
+                                    <p className="photo-label">SELFIE</p>
+                                    <img src={item.punchIn?.selfie} className="photo-thumbnail" onClick={() => window.open(item.punchIn?.selfie)} loading="lazy" />
+                                </div>
+                                <div>
+                                    <p className="photo-label">KM METER</p>
+                                    <img src={item.punchIn?.kmPhoto} className="photo-thumbnail" onClick={() => window.open(item.punchIn?.kmPhoto)} loading="lazy" />
+                                </div>
+                                <div>
+                                    <p className="photo-label">CAR PHOTO</p>
+                                    <img src={item.punchIn?.carSelfie} className="photo-thumbnail" onClick={() => window.open(item.punchIn?.carSelfie)} loading="lazy" />
+                                </div>
+                            </div>
                         </div>
+
+                        {/* Punch Out */}
                         <div>
-                            <p className="photo-label">KM METER</p>
-                            <img src={item.punchIn?.kmPhoto} className="photo-thumbnail" onClick={() => window.open(item.punchIn?.kmPhoto)} loading="lazy" />
-                        </div>
-                        <div>
-                            <p className="photo-label">CAR PHOTO</p>
-                            <img src={item.punchIn?.carSelfie} className="photo-thumbnail" onClick={() => window.open(item.punchIn?.carSelfie)} loading="lazy" />
+                            <h3 className="modal-section-title" style={{ borderColor: '#f43f5e' }}>Punch Out Details</h3>
+                            {item.punchOut?.time ? (
+                                <div className="photo-grid">
+                                    <div>
+                                        <p className="photo-label">SELFIE</p>
+                                        <img src={item.punchOut?.selfie} className="photo-thumbnail" onClick={() => window.open(item.punchOut?.selfie)} loading="lazy" />
+                                    </div>
+                                    <div>
+                                        <p className="photo-label">KM METER</p>
+                                        <img src={item.punchOut?.kmPhoto} className="photo-thumbnail" onClick={() => window.open(item.punchOut?.kmPhoto)} loading="lazy" />
+                                    </div>
+                                    <div>
+                                        <p className="photo-label">CAR PHOTO</p>
+                                        <img src={item.punchOut?.carSelfie} className="photo-thumbnail" onClick={() => window.open(item.punchOut?.carSelfie)} loading="lazy" />
+                                    </div>
+                                </div>
+                            ) : (
+                                <div style={{ height: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px' }}>
+                                    <p style={{ fontSize: '12px', margin: 0, fontWeight: '600' }}>Driver currently on road...</p>
+                                </div>
+                            )}
                         </div>
                     </div>
-                </div>
 
-                {/* Punch Out */}
-                <div>
-                    <h3 className="modal-section-title" style={{ borderColor: '#f43f5e' }}>Punch Out Details</h3>
-                    {item.punchOut?.time ? (
-                        <div className="photo-grid">
-                            <div>
-                                <p className="photo-label">SELFIE</p>
-                                <img src={item.punchOut?.selfie} className="photo-thumbnail" onClick={() => window.open(item.punchOut?.selfie)} loading="lazy" />
-                            </div>
-                            <div>
-                                <p className="photo-label">KM METER</p>
-                                <img src={item.punchOut?.kmPhoto} className="photo-thumbnail" onClick={() => window.open(item.punchOut?.kmPhoto)} loading="lazy" />
-                            </div>
-                            <div>
-                                <p className="photo-label">CAR PHOTO</p>
-                                <img src={item.punchOut?.carSelfie} className="photo-thumbnail" onClick={() => window.open(item.punchOut?.carSelfie)} loading="lazy" />
-                            </div>
+                    {/* Expenditure & Extras */}
+                    <div className="resp-grid grid-1-2-3-4" style={{ marginTop: '25px', gap: '15px' }}>
+                        <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
+                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '12px', fontWeight: '800', textTransform: 'uppercase' }}>Fuel Management</p>
+                            {item.fuel?.filled ? (
+                                <div style={{ display: 'grid', gap: '10px' }}>
+                                    {(item.fuel.entries && item.fuel.entries.length > 0) ? (
+                                        item.fuel.entries.map((entry, idx) => (
+                                            <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '8px' }}>
+                                                <img src={entry.slipPhoto} onClick={() => window.open(entry.slipPhoto)} style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', cursor: 'pointer' }} loading="lazy" />
+                                                <div style={{ flex: 1 }}>
+                                                    <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', margin: 0 }}>₹{entry.amount}</p>
+                                                    <p style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '10px', margin: 0 }}>{entry.km} KM</p>
+                                                </div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                            {item.fuel.slipPhoto && <img src={item.fuel.slipPhoto} onClick={() => window.open(item.fuel.slipPhoto)} style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover', cursor: 'pointer' }} />}
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{ color: 'white', fontWeight: '800', fontSize: '16px', margin: 0 }}>₹{item.fuel.amount}</p>
+                                                <p style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '11px', margin: 0 }}>{item.fuel.km || '--'} KM</p>
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                            ) : null}
                         </div>
-                    ) : (
-                        <div style={{ height: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px' }}>
-                            <p style={{ fontSize: '12px', margin: 0, fontWeight: '600' }}>Driver currently on road...</p>
-                        </div>
-                    )}
-                </div>
-            </div>
 
-            {/* Expenditure & Extras */}
-            <div className="resp-grid grid-1-2-3-4" style={{ marginTop: '25px', gap: '15px' }}>
-                <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
-                    <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '12px', fontWeight: '800', textTransform: 'uppercase' }}>Fuel Management</p>
-                    {item.fuel?.filled ? (
-                        <div style={{ display: 'grid', gap: '10px' }}>
-                            {(item.fuel.entries && item.fuel.entries.length > 0) ? (
-                                item.fuel.entries.map((entry, idx) => (
-                                    <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '8px' }}>
-                                        <img src={entry.slipPhoto} onClick={() => window.open(entry.slipPhoto)} style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', cursor: 'pointer' }} loading="lazy" />
-                                        <div style={{ flex: 1 }}>
-                                            <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', margin: 0 }}>₹{entry.amount}</p>
-                                            <p style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '10px', margin: 0 }}>{entry.km} KM</p>
+                        <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
+                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '12px', fontWeight: '800', textTransform: 'uppercase' }}>Tolls & Parking</p>
+                            {item.punchOut?.tollParkingAmount > 0 || (item.parking && item.parking.length > 0) ? (
+                                <div>
+                                    <p style={{ color: 'white', fontWeight: '800', fontSize: '16px', margin: 0 }}>₹{item.punchOut?.tollParkingAmount || item.parking?.reduce((s, p) => s + (p.amount || 0), 0)}</p>
+                                    {item.parking && item.parking.length > 0 && (
+                                        <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'wrap' }}>
+                                            {item.parking.map((p, idx) => (
+                                                <img key={idx} src={p.slipPhoto} onClick={() => window.open(p.slipPhoto)} style={{ width: '30px', height: '30px', borderRadius: '4px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            ) : null}
+                        </div>
+
+                        <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
+                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '12px', fontWeight: '800', textTransform: 'uppercase' }}>Incentives & Taxes</p>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                {item.punchOut?.allowanceTA > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>TA:</span> <span style={{ color: '#10b981', fontWeight: '800' }}>+₹{item.punchOut.allowanceTA}</span></div>}
+                                {item.punchOut?.nightStayAmount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>Stay:</span> <span style={{ color: '#10b981', fontWeight: '800' }}>+₹{item.punchOut.nightStayAmount}</span></div>}
+                                {item.outsideTrip?.occurred && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>Bonus:</span> <span style={{ color: 'var(--primary)', fontWeight: '800' }}>+₹{item.outsideTrip.bonusAmount}</span></div>}
+
+                                {borderTaxRecords.filter(b => b.date === item.date && b.vehicle?._id === item.vehicle?._id).map((bt, idx) => (
+                                    <div key={idx} style={{ padding: '6px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '6px', fontSize: '11px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: 'white' }}>{bt.borderName}</span>
+                                            <span style={{ color: '#10b981', fontWeight: '900' }}>₹{bt.amount}</span>
                                         </div>
                                     </div>
-                                ))
-                            ) : (
-                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                    {item.fuel.slipPhoto && <img src={item.fuel.slipPhoto} onClick={() => window.open(item.fuel.slipPhoto)} style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover', cursor: 'pointer' }} />}
-                                    <div style={{ flex: 1 }}>
-                                        <p style={{ color: 'white', fontWeight: '800', fontSize: '16px', margin: 0 }}>₹{item.fuel.amount}</p>
-                                        <p style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '11px', margin: 0 }}>{item.fuel.km || '--'} KM</p>
-                                    </div>
-                                </div>
-                            )}
+                                ))}
+                            </div>
                         </div>
-                    ) : null}
-                </div>
+                    </div>
 
-                <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
-                    <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '12px', fontWeight: '800', textTransform: 'uppercase' }}>Tolls & Parking</p>
-                    {item.punchOut?.tollParkingAmount > 0 || (item.parking && item.parking.length > 0) ? (
-                        <div>
-                            <p style={{ color: 'white', fontWeight: '800', fontSize: '16px', margin: 0 }}>₹{item.punchOut?.tollParkingAmount || item.parking?.reduce((s, p) => s + (p.amount || 0), 0)}</p>
-                            {item.parking && item.parking.length > 0 && (
-                                <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'wrap' }}>
-                                    {item.parking.map((p, idx) => (
-                                        <img key={idx} src={p.slipPhoto} onClick={() => window.open(p.slipPhoto)} style={{ width: '30px', height: '30px', borderRadius: '4px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-                                    ))}
-                                </div>
-                            )}
+                    <div className="flex-resp" style={{ marginTop: '20px', gap: '12px', display: 'flex' }}>
+                        <div className="glass-card" style={{ padding: '15px', flex: '1', minWidth: '120px', textAlign: 'center', background: 'rgba(16, 185, 129, 0.03)' }}>
+                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '5px', fontWeight: '800' }}>DAILY SALARY</p>
+                            <h3 style={{ color: '#10b981', margin: 0, fontSize: '20px', fontWeight: '900' }}>₹{(item.dailyWage || item.driver?.dailyWage || item.vehicle?.dutyAmount || 500).toLocaleString()}</h3>
                         </div>
-                    ) : null}
-                </div>
+                        <div className="glass-card" style={{ padding: '15px', flex: '1', minWidth: '120px', textAlign: 'center', background: 'rgba(16, 185, 129, 0.03)' }}>
+                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '5px', fontWeight: '800' }}>DISTANCE</p>
+                            <h3 style={{ color: '#10b981', margin: 0, fontSize: '20px', fontWeight: '900' }}>{item.totalKM || '0'} KM</h3>
+                        </div>
+                    </div>
 
-                <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
-                    <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '12px', fontWeight: '800', textTransform: 'uppercase' }}>Incentives & Taxes</p>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {item.punchOut?.allowanceTA > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>TA:</span> <span style={{ color: '#10b981', fontWeight: '800' }}>+₹{item.punchOut.allowanceTA}</span></div>}
-                        {item.punchOut?.nightStayAmount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>Stay:</span> <span style={{ color: '#10b981', fontWeight: '800' }}>+₹{item.punchOut.nightStayAmount}</span></div>}
-                        {item.outsideTrip?.occurred && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>Bonus:</span> <span style={{ color: 'var(--primary)', fontWeight: '800' }}>+₹{item.outsideTrip.bonusAmount}</span></div>}
+                    {/* Duty Details Section */}
+                    {item.punchOut?.remarks && (
+                        <div className="glass-card" style={{ padding: '15px', marginTop: '15px', border: '1px solid rgba(16, 185, 129, 0.2)', background: 'rgba(16, 185, 129, 0.02)' }}>
+                            <p style={{ fontSize: '9px', color: '#10b981', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Duty Remarks / Destination</p>
+                            <p style={{ color: 'white', fontSize: '13px', lineHeight: '1.6', margin: 0, fontWeight: '600' }}>{item.punchOut.remarks}</p>
+                        </div>
+                    )}
 
-                        {borderTaxRecords.filter(b => b.date === item.date && b.vehicle?._id === item.vehicle?._id).map((bt, idx) => (
-                            <div key={idx} style={{ padding: '6px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '6px', fontSize: '11px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                    <span style={{ color: 'white' }}>{bt.borderName}</span>
-                                    <span style={{ color: '#10b981', fontWeight: '900' }}>₹{bt.amount}</span>
+                    {/* Issues Section */}
+                    {item.punchOut?.otherRemarks && (
+                        <div className="glass-card" style={{ padding: '15px', marginTop: '12px', border: '1px solid rgba(244, 63, 94, 0.2)', background: 'rgba(244, 63, 94, 0.02)' }}>
+                            <p style={{ fontSize: '9px', color: '#f43f5e', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Maintenance Remarks</p>
+                            <p style={{ color: 'white', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>{item.punchOut.otherRemarks}</p>
+                        </div>
+                    )}
+                </>
+            ) : (
+                <div style={{ padding: '20px' }}>
+                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
+                        {item.billPhoto && (
+                            <div style={{ flex: '0 0 300px' }}>
+                                <p className="photo-label">RECEIPT / BILL PHOTO</p>
+                                <img src={item.billPhoto || item.receiptPhoto || item.slipPhoto} style={{ width: '100%', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => window.open(item.billPhoto || item.receiptPhoto || item.slipPhoto)} />
+                            </div>
+                        )}
+                        <div style={{ flex: 1, minWidth: '250px' }}>
+                            <h3 className="modal-section-title" style={{ borderColor: 'var(--primary)' }}>Entry Details</h3>
+                            <div className="glass-card" style={{ padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                <div>
+                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>CATEGORY</p>
+                                    <p style={{ color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase' }}>{item.entryType}</p>
+                                </div>
+                                <div>
+                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>AMOUNT</p>
+                                    <p style={{ color: '#10b981', fontSize: '24px', fontWeight: '900' }}>₹{item.amount}</p>
+                                </div>
+                                <div>
+                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>VEHICLE</p>
+                                    <p style={{ color: 'white', fontWeight: '800' }}>{item.vehicle?.carNumber || item.carNumber || '--'}</p>
+                                </div>
+                                <div>
+                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>ODOMETER</p>
+                                    <p style={{ color: 'white', fontWeight: '800' }}>{item.odometer || item.km || '--'} KM</p>
+                                </div>
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>REMARKS / DESCRIPTION</p>
+                                    <p style={{ color: 'white', fontSize: '14px' }}>{item.remarks || item.location || item.description || '--'}</p>
                                 </div>
                             </div>
-                        ))}
+                        </div>
                     </div>
-                </div>
-            </div>
-
-            <div className="flex-resp" style={{ marginTop: '20px', gap: '12px' }}>
-                <div className="glass-card" style={{ padding: '15px', flex: '1', minWidth: '120px', textAlign: 'center', background: 'rgba(16, 185, 129, 0.03)' }}>
-                    <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '5px', fontWeight: '800' }}>DAILY SALARY</p>
-                    <h3 style={{ color: '#10b981', margin: 0, fontSize: '20px', fontWeight: '900' }}>₹{(item.dailyWage || item.driver?.dailyWage || item.vehicle?.dutyAmount || 500).toLocaleString()}</h3>
-                </div>
-                <div className="glass-card" style={{ padding: '15px', flex: '1', minWidth: '120px', textAlign: 'center', background: 'rgba(16, 185, 129, 0.03)' }}>
-                    <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '5px', fontWeight: '800' }}>DISTANCE</p>
-                    <h3 style={{ color: '#10b981', margin: 0, fontSize: '20px', fontWeight: '900' }}>{item.totalKM || '0'} KM</h3>
-                </div>
-            </div>
-
-            {/* Duty Details Section */}
-            {item.punchOut?.remarks && (
-                <div className="glass-card" style={{ padding: '15px', marginTop: '15px', border: '1px solid rgba(16, 185, 129, 0.2)', background: 'rgba(16, 185, 129, 0.02)' }}>
-                    <p style={{ fontSize: '9px', color: '#10b981', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Duty Remarks / Destination</p>
-                    <p style={{ color: 'white', fontSize: '13px', lineHeight: '1.6', margin: 0, fontWeight: '600' }}>{item.punchOut.remarks}</p>
-                </div>
-            )}
-
-            {/* Issues Section */}
-            {item.punchOut?.otherRemarks && (
-                <div className="glass-card" style={{ padding: '15px', marginTop: '12px', border: '1px solid rgba(244, 63, 94, 0.2)', background: 'rgba(244, 63, 94, 0.02)' }}>
-                    <p style={{ fontSize: '9px', color: '#f43f5e', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Maintenance Remarks</p>
-                    <p style={{ color: 'white', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>{item.punchOut.otherRemarks}</p>
                 </div>
             )}
         </motion.div>
@@ -210,11 +251,10 @@ const Reports = () => {
     const [selectedItem, setSelectedItem] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
-    const [selectedReports, setSelectedReports] = useState(['drivers', 'freelancers', 'outsideCars']);
+    const [selectedReports, setSelectedReports] = useState(['drivers']);
 
     const reportOptions = [
         { id: 'drivers', label: 'Staff Drivers', icon: UserIcon, color: '#10b981' },
-        { id: 'freelancers', label: 'Freelancers', icon: UserIcon, color: '#f43f5e' },
         { id: 'vehicles', label: 'Vehicle Fleet', icon: LayoutGrid, color: '#0ea5e9' },
         { id: 'outsideCars', label: 'Outside Cars', icon: Car, color: '#f59e0b' },
         { id: 'fuel', label: 'Fuel Logs', icon: Fuel, color: '#22c55e' },
@@ -270,6 +310,45 @@ const Reports = () => {
         }
     };
 
+    const handleDelete = async (item) => {
+        if (!window.confirm('Are you sure you want to delete this report entry? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            let endpoint = '';
+
+            if (item.entryType === 'attendance') {
+                endpoint = item.isOutsideCar ? `/api/admin/vehicles/${item._id}` : `/api/admin/attendance/${item._id}`;
+            } else if (item.entryType === 'fuel') {
+                endpoint = `/api/admin/fuel/${item._id}`;
+            } else if (item.entryType === 'parking') {
+                endpoint = `/api/admin/parking/${item._id}`;
+            } else if (item.entryType === 'advance') {
+                endpoint = `/api/admin/advances/${item._id}`;
+            } else if (item.entryType === 'maintenance') {
+                endpoint = `/api/admin/maintenance/${item._id}`;
+            } else if (item.entryType === 'borderTax') {
+                endpoint = `/api/admin/border-tax/${item._id}`;
+            } else {
+                alert('Deletion not supported for this entry type');
+                return;
+            }
+
+            await axios.delete(endpoint, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+
+            // Refresh counts/data
+            fetchReports();
+            alert('Record deleted successfully');
+        } catch (error) {
+            console.error('Error deleting record:', error);
+            alert('Failed to delete record: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
     const handleExportTableData = async () => {
         const XLSX = await import('xlsx-js-style');
         if (filteredReports.length === 0) return alert('No records to export in the current table.');
@@ -293,7 +372,7 @@ const Reports = () => {
 
             return {
                 'Date': `${dd}-${mm}-${yyyy}`,
-                'Name': r.driver?.name || 'Unknown',
+                'Name': r.driver?.name || r.vehicle?.driverName || (r.vehicle?.isOutsideCar ? 'Outside Car' : 'Unknown'),
                 'Car': r.vehicle?.carNumber ? r.vehicle.carNumber.split('#')[0] : '',
                 'In': punchInTime,
                 'Out': punchOutTime,
@@ -301,7 +380,7 @@ const Reports = () => {
                 'Daily': dailySalary,
                 'Bonus': (r.punchOut?.allowanceTA || 0) + (r.punchOut?.nightStayAmount || 0),
                 'T/P': r.punchOut?.tollParkingAmount || (r.parking || []).reduce((sum, p) => sum + (p.amount || 0), 0),
-                'Company': (r.vehicle?.isOutsideCar || r.driver?.isFreelancer) ? 'FREELANCER' : 'Yatree Destination',
+                'Company': r.vehicle?.isOutsideCar ? 'OUTSIDE' : (r.driver?.isFreelancer ? 'FREELANCER' : 'Yatree Destination'),
                 'Remarks': r.punchOut?.otherRemarks || ''
             };
         });
@@ -380,7 +459,7 @@ const Reports = () => {
 
                 if (isOutsideSheet) {
                     return {
-                        'Driver Name': r.driver?.name || 'Unknown',
+                        'Driver Name': r.driver?.name || r.vehicle?.driverName || (r.vehicle?.isOutsideCar ? 'Outside Car' : 'Unknown'),
                         'Date': fmtDate(r.date),
                         'Car': displayCar,
                         'Punch In': punchInTime,
@@ -390,7 +469,7 @@ const Reports = () => {
                 }
 
                 return {
-                    'Driver Name': r.driver?.name || 'Unknown',
+                    'Driver Name': r.driver?.name || r.vehicle?.driverName || (r.vehicle?.isOutsideCar ? 'Outside Car' : 'Unknown'),
                     'Date': fmtDate(r.date),
                     'Car': displayCar,
                     'Punch In': punchInTime,
@@ -423,9 +502,8 @@ const Reports = () => {
             XLSX.utils.book_append_sheet(wb, ws, sheetName);
         };
 
-        if (selectedReports.includes('drivers')) createAttendanceSheet("Staff Drivers", r => !r.vehicle?.isOutsideCar && !r.driver?.isFreelancer);
-        if (selectedReports.includes('freelancers')) createAttendanceSheet("Freelancers", r => !r.vehicle?.isOutsideCar && r.driver?.isFreelancer);
-        if (selectedReports.includes('outsideCars')) createAttendanceSheet("Outside Cars", r => r.vehicle?.isOutsideCar);
+        if (selectedReports.includes('drivers')) createAttendanceSheet("Staff Drivers", r => !(r.vehicle?.isOutsideCar || r.isOutsideCar));
+        if (selectedReports.includes('outsideCars')) createAttendanceSheet("Outside Cars", r => (r.vehicle?.isOutsideCar || r.isOutsideCar));
 
         if (selectedReports.includes('vehicles')) {
             const vehicleSummary = {};
@@ -553,27 +631,27 @@ const Reports = () => {
 
     const getUnifiedData = () => {
         let combined = [];
+        console.log('Combined Debug - Reports:', reports.length, 'Selected:', selectedReports);
 
         // 1. Attendance
-        if (selectedReports.includes('drivers') || selectedReports.includes('freelancers') || selectedReports.includes('outsideCars')) {
+        if (selectedReports.includes('drivers') || selectedReports.includes('outsideCars') || selectedReports.includes('vehicles')) {
             const filteredAtt = reports.filter(r => {
-                const isOutside = r.vehicle?.isOutsideCar;
-                const isFreelancer = r.driver?.isFreelancer;
+                const isOutside = r.vehicle?.isOutsideCar || r.isOutsideCar;
                 if (selectedReports.includes('outsideCars') && isOutside) return true;
-                if (selectedReports.includes('freelancers') && !isOutside && isFreelancer) return true;
-                if (selectedReports.includes('drivers') && !isOutside && !isFreelancer) return true;
+                if (selectedReports.includes('drivers') && !isOutside) return true;
+                if (selectedReports.includes('vehicles') && !isOutside) return true;
                 return false;
             });
             combined = [...combined, ...filteredAtt.map(r => ({ ...r, entryType: 'attendance' }))];
         }
 
         // 2. Fuel
-        if (selectedReports.includes('fuel')) {
+        if (selectedReports.includes('fuel') || selectedReports.includes('vehicles')) {
             combined = [...combined, ...fuelRecords.map(f => ({ ...f, entryType: 'fuel', date: f.date.split('T')[0] }))];
         }
 
         // 3. Maintenance
-        if (selectedReports.includes('maintenance')) {
+        if (selectedReports.includes('maintenance') || selectedReports.includes('vehicles')) {
             combined = [...combined, ...maintenanceRecords.map(m => ({ ...m, entryType: 'maintenance', date: m.billDate.split('T')[0] }))];
         }
 
@@ -583,7 +661,7 @@ const Reports = () => {
         }
 
         // 5. Border Tax
-        if (selectedReports.includes('borderTax')) {
+        if (selectedReports.includes('borderTax') || selectedReports.includes('vehicles')) {
             combined = [...combined, ...borderTaxRecords.map(b => ({ ...b, entryType: 'borderTax' }))];
         }
 
@@ -597,7 +675,11 @@ const Reports = () => {
             combined = [...combined, ...parkingRecords.map(p => ({ ...p, entryType: 'parking', date: p.date.split('T')[0] }))];
         }
 
-        return combined.sort((a, b) => b.date.localeCompare(a.date));
+        return combined.sort((a, b) => {
+            const dateA = a.date || "";
+            const dateB = b.date || "";
+            return dateB.localeCompare(dateA);
+        });
     };
 
     const searchFilter = (item) => {
@@ -852,7 +934,9 @@ const Reports = () => {
                                                     <UserIcon size={18} color="white" />
                                                 </div>
                                                 <div>
-                                                    <p style={{ fontWeight: '800', fontSize: '14px', margin: 0 }}>{report.driver?.name || (typeof report.driver === 'string' ? report.driver : 'N/A')}</p>
+                                                    <p style={{ fontWeight: '800', fontSize: '14px', margin: 0 }}>
+                                                        {report.driver?.name || report.vehicle?.driverName || (report.vehicle?.isOutsideCar ? 'Outside Car' : (typeof report.driver === 'string' ? report.driver : 'N/A'))}
+                                                    </p>
                                                     <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{report.driver?.mobile || '-'}</p>
                                                 </div>
                                             </div>
@@ -927,15 +1011,18 @@ const Reports = () => {
                                             )}
                                         </td>
                                         <td style={{ padding: '18px 25px', textAlign: 'right' }}>
-                                            {report.entryType === 'attendance' && (
-                                                <button
-                                                    onClick={() => setSelectedItem(report)}
-                                                    className="glass-card"
-                                                    style={{ padding: '8px 15px', color: 'var(--primary)', border: '1px solid rgba(14, 165, 233, 0.1)', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '800' }}
-                                                >
-                                                    <Eye size={14} /> VIEW
-                                                </button>
-                                            )}
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
+                                                {(report.entryType === 'attendance' || report.entryType === 'fuel' || report.entryType === 'parking' || report.entryType === 'advance' || report.entryType === 'maintenance' || report.entryType === 'borderTax') && (
+                                                    <button
+                                                        onClick={() => setSelectedItem(report)}
+                                                        className="glass-card"
+                                                        style={{ padding: '8px 15px', color: 'var(--primary)', border: '1px solid rgba(14, 165, 233, 0.1)', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '800' }}
+                                                    >
+                                                        <Eye size={14} /> VIEW
+                                                    </button>
+                                                )}
+
+                                            </div>
                                         </td>
                                     </motion.tr>
                                 );
@@ -980,7 +1067,9 @@ const Reports = () => {
                                                     <UserIcon size={18} color="var(--primary)" />
                                                 </div>
                                                 <div>
-                                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>{report.driver?.name || (typeof report.driver === 'string' ? report.driver : 'N/A')}</div>
+                                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>
+                                                        {report.driver?.name || (report.vehicle?.isOutsideCar ? 'Outside Car' : (typeof report.driver === 'string' ? report.driver : 'N/A'))}
+                                                    </div>
                                                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{report.vehicle?.carNumber?.split('#')[0] || (typeof report.carNumber === 'string' ? report.carNumber : '--')}</div>
                                                     <div style={{ marginTop: '4px' }}>
                                                         <span style={{
@@ -1051,12 +1140,22 @@ const Reports = () => {
                                                     <div style={{ color: '#10b981', fontWeight: '900' }}>{showSalary > 0 ? `₹${showSalary}` : '--'}</div>
                                                 </div>
                                             </div>
-                                            <button
-                                                onClick={() => setSelectedItem(report)}
-                                                style={{ background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(14, 165, 233, 0.2)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '700' }}
-                                            >
-                                                <Eye size={14} /> View
-                                            </button>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                {(report.entryType === 'attendance' || report.entryType === 'fuel' || report.entryType === 'parking' || report.entryType === 'advance' || report.entryType === 'maintenance' || report.entryType === 'borderTax') && (
+                                                    <button
+                                                        onClick={() => setSelectedItem(report)}
+                                                        style={{ background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(14, 165, 233, 0.2)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '700' }}
+                                                    >
+                                                        <Eye size={14} /> View
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => handleDelete(report)}
+                                                    style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.2)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '700' }}
+                                                >
+                                                    <Trash2 size={14} />
+                                                </button>
+                                            </div>
                                         </div>
                                     </motion.div>
                                 );

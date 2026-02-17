@@ -2,11 +2,89 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
-    MapPin, Plus, Search, Trash2, Calendar, History, Car, User, Shield, FileSpreadsheet, Edit, IndianRupee, Eye, X, Image as ImageIcon
+    MapPin, Plus, Search, Trash2, Calendar, History, Car, User, Shield, FileSpreadsheet, Edit, IndianRupee, Eye, X, Image as ImageIcon, Camera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+
+const CameraModal = ({ onCapture, onClose }) => {
+    const videoRef = React.useRef(null);
+    const canvasRef = React.useRef(null);
+    const streamRef = React.useRef(null);
+    const [error, setError] = React.useState(null);
+
+    React.useEffect(() => {
+        startCamera();
+        return () => stopCamera();
+    }, []);
+
+    const startCamera = async () => {
+        try {
+            const constraints = {
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                }
+            };
+            const newStream = await navigator.mediaDevices.getUserMedia(constraints);
+            streamRef.current = newStream;
+            if (videoRef.current) {
+                videoRef.current.srcObject = newStream;
+            }
+        } catch (err) {
+            console.error("Camera error:", err);
+            setError("Could not access camera. Please ensure permissions are granted.");
+        }
+    };
+
+    const stopCamera = () => {
+        if (streamRef.current) {
+            streamRef.current.getTracks().forEach(track => track.stop());
+            streamRef.current = null;
+        }
+    };
+
+    const capture = () => {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (video && canvas) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            canvas.toBlob((blob) => {
+                const file = new File([blob], `parking.jpg`, { type: 'image/jpeg' });
+                onCapture(file, canvas.toDataURL('image/jpeg'));
+                stopCamera();
+                onClose();
+            }, 'image/jpeg', 0.8);
+        }
+    };
+
+    return (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 1100, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
+            <div className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '20px', position: 'relative' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                    <h3 style={{ color: 'white', margin: 0 }}>Capture Parking Photo</h3>
+                    <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
+                </div>
+                {error ? (
+                    <div style={{ color: '#f43f5e', padding: '20px', textAlign: 'center' }}>{error}</div>
+                ) : (
+                    <video ref={videoRef} autoPlay playsInline style={{ width: '100%', borderRadius: '12px', background: 'black' }} />
+                )}
+                <canvas ref={canvasRef} style={{ display: 'none' }} />
+                {!error && (
+                    <button onClick={capture} style={{ width: '100%', marginTop: '20px', padding: '15px', borderRadius: '12px', background: 'var(--primary)', color: 'white', border: 'none', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                        <Camera size={20} /> CAPTURE PHOTO
+                    </button>
+                )}
+            </div>
+        </div>
+    );
+};
 
 const ParkingPage = () => {
     const { selectedCompany } = useCompany();
@@ -38,6 +116,7 @@ const ParkingPage = () => {
     const [submitting, setSubmitting] = useState(false);
     const [showImageModal, setShowImageModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState('');
+    const [showCamera, setShowCamera] = useState(false);
 
     useEffect(() => {
         if (selectedCompany) {
@@ -162,7 +241,7 @@ const ParkingPage = () => {
     };
 
     const handleFileUpload = async (e) => {
-        const file = e.target.files[0];
+        const file = e.type === 'change' ? e.target.files[0] : e;
         if (!file) return;
 
         const uploadData = new FormData();
@@ -612,7 +691,7 @@ const ParkingPage = () => {
                                                             transition: 'all 0.2s ease',
                                                             opacity: e.receiptPhoto ? 1 : 0.6
                                                         }}
-                                                        title={e.receiptPhoto ? "View Receipt" : "Receipt Missing"}
+                                                        title={e.receiptPhoto ? "View Photo" : "Photo Missing"}
                                                     >
                                                         <Eye size={16} style={{ opacity: e.receiptPhoto ? 1 : 0.5 }} />
                                                     </button>
@@ -886,7 +965,7 @@ const ParkingPage = () => {
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Receipt Photo</label>
+                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Parking Photo (Camera)</label>
                                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                         {formData.receiptPhoto ? (
                                             <div style={{ position: 'relative' }}>
@@ -894,19 +973,29 @@ const ParkingPage = () => {
                                                 <button type="button" onClick={() => setFormData({ ...formData, receiptPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
                                             </div>
                                         ) : (
-                                            <label style={{
-                                                width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '2px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.3s ease'
-                                            }}
-                                                onMouseOver={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; }}
-                                                onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'; }}
-                                            >
-                                                <Plus size={20} color="var(--text-muted)" />
-                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '800' }}>Upload</span>
-                                                <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
-                                            </label>
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowCamera(true)}
+                                                    style={{
+                                                        width: '80px', height: '80px', borderRadius: '120px', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', border: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.3s ease', color: 'white', boxShadow: '0 8px 15px rgba(99, 102, 241, 0.3)'
+                                                    }}
+                                                >
+                                                    <Camera size={24} />
+                                                    <span style={{ fontSize: '10px', marginTop: '4px', fontWeight: '900' }}>Camera</span>
+                                                </button>
+
+                                                <label style={{
+                                                    width: '80px', height: '80px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: '2px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.3s ease'
+                                                }}>
+                                                    <ImageIcon size={20} color="rgba(255,255,255,0.3)" />
+                                                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '800' }}>Gallery</span>
+                                                    <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
+                                                </label>
+                                            </div>
                                         )}
                                         <div style={{ flex: 1 }}>
-                                            <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Upload a clear photo of the parking receipt.</p>
+                                            <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Use <b>Camera</b> for direct photo or <b>Gallery</b> to upload a file.</p>
                                         </div>
                                     </div>
                                 </div>
@@ -952,7 +1041,7 @@ const ParkingPage = () => {
                             {selectedImage ? (
                                 <img
                                     src={getImageUrl(selectedImage)}
-                                    alt="Parking Receipt"
+                                    alt="Parking Photo"
                                     style={{ width: '100%', height: 'auto', maxHeight: '85vh', objectFit: 'contain', borderRadius: '16px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
                                 />
                             ) : (
@@ -970,6 +1059,12 @@ const ParkingPage = () => {
                             </button>
                         </motion.div>
                     </div>
+                )}
+                {showCamera && (
+                    <CameraModal
+                        onClose={() => setShowCamera(false)}
+                        onCapture={(file) => handleFileUpload(file)}
+                    />
                 )}
             </AnimatePresence>
         </div>
