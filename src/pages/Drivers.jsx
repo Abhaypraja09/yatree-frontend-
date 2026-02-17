@@ -37,13 +37,9 @@ const Drivers = () => {
         vehicleId: '',
         punchInKM: '',
         punchOutKM: '',
-        punchInTime: '',
-        punchOutTime: '',
-        fuelAmount: '',
         parkingAmount: '',
-        pickUpLocation: '',
-        dropLocation: '',
-        dailyWage: '',
+        allowanceTA: false,
+        nightStayAmount: false,
         review: ''
     });
 
@@ -80,13 +76,9 @@ const Drivers = () => {
                 vehicleId: '',
                 punchInKM: '',
                 punchOutKM: '',
-                punchInTime: '',
-                punchOutTime: '',
-                fuelAmount: '',
                 parkingAmount: '',
-                pickUpLocation: '',
-                dropLocation: '',
-                dailyWage: '',
+                allowanceTA: false,
+                nightStayAmount: false,
                 review: ''
             });
             alert('Manual duty entry added successfully');
@@ -101,7 +93,6 @@ const Drivers = () => {
         setSelectedDriverForManual(driver);
         setManualDutyForm(prev => ({
             ...prev,
-            dailyWage: driver.dailyWage || '',
             date: new Date().toISOString().split('T')[0]
         }));
         setShowManualModal(true);
@@ -834,8 +825,8 @@ const Drivers = () => {
                                 </div>
 
                                 <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <p style={{ color: '#a78bfa', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Kilometer & Time Tracking</p>
-                                    <div className="form-grid-2" style={{ marginBottom: '15px' }}>
+                                    <p style={{ color: '#a78bfa', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Kilometer Tracking</p>
+                                    <div className="form-grid-2">
                                         <div>
                                             <label className="input-label">Punch-In KM</label>
                                             <input type="number" className="input-field" value={manualDutyForm.punchInKM} onChange={(e) => setManualDutyForm({ ...manualDutyForm, punchInKM: e.target.value })} placeholder="Opening KM" />
@@ -845,50 +836,36 @@ const Drivers = () => {
                                             <input type="number" className="input-field" value={manualDutyForm.punchOutKM} onChange={(e) => setManualDutyForm({ ...manualDutyForm, punchOutKM: e.target.value })} placeholder="Closing KM" />
                                         </div>
                                     </div>
-                                    <div className="form-grid-2">
-                                        <div>
-                                            <label className="input-label">Punch-In Time</label>
-                                            <input type="datetime-local" className="input-field" value={manualDutyForm.punchInTime} onChange={(e) => setManualDutyForm({ ...manualDutyForm, punchInTime: e.target.value })} />
-                                        </div>
-                                        <div>
-                                            <label className="input-label">Punch-Out Time</label>
-                                            <input type="datetime-local" className="input-field" value={manualDutyForm.punchOutTime} onChange={(e) => setManualDutyForm({ ...manualDutyForm, punchOutTime: e.target.value })} />
-                                        </div>
-                                    </div>
                                 </div>
 
                                 <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <p style={{ color: '#10b981', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Expenses & Financials</p>
-                                    <div className="form-grid-2" style={{ marginBottom: '15px' }}>
-                                        <div>
-                                            <label className="input-label">Fuel Amount (₹)</label>
-                                            <input type="number" className="input-field" value={manualDutyForm.fuelAmount} onChange={(e) => setManualDutyForm({ ...manualDutyForm, fuelAmount: e.target.value })} placeholder="0" />
-                                        </div>
+                                    <p style={{ color: '#10b981', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Expenses & Bonuses</p>
+                                    <div className="form-grid-2" style={{ marginBottom: '20px' }}>
                                         <div>
                                             <label className="input-label">Parking Amount (₹)</label>
                                             <input type="number" className="input-field" value={manualDutyForm.parkingAmount} onChange={(e) => setManualDutyForm({ ...manualDutyForm, parkingAmount: e.target.value })} placeholder="0" />
-                                        </div>
-                                    </div>
-                                    <div className="form-grid-2">
-                                        <div>
-                                            <label className="input-label">Daily Wage (Salary)</label>
-                                            <input type="number" className="input-field" value={manualDutyForm.dailyWage} onChange={(e) => setManualDutyForm({ ...manualDutyForm, dailyWage: e.target.value })} />
                                         </div>
                                         <div>
                                             <label className="input-label">Duty Type / Remark</label>
                                             <input type="text" className="input-field" value={manualDutyForm.review} onChange={(e) => setManualDutyForm({ ...manualDutyForm, review: e.target.value })} placeholder="e.g. Local, Outstation" />
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="form-grid-2" style={{ marginBottom: '25px' }}>
-                                    <div>
-                                        <label className="input-label">Pick-up Location</label>
-                                        <input type="text" className="input-field" value={manualDutyForm.pickUpLocation} onChange={(e) => setManualDutyForm({ ...manualDutyForm, pickUpLocation: e.target.value })} placeholder="e.g. Office" />
-                                    </div>
-                                    <div>
-                                        <label className="input-label">Drop Location</label>
-                                        <input type="text" className="input-field" value={manualDutyForm.dropLocation} onChange={(e) => setManualDutyForm({ ...manualDutyForm, dropLocation: e.target.value })} placeholder="e.g. Office" />
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <div style={{ padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', border: manualDutyForm.allowanceTA ? '1px solid #10b981' : '1px solid transparent' }} onClick={() => setManualDutyForm({ ...manualDutyForm, allowanceTA: !manualDutyForm.allowanceTA })}>
+                                            <input type="checkbox" checked={manualDutyForm.allowanceTA} readOnly style={{ width: '18px', height: '18px' }} />
+                                            <div>
+                                                <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>Day Bonus</div>
+                                                <div style={{ color: '#10b981', fontSize: '11px', fontWeight: '800' }}>+ ₹100</div>
+                                            </div>
+                                        </div>
+                                        <div style={{ padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', border: manualDutyForm.nightStayAmount ? '1px solid #f59e0b' : '1px solid transparent' }} onClick={() => setManualDutyForm({ ...manualDutyForm, nightStayAmount: !manualDutyForm.nightStayAmount })}>
+                                            <input type="checkbox" checked={manualDutyForm.nightStayAmount} readOnly style={{ width: '18px', height: '18px' }} />
+                                            <div>
+                                                <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>Night Bonus</div>
+                                                <div style={{ color: '#f59e0b', fontSize: '11px', fontWeight: '800' }}>+ ₹500</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 
