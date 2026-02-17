@@ -26,62 +26,84 @@ import SEO from '../components/SEO';
 
 const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick }) => (
     <motion.div
-        whileHover={{ y: -5, scale: 1.01 }}
+        whileHover={{ y: -8, scale: 1.02 }}
+        whileTap={{ scale: 0.98 }}
         onClick={onClick}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className={`stat-card glass-card ${loading ? 'stale-card' : ''}`}
         style={{
-            background: `linear-gradient(135deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.8) 100%)`,
-            border: '1px solid rgba(255,255,255,0.06)',
+            background: `linear-gradient(145deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.9) 100%)`,
+            border: '1px solid rgba(255,255,255,0.08)',
             position: 'relative',
             overflow: 'hidden',
             padding: 'clamp(15px, 2.5vw, 24px)',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            boxShadow: '0 20px 40px -15px rgba(0,0,0,0.5)',
+            borderRadius: '24px'
         }}
     >
         <div style={{
             position: 'absolute',
             top: '-20%',
             left: '-10%',
-            width: '120px',
-            height: '120px',
+            width: '140px',
+            height: '140px',
             background: color,
-            filter: 'blur(60px)',
-            opacity: 0.07,
+            filter: 'blur(70px)',
+            opacity: 0.1,
             pointerEvents: 'none'
         }} />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', position: 'relative', zIndex: 1 }}>
             <div style={{
-                width: '42px',
-                height: '42px',
-                borderRadius: '12px',
-                background: `${color}15`,
+                width: '46px',
+                height: '46px',
+                borderRadius: '14px',
+                background: `linear-gradient(135deg, ${color}30, ${color}10)`,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                border: `1px solid ${color}30`,
+                border: `1px solid ${color}40`,
                 color: color,
-                boxShadow: `0 8px 16px -4px ${color}20`
+                boxShadow: `0 8px 16px -4px ${color}30`
             }}>
-                <Icon size={20} />
+                <Icon size={22} strokeWidth={2.5} />
             </div>
             <div>
                 <p style={{
-                    fontSize: '11px',
-                    fontWeight: '800',
+                    fontSize: '10px',
+                    fontWeight: '900',
                     color: 'rgba(255,255,255,0.4)',
                     textTransform: 'uppercase',
-                    letterSpacing: '1.5px',
-                    marginBottom: '4px'
+                    letterSpacing: '1.8px',
+                    marginBottom: '6px'
                 }}>{label}</p>
-                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                    <h3 style={{ fontSize: '26px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px' }}>
+                    <h3 style={{
+                        fontSize: 'clamp(22px, 3vw, 28px)',
+                        fontWeight: '900',
+                        color: 'white',
+                        letterSpacing: '-1px',
+                        margin: 0,
+                        textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    }}>
                         {loading ? '...' : value || 0}
                     </h3>
                     {trend && (
-                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '2px' }}>
-                            <TrendingUp size={10} /> LIVE
+                        <span style={{
+                            fontSize: '9px',
+                            color: '#10b981',
+                            background: 'rgba(16, 185, 129, 0.1)',
+                            padding: '2px 8px',
+                            borderRadius: '20px',
+                            fontWeight: '900',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            border: '1px solid rgba(16, 185, 129, 0.2)'
+                        }}>
+                            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 5px #10b981' }}></div>
+                            LIVE
                         </span>
                     )}
                 </div>
@@ -122,32 +144,17 @@ const AttendanceModal = ({ item, onClose, onApproveReject }) => {
                             Duty Started
                         </h3>
                         <div className="photo-grid">
-                            <div>
+                            <div className="photo-box">
                                 <p className="photo-label">SELFIE</p>
-                                <img
-                                    src={item.punchIn?.selfie}
-                                    alt="Start Duty Selfie"
-                                    className="photo-thumbnail"
-                                    loading="lazy"
-                                />
+                                <img src={item.punchIn?.selfie} alt="Start Selfie" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchIn?.selfie)} />
                             </div>
-                            <div>
+                            <div className="photo-box">
                                 <p className="photo-label">KM METER</p>
-                                <img
-                                    src={item.punchIn?.kmPhoto}
-                                    alt="KM Photo"
-                                    className="photo-thumbnail"
-                                    loading="lazy"
-                                />
+                                <img src={item.punchIn?.kmPhoto} alt="KM Photo" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchIn?.kmPhoto)} />
                             </div>
-                            <div>
-                                <p className="photo-label">CAR SELFIE</p>
-                                <img
-                                    src={item.punchIn?.carSelfie}
-                                    alt="Car Selfie"
-                                    className="photo-thumbnail"
-                                    loading="lazy"
-                                />
+                            <div className="photo-box">
+                                <p className="photo-label">CAR PHOTO</p>
+                                <img src={item.punchIn?.carSelfie} alt="Car Selfie" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchIn?.carSelfie)} />
                             </div>
                         </div>
                     </div>
@@ -159,109 +166,84 @@ const AttendanceModal = ({ item, onClose, onApproveReject }) => {
                         </h3>
                         {item.punchOut?.time ? (
                             <div className="photo-grid">
-                                <div>
+                                <div className="photo-box">
                                     <p className="photo-label">SELFIE</p>
-                                    <img
-                                        src={item.punchOut?.selfie}
-                                        alt="Duty Ended Selfie"
-                                        className="photo-thumbnail"
-                                        loading="lazy"
-                                    />
+                                    <img src={item.punchOut?.selfie} alt="End Selfie" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchOut?.selfie)} />
                                 </div>
-                                <div>
+                                <div className="photo-box">
                                     <p className="photo-label">KM METER</p>
-                                    <img
-                                        src={item.punchOut?.kmPhoto}
-                                        alt="KM Photo"
-                                        className="photo-thumbnail"
-                                        loading="lazy"
-                                    />
+                                    <img src={item.punchOut?.kmPhoto} alt="KM Photo" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchOut?.kmPhoto)} />
                                 </div>
-                                <div>
-                                    <p className="photo-label">CAR SELFIE</p>
-                                    <img
-                                        src={item.punchOut?.carSelfie}
-                                        alt="Car Selfie"
-                                        className="photo-thumbnail"
-                                        loading="lazy"
-                                    />
+                                <div className="photo-box">
+                                    <p className="photo-label">CAR PHOTO</p>
+                                    <img src={item.punchOut?.carSelfie} alt="Car Selfie" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchOut?.carSelfie)} />
                                 </div>
                             </div>
                         ) : (
-                            <div style={{
-                                height: 'clamp(70px, 16vw, 85px)',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '8px',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                color: 'var(--text-muted)',
-                                border: '1px dashed rgba(255,255,255,0.1)',
-                                borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.02)'
-                            }}>
-                                <Clock size={20} />
-                                <p style={{ fontSize: 'clamp(11px, 2.5vw, 12px)', margin: 0, fontWeight: '600' }}>
-                                    On Trip...
-                                </p>
+                            <div className="on-trip-placeholder">
+                                <Clock size={24} />
+                                <p>Vehicle is currently active on trip...</p>
                             </div>
                         )}
                     </div>
                 </div>
 
-                {/* Expenditure Section removed as per user request */}
+                {/* Financials & Duty Summary */}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginTop: '25px' }}>
+                    <div className="glass-card detail-box">
+                        <p className="detail-label">FUEL MANAGEMENT</p>
+                        {item.fuel?.entries && item.fuel.entries.length > 0 ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                {item.fuel.entries.map((f, i) => (
+                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '8px' }}>
+                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                            {f.slipPhoto && <img src={f.slipPhoto} style={{ width: '30px', height: '30px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => window.open(f.slipPhoto)} />}
+                                            <span style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>₹{f.amount}</span>
+                                        </div>
+                                        <span style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '10px' }}>{f.fuelType}</span>
+                                    </div>
+                                ))}
+                            </div>
+                        ) : null}
+                    </div>
 
-                {/* Remarks Section */}
+                    <div className="glass-card detail-box">
+                        <p className="detail-label">TOLLS & PARKING</p>
+                        {item.punchOut?.tollParkingAmount > 0 || (item.parking && item.parking.length > 0) ? (
+                            <div>
+                                <h3 style={{ color: '#10b981', margin: '0 0 10px 0', fontSize: '18px', fontWeight: '900' }}>₹{item.punchOut?.tollParkingAmount || item.parking?.reduce((s, p) => s + (p.amount || 0), 0)}</h3>
+                                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
+                                    {item.parking?.map((p, i) => (
+                                        <img key={i} src={p.slipPhoto} style={{ width: '30px', height: '30px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => window.open(p.slipPhoto)} />
+                                    ))}
+                                </div>
+                            </div>
+                        ) : null}
+                    </div>
+
+                    <div className="glass-card detail-box">
+                        <p className="detail-label">BONUS & ALLOWANCE</p>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                            {item.punchOut?.allowanceTA > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>TA (Outstation):</span> <span style={{ color: '#10b981', fontWeight: '900' }}>+₹{item.punchOut.allowanceTA}</span></div>}
+                            {item.punchOut?.nightStayAmount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>Night Stay:</span> <span style={{ color: '#10b981', fontWeight: '900' }}>+₹{item.punchOut.nightStayAmount}</span></div>}
+                            {(!item.punchOut?.allowanceTA && !item.punchOut?.nightStayAmount) && null}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Duty Remarks Section */}
                 {item.punchOut?.remarks && (
-                    <div className="glass-card" style={{
-                        marginTop: 'clamp(18px, 4vw, 20px)',
-                        padding: 'clamp(12px, 2.5vw, 15px)',
-                        border: '1px solid rgba(255,255,255,0.03)'
-                    }}>
-                        <p style={{
-                            fontSize: 'clamp(9px, 2.2vw, 10px)',
-                            color: 'var(--text-muted)',
-                            marginBottom: '8px',
-                            fontWeight: '800'
-                        }}>
-                            REMARKS
-                        </p>
-                        <p style={{
-                            color: 'white',
-                            fontSize: 'clamp(12px, 2.8vw, 13px)',
-                            lineHeight: '1.6',
-                            margin: 0,
-                            fontStyle: 'italic'
-                        }}>
-                            "{item.punchOut.remarks}"
-                        </p>
+                    <div className="glass-card" style={{ marginTop: '20px', padding: '15px', border: '1px solid rgba(16, 185, 129, 0.2)', background: 'rgba(16, 185, 129, 0.03)' }}>
+                        <p style={{ fontSize: '10px', color: '#10b981', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>DUTY REMARKS / DESTINATION</p>
+                        <p style={{ color: 'white', fontSize: '14px', lineHeight: '1.6', margin: 0, fontWeight: '600' }}>{item.punchOut.remarks}</p>
                     </div>
                 )}
 
-                {/* Issues Section */}
+                {/* Issues Maintenance Section */}
                 {item.punchOut?.otherRemarks && (
-                    <div className="glass-card" style={{
-                        marginTop: 'clamp(12px, 2.5vw, 15px)',
-                        padding: 'clamp(12px, 2.5vw, 15px)',
-                        border: '1px solid rgba(244, 63, 94, 0.2)',
-                        background: 'rgba(244, 63, 94, 0.05)'
-                    }}>
-                        <p style={{
-                            fontSize: 'clamp(9px, 2.2vw, 10px)',
-                            color: '#f43f5e',
-                            marginBottom: '8px',
-                            fontWeight: '800'
-                        }}>
-                            ISSUES / MAINTENANCE
-                        </p>
-                        <p style={{
-                            color: 'white',
-                            fontSize: 'clamp(12px, 2.8vw, 13px)',
-                            lineHeight: '1.6',
-                            margin: 0
-                        }}>
-                            {item.punchOut.otherRemarks}
-                        </p>
+                    <div className="glass-card" style={{ marginTop: '12px', padding: '15px', border: '1px solid rgba(244, 63, 94, 0.2)', background: 'rgba(244, 63, 94, 0.02)' }}>
+                        <p style={{ fontSize: '10px', color: '#f43f5e', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>ISSUES / MAINTENANCE REPORT</p>
+                        <p style={{ color: 'white', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>{item.punchOut.otherRemarks}</p>
                     </div>
                 )}
 
@@ -466,29 +448,64 @@ const AdminDashboard = () => {
     };
 
     return (
-        <div className="container-fluid admin-layout-wrapper" style={{
-            padding: 'clamp(12px, 2vw, 20px)',
-            maxWidth: '100vw',
-            overflow: 'hidden'
+        <div className="admin-dashboard-container" style={{
+            background: 'radial-gradient(circle at 50% 0%, rgba(14, 165, 233, 0.08) 0%, transparent 60%), radial-gradient(circle at 0% 100%, rgba(99, 102, 241, 0.05) 0%, transparent 40%)',
+            minHeight: '100vh',
+            padding: 'clamp(15px, 4vw, 40px)',
+            color: 'white'
         }}>
-            <SEO
-                title={`${selectedCompany?.name || 'Admin'} Dashboard`}
-                description={`Real-time stats and activity for ${selectedCompany?.name || 'your fleet'}.`}
-            />
+            <SEO title="Admin Dashboard" description="Overview of fleet operations, driver attendance, and financial metrics." />
 
-            <div style={{
-                background: 'linear-gradient(180deg, rgba(30, 41, 59, 0.4) 0%, transparent 100%)',
-                borderRadius: 'clamp(12px, 3vw, 24px)',
-                padding: 'clamp(15px, 3vw, 24px)',
-                border: '1px solid rgba(255,255,255,0.05)',
-                marginBottom: 'clamp(15px, 3vw, 30px)',
+            <style>{`
+                .admin-dashboard-container { overflow-x: hidden; }
+                .glass-card {
+                    backdrop-filter: blur(16px);
+                    -webkit-backdrop-filter: blur(16px);
+                    box-shadow: 0 10px 30px -5px rgba(0,0,0,0.3);
+                }
+                .hover-row:hover { background: rgba(255,255,255,0.03); }
+                .modal-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+                @media (max-width: 768px) { .modal-grid-2 { grid-template-columns: 1fr; } }
+                
+                .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
+                .photo-box { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
+                .photo-thumbnail { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
+                .photo-thumbnail:hover { transform: scale(1.05); }
+                .photo-label { font-size: 8px; color: rgba(255,255,255,0.4); font-weight: 900; margin-bottom: 5px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
+                
+                .on-trip-placeholder { height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); border: 2px dashed rgba(255,255,255,0.1); border-radius: 20px; background: rgba(255,255,255,0.01); gap: 10px; }
+                .on-trip-placeholder p { font-size: 11px; font-weight: 700; margin: 0; }
+                
+                .detail-box { padding: 18px; background: rgba(255,255,255,0.02); border-radius: 20px; }
+                .detail-label { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 900; margin-bottom: 12px; letter-spacing: 1px; text-transform: uppercase; }
+                
+                .status-pill { border-radius: 20px; letter-spacing: 0.5px; }
+                .vehicle-badge { letter-spacing: 0.5px; }
+            `}</style>
+
+            <AnimatePresence>
+                {selectedItem && (
+                    <AttendanceModal
+                        item={selectedItem}
+                        onClose={() => setSelectedItem(null)}
+                        onApproveReject={handleApproveRejectExpense}
+                    />
+                )}
+            </AnimatePresence>
+
+            <div className="glass-card" style={{
+                background: 'rgba(30, 41, 59, 0.4)',
+                borderRadius: '32px',
+                padding: 'clamp(20px, 4vw, 32px)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                marginBottom: '40px',
                 width: '100%',
                 boxSizing: 'border-box'
             }}>
                 <header style={{
                     display: 'flex',
                     flexDirection: 'column',
-                    gap: 'clamp(15px, 3vw, 20px)',
+                    gap: '24px',
                     width: '100%'
                 }}>
                     <div className="header-logo-section">
@@ -686,29 +703,22 @@ const AdminDashboard = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="dashboard-main-container"
                     >
-                        {/* Stats Grid */}
                         <div className="stats-grid" style={{
-                            marginBottom: 'clamp(20px, 4vw, 40px)',
-                            width: '100%'
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                            gap: '12px',
+                            marginBottom: '20px'
                         }}>
-                            <StatCard icon={Car} label="FLEET SIZE" value={stats.totalVehicles} color="#0ea5e9" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
-                            <StatCard icon={Users} label="TOTAL DRIVERS" value={stats.totalDrivers} color="#6366f1" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/freelancers' : '/admin/drivers')} />
-                            {user?.role === 'Admin' && (
-                                <>
-                                    <StatCard icon={CreditCard} label="FASTAG BALANCE" value={`₹${stats.totalFastagBalance?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/fastag')} />
-                                    <StatCard icon={Wallet} label="DRIVER ADVANCES" value={`₹${stats.totalAdvancePending?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/advances')} />
-                                    <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
-                                </>
-                            )}
-                            <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/maintenance')} />
-                            <StatCard icon={Clock} label="ON ACTIVE DUTY" value={stats.countPunchIns} color="#8b5cf6" loading={loading} trend={true} onClick={() => navigate('/admin/reports')} />
-                            <StatCard icon={TrendingUp} label="DUTY CONCLUDED" value={stats.countPunchOuts} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/reports')} />
-                            {user?.role === 'Admin' && (
-                                <>
-                                    <StatCard icon={Briefcase} label="TOTAL STAFF" value={stats.totalStaff} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/staff')} />
-                                    <StatCard icon={UserCheck} label="STAFF PRESENT" value={stats.countStaffPresent} color="#10b981" loading={loading} onClick={() => navigate('/admin/staff')} />
-                                </>
-                            )}
+                            <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
+                            <StatCard icon={CreditCard} label="PARKING (MONTHLY)" value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
+                            <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
+                            <StatCard icon={ShieldAlert} label="BORDER TAX (MONTHLY)" value={`₹${stats.monthlyBorderTaxAmount?.toLocaleString() || 0}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/border-tax')} />
+                            <StatCard icon={CreditCard} label="FASTAG BALANCE" value={`₹${stats.totalFastagBalance?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/fastag')} />
+                            <StatCard icon={Wallet} label="REGULAR ADVANCES" value={`₹${stats.totalAdvancePending?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/advances')} />
+                            <StatCard icon={CreditCard} label="FREELANCER ADVANCES" value={`₹${stats.freelancerAdvances?.total?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/freelancers', { state: { tab: 'accounts' } })} />
+                            <StatCard icon={Users} label="CURRENT DRIVERS" value={stats.totalDrivers} color="#0ea5e9" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/freelancers' : '/admin/drivers')} />
+                            <StatCard icon={Car} label="FLEET SIZE" value={stats.totalVehicles} color="#8b5cf6" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
+                            <StatCard icon={Briefcase} label="TOTAL STAFF" value={stats.totalStaff} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/staff')} />
                         </div>
 
                         {/* Expiry Alerts */}
@@ -895,18 +905,27 @@ const AdminDashboard = () => {
                                         {stats.attendanceDetails?.map((item) => (
                                             <tr key={item._id} className="hover-row">
                                                 <td>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <div>
-                                                            <div className="driver-name" style={{ fontWeight: '800', color: 'white' }}>{item.driver?.name}</div>
-                                                            <div className="driver-mobile" style={{ fontSize: '11px', opacity: 0.6 }}>{item.driver?.mobile}</div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                                            <Users size={18} color="rgba(255,255,255,0.6)" />
                                                         </div>
-
+                                                        <div>
+                                                            <div className="driver-name" style={{ fontWeight: '900', color: 'white', fontSize: '14px', letterSpacing: '0.2px' }}>{item.driver?.name}</div>
+                                                            <div className="driver-mobile" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>{item.driver?.mobile}</div>
+                                                        </div>
                                                     </div>
                                                 </td>
                                                 <td>
-                                                    <span className="vehicle-badge">
-                                                        {item.vehicle?.carNumber}
-                                                    </span>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                        <span className="vehicle-badge" style={{ background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: '1px solid rgba(14, 165, 233, 0.2)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: '900', width: 'fit-content' }}>
+                                                            {item.vehicle?.carNumber}
+                                                        </span>
+                                                        {item.punchOut?.remarks && (
+                                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', maxWidth: '180px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                                {item.punchOut.remarks}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </td>
                                                 <td>
                                                     <span className="status-pill staff-badge" style={{
@@ -1044,15 +1063,6 @@ const AdminDashboard = () => {
                         </div>
                     </motion.div>
                 )}
-                <AnimatePresence>
-                    {selectedItem && (
-                        <AttendanceModal
-                            item={selectedItem}
-                            onClose={() => setSelectedItem(null)}
-                            onApproveReject={handleApproveRejectExpense}
-                        />
-                    )}
-                </AnimatePresence>
             </div>
         </div>
     );

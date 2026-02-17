@@ -137,7 +137,6 @@ export const translations = {
         yes: 'हाँ',
         no: 'नहीं',
         processing: 'प्रोसेसिंग...',
-        submit: 'सबमिट करें',
         save: 'सहेजें',
         capture: 'फोटो लें',
 
@@ -182,7 +181,7 @@ export const translations = {
         expenditureDetails: 'खर्च और यात्रा विवरण',
         fuelQuestion: '1. क्या आपने पेट्रोल/डीजल भरवाया?',
         refillNo: 'रीफिल नंबर',
-        amount: 'राशि (₹)',
+        amountWithSymbol: 'राशि (₹)',
         meterKm: 'मीटर KM',
         captureSlip: 'रसीद की फोटो लें',
         fuelType: 'ईंधन का प्रकार',
@@ -239,7 +238,7 @@ export const translations = {
         approvalStatus: 'अनुमोदन स्थिति',
         type: 'खर्च का प्रकार',
         submit: 'लॉग सबमिट करें',
-        processing: 'प्रक्रिया चल रही है...',
+
         noExpensesYet: 'अभी तक कोई खर्च नहीं जोड़ा गया है',
 
         // Ledger

@@ -167,7 +167,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                         fontSize: '18px',
                         boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
                     }}>
-                        {user.name.charAt(0)}
+                        {user?.name?.charAt(0) || 'A'}
                     </div>
                     <div>
                         <p style={{ fontSize: '15px', fontWeight: '700', color: 'white' }}>{user.name}</p>

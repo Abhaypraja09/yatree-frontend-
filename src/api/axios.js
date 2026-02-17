@@ -27,4 +27,19 @@ instance.interceptors.request.use(
     }
 );
 
+// Add a response interceptor to handle 401 errors (expired token)
+instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+        if (error.response && error.response.status === 401) {
+            // If the error is not from the login page itself
+            if (!window.location.pathname.includes('/login')) {
+                localStorage.removeItem('userInfo');
+                window.location.href = '/login';
+            }
+        }
+        return Promise.reject(error);
+    }
+);
+
 export default instance;

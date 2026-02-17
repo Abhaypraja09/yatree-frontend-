@@ -117,7 +117,7 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
                                 </div>
                             )}
                         </div>
-                    ) : <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: 0 }}>No fuel entries</p>}
+                    ) : null}
                 </div>
 
                 <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
@@ -133,7 +133,7 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
                                 </div>
                             )}
                         </div>
-                    ) : <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: 0 }}>None reported</p>}
+                    ) : null}
                 </div>
 
                 <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
@@ -166,9 +166,18 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
                 </div>
             </div>
 
+            {/* Duty Details Section */}
+            {item.punchOut?.remarks && (
+                <div className="glass-card" style={{ padding: '15px', marginTop: '15px', border: '1px solid rgba(16, 185, 129, 0.2)', background: 'rgba(16, 185, 129, 0.02)' }}>
+                    <p style={{ fontSize: '9px', color: '#10b981', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Duty Remarks / Destination</p>
+                    <p style={{ color: 'white', fontSize: '13px', lineHeight: '1.6', margin: 0, fontWeight: '600' }}>{item.punchOut.remarks}</p>
+                </div>
+            )}
+
+            {/* Issues Section */}
             {item.punchOut?.otherRemarks && (
-                <div className="glass-card" style={{ padding: '15px', marginTop: '15px', border: '1px solid rgba(244, 63, 94, 0.2)', background: 'rgba(244, 63, 94, 0.02)' }}>
-                    <p style={{ fontSize: '9px', color: '#f43f5e', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase' }}>Remarks</p>
+                <div className="glass-card" style={{ padding: '15px', marginTop: '12px', border: '1px solid rgba(244, 63, 94, 0.2)', background: 'rgba(244, 63, 94, 0.02)' }}>
+                    <p style={{ fontSize: '9px', color: '#f43f5e', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Maintenance Remarks</p>
                     <p style={{ color: 'white', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>{item.punchOut.otherRemarks}</p>
                 </div>
             )}
@@ -787,7 +796,7 @@ const Reports = () => {
                             <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>In/Start</th>
                             <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Out/End</th>
                             <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Amount/Pay</th>
-                            <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Status</th>
+                            <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Duty KM</th>
                             <th style={{ padding: '18px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Action</th>
                         </tr>
                     </thead>
@@ -901,8 +910,12 @@ const Reports = () => {
                                                     {report.status === 'Pending' ? 'Advance Given' : 'Success'}
                                                 </span>
                                             ) : report.entryType === 'attendance' ? (
-                                                <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{report.totalKM ? `${report.totalKM} KM` : '--'}</span>
-                                            ) : '--'}
+                                                <span style={{ color: 'white', fontSize: '14px', fontWeight: '800' }}>{report.totalKM ? `${report.totalKM} KM` : '--'}</span>
+                                            ) : report.entryType === 'fuel' ? (
+                                                <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{report.odometer || '--'} KM</span>
+                                            ) : (
+                                                <span style={{ color: 'var(--text-muted)', fontSize: '11px' }}>--</span>
+                                            )}
                                         </td>
                                         <td style={{ padding: '18px 25px', textAlign: 'right' }}>
                                             {report.entryType === 'attendance' && (
@@ -1015,8 +1028,8 @@ const Reports = () => {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                                             <div style={{ display: 'flex', gap: '15px' }}>
                                                 <div>
-                                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>DISTANCE</div>
-                                                    <div style={{ color: 'white', fontWeight: '900' }}>{report.totalKM ? `${report.totalKM} KM` : '--'}</div>
+                                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>KM RUN</div>
+                                                    <div style={{ color: 'white', fontWeight: '900' }}>{report.totalKM || report.odometer || '0'} KM</div>
                                                 </div>
                                                 <div>
                                                     <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>PAY</div>
