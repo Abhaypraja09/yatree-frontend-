@@ -2,21 +2,10 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import {
-    Users,
-    Car,
-    Clock,
-    TrendingUp,
-    CreditCard,
-    X,
-    ShieldAlert,
-    ChevronLeft,
-    ChevronRight,
-    Calendar,
-    UserCheck,
-    Wallet,
-    Fuel,
-    Wrench,
-    Briefcase
+    Activity, Users, Car, CreditCard, AlertTriangle, ShieldAlert,
+    TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, Clock,
+    ChevronLeft, ChevronRight, Filter, Search, MoreHorizontal,
+    Plus, Download, Wrench, Briefcase, Fuel, Calendar, X, IndianRupee, Camera
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -705,21 +694,24 @@ const AdminDashboard = () => {
                     >
                         <div className="stats-grid" style={{
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
                             gap: '12px',
                             marginBottom: '20px'
                         }}>
+                            <StatCard icon={IndianRupee} label="DAILY ADVANCES" value={`₹${(stats.dailyAdvancesSum || 0).toLocaleString()}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/advances')} trend="LIVE" />
+                            <StatCard icon={Activity} label="DAILY SALARY COST" value={`₹${(stats.dailySalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/advances')} trend="LIVE" />
                             <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
-                            <StatCard icon={CreditCard} label="PARKING (MONTHLY)" value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
                             <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
+                            <StatCard icon={CreditCard} label="TOTAL FASTAG BALANCE" value={`₹${stats.totalFastagBalance?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/fastag')} />
+
+                            <StatCard icon={CreditCard} label="PARKING (MONTHLY)" value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
                             <StatCard icon={ShieldAlert} label="BORDER TAX (MONTHLY)" value={`₹${stats.monthlyBorderTaxAmount?.toLocaleString() || 0}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/border-tax')} />
-                            <StatCard icon={CreditCard} label="FASTAG BALANCE" value={`₹${stats.totalFastagBalance?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/fastag')} />
-                            <StatCard icon={Wallet} label="REGULAR ADVANCES" value={`₹${stats.totalAdvancePending?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/advances')} />
-                            <StatCard icon={CreditCard} label="FREELANCER ADVANCES" value={`₹${stats.freelancerAdvances?.total?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/freelancers', { state: { tab: 'accounts' } })} />
                             <StatCard icon={Users} label="CURRENT DRIVERS" value={stats.totalDrivers} color="#0ea5e9" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/freelancers' : '/admin/drivers')} />
                             <StatCard icon={Car} label="FLEET SIZE" value={stats.totalVehicles} color="#8b5cf6" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
                             <StatCard icon={Briefcase} label="TOTAL STAFF" value={stats.totalStaff} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/staff')} />
                         </div>
+
+
 
                         {/* Expiry Alerts */}
                         {stats.expiringAlerts && stats.expiringAlerts.length > 0 && (

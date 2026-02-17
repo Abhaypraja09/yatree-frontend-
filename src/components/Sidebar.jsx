@@ -26,6 +26,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     const allMenuItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
         { path: '/admin/drivers', icon: Users, label: 'Drivers' },
+        { path: '/admin/freelancers', icon: Users, label: 'Freelancers' },
         { path: '/admin/advances', icon: CreditCard, label: 'Advances' },
         { path: '/admin/vehicles', icon: Car, label: 'Vehicles' },
         { path: '/admin/outside-cars', icon: Car, label: 'Outside Cars' },
@@ -34,7 +35,6 @@ const Sidebar = ({ isOpen, onClose }) => {
         { path: '/admin/maintenance', icon: Wrench, label: 'Maintenance' },
         { path: '/admin/fuel', icon: Fuel, label: 'Fuel' },
         { path: '/admin/parking', icon: MapPin, label: 'Parking' },
-        { path: '/admin/freelancers', icon: Users, label: 'Freelancers' },
         { path: '/admin/staff', icon: Users, label: 'Staff Management' },
         { path: '/admin/reports', icon: ClipboardList, label: 'Daily Reports' },
         { path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins' },

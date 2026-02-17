@@ -211,14 +211,13 @@ const Drivers = () => {
             d.mobile?.includes(searchTerm) ||
             d.username?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        if (driverTypeFilter === 'All') return matchesSearch;
-        if (driverTypeFilter === 'Freelancer') return d.isFreelancer && matchesSearch;
         return !d.isFreelancer && matchesSearch;
     });
 
-    const totalDrivers = drivers.length;
-    const activeDrivers = drivers.filter(d => d.status === 'active').length;
-    const blockedDrivers = drivers.filter(d => d.status === 'blocked').length;
+    const staffDriversList = drivers.filter(d => !d.isFreelancer);
+    const totalDrivers = staffDriversList.length;
+    const activeDrivers = staffDriversList.filter(d => d.status === 'active').length;
+    const blockedDrivers = staffDriversList.filter(d => d.status === 'blocked').length;
     const freelancersCount = drivers.filter(d => d.isFreelancer).length;
 
     return (
@@ -260,25 +259,22 @@ const Drivers = () => {
                 <div className="mobile-search-row" style={{ display: 'flex', gap: '10px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
 
                     <div style={{ position: 'relative', flex: '1', minWidth: '150px', maxWidth: '180px' }}>
-                        <Filter size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)', zIndex: 1 }} />
-                        <select
-                            value={driverTypeFilter}
-                            onChange={(e) => setDriverTypeFilter(e.target.value)}
+                        <div
                             className="input-field"
                             style={{
                                 height: '52px',
-                                paddingLeft: '44px',
+                                paddingLeft: '20px',
                                 marginBottom: 0,
                                 fontSize: '13px',
-                                appearance: 'auto',
                                 background: 'rgba(255,255,255,0.03)',
-                                cursor: 'pointer'
+                                display: 'flex',
+                                alignItems: 'center',
+                                color: 'rgba(255,255,255,0.6)',
+                                fontWeight: '700'
                             }}
                         >
-                            <option value="Regular" style={{ color: '#1e293b' }}>Regular Only</option>
-                            <option value="Freelancer" style={{ color: '#1e293b' }}>Freelancers Only</option>
-                            <option value="All" style={{ color: '#1e293b' }}>All Types</option>
-                        </select>
+                            Company Drivers
+                        </div>
                     </div>
                     <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '100%', maxWidth: '380px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 auto' }}>
                         <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />

@@ -11,6 +11,7 @@ import {
     MapPin,
     X,
     User as UserIcon,
+    Users,
     Car,
     Shield,
     Wallet,
@@ -633,7 +634,16 @@ const Reports = () => {
 
     const getUnifiedData = () => {
         let combined = [];
-        console.log('Combined Debug - Reports:', reports.length, 'Selected:', selectedReports);
+        // Helper to get date string
+        const getEntryDate = (d) => {
+            if (!d) return "";
+            if (typeof d === 'string') return d.split('T')[0];
+            try {
+                return new Date(d).toISOString().split('T')[0];
+            } catch (e) {
+                return "";
+            }
+        };
 
         // 1. Attendance
         if (selectedReports.includes('drivers') || selectedReports.includes('freelancers') || selectedReports.includes('outsideCars') || selectedReports.includes('vehicles')) {
@@ -642,9 +652,9 @@ const Reports = () => {
                 const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
 
                 if (selectedReports.includes('outsideCars') && isOutside) return true;
-                if (selectedReports.includes('freelancers') && isFreelancer && !isOutside) return true;
+                if (selectedReports.includes('freelancers') && isFreelancer) return true;
                 if (selectedReports.includes('drivers') && !isOutside && !isFreelancer) return true;
-                if (selectedReports.includes('vehicles') && !isOutside) return true; // Vehicles report includes all non-outside cars
+                if (selectedReports.includes('vehicles')) return true;
                 return false;
             });
             combined = [...combined, ...filteredAtt.map(r => ({ ...r, entryType: 'attendance' }))];
@@ -652,17 +662,17 @@ const Reports = () => {
 
         // 2. Fuel
         if (selectedReports.includes('fuel') || selectedReports.includes('vehicles')) {
-            combined = [...combined, ...fuelRecords.map(f => ({ ...f, entryType: 'fuel', date: f.date.split('T')[0] }))];
+            combined = [...combined, ...fuelRecords.map(f => ({ ...f, entryType: 'fuel', date: getEntryDate(f.date) }))];
         }
 
         // 3. Maintenance
         if (selectedReports.includes('maintenance') || selectedReports.includes('vehicles')) {
-            combined = [...combined, ...maintenanceRecords.map(m => ({ ...m, entryType: 'maintenance', date: m.billDate.split('T')[0] }))];
+            combined = [...combined, ...maintenanceRecords.map(m => ({ ...m, entryType: 'maintenance', date: getEntryDate(m.billDate) }))];
         }
 
         // 4. Advances
         if (selectedReports.includes('advances')) {
-            combined = [...combined, ...advanceRecords.map(a => ({ ...a, entryType: 'advance', date: a.date.split('T')[0] }))];
+            combined = [...combined, ...advanceRecords.map(a => ({ ...a, entryType: 'advance', date: getEntryDate(a.date) }))];
         }
 
         // 5. Border Tax
@@ -672,12 +682,12 @@ const Reports = () => {
 
         // 6. Fastag
         if (selectedReports.includes('fastag')) {
-            combined = [...combined, ...fastagRecharges.map(f => ({ ...f, entryType: 'fastag', date: f.date.split('T')[0] }))];
+            combined = [...combined, ...fastagRecharges.map(f => ({ ...f, entryType: 'fastag', date: getEntryDate(f.date) }))];
         }
 
         // 7. Parking
         if (selectedReports.includes('parking')) {
-            combined = [...combined, ...parkingRecords.map(p => ({ ...p, entryType: 'parking', date: p.date.split('T')[0] }))];
+            combined = [...combined, ...parkingRecords.map(p => ({ ...p, entryType: 'parking', date: getEntryDate(p.date) }))];
         }
 
         return combined.sort((a, b) => {
@@ -987,6 +997,12 @@ const Reports = () => {
                                                 <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{report.fuelType} | {report.quantity}L</span>
                                             ) : report.entryType === 'parking' ? (
                                                 <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{report.location || 'Local Parking'}</span>
+                                            ) : report.entryType === 'fastag' ? (
+                                                <span style={{ color: '#ec4899', fontSize: '12px', fontWeight: '800' }}>{report.method || 'Manual'}</span>
+                                            ) : report.entryType === 'maintenance' ? (
+                                                <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: '800' }}>{report.maintenanceType || 'Service'}</span>
+                                            ) : report.entryType === 'borderTax' ? (
+                                                <span style={{ color: '#8b5cf6', fontSize: '12px', fontWeight: '800' }}>{report.borderName}</span>
                                             ) : '--'}
                                         </td>
                                         <td style={{ padding: '18px 25px' }}>
@@ -995,6 +1011,8 @@ const Reports = () => {
                                                     <ArrowDownLeft size={14} />
                                                     <span>{new Date(report.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                                 </div>
+                                            ) : report.entryType === 'fastag' ? (
+                                                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>Recharge</span>
                                             ) : '--'}
                                         </td>
                                         <td style={{ padding: '18px 25px' }}>
@@ -1185,7 +1203,7 @@ const Reports = () => {
                     />
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 

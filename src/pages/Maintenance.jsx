@@ -49,7 +49,6 @@ const Maintenance = () => {
         paymentMode: 'Cash',
         currentKm: '',
         nextServiceKm: '',
-        nextServiceDate: '',
         status: 'Completed'
     });
     const [billPhoto, setBillPhoto] = useState(null);
@@ -122,7 +121,7 @@ const Maintenance = () => {
             Object.keys(formData).forEach(key => {
                 if (key === 'partsChanged') {
                     fd.append(key, JSON.stringify(formData[key]));
-                } else if ((key === 'nextServiceDate' || key === 'nextServiceKm') && (!showNextService || !formData[key])) {
+                } else if (key === 'nextServiceKm' && (!showNextService || !formData[key])) {
                     // Skip if hidden or empty
                 } else {
                     fd.append(key, formData[key]);
@@ -183,7 +182,6 @@ const Maintenance = () => {
             paymentMode: 'Cash',
             currentKm: '',
             nextServiceKm: '',
-            nextServiceDate: '',
             status: 'Completed'
         });
         setBillPhoto(null);
@@ -202,8 +200,7 @@ const Maintenance = () => {
             'KM Reading': r.currentKm || 'N/A',
             'Payment Mode': r.paymentMode,
             'Description': r.description || 'N/A',
-            'Next Service KM': r.nextServiceKm || 'N/A',
-            'Next Service Date': r.nextServiceDate ? new Date(r.nextServiceDate).toLocaleDateString('en-IN') : 'N/A'
+            'Next Service KM': r.nextServiceKm || 'N/A'
         }));
 
         const ws = XLSX.utils.json_to_sheet(dataToExport);
@@ -674,7 +671,6 @@ const Maintenance = () => {
                                         {showNextService && (
                                             <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ display: 'grid', gap: '15px' }}>
                                                 <input type="number" className="input-field" placeholder="Next Service KM" value={formData.nextServiceKm} onChange={(e) => setFormData({ ...formData, nextServiceKm: e.target.value })} />
-                                                <input type="date" className="input-field" value={formData.nextServiceDate} onChange={(e) => setFormData({ ...formData, nextServiceDate: e.target.value })} />
                                             </motion.div>
                                         )}
                                     </div>

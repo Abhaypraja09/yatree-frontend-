@@ -128,7 +128,7 @@ const Staff = () => {
     });
 
     return (
-        <div className="container-fluid" style={{ paddingBottom: '40px' }}>
+        <div className="container-fluid" style={{ paddingBottom: '40px', color: 'white' }}>
             <SEO title="Staff Management" />
 
             <header style={{

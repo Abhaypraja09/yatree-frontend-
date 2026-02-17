@@ -8,9 +8,6 @@ export const translations = {
         logout: 'Logout',
         yes: 'Yes',
         no: 'No',
-        processing: 'Processing...',
-        submit: 'Submit',
-        save: 'Save',
         capture: 'Capture',
 
         // Dashboard/Status
@@ -52,9 +49,7 @@ export const translations = {
 
         // Expenditure
         expenditureDetails: 'EXPENDITURE & TRIP DETAILS',
-        fuelQuestion: '1. Did you refill Petrol/Diesel?',
         refillNo: 'REFILL NO.',
-        amount: 'Amount (₹)',
         meterKm: 'Meter KM',
         captureSlip: 'Capture Slip',
         fuelType: 'Fuel Type',
@@ -136,7 +131,6 @@ export const translations = {
         logout: 'लॉगआउट',
         yes: 'हाँ',
         no: 'नहीं',
-        processing: 'प्रोसेसिंग...',
         save: 'सहेजें',
         capture: 'फोटो लें',
 
