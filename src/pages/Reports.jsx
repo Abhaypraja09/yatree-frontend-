@@ -299,6 +299,7 @@ const Reports = () => {
                 'Out': punchOutTime,
                 'KM': r.totalKM || 0,
                 'Daily': dailySalary,
+                'Bonus': (r.punchOut?.allowanceTA || 0) + (r.punchOut?.nightStayAmount || 0),
                 'T/P': r.punchOut?.tollParkingAmount || (r.parking || []).reduce((sum, p) => sum + (p.amount || 0), 0),
                 'Company': (r.vehicle?.isOutsideCar || r.driver?.isFreelancer) ? 'FREELANCER' : 'Yatree Destination',
                 'Remarks': r.punchOut?.otherRemarks || ''
@@ -396,6 +397,7 @@ const Reports = () => {
                     'Punch Out': punchOutTime,
                     'KM Run': r.totalKM || 0,
                     'Daily Wage': dailySalary,
+                    'Bonus': (r.punchOut?.allowanceTA || 0) + (r.punchOut?.nightStayAmount || 0),
                     'Toll/Parking': r.punchOut?.tollParkingAmount || (r.parking || []).reduce((sum, p) => sum + (p.amount || 0), 0),
                     'Fuel Cost': r.fuel?.amount || 0,
                     'Remarks': r.punchOut?.otherRemarks || r.punchIn?.remarks || ''
@@ -407,12 +409,13 @@ const Reports = () => {
                     acc['KM Run'] += Number(curr['KM Run']) || 0;
                     acc['Toll/Parking'] += Number(curr['Toll/Parking']) || 0;
                     acc['Fuel Cost'] += Number(curr['Fuel Cost']) || 0;
+                    acc['Bonus'] += Number(curr['Bonus']) || 0;
                 }
                 acc['Daily Wage'] += Number(curr['Daily Wage']) || 0;
                 return acc;
             }, isOutsideSheet ?
                 { 'Driver Name': 'TOTAL', 'Date': '-', 'Car': '-', 'Punch In': '-', 'Punch Out': '-', 'Daily Wage': 0 } :
-                { 'Driver Name': 'TOTAL', 'Date': '-', 'Car': '-', 'KM Run': 0, 'Daily Wage': 0, 'Toll/Parking': 0, 'Fuel Cost': 0 }
+                { 'Driver Name': 'TOTAL', 'Date': '-', 'Car': '-', 'KM Run': 0, 'Daily Wage': 0, 'Bonus': 0, 'Toll/Parking': 0, 'Fuel Cost': 0 }
             );
 
             rows.push(totals);
@@ -878,6 +881,12 @@ const Reports = () => {
                                                 <Car size={16} style={{ color: 'var(--primary)', opacity: 0.7 }} />
                                                 <span>{(report.vehicle?.carNumber || report.carNumber || '--').split('#')[0]}</span>
                                             </div>
+                                            {report.entryType === 'attendance' && (report.punchOut?.allowanceTA > 0 || report.punchOut?.nightStayAmount > 0) && (
+                                                <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
+                                                    {report.punchOut.allowanceTA > 0 && <span style={{ fontSize: '9px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>DAY +100</span>}
+                                                    {report.punchOut.nightStayAmount > 0 && <span style={{ fontSize: '9px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>NIGHT +500</span>}
+                                                </div>
+                                            )}
                                         </td>
                                         <td style={{ padding: '18px 25px' }}>
                                             {report.entryType === 'attendance' ? (
@@ -1006,6 +1015,12 @@ const Reports = () => {
                                             }}>
                                                 {report.vehicle?.isOutsideCar ? 'OUT' : (report.driver?.isFreelancer ? 'FREE' : 'STAFF')}
                                             </span>
+                                            {report.entryType === 'attendance' && (report.punchOut?.allowanceTA > 0 || report.punchOut?.nightStayAmount > 0) && (
+                                                <div style={{ display: 'flex', gap: '4px' }}>
+                                                    {report.punchOut.allowanceTA > 0 && <span style={{ fontSize: '9px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>+100</span>}
+                                                    {report.punchOut.nightStayAmount > 0 && <span style={{ fontSize: '9px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>+500</span>}
+                                                </div>
+                                            )}
                                         </div>
 
                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px', padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '10px' }}>
