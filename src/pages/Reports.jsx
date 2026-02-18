@@ -20,7 +20,9 @@ import {
     Fuel,
     Wrench,
     IndianRupee,
-    Trash2
+    Trash2,
+    ShieldAlert,
+    AlertTriangle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -189,10 +191,20 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
             ) : (
                 <div style={{ padding: '20px' }}>
                     <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                        {item.billPhoto && (
+                        {(item.billPhoto || item.receiptPhoto || item.slipPhoto) && (
                             <div style={{ flex: '0 0 300px' }}>
                                 <p className="photo-label">RECEIPT / BILL PHOTO</p>
                                 <img src={item.billPhoto || item.receiptPhoto || item.slipPhoto} style={{ width: '100%', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => window.open(item.billPhoto || item.receiptPhoto || item.slipPhoto)} />
+                            </div>
+                        )}
+                        {item.entryType === 'accident' && item.photos?.length > 0 && (
+                            <div style={{ flex: '0 0 300px' }}>
+                                <p className="photo-label">ACCIDENT EVIDENCE ({item.photos.length})</p>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    {item.photos.map((ph, i) => (
+                                        <img key={i} src={ph} style={{ width: '100%', height: '80px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer' }} onClick={() => window.open(ph)} />
+                                    ))}
+                                </div>
                             </div>
                         )}
                         <div style={{ flex: 1, minWidth: '250px' }}>
@@ -248,6 +260,7 @@ const Reports = () => {
     const [maintenanceRecords, setMaintenanceRecords] = useState([]);
     const [advanceRecords, setAdvanceRecords] = useState([]);
     const [parkingRecords, setParkingRecords] = useState([]);
+    const [accidentLogs, setAccidentLogs] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
@@ -265,6 +278,7 @@ const Reports = () => {
         { id: 'borderTax', label: 'Border Tax', icon: Shield, color: '#8b5cf6' },
         { id: 'parking', label: 'Parking', icon: MapPin, color: '#6366f1' },
         { id: 'fastag', label: 'Fastag Logs', icon: Wallet, color: '#ec4899' },
+        { id: 'accidents', label: 'Accident Logs', icon: ShieldAlert, color: '#f43f5e' },
     ];
 
     const toggleReport = (id) => {
@@ -305,6 +319,7 @@ const Reports = () => {
             setMaintenanceRecords(data.maintenance || []);
             setAdvanceRecords(data.advances || []);
             setParkingRecords(data.parking || []);
+            setAccidentLogs(data.accidentLogs || []);
         } catch (err) {
             console.error('Error fetching reports', err);
         } finally {
@@ -333,6 +348,8 @@ const Reports = () => {
                 endpoint = `/api/admin/maintenance/${item._id}`;
             } else if (item.entryType === 'borderTax') {
                 endpoint = `/api/admin/border-tax/${item._id}`;
+            } else if (item.entryType === 'accident') {
+                endpoint = `/api/admin/accident-logs/${item._id}`;
             } else {
                 alert('Deletion not supported for this entry type');
                 return;
@@ -598,6 +615,20 @@ const Reports = () => {
             XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(parkingRows), "Parking Logs");
         }
 
+        if (selectedReports.includes('accidents') && accidentLogs.length > 0) {
+            hasGlobalData = true;
+            const accRows = accidentLogs.map(a => ({
+                'Date': fmtDate(new Date(a.date)),
+                'Car': a.vehicle?.carNumber ? a.vehicle.carNumber.split('#')[0] : 'N/A',
+                'Driver': a.driver?.name || 'N/A',
+                'Location': a.location || 'N/A',
+                'Cost': a.amount,
+                'Status': a.status,
+                'Description': a.description || ''
+            }));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(accRows), "Accident Logs");
+        }
+
         if (selectedReports.includes('fastag') && fastagRecharges.length > 0) {
             hasGlobalData = true;
             const sortedFT = [...fastagRecharges].sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -688,6 +719,11 @@ const Reports = () => {
         // 7. Parking
         if (selectedReports.includes('parking')) {
             combined = [...combined, ...parkingRecords.map(p => ({ ...p, entryType: 'parking', date: getEntryDate(p.date) }))];
+        }
+
+        // 8. Accidents
+        if (selectedReports.includes('accidents')) {
+            combined = [...combined, ...accidentLogs.map(a => ({ ...a, entryType: 'accident', date: getEntryDate(a.date) }))];
         }
 
         return combined.sort((a, b) => {
@@ -964,13 +1000,14 @@ const Reports = () => {
                                                 padding: '4px 10px',
                                                 borderRadius: '6px',
                                                 background: report.entryType === 'attendance' ? 'rgba(16, 185, 129, 0.1)' :
-                                                    report.entryType === 'fuel' ? 'rgba(34, 197, 94, 0.1)' :
-                                                        report.entryType === 'parking' ? 'rgba(99, 102, 241, 0.1)' :
-                                                            report.entryType === 'advance' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.05)',
+                                                    report.entryType === 'parking' ? 'rgba(99, 102, 241, 0.1)' :
+                                                        report.entryType === 'advance' ? 'rgba(99, 102, 241, 0.1)' :
+                                                            report.entryType === 'accident' ? 'rgba(244, 63, 94, 0.1)' : 'rgba(255,255,255,0.05)',
                                                 color: report.entryType === 'attendance' ? '#10b981' :
                                                     report.entryType === 'fuel' ? '#22c55e' :
                                                         report.entryType === 'parking' ? '#6366f1' :
-                                                            report.entryType === 'advance' ? '#6366f1' : 'white'
+                                                            report.entryType === 'advance' ? '#6366f1' :
+                                                                report.entryType === 'accident' ? '#f43f5e' : 'white'
                                             }}>
                                                 {report.entryType}
                                             </span>
@@ -979,6 +1016,20 @@ const Reports = () => {
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontWeight: '700', fontSize: '14px' }}>
                                                 <Car size={16} style={{ color: 'var(--primary)', opacity: 0.7 }} />
                                                 <span>{(report.vehicle?.carNumber || report.carNumber || '--').split('#')[0]}</span>
+                                                {report.entryType === 'attendance' && report.dutyCount > 1 && (
+                                                    <span style={{
+                                                        fontSize: '9px',
+                                                        background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
+                                                        color: 'white',
+                                                        padding: '2px 6px',
+                                                        borderRadius: '4px',
+                                                        fontWeight: '900',
+                                                        marginLeft: '4px',
+                                                        boxShadow: '0 2px 4px rgba(14, 165, 233, 0.2)'
+                                                    }}>
+                                                        {report.dutyCount} DUTIES
+                                                    </span>
+                                                )}
                                             </div>
                                             {report.entryType === 'attendance' && (report.punchOut?.allowanceTA > 0 || report.punchOut?.nightStayAmount > 0) && (
                                                 <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
@@ -1003,6 +1054,8 @@ const Reports = () => {
                                                 <span style={{ color: '#ef4444', fontSize: '12px', fontWeight: '800' }}>{report.maintenanceType || 'Service'}</span>
                                             ) : report.entryType === 'borderTax' ? (
                                                 <span style={{ color: '#8b5cf6', fontSize: '12px', fontWeight: '800' }}>{report.borderName}</span>
+                                            ) : report.entryType === 'accident' ? (
+                                                <span style={{ color: '#f43f5e', fontSize: '12px', fontWeight: '800' }}>{report.location || 'Accident'}</span>
                                             ) : '--'}
                                         </td>
                                         <td style={{ padding: '18px 25px' }}>
@@ -1013,6 +1066,8 @@ const Reports = () => {
                                                 </div>
                                             ) : report.entryType === 'fastag' ? (
                                                 <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>Recharge</span>
+                                            ) : report.entryType === 'accident' ? (
+                                                <span style={{ color: report.status === 'Pending' ? '#fbbf24' : '#10b981', fontSize: '11px', fontWeight: '800' }}>{report.status}</span>
                                             ) : '--'}
                                         </td>
                                         <td style={{ padding: '18px 25px' }}>
@@ -1035,7 +1090,7 @@ const Reports = () => {
                                         </td>
                                         <td style={{ padding: '18px 25px', textAlign: 'right' }}>
                                             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
-                                                {(report.entryType === 'attendance' || report.entryType === 'fuel' || report.entryType === 'parking' || report.entryType === 'advance' || report.entryType === 'maintenance' || report.entryType === 'borderTax') && (
+                                                {(report.entryType === 'attendance' || report.entryType === 'fuel' || report.entryType === 'parking' || report.entryType === 'advance' || report.entryType === 'maintenance' || report.entryType === 'borderTax' || report.entryType === 'accident') && (
                                                     <button
                                                         onClick={() => setSelectedItem(report)}
                                                         className="glass-card"

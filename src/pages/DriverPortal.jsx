@@ -1,3 +1,4 @@
+// Driver Portal Page
 import React, { useState, useEffect, useRef } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -157,6 +158,8 @@ const DriverPortal = () => {
     const [nightStay, setNightStay] = useState(false);
     const [otherRemarks, setOtherRemarks] = useState('');
     const [remarks, setRemarks] = useState('');
+    const [dutyRemarks, setDutyRemarks] = useState(['']);
+    const [dutyCount, setDutyCount] = useState(1);
 
     // Camera Modal states
     const [activeCamera, setActiveCamera] = useState(null);
@@ -253,7 +256,8 @@ const DriverPortal = () => {
         }
 
         if (type === 'punch-out') {
-            formData.append('remarks', remarks);
+            const finalRemarks = dutyRemarks.filter(r => r.trim()).map((r, i) => `${i + 1}. ${r}`).join('\n');
+            formData.append('remarks', finalRemarks);
             formData.append('otherRemarks', otherRemarks);
             formData.append('fuelFilled', fuelFilled);
             if (fuelFilled) {
@@ -275,6 +279,7 @@ const DriverPortal = () => {
             if (outsideTripOccurred) {
                 formData.append('outsideTripType', outsideTripTypes.join(','));
             }
+            formData.append('dutyCount', dutyCount);
         }
 
         try {
@@ -303,6 +308,9 @@ const DriverPortal = () => {
             setOutsideTripOccurred(false);
             setRemarks('');
             setOtherRemarks('');
+            setOtherRemarks('');
+            setDutyRemarks(['']);
+            setDutyCount(1);
             setShowPunchOutForm(false);
             fetchDashboard();
         } catch (err) {
@@ -1037,6 +1045,34 @@ const DriverPortal = () => {
                                                             </div>
                                                         )}
                                                     </div>
+
+                                                    {/* Duty Count Selection (Hidden but kept for logic) */}
+                                                    <div style={{ display: 'none' }}>
+                                                        <p className="input-label" style={{ marginBottom: '10px' }}>{t('selectDutyCount')}</p>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                                                            {[1, 2, 3, 4, 5].map((num) => (
+                                                                <button
+                                                                    key={num}
+                                                                    onClick={() => setDutyCount(num)}
+                                                                    style={{
+                                                                        padding: '12px 8px',
+                                                                        borderRadius: '12px',
+                                                                        fontSize: '14px',
+                                                                        fontWeight: '900',
+                                                                        border: '1px solid',
+                                                                        borderColor: dutyCount === num ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
+                                                                        background: dutyCount === num ? 'rgba(14, 165, 233, 0.2)' : 'rgba(255,255,255,0.05)',
+                                                                        color: dutyCount === num ? 'white' : 'rgba(255,255,255,0.5)',
+                                                                        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                        transform: dutyCount === num ? 'scale(1.05)' : 'scale(1)',
+                                                                        boxShadow: dutyCount === num ? '0 4px 12px rgba(14, 165, 233, 0.2)' : 'none'
+                                                                    }}
+                                                                >
+                                                                    {num}
+                                                                </button>
+                                                            ))}
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             )}
 
@@ -1045,13 +1081,72 @@ const DriverPortal = () => {
                                                 <div style={{ marginBottom: 'clamp(20px, 5vw, 28px)' }}>
                                                     <div className="input-wrapper-full">
                                                         <label className="input-label">{t('remarksAdmin')}</label>
-                                                        <textarea
-                                                            className="input-field"
-                                                            placeholder={t('enterRemarks')}
-                                                            value={remarks}
-                                                            onChange={(e) => setRemarks(e.target.value)}
-                                                            style={{ marginBottom: '15px', resize: 'vertical', minHeight: '60px' }}
-                                                        />
+                                                        <div style={{ display: 'grid', gap: '10px' }}>
+                                                            {dutyRemarks.map((remark, index) => (
+                                                                <div key={index} style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                                                    <div style={{
+                                                                        width: '28px',
+                                                                        height: '28px',
+                                                                        borderRadius: '50%',
+                                                                        background: 'rgba(14, 165, 233, 0.1)',
+                                                                        color: 'var(--primary)',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                        fontSize: '12px',
+                                                                        fontWeight: '800',
+                                                                        border: '1px solid rgba(14, 165, 233, 0.2)'
+                                                                    }}>
+                                                                        {index + 1}
+                                                                    </div>
+                                                                    <input
+                                                                        type="text"
+                                                                        className="input-field"
+                                                                        placeholder={`Duty ${index + 1} (e.g. Reports)`}
+                                                                        value={remark}
+                                                                        onChange={(e) => {
+                                                                            const newRemarks = [...dutyRemarks];
+                                                                            newRemarks[index] = e.target.value;
+                                                                            setDutyRemarks(newRemarks);
+                                                                            // Also sync dutyCount for admin reference
+                                                                            setDutyCount(newRemarks.filter(r => r.trim()).length || 1);
+                                                                        }}
+                                                                        style={{ flex: 1, padding: '10px', fontSize: '14px', height: '40px' }}
+                                                                    />
+                                                                    {dutyRemarks.length > 1 && (
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                const newRemarks = dutyRemarks.filter((_, i) => i !== index);
+                                                                                setDutyRemarks(newRemarks);
+                                                                                setDutyCount(newRemarks.filter(r => r.trim()).length || 1);
+                                                                            }}
+                                                                            style={{ color: '#f43f5e', background: 'rgba(244, 63, 94, 0.1)', padding: '8px', borderRadius: '8px' }}
+                                                                        >
+                                                                            <Trash2 size={16} />
+                                                                        </button>
+                                                                    )}
+                                                                </div>
+                                                            ))}
+                                                            <button
+                                                                onClick={() => setDutyRemarks([...dutyRemarks, ''])}
+                                                                style={{
+                                                                    marginTop: '6px',
+                                                                    padding: '10px',
+                                                                    borderRadius: '10px',
+                                                                    border: '1px dashed rgba(14, 165, 233, 0.3)',
+                                                                    background: 'rgba(14, 165, 233, 0.05)',
+                                                                    color: 'var(--primary)',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '800',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    justifyContent: 'center',
+                                                                    gap: '6px'
+                                                                }}
+                                                            >
+                                                                <Plus size={16} /> Add Another Duty
+                                                            </button>
+                                                        </div>
                                                     </div>
 
                                                     <div className="input-wrapper-full" style={{ marginTop: '4px' }}>

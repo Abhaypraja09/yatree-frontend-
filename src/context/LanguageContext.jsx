@@ -63,6 +63,8 @@ export const translations = {
         outsideCityQuestion: '3. Did you go outside city?',
         sameDay: 'SAME DAY (+100)',
         nightStay: 'NIGHT STAY (+500)',
+        dutyCount: 'Total Duties Done Today',
+        selectDutyCount: 'How many duties completed?',
 
         // Maintenance
         maintenanceIssues: 'DRIVER Service (OPTIONAL)',
@@ -189,6 +191,8 @@ export const translations = {
         outsideCityQuestion: '3. क्या आप शहर के बाहर गए थे?',
         sameDay: 'उसी दिन वापसी (+100)',
         nightStay: 'रात का ठहराव (+500)',
+        dutyCount: 'आज की कुल ड्यूटी',
+        selectDutyCount: 'आज कितनी ड्यूटी पूरी कीं?',
 
         // Maintenance
         maintenanceIssues: 'ड्राइवर सेवा (वैकल्पिक)',

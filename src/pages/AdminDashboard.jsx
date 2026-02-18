@@ -81,18 +81,18 @@ const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick }) 
                     {trend && (
                         <span style={{
                             fontSize: '9px',
-                            color: '#10b981',
-                            background: 'rgba(16, 185, 129, 0.1)',
+                            color: trend === 'LIVE' ? '#10b981' : (trend === 'PENDING' ? '#fbbf24' : '#38bdf8'),
+                            background: trend === 'LIVE' ? 'rgba(16, 185, 129, 0.1)' : (trend === 'PENDING' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(56, 189, 248, 0.1)'),
                             padding: '2px 8px',
                             borderRadius: '20px',
                             fontWeight: '900',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '3px',
-                            border: '1px solid rgba(16, 185, 129, 0.2)'
+                            border: trend === 'LIVE' ? '1px solid rgba(16, 185, 129, 0.2)' : (trend === 'PENDING' ? '1px solid rgba(251, 191, 36, 0.2)' : '1px solid rgba(56, 189, 248, 0.2)')
                         }}>
-                            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 5px #10b981' }}></div>
-                            LIVE
+                            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: trend === 'LIVE' ? '#10b981' : (trend === 'PENDING' ? '#fbbf24' : '#38bdf8'), boxShadow: `0 0 5px ${trend === 'LIVE' ? '#10b981' : (trend === 'PENDING' ? '#fbbf24' : '#38bdf8')}` }}></div>
+                            {trend}
                         </span>
                     )}
                 </div>
@@ -698,17 +698,18 @@ const AdminDashboard = () => {
                             gap: '12px',
                             marginBottom: '20px'
                         }}>
-                            <StatCard icon={IndianRupee} label="DAILY ADVANCES" value={`₹${(stats.dailyAdvancesSum || 0).toLocaleString()}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/advances')} trend="LIVE" />
-                            <StatCard icon={Activity} label="DAILY SALARY COST" value={`₹${(stats.dailySalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/advances')} trend="LIVE" />
-                            <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
+                            <StatCard icon={IndianRupee} label="TOTAL DRIVER SALARY" value={`₹${(stats.monthlySalaryTotal || 0).toLocaleString()}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/advances')} trend="MONTHLY" />
+                            <StatCard icon={AlertTriangle} label="TOTAL ACCIDENT COST" value={`₹${(stats.monthlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} trend="MONTHLY" />
+                            <StatCard icon={CreditCard} label="TOTAL DRIVER ADVANCE" value={`₹${(stats.totalAdvancesSum || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/advances')} trend="PENDING" />
+                            <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/fuel')} />
                             <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
                             <StatCard icon={CreditCard} label="TOTAL FASTAG BALANCE" value={`₹${stats.totalFastagBalance?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/fastag')} />
-
-                            <StatCard icon={CreditCard} label="PARKING (MONTHLY)" value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
                             <StatCard icon={ShieldAlert} label="BORDER TAX (MONTHLY)" value={`₹${stats.monthlyBorderTaxAmount?.toLocaleString() || 0}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/border-tax')} />
                             <StatCard icon={Users} label="CURRENT DRIVERS" value={stats.totalDrivers} color="#0ea5e9" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/freelancers' : '/admin/drivers')} />
                             <StatCard icon={Car} label="FLEET SIZE" value={stats.totalVehicles} color="#8b5cf6" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
                             <StatCard icon={Briefcase} label="TOTAL STAFF" value={stats.totalStaff} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/staff')} />
+                            <StatCard icon={CreditCard} label="PARKING (MONTHLY)" value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
+                            <StatCard icon={Activity} label="TOTAL DUTIES TODAY" value={stats.countPunchIns || 0} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/reports')} trend="LIVE" />
                         </div>
 
 
@@ -785,9 +786,15 @@ const AdminDashboard = () => {
                                                     whiteSpace: 'nowrap',
                                                     boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
                                                 }}>
-                                                    {alert.daysLeft < 0
-                                                        ? `${Math.abs(alert.daysLeft)}d Ago`
-                                                        : (alert.daysLeft === 0 ? 'Today' : `${alert.daysLeft}d Left`)}
+                                                    {alert.expiryDate ? (
+                                                        alert.daysLeft < 0
+                                                            ? `${Math.abs(alert.daysLeft)}d Ago`
+                                                            : (alert.daysLeft === 0 ? 'Today' : `${alert.daysLeft}d Left`)
+                                                    ) : (
+                                                        alert.daysLeft <= 0
+                                                            ? `${Math.abs(alert.daysLeft)} KM Over`
+                                                            : `${alert.daysLeft} KM Left`
+                                                    )}
                                                 </span>
                                             </div>
                                             <div className="alert-type" style={{ color: 'white', marginBottom: '8px' }}>
@@ -805,16 +812,24 @@ const AdminDashboard = () => {
                                                     fontWeight: '500',
                                                     fontSize: 'clamp(10px, 2.5vw, 12px)'
                                                 }}>
-                                                    Exp: <span style={{ color: 'white', fontWeight: '700' }}>
-                                                        {new Date(alert.expiryDate).toLocaleDateString('en-IN', {
-                                                            day: '2-digit',
-                                                            month: 'short',
-                                                            year: 'numeric'
-                                                        })}
-                                                    </span>
+                                                    {alert.expiryDate ? (
+                                                        <>Exp: <span style={{ color: 'white', fontWeight: '700' }}>
+                                                            {new Date(alert.expiryDate).toLocaleDateString('en-IN', {
+                                                                day: '2-digit',
+                                                                month: 'short',
+                                                                year: 'numeric'
+                                                            })}
+                                                        </span></>
+                                                    ) : (
+                                                        <>Current: <span style={{ color: 'white', fontWeight: '700' }}>{alert.currentKm} KM</span></>
+                                                    )}
                                                 </div>
                                                 <a
-                                                    href={`https://wa.me/916367466426?text=${encodeURIComponent(`REMINDER: Vehicle document for ${alert.identifier} (${alert.documentType}) is expiring on ${new Date(alert.expiryDate).toLocaleDateString()}. Please renew it ASAP.`)}`}
+                                                    href={`https://wa.me/916367466426?text=${encodeURIComponent(
+                                                        alert.expiryDate
+                                                            ? `REMINDER: Vehicle document for ${alert.identifier} (${alert.documentType}) is expiring on ${new Date(alert.expiryDate).toLocaleDateString()}. Please renew it ASAP.`
+                                                            : `REMINDER: Vehicle ${alert.identifier} is due for ${alert.documentType}. Current KM: ${alert.currentKm}, Target KM: ${alert.targetKm}. Service needed ASAP.`
+                                                    )}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     style={{

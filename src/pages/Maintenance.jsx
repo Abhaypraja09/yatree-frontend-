@@ -34,6 +34,7 @@ const Maintenance = () => {
     const [filterType, setFilterType] = useState('All');
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [alerts, setAlerts] = useState([]);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -80,8 +81,27 @@ const Maintenance = () => {
         if (selectedCompany) {
             fetchRecords();
             fetchVehicles();
+            fetchAlerts();
         }
     }, [selectedCompany, selectedMonth, selectedYear]);
+
+    const fetchAlerts = async () => {
+        if (!selectedCompany?._id) return;
+        try {
+            const userInfoStr = localStorage.getItem('userInfo');
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+            if (!userInfo?.token) return;
+
+            const { data } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            // We only care about Service alerts
+            const serviceAlerts = (data.expiringAlerts || []).filter(a => a.type === 'Service');
+            setAlerts(serviceAlerts);
+        } catch (err) {
+            console.error('Error fetching alerts', err);
+        }
+    };
 
     const fetchRecords = async () => {
         if (!selectedCompany?._id) return;
@@ -295,6 +315,85 @@ const Maintenance = () => {
                     </button>
                 </div>
             </header>
+
+            {/* Alerts Section */}
+            {alerts.length > 0 && (
+                <div style={{ marginBottom: '30px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '15px' }}>
+                        <AlertCircle color="#f43f5e" size={20} />
+                        <h3 style={{ fontSize: '14px', fontWeight: '800', color: 'white', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>
+                            Critical Service Alerts
+                        </h3>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '15px' }}>
+                        {alerts.map((alert, idx) => (
+                            <motion.div
+                                key={idx}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="glass-card"
+                                style={{
+                                    padding: '15px',
+                                    border: `1px solid ${alert.daysLeft < 0 ? 'rgba(244, 63, 94, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                                    background: `linear-gradient(145deg, ${alert.daysLeft < 0 ? 'rgba(244, 63, 94, 0.1)' : 'rgba(245, 158, 11, 0.1)'}, rgba(15, 23, 42, 0.2))`,
+                                    position: 'relative'
+                                }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                                    <span style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>{alert.identifier}</span>
+                                    <span style={{
+                                        fontSize: '10px',
+                                        padding: '4px 8px',
+                                        borderRadius: '6px',
+                                        background: alert.daysLeft < 0 ? '#f43f5e' : '#f59e0b',
+                                        color: 'white',
+                                        fontWeight: '800'
+                                    }}>
+                                        {alert.expiryDate ? (
+                                            alert.daysLeft < 0 ? `${Math.abs(alert.daysLeft)}d Overdue` : `${alert.daysLeft}d Left`
+                                        ) : (
+                                            alert.daysLeft <= 0 ? `${Math.abs(alert.daysLeft)} KM Over` : `${alert.daysLeft} KM Left`
+                                        )}
+                                    </span>
+                                </div>
+                                <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', fontWeight: '600', marginBottom: '12px' }}>
+                                    {alert.documentType}
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>
+                                        {alert.expiryDate ? (
+                                            <>Due Date: <span style={{ color: 'white' }}>{new Date(alert.expiryDate).toLocaleDateString('en-IN')}</span></>
+                                        ) : (
+                                            <>Current: <span style={{ color: 'white' }}>{alert.currentKm} KM</span></>
+                                        )}
+                                    </div>
+                                    <a
+                                        href={`https://wa.me/916367466426?text=${encodeURIComponent(
+                                            alert.expiryDate
+                                                ? `REMINDER: Vehicle ${alert.identifier} is due for ${alert.documentType} on ${new Date(alert.expiryDate).toLocaleDateString()}.`
+                                                : `REMINDER: Vehicle ${alert.identifier} is due for ${alert.documentType}. Current KM: ${alert.currentKm}, Target KM: ${alert.targetKm}.`
+                                        )}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        style={{
+                                            padding: '6px 12px',
+                                            borderRadius: '8px',
+                                            background: 'rgba(37, 211, 102, 0.1)',
+                                            color: '#25D366',
+                                            fontSize: '11px',
+                                            fontWeight: '800',
+                                            textDecoration: 'none',
+                                            border: '1px solid rgba(37, 211, 102, 0.2)'
+                                        }}
+                                    >
+                                        REMIND
+                                    </a>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Summary Row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '30px' }}>

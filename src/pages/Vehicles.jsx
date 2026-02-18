@@ -22,6 +22,16 @@ const Vehicles = () => {
     const [fastagNumber, setFastagNumber] = useState('');
     const [fastagBalance, setFastagBalance] = useState('');
     const [fastagBank, setFastagBank] = useState('');
+    const [lastOdometer, setLastOdometer] = useState('');
+
+    const [editingVehicle, setEditingVehicle] = useState(null);
+    const [editFormData, setEditFormData] = useState({
+        carNumber: '',
+        model: '',
+        lastOdometer: '',
+        fastagBalance: '',
+        dutyAmount: ''
+    });
 
     const [creating, setCreating] = useState(false);
     const [docs, setDocs] = useState({
@@ -96,6 +106,7 @@ const Vehicles = () => {
             formData.append('fastagNumber', fastagNumber);
             formData.append('fastagBalance', fastagBalance || 0);
             formData.append('fastagBank', fastagBank);
+            formData.append('lastOdometer', lastOdometer || 0);
 
             // Add Documents
             Object.keys(docs).forEach(type => {
@@ -153,6 +164,23 @@ const Vehicles = () => {
             alert(err.response?.data?.message || 'Error uploading document');
         } finally {
             setUploadingDoc(false);
+        }
+    };
+
+    const handleUpdateVehicle = async (e) => {
+        e.preventDefault();
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.put(`/api/admin/vehicles/${editingVehicle._id}`, editFormData, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setShowDocsModal(null);
+            setEditingVehicle(null);
+            fetchVehicles();
+            fetchAlerts();
+            alert('Vehicle updated successfully');
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error updating vehicle');
         }
     };
 
@@ -350,7 +378,17 @@ const Vehicles = () => {
                                         </div>
                                     </div>
                                     <button
-                                        onClick={() => setShowDocsModal(v)}
+                                        onClick={() => {
+                                            setShowDocsModal(v);
+                                            setEditingVehicle(v);
+                                            setEditFormData({
+                                                carNumber: v.carNumber,
+                                                model: v.model,
+                                                lastOdometer: v.lastOdometer || 0,
+                                                fastagBalance: v.fastagBalance || 0,
+                                                dutyAmount: v.dutyAmount || 0
+                                            });
+                                        }}
                                         style={{
                                             background: 'linear-gradient(135deg, var(--primary), #0284c7)',
                                             color: 'white',
@@ -459,6 +497,11 @@ const Vehicles = () => {
                                 <input type="number" className="input-field" placeholder="Daily or Fixed Amount" value={dutyAmount} onChange={(e) => setDutyAmount(e.target.value)} />
                             </div>
 
+                            <div style={{ marginBottom: '25px' }}>
+                                <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Initial Odometer (KM)</label>
+                                <input type="number" className="input-field" placeholder="Current KM" value={lastOdometer} onChange={(e) => setLastOdometer(e.target.value)} />
+                            </div>
+
                             <div style={{ padding: '20px', background: 'rgba(255,255,255,0.01)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
                                 <h3 style={{ color: 'white', fontSize: '15px', fontWeight: '700', marginBottom: '15px' }}>Initial Documents (Optional)</h3>
                                 <div style={{ display: 'grid', gap: '12px' }}>
@@ -498,10 +541,60 @@ const Vehicles = () => {
                     <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card modal-content" style={{ padding: '25px', width: '100%', maxWidth: '850px', maxHeight: '95vh', overflowY: 'auto' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
                             <div>
-                                <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '800', margin: 0 }}>Documents</h2>
+                                <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '800', margin: 0 }}>Manage Vehicle</h2>
                                 <p style={{ color: 'var(--primary)', fontSize: '13px', margin: 0, fontWeight: '600' }}>{showDocsModal.carNumber}</p>
                             </div>
                             <button onClick={() => setShowDocsModal(null)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
+                        </div>
+
+                        {/* Update Stats Section */}
+                        <div style={{ padding: '20px', background: 'rgba(14, 165, 233, 0.05)', borderRadius: '16px', border: '1px solid rgba(14, 165, 233, 0.1)', marginBottom: '30px' }}>
+                            <h3 style={{ color: 'white', fontSize: '14px', fontWeight: '800', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                <Info size={16} /> Update Odometer & Stats
+                            </h3>
+                            <form onSubmit={handleUpdateVehicle} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px' }}>
+                                <div>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', display: 'block', marginBottom: '5px', textTransform: 'uppercase' }}>Current Odometer (KM)</label>
+                                    <input
+                                        type="number"
+                                        className="input-field"
+                                        style={{ marginBottom: 0, height: '40px', fontSize: '13px' }}
+                                        value={editFormData.lastOdometer}
+                                        onChange={(e) => setEditFormData({ ...editFormData, lastOdometer: e.target.value })}
+                                        placeholder="e.g. 118903"
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', display: 'block', marginBottom: '5px', textTransform: 'uppercase' }}>Fastag Balance</label>
+                                    <input
+                                        type="number"
+                                        className="input-field"
+                                        style={{ marginBottom: 0, height: '40px', fontSize: '13px' }}
+                                        value={editFormData.fastagBalance}
+                                        onChange={(e) => setEditFormData({ ...editFormData, fastagBalance: e.target.value })}
+                                        placeholder="0.00"
+                                    />
+                                </div>
+                                <div>
+                                    <label style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', display: 'block', marginBottom: '5px', textTransform: 'uppercase' }}>Base Rate (Duty)</label>
+                                    <input
+                                        type="number"
+                                        className="input-field"
+                                        style={{ marginBottom: 0, height: '40px', fontSize: '13px' }}
+                                        value={editFormData.dutyAmount}
+                                        onChange={(e) => setEditFormData({ ...editFormData, dutyAmount: e.target.value })}
+                                        placeholder="0"
+                                    />
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                    <button type="submit" className="btn-primary" style={{ height: '40px', width: '100%', fontSize: '12px', fontWeight: '800' }}>Save Changes</button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div style={{ marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Shield size={16} color="var(--primary)" />
+                            <h3 style={{ color: 'white', fontSize: '14px', fontWeight: '800', margin: 0, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Vehicle Documents</h3>
                         </div>
 
                         <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px', marginBottom: '35px' }}>

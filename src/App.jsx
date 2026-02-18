@@ -20,6 +20,7 @@ const Advances = lazy(() => import('./pages/Advances'));
 const Admins = lazy(() => import('./pages/Admins'));
 const Staff = lazy(() => import('./pages/Staff'));
 const StaffPortal = lazy(() => import('./pages/StaffPortal'));
+const AccidentLogs = lazy(() => import('./pages/AccidentLogs'));
 import Sidebar from './components/Sidebar';
 import { CompanyProvider } from './context/CompanyContext';
 
@@ -158,6 +159,7 @@ const AdminRoutes = () => {
       <Route path="parking" element={<Parking />} />
       <Route path="freelancers" element={<Freelancers />} />
       <Route path="reports" element={<Reports />} />
+      <Route path="accident-logs" element={<AccidentLogs />} />
 
       <Route path="fuel" element={<Fuel />} />
 
