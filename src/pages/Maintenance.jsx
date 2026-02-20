@@ -55,6 +55,7 @@ const Maintenance = () => {
     const [billPhoto, setBillPhoto] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [showNextService, setShowNextService] = useState(false);
+    const [editingId, setEditingId] = useState(null);
 
     const maintenanceTypes = [
         'Regular Service',
@@ -135,18 +136,28 @@ const Maintenance = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            await axios.post('/api/admin/maintenance', fd, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                    Authorization: `Bearer ${userInfo.token}`
-                }
-            });
+            if (editingId) {
+                await axios.put(`/api/admin/maintenance/${editingId}`, fd, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${userInfo.token}`
+                    }
+                });
+                alert('Maintenance record updated successfully');
+            } else {
+                await axios.post('/api/admin/maintenance', fd, {
+                    headers: {
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${userInfo.token}`
+                    }
+                });
+                alert('Maintenance record added successfully');
+            }
 
             setShowModal(false);
             setShowNextService(false);
             resetForm();
             fetchRecords();
-            alert('Maintenance record added successfully');
         } catch (err) {
             console.error(err);
             alert(err.response?.data?.message || 'Error saving record');
@@ -187,6 +198,28 @@ const Maintenance = () => {
         });
         setBillPhoto(null);
         setShowNextService(false);
+        setEditingId(null);
+    };
+
+    const handleEdit = (record) => {
+        setFormData({
+            vehicleId: record.vehicle?._id || '',
+            maintenanceType: record.maintenanceType,
+            category: record.category || '',
+            partsChanged: record.partsChanged || [],
+            description: record.description || '',
+            garageName: record.garageName || '',
+            billNumber: record.billNumber || '',
+            billDate: record.billDate ? record.billDate.split('T')[0] : '',
+            amount: record.amount,
+            paymentMode: record.paymentMode || 'Cash',
+            currentKm: record.currentKm || '',
+            nextServiceKm: record.nextServiceKm || '',
+            status: record.status || 'Completed'
+        });
+        setEditingId(record._id);
+        if (record.nextServiceKm) setShowNextService(true);
+        setShowModal(true);
     };
 
     const downloadExcel = () => {
@@ -290,7 +323,11 @@ const Maintenance = () => {
                     </button>
                     <button
                         className="btn-primary"
-                        onClick={() => setShowModal(true)}
+                        onClick={() => {
+                            setEditingId(null);
+                            resetForm();
+                            setShowModal(true);
+                        }}
                         style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', whiteSpace: 'nowrap' }}
                     >
                         <Plus size={20} /> <span className="hide-mobile">Add Record</span><span className="show-mobile">Add</span>
@@ -443,6 +480,14 @@ const Maintenance = () => {
                                                 </button>
                                             )}
                                             <button
+                                                onClick={() => handleEdit(record)}
+                                                className="glass-card-hover-effect"
+                                                style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                title="Edit Entry"
+                                            >
+                                                <Wrench size={16} />
+                                            </button>
+                                            <button
                                                 onClick={() => handleDelete(record._id)}
                                                 className="glass-card-hover-effect"
                                                 style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
@@ -531,6 +576,12 @@ const Maintenance = () => {
                                             </button>
                                         )}
                                         <button
+                                            onClick={() => handleEdit(record)}
+                                            style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
+                                        >
+                                            <Wrench size={14} /> Edit
+                                        </button>
+                                        <button
                                             onClick={() => handleDelete(record._id)}
                                             style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
                                         >
@@ -565,7 +616,7 @@ const Maintenance = () => {
                         >
                             <div style={{ padding: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
-                                    <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '800', margin: 0 }}>Add Maintenance Record</h2>
+                                    <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '800', margin: 0 }}>{editingId ? 'Edit Maintenance Record' : 'Add Maintenance Record'}</h2>
                                     <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '4px 0 0' }}>Log repairs, services, and part replacements.</p>
                                 </div>
                                 <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
@@ -700,7 +751,7 @@ const Maintenance = () => {
                                             className="btn-primary"
                                             style={{ height: '60px', borderRadius: '16px', fontSize: '16px', fontWeight: '900' }}
                                         >
-                                            {submitting ? 'Saving Record...' : 'Save Maintenance Entry'}
+                                            {submitting ? 'Saving...' : (editingId ? 'Update Record' : 'Save Maintenance Entry')}
                                         </button>
                                         <button
                                             type="button"

@@ -85,6 +85,19 @@ const Advances = () => {
         }
     };
 
+    const handleDelete = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this advance record?')) return;
+
+        try {
+            await axios.delete(`/api/admin/advances/${id}`);
+            fetchData();
+            // Show toast or message if you have a toast component
+        } catch (err) {
+            console.error('Failed to delete advance:', err);
+            alert('Failed to delete advance record');
+        }
+    };
+
     const filtered = advances.filter(a => {
         const matchesSearch = (a.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             a.remark?.toLowerCase().includes(searchTerm.toLowerCase()));
@@ -270,6 +283,7 @@ const Advances = () => {
                             <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
                             <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Recovered</th>
                             <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remarks</th>
+                            <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -320,6 +334,23 @@ const Advances = () => {
                                         {advance.remark || '-'}
                                     </div>
                                 </td>
+                                <td style={{ padding: '20px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                    <button
+                                        onClick={() => handleDelete(advance._id)}
+                                        style={{
+                                            background: 'rgba(244, 63, 94, 0.1)',
+                                            color: '#f43f5e',
+                                            border: 'none',
+                                            padding: '8px',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s'
+                                        }}
+                                        className="hover:bg-red-500/20"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                </td>
                             </motion.tr>
                         ))}
                     </tbody>
@@ -368,10 +399,31 @@ const Advances = () => {
                                 </div>
 
                                 {advance.remark && (
-                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic', marginBottom: '10px' }}>
                                         "{advance.remark}"
                                     </div>
                                 )}
+
+                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                    <button
+                                        onClick={() => handleDelete(advance._id)}
+                                        style={{
+                                            background: 'rgba(244, 63, 94, 0.1)',
+                                            color: '#f43f5e',
+                                            border: 'none',
+                                            padding: '8px 16px',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontSize: '12px',
+                                            fontWeight: '800',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px'
+                                        }}
+                                    >
+                                        <X size={14} /> DELETE
+                                    </button>
+                                </div>
                             </motion.div>
                         ))}
                     </div>

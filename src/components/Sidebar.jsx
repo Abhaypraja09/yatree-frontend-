@@ -30,6 +30,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         { path: '/admin/drivers', icon: Users, label: 'Drivers' },
         { path: '/admin/freelancers', icon: Users, label: 'Freelancers' },
         { path: '/admin/advances', icon: IndianRupee, label: 'Advances' },
+        { path: '/admin/driver-salaries', icon: IndianRupee, label: 'Driver Salaries' },
         { path: '/admin/vehicles', icon: Car, label: 'Vehicles' },
         { path: '/admin/outside-cars', icon: Car, label: 'Outside Cars' },
         { path: '/admin/border-tax', icon: ShieldAlert, label: 'Border Tax' },
@@ -45,7 +46,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     ];
 
     const menuItems = user.role === 'Executive'
-        ? allMenuItems.filter(item => ['Freelancers', 'Outside Cars', 'Maintenance', 'Parts Warranty', 'Fuel', 'Parking', 'Daily Reports', 'Active Logs', 'Staff Management'].includes(item.label))
+        ? allMenuItems.filter(item => ['Freelancers', 'Outside Cars', 'Maintenance', 'Parts Warranty', 'Fuel', 'Parking', 'Daily Reports', 'Active Logs', 'Staff Management', 'Driver Salaries'].includes(item.label))
         : allMenuItems;
 
     const logoMap = {

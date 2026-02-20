@@ -419,679 +419,640 @@ const Freelancers = () => {
     return (
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
             <SEO title="Freelancer Fleet Network" description="Onboard and manage freelance drivers for temporary duties and peak demand management." />
-            <header style={{ paddingBottom: '40px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '40px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '40px', flexWrap: 'wrap' }}>
-                    <div style={{ flex: '1', minWidth: '300px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                            <div style={{ padding: '8px 16px', borderRadius: '100px', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                                <span style={{ fontSize: '11px', fontWeight: '900', color: '#818cf8', letterSpacing: '2px', textTransform: 'uppercase' }}>Professional Network</span>
-                            </div>
-                        </div>
-                        <h1 className="resp-title text-gradient" style={{ margin: 0, fontWeight: '900', letterSpacing: '-2px', fontSize: 'clamp(32px, 6vw, 56px)', lineHeight: '1' }}>
-                            Fleet <span style={{ color: 'var(--primary)' }}>Elite</span>
-                        </h1>
 
+            {/* Header with Search and Stats */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px', marginBottom: '32px', flexWrap: 'wrap' }}>
+                <div style={{ flex: 1, minWidth: '300px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '10px' }}>
+                        <div style={{ width: '4px', height: '28px', background: '#6366f1', borderRadius: '10px' }}></div>
+                        <h1 style={{ fontSize: '36px', fontWeight: '900', margin: 0, color: 'white', letterSpacing: '-1.5px' }}>
+                            Fleet <span style={{ color: '#6366f1' }}>Elite</span>
+                        </h1>
+                    </div>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0, fontSize: '14px', fontWeight: '600' }}>Manage on-demand professional drivers and logistics</p>
+                </div>
+
+                <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                    <div style={{ position: 'relative' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                        <input
+                            type="text"
+                            placeholder="Find personnel..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                height: '50px',
+                                width: '260px',
+                                background: 'rgba(255,255,255,0.03)',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                borderRadius: '16px',
+                                padding: '0 16px 0 46px',
+                                color: 'white',
+                                fontSize: '14px',
+                                transition: 'all 0.3s ease'
+                            }}
+                        />
+                    </div>
+                    <button onClick={() => setShowAddModal(true)} className="btn-primary" style={{ height: '50px', padding: '0 28px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '14px', fontWeight: '800' }}>
+                        <Plus size={20} /> ADD FREELANCER
+                    </button>
+                </div>
+            </div>
+
+            {/* Filter Hub */}
+            <div className="premium-glass" style={{ padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
+                <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '16px' }}>
+                    {[
+                        { id: 'personnel', label: 'Drivers List', icon: <UserIcon size={16} /> },
+                        { id: 'logistics', label: 'Duty History', icon: <Car size={16} /> },
+                        { id: 'accounts', label: 'Financials', icon: <Download size={16} /> }
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '12px 24px',
+                                borderRadius: '12px',
+                                border: 'none',
+                                background: activeTab === tab.id ? '#6366f1' : 'transparent',
+                                color: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.5)',
+                                cursor: 'pointer',
+                                fontSize: '13px',
+                                fontWeight: '800',
+                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                            }}
+                        >
+                            {tab.icon} {tab.label.toUpperCase()}
+                        </button>
+                    ))}
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase' }}>Filter:</span>
+                        <select
+                            value={driverFilter}
+                            onChange={(e) => setDriverFilter(e.target.value)}
+                            style={{
+                                background: 'rgba(255,255,255,0.05)',
+                                color: 'white',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                padding: '10px 18px',
+                                borderRadius: '12px',
+                                fontSize: '13px',
+                                fontWeight: '700',
+                                outline: 'none',
+                                height: '44px'
+                            }}
+                        >
+                            <option value="All">All Drivers</option>
+                            {drivers.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
+                        </select>
                     </div>
 
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '16px', justifyContent: 'flex-end', flex: 1, maxWidth: '900px' }}>
-                        <div style={{ position: 'relative', flex: '1', minWidth: '220px' }}>
-                            <Filter size={18} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(16, 15, 15, 0.3)', zIndex: 1 }} />
-                            <select
-                                value={driverFilter}
-                                onChange={(e) => setDriverFilter(e.target.value)}
-                                className="input-field"
-                                style={{ height: '56px', paddingLeft: '50px', fontSize: '14px', fontWeight: '700', borderRadius: '18px', background: 'rgba(6, 4, 4, 0.63)' }}
-                            >
-                                <option value="All">All Assets</option>
-                                {drivers.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
-                            </select>
-                        </div>
-                        <div style={{ position: 'relative', flex: '1', minWidth: '220px' }}>
-                            <Search size={18} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', zIndex: 1 }} />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '12px' }}>
                             <input
-                                type="text"
-                                placeholder="Locate specific personnel..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="input-field"
-                                style={{ height: '56px', paddingLeft: '50px', fontSize: '14px', fontWeight: '700', borderRadius: '18px', background: 'rgba(255,255,255,0.03)' }}
+                                type="date"
+                                value={fromDate}
+                                onChange={e => setFromDate(e.target.value)}
+                                style={{
+                                    background: 'transparent',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '8px 12px',
+                                    fontSize: '12px',
+                                    fontWeight: '700'
+                                }}
+                            />
+                            <span style={{ color: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}>|</span>
+                            <input
+                                type="date"
+                                value={toDate}
+                                onChange={e => setToDate(e.target.value)}
+                                style={{
+                                    background: 'transparent',
+                                    color: 'white',
+                                    border: 'none',
+                                    padding: '8px 12px',
+                                    fontSize: '12px',
+                                    fontWeight: '700'
+                                }}
                             />
                         </div>
+                        <button onClick={handleDownloadExcel} style={{ height: '44px', width: '44px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Export Reports">
+                            <Download size={18} />
+                        </button>
                     </div>
                 </div>
+            </div>
 
-                <div style={{ marginTop: '60px', display: 'flex', justifyContent: 'space-between', gap: '40px', alignItems: 'center', flexWrap: 'wrap', marginBottom: '40px' }}>
-                    <div style={{ display: 'flex', gap: '35px', flex: '1', minWidth: '320px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <div style={{
-                            display: 'flex',
-                            gap: '8px',
-                            background: 'rgba(255, 255, 255, 0.03)',
-                            padding: '6px',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(255,255,255,0.05)'
-                        }}>
-                            {['personnel', 'accounts', 'logistics'].map(tab => (
-                                <button
-                                    key={tab}
-                                    onClick={() => setActiveTab(tab)}
-                                    style={{
-                                        padding: '10px 24px',
-                                        borderRadius: '12px',
-                                        fontSize: '12px',
-                                        fontWeight: '800',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '1px',
-                                        background: activeTab === tab ? '#6366f1' : 'transparent',
-                                        color: activeTab === tab ? 'white' : 'rgba(255,255,255,0.4)',
-                                        border: 'none',
-                                        cursor: 'pointer',
+            {/* Content Tabs */}
+            <div style={{ position: 'relative', minHeight: '600px' }}>
+                {/* PERSONNEL TAB */}
+                {activeTab === 'personnel' && (
+                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
+                        {/* Personnel Summary */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '32px' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', padding: '20px' }}>
+                                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 6px 0' }}>Total Network</p>
+                                <h3 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{drivers.length}</h3>
+                            </div>
+                            <div style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.1)', borderRadius: '20px', padding: '20px' }}>
+                                <p style={{ color: 'rgba(16,185,129,0.7)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 6px 0' }}>Available</p>
+                                <h3 style={{ color: '#10b981', fontSize: '28px', fontWeight: '900', margin: 0 }}>{availableDrivers.length}</h3>
+                            </div>
+                            <div style={{ background: 'rgba(244,63,94,0.05)', border: '1px solid rgba(244,63,94,0.1)', borderRadius: '20px', padding: '20px' }}>
+                                <p style={{ color: '#f43f5e', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 6px 0' }}>On Duty</p>
+                                <h3 style={{ color: '#f43f5e', fontSize: '28px', fontWeight: '900', margin: 0 }}>{onDutyDrivers.length}</h3>
+                            </div>
+                            <div style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.1)', borderRadius: '20px', padding: '20px' }}>
+                                <p style={{ color: '#818cf8', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 6px 0' }}>Company Docs</p>
+                                <h3 style={{ color: '#818cf8', fontSize: '28px', fontWeight: '900', margin: 0 }}>{drivers.filter(d => d.documents?.length > 0).length}</h3>
+                            </div>
+                        </div>
+
+                        {/* Driver Grid */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
+                            {loading ? (
+                                <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', gridColumn: '1/-1', padding: '60px' }}>Loading professional network...</p>
+                            ) : drivers.length === 0 ? (
+                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '80px 40px', background: 'rgba(255,255,255,0.02)', borderRadius: '32px', border: '2px dashed rgba(255,255,255,0.05)' }}>
+                                    <UserIcon size={40} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
+                                    <h3 style={{ color: 'white', fontWeight: '800' }}>No Freelancers Recorded</h3>
+                                    <p style={{ color: 'rgba(255,255,255,0.3)', marginBottom: '30px' }}>Expand your fleet by adding professional on-demand drivers.</p>
+                                    <button onClick={() => setShowAddModal(true)} className="btn-primary" style={{ padding: '12px 32px', borderRadius: '16px' }}>REGISTER FIRST DRIVER</button>
+                                </div>
+                            ) : [...onDutyDrivers, ...availableDrivers].map(d => {
+                                const isOnDuty = d.tripStatus === 'active';
+                                const dutyCount = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id).length;
+                                return (
+                                    <div key={d._id} className="premium-glass" style={{
+                                        borderRadius: '24px',
+                                        border: d._id === driverFilter
+                                            ? '2px solid #6366f1'
+                                            : isOnDuty
+                                                ? '1px solid rgba(244,63,94,0.25)'
+                                                : '1px solid rgba(255,255,255,0.07)',
+                                        padding: '24px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '18px',
                                         transition: 'all 0.3s ease'
-                                    }}
-                                >
-                                    {tab}
-                                </button>
-                            ))}
-                        </div>
-                        <div style={{ display: 'flex', gap: '15px' }}>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', paddingLeft: '5px' }}>FROM</span>
-                                <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} className="input-field" style={{ height: '42px', width: '140px', marginBottom: 0, fontSize: '13px', borderRadius: '12px' }} />
-                            </div>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', paddingLeft: '5px' }}>TO</span>
-                                <input type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} className="input-field" style={{ height: '42px', width: '140px', marginBottom: 0, fontSize: '13px', borderRadius: '12px' }} />
-                            </div>
-                        </div>
-                    </div>
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                        <button onClick={handleDownloadExcel} style={{ height: '42px', padding: '0 20px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', fontWeight: '700', fontSize: '12px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Download size={18} /> <span>REPORTS</span>
-                        </button>
-                        <button onClick={() => setShowAddModal(true)} className="btn-primary" style={{ height: '42px', padding: '0 25px', fontWeight: '800', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '10px', borderRadius: '12px' }}>
-                            <Plus size={20} /> <span>Add</span>
-                        </button>
-                    </div>
-                </div>
-            </header>
-
-
-            {activeTab === 'personnel' && (
-                <div style={{ animation: 'fadeIn 0.5s ease' }}>
-
-
-                    {/* Settlement Detail (if filtered) */}
-                    {driverFilter !== 'All' && (
-                        <div style={{ background: 'rgba(99, 102, 241, 0.05)', padding: '30px', borderRadius: '20px', marginBottom: '40px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', flexWrap: 'wrap', gap: '20px' }}>
-                                <div>
-                                    <p style={{ color: '#818cf8', fontSize: '12px', margin: '0 0 5px 0', fontWeight: '700' }}>OPERATIONAL LEDGER</p>
-                                    <h2 style={{ color: 'white', fontSize: '24px', margin: 0, fontWeight: '800' }}>{filterDriverName}</h2>
-                                </div>
-                                <div style={{ display: 'flex', gap: '15px' }}>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', margin: 0 }}>PAYABLE BALANCE</p>
-                                        <h3 style={{ color: '#10b981', fontSize: '24px', margin: 0, fontWeight: '800' }}>₹{netPayable.toLocaleString('en-IN')}</h3>
-                                    </div>
-                                    <button onClick={() => { const d = drivers.find(drv => drv._id === driverFilter); if (d) { setSelectedDriver(d); setShowAdvanceModal(true); } else { alert('Select a driver'); } }} className="btn-primary" style={{ padding: '0 20px', height: '45px', borderRadius: '10px', fontSize: '13px' }}>PAY ADVANCE</button>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Driver Grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-                        {loading ? (
-                            <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', gridColumn: '1/-1' }}>Loading professional network...</p>
-                        ) : drivers.length === 0 ? (
-                            <p style={{ color: 'rgba(255,255,255,0.4)', textAlign: 'center', gridColumn: '1/-1' }}>No drivers registered yet.</p>
-                        ) : [...onDutyDrivers, ...availableDrivers].map(d => {
-                            const isOnDuty = d.tripStatus === 'active';
-                            return (
-                                <div key={d._id} style={{
-                                    background: 'rgba(25, 28, 35, 0.6)',
-                                    borderRadius: '16px',
-                                    border: d._id === driverFilter ? '1px solid #6366f1' : '1px solid rgba(255,255,255,0.08)',
-                                    padding: '24px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '15px',
-                                    transition: 'all 0.3s ease'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                            <UserIcon size={24} style={{ color: isOnDuty ? '#f43f5e' : 'white' }} />
-                                        </div>
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                                <h4 style={{ color: 'white', margin: 0, fontSize: '16px', fontWeight: '700' }}>{d.name}</h4>
-                                                <span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '5px', background: isOnDuty ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: isOnDuty ? '#f43f5e' : '#10b981', fontWeight: '800' }}>
-                                                    {isOnDuty ? 'ENGAGED' : 'STANDBY'}
-                                                </span>
+                                    }}>
+                                        {/* Header Row */}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                            <div style={{
+                                                width: '60px', height: '60px', borderRadius: '18px', flexShrink: 0,
+                                                background: isOnDuty ? 'rgba(244,63,94,0.1)' : 'rgba(255,255,255,0.03)',
+                                                display: 'flex', justifyContent: 'center', alignItems: 'center'
+                                            }}>
+                                                <UserIcon size={26} style={{ color: isOnDuty ? '#f43f5e' : 'white' }} />
                                             </div>
-                                            <p style={{ color: 'rgba(255,255,255,0.4)', margin: '2px 0 0 0', fontSize: '12px' }}>{d.mobile}</p>
+                                            <div style={{ flex: 1, minWidth: 0 }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                                                    <h4 style={{ color: 'white', margin: 0, fontSize: '17px', fontWeight: '800', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name.split(' (F)')[0]}</h4>
+                                                    <span style={{
+                                                        fontSize: '9px', padding: '4px 10px', borderRadius: '100px', fontWeight: '900',
+                                                        background: isOnDuty ? 'rgba(244,63,94,0.15)' : 'rgba(16,185,129,0.15)',
+                                                        color: isOnDuty ? '#f43f5e' : '#10b981', flexShrink: 0
+                                                    }}>
+                                                        {isOnDuty ? '● ON MISSION' : '○ STANDBY'}
+                                                    </span>
+                                                </div>
+                                                <a href={`tel:${d.mobile}`} style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700', marginTop: '4px' }}>
+                                                    <Phone size={12} /> {d.mobile}
+                                                </a>
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px' }}>
-                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', display: 'block' }}>DAILY PAY</span>
-                                            <span style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>₹{d.dailyWage || 0}</span>
+                                        {/* Stats Row */}
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Daily Pay</p>
+                                                <p style={{ color: 'white', fontWeight: '900', fontSize: '16px', margin: 0 }}>₹{d.dailyWage || 0}</p>
+                                            </div>
+                                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                                                <div>
+                                                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Duties</p>
+                                                    <p style={{ color: '#818cf8', fontWeight: '900', fontSize: '16px', margin: 0 }}>{dutyCount}</p>
+                                                </div>
+                                                <button
+                                                    onClick={() => { setDriverFilter(d._id); setActiveTab('logistics'); }}
+                                                    style={{ padding: '4px 8px', borderRadius: '6px', fontSize: '9px', fontWeight: '900', background: 'rgba(99,102,241,0.1)', color: '#818cf8', border: '1px solid rgba(99,102,241,0.2)', cursor: 'pointer' }}
+                                                >HISTORY</button>
+                                            </div>
                                         </div>
-                                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '10px', borderRadius: '8px' }}>
-                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', display: 'block' }}>VERIFICATION</span>
-                                            <span style={{ color: 'white', fontWeight: '700', fontSize: '13px' }}>{d.licenseNumber ? (d.licenseNumber.length > 8 ? d.licenseNumber.slice(0, 8) + '...' : d.licenseNumber) : 'FLEET-ELITE'}</span>
-                                        </div>
-                                    </div>
 
-                                    {isOnDuty && (
-                                        <div style={{ background: 'rgba(14, 165, 233, 0.05)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: '700' }}>MISSION ASSET</span>
-                                            <span style={{ color: 'white', fontWeight: '800', fontSize: '12px' }}>{d.assignedVehicle?.carNumber?.split('#')[0]}</span>
-                                        </div>
-                                    )}
-
-                                    {d.freelancerReview && (
-                                        <div style={{ marginTop: '10px', padding: '10px', background: 'rgba(255, 255, 255, 0.03)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <p style={{ color: 'rgba(255, 255, 255, 0.5)', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Latest Review</p>
-                                            <p style={{ color: 'rgba(255, 255, 255, 0.9)', fontSize: '12px', fontStyle: 'italic', margin: 0 }}>"{d.freelancerReview}"</p>
-                                        </div>
-                                    )}
-
-                                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
-                                        {isOnDuty ? (
-                                            <button onClick={() => { setSelectedDriver(d); setPunchOutData({ ...punchOutData, km: '', time: new Date().toISOString().slice(0, 16), dailyWage: d.dailyWage || '' }); setShowPunchOutModal(true); }} className="btn-primary" style={{ flex: 1, height: '40px', background: '#f43f5e', fontSize: '12px', borderRadius: '8px' }}>FINISH DUTY</button>
-                                        ) : (
-                                            <button onClick={() => { setSelectedDriver(d); setPunchInData({ ...punchInData, time: new Date().toISOString().slice(0, 16), date: new Date().toISOString().split('T')[0] }); setShowPunchInModal(true); }} className="btn-primary" style={{ flex: 1, height: '40px', fontSize: '12px', borderRadius: '8px' }}>ASSIGN DUTY</button>
+                                        {/* Active Vehicle */}
+                                        {isOnDuty && (
+                                            <div style={{ background: 'rgba(14,165,233,0.08)', padding: '12px 16px', borderRadius: '14px', border: '1px solid rgba(14,165,233,0.15)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <Car size={16} style={{ color: '#0ea5e9' }} />
+                                                <div>
+                                                    <p style={{ color: 'rgba(14,165,233,0.7)', fontSize: '9px', fontWeight: '800', margin: '0 0 2px 0' }}>CURRENT VEHICLE</p>
+                                                    <p style={{ color: 'white', fontWeight: '800', fontSize: '13px', margin: 0 }}>{d.assignedVehicle?.carNumber?.split('#')[0] || '---'}</p>
+                                                </div>
+                                            </div>
                                         )}
-                                        <div style={{ display: 'flex', gap: '5px' }}>
-                                            <button onClick={() => { setSelectedDriver(d); setShowAdvanceModal(true); }} style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Download size={16} style={{ transform: 'rotate(180deg)' }} /></button>
-                                            <button onClick={() => { setSelectedDriver(d); setShowDocumentModal(true); }} style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ fontSize: '10px', fontWeight: '900' }}>DOC</div></button>
-                                            <button onClick={() => openEditModal(d)} style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Edit2 size={16} /></button>
-                                            <button onClick={() => handleDelete(d._id)} style={{ width: '40px', height: '40px', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.05)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Trash2 size={16} /></button>
+
+                                        {/* Actions */}
+                                        <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                                            {isOnDuty ? (
+                                                <button
+                                                    onClick={() => { setSelectedDriver(d); setPunchOutData({ ...punchOutData, km: '', time: new Date().toISOString().slice(0, 16), dailyWage: d.dailyWage || '' }); setShowPunchOutModal(true); }}
+                                                    className="btn-primary"
+                                                    style={{ flex: 1, height: '44px', background: '#f43f5e', fontSize: '11px', fontWeight: '900', borderRadius: '12px' }}
+                                                >FINISH DUTY</button>
+                                            ) : (
+                                                <button
+                                                    onClick={() => { setSelectedDriver(d); setPunchInData({ ...punchInData, time: new Date().toISOString().slice(0, 16), date: new Date().toISOString().split('T')[0] }); setShowPunchInModal(true); }}
+                                                    className="btn-primary"
+                                                    style={{ flex: 1, height: '44px', fontSize: '11px', fontWeight: '900', borderRadius: '12px' }}
+                                                >ASSIGN DUTY</button>
+                                            )}
+                                            <div style={{ display: 'flex', gap: '6px' }}>
+                                                <button onClick={() => { setSelectedDriver(d); setShowAdvanceModal(true); }} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
+                                                    <Download size={18} style={{ transform: 'rotate(180deg)' }} />
+                                                </button>
+                                                <button onClick={() => openEditModal(d)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
+                                                    <Edit2 size={16} />
+                                                </button>
+                                                <button onClick={() => handleDelete(d._id)} style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(244,63,94,0.05)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
-                            );
-                        })}
+                                );
+                            })}
+                        </div>
                     </div>
-                </div>
-            )}
+                )}
 
-            {activeTab === 'accounts' && (
-                <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
-                        {/* Transaction List */}
-                        <div style={{ background: 'rgba(25, 28, 35, 0.6)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-                            <div style={{ padding: '20px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <h3 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '800' }}>Transaction Ledger</h3>
-                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Last 50 Records</span>
-                            </div>
-                            <div style={{ overflowX: 'auto' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                    <thead>
-                                        <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                            <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'left', fontWeight: '800' }}>Date</th>
-                                            <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'left', fontWeight: '800' }}>Recipient</th>
-                                            <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'left', fontWeight: '800' }}>Amount</th>
-                                            <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'right', fontWeight: '800' }}>Type</th>
-                                            <th style={{ padding: '15px 20px', textAlign: 'right' }}></th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {advances.filter(adv => driverFilter === 'All' || adv.driver?._id === driverFilter).slice(0, 50).map((adv) => (
-                                            <tr key={adv._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                                <td style={{ padding: '15px 20px', fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>{new Date(adv.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
-                                                <td style={{ padding: '15px 20px' }}>
-                                                    <span style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{adv.driver?.name || '---'}</span>
-                                                </td>
-                                                <td style={{ padding: '15px 20px', color: '#f43f5e', fontWeight: '800', fontSize: '14px' }}>₹{adv.amount.toLocaleString()}</td>
-                                                <td style={{ padding: '15px 20px', textAlign: 'right' }}>
-                                                    <span style={{ fontSize: '9px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', fontWeight: '800' }}>{adv.advanceType?.toUpperCase() || 'OFFICE'}</span>
-                                                </td>
-                                                <td style={{ padding: '15px 20px', textAlign: 'right' }}>
-                                                    <button
-                                                        onClick={() => handleDeleteAdvance(adv._id)}
-                                                        style={{
-                                                            background: 'transparent',
-                                                            border: 'none',
-                                                            color: 'rgba(255,255,255,0.3)',
-                                                            cursor: 'pointer',
-                                                            padding: '5px'
-                                                        }}
-                                                        onMouseEnter={(e) => e.currentTarget.style.color = '#f43f5e'}
-                                                        onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </td>
+                {/* ACCOUNTS TAB */}
+                {activeTab === 'accounts' && (
+                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
+                            {/* Transaction List */}
+                            <div style={{ background: 'rgba(25, 28, 35, 0.6)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                                <div style={{ padding: '20px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <h3 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '800' }}>Transaction Ledger</h3>
+                                    <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Last 50 Records</span>
+                                </div>
+                                <div style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                            <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                                <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'left', fontWeight: '800' }}>Date</th>
+                                                <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'left', fontWeight: '800' }}>Recipient</th>
+                                                <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'left', fontWeight: '800' }}>Amount</th>
+                                                <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'right', fontWeight: '800' }}>Type</th>
+                                                <th style={{ padding: '15px 20px', textAlign: 'right' }}></th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
+                                        </thead>
+                                        <tbody>
+                                            {advances.filter(adv => driverFilter === 'All' || adv.driver?._id === driverFilter).slice(0, 50).map((adv) => (
+                                                <tr key={adv._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                    <td style={{ padding: '15px 20px', fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>{new Date(adv.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
+                                                    <td style={{ padding: '15px 20px' }}>
+                                                        <span style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{adv.driver?.name || '---'}</span>
+                                                    </td>
+                                                    <td style={{ padding: '15px 20px', color: '#f43f5e', fontWeight: '800', fontSize: '14px' }}>₹{adv.amount.toLocaleString()}</td>
+                                                    <td style={{ padding: '15px 20px', textAlign: 'right' }}>
+                                                        <span style={{ fontSize: '9px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', fontWeight: '800' }}>{adv.advanceType?.toUpperCase() || 'OFFICE'}</span>
+                                                    </td>
+                                                    <td style={{ padding: '15px 20px', textAlign: 'right' }}>
+                                                        <button
+                                                            onClick={() => handleDeleteAdvance(adv._id)}
+                                                            style={{
+                                                                background: 'transparent',
+                                                                border: 'none',
+                                                                color: 'rgba(255,255,255,0.3)',
+                                                                cursor: 'pointer',
+                                                                padding: '5px'
+                                                            }}
+                                                            onMouseEnter={(e) => e.currentTarget.style.color = '#f43f5e'}
+                                                            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
-                        </div>
 
-                        {/* Summary Sidebar */}
-                        <div style={{ display: 'grid', gap: '20px' }}>
-                            <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '25px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
-                                <p style={{ color: '#34d399', fontSize: '11px', margin: '0 0 10px 0', fontWeight: '800', textTransform: 'uppercase' }}>Net Fleet Liability</p>
-                                <h2 style={{ color: 'white', fontSize: '36px', margin: 0, fontWeight: '800', letterSpacing: '-1px' }}>
-                                    <span style={{ fontSize: '20px', opacity: 0.5, marginRight: '5px' }}>₹</span>
-                                    {(attendance.reduce((s, a) => s + (Number(a.dailyWage) || 0), 0) - advances.reduce((s, a) => s + a.amount, 0)).toLocaleString()}
-                                </h2>
-                                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: '15px 0 0 0', lineHeight: '1.5' }}>
-                                    Total outstanding balance for <b>{drivers.length}</b> professional assets in the current view.
-                                </p>
-                            </div>
+                            {/* Summary Sidebar */}
+                            <div style={{ display: 'grid', gap: '20px' }}>
+                                <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '25px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                                    <p style={{ color: '#34d399', fontSize: '11px', margin: '0 0 10px 0', fontWeight: '800', textTransform: 'uppercase' }}>Net Fleet Liability</p>
+                                    <h2 style={{ color: 'white', fontSize: '36px', margin: 0, fontWeight: '800', letterSpacing: '-1px' }}>
+                                        <span style={{ fontSize: '20px', opacity: 0.5, marginRight: '5px' }}>₹</span>
+                                        {netPayable.toLocaleString()}
+                                    </h2>
+                                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: '15px 0 0 0', lineHeight: '1.5' }}>
+                                        Total outstanding balance for <b>{baseDrivers.length}</b> professional assets in the current view.
+                                    </p>
+                                </div>
 
-                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <h4 style={{ color: 'white', fontSize: '13px', margin: '0 0 15px 0', fontWeight: '800' }}>Quick Metrics</h4>
-                                <div style={{ display: 'grid', gap: '12px' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Gross Earnings</span>
-                                        <span style={{ fontSize: '13px', color: 'white', fontWeight: '700' }}>₹{totalSettlement.toLocaleString()}</span>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Advances Paid</span>
-                                        <span style={{ fontSize: '13px', color: '#f43f5e', fontWeight: '700' }}>₹{totalAdvances.toLocaleString()}</span>
+                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <h4 style={{ color: 'white', fontSize: '13px', margin: '0 0 15px 0', fontWeight: '800' }}>Quick Metrics</h4>
+                                    <div style={{ display: 'grid', gap: '12px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Gross Earnings</span>
+                                            <span style={{ fontSize: '13px', color: 'white', fontWeight: '700' }}>₹{totalSettlement.toLocaleString()}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Advances Paid</span>
+                                            <span style={{ fontSize: '13px', color: '#f43f5e', fontWeight: '700' }}>₹{totalAdvances.toLocaleString()}</span>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-
-
-            {activeTab === 'logistics' && (
-                <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(350px, 1fr))', gap: '20px' }}>
-                        {filteredAttendance.map((a) => (
-                            <div
-                                key={a._id}
-                                style={{
-                                    background: 'rgba(25, 28, 35, 0.6)',
-                                    borderRadius: '16px',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    padding: '20px',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '15px'
-                                }}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <div>
-                                        <h4 style={{ margin: 0, color: 'white', fontSize: '15px', fontWeight: '800' }}>{a.driver?.name || 'Unidentified'}</h4>
-                                        <p style={{ margin: '2px 0 0 0', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700' }}>
-                                            {a.punchIn?.time ? new Date(a.punchIn.time).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : 'N/A'} • {a.punchIn?.time ? new Date(a.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
-                                        </p>
-                                    </div>
-                                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '5px 10px', borderRadius: '6px', fontSize: '14px', fontWeight: '800' }}>
-                                        ₹{a.dailyWage || 0}
-                                    </div>
-                                </div>
-
-                                <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '15px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
-                                        <span style={{ fontSize: '13px', color: 'white', fontWeight: '600' }}>{a.pickUpLocation || 'HQ Depot'}</span>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f43f5e' }} />
-                                        <span style={{ fontSize: '13px', color: 'white', fontWeight: '600' }}>{a.dropLocation || 'Pending...'}</span>
-                                    </div>
-                                </div>
-
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div style={{ display: 'flex', gap: '20px' }}>
-                                        <div>
-                                            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', margin: '0 0 2px 0', textTransform: 'uppercase' }}>ASSET</p>
-                                            <p style={{ color: '#0ea5e9', fontSize: '13px', margin: 0, fontWeight: '800' }}>{a.vehicle?.carNumber?.split('#')[0]}</p>
-                                        </div>
-                                        <div>
-                                            <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', margin: '0 0 2px 0', textTransform: 'uppercase' }}>DISTANCE</p>
-                                            <p style={{ color: 'white', fontSize: '13px', margin: 0, fontWeight: '800' }}>{a.totalKM || (a.punchOut?.km - a.punchIn?.km) || 0} KM</p>
-                                        </div>
-                                    </div>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                        <Car size={16} style={{ color: 'rgba(255,255,255,0.2)' }} />
-                                    </div>
-                                </div>
+                )}
+                {/* LOGISTICS TAB */}
+                {activeTab === 'logistics' && (
+                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
+                        {/* Summary bar */}
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '28px' }}>
+                            <div style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: '16px', padding: '18px 20px' }}>
+                                <p style={{ color: 'rgba(16,185,129,0.7)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Total Duties</p>
+                                <h3 style={{ color: 'white', fontSize: '26px', fontWeight: '900', margin: 0 }}>{filteredAttendance.length}</h3>
                             </div>
-                        ))}
-                    </div>
-                </div>
-            )}
+                            <div style={{ background: 'rgba(14,165,233,0.07)', border: '1px solid rgba(14,165,233,0.18)', borderRadius: '16px', padding: '18px 20px' }}>
+                                <p style={{ color: 'rgba(14,165,233,0.7)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Total KM</p>
+                                <h3 style={{ color: 'white', fontSize: '26px', fontWeight: '900', margin: 0 }}>
+                                    {filteredAttendance.reduce((s, a) => s + (a.totalKM || (a.punchOut?.km - a.punchIn?.km) || 0), 0).toLocaleString()}
+                                </h3>
+                            </div>
+                            <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: '16px', padding: '18px 20px' }}>
+                                <p style={{ color: 'rgba(245,158,11,0.7)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Total Earned</p>
+                                <h3 style={{ color: 'white', fontSize: '26px', fontWeight: '900', margin: 0 }}>
+                                    ₹{filteredAttendance.reduce((s, a) => s + (Number(a.dailyWage) || 0), 0).toLocaleString()}
+                                </h3>
+                            </div>
+                        </div>
 
+                        {/* Duty Cards */}
+                        {filteredAttendance.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '20px' }}>
+                                <Car size={40} style={{ color: 'rgba(255,255,255,0.15)', marginBottom: '16px' }} />
+                                <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px', fontWeight: '700' }}>No duty records found for selected period</p>
+                                <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', marginTop: '6px' }}>Try changing the date range or driver filter</p>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'grid', gap: '14px' }}>
+                                {filteredAttendance.map((a) => {
+                                    const punchInDate = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : null);
+                                    const punchInTime = a.punchIn?.time ? new Date(a.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
+                                    const punchOutTime = a.punchOut?.time ? new Date(a.punchOut.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
+                                    const totalKM = a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0);
+                                    const isCompleted = a.status === 'completed' || !!a.punchOut?.time;
+
+                                    return (
+                                        <div key={a._id} style={{
+                                            background: 'rgba(25,28,35,0.7)',
+                                            borderRadius: '18px',
+                                            border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.2)'}`,
+                                            padding: '20px 24px',
+                                            display: 'flex',
+                                            gap: '20px',
+                                            alignItems: 'flex-start',
+                                            flexWrap: 'wrap'
+                                        }}>
+                                            {/* Date Block */}
+                                            <div style={{
+                                                background: 'rgba(99,102,241,0.1)',
+                                                border: '1px solid rgba(99,102,241,0.2)',
+                                                borderRadius: '14px',
+                                                padding: '12px 16px',
+                                                textAlign: 'center',
+                                                minWidth: '70px',
+                                                flexShrink: 0
+                                            }}>
+                                                <p style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', margin: '0 0 2px 0', textTransform: 'uppercase' }}>
+                                                    {punchInDate ? new Date(punchInDate).toLocaleString('default', { month: 'short' }) : '---'}
+                                                </p>
+                                                <p style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: '0', lineHeight: 1 }}>
+                                                    {punchInDate ? new Date(punchInDate + 'T00:00:00').getDate() : '--'}
+                                                </p>
+                                                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '700', margin: '2px 0 0 0' }}>
+                                                    {punchInDate ? new Date(punchInDate + 'T00:00:00').getFullYear() : ''}
+                                                </p>
+                                            </div>
+
+                                            {/* Middle Info */}
+                                            <div style={{ flex: 1, minWidth: '180px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+                                                    <h4 style={{ color: 'white', margin: 0, fontSize: '16px', fontWeight: '800' }}>{a.driver?.name || 'Unknown Driver'}</h4>
+                                                    <span style={{
+                                                        fontSize: '9px', padding: '3px 10px', borderRadius: '100px', fontWeight: '900',
+                                                        background: isCompleted ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)',
+                                                        color: isCompleted ? '#10b981' : '#f59e0b'
+                                                    }}>
+                                                        {isCompleted ? '✓ COMPLETED' : '⏳ ON DUTY'}
+                                                    </span>
+                                                </div>
+
+                                                {/* Route */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '2px' }}>
+                                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }} />
+                                                        <div style={{ width: '1px', height: '14px', background: 'rgba(255,255,255,0.15)' }} />
+                                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f43f5e' }} />
+                                                    </div>
+                                                    <div>
+                                                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: '0 0 8px 0' }}>{a.pickUpLocation || 'Start Point'}</p>
+                                                        <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', margin: 0 }}>{a.dropLocation || (isCompleted ? 'N/A' : 'In Progress...')}</p>
+                                                    </div>
+                                                </div>
+
+                                                {/* Times */}
+                                                <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <LogIn size={13} style={{ color: '#10b981' }} />
+                                                        <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: '600' }}>{punchInTime}</span>
+                                                    </div>
+                                                    {punchOutTime && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <LogOut size={13} style={{ color: '#f43f5e' }} />
+                                                            <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: '600' }}>{punchOutTime}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+
+                                            {/* Right Stats */}
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', alignItems: 'flex-end', flexShrink: 0 }}>
+                                                <div style={{ background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', padding: '8px 16px', borderRadius: '12px', textAlign: 'center' }}>
+                                                    <p style={{ color: 'rgba(16,185,129,0.7)', fontSize: '9px', fontWeight: '800', margin: '0 0 2px 0' }}>SALARY</p>
+                                                    <p style={{ color: '#10b981', fontSize: '18px', fontWeight: '900', margin: 0 }}>₹{a.dailyWage || 0}</p>
+                                                </div>
+                                                <div style={{ background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.15)', padding: '6px 14px', borderRadius: '10px', textAlign: 'center' }}>
+                                                    <p style={{ color: 'rgba(14,165,233,0.7)', fontSize: '9px', fontWeight: '800', margin: '0 0 1px 0' }}>VEHICLE</p>
+                                                    <p style={{ color: '#0ea5e9', fontSize: '13px', fontWeight: '800', margin: 0 }}>{a.vehicle?.carNumber?.split('#')[0] || 'N/A'}</p>
+                                                </div>
+                                                {totalKM > 0 && (
+                                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', margin: 0 }}>{totalKM} KM</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        )}
+                    </div>
+                )}
+            </div>
 
             {/* Modals Implementation */}
             <div>
-
                 {/* Add Freelancer Modal */}
-                {
-                    showAddModal && (
-                        <Modal title="Add New Freelancer" onClose={() => setShowAddModal(false)}>
-                            <form onSubmit={handleCreate} style={{ display: 'grid', gap: '20px' }}>
-                                <Field label="Full Name *" value={formData.name} onChange={v => setFormData({ ...formData, name: v })} required />
-                                <div className="freelancer-modal-grid">
-                                    <Field label="Mobile Number *" value={formData.mobile} onChange={v => setFormData({ ...formData, mobile: v })} required />
-                                    <Field label="License Number" value={formData.licenseNumber} onChange={v => setFormData({ ...formData, licenseNumber: v })} />
-                                    <Field label="Daily Wage (₹)" type="number" value={formData.dailyWage} onChange={v => setFormData({ ...formData, dailyWage: v })} />
-                                </div>
-                                <SubmitButton disabled={submitting} text="Register Freelancer" message={message} />
-                            </form>
-                        </Modal>
-                    )
-                }
+                {showAddModal && (
+                    <Modal title="Add New Freelancer" onClose={() => setShowAddModal(false)}>
+                        <form onSubmit={handleCreate} style={{ display: 'grid', gap: '20px' }}>
+                            <Field label="Full Name *" value={formData.name} onChange={v => setFormData({ ...formData, name: v })} required />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Mobile Number *" value={formData.mobile} onChange={v => setFormData({ ...formData, mobile: v })} required />
+                                <Field label="License Number" value={formData.licenseNumber} onChange={v => setFormData({ ...formData, licenseNumber: v })} />
+                            </div>
+                            <Field label="Daily Wage (₹)" type="number" value={formData.dailyWage} onChange={v => setFormData({ ...formData, dailyWage: v })} />
+                            <SubmitButton disabled={submitting} text="Register Freelancer" message={message} />
+                        </form>
+                    </Modal>
+                )}
 
                 {/* Edit Freelancer Modal */}
-                {
-                    showEditModal && (
-                        <Modal title={`Edit Freelancer: ${editingDriver?.name}`} onClose={() => setShowEditModal(false)}>
-                            <form onSubmit={handleUpdate} style={{ display: 'grid', gap: '20px' }}>
-                                <Field label="Full Name *" value={editForm.name} onChange={v => setEditForm({ ...editForm, name: v })} required />
-                                <div className="form-grid-2">
-                                    <Field label="Mobile Number *" value={editForm.mobile} onChange={v => setEditForm({ ...editForm, mobile: v })} required />
-                                    <Field label="License Number" value={editForm.licenseNumber} onChange={v => setEditForm({ ...editForm, licenseNumber: v })} />
-                                    <Field label="Daily Wage (₹)" type="number" value={editForm.dailyWage} onChange={v => setEditForm({ ...editForm, dailyWage: v })} />
-                                </div>
-                                <SubmitButton disabled={submitting} text="Update Freelancer" message={message} />
-                            </form>
-                        </Modal>
-                    )
-                }
+                {showEditModal && (
+                    <Modal title={`Edit Freelancer: ${editingDriver?.name}`} onClose={() => setShowEditModal(false)}>
+                        <form onSubmit={handleUpdate} style={{ display: 'grid', gap: '20px' }}>
+                            <Field label="Full Name *" value={editForm.name} onChange={v => setEditForm({ ...editForm, name: v })} required />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Mobile Number *" value={editForm.mobile} onChange={v => setEditForm({ ...editForm, mobile: v })} required />
+                                <Field label="License Number" value={editForm.licenseNumber} onChange={v => setEditForm({ ...editForm, licenseNumber: v })} />
+                            </div>
+                            <Field label="Daily Wage (₹)" type="number" value={editForm.dailyWage} onChange={v => setEditForm({ ...editForm, dailyWage: v })} />
+                            <SubmitButton disabled={submitting} text="Update Freelancer" message={message} />
+                        </form>
+                    </Modal>
+                )}
 
                 {/* Punch In Modal */}
-                {
-                    showPunchInModal && (
-                        <Modal title={`Assign Duty: ${selectedDriver?.name}`} onClose={() => setShowPunchInModal(false)}>
-                            <form onSubmit={handlePunchIn} style={{ display: 'grid', gap: '30px' }}>
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Select Vehicle *</label>
-                                    <input
-                                        type="text"
-                                        list="vehicle-list"
-                                        className="input-field"
-                                        placeholder="Type car number to find..."
-                                        required
-                                        autoComplete="off"
-                                        value={vehicleSearch}
-                                        onChange={e => {
-                                            setVehicleSearch(e.target.value);
-                                            const found = vehicles.find(v => v.carNumber?.split('#')[0]?.toUpperCase() === e.target.value.toUpperCase());
-                                            if (found) setPunchInData({ ...punchInData, vehicleId: found._id });
-                                            else setPunchInData({ ...punchInData, vehicleId: '' });
-                                        }}
-                                        style={{ height: '45px' }}
-                                    />
-                                    <datalist id="vehicle-list">
-                                        {vehicles.filter(v => !v.currentDriver).map(v => (
-                                            <option key={v._id} value={v.carNumber?.split('#')[0]}>
-                                                {v.model}
-                                            </option>
-                                        ))}
-                                    </datalist>
-                                </div>
-                                <div className="form-grid-2">
-                                    <Field label="Duty Date *" type="date" value={punchInData.date} onChange={v => setPunchInData({ ...punchInData, date: v })} required />
-                                    <Field label="Punch-In Time *" type="datetime-local" value={punchInData.time} onChange={v => setPunchInData({ ...punchInData, time: v })} required />
-                                </div>
-                                <div className="form-grid-2">
-                                    <Field label="Starting KM *" type="number" value={punchInData.km} onChange={v => setPunchInData({ ...punchInData, km: v })} required autoComplete="off" />
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Pick-up Location</label>
-                                        <input
-                                            type="text"
-                                            list="pickup-list"
-                                            className="input-field"
-                                            placeholder="Type or select..."
-                                            autoComplete="off"
-                                            value={punchInData.pickUpLocation}
-                                            onChange={e => setPunchInData({ ...punchInData, pickUpLocation: e.target.value })}
-                                        />
-                                        <datalist id="pickup-list">
-                                            {uniquePickups.map(loc => <option key={loc} value={loc} />)}
-                                        </datalist>
-                                    </div>
-                                </div>
-                                <SubmitButton disabled={submitting} text="Start Duty" />
-                            </form>
-                        </Modal>
-                    )
-                }
+                {showPunchInModal && (
+                    <Modal title={`Assign Duty: ${selectedDriver?.name}`} onClose={() => setShowPunchInModal(false)}>
+                        <form onSubmit={handlePunchIn} style={{ display: 'grid', gap: '25px' }}>
+                            <div>
+                                <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Select Vehicle *</label>
+                                <input
+                                    type="text"
+                                    list="vehicle-list"
+                                    className="input-field"
+                                    placeholder="Type car number..."
+                                    required
+                                    value={vehicleSearch}
+                                    onChange={e => {
+                                        setVehicleSearch(e.target.value);
+                                        const found = vehicles.find(v => v.carNumber?.split('#')[0]?.toUpperCase() === e.target.value.toUpperCase());
+                                        if (found) setPunchInData({ ...punchInData, vehicleId: found._id });
+                                    }}
+                                />
+                                <datalist id="vehicle-list">
+                                    {vehicles.filter(v => !v.currentDriver).map(v => (
+                                        <option key={v._id} value={v.carNumber?.split('#')[0]}>{v.model}</option>
+                                    ))}
+                                </datalist>
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Duty Date *" type="date" value={punchInData.date} onChange={v => setPunchInData({ ...punchInData, date: v })} required />
+                                <Field label="Punch-In Time *" type="datetime-local" value={punchInData.time} onChange={v => setPunchInData({ ...punchInData, time: v })} required />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Starting KM *" type="number" value={punchInData.km} onChange={v => setPunchInData({ ...punchInData, km: v })} required />
+                                <Field label="Pick-up Location" value={punchInData.pickUpLocation} onChange={v => setPunchInData({ ...punchInData, pickUpLocation: v })} />
+                            </div>
+                            <SubmitButton disabled={submitting} text="Start Duty" />
+                        </form>
+                    </Modal>
+                )}
 
                 {/* Punch Out Modal */}
-                {
-                    showPunchOutModal && (
-                        <Modal title={`Duty Completion: ${selectedDriver?.name}`} onClose={() => setShowPunchOutModal(false)}>
-                            <form onSubmit={handlePunchOut} style={{ display: 'grid', gap: '20px' }}>
-                                <div className="form-grid-2">
-                                    <Field label="Closing KM *" type="number" value={punchOutData.km} onChange={v => setPunchOutData({ ...punchOutData, km: v })} required />
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Drop Location</label>
-                                        <input
-                                            type="text"
-                                            list="drop-list"
-                                            className="input-field"
-                                            placeholder="Type or select..."
-                                            value={punchOutData.dropLocation}
-                                            onChange={e => setPunchOutData({ ...punchOutData, dropLocation: e.target.value })}
-                                        />
-                                        <datalist id="drop-list">
-                                            {uniqueDrops.map(loc => <option key={loc} value={loc} />)}
-                                        </datalist>
-                                    </div>
-                                </div>
-                                <div className="form-grid-2">
-                                    <Field label="Punch-Out Time *" type="datetime-local" value={punchOutData.time} onChange={v => setPunchOutData({ ...punchOutData, time: v })} required />
-                                    <div style={{ opacity: 0.5 }}>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Duty Date Range</label>
-                                        <p style={{ fontSize: '12px', color: 'white', margin: 0, paddingTop: '10px' }}>Started: {selectedDriver?.activeAttendance?.punchIn?.time ? new Date(selectedDriver.activeAttendance.punchIn.time).toLocaleString() : 'N/A'}</p>
-                                    </div>
-                                </div>
-
-                                <div className="form-grid-2">
-                                    <Field label="Fuel Spent (₹)" type="number" value={punchOutData.fuelAmount} onChange={v => setPunchOutData({ ...punchOutData, fuelAmount: v })} />
-                                    <Field label="Parking/Toll (₹)" type="number" value={punchOutData.parkingAmount} onChange={v => setPunchOutData({ ...punchOutData, parkingAmount: v })} />
-                                </div>
-
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Duty Salary (Wage) *</label>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(60px, 1fr))', gap: '10px' }}>
-                                        {[300, 400, 500].map(val => (
-                                            <button
-                                                key={val}
-                                                type="button"
-                                                onClick={() => setPunchOutData({ ...punchOutData, dailyWage: val })}
-                                                style={{
-                                                    padding: '10px',
-                                                    borderRadius: '10px',
-                                                    border: '1px solid ' + (punchOutData.dailyWage === val ? 'var(--primary)' : 'rgba(255,255,255,0.1)'),
-                                                    background: punchOutData.dailyWage === val ? 'rgba(14, 165, 233, 0.1)' : 'transparent',
-                                                    color: 'white',
-                                                    fontWeight: '800'
-                                                }}
-                                            >
-                                                ₹{val}
-                                            </button>
-                                        ))}
-                                        <input
-                                            type="number"
-                                            placeholder="Other"
-                                            className="input-field"
-                                            style={{ marginBottom: 0, padding: '10px', height: 'auto', textAlign: 'center' }}
-                                            value={![300, 400, 500].includes(punchOutData.dailyWage) ? punchOutData.dailyWage : ''}
-                                            onChange={(e) => setPunchOutData({ ...punchOutData, dailyWage: Number(e.target.value) })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Review / Remarks</label>
-                                    <textarea
-                                        className="input-field"
-                                        style={{ height: '80px', paddingTop: '12px' }}
-                                        placeholder=""
-                                        value={punchOutData.review}
-                                        onChange={e => setPunchOutData({ ...punchOutData, review: e.target.value })}
-                                    />
-                                </div>
-                                <SubmitButton disabled={submitting} text="Finish Duty & Release Vehicle" />
-                            </form>
-                        </Modal>
-                    )
-                }
-                {/* Advance Payment Modal */}
-                {
-                    showAdvanceModal && (
-                        <Modal title={`Give Advance: ${selectedDriver?.name || '---'}`} onClose={() => setShowAdvanceModal(false)}>
-                            <form onSubmit={handleAddAdvance} style={{ display: 'grid', gap: '20px' }}>
-                                <div className="form-grid-2">
-                                    <Field
-                                        label="Advance Amount (₹) *"
-                                        type="number"
-                                        inputMode="numeric"
-                                        value={advanceData.amount}
-                                        onChange={v => setAdvanceData(prev => ({ ...prev, amount: v }))}
-                                        required
-                                        placeholder="0.00"
-                                    />
-                                    <Field
-                                        label="Payment Date *"
-                                        type="date"
-                                        value={advanceData.date}
-                                        onChange={v => setAdvanceData(prev => ({ ...prev, date: v }))}
-                                        required
-                                    />
-                                </div>
-                                <div className="form-grid-2">
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Advance Type *</label>
-                                        <select
-                                            className="input-field"
-                                            value={advanceData.advanceType}
-                                            onChange={e => {
-                                                const val = e.target.value;
-                                                setAdvanceData(prev => ({ ...prev, advanceType: val }));
-                                            }}
-                                            style={{ height: '48px', appearance: 'auto', background: 'rgba(255,255,255,0.03)', color: 'white' }}
-                                            required
-                                        >
-                                            <option value="Office" style={{ color: '#1e293b' }}>Office</option>
-                                            <option value="Staff" style={{ color: '#1e293b' }}>Staff</option>
-                                            <option value="Other" style={{ color: '#1e293b' }}>Other</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Given By / Through *</label>
-                                        <input
-                                            type="text"
-                                            list="given-by-list"
-                                            className="input-field"
-                                            required
-                                            value={advanceData.givenBy}
-                                            onChange={e => {
-                                                const val = e.target.value;
-                                                setAdvanceData(prev => ({ ...prev, givenBy: val }));
-                                            }}
-                                            placeholder="Name of person"
-                                            style={{ height: '48px', color: 'white' }}
-                                        />
-                                        <datalist id="given-by-list">
-                                            {[...new Set(advances.map(a => a.givenBy))].filter(Boolean).map(name => (
-                                                <option key={name} value={name} />
-                                            ))}
-                                        </datalist>
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Payment Remark / Note</label>
-                                    <textarea
-                                        className="input-field"
-                                        style={{ height: '80px', paddingTop: '12px', color: 'white' }}
-                                        placeholder="e.g. For fuel, Cash advance, etc."
-                                        value={advanceData.remark}
-                                        onChange={e => {
-                                            const val = e.target.value;
-                                            setAdvanceData(prev => ({ ...prev, remark: val }));
-                                        }}
-                                    />
-                                </div>
-                                <SubmitButton disabled={submitting} text="Confirm Advance Payment" message={message} />
-                            </form>
-                        </Modal>
-                    )
-                }
-
-                {/* Document Management Modal */}
-                {
-                    showDocumentModal && (
-                        <Modal title={`Documents: ${selectedDriver?.name}`} onClose={() => setShowDocumentModal(false)}>
-                            <div style={{ display: 'grid', gap: '30px' }}>
-                                {/* Existing Documents */}
-                                <div>
-                                    <h4 style={{ color: 'white', fontSize: '14px', marginBottom: '15px' }}>Uploaded Documents</h4>
-                                    {selectedDriver?.documents?.length > 0 ? (
-                                        <div style={{ display: 'grid', gap: '10px' }}>
-                                            {selectedDriver.documents.map((doc, idx) => (
-                                                <div key={idx} style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                    <div>
-                                                        <p style={{ color: 'white', fontSize: '13px', fontWeight: '700', margin: 0 }}>{doc.documentType}</p>
-                                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: '2px 0 0 0' }}>
-                                                            {doc.expiryDate ? `Expires: ${new Date(doc.expiryDate).toLocaleDateString()}` : 'No Expiry'}
-                                                        </p>
-                                                    </div>
-                                                    <a href={doc.imageUrl} target="_blank" rel="noopener noreferrer" style={{ padding: '6px 12px', borderRadius: '8px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', fontSize: '11px', textDecoration: 'none', fontWeight: '800' }}>VIEW</a>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px', fontStyle: 'italic' }}>No documents uploaded yet.</p>
-                                    )}
-                                </div>
-
-                                {/* Upload New */}
-                                <form onSubmit={handleUploadDocument} style={{ display: 'grid', gap: '20px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '25px' }}>
-                                    <h4 style={{ color: 'white', fontSize: '14px', margin: 0 }}>Upload New Document</h4>
-                                    <div className="form-grid-2">
-                                        <div>
-                                            <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', display: 'block' }}>Document Type</label>
-                                            <select
-                                                className="input-field"
-                                                value={documentForm.documentType}
-                                                onChange={e => setDocumentForm({ ...documentForm, documentType: e.target.value })}
-                                                style={{ height: '48px', appearance: 'auto', background: 'rgba(255,255,255,0.03)', color: 'white' }}
-                                            >
-                                                {['Aadhaar Front', 'Aadhaar Back', 'Driving License', 'Address Proof', 'Offer Letter'].map(t => (
-                                                    <option key={t} value={t} style={{ color: 'black' }}>{t}</option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                        <Field
-                                            label="Expiry Date (Optional)"
-                                            type="date"
-                                            value={documentForm.expiryDate}
-                                            onChange={v => setDocumentForm({ ...documentForm, expiryDate: v })}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '700', marginBottom: '8px', display: 'block' }}>File Attachment</label>
-                                        <input
-                                            type="file"
-                                            onChange={e => setDocumentFile(e.target.files[0])}
-                                            className="input-field"
-                                            style={{ paddingTop: '10px', height: '48px' }}
-                                            accept="image/*,.pdf"
-                                        />
-                                    </div>
-                                    <SubmitButton disabled={submitting} text="Upload Document" message={message} />
-                                </form>
+                {showPunchOutModal && (
+                    <Modal title={`Duty Completion: ${selectedDriver?.name}`} onClose={() => setShowPunchOutModal(false)}>
+                        <form onSubmit={handlePunchOut} style={{ display: 'grid', gap: '20px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Closing KM *" type="number" value={punchOutData.km} onChange={v => setPunchOutData({ ...punchOutData, km: v })} required />
+                                <Field label="Drop Location" value={punchOutData.dropLocation} onChange={v => setPunchOutData({ ...punchOutData, dropLocation: v })} />
                             </div>
-                        </Modal>
-                    )
-                }
+                            <Field label="Punch-Out Time *" type="datetime-local" value={punchOutData.time} onChange={v => setPunchOutData({ ...punchOutData, time: v })} required />
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Fuel Spent (₹)" type="number" value={punchOutData.fuelAmount} onChange={v => setPunchOutData({ ...punchOutData, fuelAmount: v })} />
+                                <Field label="Parking/Toll (₹)" type="number" value={punchOutData.parkingAmount} onChange={v => setPunchOutData({ ...punchOutData, parkingAmount: v })} />
+                            </div>
+                            <Field label="Duty Salary (Wage) *" type="number" value={punchOutData.dailyWage} onChange={v => setPunchOutData({ ...punchOutData, dailyWage: v })} required />
+                            <Field label="Remarks" value={punchOutData.review} onChange={v => setPunchOutData({ ...punchOutData, review: v })} />
+                            <SubmitButton disabled={submitting} text="Finish Duty" />
+                        </form>
+                    </Modal>
+                )}
+
+                {/* Advance Payment Modal */}
+                {showAdvanceModal && (
+                    <Modal title={`Give Advance: ${selectedDriver?.name || '---'}`} onClose={() => setShowAdvanceModal(false)}>
+                        <form onSubmit={handleAddAdvance} style={{ display: 'grid', gap: '20px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Amount (₹) *" type="number" value={advanceData.amount} onChange={v => setAdvanceData({ ...advanceData, amount: v })} required />
+                                <Field label="Date *" type="date" value={advanceData.date} onChange={v => setAdvanceData({ ...advanceData, date: v })} required />
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div>
+                                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Type *</label>
+                                    <select className="input-field" value={advanceData.advanceType} onChange={e => setAdvanceData({ ...advanceData, advanceType: e.target.value })} style={{ height: '48px', background: 'rgba(255,255,255,0.03)', color: 'white' }}>
+                                        <option value="Office">Office</option>
+                                        <option value="Staff">Staff</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                                <Field label="Given By *" value={advanceData.givenBy} onChange={v => setAdvanceData({ ...advanceData, givenBy: v })} required />
+                            </div>
+                            <Field label="Remark" value={advanceData.remark} onChange={v => setAdvanceData({ ...advanceData, remark: v })} />
+                            <SubmitButton disabled={submitting} text="Confirm Payment" message={message} />
+                        </form>
+                    </Modal>
+                )}
+
+                {/* Document Modal */}
+                {showDocumentModal && (
+                    <Modal title={`Documents: ${selectedDriver?.name}`} onClose={() => setShowDocumentModal(false)}>
+                        <div style={{ display: 'grid', gap: '25px' }}>
+                            {selectedDriver?.documents?.map((doc, i) => (
+                                <div key={i} style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between' }}>
+                                    <div>
+                                        <p style={{ color: 'white', fontWeight: '700', margin: 0 }}>{doc.documentType}</p>
+                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: 0 }}>{doc.expiryDate ? `Expires: ${new Date(doc.expiryDate).toLocaleDateString()}` : 'Lifetime'}</p>
+                                    </div>
+                                    <a href={doc.imageUrl} target="_blank" rel="noreferrer" style={{ color: '#6366f1', fontSize: '11px', fontWeight: '800' }}>VIEW</a>
+                                </div>
+                            ))}
+                            <form onSubmit={handleUploadDocument} style={{ display: 'grid', gap: '15px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <Field label="Type" value={documentForm.documentType} onChange={v => setDocumentForm({ ...documentForm, documentType: v })} />
+                                    <Field label="Expiry" type="date" value={documentForm.expiryDate} onChange={v => setDocumentForm({ ...documentForm, expiryDate: v })} />
+                                </div>
+                                <input type="file" onChange={e => setDocumentFile(e.target.files[0])} className="input-field" style={{ height: '48px', paddingTop: '10px' }} />
+                                <SubmitButton disabled={submitting} text="Upload" message={message} />
+                            </form>
+                        </div>
+                    </Modal>
+                )}
             </div>
-        </div >
+        </div>
     );
 };
 

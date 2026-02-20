@@ -22,6 +22,7 @@ const Staff = lazy(() => import('./pages/Staff'));
 const StaffPortal = lazy(() => import('./pages/StaffPortal'));
 const ActiveLogs = lazy(() => import('./pages/ActiveLogs'));
 const Warranties = lazy(() => import('./pages/Warranties'));
+const DriverSalaries = lazy(() => import('./pages/DriverSalaries'));
 import Sidebar from './components/Sidebar';
 import { CompanyProvider } from './context/CompanyContext';
 
@@ -173,6 +174,7 @@ const AdminRoutes = () => {
           <Route path="fastag" element={<Fastag />} />
           <Route path="border-tax" element={<BorderTax />} />
           <Route path="admins" element={<Admins />} />
+          <Route path="driver-salaries" element={<DriverSalaries />} />
         </>
       )}
 

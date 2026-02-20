@@ -13,6 +13,113 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
 
+const EditAttendanceModal = ({ item, onClose, onUpdate, vehicles, drivers }) => {
+    const [formData, setFormData] = useState({
+        vehicleId: item.vehicle?._id || '',
+        driverId: item.driver?._id || '',
+        startKm: item.punchIn?.km || '',
+        status: item.status || 'active',
+        remarks: item.punchOut?.remarks || ''
+    });
+    const [updating, setUpdating] = useState(false);
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setUpdating(true);
+        try {
+            await onUpdate(item._id, formData);
+            onClose();
+        } catch (error) {
+            console.error(error);
+            alert('Failed to update attendance');
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    return (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px' }}>
+            <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="glass-card"
+                style={{ width: '100%', maxWidth: '500px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', padding: '0' }}
+            >
+                <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '700' }}>Edit Active Log</h3>
+                    <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={20} /></button>
+                </div>
+                <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
+                    <div style={{ marginBottom: '15px' }}>
+                        <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Vehicle</label>
+                        <select
+                            className="input-field"
+                            value={formData.vehicleId}
+                            onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                            style={{ background: '#1e293b' }}
+                        >
+                            {vehicles?.map(v => (
+                                <option key={v._id} value={v._id}>{v.carNumber} ({v.model})</option>
+                            ))}
+                        </select>
+                    </div>
+                    {/* <div style={{ marginBottom: '15px' }}>
+                        <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Driver</label>
+                        <select
+                            className="input-field"
+                            value={formData.driverId}
+                            onChange={(e) => setFormData({ ...formData, driverId: e.target.value })}
+                            style={{ background: '#1e293b' }}
+                        >
+                            {drivers?.map(d => (
+                                <option key={d._id} value={d._id}>{d.name}</option>
+                            ))}
+                        </select>
+                    </div> */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
+                        <div>
+                            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Start KM</label>
+                            <input
+                                type="number"
+                                className="input-field"
+                                value={formData.startKm}
+                                onChange={(e) => setFormData({ ...formData, startKm: e.target.value })}
+                            />
+                        </div>
+                        <div>
+                            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Status</label>
+                            <select
+                                className="input-field"
+                                value={formData.status}
+                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                                style={{ background: '#1e293b' }}
+                            >
+                                <option value="active">Active</option>
+                                <option value="completed">Completed</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Remarks / Destination</label>
+                        <textarea
+                            className="input-field"
+                            value={formData.remarks}
+                            onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                            rows={3}
+                        />
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px' }}>
+                        <button type="button" onClick={onClose} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', color: 'white', border: 'none', fontWeight: '700', cursor: 'pointer' }}>Cancel</button>
+                        <button type="submit" disabled={updating} className="btn-primary" style={{ flex: 1, padding: '12px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>
+                            {updating ? 'Updating...' : 'Save Changes'}
+                        </button>
+                    </div>
+                </form>
+            </motion.div>
+        </div>
+    );
+};
+
 const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick }) => (
     <motion.div
         whileHover={{ y: -8, scale: 1.02 }}
@@ -372,6 +479,9 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [editingItem, setEditingItem] = useState(null);
+    const [allVehicles, setAllVehicles] = useState([]);
+    const [allDrivers, setAllDrivers] = useState([]);
     const dateInputRef = useRef(null);
 
 
@@ -406,12 +516,41 @@ const AdminDashboard = () => {
             }
         };
 
+        const fetchResources = async () => {
+            if (!selectedCompany?._id) return;
+            try {
+                const userInfoRaw = localStorage.getItem('userInfo');
+                const userInfo = JSON.parse(userInfoRaw);
+                const [vRes, dRes] = await Promise.all([
+                    axios.get(`/api/admin/vehicles/${selectedCompany._id}`, { headers: { Authorization: `Bearer ${userInfo.token}` } }),
+                    axios.get(`/api/admin/drivers/${selectedCompany._id}`, { headers: { Authorization: `Bearer ${userInfo.token}` } })
+                ]);
+                setAllVehicles(vRes.data.vehicles || []);
+                setAllDrivers(dRes.data.drivers || []);
+            } catch (err) { console.error(err); }
+        };
+
         fetchStats();
+        fetchResources();
 
         return () => {
             isCancelled = true;
         };
     }, [selectedCompany, selectedDate]);
+
+    const handleUpdateAttendance = async (id, data) => {
+        const userInfoRaw = localStorage.getItem('userInfo');
+        const userInfo = JSON.parse(userInfoRaw);
+        await axios.put(`/api/admin/attendance/${id}`, data, {
+            headers: { Authorization: `Bearer ${userInfo.token}` }
+        });
+        // Refresh stats
+        const { data: newData } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}?date=${selectedDate}`, {
+            headers: { Authorization: `Bearer ${userInfo.token}` }
+        });
+        setStats(newData);
+        alert('Record updated successfully');
+    };
 
     const handleApproveRejectExpense = async (attendanceId, expenseId, status) => {
         try {
@@ -478,6 +617,15 @@ const AdminDashboard = () => {
                         item={selectedItem}
                         onClose={() => setSelectedItem(null)}
                         onApproveReject={handleApproveRejectExpense}
+                    />
+                )}
+                {editingItem && (
+                    <EditAttendanceModal
+                        item={editingItem}
+                        onClose={() => setEditingItem(null)}
+                        onUpdate={handleUpdateAttendance}
+                        vehicles={allVehicles}
+                        drivers={allDrivers}
                     />
                 )}
             </AnimatePresence>
@@ -699,7 +847,7 @@ const AdminDashboard = () => {
                             marginBottom: '20px'
                         }}>
                             {/* Row 1 */}
-                            <StatCard icon={Users} label="TOTAL DRIVER SALARY" value={`₹${(stats.monthlySalaryTotal || 0).toLocaleString()}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/advances')} trend="MONTHLY" />
+                            <StatCard icon={Users} label="TOTAL DRIVER SALARY" value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/advances')} trend="MONTHLY" />
                             <StatCard icon={AlertTriangle} label="TOTAL ACCIDENT COST" value={`₹${(stats.monthlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} trend="ALL TIME" />
                             <StatCard icon={CreditCard} label="TOTAL DRIVER ADVANCE" value={`₹${(stats.totalAdvancePending || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/advances')} trend="PENDING" />
                             <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
@@ -712,6 +860,8 @@ const AdminDashboard = () => {
                             <StatCard icon={Briefcase} label="TOTAL STAFF" value={stats.totalStaff} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/staff')} />
                             <StatCard icon={CreditCard} label="PARKING (MONTHLY)" value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
                             <StatCard icon={CreditCard} label="TOTAL FASTAG BALANCE" value={`₹${stats.totalFastagBalance?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/fastag')} />
+                            <StatCard icon={TrendingUp} label="OUTSIDE CARS (MONTHLY)" value={`₹${(stats.monthlyOutsideCarsTotal || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/outside-cars')} />
+                            <StatCard icon={Users} label="FREELANCERS (MONTHLY)" value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />
                             <StatCard icon={Activity} label="TOTAL DUTIES TODAY" value={stats.countPunchIns} color="#3b82f6" loading={loading} onClick={() => { }} trend="LIVE" />
                         </div>
 
@@ -947,6 +1097,13 @@ const AdminDashboard = () => {
                                                     >
                                                         Details
                                                     </button>
+                                                    <button
+                                                        onClick={() => setEditingItem(item)}
+                                                        className="action-button glass-card-hover-effect"
+                                                        style={{ marginLeft: '8px', background: 'rgba(255,255,255,0.1)' }}
+                                                    >
+                                                        Edit
+                                                    </button>
                                                 </td>
                                             </tr>
                                         ))}
@@ -1049,6 +1206,21 @@ const AdminDashboard = () => {
                                                         }}
                                                     >
                                                         VIEW DETAILS
+                                                    </button>
+                                                    <button
+                                                        onClick={() => setEditingItem(item)}
+                                                        style={{
+                                                            background: 'rgba(255, 255, 255, 0.1)',
+                                                            color: 'white',
+                                                            border: '1px solid rgba(255, 255, 255, 0.2)',
+                                                            padding: '8px 20px',
+                                                            borderRadius: '10px',
+                                                            fontSize: '12px',
+                                                            fontWeight: '800',
+                                                            letterSpacing: '0.5px'
+                                                        }}
+                                                    >
+                                                        EDIT
                                                     </button>
                                                 </div>
                                             </div>

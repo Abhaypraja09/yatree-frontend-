@@ -326,8 +326,9 @@ const FuelPage = () => {
             setShowApprovalModal(false);
             resetForm();
         } catch (err) {
-            console.error(err);
-            alert('Error processing request');
+            console.error('Fuel approve/reject error:', err);
+            const msg = err.response?.data?.message || err.message || 'Error processing request';
+            alert(`Error: ${msg}`);
         }
     };
 

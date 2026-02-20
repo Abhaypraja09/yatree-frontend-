@@ -177,18 +177,23 @@ const DriverPortal = () => {
     const [activeTab, setActiveTab] = useState('home'); // 'home' or 'ledger'
     const [ledgerData, setLedgerData] = useState(null);
     const [ledgerLoading, setLedgerLoading] = useState(false);
+    const [ledgerMonth, setLedgerMonth] = useState(new Date().getMonth() + 1); // 1-12
+    const [ledgerYear, setLedgerYear] = useState(new Date().getFullYear());
 
     useEffect(() => {
         fetchDashboard();
-        if (activeTab === 'ledger') {
-            fetchLedger();
-        }
-    }, [activeTab]);
+    }, []);
 
-    const fetchLedger = async () => {
+    useEffect(() => {
+        if (activeTab === 'ledger') {
+            fetchLedger(ledgerMonth, ledgerYear);
+        }
+    }, [activeTab, ledgerMonth, ledgerYear]);
+
+    const fetchLedger = async (m, y) => {
         setLedgerLoading(true);
         try {
-            const { data } = await axios.get('/api/driver/ledger', {
+            const { data } = await axios.get(`/api/driver/ledger?month=${m}&year=${y}`, {
                 headers: { Authorization: `Bearer ${user.token}` }
             });
             setLedgerData(data);
@@ -382,40 +387,39 @@ const DriverPortal = () => {
                 return;
             }
 
+            const monthName = new Date(ledgerYear, ledgerMonth - 1, 1).toLocaleString('default', { month: 'long' });
+            const periodLabel = `${monthName} ${ledgerYear}`;
+
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
 
-            // 1. TOP HEADER DESIGN
-            doc.setFillColor(15, 23, 42); // Darker sleek header
+            // 1. HEADER
+            doc.setFillColor(15, 23, 42);
             doc.rect(0, 0, pageWidth, 45, 'F');
 
-            // Text in Header
             doc.setTextColor(255, 255, 255);
-            doc.setFontSize(28);
+            doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text('YATREE DESTINATION', 15, 25);
-
-            doc.setFontSize(11);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Premium Fleet Management Services', 15, 33);
-            doc.text('yatreedestination.com', 15, 38);
-
-            doc.setFontSize(16);
-            doc.setFont('helvetica', 'bold');
-            doc.text('OFFICIAL STATEMENT', pageWidth - 15, 25, { align: 'right' });
+            doc.text('YATREE DESTINATION', 15, 22);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Reference No: YD-${Date.now().toString().slice(-6)}`, pageWidth - 15, 32, { align: 'right' });
-            doc.text(`Statement Date: ${new Date().toLocaleDateString()}`, pageWidth - 15, 37, { align: 'right' });
+            doc.text('Premium Fleet Management Services', 15, 30);
+            doc.text('yatreedestination.com', 15, 37);
 
-            // 2. DRIVER & SUMMARY INFO BOXES
-            doc.setTextColor(15, 23, 42);
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
-            doc.text('DRIVER DETAILS', 15, 60);
+            doc.text('SALARY STATEMENT', pageWidth - 15, 22, { align: 'right' });
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.text(`Period: ${periodLabel}`, pageWidth - 15, 30, { align: 'right' });
+            doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - 15, 37, { align: 'right' });
 
-            // Draw a light gray line
+            // 2. DRIVER & SUMMARY
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont('helvetica', 'bold');
+            doc.text('DRIVER DETAILS', 15, 60);
             doc.setDrawColor(226, 232, 240);
             doc.line(15, 63, pageWidth - 15, 63);
 
@@ -424,141 +428,111 @@ const DriverPortal = () => {
             doc.text('Name:', 15, 72);
             doc.setFont('helvetica', 'normal');
             doc.text(user.name.toUpperCase(), 40, 72);
-
             doc.setFont('helvetica', 'bold');
             doc.text('Phone:', 15, 79);
             doc.setFont('helvetica', 'normal');
             doc.text(user.mobile || 'N/A', 40, 79);
 
-            // Summary Box on Right
+            // Summary Box
             doc.setFillColor(248, 250, 252);
             doc.roundedRect(pageWidth / 2, 55, pageWidth / 2 - 15, 35, 3, 3, 'F');
-
             doc.setFont('helvetica', 'bold');
             doc.text('PAYMENT SUMMARY', pageWidth / 2 + 5, 62);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Gross Earnings:`, pageWidth / 2 + 5, 70);
+            doc.text('Gross Earnings:', pageWidth / 2 + 5, 70);
             doc.text(`Rs. ${ledgerData.summary.totalEarned}`, pageWidth - 20, 70, { align: 'right' });
-
-            doc.text(`Total Advances:`, pageWidth / 2 + 5, 76);
+            doc.text('Total Advances:', pageWidth / 2 + 5, 76);
             doc.text(`Rs. ${ledgerData.summary.totalAdvances}`, pageWidth - 20, 76, { align: 'right' });
-
             doc.setDrawColor(203, 213, 225);
             doc.line(pageWidth / 2 + 5, 79, pageWidth - 20, 79);
-
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(14, 165, 233);
-            doc.text(`Net Payable:`, pageWidth / 2 + 5, 86);
+            doc.text('Net Payable:', pageWidth / 2 + 5, 86);
             doc.text(`Rs. ${ledgerData.summary.netPayable}`, pageWidth - 20, 86, { align: 'right' });
 
-            // 3. DUTY HISTORY TABLE
+            // 3. DUTY TABLE
             doc.setTextColor(15, 23, 42);
-            doc.setFontSize(14);
+            doc.setFontSize(13);
             doc.setFont('helvetica', 'bold');
             doc.text('DUTY & TRIP LOGS', 15, 105);
 
-            const dutyColumns = [
-                { header: 'DATE', dataKey: 'date' },
-                { header: 'VEHICLE NO.', dataKey: 'vehicle' },
-                { header: 'TOTAL KM', dataKey: 'totalKM' },
-                { header: 'WAGE', dataKey: 'wage' },
-                { header: 'BONUS', dataKey: 'bonus' },
-                { header: 'TOTAL', dataKey: 'total' }
-            ];
-
             const dutyRows = ledgerData.history.map(att => ({
-                date: att.date,
-                vehicle: att.vehicle,
-                totalKM: `${att.totalKM} KM`,
-                wage: `Rs. ${att.dailyWage}`,
-                bonus: `Rs. ${att.bonuses}`,
-                total: `Rs. ${att.dailyWage + att.bonuses}`
+                date: (att.date || '').toString().split('T')[0],
+                vehicle: att.vehicle || 'N/A',
+                totalKM: `${att.totalKM || 0} KM`,
+                wage: `Rs. ${att.dailyWage || 0}`,
+                bonus: `Rs. ${att.bonuses || 0}`,
+                parking: `Rs. ${att.parking || 0}`,
+                total: `Rs. ${(att.dailyWage || 0) + (att.bonuses || 0) + (att.parking || 0)}`
             }));
 
             autoTable(doc, {
-                columns: dutyColumns,
+                columns: [
+                    { header: 'DATE', dataKey: 'date' },
+                    { header: 'VEHICLE', dataKey: 'vehicle' },
+                    { header: 'KM', dataKey: 'totalKM' },
+                    { header: 'WAGE', dataKey: 'wage' },
+                    { header: 'BONUS', dataKey: 'bonus' },
+                    { header: 'PARKING', dataKey: 'parking' },
+                    { header: 'TOTAL', dataKey: 'total' }
+                ],
                 body: dutyRows,
                 startY: 110,
                 theme: 'grid',
-                headStyles: {
-                    fillColor: [15, 23, 42],
-                    textColor: [255, 255, 255],
-                    fontSize: 10,
-                    fontStyle: 'bold',
-                    halign: 'center'
-                },
-                bodyStyles: { fontSize: 9, halign: 'center' },
+                headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontSize: 9, fontStyle: 'bold', halign: 'center' },
+                bodyStyles: { fontSize: 8, halign: 'center' },
                 alternateRowStyles: { fillColor: [249, 250, 251] },
                 margin: { left: 15, right: 15 }
             });
 
-            // 4. ADVANCE LOGS TABLE
+            // 4. ADVANCE TABLE
             let nextY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 110) + 15;
-            doc.setFontSize(14);
+            doc.setFontSize(13);
             doc.setFont('helvetica', 'bold');
+            doc.setTextColor(15, 23, 42);
             doc.text('ADVANCES & SETTLEMENTS', 15, nextY);
-
-            const advColumns = [
-                { header: 'DATE', dataKey: 'date' },
-                { header: 'PARTICULARS', dataKey: 'remark' },
-                { header: 'GIVEN (Rs.)', dataKey: 'amount' },
-                { header: 'RECOVERED (Rs.)', dataKey: 'recovered' },
-                { header: 'STATUS', dataKey: 'status' }
-            ];
 
             const advRows = ledgerData.advances.map(adv => ({
                 date: new Date(adv.date).toLocaleDateString(),
-                remark: adv.remark.toUpperCase(),
+                remark: (adv.remark || '').toUpperCase(),
                 amount: `Rs. ${adv.amount}`,
-                recovered: `Rs. ${adv.recovered}`,
-                status: adv.status.toUpperCase()
+                recovered: `Rs. ${adv.recovered || 0}`,
+                status: (adv.status || '').toUpperCase()
             }));
 
             autoTable(doc, {
-                columns: advColumns,
+                columns: [
+                    { header: 'DATE', dataKey: 'date' },
+                    { header: 'PARTICULARS', dataKey: 'remark' },
+                    { header: 'GIVEN (Rs.)', dataKey: 'amount' },
+                    { header: 'RECOVERED (Rs.)', dataKey: 'recovered' },
+                    { header: 'STATUS', dataKey: 'status' }
+                ],
                 body: advRows,
                 startY: nextY + 5,
                 theme: 'striped',
-                headStyles: {
-                    fillColor: [244, 63, 94],
-                    textColor: [255, 255, 255],
-                    fontSize: 10,
-                    fontStyle: 'bold',
-                    halign: 'center'
-                },
-                bodyStyles: { fontSize: 9, halign: 'center' },
+                headStyles: { fillColor: [244, 63, 94], textColor: [255, 255, 255], fontSize: 9, fontStyle: 'bold', halign: 'center' },
+                bodyStyles: { fontSize: 8, halign: 'center' },
                 margin: { left: 15, right: 15 }
             });
 
-            // 5. FOOTER & SIGNATURE
-            let finalY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 30;
-
-            // Check if we need a new page for footer
-            let footerY = finalY;
-            if (footerY > pageHeight - 40) {
-                doc.addPage();
-                footerY = 30;
-            }
-
+            // 5. FOOTER
+            let footerY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 25;
+            if (footerY > pageHeight - 40) { doc.addPage(); footerY = 30; }
             doc.setDrawColor(203, 213, 225);
             doc.line(15, footerY, pageWidth - 15, footerY);
-
             doc.setFontSize(9);
             doc.setTextColor(100, 116, 139);
             doc.setFont('helvetica', 'italic');
-            doc.text('Terms: Note that this statement reflects logged and approved shifts only. Discrepancies should be reported to the office within 24 hours.', 15, footerY + 8, { maxWidth: pageWidth - 30 });
-
+            doc.text('This statement reflects logged and approved shifts only. Discrepancies should be reported within 24 hours.', 15, footerY + 8, { maxWidth: pageWidth - 30 });
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(15, 23, 42);
-            doc.text('Company Seal & Sign', pageWidth - 15, footerY + 30, { align: 'right' });
+            doc.text('_______________________', pageWidth - 15, footerY + 28, { align: 'right' });
+            doc.text('Company Seal & Sign', pageWidth - 15, footerY + 34, { align: 'right' });
 
-            doc.setFont('helvetica', 'normal');
-            doc.text('_______________________', pageWidth - 15, footerY + 25, { align: 'right' });
-
-            // Save FileName
-            const fileName = `YD_Bill_${user.name.replace(/\s+/g, '_')}_${new Date().toLocaleDateString().replace(/\//g, '-')}.pdf`;
+            const fileName = `YD_Salary_${user.name.replace(/\s+/g, '_')}_${monthName}_${ledgerYear}.pdf`;
             doc.save(fileName);
         } catch (error) {
             console.error("PDF Export Error:", error);
@@ -1627,9 +1601,51 @@ const DriverPortal = () => {
 
                     {activeTab === 'ledger' && (
                         <div className="ledger-section">
+                            {/* ── Month / Year Selector ── */}
+                            <div style={{
+                                background: 'linear-gradient(135deg, rgba(14,165,233,0.12) 0%, rgba(99,102,241,0.08) 100%)',
+                                border: '1px solid rgba(14,165,233,0.25)',
+                                borderRadius: '18px',
+                                padding: '16px 20px',
+                                marginBottom: '20px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '12px'
+                            }}>
+                                {/* Prev Month */}
+                                <button
+                                    onClick={() => {
+                                        if (ledgerMonth === 1) { setLedgerMonth(12); setLedgerYear(y => y - 1); }
+                                        else setLedgerMonth(m => m - 1);
+                                    }}
+                                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'white', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px', fontWeight: '700', flexShrink: 0 }}
+                                >‹</button>
+
+                                {/* Month + Year display */}
+                                <div style={{ textAlign: 'center', flex: 1 }}>
+                                    <p style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(14,165,233,0.8)', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '1px' }}>📅 Select Month</p>
+                                    <p style={{ fontSize: '20px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px' }}>
+                                        {new Date(ledgerYear, ledgerMonth - 1, 1).toLocaleString('default', { month: 'long' })} {ledgerYear}
+                                    </p>
+                                </div>
+
+                                {/* Next Month */}
+                                <button
+                                    onClick={() => {
+                                        const now = new Date();
+                                        if (ledgerYear > now.getFullYear() || (ledgerYear === now.getFullYear() && ledgerMonth >= now.getMonth() + 1)) return;
+                                        if (ledgerMonth === 12) { setLedgerMonth(1); setLedgerYear(y => y + 1); }
+                                        else setLedgerMonth(m => m + 1);
+                                    }}
+                                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'white', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px', fontWeight: '700', flexShrink: 0, opacity: (ledgerYear === new Date().getFullYear() && ledgerMonth >= new Date().getMonth() + 1) ? 0.3 : 1 }}
+                                >›</button>
+                            </div>
+
                             {ledgerLoading ? (
                                 <div className="glass-card" style={{ padding: '60px', textAlign: 'center' }}>
                                     <div className="spinner" style={{ margin: '0 auto' }}></div>
+                                    <p style={{ color: 'var(--text-muted)', marginTop: '16px', fontSize: '13px', fontWeight: '600' }}>Loading data...</p>
                                 </div>
                             ) : (
                                 <div className="ledger-content">
@@ -1641,7 +1657,7 @@ const DriverPortal = () => {
                                         </div>
                                         <div className="glass-card" style={{ padding: '16px', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
                                             <p style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(245, 158, 11, 0.8)', marginBottom: '4px', textTransform: 'uppercase' }}>{t('workingDays')}</p>
-                                            <h3 style={{ fontSize: '20px', fontWeight: '900', color: 'white' }}>{ledgerData?.summary?.workingDays || 0}</h3>
+                                            <h3 style={{ fontSize: '20px', fontWeight: '900', color: 'white' }}>{ledgerData?.summary?.workingDays || 0} Days</h3>
                                         </div>
                                         <div className="glass-card" style={{ padding: '16px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
                                             <p style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(99, 102, 241, 0.8)', marginBottom: '4px', textTransform: 'uppercase' }}>{t('pendingAdvance')}</p>
@@ -1658,41 +1674,57 @@ const DriverPortal = () => {
                                         className="btn-primary"
                                         style={{ width: '100%', marginBottom: '24px', padding: '16px', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}
                                     >
-                                        <Download size={20} /> {t('downloadPDF') || 'Download PDF Report'}
+                                        <Download size={20} /> {t('downloadPDF') || 'Download PDF Report'} — {new Date(ledgerYear, ledgerMonth - 1, 1).toLocaleString('default', { month: 'short' })} {ledgerYear}
                                     </button>
 
                                     {/* Duty History */}
                                     <h4 style={{ color: 'white', marginBottom: '16px', fontSize: '16px', fontWeight: '800' }}>{t('dutyHistory')}</h4>
-                                    <div style={{ display: 'grid', gap: '12px' }}>
-                                        {ledgerData?.history?.map(item => (
-                                            <div key={item._id} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <div>
-                                                    <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{item.date}</p>
-                                                    <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{item.vehicle} • {item.totalKM} KM</p>
+                                    {(!ledgerData?.history || ledgerData.history.length === 0) ? (
+                                        <div className="glass-card" style={{ padding: '32px', textAlign: 'center', marginBottom: '16px' }}>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: '600' }}>No duty records for this month</p>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'grid', gap: '12px' }}>
+                                            {ledgerData?.history?.map(item => (
+                                                <div key={item._id} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div>
+                                                        <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{(item.date || '').toString().split('T')[0]}</p>
+                                                        <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{item.vehicle} • {item.totalKM} KM</p>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <p style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>Rs. {(item.dailyWage || 0) + (item.bonuses || 0) + (item.parking || 0)}</p>
+                                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>
+                                                            Wage: {item.dailyWage || 0}
+                                                            {item.bonuses > 0 ? ` + Bonus: ${item.bonuses}` : ''}
+                                                            {item.parking > 0 ? ` + Parking: ${item.parking}` : ''}
+                                                        </p>
+                                                    </div>
                                                 </div>
-                                                <div style={{ textAlign: 'right' }}>
-                                                    <p style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>Rs. {item.dailyWage + item.bonuses}</p>
-                                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>Wage: {item.dailyWage} + Bonus: {item.bonuses}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                            ))}
+                                        </div>
+                                    )}
 
                                     {/* Advance History */}
                                     <h4 style={{ color: 'white', marginTop: '32px', marginBottom: '16px', fontSize: '16px', fontWeight: '800' }}>{t('advanceHistory')}</h4>
-                                    <div style={{ display: 'grid', gap: '12px', marginBottom: '40px' }}>
-                                        {ledgerData?.advances?.map(item => (
-                                            <div key={item._id} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '4px solid #f43f5e' }}>
-                                                <div>
-                                                    <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{new Date(item.date).toLocaleDateString()}</p>
-                                                    <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{item.remark}</p>
+                                    {(!ledgerData?.advances || ledgerData.advances.length === 0) ? (
+                                        <div className="glass-card" style={{ padding: '32px', textAlign: 'center', marginBottom: '40px' }}>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: '600' }}>No advances for this month</p>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'grid', gap: '12px', marginBottom: '40px' }}>
+                                            {ledgerData?.advances?.map(item => (
+                                                <div key={item._id} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '4px solid #f43f5e' }}>
+                                                    <div>
+                                                        <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{new Date(item.date).toLocaleDateString()}</p>
+                                                        <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{item.remark}</p>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <p style={{ color: '#f43f5e', fontWeight: '900', fontSize: '15px' }}>Rs. {item.amount}</p>
+                                                    </div>
                                                 </div>
-                                                <div style={{ textAlign: 'right' }}>
-                                                    <p style={{ color: '#f43f5e', fontWeight: '900', fontSize: '15px' }}>Rs. {item.amount}</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
+                                            ))}
+                                        </div>
+                                    )}
                                 </div>
                             )}
                         </div>
