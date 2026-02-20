@@ -1,37 +1,37 @@
 /* Font loaded via HTML <link> preload for faster rendering */
 
 :root {
-  /* ⚡ THEME: Cyberpunk Dark — Electric Teal + Hot Fuchsia */
-  --primary: #00e5ff;
-  /* Electric Cyan/Teal */
-  --primary-dark: #00b8d9;
-  /* Deep Teal */
-  --secondary: #ff2d78;
-  /* Hot Fuchsia/Pink */
-  --accent: #7c3aed;
-  /* Deep Violet accent */
-  --success: #00ffa3;
-  /* Neon Mint Green */
-  --danger: #ff3860;
-  /* Vivid Red */
-  --warning: #ffbe0b;
-  /* Bright Yellow */
+  /* 🏷️ THEME: Professional Slate — Calm Indigo + Soft Blue */
+  --primary: #6366f1;
+  /* Calm Indigo — easy on eyes */
+  --primary-dark: #4f46e5;
+  /* Deeper Indigo */
+  --secondary: #38bdf8;
+  /* Soft Sky Blue */
+  --accent: #a78bfa;
+  /* Soft Violet accent */
+  --success: #34d399;
+  /* Calm Emerald green */
+  --danger: #f87171;
+  /* Soft Red — not too harsh */
+  --warning: #fbbf24;
+  /* Warm Amber */
 
-  /* Background layers - True dark charcoal */
-  --bg-dark: #080c14;
-  --bg-mid: #0d1220;
-  --bg-card: rgba(13, 18, 32, 0.9);
+  /* Background — warm dark slate, much easier on eyes than pure black */
+  --bg-dark: #0f172a;
+  --bg-mid: #1e293b;
+  --bg-card: rgba(30, 41, 59, 0.8);
 
-  /* Text */
-  --text-main: #e8f4fd;
-  --text-muted: #4d7fa6;
+  /* Text — not pure white, soft cream-white */
+  --text-main: #f1f5f9;
+  --text-muted: #94a3b8;
 
-  /* Glass system — Teal-tinted */
-  --border: rgba(0, 229, 255, 0.1);
-  --glass: rgba(8, 12, 20, 0.8);
-  --blur: 20px;
-  --glass-border: rgba(0, 229, 255, 0.12);
-  --glass-bg: rgba(13, 18, 32, 0.7);
+  /* Glass system — neutral, no neon tint */
+  --border: rgba(148, 163, 184, 0.12);
+  --glass: rgba(15, 23, 42, 0.6);
+  --blur: 16px;
+  --glass-border: rgba(148, 163, 184, 0.1);
+  --glass-bg: rgba(30, 41, 59, 0.55);
 }
 
 * {
@@ -45,10 +45,9 @@ body,
 #root {
   font-family: 'Outfit', sans-serif;
   background:
-    radial-gradient(ellipse at 15% 0%, rgba(0, 229, 255, 0.07) 0%, transparent 45%),
-    radial-gradient(ellipse at 85% 5%, rgba(255, 45, 120, 0.06) 0%, transparent 40%),
-    radial-gradient(ellipse at 50% 95%, rgba(0, 229, 255, 0.05) 0%, transparent 40%),
-    linear-gradient(160deg, #060910 0%, #080c14 50%, #070b13 100%);
+    radial-gradient(ellipse at 20% 0%, rgba(99, 102, 241, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(56, 189, 248, 0.05) 0%, transparent 40%),
+    linear-gradient(160deg, #0b1120 0%, #0f172a 60%, #141e33 100%);
   background-attachment: fixed;
   min-height: 100vh;
   margin: 0;
@@ -77,7 +76,7 @@ button {
   backdrop-filter: blur(var(--blur));
   border: 1px solid var(--glass-border);
   border-radius: 16px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(0, 229, 255, 0.06);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
   transition: all 0.3s ease;
   padding: clamp(12px, 3.5vw, 25px);
   max-width: 100%;
@@ -85,8 +84,8 @@ button {
 }
 
 .glass-card:hover {
-  border-color: rgba(0, 229, 255, 0.2);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(0, 229, 255, 0.05), inset 0 1px 0 rgba(0, 229, 255, 0.1);
+  border-color: rgba(99, 102, 241, 0.25);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(99, 102, 241, 0.08);
 }
 
 @media (max-width: 480px) {
@@ -96,20 +95,20 @@ button {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #00e5ff 0%, #00b8d9 50%, #0097b2 100%);
-  color: #050810;
+  background: linear-gradient(135deg, #6366f1, #4f46e5);
+  color: white;
   padding: 12px 24px;
   border-radius: 12px;
-  font-weight: 800;
+  font-weight: 700;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 20px rgba(0, 229, 255, 0.3);
+  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
   letter-spacing: 0.3px;
 }
 
 .btn-primary:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 35px rgba(0, 229, 255, 0.5), 0 0 15px rgba(0, 229, 255, 0.2);
-  background: linear-gradient(135deg, #33eeff 0%, #00e5ff 50%, #00b8d9 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.45);
+  background: linear-gradient(135deg, #818cf8, #6366f1);
 }
 
 .input-field {
@@ -124,10 +123,10 @@ button {
 }
 
 .input-field:focus {
-  border-color: rgba(0, 229, 255, 0.5);
-  box-shadow: 0 0 0 3px rgba(0, 229, 255, 0.1), 0 0 25px rgba(0, 229, 255, 0.07);
+  border-color: rgba(99, 102, 241, 0.5);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
   outline: none;
-  background: rgba(0, 229, 255, 0.03);
+  background: rgba(99, 102, 241, 0.04);
 }
 
 /* Hide number input spinners */
@@ -171,7 +170,7 @@ button {
 .spinner {
   width: 30px;
   height: 30px;
-  border: 3px solid rgba(0, 229, 255, 0.1);
+  border: 3px solid rgba(99, 102, 241, 0.15);
   border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
@@ -179,14 +178,14 @@ button {
 
 /* Premium UI Enhancements */
 .premium-glass {
-  background: rgba(8, 12, 20, 0.6);
-  backdrop-filter: blur(24px);
-  border: 1px solid rgba(0, 229, 255, 0.1);
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(0, 229, 255, 0.05);
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, #00e5ff 0%, #33ccff 40%, #ff2d78 100%);
+  background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 50%, #6366f1 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -194,7 +193,7 @@ button {
 }
 
 .text-gradient-violet {
-  background: linear-gradient(135deg, #00e5ff 0%, #00b8d9 100%);
+  background: linear-gradient(135deg, #e0e7ff 0%, #a5b4fc 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -206,9 +205,9 @@ button {
 }
 
 .card-hover:hover {
-  transform: translateY(-8px) scale(1.02);
-  border-color: rgba(0, 229, 255, 0.25);
-  box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.7), 0 0 30px rgba(0, 229, 255, 0.08);
+  transform: translateY(-6px) scale(1.01);
+  border-color: rgba(99, 102, 241, 0.2);
+  box-shadow: 0 20px 50px -12px rgba(0, 0, 0, 0.5), 0 8px 20px -8px rgba(99, 102, 241, 0.15);
 }
 
 .premium-scroll::-webkit-scrollbar {
