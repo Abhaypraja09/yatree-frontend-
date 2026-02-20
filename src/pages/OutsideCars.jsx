@@ -157,8 +157,7 @@ const OutsideCars = () => {
                 data.append('carType', 'Other');
                 await axios.post('/api/admin/vehicles', data, {
                     headers: {
-                        Authorization: `Bearer ${userInfo.token}`,
-                        'Content-Type': 'multipart/form-data'
+                        Authorization: `Bearer ${userInfo.token}`
                     }
                 });
             }

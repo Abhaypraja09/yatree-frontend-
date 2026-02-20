@@ -459,62 +459,102 @@ const Freelancers = () => {
                 </div>
             </div>
 
-            {/* Filter Hub */}
-            <div className="premium-glass" style={{ padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-                <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '16px' }}>
-                    {[
-                        { id: 'personnel', label: 'Drivers List', icon: <UserIcon size={16} /> },
-                        { id: 'logistics', label: 'Duty History', icon: <Car size={16} /> },
-                        { id: 'accounts', label: 'Financials', icon: <Download size={16} /> }
-                    ].map(tab => (
-                        <button
-                            key={tab.id}
-                            onClick={() => setActiveTab(tab.id)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                padding: '12px 24px',
-                                borderRadius: '12px',
-                                border: 'none',
-                                background: activeTab === tab.id ? '#6366f1' : 'transparent',
-                                color: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.5)',
-                                cursor: 'pointer',
-                                fontSize: '13px',
-                                fontWeight: '800',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                            }}
-                        >
-                            {tab.icon} {tab.label.toUpperCase()}
-                        </button>
-                    ))}
-                </div>
+            {/* Premium Filter Hub */}
+            <div className="premium-glass" style={{
+                padding: '28px',
+                borderRadius: '32px',
+                border: '1px solid rgba(255,255,255,0.06)',
+                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.4), rgba(15, 23, 42, 0.2))',
+                marginBottom: '40px',
+                boxShadow: '0 20px 40px rgba(0,0,0,0.2)'
+            }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '25px' }}>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase' }}>Filter:</span>
-                        <select
-                            value={driverFilter}
-                            onChange={(e) => setDriverFilter(e.target.value)}
-                            style={{
-                                background: 'rgba(255,255,255,0.05)',
-                                color: 'white',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                padding: '10px 18px',
-                                borderRadius: '12px',
-                                fontSize: '13px',
-                                fontWeight: '700',
-                                outline: 'none',
-                                height: '44px'
-                            }}
-                        >
-                            <option value="All">All Drivers</option>
-                            {drivers.map(d => <option key={d._id} value={d._id}>{d.name}</option>)}
-                        </select>
+                    {/* Switch-style Tabs */}
+                    <div style={{
+                        display: 'flex',
+                        background: 'rgba(5, 8, 15, 0.4)',
+                        padding: '6px',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        minWidth: 'fit-content'
+                    }}>
+                        {[
+                            { id: 'personnel', label: 'Drivers', icon: <UserIcon size={16} /> },
+                            { id: 'logistics', label: 'Duties', icon: <Car size={16} /> },
+                            { id: 'accounts', label: 'Financials', icon: <Download size={16} /> }
+                        ].map(tab => (
+                            <button
+                                key={tab.id}
+                                onClick={() => setActiveTab(tab.id)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    padding: '12px 28px',
+                                    borderRadius: '16px',
+                                    border: 'none',
+                                    background: activeTab === tab.id ? 'linear-gradient(135deg, #6366f1, #4f46e5)' : 'transparent',
+                                    color: activeTab === tab.id ? 'white' : 'rgba(255,255,255,0.4)',
+                                    cursor: 'pointer',
+                                    fontSize: '13px',
+                                    fontWeight: '800',
+                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    boxShadow: activeTab === tab.id ? '0 10px 20px rgba(99, 102, 241, 0.3)' : 'none'
+                                }}
+                            >
+                                {tab.icon} <span style={{ letterSpacing: '0.5px' }}>{tab.label.toUpperCase()}</span>
+                            </button>
+                        ))}
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '12px' }}>
+                    {/* Filter Controls */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
+
+                        {/* Driver Picker */}
+                        <div style={{ position: 'relative', flex: '1', maxWidth: '280px', minWidth: '200px' }}>
+                            <div style={{
+                                position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)',
+                                color: '#6366f1', display: 'flex', alignItems: 'center'
+                            }}>
+                                <Filter size={14} />
+                            </div>
+                            <select
+                                value={driverFilter}
+                                onChange={(e) => setDriverFilter(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    background: 'rgba(15, 23, 42, 0.4)',
+                                    color: 'white',
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                    padding: '12px 18px 12px 42px',
+                                    borderRadius: '16px',
+                                    fontSize: '13px',
+                                    fontWeight: '700',
+                                    outline: 'none',
+                                    height: '52px',
+                                    appearance: 'none',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <option value="All" style={{ background: '#0f172a' }}>All Personnel</option>
+                                {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name.split(' (F)')[0]}</option>)}
+                            </select>
+                            <div style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'rgba(255,255,255,0.2)' }}>
+                                <Plus size={14} style={{ transform: 'rotate(45deg)' }} />
+                            </div>
+                        </div>
+
+                        {/* Date Picker */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            padding: '6px 16px',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            height: '52px'
+                        }}>
                             <input
                                 type="date"
                                 value={fromDate}
@@ -523,12 +563,13 @@ const Freelancers = () => {
                                     background: 'transparent',
                                     color: 'white',
                                     border: 'none',
-                                    padding: '8px 12px',
                                     fontSize: '12px',
-                                    fontWeight: '700'
+                                    fontWeight: '800',
+                                    outline: 'none',
+                                    padding: '0 8px'
                                 }}
                             />
-                            <span style={{ color: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}>|</span>
+                            <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 10px' }}></div>
                             <input
                                 type="date"
                                 value={toDate}
@@ -537,14 +578,35 @@ const Freelancers = () => {
                                     background: 'transparent',
                                     color: 'white',
                                     border: 'none',
-                                    padding: '8px 12px',
                                     fontSize: '12px',
-                                    fontWeight: '700'
+                                    fontWeight: '800',
+                                    outline: 'none',
+                                    padding: '0 8px'
                                 }}
                             />
                         </div>
-                        <button onClick={handleDownloadExcel} style={{ height: '44px', width: '44px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Export Reports">
-                            <Download size={18} />
+
+                        {/* Excel Export */}
+                        <button
+                            onClick={handleDownloadExcel}
+                            style={{
+                                height: '52px',
+                                width: '52px',
+                                borderRadius: '16px',
+                                background: 'rgba(16,185,129,0.1)',
+                                color: '#10b981',
+                                border: '1px solid rgba(16,185,129,0.2)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease'
+                            }}
+                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.2)'}
+                            onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(16,185,129,0.1)'}
+                            title="Export Reports"
+                        >
+                            <Download size={20} />
                         </button>
                     </div>
                 </div>
@@ -692,85 +754,184 @@ const Freelancers = () => {
                     </div>
                 )}
 
-                {/* ACCOUNTS TAB */}
+                {/* ACCOUNTS TAB - NEW PREMIUM DESIGN */}
                 {activeTab === 'accounts' && (
                     <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 350px', gap: '30px', alignItems: 'start' }}>
-                            {/* Transaction List */}
-                            <div style={{ background: 'rgba(25, 28, 35, 0.6)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-                                <div style={{ padding: '20px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <h3 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '800' }}>Transaction Ledger</h3>
-                                    <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Last 50 Records</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: '30px', alignItems: 'start' }}>
+
+                            {/* Unified Statement Ledger */}
+                            <div className="premium-glass" style={{ borderRadius: '28px', border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.3)' }}>
+                                <div style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
+                                    <div>
+                                        <h3 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '900', letterSpacing: '-0.5px' }}>Financial Ledger</h3>
+                                        <p style={{ margin: '4px 0 0 0', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700' }}>Comprehensive flow of earnings and advances</p>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', fontWeight: '800', color: '#10b981', background: 'rgba(16, 185, 129, 0.1)', padding: '5px 10px', borderRadius: '8px' }}>
+                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></div> EARNINGS
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', fontWeight: '800', color: '#f43f5e', background: 'rgba(244, 63, 94, 0.1)', padding: '5px 10px', borderRadius: '8px' }}>
+                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f43f5e' }}></div> ADVANCES
+                                        </div>
+                                    </div>
                                 </div>
+
                                 <div style={{ overflowX: 'auto' }}>
                                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                         <thead>
-                                            <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                                <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'left', fontWeight: '800' }}>Date</th>
-                                                <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'left', fontWeight: '800' }}>Recipient</th>
-                                                <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'left', fontWeight: '800' }}>Amount</th>
-                                                <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'right', fontWeight: '800' }}>Type</th>
-                                                <th style={{ padding: '15px 20px', textAlign: 'right' }}></th>
+                                            <tr style={{ background: 'rgba(5, 8, 15, 0.2)' }}>
+                                                <th style={{ padding: '18px 25px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'left', fontWeight: '900', letterSpacing: '1px' }}>Timeline</th>
+                                                <th style={{ padding: '18px 25px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'left', fontWeight: '900', letterSpacing: '1px' }}>Entity / Description</th>
+                                                <th style={{ padding: '18px 25px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', textAlign: 'right', fontWeight: '900', letterSpacing: '1px' }}>Transaction</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'right' }}></th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {advances.filter(adv => driverFilter === 'All' || adv.driver?._id === driverFilter).slice(0, 50).map((adv) => (
-                                                <tr key={adv._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                                    <td style={{ padding: '15px 20px', fontSize: '13px', color: 'rgba(255,255,255,0.6)' }}>{new Date(adv.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
-                                                    <td style={{ padding: '15px 20px' }}>
-                                                        <span style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{adv.driver?.name || '---'}</span>
-                                                    </td>
-                                                    <td style={{ padding: '15px 20px', color: '#f43f5e', fontWeight: '800', fontSize: '14px' }}>₹{adv.amount.toLocaleString()}</td>
-                                                    <td style={{ padding: '15px 20px', textAlign: 'right' }}>
-                                                        <span style={{ fontSize: '9px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', fontWeight: '800' }}>{adv.advanceType?.toUpperCase() || 'OFFICE'}</span>
-                                                    </td>
-                                                    <td style={{ padding: '15px 20px', textAlign: 'right' }}>
-                                                        <button
-                                                            onClick={() => handleDeleteAdvance(adv._id)}
-                                                            style={{
-                                                                background: 'transparent',
-                                                                border: 'none',
-                                                                color: 'rgba(255,255,255,0.3)',
-                                                                cursor: 'pointer',
-                                                                padding: '5px'
-                                                            }}
-                                                            onMouseEnter={(e) => e.currentTarget.style.color = '#f43f5e'}
-                                                            onMouseLeave={(e) => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
-                                                        >
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            ))}
+                                            {/* Combine Attendance (Earnings) and Advances (Payments) into one timeline */}
+                                            {(() => {
+                                                const unifiedEntries = [
+                                                    ...filteredAttendance.map(a => ({
+                                                        id: a._id,
+                                                        date: a.date,
+                                                        type: 'EARNING',
+                                                        amount: Number(a.dailyWage) || 0,
+                                                        description: `Duty: ${a.pickUpLocation || 'Trip'} ➜ ${a.dropLocation || 'End'}`,
+                                                        driver: a.driver?.name,
+                                                        remark: a.vehicle?.carNumber?.split('#')[0],
+                                                        givenBy: 'System'
+                                                    })),
+                                                    ...advances.filter(adv => driverFilter === 'All' || adv.driver?._id === driverFilter).map(adv => ({
+                                                        id: adv._id,
+                                                        date: adv.date,
+                                                        type: 'ADVANCE',
+                                                        amount: adv.amount,
+                                                        description: adv.remark || 'Advance Payment',
+                                                        driver: adv.driver?.name,
+                                                        remark: adv.advanceType,
+                                                        givenBy: adv.givenBy || 'Office'
+                                                    }))
+                                                ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+                                                if (unifiedEntries.length === 0) {
+                                                    return (
+                                                        <tr>
+                                                            <td colSpan="4" style={{ padding: '80px 0', textAlign: 'center' }}>
+                                                                <AlertCircle size={32} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '15px' }} />
+                                                                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px', fontWeight: '700' }}>No financial activity for this selection.</p>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                }
+
+                                                return unifiedEntries.map((entry) => (
+                                                    <tr key={entry.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }} className="ledger-row">
+                                                        <td style={{ padding: '18px 25px' }}>
+                                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '13px' }}>{new Date(entry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', marginTop: '2px' }}>{new Date(entry.date).getFullYear()}</div>
+                                                        </td>
+                                                        <td style={{ padding: '18px 25px' }}>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                                                                <span style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{entry.driver || '---'}</span>
+                                                                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '600' }}>{entry.description}</span>
+                                                                <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
+                                                                    <span style={{ fontSize: '9px', color: '#6366f1', fontWeight: '900', textTransform: 'uppercase' }}>Ref: {entry.remark || 'N/A'}</span>
+                                                                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', textTransform: 'uppercase' }}>By: {entry.givenBy}</span>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: '18px 25px', textAlign: 'right' }}>
+                                                            <div style={{
+                                                                color: entry.type === 'EARNING' ? '#10b981' : '#f43f5e',
+                                                                fontWeight: '900',
+                                                                fontSize: '18px',
+                                                                letterSpacing: '-0.5px'
+                                                            }}>
+                                                                {entry.type === 'EARNING' ? '+' : '-'}₹{entry.amount.toLocaleString()}
+                                                            </div>
+                                                            <div style={{
+                                                                fontSize: '9px',
+                                                                fontWeight: '900',
+                                                                color: entry.type === 'EARNING' ? 'rgba(16, 185, 129, 0.4)' : 'rgba(244, 63, 94, 0.4)',
+                                                                textTransform: 'uppercase'
+                                                            }}>
+                                                                {entry.type === 'EARNING' ? 'CREDIT' : 'DEBIT'}
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: '18px 25px', textAlign: 'right' }}>
+                                                            {entry.type === 'ADVANCE' && (
+                                                                <button
+                                                                    onClick={() => handleDeleteAdvance(entry.id)}
+                                                                    style={{ background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}
+                                                                >
+                                                                    <Trash2 size={13} />
+                                                                </button>
+                                                            )}
+                                                        </td>
+                                                    </tr>
+                                                ));
+                                            })()}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
 
-                            {/* Summary Sidebar */}
-                            <div style={{ display: 'grid', gap: '20px' }}>
-                                <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '25px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
-                                    <p style={{ color: '#34d399', fontSize: '11px', margin: '0 0 10px 0', fontWeight: '800', textTransform: 'uppercase' }}>Net Fleet Liability</p>
-                                    <h2 style={{ color: 'white', fontSize: '36px', margin: 0, fontWeight: '800', letterSpacing: '-1px' }}>
-                                        <span style={{ fontSize: '20px', opacity: 0.5, marginRight: '5px' }}>₹</span>
+                            {/* Summary & Individual Balances Sidebar */}
+                            <div style={{ display: 'grid', gap: '25px' }}>
+                                {/* Main Stats */}
+                                <div className="premium-glass" style={{ padding: '30px', borderRadius: '28px', border: '1px solid #10b98144', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.05), transparent)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
+                                        <p style={{ color: '#10b981', fontSize: '11px', margin: 0, fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Net Settlement Due</p>
+                                    </div>
+                                    <h2 style={{ color: 'white', fontSize: '42px', margin: 0, fontWeight: '900', letterSpacing: '-2px' }}>
+                                        <span style={{ fontSize: '24px', opacity: 0.3, marginRight: '8px', fontWeight: '400' }}>₹</span>
                                         {netPayable.toLocaleString()}
                                     </h2>
-                                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', margin: '15px 0 0 0', lineHeight: '1.5' }}>
-                                        Total outstanding balance for <b>{baseDrivers.length}</b> professional assets in the current view.
-                                    </p>
+                                    <div style={{ marginTop: '25px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', paddingBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>Total Earned</span>
+                                            <span style={{ fontSize: '14px', color: '#10b981', fontWeight: '800' }}>+₹{totalSettlement.toLocaleString()}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>Total Advanced</span>
+                                            <span style={{ fontSize: '14px', color: '#f43f5e', fontWeight: '800' }}>-₹{totalAdvances.toLocaleString()}</span>
+                                        </div>
+                                    </div>
                                 </div>
 
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <h4 style={{ color: 'white', fontSize: '13px', margin: '0 0 15px 0', fontWeight: '800' }}>Quick Metrics</h4>
-                                    <div style={{ display: 'grid', gap: '12px' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Gross Earnings</span>
-                                            <span style={{ fontSize: '13px', color: 'white', fontWeight: '700' }}>₹{totalSettlement.toLocaleString()}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)' }}>Advances Paid</span>
-                                            <span style={{ fontSize: '13px', color: '#f43f5e', fontWeight: '700' }}>₹{totalAdvances.toLocaleString()}</span>
-                                        </div>
+                                {/* Per-Driver Health Checklist */}
+                                <div className="premium-glass" style={{ padding: '25px', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(5, 8, 15, 0.4)' }}>
+                                    <h4 style={{ color: 'white', fontSize: '14px', margin: '0 0 20px 0', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <UserIcon size={16} style={{ color: '#6366f1' }} /> BALANCES PER DRIVER
+                                    </h4>
+                                    <div style={{ display: 'grid', gap: '12px', maxHeight: '400px', overflowY: 'auto', paddingRight: '5px' }}>
+                                        {drivers.map(driver => {
+                                            const dEarned = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id).reduce((s, a) => s + (Number(a.dailyWage) || 0), 0);
+                                            const dAdvanced = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id).reduce((s, adv) => s + adv.amount, 0);
+                                            const dBalance = dEarned - dAdvanced;
+
+                                            if (dEarned === 0 && dAdvanced === 0) return null;
+
+                                            return (
+                                                <div key={driver._id} style={{
+                                                    padding: '15px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px',
+                                                    border: '1px solid rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'space-between',
+                                                    alignItems: 'center'
+                                                }}>
+                                                    <div>
+                                                        <p style={{ color: 'white', fontSize: '13px', fontWeight: '800', margin: '0 0 2px 0' }}>{driver.name.split(' (F)')[0]}</p>
+                                                        <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px', fontWeight: '700', margin: 0 }}>E: ₹{dEarned.toLocaleString()} | A: ₹{dAdvanced.toLocaleString()}</p>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <p style={{
+                                                            color: dBalance >= 0 ? '#10b981' : '#f43f5e',
+                                                            fontSize: '15px', fontWeight: '900', margin: 0
+                                                        }}>₹{dBalance.toLocaleString()}</p>
+                                                        <span style={{ fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.2)' }}>NET DUE</span>
+                                                    </div>
+                                                </div>
+                                            );
+                                        }).filter(Boolean)}
                                     </div>
                                 </div>
                             </div>
@@ -1002,27 +1163,92 @@ const Freelancers = () => {
                     </Modal>
                 )}
 
-                {/* Advance Payment Modal */}
+                {/* Enhanced Advance Payment Modal */}
                 {showAdvanceModal && (
-                    <Modal title={`Give Advance: ${selectedDriver?.name || '---'}`} onClose={() => setShowAdvanceModal(false)}>
-                        <form onSubmit={handleAddAdvance} style={{ display: 'grid', gap: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Amount (₹) *" type="number" value={advanceData.amount} onChange={v => setAdvanceData({ ...advanceData, amount: v })} required />
-                                <Field label="Date *" type="date" value={advanceData.date} onChange={v => setAdvanceData({ ...advanceData, date: v })} required />
+                    <Modal title="Financial Disbursement" onClose={() => setShowAdvanceModal(false)}>
+                        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                            <div style={{
+                                width: '70px', height: '70px', borderRadius: '24px', background: 'rgba(16, 185, 129, 0.1)',
+                                display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 15px',
+                                border: '1px solid rgba(16, 185, 129, 0.2)'
+                            }}>
+                                <Download size={32} style={{ color: '#10b981', transform: 'rotate(180deg)' }} />
                             </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <div>
-                                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Type *</label>
-                                    <select className="input-field" value={advanceData.advanceType} onChange={e => setAdvanceData({ ...advanceData, advanceType: e.target.value })} style={{ height: '48px', background: 'rgba(255,255,255,0.03)', color: 'white' }}>
-                                        <option value="Office">Office</option>
-                                        <option value="Staff">Staff</option>
-                                        <option value="Other">Other</option>
-                                    </select>
+                            <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: '0 0 5px 0' }}>Disburse Advance</h3>
+                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: 0 }}>Processing payment for <span style={{ color: '#6366f1', fontWeight: '800' }}>{selectedDriver?.name?.split(' (F)')[0]}</span></p>
+                        </div>
+
+                        <form onSubmit={handleAddAdvance} style={{ display: 'grid', gap: '25px' }}>
+                            <div>
+                                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Payment Amount (₹) *</label>
+                                <div style={{ position: 'relative' }}>
+                                    <span style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontSize: '20px', fontWeight: '900' }}>₹</span>
+                                    <input
+                                        type="number"
+                                        className="input-field"
+                                        required
+                                        value={advanceData.amount}
+                                        onChange={v => setAdvanceData({ ...advanceData, amount: v.target.value })}
+                                        placeholder="0.00"
+                                        style={{
+                                            paddingLeft: '45px', fontSize: '24px', fontWeight: '900', height: '70px',
+                                            background: 'rgba(5, 8, 15, 0.4)', border: '1px solid rgba(255,255,255,0.1)',
+                                            color: 'white', borderRadius: '20px'
+                                        }}
+                                    />
                                 </div>
-                                <Field label="Given By *" value={advanceData.givenBy} onChange={v => setAdvanceData({ ...advanceData, givenBy: v })} required />
+
+                                {/* Quick Amounts */}
+                                <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }}>
+                                    {[500, 1000, 2000, 5000].map(amt => (
+                                        <button
+                                            key={amt}
+                                            type="button"
+                                            onClick={() => setAdvanceData({ ...advanceData, amount: amt.toString() })}
+                                            style={{
+                                                flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)',
+                                                background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)',
+                                                fontSize: '11px', fontWeight: '900', cursor: 'pointer', transition: 'all 0.3s'
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.border = '1px solid rgba(16, 185, 129, 0.3)'}
+                                            onMouseLeave={e => e.currentTarget.style.border = '1px solid rgba(255,255,255,0.05)'}
+                                        >
+                                            +₹{amt}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                            <Field label="Remark" value={advanceData.remark} onChange={v => setAdvanceData({ ...advanceData, remark: v })} />
-                            <SubmitButton disabled={submitting} text="Confirm Payment" message={message} />
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '15px' }}>
+                                <Field label="Value Date *" type="date" value={advanceData.date} onChange={v => setAdvanceData({ ...advanceData, date: v })} required />
+                                <Field label="Authorized By *" value={advanceData.givenBy} onChange={v => setAdvanceData({ ...advanceData, givenBy: v })} required />
+                            </div>
+
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '15px' }}>Classification</p>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    {['Office', 'Staff', 'Other'].map(type => (
+                                        <button
+                                            key={type}
+                                            type="button"
+                                            onClick={() => setAdvanceData({ ...advanceData, advanceType: type })}
+                                            style={{
+                                                flex: 1, padding: '12px', borderRadius: '14px', border: 'none',
+                                                background: advanceData.advanceType === type ? 'rgba(99, 102, 241, 0.15)' : 'rgba(5, 8, 15, 0.3)',
+                                                color: advanceData.advanceType === type ? '#818cf8' : 'rgba(255,255,255,0.3)',
+                                                fontWeight: '900', fontSize: '12px', cursor: 'pointer',
+                                                border: advanceData.advanceType === type ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(255,255,255,0.02)'
+                                            }}
+                                        >
+                                            {type.toUpperCase()}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <Field label="Transaction Reference / Remark" placeholder="e.g. Fuel Advance, Emergency..." value={advanceData.remark} onChange={v => setAdvanceData({ ...advanceData, remark: v })} />
+
+                            <SubmitButton disabled={submitting} text="DISBURSE FUNDS" message={message} />
                         </form>
                     </Modal>
                 )}

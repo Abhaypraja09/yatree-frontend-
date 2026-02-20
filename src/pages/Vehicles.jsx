@@ -111,7 +111,6 @@ const Vehicles = () => {
             if (editingId) {
                 await axios.put(`/api/admin/vehicles/${editingId}`, formData, {
                     headers: {
-                        'Content-Type': 'multipart/form-data',
                         Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}`
                     }
                 });
@@ -119,7 +118,6 @@ const Vehicles = () => {
             } else {
                 await axios.post('/api/admin/vehicles', formData, {
                     headers: {
-                        'Content-Type': 'multipart/form-data',
                         Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}`
                     }
                 });
@@ -430,92 +428,273 @@ const Vehicles = () => {
             </div>
 
             {showModal && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '15px' }}>
-                    <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card modal-content" style={{ padding: '25px', width: '100%', maxWidth: '750px', maxHeight: '95vh', overflowY: 'auto' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-                            <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '700' }}>{editingId ? 'Edit Vehicle' : 'Add New Vehicle'}</h2>
-                            <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+                    <motion.div
+                        initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                        className="premium-glass"
+                        style={{
+                            padding: 'clamp(24px, 5vw, 40px)',
+                            width: '100%',
+                            maxWidth: '800px',
+                            background: 'linear-gradient(145deg, #0f172a, #1e293b)',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            overflowY: 'auto',
+                            maxHeight: '90vh',
+                            borderRadius: '32px',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                        }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px', position: 'relative' }}>
+                            <div>
+                                <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
+                                    {editingId ? 'Edit Vehicle' : 'Add New'} <span style={{ background: 'linear-gradient(to right, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Fleet Asset</span>
+                                </h2>
+                                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', margin: '6px 0 0', letterSpacing: '1.5px' }}>Vehicle Information Management</p>
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setShowModal(false);
+                                    setEditingId(null);
+                                }}
+                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
+                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                            >
+                                <XCircle size={24} />
+                            </button>
                         </div>
 
-                        <form onSubmit={handleCreateVehicle}>
-                            <div className="form-grid-2">
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Car Number *</label>
-                                    <input className="input-field" placeholder="DL-01-AB-1234" value={carNumber} onChange={(e) => setCarNumber(e.target.value)} required />
-                                </div>
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Model Name *</label>
-                                    <input className="input-field" placeholder="Toyota Innova" value={model} onChange={(e) => setModel(e.target.value)} required />
-                                </div>
-                            </div>
+                        <form onSubmit={handleCreateVehicle} style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
 
-                            <div className="form-grid-2">
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Permit Category</label>
-                                    <select className="input-field" value={permitType} onChange={(e) => setPermitType(e.target.value)}>
-                                        <option value="All India">All India (National)</option>
-                                        <option value="State Only">State Only</option>
-                                        <option value="Local">Local Trip</option>
-                                    </select>
+                            {/* Section 1: Core Details */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1' }}></div>
+                                    <h3 style={{ color: 'white', fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', margin: 0, letterSpacing: '1px' }}>Core Specifications</h3>
                                 </div>
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Car Segment</label>
-                                    <select className="input-field" value={carType} onChange={(e) => setCarType(e.target.value)}>
-                                        <option value="SUV">SUV / MUV</option>
-                                        <option value="Sedan">Sedan</option>
-                                        <option value="Hatchback">Hatchback</option>
-                                        <option value="Other">Luxury / Other</option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px', marginBottom: '20px' }}>
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fastag ID</label>
-                                    <input className="input-field" placeholder="ID Number" value={fastagNumber} onChange={(e) => setFastagNumber(e.target.value)} />
-                                </div>
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fastag Bank</label>
-                                    <input className="input-field" placeholder="Bank Name" value={fastagBank} onChange={(e) => setFastagBank(e.target.value)} />
-                                </div>
-                                <div>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Current Bal</label>
-                                    <input type="number" className="input-field" placeholder="0.00" value={fastagBalance} onChange={(e) => setFastagBalance(e.target.value)} />
-                                </div>
-                            </div>
-
-                            <div style={{ marginBottom: '25px' }}>
-                                <label style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Duty / Rental Amount</label>
-                                <input type="number" className="input-field" placeholder="Daily or Fixed Amount" value={dutyAmount} onChange={(e) => setDutyAmount(e.target.value)} />
-                            </div>
-
-                            <div style={{ padding: '20px', background: 'rgba(255,255,255,0.01)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
-                                <h3 style={{ color: 'white', fontSize: '15px', fontWeight: '700', marginBottom: '15px' }}>Initial Documents (Optional)</h3>
-                                <div style={{ display: 'grid', gap: '12px' }}>
-                                    {['rc', 'insurance', 'puc', 'fitness', 'permit'].map(type => (
-                                        <div key={type} className="doc-upload-grid">
-                                            <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>{type}</label>
+                                <div className="form-grid-2">
+                                    <div className="form-group">
+                                        <label>Car Number *</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#6366f1' }}>
+                                                <Car size={16} />
+                                            </div>
                                             <input
-                                                type="file"
-                                                onChange={(e) => setDocs({ ...docs, [type]: e.target.files[0] })}
-                                                style={{ fontSize: '11px', color: 'var(--text-muted)' }}
-                                            />
-                                            <input
-                                                type="date"
                                                 className="input-field"
-                                                style={{ marginBottom: 0, padding: '8px 12px', fontSize: '12px' }}
-                                                value={docExpiries[type]}
-                                                onChange={(e) => setDocExpiries({ ...docExpiries, [type]: e.target.value })}
+                                                style={{ paddingLeft: '45px', height: '54px', fontSize: '15px', fontWeight: '700', textTransform: 'uppercase' }}
+                                                placeholder="e.g. RJ-27-TA-XXXX"
+                                                value={carNumber}
+                                                onChange={(e) => setCarNumber(e.target.value)}
+                                                required
                                             />
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Model Name *</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#6366f1' }}>
+                                                <Info size={16} />
+                                            </div>
+                                            <input
+                                                className="input-field"
+                                                style={{ paddingLeft: '45px', height: '54px', fontSize: '15px' }}
+                                                placeholder="e.g. Maruti Ciaz"
+                                                value={model}
+                                                onChange={(e) => setModel(e.target.value)}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="form-grid-2">
+                                    <div className="form-group">
+                                        <label>Permit Category</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#6366f1' }}>
+                                                <MapPin size={16} />
+                                            </div>
+                                            <select
+                                                className="input-field"
+                                                style={{ paddingLeft: '45px', height: '54px', appearance: 'none', cursor: 'pointer' }}
+                                                value={permitType}
+                                                onChange={(e) => setPermitType(e.target.value)}
+                                            >
+                                                <option value="All India" style={{ background: '#0f172a' }}>All India (National)</option>
+                                                <option value="State Only" style={{ background: '#0f172a' }}>State Only</option>
+                                                <option value="Local" style={{ background: '#0f172a' }}>Local Trip</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Car Segment</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#6366f1' }}>
+                                                <Car size={16} />
+                                            </div>
+                                            <select
+                                                className="input-field"
+                                                style={{ paddingLeft: '45px', height: '54px', appearance: 'none', cursor: 'pointer' }}
+                                                value={carType}
+                                                onChange={(e) => setCarType(e.target.value)}
+                                            >
+                                                <option value="SUV" style={{ background: '#0f172a' }}>SUV / MUV</option>
+                                                <option value="Sedan" style={{ background: '#0f172a' }}>Sedan</option>
+                                                <option value="Hatchback" style={{ background: '#0f172a' }}>Hatchback</option>
+                                                <option value="Other" style={{ background: '#0f172a' }}>Luxury / Other</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 2: Financials & Tracking */}
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
+                                    <h3 style={{ color: 'white', fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', margin: 0, letterSpacing: '1px' }}>Financials & Tracking</h3>
+                                </div>
+                                <div className="form-grid-3">
+                                    <div className="form-group">
+                                        <label>Fastag ID</label>
+                                        <input className="input-field" style={{ height: '50px' }} placeholder="ID Number" value={fastagNumber} onChange={(e) => setFastagNumber(e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Fastag Bank</label>
+                                        <input className="input-field" style={{ height: '50px' }} placeholder="e.g. ICICI" value={fastagBank} onChange={(e) => setFastagBank(e.target.value)} />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Fastag Balance (₹)</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontWeight: '900' }}>₹</div>
+                                            <input type="number" className="input-field no-spinner" style={{ height: '50px', paddingLeft: '32px' }} placeholder="0.00" value={fastagBalance} onChange={(e) => setFastagBalance(e.target.value)} />
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="form-group">
+                                    <label>Daily Rental / Duty Amount</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontWeight: '900' }}>₹</div>
+                                        <input type="number" className="input-field no-spinner" style={{ height: '54px', paddingLeft: '35px', fontSize: '16px', fontWeight: '800' }} placeholder="Fixed Daily Amount" value={dutyAmount} onChange={(e) => setDutyAmount(e.target.value)} />
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Section 3: Documents */}
+                            <div style={{
+                                padding: '25px',
+                                background: 'rgba(255,255,255,0.02)',
+                                borderRadius: '24px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '20px'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }}></div>
+                                        <h3 style={{ color: 'white', fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', margin: 0, letterSpacing: '1px' }}>Fleet Documentation</h3>
+                                    </div>
+                                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>JPG/PNG/PDF • MAX 5MB</span>
+                                </div>
+
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    {['rc', 'insurance', 'puc', 'fitness', 'permit'].map(type => (
+                                        <div key={type} style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: '100px 1fr 180px',
+                                            gap: '20px',
+                                            alignItems: 'center',
+                                            padding: '12px 15px',
+                                            background: 'rgba(0,0,0,0.2)',
+                                            borderRadius: '16px',
+                                            border: docs[type] ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid transparent'
+                                        }}>
+                                            <label style={{ color: 'white', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>{type}</label>
+
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    id={`file-${type}`}
+                                                    type="file"
+                                                    onChange={(e) => setDocs({ ...docs, [type]: e.target.files[0] })}
+                                                    style={{ display: 'none' }}
+                                                />
+                                                <label
+                                                    htmlFor={`file-${type}`}
+                                                    style={{
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '10px',
+                                                        padding: '10px 15px',
+                                                        background: docs[type] ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.05)',
+                                                        borderRadius: '10px',
+                                                        border: '1px dashed rgba(255,255,255,0.1)',
+                                                        cursor: 'pointer',
+                                                        fontSize: '13px',
+                                                        color: docs[type] ? '#10b981' : 'rgba(255,255,255,0.4)',
+                                                        fontWeight: '700',
+                                                        transition: 'all 0.2s ease'
+                                                    }}
+                                                >
+                                                    {docs[type] ? <CheckCircle2 size={16} /> : <Clock size={16} />}
+                                                    {docs[type] ? docs[type].name.substring(0, 20) + (docs[type].name.length > 20 ? '...' : '') : 'Upload Scan'}
+                                                </label>
+                                            </div>
+
+                                            <div style={{ position: 'relative' }}>
+                                                <Calendar size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                                                <input
+                                                    type="date"
+                                                    className="input-field"
+                                                    placeholder="Expiry"
+                                                    style={{ marginBottom: 0, padding: '8px 12px 8px 35px', fontSize: '13px', height: '42px', colorScheme: 'dark' }}
+                                                    value={docExpiries[type]}
+                                                    onChange={(e) => setDocExpiries({ ...docExpiries, [type]: e.target.value })}
+                                                />
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
+                                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', textAlign: 'center' }}>
+                                    <Info size={10} style={{ marginRight: '5px' }} />
+                                    Document upload is optional during creation, but required for duty assignments.
+                                </p>
                             </div>
 
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <button type="button" className="glass-card" style={{ flex: 1, padding: '14px', color: 'white', fontWeight: '700' }} onClick={() => setShowModal(false)}>Cancel</button>
-                                <button type="submit" className="btn-primary" style={{ flex: 1, padding: '14px' }} disabled={creating}>
-                                    {creating ? 'Processing...' : (editingId ? 'Update Vehicle' : 'Create Vehicle')}
+                            {/* Actions */}
+                            <div style={{ display: 'flex', gap: '15px', padding: '10px 0' }}>
+                                <button
+                                    type="button"
+                                    className="glass-card"
+                                    style={{ flex: 1, padding: '16px', color: 'white', fontWeight: '800', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+                                    onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                                    onMouseOut={(e) => e.currentTarget.style.background = 'transparent'}
+                                    onClick={() => {
+                                        setShowModal(false);
+                                        setEditingId(null);
+                                    }}
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    className="btn-primary"
+                                    style={{ flex: 2, padding: '16px', borderRadius: '18px', fontSize: '16px', fontWeight: '900', boxShadow: '0 20px 40px -10px rgba(14, 165, 233, 0.4)' }}
+                                    disabled={creating}
+                                >
+                                    {creating ? (
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                            <div className="spinner" style={{ width: '20px', height: '20px' }}></div>
+                                            <span>Processing...</span>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                            {editingId ? <CheckCircle2 size={20} /> : <Plus size={20} />}
+                                            <span>{editingId ? 'Save Vehicle Updates' : 'Add Vehicle to Fleet'}</span>
+                                        </div>
+                                    )}
                                 </button>
                             </div>
                         </form>

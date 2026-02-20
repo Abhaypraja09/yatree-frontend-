@@ -67,12 +67,12 @@ const Sidebar = ({ isOpen, onClose }) => {
                 padding: '30px 20px',
                 display: 'flex',
                 flexDirection: 'column',
-                borderRight: '1px solid var(--border)',
-                background: 'var(--bg-dark)',
+                borderRight: '1px solid rgba(0, 229, 255, 0.1)',
+                background: 'linear-gradient(180deg, #060a12 0%, #080c14 100%)',
                 backdropFilter: 'blur(20px)',
                 zIndex: 100,
                 transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: isOpen ? '20px 0 50px rgba(0,0,0,0.5)' : 'none'
+                boxShadow: isOpen ? '20px 0 60px rgba(0,0,0,0.8)' : 'none'
             }}
         >
             {/* Desktop Sidebar always visible on large screens */}
@@ -138,9 +138,10 @@ const Sidebar = ({ isOpen, onClose }) => {
                             borderRadius: '12px',
                             marginBottom: '6px',
                             transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            background: isActive ? 'rgba(14, 165, 233, 0.12)' : 'transparent',
-                            color: isActive ? 'var(--primary)' : 'var(--text-muted)',
-                            border: isActive ? '1px solid rgba(14, 165, 233, 0.25)' : '1px solid transparent'
+                            background: isActive ? 'rgba(0, 229, 255, 0.1)' : 'transparent',
+                            color: isActive ? '#00e5ff' : 'rgba(77, 127, 166, 0.9)',
+                            border: isActive ? '1px solid rgba(0, 229, 255, 0.25)' : '1px solid transparent',
+                            boxShadow: isActive ? '0 0 20px rgba(0, 229, 255, 0.1)' : 'none'
                         })}
                     >
                         <item.icon size={20} />
@@ -163,14 +164,14 @@ const Sidebar = ({ isOpen, onClose }) => {
                         width: '42px',
                         height: '42px',
                         borderRadius: '12px',
-                        background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                        background: 'linear-gradient(135deg, #00e5ff, #ff2d78)',
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
                         color: 'white',
                         fontWeight: '800',
                         fontSize: '18px',
-                        boxShadow: '0 4px 12px rgba(14, 165, 233, 0.3)'
+                        boxShadow: '0 4px 16px rgba(0, 229, 255, 0.3)'
                     }}>
                         {user?.name?.charAt(0) || 'A'}
                     </div>

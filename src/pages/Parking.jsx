@@ -164,7 +164,7 @@ const ParkingPage = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false`, {
+            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&isFreelancer=false`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setDrivers(data.drivers || []);
@@ -294,6 +294,9 @@ const ParkingPage = () => {
 
         const matchesSearch = (carNum.toLowerCase().includes(searchTerm.toLowerCase()) ||
             drvName.toLowerCase().includes(searchTerm.toLowerCase()));
+
+        const isFreelancer = e.driverId?.isFreelancer || e.driver?.includes('(F)');
+        if (isFreelancer) return false;
 
         const matchesDriver = filterDriver === 'All' || (e.driverId?._id === filterDriver) || (e.driver === filterDriver);
         return matchesSearch && matchesDriver;
