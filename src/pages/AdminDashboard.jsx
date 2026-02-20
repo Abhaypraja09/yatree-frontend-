@@ -378,10 +378,14 @@ const AttendanceModal = ({ item, onClose, onApproveReject }) => {
                                         </div>
                                         <div>
                                             <p style={{ color: 'white', fontSize: '14px', fontWeight: '700', margin: 0, textTransform: 'capitalize' }}>
-                                                {exp.type} - ₹{exp.amount}
+                                                {exp.type === 'other'
+                                                    ? (exp.fuelType || 'Other Service')
+                                                    : exp.type === 'fuel'
+                                                        ? 'Fuel'
+                                                        : 'Parking'} - ₹{exp.amount}
                                             </p>
                                             <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: 0 }}>
-                                                {exp.type === 'fuel' ? `${exp.km} KM` : 'Parking Slip'}
+                                                {exp.type === 'fuel' ? `${exp.km} KM` : exp.type === 'other' ? 'Service Receipt' : 'Parking Slip'}
                                             </p>
                                         </div>
                                     </div>
