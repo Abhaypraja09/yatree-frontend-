@@ -504,62 +504,90 @@ const ParkingPage = () => {
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-                        {pendingEntries.map((entry) => (
-                            <motion.div
-                                key={entry._id}
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                className="glass-card"
-                                style={{
-                                    padding: '24px',
-                                    border: '1px solid rgba(244, 63, 94, 0.2)',
-                                    background: 'linear-gradient(145deg, rgba(244, 63, 94, 0.05), rgba(15, 23, 42, 0.4))',
-                                    borderRadius: '20px'
-                                }}
-                            >
-                                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-                                    {entry.slipPhoto ? (
-                                        <div style={{ position: 'relative' }}>
-                                            <img
-                                                src={getImageUrl(entry.slipPhoto)}
-                                                onClick={() => { setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
-                                                style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
-                                            />
-                                            <div style={{ position: 'absolute', bottom: '-8px', right: '-8px', background: '#f43f5e', color: 'white', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '900' }}>SLIP</div>
+                        {pendingEntries.map((entry) => {
+                            // Determine display label based on type
+                            const serviceLabel = entry.type === 'other'
+                                ? (entry.fuelType || 'Other Service')
+                                : 'Parking';
+                            const isOtherService = entry.type === 'other';
+                            const labelColor = isOtherService ? '#f59e0b' : '#818cf8';
+                            const labelBg = isOtherService ? 'rgba(245,158,11,0.1)' : 'rgba(129,140,248,0.1)';
+                            const labelBorder = isOtherService ? 'rgba(245,158,11,0.25)' : 'rgba(129,140,248,0.25)';
+
+                            return (
+                                <motion.div
+                                    key={entry._id}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="glass-card"
+                                    style={{
+                                        padding: '24px',
+                                        border: '1px solid rgba(244, 63, 94, 0.2)',
+                                        background: 'linear-gradient(145deg, rgba(244, 63, 94, 0.05), rgba(15, 23, 42, 0.4))',
+                                        borderRadius: '20px'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+                                        {entry.slipPhoto ? (
+                                            <div style={{ position: 'relative' }}>
+                                                <img
+                                                    src={getImageUrl(entry.slipPhoto)}
+                                                    onClick={() => { setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
+                                                    style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                                                />
+                                                <div style={{ position: 'absolute', bottom: '-8px', right: '-8px', background: '#f43f5e', color: 'white', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '900' }}>SLIP</div>
+                                            </div>
+                                        ) : (
+                                            <div
+                                                onClick={() => { setSelectedImage(''); setShowImageModal(true); }}
+                                                style={{ width: '64px', height: '64px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                            >
+                                                <Eye size={24} color="rgba(255,255,255,0.2)" />
+                                            </div>
+                                        )}
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '6px' }}>
+                                                <h4 style={{ color: 'white', fontWeight: '900', fontSize: '22px', margin: 0 }}>₹{entry.amount}</h4>
+                                                <span style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', fontSize: '9px', padding: '3px 8px', borderRadius: '6px', fontWeight: '800', textTransform: 'uppercase', border: '1px solid rgba(244, 63, 94, 0.2)' }}>Action Required</span>
+                                            </div>
+                                            {/* Show service type badge — Parking / Car Wash / Puncture etc. */}
+                                            <span style={{
+                                                display: 'inline-block',
+                                                background: labelBg,
+                                                color: labelColor,
+                                                fontSize: '10px',
+                                                padding: '2px 10px',
+                                                borderRadius: '6px',
+                                                fontWeight: '800',
+                                                border: `1px solid ${labelBorder}`,
+                                                marginTop: '6px',
+                                                marginBottom: '2px',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.5px'
+                                            }}>
+                                                {serviceLabel}
+                                            </span>
+                                            <p style={{ color: 'white', fontSize: '13px', fontWeight: '700', margin: '4px 0 0' }}>{entry.driver}</p>
+                                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: '0' }}>{entry.carNumber}</p>
                                         </div>
-                                    ) : (
-                                        <div
-                                            onClick={() => { setSelectedImage(''); setShowImageModal(true); }}
-                                            style={{ width: '64px', height: '64px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                        >
-                                            <Eye size={24} color="rgba(255,255,255,0.2)" />
-                                        </div>
-                                    )}
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                            <h4 style={{ color: 'white', fontWeight: '900', fontSize: '22px', margin: 0 }}>₹{entry.amount}</h4>
-                                            <span style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', fontSize: '9px', padding: '3px 8px', borderRadius: '6px', fontWeight: '800', textTransform: 'uppercase', border: '1px solid rgba(244, 63, 94, 0.2)' }}>Action Required</span>
-                                        </div>
-                                        <p style={{ color: 'white', fontSize: '13px', fontWeight: '700', margin: '4px 0 0' }}>{entry.driver}</p>
-                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: '0' }}>{entry.carNumber}</p>
                                     </div>
-                                </div>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <button
-                                        onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'approved')}
-                                        style={{ flex: 1.5, background: '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: '800', fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
-                                    >
-                                        Approve
-                                    </button>
-                                    <button
-                                        onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'rejected')}
-                                        style={{ flex: 1, background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}
-                                    >
-                                        Reject
-                                    </button>
-                                </div>
-                            </motion.div>
-                        ))}
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <button
+                                            onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'approved')}
+                                            style={{ flex: 1.5, background: '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: '800', fontSize: '14px', cursor: 'pointer', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}
+                                        >
+                                            Approve
+                                        </button>
+                                        <button
+                                            onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'rejected')}
+                                            style={{ flex: 1, background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}
+                                        >
+                                            Reject
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -1086,7 +1114,7 @@ const ParkingPage = () => {
                     />
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 
