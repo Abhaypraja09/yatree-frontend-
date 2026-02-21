@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from '../api/axios';
 import {
-    Users, Clock, Fuel, X, Camera, LogIn, IndianRupee, Activity
+    Users, Clock, Fuel, X, Camera, LogIn, IndianRupee, Activity,
+    Calendar, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -267,7 +268,7 @@ const AttendanceModal = ({ item, onClose, onApproveReject }) => {
                             <Fuel size={18} fill="#f43f5e" color="#f43f5e" />
                             ₹{(() => {
                                 const recordedFuel = item.fuel?.amount || 0;
-                                const pendingFuel = item.pendingExpenses?.filter(e => e.type === 'fuel').reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
+                                const pendingFuel = item.pendingExpenses?.filter(e => e.type === 'fuel' && e.status === 'pending').reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
                                 return recordedFuel + pendingFuel;
                             })()}
                         </h4>
@@ -296,8 +297,20 @@ const AttendanceModal = ({ item, onClose, onApproveReject }) => {
 
 const LiveFeed = () => {
     const { user } = useAuth();
-    const { selectedCompany, selectedDate } = useCompany();
+    const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
+    const dateInputRef = useRef(null);
+
+    const getTodayLocal = () => {
+        const d = new Date();
+        const offset = d.getTimezoneOffset();
+        const localDate = new Date(d.getTime() - (offset * 60 * 1000));
+        return localDate.toISOString().split('T')[0];
+    };
+
+    const formatDate = (dateStr) => {
+        return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+    };
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
@@ -405,9 +418,67 @@ const LiveFeed = () => {
                             </h1>
                         </div>
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', margin: 0 }}>ACTIVE SESSIONS</p>
-                        <h2 style={{ color: 'white', margin: 0, fontWeight: '900' }}>{stats?.attendanceDetails?.length || 0}</h2>
+                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <button
+                                    onClick={() => {
+                                        const d = new Date(selectedDate);
+                                        d.setDate(d.getDate() - 1);
+                                        setSelectedDate(d.toISOString().split('T')[0]);
+                                    }}
+                                    style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: '#334155', color: '#ffffff', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                                >
+                                    <ChevronLeft size={16} strokeWidth={3} />
+                                </button>
+
+                                <div
+                                    style={{ position: 'relative', cursor: 'pointer' }}
+                                    onClick={() => {
+                                        if (dateInputRef.current) {
+                                            if (typeof dateInputRef.current.showPicker === 'function') {
+                                                dateInputRef.current.showPicker();
+                                            } else {
+                                                dateInputRef.current.click();
+                                            }
+                                        }
+                                    }}
+                                >
+                                    <div style={{ height: '30px', padding: '0 12px', background: '#334155', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap' }}>
+                                        <Calendar size={14} color="#ffffff" />
+                                        <span style={{ color: '#ffffff', fontSize: '12px', fontWeight: '700' }}>{formatDate(selectedDate)}</span>
+                                    </div>
+                                    <input
+                                        type="date"
+                                        ref={dateInputRef}
+                                        value={selectedDate}
+                                        onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+                                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, pointerEvents: 'none' }}
+                                    />
+                                </div>
+
+                                <button
+                                    onClick={() => {
+                                        const d = new Date(selectedDate);
+                                        d.setDate(d.getDate() + 1);
+                                        setSelectedDate(d.toISOString().split('T')[0]);
+                                    }}
+                                    style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: '#334155', color: '#ffffff', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                                >
+                                    <ChevronRight size={16} strokeWidth={3} />
+                                </button>
+                            </div>
+                            <button
+                                onClick={() => setSelectedDate(getTodayLocal())}
+                                style={{ padding: '0 10px', height: '28px', borderRadius: '8px', background: selectedDate === getTodayLocal() ? '#fbbf24' : 'rgba(255,255,255,0.05)', color: selectedDate === getTodayLocal() ? '#000' : 'white', fontWeight: '800', border: 'none', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer' }}
+                            >
+                                Today
+                            </button>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', margin: 0 }}>ACTIVE SESSIONS</p>
+                            <h2 style={{ color: 'white', margin: 0, fontWeight: '900' }}>{stats?.attendanceDetails?.length || 0}</h2>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -434,8 +505,8 @@ const LiveFeed = () => {
                                             <div>
                                                 <div style={{ fontWeight: '900', color: 'white', fontSize: '14px' }}>
                                                     {item.driver?.name}
-                                                    {item.driver?.isFreelancer && <span style={{ marginLeft: '6px', fontSize: '8px', background: '#818cf8', color: 'white', padding: '1px 4px', borderRadius: '4px' }}>F</span>}
                                                 </div>
+                                                {item.driver?.isFreelancer && <div style={{ fontSize: '9px', fontWeight: '900', color: '#818cf8', textTransform: 'uppercase', marginTop: '-2px' }}>Freelancer Driver</div>}
                                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px' }}>
                                                     <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>{item.driver?.mobile}</span>
                                                     {item.punchIn?.time && (
@@ -455,10 +526,10 @@ const LiveFeed = () => {
                                                 </span>
                                                 {(() => {
                                                     const recordedFuel = item.fuel?.amount || 0;
-                                                    const pendingFuel = item.pendingExpenses?.filter(e => e.type === 'fuel').reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
+                                                    const pendingFuel = item.pendingExpenses?.filter(e => e.type === 'fuel' && e.status === 'pending').reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
                                                     const totalFuel = recordedFuel + pendingFuel;
 
-                                                    if (totalFuel > 0 || item.pendingExpenses?.some(e => e.type === 'fuel')) {
+                                                    if (totalFuel > 0 || item.pendingExpenses?.some(e => e.type === 'fuel' && e.status === 'pending')) {
                                                         return (
                                                             <div style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '4px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
                                                                 <Fuel size={12} fill="#f43f5e" />
@@ -509,14 +580,15 @@ const LiveFeed = () => {
                                     </div>
                                     <div>
                                         <div style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>{item.driver?.name}</div>
+                                        {item.driver?.isFreelancer && <div style={{ fontSize: '10px', fontWeight: '900', color: '#818cf8', textTransform: 'uppercase', marginTop: '2px' }}>Freelancer Driver</div>}
                                         <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '600' }}>
                                             {item.vehicle?.carNumber}
                                             {(() => {
                                                 const recordedFuel = item.fuel?.amount || 0;
-                                                const pendingFuel = item.pendingExpenses?.filter(e => e.type === 'fuel').reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
+                                                const pendingFuel = item.pendingExpenses?.filter(e => e.type === 'fuel' && e.status === 'pending').reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
                                                 const totalFuel = recordedFuel + pendingFuel;
 
-                                                if (totalFuel > 0 || item.pendingExpenses?.some(e => e.type === 'fuel')) {
+                                                if (totalFuel > 0 || item.pendingExpenses?.some(e => e.type === 'fuel' && e.status === 'pending')) {
                                                     return (
                                                         <span style={{ color: '#f43f5e', marginLeft: '8px', fontSize: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
                                                             <Fuel size={10} fill="#f43f5e" /> ₹{totalFuel}

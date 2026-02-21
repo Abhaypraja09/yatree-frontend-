@@ -395,11 +395,28 @@ const FuelPage = () => {
     });
 
     // Summary Statistics - Calculate true average (Total Distance / Total Fuel Used)
-    // We only sum Quantity and Amount for entries where distance > 0, because the first entry's quantity 
-    // is used for the trip *before* the tracking started.
-    const totalAmount = filteredEntries.reduce((sum, e) => sum + (e.distance > 0 ? (Number(e.amount) || 0) : 0), 0);
-    const totalLiters = filteredEntries.reduce((sum, e) => sum + (e.distance > 0 ? (Number(e.quantity) || 0) : 0), 0);
+    // For Trip Performance logic: Distance / Previous fill that powered it.
+    // Total distance is the sum of all trips that finished.
+    // Total Liter is the sum of all quantities EXCEPT the very latest one (which is still in the tank).
     const totalDistance = filteredEntries.reduce((sum, e) => sum + (e.distance || 0), 0);
+
+    // In the newest-first array, we sum quantity if there's a newer entry for the same vehicle
+    const totalLiters = filteredEntries.reduce((sum, e, idx) => {
+        const hasNewerEntry = filteredEntries.slice(0, idx).some(newer => newer.vehicle?._id === e.vehicle?._id);
+        if (hasNewerEntry) {
+            return sum + (Number(e.quantity) || 0);
+        }
+        return sum;
+    }, 0);
+
+    const totalAmount = filteredEntries.reduce((sum, e, idx) => {
+        const hasNewerEntry = filteredEntries.slice(0, idx).some(newer => newer.vehicle?._id === e.vehicle?._id);
+        if (hasNewerEntry) {
+            return sum + (Number(e.amount) || 0);
+        }
+        return sum;
+    }, 0);
+
     const avgMileage = totalLiters > 0 ? (totalDistance / totalLiters).toFixed(2) : 0;
 
     const petrolAmount = filteredEntries.filter(e => e.fuelType === 'Petrol').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
