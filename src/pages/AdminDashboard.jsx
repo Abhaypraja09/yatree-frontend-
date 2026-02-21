@@ -5,120 +5,13 @@ import {
     Activity, Users, Car, CreditCard, AlertTriangle, ShieldAlert,
     TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, Clock,
     ChevronLeft, ChevronRight, Filter, Search, MoreHorizontal,
-    Plus, Download, Wrench, Briefcase, Fuel, Calendar, X, IndianRupee, Camera, ShieldCheck
+    Plus, Download, Wrench, Briefcase, Fuel, Calendar, X, IndianRupee, Camera, ShieldCheck, Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
-
-const EditAttendanceModal = ({ item, onClose, onUpdate, vehicles, drivers }) => {
-    const [formData, setFormData] = useState({
-        vehicleId: item.vehicle?._id || '',
-        driverId: item.driver?._id || '',
-        startKm: item.punchIn?.km || '',
-        status: item.status || 'active',
-        remarks: item.punchOut?.remarks || ''
-    });
-    const [updating, setUpdating] = useState(false);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setUpdating(true);
-        try {
-            await onUpdate(item._id, formData);
-            onClose();
-        } catch (error) {
-            console.error(error);
-            alert('Failed to update attendance');
-        } finally {
-            setUpdating(false);
-        }
-    };
-
-    return (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px' }}>
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="glass-card"
-                style={{ width: '100%', maxWidth: '500px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', padding: '0' }}
-            >
-                <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '700' }}>Edit Active Log</h3>
-                    <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={20} /></button>
-                </div>
-                <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
-                    <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Vehicle</label>
-                        <select
-                            className="input-field"
-                            value={formData.vehicleId}
-                            onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-                            style={{ background: '#1e293b' }}
-                        >
-                            {vehicles?.map(v => (
-                                <option key={v._id} value={v._id}>{v.carNumber} ({v.model})</option>
-                            ))}
-                        </select>
-                    </div>
-                    {/* <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Driver</label>
-                        <select
-                            className="input-field"
-                            value={formData.driverId}
-                            onChange={(e) => setFormData({ ...formData, driverId: e.target.value })}
-                            style={{ background: '#1e293b' }}
-                        >
-                            {drivers?.map(d => (
-                                <option key={d._id} value={d._id}>{d.name}</option>
-                            ))}
-                        </select>
-                    </div> */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-                        <div>
-                            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Start KM</label>
-                            <input
-                                type="number"
-                                className="input-field"
-                                value={formData.startKm}
-                                onChange={(e) => setFormData({ ...formData, startKm: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Status</label>
-                            <select
-                                className="input-field"
-                                value={formData.status}
-                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                style={{ background: '#1e293b' }}
-                            >
-                                <option value="active">Active</option>
-                                <option value="completed">Completed</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Remarks / Destination</label>
-                        <textarea
-                            className="input-field"
-                            value={formData.remarks}
-                            onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                            rows={3}
-                        />
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button type="button" onClick={onClose} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', color: 'white', border: 'none', fontWeight: '700', cursor: 'pointer' }}>Cancel</button>
-                        <button type="submit" disabled={updating} className="btn-primary" style={{ flex: 1, padding: '12px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>
-                            {updating ? 'Updating...' : 'Save Changes'}
-                        </button>
-                    </div>
-                </form>
-            </motion.div>
-        </div>
-    );
-};
 
 const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick }) => (
     <motion.div
@@ -208,273 +101,6 @@ const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick }) 
     </motion.div>
 );
 
-const AttendanceModal = ({ item, onClose, onApproveReject }) => {
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        return () => {
-            document.body.style.overflow = 'unset';
-        };
-    }, []);
-
-    return (
-        <div className="modal-overlay" onClick={onClose}>
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                transition={{ duration: 0.2 }}
-                className="glass-card modal-content"
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div className="modal-header">
-                    <h2 className="modal-title">Attendance Details</h2>
-                    <button onClick={onClose} className="modal-close-btn">
-                        <X size={18} />
-                    </button>
-                </div>
-
-                <div className="modal-grid-2">
-                    {/* Punch In */}
-                    <div>
-                        <h3 className="modal-section-title" style={{ color: '#10b981', borderLeft: '4px solid #10b981', paddingLeft: '12px' }}>
-                            Duty Started
-                        </h3>
-                        <div className="photo-grid">
-                            <div className="photo-box">
-                                <p className="photo-label">SELFIE</p>
-                                <img src={item.punchIn?.selfie} alt="Start Selfie" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchIn?.selfie)} />
-                            </div>
-                            <div className="photo-box">
-                                <p className="photo-label">KM METER</p>
-                                <img src={item.punchIn?.kmPhoto} alt="KM Photo" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchIn?.kmPhoto)} />
-                            </div>
-                            <div className="photo-box">
-                                <p className="photo-label">CAR PHOTO</p>
-                                <img src={item.punchIn?.carSelfie} alt="Car Selfie" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchIn?.carSelfie)} />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Punch Out */}
-                    <div>
-                        <h3 className="modal-section-title" style={{ color: '#f43f5e', borderLeft: '4px solid #f43f5e', paddingLeft: '12px' }}>
-                            Duty Ended
-                        </h3>
-                        {item.punchOut?.time ? (
-                            <div className="photo-grid">
-                                <div className="photo-box">
-                                    <p className="photo-label">SELFIE</p>
-                                    <img src={item.punchOut?.selfie} alt="End Selfie" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchOut?.selfie)} />
-                                </div>
-                                <div className="photo-box">
-                                    <p className="photo-label">KM METER</p>
-                                    <img src={item.punchOut?.kmPhoto} alt="KM Photo" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchOut?.kmPhoto)} />
-                                </div>
-                                <div className="photo-box">
-                                    <p className="photo-label">CAR PHOTO</p>
-                                    <img src={item.punchOut?.carSelfie} alt="Car Selfie" className="photo-thumbnail" loading="lazy" onClick={() => window.open(item.punchOut?.carSelfie)} />
-                                </div>
-                            </div>
-                        ) : (
-                            <div className="on-trip-placeholder">
-                                <Clock size={24} />
-                                <p>Vehicle is currently active on trip...</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Financials & Duty Summary */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginTop: '25px' }}>
-                    <div className="glass-card detail-box">
-                        <p className="detail-label">FUEL MANAGEMENT</p>
-                        {item.fuel?.entries && item.fuel.entries.length > 0 ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                {item.fuel.entries.map((f, i) => (
-                                    <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '8px' }}>
-                                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                            {f.slipPhoto && <img src={f.slipPhoto} style={{ width: '30px', height: '30px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => window.open(f.slipPhoto)} />}
-                                            <span style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>₹{f.amount}</span>
-                                        </div>
-                                        <span style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '10px' }}>{f.fuelType}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        ) : null}
-                    </div>
-
-                    <div className="glass-card detail-box">
-                        <p className="detail-label">TOLLS & PARKING</p>
-                        {item.punchOut?.tollParkingAmount > 0 || (item.parking && item.parking.length > 0) ? (
-                            <div>
-                                <h3 style={{ color: '#10b981', margin: '0 0 10px 0', fontSize: '18px', fontWeight: '900' }}>₹{item.punchOut?.tollParkingAmount || item.parking?.reduce((s, p) => s + (p.amount || 0), 0)}</h3>
-                                <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
-                                    {item.parking?.map((p, i) => (
-                                        <img key={i} src={p.slipPhoto} style={{ width: '30px', height: '30px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => window.open(p.slipPhoto)} />
-                                    ))}
-                                </div>
-                            </div>
-                        ) : null}
-                    </div>
-
-                    <div className="glass-card detail-box">
-                        <p className="detail-label">BONUS & ALLOWANCE</p>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                            {item.punchOut?.allowanceTA > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>TA (Outstation):</span> <span style={{ color: '#10b981', fontWeight: '900' }}>+₹{item.punchOut.allowanceTA}</span></div>}
-                            {item.punchOut?.nightStayAmount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>Night Stay:</span> <span style={{ color: '#10b981', fontWeight: '900' }}>+₹{item.punchOut.nightStayAmount}</span></div>}
-                            {(!item.punchOut?.allowanceTA && !item.punchOut?.nightStayAmount) && null}
-                        </div>
-                    </div>
-                </div>
-
-                {/* Duty Remarks Section */}
-                {item.punchOut?.remarks && (
-                    <div className="glass-card" style={{ marginTop: '20px', padding: '15px', border: '1px solid rgba(16, 185, 129, 0.2)', background: 'rgba(16, 185, 129, 0.03)' }}>
-                        <p style={{ fontSize: '10px', color: '#10b981', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>DUTY REMARKS / DESTINATION</p>
-                        <p style={{ color: 'white', fontSize: '14px', lineHeight: '1.6', margin: 0, fontWeight: '600' }}>{item.punchOut.remarks}</p>
-                    </div>
-                )}
-
-                {/* Issues Maintenance Section */}
-                {item.punchOut?.otherRemarks && (
-                    <div className="glass-card" style={{ marginTop: '12px', padding: '15px', border: '1px solid rgba(244, 63, 94, 0.2)', background: 'rgba(244, 63, 94, 0.02)' }}>
-                        <p style={{ fontSize: '10px', color: '#f43f5e', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>ISSUES / MAINTENANCE REPORT</p>
-                        <p style={{ color: 'white', fontSize: '14px', lineHeight: '1.6', margin: 0 }}>{item.punchOut.otherRemarks}</p>
-                    </div>
-                )}
-
-                {item.pendingExpenses && item.pendingExpenses.length > 0 && (
-                    <div style={{ marginTop: 'clamp(18px, 4vw, 25px)' }}>
-                        <h3 className="modal-section-title" style={{ color: '#f59e0b', borderLeft: '4px solid #f59e0b', paddingLeft: '12px' }}>
-                            Awaiting Slips
-                        </h3>
-                        <div style={{ display: 'grid', gap: '12px', marginTop: '12px' }}>
-                            {item.pendingExpenses.map((exp, idx) => (
-                                <div key={exp._id} className="glass-card" style={{
-                                    padding: '12px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'space-between',
-                                    background: 'rgba(255,255,255,0.02)',
-                                    border: '1px solid rgba(255,255,255,0.05)'
-                                }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div style={{
-                                            width: '45px',
-                                            height: '45px',
-                                            borderRadius: '8px',
-                                            overflow: 'hidden',
-                                            cursor: exp.slipPhoto ? 'pointer' : 'default',
-                                            background: 'rgba(255,255,255,0.05)',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
-                                        }} onClick={() => exp.slipPhoto && window.open(exp.slipPhoto, '_blank')}>
-                                            {exp.slipPhoto ? (
-                                                <img src={exp.slipPhoto} alt="Slip" style={{ width: '100%', height: '100%', objectFit: 'cover' }} loading="lazy" />
-                                            ) : (
-                                                <Camera size={20} style={{ opacity: 0.3 }} />
-                                            )}
-                                        </div>
-                                        <div>
-                                            <p style={{ color: 'white', fontSize: '14px', fontWeight: '700', margin: 0, textTransform: 'capitalize' }}>
-                                                {exp.type === 'other'
-                                                    ? (exp.fuelType || 'Other Service')
-                                                    : exp.type === 'fuel'
-                                                        ? 'Fuel'
-                                                        : 'Parking'} - ₹{exp.amount}
-                                            </p>
-                                            <p style={{ color: 'var(--text-muted)', fontSize: '11px', margin: 0 }}>
-                                                {exp.type === 'fuel' ? `${exp.km} KM` : exp.type === 'other' ? 'Service Receipt' : 'Parking Slip'}
-                                            </p>
-                                        </div>
-                                    </div>
-
-                                    {exp.status === 'pending' ? (
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button
-                                                onClick={() => onApproveReject(item._id, exp._id, 'approved')}
-                                                style={{
-                                                    background: 'rgba(16, 185, 129, 0.15)',
-                                                    color: '#10b981',
-                                                    padding: '6px 12px',
-                                                    borderRadius: '8px',
-                                                    fontSize: '11px',
-                                                    fontWeight: '800',
-                                                    border: '1px solid rgba(16, 185, 129, 0.2)'
-                                                }}
-                                            >
-                                                APPROVE
-                                            </button>
-                                            <button
-                                                onClick={() => onApproveReject(item._id, exp._id, 'rejected')}
-                                                style={{
-                                                    background: 'rgba(244, 63, 94, 0.15)',
-                                                    color: '#f43f5e',
-                                                    padding: '6px 12px',
-                                                    borderRadius: '8px',
-                                                    fontSize: '11px',
-                                                    fontWeight: '800',
-                                                    border: '1px solid rgba(244, 63, 94, 0.2)'
-                                                }}
-                                            >
-                                                REJECT
-                                            </button>
-                                        </div>
-                                    ) : (
-                                        <span style={{
-                                            fontSize: '11px',
-                                            fontWeight: '800',
-                                            color: exp.status === 'approved' ? '#10b981' : '#f43f5e',
-                                            textTransform: 'uppercase',
-                                            padding: '4px 8px',
-                                            borderRadius: '6px',
-                                            background: exp.status === 'approved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)'
-                                        }}>
-                                            {exp.status}
-                                        </span>
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
-                {/* Distance Summary */}
-                <div style={{
-                    marginTop: 'clamp(18px, 4vw, 25px)',
-                    display: 'grid',
-                    gap: 'clamp(12px, 2.5vw, 15px)'
-                }} className="modal-grid-2">
-                    <div className="glass-card" style={{
-                        padding: 'clamp(14px, 2.5vw, 15px)',
-                        textAlign: 'center',
-                        border: '1px solid rgba(16, 185, 129, 0.2)',
-                        background: 'rgba(16, 185, 129, 0.05)'
-                    }}>
-                        <p style={{
-                            fontSize: 'clamp(9px, 2.2vw, 10px)',
-                            color: '#10b981',
-                            fontWeight: '800',
-                            marginBottom: '6px'
-                        }}>
-                            DISTANCE COVERED
-                        </p>
-                        <h3 style={{
-                            color: 'white',
-                            margin: 0,
-                            fontSize: 'clamp(20px, 4.5vw, 24px)',
-                            fontWeight: '800'
-                        }}>
-                            {item.totalKM} <small style={{ fontSize: 'clamp(11px, 2.5vw, 12px)', opacity: 0.6 }}>KM</small>
-                        </h3>
-                    </div>
-                </div>
-            </motion.div>
-        </div>
-    );
-};
-
 const AdminDashboard = () => {
     const { user } = useAuth();
     const navigate = useNavigate();
@@ -482,102 +108,42 @@ const AdminDashboard = () => {
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [editingItem, setEditingItem] = useState(null);
-    const [allVehicles, setAllVehicles] = useState([]);
-    const [allDrivers, setAllDrivers] = useState([]);
     const dateInputRef = useRef(null);
 
-
     const getTodayLocal = () => {
-        return new Date().toLocaleDateString('en-CA'); // YYYY-MM-DD format
+        const d = new Date();
+        const offset = d.getTimezoneOffset();
+        const localDate = new Date(d.getTime() - (offset * 60 * 1000));
+        return localDate.toISOString().split('T')[0];
     };
 
     const formatDate = (dateStr) => {
-        if (!dateStr) return '';
-        const d = new Date(dateStr);
-        return d.toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+        return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     };
 
-    useEffect(() => {
-        let isCancelled = false;
-
-        const fetchStats = async () => {
-            const userInfoRaw = localStorage.getItem('userInfo');
-            if (!userInfoRaw || !selectedCompany) return;
-
-            setLoading(true);
-            try {
-                const userInfo = JSON.parse(userInfoRaw);
-                const { data } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}?date=${selectedDate}`, {
-                    headers: { Authorization: `Bearer ${userInfo.token}` }
-                });
-                if (!isCancelled) setStats(data);
-            } catch (err) {
-                console.error('Error fetching stats', err);
-            } finally {
-                if (!isCancelled) setLoading(false);
-            }
-        };
-
-        const fetchResources = async () => {
-            if (!selectedCompany?._id) return;
-            try {
-                const userInfoRaw = localStorage.getItem('userInfo');
-                const userInfo = JSON.parse(userInfoRaw);
-                const [vRes, dRes] = await Promise.all([
-                    axios.get(`/api/admin/vehicles/${selectedCompany._id}`, { headers: { Authorization: `Bearer ${userInfo.token}` } }),
-                    axios.get(`/api/admin/drivers/${selectedCompany._id}`, { headers: { Authorization: `Bearer ${userInfo.token}` } })
-                ]);
-                setAllVehicles(vRes.data.vehicles || []);
-                setAllDrivers(dRes.data.drivers || []);
-            } catch (err) { console.error(err); }
-        };
-
-        fetchStats();
-        fetchResources();
-
-        return () => {
-            isCancelled = true;
-        };
-    }, [selectedCompany, selectedDate]);
-
-    const handleUpdateAttendance = async (id, data) => {
+    const fetchStats = async () => {
         const userInfoRaw = localStorage.getItem('userInfo');
-        const userInfo = JSON.parse(userInfoRaw);
-        await axios.put(`/api/admin/attendance/${id}`, data, {
-            headers: { Authorization: `Bearer ${userInfo.token}` }
-        });
-        // Refresh stats
-        const { data: newData } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}?date=${selectedDate}`, {
-            headers: { Authorization: `Bearer ${userInfo.token}` }
-        });
-        setStats(newData);
-        alert('Record updated successfully');
-    };
+        if (!userInfoRaw || !selectedCompany) return;
 
-    const handleApproveRejectExpense = async (attendanceId, expenseId, status) => {
+        setLoading(true);
         try {
-            const userInfoRaw = localStorage.getItem('userInfo');
             const userInfo = JSON.parse(userInfoRaw);
-            await axios.patch(`/api/admin/attendance/${attendanceId}/expense/${expenseId}`, { status }, {
-                headers: { Authorization: `Bearer ${userInfo.token}` }
-            });
-            // Refresh stats to show updated status
             const { data } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}?date=${selectedDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setStats(data);
-            // Also update selectedItem if it's the one we are viewing
-            if (selectedItem && selectedItem._id === attendanceId) {
-                const updatedItem = data.attendanceDetails.find(a => a._id === attendanceId);
-                setSelectedItem(updatedItem);
-            }
         } catch (err) {
-            console.error('Error processing expense', err);
-            alert('Failed to process expense');
+            console.error('Error fetching stats', err);
+        } finally {
+            setLoading(false);
         }
     };
+
+    useEffect(() => {
+        fetchStats();
+        const interval = setInterval(fetchStats, 60000);
+        return () => clearInterval(interval);
+    }, [selectedCompany, selectedDate]);
 
     return (
         <div className="admin-dashboard-container" style={{
@@ -595,44 +161,11 @@ const AdminDashboard = () => {
                     -webkit-backdrop-filter: blur(16px);
                     box-shadow: 0 10px 30px -5px rgba(0,0,0,0.3);
                 }
-                .hover-row:hover { background: rgba(255,255,255,0.03); }
-                .modal-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-                @media (max-width: 768px) { .modal-grid-2 { grid-template-columns: 1fr; } }
-                
-                .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 10px; }
-                .photo-box { background: rgba(0,0,0,0.2); padding: 8px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.05); }
-                .photo-thumbnail { width: 100%; aspect-ratio: 1; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
-                .photo-thumbnail:hover { transform: scale(1.05); }
-                .photo-label { font-size: 8px; color: rgba(255,255,255,0.4); font-weight: 900; margin-bottom: 5px; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; }
-                
-                .on-trip-placeholder { height: 100px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: rgba(255,255,255,0.3); border: 2px dashed rgba(255,255,255,0.1); border-radius: 20px; background: rgba(255,255,255,0.01); gap: 10px; }
-                .on-trip-placeholder p { font-size: 11px; font-weight: 700; margin: 0; }
-                
-                .detail-box { padding: 18px; background: rgba(255,255,255,0.02); border-radius: 20px; }
-                .detail-label { font-size: 10px; color: rgba(255,255,255,0.4); font-weight: 900; margin-bottom: 12px; letter-spacing: 1px; text-transform: uppercase; }
-                
                 .status-pill { border-radius: 20px; letter-spacing: 0.5px; }
                 .vehicle-badge { letter-spacing: 0.5px; }
             `}</style>
 
-            <AnimatePresence>
-                {selectedItem && (
-                    <AttendanceModal
-                        item={selectedItem}
-                        onClose={() => setSelectedItem(null)}
-                        onApproveReject={handleApproveRejectExpense}
-                    />
-                )}
-                {editingItem && (
-                    <EditAttendanceModal
-                        item={editingItem}
-                        onClose={() => setEditingItem(null)}
-                        onUpdate={handleUpdateAttendance}
-                        vehicles={allVehicles}
-                        drivers={allDrivers}
-                    />
-                )}
-            </AnimatePresence>
+
 
             <div className="glass-card" style={{
                 background: 'rgba(30, 41, 59, 0.4)',
@@ -650,39 +183,29 @@ const AdminDashboard = () => {
                     width: '100%'
                 }}>
                     <div className="header-logo-section">
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            style={{
-                                width: ' clamp(44px, 10vw, 56px)',
-                                height: 'clamp(44px, 10vw, 56px)',
-                                background: 'white',
-                                borderRadius: '14px',
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <div style={{
+                                width: 'clamp(40px,10vw,50px)',
+                                height: 'clamp(40px,10vw,50px)',
+                                background: 'linear-gradient(135deg, white, #f8fafc)',
+                                borderRadius: '16px',
                                 padding: '8px',
-                                boxShadow: '0 12px 24px -6px rgba(0,0,0,0.4)',
-                                border: '1px solid rgba(255,255,255,0.1)'
-                            }}
-                        >
-                            <img
-                                src="/logos/logo.png"
-                                alt="Yatree Destination Logo"
-                                style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                            />
-                        </motion.div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
-                                <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Fleet Overview</span>
-                            </div>
-                            <h1 style={{
-                                fontSize: 'clamp(18px, 4.5vw, 24px)',
-                                fontWeight: '900',
-                                color: 'white',
-                                margin: '2px 0 0 0',
-                                letterSpacing: '-0.5px'
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
                             }}>
-                                Yatree Destination <span className="hide-mobile">Dashboard</span>
-                            </h1>
+                                <Shield size={28} color="#fbbf24" />
+                            </div>
+                            <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                    <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Control Center</span>
+                                </div>
+                                <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', cursor: 'pointer' }}>
+                                    Executive <span className="text-gradient-yellow">Dashboard</span>
+                                </h1>
+                            </div>
                         </div>
                     </div>
 
@@ -851,21 +374,21 @@ const AdminDashboard = () => {
                             marginBottom: '20px'
                         }}>
                             {/* Row 1 */}
-                            <StatCard icon={Users} label="TOTAL DRIVER SALARY" value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/advances')} trend="MONTHLY" />
+                            <StatCard icon={Users} label="TOTAL DRIVER SALARY" value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/advances')} trend="MONTHLY" />
                             <StatCard icon={AlertTriangle} label="TOTAL ACCIDENT COST" value={`₹${(stats.monthlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} trend="ALL TIME" />
                             <StatCard icon={CreditCard} label="TOTAL DRIVER ADVANCE" value={`₹${(stats.totalAdvancePending || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/advances')} trend="PENDING" />
                             <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
                             <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
 
                             {/* Row 2 */}
+                            <StatCard icon={TrendingUp} label="OUTSIDE CARS (MONTHLY)" value={`₹${(stats.monthlyOutsideCarsTotal || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/outside-cars')} />
+                            <StatCard icon={Users} label="FREELANCERS (MONTHLY)" value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />
                             <StatCard icon={ShieldCheck} label="WARRANTY COST (TOTAL)" value={`₹${(stats.totalWarrantyCost || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/warranties')} />
                             <StatCard icon={Users} label="CURRENT DRIVERS" value={stats.totalDrivers} color="#0ea5e9" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/freelancers' : '/admin/drivers')} />
                             <StatCard icon={Car} label="FLEET SIZE" value={stats.totalVehicles} color="#8b5cf6" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
                             <StatCard icon={Briefcase} label="TOTAL STAFF" value={stats.totalStaff} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/staff')} />
                             <StatCard icon={CreditCard} label="PARKING (MONTHLY)" value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
-                            <StatCard icon={CreditCard} label="TOTAL FASTAG BALANCE" value={`₹${stats.totalFastagBalance?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/fastag')} />
-                            <StatCard icon={TrendingUp} label="OUTSIDE CARS (MONTHLY)" value={`₹${(stats.monthlyOutsideCarsTotal || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/outside-cars')} />
-                            <StatCard icon={Users} label="FREELANCERS (MONTHLY)" value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />
+                            <StatCard icon={CreditCard} label="TOTAL FASTAG BALANCE" value={`₹${stats.totalFastagBalance?.toLocaleString() || 0}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/fastag')} />
                             <StatCard icon={Activity} label="TOTAL DUTIES TODAY" value={stats.countPunchIns} color="#3b82f6" loading={loading} onClick={() => { }} trend="LIVE" />
                         </div>
 
@@ -999,240 +522,6 @@ const AdminDashboard = () => {
                             </div>
                         )}
 
-                        {/* Activity Feed - Responsive */}
-                        <div className="glass-card" style={{
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            width: '100%',
-                            boxSizing: 'border-box'
-                        }}>
-                            <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                marginBottom: 'clamp(16px, 3.5vw, 20px)',
-                                flexWrap: 'wrap',
-                                gap: '10px',
-                            }}>
-                                <h3 style={{
-                                    fontSize: 'clamp(14px, 3.2vw, 16px)',
-                                    fontWeight: '700',
-                                    color: 'white',
-                                    margin: 0
-                                }}>
-                                    Activity Feed
-                                </h3>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{
-                                        width: '8px',
-                                        height: '8px',
-                                        background: '#10b981',
-                                        borderRadius: '50%',
-                                        boxShadow: '0 0 10px #10b981'
-                                    }}></span>
-                                    <span style={{
-                                        fontSize: 'clamp(9px, 2.2vw, 11px)',
-                                        color: 'var(--text-muted)',
-                                        fontWeight: '600',
-                                        letterSpacing: '0.5px'
-                                    }}>
-                                        LIVE UPDATES
-                                    </span>
-                                </div>
-                            </div>
-
-                            {/* Desktop/Tablet Table View */}
-                            <div className="activity-table-wrapper hide-mobile">
-                                <table className="activity-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Driver Details</th>
-                                            <th>Assigned Car</th>
-                                            <th>Trip Status</th>
-                                            <th style={{ textAlign: 'right' }}>Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {stats.attendanceDetails?.map((item) => (
-                                            <tr key={item._id} className="hover-row">
-                                                <td>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(255,255,255,0.08)' }}>
-                                                            <Users size={18} color="rgba(255,255,255,0.6)" />
-                                                        </div>
-                                                        <div>
-                                                            <div className="driver-name" style={{ fontWeight: '900', color: 'white', fontSize: '14px', letterSpacing: '0.2px' }}>{item.driver?.name}</div>
-                                                            <div className="driver-mobile" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>{item.driver?.mobile}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                        <span className="vehicle-badge" style={{ background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: '1px solid rgba(14, 165, 233, 0.2)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: '900', width: 'fit-content' }}>
-                                                            {item.vehicle?.carNumber}
-                                                        </span>
-                                                        {item.punchOut?.remarks && (
-                                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', maxWidth: '180px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                                {item.punchOut.remarks}
-                                                            </span>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span className="status-pill staff-badge" style={{
-                                                        background: item.status === 'completed'
-                                                            ? 'rgba(16, 185, 129, 0.1)'
-                                                            : 'rgba(56, 189, 248, 0.1)',
-                                                        color: item.status === 'completed' ? '#10b981' : '#38bdf8',
-                                                        border: `1px solid ${item.status === 'completed'
-                                                            ? 'rgba(16, 185, 129, 0.2)'
-                                                            : 'rgba(56, 189, 248, 0.2)'}`,
-                                                        fontWeight: '800',
-                                                        textTransform: 'uppercase',
-                                                        fontSize: '10px',
-                                                        letterSpacing: '0.5px'
-                                                    }}>
-                                                        {item.status === 'completed' ? 'Duty Concluded' : 'On Active Duty'}
-                                                    </span>
-                                                </td>
-                                                <td style={{ textAlign: 'right' }}>
-                                                    <button
-                                                        onClick={() => setSelectedItem(item)}
-                                                        className="action-button glass-card-hover-effect"
-                                                    >
-                                                        Details
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setEditingItem(item)}
-                                                        className="action-button glass-card-hover-effect"
-                                                        style={{ marginLeft: '8px', background: 'rgba(255,255,255,0.1)' }}
-                                                    >
-                                                        Edit
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                        {(!stats.attendanceDetails || stats.attendanceDetails.length === 0) && (
-                                            <tr>
-                                                <td colSpan="4" style={{
-                                                    padding: 'clamp(40px, 10vw, 60px) clamp(16px, 4vw, 25px)',
-                                                    textAlign: 'center',
-                                                    color: 'var(--text-muted)'
-                                                }}>
-                                                    <Users size={32} style={{ opacity: 0.15, marginBottom: '12px' }} />
-                                                    <p style={{ fontSize: 'clamp(12px, 2.8vw, 14px)', margin: 0 }}>
-                                                        No activity recorded for this date
-                                                    </p>
-                                                </td>
-                                            </tr>
-                                        )}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Mobile Card View */}
-                            <div className="show-mobile">
-                                {(!stats.attendanceDetails || stats.attendanceDetails.length === 0) ? (
-                                    <div className="glass-card" style={{
-                                        padding: '40px 20px',
-                                        textAlign: 'center',
-                                        color: 'var(--text-muted)'
-                                    }}>
-                                        <Users size={32} style={{ opacity: 0.15, marginBottom: '12px', margin: '0 auto' }} />
-                                        <p style={{ fontSize: '14px', margin: 0 }}>
-                                            No activity recorded for this date
-                                        </p>
-                                    </div>
-                                ) : (
-                                    <div style={{ display: 'grid', gap: '15px' }}>
-                                        {stats.attendanceDetails.map((item) => (
-                                            <div key={item._id} className="glass-card" style={{
-                                                padding: '15px',
-                                                border: '1px solid rgba(255,255,255,0.08)'
-                                            }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                                        <div style={{
-                                                            width: '40px',
-                                                            height: '40px',
-                                                            borderRadius: '10px',
-                                                            background: 'rgba(56, 189, 248, 0.1)',
-                                                            color: '#38bdf8',
-                                                            display: 'flex',
-                                                            justifyContent: 'center',
-                                                            alignItems: 'center',
-                                                            flexShrink: 0
-                                                        }}>
-                                                            <Users size={20} />
-                                                        </div>
-                                                        <div>
-                                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '15px', lineHeight: '1.2' }}>{item.driver?.name}</div>
-                                                            <div style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '2px' }}>{item.vehicle?.carNumber}</div>
-                                                        </div>
-                                                    </div>
-                                                    <span className="status-pill" style={{
-                                                        background: item.status === 'completed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(56, 189, 248, 0.1)',
-                                                        color: item.status === 'completed' ? '#10b981' : '#38bdf8',
-                                                        border: `1px solid ${item.status === 'completed' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(56, 189, 248, 0.2)'}`,
-                                                        fontSize: '10px',
-                                                        padding: '4px 8px',
-                                                        fontWeight: '800'
-                                                    }}>
-                                                        {item.status === 'completed' ? 'DONE' : 'ACTIVE'}
-                                                    </span>
-                                                </div>
-
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                                    {item.driverPendingAdvance > 0 ? (
-                                                        <div style={{
-                                                            color: '#f43f5e',
-                                                            background: 'rgba(244, 63, 94, 0.1)',
-                                                            padding: '4px 10px',
-                                                            borderRadius: '8px',
-                                                            fontSize: '11px',
-                                                            fontWeight: '800',
-                                                            border: '1px solid rgba(244, 63, 94, 0.2)'
-                                                        }}>
-                                                            ADV: ₹{item.driverPendingAdvance}
-                                                        </div>
-                                                    ) : <span></span>}
-
-                                                    <button
-                                                        onClick={() => setSelectedItem(item)}
-                                                        style={{
-                                                            background: 'rgba(14, 165, 233, 0.1)',
-                                                            color: '#0ea5e9',
-                                                            border: '1px solid rgba(14, 165, 233, 0.2)',
-                                                            padding: '8px 20px',
-                                                            borderRadius: '10px',
-                                                            fontSize: '12px',
-                                                            fontWeight: '800',
-                                                            letterSpacing: '0.5px'
-                                                        }}
-                                                    >
-                                                        VIEW DETAILS
-                                                    </button>
-                                                    <button
-                                                        onClick={() => setEditingItem(item)}
-                                                        style={{
-                                                            background: 'rgba(255, 255, 255, 0.1)',
-                                                            color: 'white',
-                                                            border: '1px solid rgba(255, 255, 255, 0.2)',
-                                                            padding: '8px 20px',
-                                                            borderRadius: '10px',
-                                                            fontSize: '12px',
-                                                            fontWeight: '800',
-                                                            letterSpacing: '0.5px'
-                                                        }}
-                                                    >
-                                                        EDIT
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                )}
-                            </div>
-                        </div>
                     </motion.div>
                 )}
             </div>

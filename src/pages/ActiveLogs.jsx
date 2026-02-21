@@ -177,11 +177,29 @@ const ActiveLogs = () => {
             <SEO title="Active Accident Logs" description="Track and manage vehicle accidents and incidents." />
 
             <header className="flex-resp" style={{ justifyContent: 'space-between', padding: '30px 0', gap: '20px', flexWrap: 'wrap' }}>
-                <div>
-                    <h1 className="resp-title" style={{ color: 'white', margin: 0, letterSpacing: '-1px', fontSize: 'clamp(24px, 5vw, 32px)' }}>
-                        Incident <span className="text-gradient">Logs</span>
-                    </h1>
-                    <p className="resp-subtitle" style={{ marginTop: '5px' }}>Track vehicle damage and on-road incidents.</p>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{
+                        width: 'clamp(40px,10vw,50px)',
+                        height: 'clamp(40px,10vw,50px)',
+                        background: 'linear-gradient(135deg, white, #f8fafc)',
+                        borderRadius: '16px',
+                        padding: '8px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                    }}>
+                        <AlertTriangle size={28} color="#fbbf24" />
+                    </div>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Safety</span>
+                        </div>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                            Incident <span className="text-gradient-yellow">Logs</span>
+                        </h1>
+                    </div>
                 </div>
 
                 <div className="flex-resp" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
@@ -246,155 +264,157 @@ const ActiveLogs = () => {
                 </div>
             </div>
 
-            {loading ? (
-                <div style={{ padding: '80px', textAlign: 'center' }}>
-                    <div className="spinner" style={{ margin: '0 auto' }}></div>
-                    <p style={{ color: 'var(--text-muted)', marginTop: '20px', fontSize: '14px' }}>Loading logs...</p>
-                </div>
-            ) : filteredLogs.length === 0 ? (
-                <div className="glass-card" style={{ padding: '60px', textAlign: 'center' }}>
-                    <AlertTriangle size={48} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
-                    <h3 style={{ color: 'white' }}>No incidents recorded</h3>
-                    <p style={{ color: 'var(--text-muted)' }}>Use the "New Incident" button to log vehicle damage.</p>
-                </div>
-            ) : (
-                <>
-                    {/* DESKTOP VIEW: TABLE */}
-                    <div className="glass-card hide-mobile" style={{ padding: 0, overflow: 'hidden' }}>
-                        <div className="table-responsive">
-                            <table className="activity-table" style={{ width: '100%' }}>
-                                <thead>
-                                    <tr>
-                                        <th>Date & Loc</th>
-                                        <th>Vehicle / Driver</th>
-                                        <th>Description</th>
-                                        <th>Est. Cost</th>
-                                        <th>Status</th>
-                                        <th>Evidence</th>
-                                        <th style={{ textAlign: 'right' }}>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredLogs.map((log) => (
-                                        <tr key={log._id} className="hover-row">
-                                            <td>
-                                                <div style={{ color: 'white', fontWeight: '700', fontSize: '13px' }}>{new Date(log.date).toLocaleDateString('en-GB')}</div>
-                                                <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                    <MapPin size={10} /> {log.location || 'Unknown'}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div className="vehicle-badge" style={{ marginBottom: '4px' }}>{log.vehicle?.carNumber || 'Unknown'}</div>
-                                                <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{log.driver?.name}</div>
-                                            </td>
-                                            <td style={{ maxWidth: '300px' }}>
-                                                <div style={{ color: 'white', fontSize: '13px', lineHeight: '1.4', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                                                    {log.description}
-                                                </div>
-                                            </td>
-                                            <td>
-                                                <div style={{ color: '#f43f5e', fontWeight: '800' }}>₹{Number(log.amount || 0).toLocaleString()}</div>
-                                            </td>
-                                            <td>
-                                                <StatusBadge status={log.status} />
-                                            </td>
-                                            <td>
-                                                {log.photos && log.photos.length > 0 ? (
-                                                    <div style={{ display: 'flex', gap: '6px' }}>
-                                                        {log.photos.slice(0, 3).map((p, i) => (
-                                                            <div key={i} className="img-overlay" style={{ position: 'relative', cursor: 'zoom-in', transition: '0.2s' }}>
-                                                                <img
-                                                                    src={p}
-                                                                    onClick={() => setViewPhoto(p)}
-                                                                    style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }}
-                                                                />
-                                                            </div>
-                                                        ))}
-                                                        {log.photos.length > 3 && (
-                                                            <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: 'rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '10px', color: 'white', fontWeight: '700' }}>
-                                                                +{log.photos.length - 3}
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                ) : (
-                                                    <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px' }}>No img</span>
-                                                )}
-                                            </td>
-                                            <td style={{ textAlign: 'right' }}>
-                                                <button
-                                                    onClick={() => handleDelete(log._id)}
-                                                    className="action-button"
-                                                    style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '6px 10px' }}
-                                                >
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </td>
+            {
+                loading ? (
+                    <div style={{ padding: '80px', textAlign: 'center' }}>
+                        <div className="spinner" style={{ margin: '0 auto' }}></div>
+                        <p style={{ color: 'var(--text-muted)', marginTop: '20px', fontSize: '14px' }}>Loading logs...</p>
+                    </div>
+                ) : filteredLogs.length === 0 ? (
+                    <div className="glass-card" style={{ padding: '60px', textAlign: 'center' }}>
+                        <AlertTriangle size={48} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
+                        <h3 style={{ color: 'white' }}>No incidents recorded</h3>
+                        <p style={{ color: 'var(--text-muted)' }}>Use the "New Incident" button to log vehicle damage.</p>
+                    </div>
+                ) : (
+                    <>
+                        {/* DESKTOP VIEW: TABLE */}
+                        <div className="glass-card hide-mobile" style={{ padding: 0, overflow: 'hidden' }}>
+                            <div className="table-responsive">
+                                <table className="activity-table" style={{ width: '100%' }}>
+                                    <thead>
+                                        <tr>
+                                            <th>Date & Loc</th>
+                                            <th>Vehicle / Driver</th>
+                                            <th>Description</th>
+                                            <th>Est. Cost</th>
+                                            <th>Status</th>
+                                            <th>Evidence</th>
+                                            <th style={{ textAlign: 'right' }}>Action</th>
                                         </tr>
-                                    ))}
-                                </tbody>
-                            </table>
+                                    </thead>
+                                    <tbody>
+                                        {filteredLogs.map((log) => (
+                                            <tr key={log._id} className="hover-row">
+                                                <td>
+                                                    <div style={{ color: 'white', fontWeight: '700', fontSize: '13px' }}>{new Date(log.date).toLocaleDateString('en-GB')}</div>
+                                                    <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <MapPin size={10} /> {log.location || 'Unknown'}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div className="vehicle-badge" style={{ marginBottom: '4px' }}>{log.vehicle?.carNumber || 'Unknown'}</div>
+                                                    <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{log.driver?.name}</div>
+                                                </td>
+                                                <td style={{ maxWidth: '300px' }}>
+                                                    <div style={{ color: 'white', fontSize: '13px', lineHeight: '1.4', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                                        {log.description}
+                                                    </div>
+                                                </td>
+                                                <td>
+                                                    <div style={{ color: '#f43f5e', fontWeight: '800' }}>₹{Number(log.amount || 0).toLocaleString()}</div>
+                                                </td>
+                                                <td>
+                                                    <StatusBadge status={log.status} />
+                                                </td>
+                                                <td>
+                                                    {log.photos && log.photos.length > 0 ? (
+                                                        <div style={{ display: 'flex', gap: '6px' }}>
+                                                            {log.photos.slice(0, 3).map((p, i) => (
+                                                                <div key={i} className="img-overlay" style={{ position: 'relative', cursor: 'zoom-in', transition: '0.2s' }}>
+                                                                    <img
+                                                                        src={p}
+                                                                        onClick={() => setViewPhoto(p)}
+                                                                        style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }}
+                                                                    />
+                                                                </div>
+                                                            ))}
+                                                            {log.photos.length > 3 && (
+                                                                <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: 'rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '10px', color: 'white', fontWeight: '700' }}>
+                                                                    +{log.photos.length - 3}
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    ) : (
+                                                        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px' }}>No img</span>
+                                                    )}
+                                                </td>
+                                                <td style={{ textAlign: 'right' }}>
+                                                    <button
+                                                        onClick={() => handleDelete(log._id)}
+                                                        className="action-button"
+                                                        style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '6px 10px' }}
+                                                    >
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* MOBILE VIEW: CARDS */}
-                    <div className="show-mobile">
-                        <div style={{ display: 'grid', gap: '15px' }}>
-                            {filteredLogs.map((log) => (
-                                <motion.div
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    key={log._id}
-                                    className="glass-card"
-                                    style={{ padding: '15px' }}
-                                >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                                        <div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                                                <span className="vehicle-badge" style={{ fontSize: '12px' }}>{log.vehicle?.carNumber || 'N/A'}</span>
-                                                <StatusBadge status={log.status} />
+                        {/* MOBILE VIEW: CARDS */}
+                        <div className="show-mobile">
+                            <div style={{ display: 'grid', gap: '15px' }}>
+                                {filteredLogs.map((log) => (
+                                    <motion.div
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        key={log._id}
+                                        className="glass-card"
+                                        style={{ padding: '15px' }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                                            <div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                                    <span className="vehicle-badge" style={{ fontSize: '12px' }}>{log.vehicle?.carNumber || 'N/A'}</span>
+                                                    <StatusBadge status={log.status} />
+                                                </div>
+                                                <div style={{ color: 'var(--text-muted)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                    <User size={12} /> {log.driver?.name || 'Unknown'}
+                                                </div>
                                             </div>
-                                            <div style={{ color: 'var(--text-muted)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                <User size={12} /> {log.driver?.name || 'Unknown'}
+                                            <div style={{ textAlign: 'right' }}>
+                                                <div style={{ color: '#f43f5e', fontWeight: '800', fontSize: '16px' }}>₹{Number(log.amount || 0).toLocaleString()}</div>
+                                                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>{new Date(log.date).toLocaleDateString('en-GB')}</div>
                                             </div>
                                         </div>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <div style={{ color: '#f43f5e', fontWeight: '800', fontSize: '16px' }}>₹{Number(log.amount || 0).toLocaleString()}</div>
-                                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>{new Date(log.date).toLocaleDateString('en-GB')}</div>
-                                        </div>
-                                    </div>
 
-                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '10px', marginBottom: '12px' }}>
-                                        <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Description</p>
-                                        <p style={{ color: 'white', fontSize: '13px', lineHeight: '1.4', margin: 0 }}>{log.description}</p>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '8px', fontSize: '11px', color: 'var(--primary)' }}>
-                                            <MapPin size={12} /> {log.location || 'Location not tagged'}
+                                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '10px', marginBottom: '12px' }}>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Description</p>
+                                            <p style={{ color: 'white', fontSize: '13px', lineHeight: '1.4', margin: 0 }}>{log.description}</p>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '8px', fontSize: '11px', color: 'var(--primary)' }}>
+                                                <MapPin size={12} /> {log.location || 'Location not tagged'}
+                                            </div>
                                         </div>
-                                    </div>
 
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                                        <div style={{ display: 'flex', gap: '5px' }}>
-                                            {log.photos && log.photos.map((p, i) => (
-                                                <img
-                                                    key={i}
-                                                    src={p}
-                                                    onClick={() => setViewPhoto(p)}
-                                                    style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }}
-                                                />
-                                            ))}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
+                                            <div style={{ display: 'flex', gap: '5px' }}>
+                                                {log.photos && log.photos.map((p, i) => (
+                                                    <img
+                                                        key={i}
+                                                        src={p}
+                                                        onClick={() => setViewPhoto(p)}
+                                                        style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }}
+                                                    />
+                                                ))}
+                                            </div>
+                                            <button
+                                                onClick={() => handleDelete(log._id)}
+                                                style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
                                         </div>
-                                        <button
-                                            onClick={() => handleDelete(log._id)}
-                                            style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                        >
-                                            <Trash2 size={16} />
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            ))}
+                                    </motion.div>
+                                ))}
+                            </div>
                         </div>
-                    </div>
-                </>
-            )}
+                    </>
+                )
+            }
 
             {/* Create Modal */}
             <AnimatePresence>
@@ -489,12 +509,14 @@ const ActiveLogs = () => {
             </AnimatePresence>
 
             {/* Photo View Modal */}
-            {viewPhoto && (
-                <div onClick={() => setViewPhoto(null)} style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'zoom-out', padding: '20px' }}>
-                    <img src={viewPhoto} style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
-                </div>
-            )}
-        </div>
+            {
+                viewPhoto && (
+                    <div onClick={() => setViewPhoto(null)} style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'zoom-out', padding: '20px' }}>
+                        <img src={viewPhoto} style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
+                    </div>
+                )
+            }
+        </div >
     );
 };
 

@@ -191,9 +191,149 @@ const Vehicles = () => {
         )
     );
 
+    // Ticker Component
+    const VehicleTicker = ({ data }) => {
+        if (!data || data.length === 0) return null;
+        // Repeat data to ensure substantial width for the loop
+        const displayData = [...data, ...data, ...data, ...data];
+
+        return (
+            <div className="vehicle-ticker-container"
+                style={{
+                    position: 'sticky',
+                    top: '0px',
+                    zIndex: 1000,
+                    margin: '0 -20px 30px -20px',
+                    padding: '0 20px'
+                }}
+            >
+                <div className="vehicle-ticker-wrap"
+                    style={{
+                        background: 'rgba(15, 23, 42, 0.9)',
+                        backdropFilter: 'blur(20px)',
+                        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                        padding: '12px 0',
+                        overflow: 'hidden',
+                        display: 'flex',
+                        marginTop: '0px',
+                        alignItems: 'center',
+                        boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.5)',
+                        position: 'relative'
+                    }}
+                >
+                    {/* Left "Live" Badge */}
+                    <div style={{
+                        position: 'absolute',
+                        left: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: '140px',
+                        background: 'linear-gradient(to right, #0f172a 80%, transparent)',
+                        zIndex: 10,
+                        display: 'flex',
+                        alignItems: 'center',
+                        paddingLeft: '15px'
+                    }}>
+                        <div style={{
+                            background: 'linear-gradient(135deg, #ef4444, #b91c1c)', // Red for "Live" feel
+                            color: 'white',
+                            fontSize: '9px',
+                            fontWeight: '900',
+
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            textTransform: 'uppercase',
+                            letterSpacing: '1.5px',
+                            boxShadow: '0 0 15px rgba(239, 68, 68, 0.4)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            border: '1px solid rgba(255,255,255,0.1)'
+                        }}>
+                            <div style={{ width: '6px', height: '6px', background: 'white', borderRadius: '50%', animation: 'tickerPulse 0.8s infinite alternate' }}></div>
+                            LIVE STATUS
+                        </div>
+                    </div>
+
+                    <motion.div
+                        style={{
+                            display: 'flex',
+                            whiteSpace: 'nowrap',
+                            gap: '60px',
+                            paddingLeft: '150px' // Start after the badge
+                        }}
+                        animate={{ x: ["0%", "-50%"] }}
+                        transition={{
+                            x: {
+                                repeat: Infinity,
+                                repeatType: "loop",
+                                duration: Math.max(40, data.length * 10), // Increased duration to slow it down (was * 5)
+                                ease: "linear",
+                            },
+                        }}
+                    >
+                        {displayData.map((v, i) => (
+                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{
+                                        width: '8px',
+                                        height: '8px',
+                                        borderRadius: '50%',
+                                        background: v.currentDriver ? '#10b981' : '#f59e0b',
+                                        boxShadow: `0 0 10px ${v.currentDriver ? 'rgba(16, 185, 129, 0.5)' : 'rgba(245, 158, 11, 0.5)'}`
+                                    }}></div>
+                                    <span style={{ color: 'white', fontWeight: '800', fontSize: '13px', letterSpacing: '0.5px' }}>{v.carNumber}</span>
+                                </div>
+
+                                <span style={{ color: 'rgba(255,255,255,0.1)', fontSize: '12px' }}>|</span>
+
+                                <span style={{ color: 'var(--text-muted)', fontSize: '12px', fontWeight: '600' }}>
+                                    {v.currentDriver ? (
+                                        <>Duty: <span style={{ color: 'white', fontWeight: '800' }}>{v.currentDriver.name}</span></>
+                                    ) : (
+                                        <span style={{ color: '#f59e0b', fontWeight: '700' }}>STANDBY</span>
+                                    )}
+                                </span>
+
+                                <span style={{ color: 'rgba(255,255,255,0.1)', fontSize: '12px' }}>|</span>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                    <Wallet size={12} style={{ color: 'var(--secondary)' }} />
+                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>₹{v.fastagBalance || 0}</span>
+                                </div>
+                            </div>
+                        ))}
+                    </motion.div>
+
+                    {/* Right Gradient Fade */}
+                    <div style={{
+                        position: 'absolute',
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                        width: '80px',
+                        background: 'linear-gradient(to left, #0f172a 20%, transparent)',
+                        zIndex: 10
+                    }}></div>
+                </div>
+
+                <style>
+                    {`
+                        @keyframes tickerPulse {
+                            from { transform: scale(1); opacity: 1; }
+                            to { transform: scale(1.3); opacity: 0.6; }
+                        }
+                    `}
+                </style>
+            </div>
+        );
+    };
+
     return (
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
             <SEO title="Manage Vehicles" description="Track and manage all vehicles in your fleet, including document status and assignments." />
+
+            <VehicleTicker data={vehicles} />
             {alerts.length > 0 && (
                 <div style={{ marginBottom: '30px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f59e0b', marginBottom: '15px' }}>
@@ -243,21 +383,26 @@ const Vehicles = () => {
                 <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{
-                            width: '45px',
-                            height: '45px',
-                            background: 'rgba(14, 165, 233, 0.1)',
-                            borderRadius: '12px',
+                            width: 'clamp(40px,10vw,50px)',
+                            height: 'clamp(40px,10vw,50px)',
+                            background: 'linear-gradient(135deg, white, #f8fafc)',
+                            borderRadius: '16px',
+                            padding: '8px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            border: '1px solid rgba(14, 165, 233, 0.2)',
-                            color: 'var(--primary)'
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
                         }}>
-                            <Car size={24} />
+                            <Car size={28} color="#fbbf24" />
                         </div>
                         <div>
-                            <h1 className="resp-title" style={{ margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>Fleet Assets</h1>
-                            <p className="resp-subtitle" style={{ fontSize: '13px', margin: 0 }}>{vehicles.length} Active vehicles in operation</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Asset Management</span>
+                            </div>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', cursor: 'pointer' }}>
+                                Vehicle <span className="text-gradient-yellow">Fleet</span>
+                            </h1>
                         </div>
                     </div>
 

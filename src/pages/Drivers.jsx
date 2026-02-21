@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, User as UserIcon } from 'lucide-react';
+import { Plus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, User as UserIcon, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
@@ -40,6 +40,7 @@ const Drivers = () => {
         parkingAmount: '',
         allowanceTA: false,
         nightStayAmount: false,
+        otherBonus: '',
         review: ''
     });
 
@@ -79,6 +80,7 @@ const Drivers = () => {
                 parkingAmount: '',
                 allowanceTA: false,
                 nightStayAmount: false,
+                otherBonus: '',
                 review: ''
             });
             alert('Manual duty entry added successfully');
@@ -244,15 +246,15 @@ const Drivers = () => {
                         alignItems: 'center',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
                     }}>
-                        <img src="/logos/logo.png" alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                        <Users size={28} color="#fbbf24" />
                     </div>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 8px #f43f5e' }}></div>
-                            <span style={{ fontSize: 'clamp(9px, 2.5vw, 10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Personnel Hub</span>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Operations</span>
                         </div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
-                            Fleet <span className="text-gradient-blue">Drivers</span>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', cursor: 'pointer' }}>
+                            Staff <span className="text-gradient-yellow">Drivers</span>
                         </h1>
                     </div>
                 </div>
@@ -836,14 +838,18 @@ const Drivers = () => {
 
                                 <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '12px', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <p style={{ color: '#10b981', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px' }}>Expenses & Bonuses</p>
-                                    <div className="form-grid-2" style={{ marginBottom: '20px' }}>
+                                    <div className="form-grid-3" style={{ marginBottom: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
                                         <div>
                                             <label className="input-label">Parking Amount (₹)</label>
                                             <input type="number" className="input-field" value={manualDutyForm.parkingAmount} onChange={(e) => setManualDutyForm({ ...manualDutyForm, parkingAmount: e.target.value })} placeholder="0" />
                                         </div>
                                         <div>
+                                            <label className="input-label">Extra Bonus (₹)</label>
+                                            <input type="number" className="input-field" value={manualDutyForm.otherBonus} onChange={(e) => setManualDutyForm({ ...manualDutyForm, otherBonus: e.target.value })} placeholder="0" />
+                                        </div>
+                                        <div>
                                             <label className="input-label">Duty Type / Remark</label>
-                                            <input type="text" className="input-field" value={manualDutyForm.review} onChange={(e) => setManualDutyForm({ ...manualDutyForm, review: e.target.value })} placeholder="e.g. Local, Outstation" />
+                                            <input type="text" className="input-field" value={manualDutyForm.review} onChange={(e) => setManualDutyForm({ ...manualDutyForm, review: e.target.value })} placeholder="e.g. Local" />
                                         </div>
                                     </div>
 

@@ -1,15 +1,15 @@
 /* Font loaded via HTML <link> preload for faster rendering */
 
 :root {
-  /* 🏷️ THEME: Professional Slate — Calm Indigo + Soft Blue */
-  --primary: #6366f1;
-  /* Calm Indigo — easy on eyes */
-  --primary-dark: #4f46e5;
-  /* Deeper Indigo */
-  --secondary: #38bdf8;
-  /* Soft Sky Blue */
-  --accent: #a78bfa;
-  /* Soft Violet accent */
+  /* 🏷️ THEME: Premium Amber — Warm Yellow + Gold */
+  --primary: #fbbf24;
+  /* Amber — premium feel */
+  --primary-dark: #f59e0b;
+  /* Darker Amber */
+  --secondary: #fbbf24;
+  /* Amber */
+  --accent: #fcd34d;
+  /* Lighter Amber */
   --success: #34d399;
   /* Calm Emerald green */
   --danger: #f87171;
@@ -95,20 +95,21 @@ button {
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #6366f1, #4f46e5);
-  color: white;
+  background: var(--primary);
+  color: #000;
+  border: none;
   padding: 12px 24px;
   border-radius: 12px;
   font-weight: 700;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 15px rgba(251, 191, 36, 0.3);
   letter-spacing: 0.3px;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.45);
-  background: linear-gradient(135deg, #818cf8, #6366f1);
+  box-shadow: 0 6px 24px rgba(251, 191, 36, 0.45);
+  background: linear-gradient(135deg, #fcd34d, #fbbf24);
 }
 
 .input-field {
@@ -123,10 +124,10 @@ button {
 }
 
 .input-field:focus {
-  border-color: rgba(99, 102, 241, 0.5);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+  border-color: rgba(251, 191, 36, 0.5);
+  box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.12);
   outline: none;
-  background: rgba(99, 102, 241, 0.04);
+  background: rgba(251, 191, 36, 0.04);
 }
 
 /* Hide number input spinners */
@@ -184,12 +185,38 @@ button {
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
 }
 
-.text-gradient {
+.text-gradient-blue {
   background: linear-gradient(135deg, #a5b4fc 0%, #818cf8 50%, #6366f1 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
   line-height: 1.2;
+}
+
+.text-gradient-green {
+  background: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.2;
+}
+
+.text-gradient-yellow {
+  background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 50%, #f59e0b 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  line-height: 1.2;
+}
+
+.glass-card-hover-effect {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card-hover-effect:hover {
+  transform: translateY(-4px);
+  border-color: rgba(99, 102, 241, 0.3) !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
 }
 
 .text-gradient-violet {

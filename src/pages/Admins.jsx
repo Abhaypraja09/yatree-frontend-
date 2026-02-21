@@ -74,14 +74,29 @@ const Admins = () => {
                 padding: '30px 0',
                 marginBottom: '10px'
             }}>
-                <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 8px #0ea5e9' }}></div>
-                        <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Security & Access</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{
+                        width: 'clamp(40px,10vw,50px)',
+                        height: 'clamp(40px,10vw,50px)',
+                        background: 'linear-gradient(135deg, white, #f8fafc)',
+                        borderRadius: '16px',
+                        padding: '8px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                    }}>
+                        <UserIcon size={28} color="#fbbf24" />
                     </div>
-                    <h1 style={{ color: 'white', fontSize: '32px', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
-                        Limited <span className="text-gradient-blue">Admins</span>
-                    </h1>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>System Access</span>
+                        </div>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                            Admin <span className="text-gradient-yellow">Console</span>
+                        </h1>
+                    </div>
                 </div>
                 <button
                     className="btn-primary"

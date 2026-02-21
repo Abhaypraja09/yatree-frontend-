@@ -114,27 +114,39 @@ const Advances = () => {
             <SEO title="Driver Advances" description="Manage and track advances given to drivers and their recovery status." />
 
             <header style={{ paddingBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
-                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: '20px' }}>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 10px #fbbf24' }}></div>
-                            <span style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Financial Transactions</span>
+                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{
+                            width: 'clamp(40px,10vw,50px)',
+                            height: 'clamp(40px,10vw,50px)',
+                            background: 'linear-gradient(135deg, white, #f8fafc)',
+                            borderRadius: '16px',
+                            padding: '8px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                        }}>
+                            <IndianRupee size={28} color="#fbbf24" />
                         </div>
-                        <h1 className="resp-title">
-                            Driver <span style={{ color: '#fbbf24' }}>Advances</span>
-                        </h1>
-                        <p className="resp-subtitle" style={{ marginTop: '8px', maxWidth: '500px' }}>
-                            Track and manage payments issued to <b>{selectedCompany?.name}</b> drivers.
-                        </p>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Financial Oversight</span>
+                            </div>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(24px,5vw,32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                                Cash <span className="text-gradient-yellow">Advances</span>
+                            </h1>
+                        </div>
                     </div>
 
                     <div className="flex-resp" style={{ gap: '12px' }}>
-                        <div className="glass-card" style={{ padding: '15px 25px', background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px' }}>
-                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#fbbf24', textTransform: 'uppercase' }}>Total Issued</span>
+                        <div className="glass-card" style={{ padding: '15px 25px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px' }}>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Total</span>
                             <span style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>₹{totalAdvanceAmount.toLocaleString()}</span>
                         </div>
-                        <div className="glass-card" style={{ padding: '15px 25px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px' }}>
-                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#6366f1', textTransform: 'uppercase' }}>Advance Payment</span>
+                        <div className="glass-card" style={{ padding: '15px 25px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px' }}>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Advance Payment</span>
                             <span style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>₹{pendingAmount.toLocaleString()}</span>
                         </div>
                     </div>

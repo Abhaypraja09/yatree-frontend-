@@ -21,7 +21,8 @@ import {
     Wrench,
     IndianRupee,
     Trash2,
-    AlertTriangle
+    AlertTriangle,
+    FileText
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -764,12 +765,27 @@ const Reports = () => {
                 flexWrap: 'wrap'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ width: '45px', height: '45px', background: 'white', borderRadius: '12px', padding: '6px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-                        <img src="/logos/logo.png" alt="Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                    <div style={{
+                        width: 'clamp(40px,10vw,50px)',
+                        height: 'clamp(40px,10vw,50px)',
+                        background: 'linear-gradient(135deg, white, #f8fafc)',
+                        borderRadius: '16px',
+                        padding: '8px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                    }}>
+                        <FileText size={28} color="#fbbf24" />
                     </div>
                     <div>
-                        <h1 className="resp-title" style={{ fontSize: '24px' }}>Daily Reports</h1>
-                        <p className="resp-subtitle">Operational logs for Yatree Destination</p>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Operational Insights</span>
+                        </div>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px,5vw,32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                            Daily <span className="text-gradient-yellow">Reports</span>
+                        </h1>
                     </div>
                 </div>
 
@@ -914,10 +930,10 @@ const Reports = () => {
                         </motion.div>
                     ))}
                 </div>
-            </motion.div>
+            </motion.div >
 
             {/* Filter Bar */}
-            <div className="flex-resp" style={{ marginBottom: '30px', gap: '15px' }}>
+            < div className="flex-resp" style={{ marginBottom: '30px', gap: '15px' }}>
                 <div style={{ position: 'relative', flex: 1, minWidth: 'min(100%, 300px)' }}>
                     <input
                         type="text"
@@ -930,7 +946,7 @@ const Reports = () => {
                     <Search size={20} style={{ position: 'absolute', left: '16px', top: '15px', color: 'var(--text-muted)' }} />
                 </div>
 
-            </div>
+            </div >
 
             <div className="scroll-x glass-card hide-mobile" style={{ padding: '0', border: '1px solid rgba(255,255,255,0.05)' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white', minWidth: '1000px' }}>

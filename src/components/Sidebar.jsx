@@ -16,7 +16,8 @@ import {
     IndianRupee,
     MapPin,
     AlertTriangle,
-    ShieldCheck
+    ShieldCheck,
+    Activity
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
@@ -27,9 +28,9 @@ const Sidebar = ({ isOpen, onClose }) => {
 
     const allMenuItems = [
         { path: '/admin', icon: LayoutDashboard, label: 'Dashboard' },
+        { path: '/admin/live-feed', icon: Activity, label: 'Live Feed' },
         { path: '/admin/drivers', icon: Users, label: 'Drivers' },
         { path: '/admin/freelancers', icon: Users, label: 'Freelancers' },
-        { path: '/admin/advances', icon: IndianRupee, label: 'Advances' },
         { path: '/admin/driver-salaries', icon: IndianRupee, label: 'Driver Salaries' },
         { path: '/admin/vehicles', icon: Car, label: 'Vehicles' },
         { path: '/admin/outside-cars', icon: Car, label: 'Outside Cars' },
@@ -46,7 +47,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     ];
 
     const menuItems = user.role === 'Executive'
-        ? allMenuItems.filter(item => ['Freelancers', 'Outside Cars', 'Maintenance', 'Parts Warranty', 'Fuel', 'Parking', 'Daily Reports', 'Active Logs', 'Staff Management', 'Driver Salaries'].includes(item.label))
+        ? allMenuItems.filter(item => ['Dashboard', 'Live Feed', 'Freelancers', 'Outside Cars', 'Maintenance', 'Parts Warranty', 'Fuel', 'Parking', 'Daily Reports', 'Active Logs', 'Staff Management', 'Driver Salaries'].includes(item.label))
         : allMenuItems;
 
     const logoMap = {
@@ -111,14 +112,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                         <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>Automotive Excellence</p>
                     </div>
                 </div>
-                {/* Close Button for Mobile */}
-                <button
-                    onClick={onClose}
-                    className="mobile-only"
-                    style={{ background: 'none', color: 'var(--text-muted)' }}
-                >
-                    <ChevronRight style={{ transform: 'rotate(180deg)' }} />
-                </button>
             </div>
 
             {/* Active Company section removed */}

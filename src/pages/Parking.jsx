@@ -353,18 +353,29 @@ const ParkingPage = () => {
                     gap: '20px',
                     marginBottom: '30px'
                 }}>
-                    <div style={{ flex: '1 1 300px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#818cf8', boxShadow: '0 0 12px rgba(129, 140, 248, 0.5)' }}></div>
-                            <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>Financial Records</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{
+                            width: 'clamp(40px,10vw,50px)',
+                            height: 'clamp(40px,10vw,50px)',
+                            background: 'linear-gradient(135deg, white, #f8fafc)',
+                            borderRadius: '16px',
+                            padding: '8px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                        }}>
+                            <MapPin size={28} color="#fbbf24" />
                         </div>
-                        <h1 style={{ color: 'white', margin: 0, letterSpacing: '-1px', fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: '900', lineHeight: 1 }}>
-                            Parking <span style={{
-                                background: 'linear-gradient(to right, #818cf8, #c084fc)',
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent'
-                            }}>Logs</span>
-                        </h1>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Logistics Hub</span>
+                            </div>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                                Parking <span className="text-gradient-yellow">Manager</span>
+                            </h1>
+                        </div>
                     </div>
 
                     <div style={{
@@ -407,14 +418,15 @@ const ParkingPage = () => {
                                 padding: '0 24px',
                                 borderRadius: '12px',
                                 fontWeight: '800',
-                                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
-                                color: 'white',
+                                background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                                color: 'black',
                                 border: 'none',
-                                boxShadow: '0 8px 20px -6px rgba(99, 102, 241, 0.5)',
+                                boxShadow: '0 8px 20px -6px rgba(251, 191, 36, 0.5)',
                                 transition: 'all 0.3s ease',
                                 cursor: 'pointer',
-                                flex: '1 1 auto',
-                                justifyContent: 'center'
+                                flex: '1 1 180px',
+                                justifyContent: 'center',
+                                whiteSpace: 'nowrap'
                             }}
                             onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
                             onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
@@ -1238,47 +1250,50 @@ const ParkingPage = () => {
                     {/* Modal */}
                     <AnimatePresence>
                         {showModal && (
-                            <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(12px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+                            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', zIndex: 1100, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '15px', overflowY: 'auto' }}>
                                 <motion.div
-                                    initial={{ scale: 0.9, opacity: 0, y: 20 }}
-                                    animate={{ scale: 1, opacity: 1, y: 0 }}
-                                    exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                                    className="glass-card"
-                                    style={{
-                                        padding: 'clamp(24px, 5vw, 40px)',
-                                        width: '100%',
-                                        maxWidth: '500px',
-                                        background: 'linear-gradient(145deg, #0f172a, #1e293b)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        overflowY: 'auto',
-                                        maxHeight: '90vh',
-                                        borderRadius: '24px',
-                                        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-                                    }}
+                                    initial={{ y: 50, opacity: 0 }}
+                                    animate={{ y: 0, opacity: 1 }}
+                                    exit={{ y: 50, opacity: 0 }}
+                                    className="premium-glass"
+                                    style={{ width: '100%', maxWidth: '500px', padding: '0', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a', overflow: 'visible', margin: 'auto', borderRadius: '24px' }}
                                 >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                    <div style={{ padding: '24px 30px', background: 'linear-gradient(to right, #1e293b, #0f172a)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
                                         <div>
-                                            <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Manual Entry</h2>
-                                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', margin: '4px 0 0', letterSpacing: '1px' }}>Add parking record</p>
+                                            <h2 style={{ color: 'white', fontSize: '20px', margin: 0, fontWeight: '800' }}>{editingId ? 'Edit Entry' : 'Manual Entry'}</h2>
+                                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', margin: '4px 0 0' }}>Parking Record</p>
                                         </div>
-                                        <button
-                                            onClick={() => setShowModal(false)}
-                                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s ease' }}
-                                            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'}
-                                            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                                        >
-                                            <Plus size={20} style={{ transform: 'rotate(45deg)' }} />
-                                        </button>
+                                        <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '50%', padding: '10px', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
                                     </div>
 
-                                    <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                    <form onSubmit={handleCreate} style={{ padding: '25px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Select Driver</label>
+                                            <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</label>
                                             <div style={{ position: 'relative' }}>
+                                                <Car size={18} style={{ position: 'absolute', left: '15px', top: '16px', color: 'var(--primary)' }} />
                                                 <select
                                                     className="input-field"
-                                                    style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', width: '100%', outline: 'none' }}
-                                                    value={formData.driverId}
+                                                    style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px 0 45px', width: '100%', outline: 'none', cursor: 'pointer' }}
+                                                    value={formData.vehicleId || ''}
+                                                    onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                                                    required
+                                                >
+                                                    <option value="" style={{ background: '#1e293b' }}>Select Vehicle</option>
+                                                    {vehicles.map(v => (
+                                                        <option key={v._id} value={v._id} style={{ background: '#1e293b' }}>{v.carNumber}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                        </div>
+
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                            <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <User size={18} style={{ position: 'absolute', left: '15px', top: '16px', color: 'var(--primary)' }} />
+                                                <select
+                                                    className="input-field"
+                                                    style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px 0 45px', width: '100%', outline: 'none', cursor: 'pointer' }}
+                                                    value={formData.driverId || ''}
                                                     onChange={(e) => {
                                                         const selected = drivers.find(d => d._id === e.target.value);
                                                         setFormData({ ...formData, driverId: e.target.value, driver: selected ? selected.name : '' });
@@ -1295,7 +1310,7 @@ const ParkingPage = () => {
 
                                         <div style={{
                                             display: 'grid',
-                                            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                                            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
                                             gap: '15px'
                                         }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -1327,7 +1342,7 @@ const ParkingPage = () => {
 
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                             <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Parking Photo (Camera)</label>
-                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
                                                 {formData.receiptPhoto ? (
                                                     <div style={{ position: 'relative' }}>
                                                         <img src={getImageUrl(formData.receiptPhoto)} alt="Receipt" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover' }} />
@@ -1339,7 +1354,7 @@ const ParkingPage = () => {
                                                             type="button"
                                                             onClick={() => setShowCamera(true)}
                                                             style={{
-                                                                width: '80px', height: '80px', borderRadius: '120px', background: 'linear-gradient(135deg, #6366f1, #4f46e5)', border: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.3s ease', color: 'white', boxShadow: '0 8px 15px rgba(99, 102, 241, 0.3)'
+                                                                width: '80px', height: '80px', borderRadius: '20px', background: 'linear-gradient(135deg, #fbbf24, #d97706)', border: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.3s ease', color: 'black', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.3)'
                                                             }}
                                                         >
                                                             <Camera size={24} />
@@ -1355,31 +1370,29 @@ const ParkingPage = () => {
                                                         </label>
                                                     </div>
                                                 )}
-                                                <div style={{ flex: 1 }}>
-                                                    <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Use <b>Camera</b> for direct photo or <b>Gallery</b> to upload a file.</p>
+                                                <div style={{ flex: '1 1 200px' }}>
+                                                    <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Use <b>Camera</b> for direct photo or <b>Gallery</b>.</p>
                                                 </div>
                                             </div>
                                         </div>
-
 
                                         <button
                                             type="submit"
                                             disabled={submitting}
                                             style={{
                                                 height: '56px',
-                                                marginTop: '10px',
-                                                background: 'linear-gradient(135deg, #6366f1 0%, #4f46e5 100%)',
+                                                background: 'linear-gradient(135deg, #fbbf24, #d97706)',
                                                 borderRadius: '16px',
-                                                fontWeight: '800',
+                                                fontWeight: '900',
                                                 fontSize: '16px',
-                                                color: 'white',
+                                                color: 'black',
                                                 border: 'none',
-                                                boxShadow: '0 12px 24px -8px rgba(99, 102, 241, 0.5)',
+                                                boxShadow: '0 12px 24px -8px rgba(251, 191, 36, 0.5)',
                                                 cursor: submitting ? 'not-allowed' : 'pointer',
-                                                transition: 'all 0.3s ease'
+                                                transition: 'all 0.3s ease',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '1px'
                                             }}
-                                            onMouseOver={(e) => !submitting && (e.currentTarget.style.transform = 'translateY(-2px)')}
-                                            onMouseOut={(e) => !submitting && (e.currentTarget.style.transform = 'translateY(0)')}
                                         >
                                             {submitting ? 'Saving...' : 'Save Record'}
                                         </button>
@@ -1428,7 +1441,8 @@ const ParkingPage = () => {
                             />
                         )}
                     </AnimatePresence>
-                </>)}
+                </>
+            )}
         </div>
     );
 };

@@ -395,8 +395,10 @@ const FuelPage = () => {
     });
 
     // Summary Statistics - Calculate true average (Total Distance / Total Fuel Used)
-    const totalAmount = filteredEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
-    const totalLiters = filteredEntries.reduce((sum, e) => sum + (Number(e.quantity) || 0), 0);
+    // We only sum Quantity and Amount for entries where distance > 0, because the first entry's quantity 
+    // is used for the trip *before* the tracking started.
+    const totalAmount = filteredEntries.reduce((sum, e) => sum + (e.distance > 0 ? (Number(e.amount) || 0) : 0), 0);
+    const totalLiters = filteredEntries.reduce((sum, e) => sum + (e.distance > 0 ? (Number(e.quantity) || 0) : 0), 0);
     const totalDistance = filteredEntries.reduce((sum, e) => sum + (e.distance || 0), 0);
     const avgMileage = totalLiters > 0 ? (totalDistance / totalLiters).toFixed(2) : 0;
 
@@ -413,14 +415,29 @@ const FuelPage = () => {
                 padding: '40px 0',
                 gap: '24px'
             }}>
-                <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b', boxShadow: '0 0 10px #f59e0b' }}></div>
-                        <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>Expense Tracking</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{
+                        width: 'clamp(40px,10vw,50px)',
+                        height: 'clamp(40px,10vw,50px)',
+                        background: 'linear-gradient(135deg, white, #f8fafc)',
+                        borderRadius: '16px',
+                        padding: '8px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                    }}>
+                        <Fuel size={28} color="#fbbf24" />
                     </div>
-                    <h1 className="resp-title" style={{ color: 'white', margin: 0, letterSpacing: '-1px' }}>
-                        Fuel <span className="text-gradient-orange">Management</span>
-                    </h1>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fuel Consumption</span>
+                        </div>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                            Fuel <span className="text-gradient-yellow">Management</span>
+                        </h1>
+                    </div>
                 </div>
 
                 <div className="flex-resp" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>

@@ -265,14 +265,29 @@ const Maintenance = () => {
                 gap: '20px',
                 flexWrap: 'wrap'
             }}>
-                <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 10px #0ea5e9' }}></div>
-                        <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>Asset Care</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{
+                        width: 'clamp(40px,10vw,50px)',
+                        height: 'clamp(40px,10vw,50px)',
+                        background: 'linear-gradient(135deg, white, #f8fafc)',
+                        borderRadius: '16px',
+                        padding: '8px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                    }}>
+                        <Wrench size={28} color="#fbbf24" />
                     </div>
-                    <h1 className="resp-title" style={{ color: 'white', margin: 0, letterSpacing: '-1px', fontSize: 'clamp(24px, 5vw, 32px)' }}>
-                        Vehicle <span className="text-gradient-blue">Maintenance</span>
-                    </h1>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Health</span>
+                        </div>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                            Vehicle <span className="text-gradient-yellow">Maintenance</span>
+                        </h1>
+                    </div>
                 </div>
 
                 <div className="flex-resp mobile-search-row" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>

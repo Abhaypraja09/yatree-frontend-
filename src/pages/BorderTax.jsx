@@ -148,12 +148,31 @@ const BorderTax = () => {
             <div className="container-fluid" style={{ paddingBottom: '40px' }}>
                 <SEO title="Select Vehicle - Border Tax" description="Choose a vehicle to manage border tax records." />
                 <header style={{ padding: '40px 0', textAlign: 'center' }}>
-                    <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-                        <h1 style={{ fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: '900', color: 'white', margin: 0, letterSpacing: '-1px' }}>
-                            Border Tax <span style={{ color: 'var(--primary)' }}>Hub</span>
-                        </h1>
-                        <p style={{ color: 'var(--text-muted)', marginTop: '10px', fontSize: '16px' }}>Select a vehicle to manage its crossing records</p>
-                    </motion.div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', justifyContent: 'center' }}>
+                        <div style={{
+                            width: 'clamp(40px,10vw,50px)',
+                            height: 'clamp(40px,10vw,50px)',
+                            background: 'linear-gradient(135deg, white, #f8fafc)',
+                            borderRadius: '16px',
+                            padding: '8px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                        }}>
+                            <ShieldAlert size={28} color="#fbbf24" />
+                        </div>
+                        <div style={{ textAlign: 'left' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>State Permits</span>
+                            </div>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                                Border Tax <span className="text-gradient-yellow">Hub</span>
+                            </h1>
+                        </div>
+                    </div>
+                    <p style={{ color: 'var(--text-muted)', marginTop: '10px', fontSize: '16px' }}>Select a vehicle to manage its crossing records</p>
 
                     <div style={{ position: 'relative', maxWidth: '500px', margin: '40px auto 0' }}>
                         <Search size={20} style={{ position: 'absolute', left: '20px', top: '16px', color: 'var(--text-muted)' }} />
@@ -215,7 +234,7 @@ const BorderTax = () => {
                         </div>
                     )}
                 </div>
-            </div>
+            </div >
         );
     }
 
@@ -233,14 +252,15 @@ const BorderTax = () => {
                         className="glass-card-hover-effect"
                         style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}
                     >
-                        <AlertCircle size={20} style={{ transform: 'rotate(180deg)' }} />
+                        <AlertCircle size={20} style={{ transform: 'rotate(180deg)' }} color="#fbbf24" />
                     </button>
                     <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--primary)', letterSpacing: '1px', textTransform: 'uppercase' }}>Management Detail</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <span style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', textTransform: 'uppercase' }}>Management Detail</span>
                         </div>
-                        <h1 className="resp-title" style={{ fontSize: '24px', fontWeight: '900', margin: 0 }}>
-                            {selectedVehicle.carNumber}
+                        <h1 className="resp-title" style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0, cursor: 'pointer' }}>
+                            {selectedVehicle.carNumber} <span className="text-gradient-yellow">Permits</span>
                         </h1>
                     </div>
                 </div>

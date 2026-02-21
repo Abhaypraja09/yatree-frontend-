@@ -246,81 +246,78 @@ const OutsideCars = () => {
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Outside Fleet Command" description="Manage external vehicles and freelancer drivers for specific duties." />
 
-            <header style={{ paddingBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
-                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--secondary)', boxShadow: '0 0 10px var(--secondary)' }}></div>
-                            <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>Logistics Monitor</span>
+            <header style={{ padding: 'clamp(20px, 4vw, 40px) 0' }}>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '20px',
+                    marginBottom: '30px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{
+                            width: 'clamp(40px,10vw,50px)',
+                            height: 'clamp(40px,10vw,50px)',
+                            background: 'linear-gradient(135deg, white, #f8fafc)',
+                            borderRadius: '16px',
+                            padding: '8px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                        }}>
+                            <Car size={32} color="#fbbf24" />
                         </div>
-                        <h1 className="resp-title" style={{ margin: 0, fontWeight: '900', letterSpacing: '-1.5px' }}>
-                            Outside <span style={{ color: 'var(--secondary)' }}>Fleet</span>
-                        </h1>
-                        <p className="resp-subtitle" style={{ marginTop: '4px', fontSize: '13px' }}>
-                            External assets from <b>{formatDateDisplay(fromDate)}</b> to <b>{formatDateDisplay(toDate)}</b>
-                        </p>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Vendor Management</span>
+                            </div>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
+                                Outside <span className="text-gradient-yellow">Fleet</span>
+                            </h1>
+                            <p style={{ marginTop: '4px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                                External assets: <b style={{ color: 'white' }}>{formatDateDisplay(fromDate)}</b> — <b style={{ color: 'white' }}>{formatDateDisplay(toDate)}</b>
+                            </p>
+                        </div>
                     </div>
 
                     <div className="flex-resp" style={{ gap: '12px' }}>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#818cf8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Total Payable</span>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Total Payable</span>
                             <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{totalPayable.toLocaleString()}</span>
                         </motion.div>
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#34d399', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Duties Logged</span>
-                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{totalDutiesCount} Records</span>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#34d399', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Records Found</span>
+                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{totalDutiesCount}</span>
                         </motion.div>
                     </div>
                 </div>
 
-                <div className="grid-1-2-2-4" style={{ marginTop: '30px', gap: '15px' }}>
-                    <div className="input-field-group">
-                        <label className="input-label">From Date</label>
+                <div className="glass-card" style={{ padding: '20px', marginBottom: '30px', display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
                         <input
-                            type="date"
+                            type="text"
+                            placeholder="Search number, owner..."
                             className="input-field"
-                            value={fromDate}
-                            onChange={(e) => setFromDate(e.target.value)}
-                            style={{ height: '48px', marginBottom: 0 }}
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            style={{ width: '100%', height: '50px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', paddingLeft: '45px', margin: 0 }}
                         />
                     </div>
-                    <div className="input-field-group">
-                        <label className="input-label">To Date</label>
-                        <input
-                            type="date"
-                            className="input-field"
-                            value={toDate}
-                            onChange={(e) => setToDate(e.target.value)}
-                            style={{ height: '48px', marginBottom: 0 }}
-                        />
-                    </div>
-                    <div className="input-field-group">
-                        <label className="input-label">Owner Hub</label>
-                        <select
-                            value={ownerFilter}
-                            onChange={(e) => handleOwnerChange(e.target.value)}
-                            className="input-field"
-                            style={{ height: '48px', marginBottom: 0, appearance: 'auto' }}
-                        >
-                            <option value="All">All Owners</option>
-                            {uniqueOwners.map(owner => (
-                                <option key={owner} value={owner} style={{ background: '#0f172a' }}>{owner}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="input-field-group">
-                        <label className="input-label">Property Hub</label>
-                        <select
-                            value={propertyFilter}
-                            onChange={(e) => setPropertyFilter(e.target.value)}
-                            className="input-field"
-                            style={{ height: '48px', marginBottom: 0, appearance: 'auto' }}
-                        >
-                            <option value="All">All Properties</option>
-                            {uniqueProperties.map(p => (
-                                <option key={p} value={p} style={{ background: '#0f172a' }}>{p}</option>
-                            ))}
-                        </select>
+                    <select value={ownerFilter} onChange={e => handleOwnerChange(e.target.value)} className="input-field" style={{ flex: '1 1 160px', height: '50px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', margin: 0 }}>
+                        <option value="All" style={{ background: '#1e293b' }}>All Owners</option>
+                        {uniqueOwners.map(o => <option key={o} value={o} style={{ background: '#1e293b' }}>{o}</option>)}
+                    </select>
+                    <select value={propertyFilter} onChange={e => setPropertyFilter(e.target.value)} className="input-field" style={{ flex: '1 1 160px', height: '50px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', margin: 0 }}>
+                        <option value="All" style={{ background: '#1e293b' }}>All Properties</option>
+                        {uniqueProperties.map(p => <option key={p} value={p} style={{ background: '#1e293b' }}>{p}</option>)}
+                    </select>
+                    <div style={{ display: 'flex', gap: '8px', flex: '0 0 auto' }}>
+                        <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} className="input-field" style={{ width: '135px', height: '50px', fontSize: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', margin: 0 }} />
+                        <input type="date" value={toDate} onChange={e => setToDate(e.target.value)} className="input-field" style={{ width: '135px', height: '50px', fontSize: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', margin: 0 }} />
                     </div>
                 </div>
 
@@ -411,24 +408,9 @@ const OutsideCars = () => {
                     </button>
                     <button
                         onClick={handleOpenLogDuty}
-                        className="glass-card-hover-effect"
-                        style={{
-                            height: '52px',
-                            padding: '0 25px',
-                            background: 'linear-gradient(135deg, var(--secondary), var(--primary))',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '12px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
-                            fontWeight: '800',
-                            fontSize: '14px',
-                            letterSpacing: '0.5px'
-                        }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black', border: 'none', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)' }}
                     >
-                        <Plus size={20} /> Add Entry
+                        <Plus size={20} /> <span className="hide-mobile">Add Duty Entry</span><span className="show-mobile">Add</span>
                     </button>
                 </div>
             </header>
@@ -483,7 +465,7 @@ const OutsideCars = () => {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <div style={{ fontWeight: '900', fontSize: '18px', color: 'white', letterSpacing: '0.5px' }}>{v.carNumber?.split('#')[0]}</div>
                                         {v.dutyType?.includes(' + ') && (
-                                            <span style={{ fontSize: '9px', background: 'rgba(99, 102, 241, 0.2)', color: '#a5b4fc', padding: '3px 8px', borderRadius: '6px', fontWeight: '900', border: '1px solid rgba(165, 180, 252, 0.2)' }}>COMBINED</span>
+                                            <span style={{ fontSize: '9px', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', padding: '3px 8px', borderRadius: '6px', fontWeight: '900', border: '1px solid rgba(251, 191, 36, 0.2)' }}>COMBINED</span>
                                         )}
                                     </div>
                                     <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>{v.model}</div>
@@ -559,7 +541,7 @@ const OutsideCars = () => {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                             <span style={{ fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '0.5px' }}>{v.carNumber?.split('#')[0]}</span>
                                             {v.dutyType?.includes(' + ') && (
-                                                <span style={{ fontSize: '8px', background: 'rgba(99, 102, 241, 0.2)', color: '#a5b4fc', padding: '2px 6px', borderRadius: '4px', fontWeight: '900', textTransform: 'uppercase' }}>Combined</span>
+                                                <span style={{ fontSize: '8px', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', padding: '2px 6px', borderRadius: '4px', fontWeight: '900', textTransform: 'uppercase' }}>Combined</span>
                                             )}
                                         </div>
                                         <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: '600' }}>{v.model}</div>
@@ -629,69 +611,89 @@ const OutsideCars = () => {
             {/* Modal Refactored */}
             <AnimatePresence>
                 {showModal && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', zIndex: 1050, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-                        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }} className="glass-card" style={{ width: '100%', maxWidth: '600px', padding: '0', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a', overflow: 'hidden' }}>
-                            <div style={{ padding: '30px', background: 'linear-gradient(to right, #1e293b, #0f172a)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', zIndex: 1100, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '15px', overflowY: 'auto' }}>
+                        <motion.div
+                            initial={{ y: 50, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 50, opacity: 0 }}
+                            className="premium-glass"
+                            style={{ width: '100%', maxWidth: '600px', padding: '0', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a', overflow: 'visible', margin: 'auto', borderRadius: '24px' }}
+                        >
+                            <div style={{ padding: '24px 30px', background: 'linear-gradient(to right, #1e293b, #0f172a)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
                                 <div>
                                     <h2 style={{ color: 'white', fontSize: '20px', margin: 0, fontWeight: '800' }}>{editMode ? 'Update Voucher' : 'New Duty Entry'}</h2>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '12px', marginTop: '4px', margin: 0 }}>Log details for outside vehicle & driver</p>
+                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', margin: '4px 0 0' }}>Log Past Duty</p>
                                 </div>
                                 <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '50%', padding: '10px', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
                             </div>
 
-
-                            <form onSubmit={handleSubmit} style={{ padding: '30px', display: 'grid', gap: '20px' }}>
-
-                                {/* Section 1: Vehicle & Owner */}
-                                <div className="form-grid-2">
+                            <form onSubmit={handleSubmit} style={{ padding: '25px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                                     <div className="input-field-group">
-                                        <label className="input-label" style={{ color: '#94a3b8' }}>Vehicle Number</label>
-                                        <input type="text" list="carCodes" className="input-field" required disabled={editMode} value={formData.carNumber} onChange={(e) => handleCarNumberChange(e.target.value)} placeholder="DL-01..." style={{ background: 'rgba(255,255,255,0.02)' }} />
+                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Vehicle Number *</label>
+                                        <input type="text" list="carCodes" className="input-field" required disabled={editMode} value={formData.carNumber} onChange={(e) => handleCarNumberChange(e.target.value)} placeholder="DL-01..." style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
                                         <datalist id="carCodes">{carNumberSuggestions.map((opt, i) => <option key={i} value={opt} />)}</datalist>
                                     </div>
                                     <div className="input-field-group">
-                                        <label className="input-label" style={{ color: '#94a3b8' }}>Model</label>
-                                        <input type="text" className="input-field" required value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} placeholder="e.g. Innova" style={{ background: 'rgba(255,255,255,0.02)' }} />
+                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Model *</label>
+                                        <input type="text" className="input-field" required value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} placeholder="e.g. Innova" style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
                                     </div>
                                 </div>
 
-                                <div className="form-grid-2">
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                                     <div className="input-field-group">
-                                        <label className="input-label" style={{ color: '#94a3b8' }}>Proprietor (Owner)</label>
-                                        <input type="text" className="input-field" required value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} placeholder="Company Name" style={{ background: 'rgba(255,255,255,0.02)' }} />
+                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Proprietor (Owner) *</label>
+                                        <input type="text" className="input-field" required value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} placeholder="Company Name" style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
                                     </div>
                                     <div className="input-field-group">
-                                        <label className="input-label" style={{ color: '#94a3b8' }}>Property (Client)</label>
-                                        <input type="text" className="input-field" required value={formData.property} onChange={(e) => setFormData({ ...formData, property: e.target.value })} placeholder="e.g. Hotel Taj" style={{ background: 'rgba(255,255,255,0.02)' }} />
+                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Property (Client) *</label>
+                                        <input type="text" className="input-field" required value={formData.property} onChange={(e) => setFormData({ ...formData, property: e.target.value })} placeholder="e.g. Hotel Taj" style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
                                     </div>
                                 </div>
+
                                 <div className="input-field-group">
-                                    <label className="input-label" style={{ color: '#94a3b8' }}>Duty Date</label>
-                                    <input type="date" className="input-field" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} style={{ background: 'rgba(255,255,255,0.02)' }} />
+                                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Duty Date *</label>
+                                    <input type="date" className="input-field" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
                                 </div>
 
-                                {/* Section 2: Trip Details */}
                                 <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)', display: 'grid', gap: '20px' }}>
-                                    <div className="form-grid-2">
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                                         <div className="input-field-group">
-                                            <label className="input-label" style={{ color: '#94a3b8' }}>Service Type</label>
-                                            <input type="text" list="serviceTypes" className="input-field" value={formData.dutyType} onChange={(e) => setFormData({ ...formData, dutyType: e.target.value })} placeholder="e.g. Airport Drop" />
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Service Type</label>
+                                            <input type="text" list="serviceTypes" className="input-field" value={formData.dutyType} onChange={(e) => setFormData({ ...formData, dutyType: e.target.value })} placeholder="e.g. Airport Drop" style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
                                             <datalist id="serviceTypes">{dutyTypeSuggestions.map((opt, i) => <option key={i} value={opt} />)}</datalist>
                                         </div>
                                         <div className="input-field-group">
-                                            <label className="input-label" style={{ color: '#10b981', fontWeight: '700' }}>Settlement Amount (₹)</label>
-                                            <input type="number" className="input-field" required value={formData.dutyAmount} onChange={(e) => setFormData({ ...formData, dutyAmount: e.target.value })} style={{ fontWeight: '800', color: 'var(--secondary)', fontSize: '18px' }} placeholder="0.00" />
+                                            <label style={{ color: '#fbbf24', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Settlement Amount (₹) *</label>
+                                            <input type="number" className="input-field" required value={formData.dutyAmount} onChange={(e) => setFormData({ ...formData, dutyAmount: e.target.value })} style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: '#fbbf24', padding: '0 15px', fontWeight: '800', fontSize: '18px' }} placeholder="0.00" />
                                         </div>
                                     </div>
                                     <div className="input-field-group">
-                                        <label className="input-label" style={{ color: '#94a3b8' }}>Drop Location / Terminal</label>
-                                        <input type="text" list="points" className="input-field" value={formData.dropLocation} onChange={(e) => setFormData({ ...formData, dropLocation: e.target.value })} placeholder="Specific location detail..." />
+                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Drop Location / Terminal</label>
+                                        <input type="text" list="points" className="input-field" value={formData.dropLocation} onChange={(e) => setFormData({ ...formData, dropLocation: e.target.value })} placeholder="Specific location detail..." style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
                                         <datalist id="points">{dropLocationSuggestions.map((opt, i) => <option key={i} value={opt} />)}</datalist>
                                     </div>
                                 </div>
 
-                                <button type="submit" className="glass-card-hover-effect" style={{ marginTop: '10px', height: '60px', borderRadius: '16px', fontSize: '16px', fontWeight: '800', letterSpacing: '1px', background: 'linear-gradient(135deg, var(--primary), #4f46e5)', color: 'white', border: 'none', cursor: 'pointer', boxShadow: '0 10px 30px rgba(79, 70, 229, 0.3)' }}>
-                                    {editMode ? 'UPDATE RECORD' : 'CONFIRM ENTRY'}
+                                <button
+                                    type="submit"
+                                    style={{
+                                        height: '56px',
+                                        background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                                        borderRadius: '16px',
+                                        fontWeight: '900',
+                                        fontSize: '16px',
+                                        color: 'black',
+                                        border: 'none',
+                                        boxShadow: '0 12px 24px -8px rgba(251, 191, 36, 0.5)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px',
+                                        marginTop: '10px'
+                                    }}
+                                >
+                                    {editMode ? 'Update Record' : 'Confirm Entry'}
                                 </button>
                             </form>
                         </motion.div>

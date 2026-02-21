@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Search, X, DollarSign, Car, ParkingSquare, TrendingDown, Wallet } from 'lucide-react';
+import { Search, X, Car, ParkingSquare, TrendingDown, Wallet, Plus, Calendar, User, FileText, IndianRupee, CheckCircle, AlertCircle, Edit2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
@@ -18,8 +18,25 @@ const DriverSalaries = () => {
     const [selectedDriverDetails, setSelectedDriverDetails] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
 
+    // Advances states
+    const [advances, setAdvances] = useState([]);
+    const [drivers, setDrivers] = useState([]);
+    const [showAdvanceModal, setShowAdvanceModal] = useState(false);
+    const [advanceFormData, setAdvanceFormData] = useState({
+        driverId: '',
+        amount: '',
+        date: new Date().toISOString().split('T')[0],
+        remark: ''
+    });
+    const [submittingAdvance, setSubmittingAdvance] = useState(false);
+    const [advanceMessage, setAdvanceMessage] = useState({ type: '', text: '' });
+    const [editingAdvanceId, setEditingAdvanceId] = useState(null);
+
     useEffect(() => {
-        if (selectedCompany) fetchSalaries();
+        if (selectedCompany) {
+            fetchSalaries();
+            fetchAdvanceData();
+        }
     }, [selectedCompany, month, year]);
 
     const fetchSalaries = async () => {
@@ -33,6 +50,93 @@ const DriverSalaries = () => {
             setSalaries(data || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
+    };
+
+    const fetchAdvanceData = async () => {
+        if (!selectedCompany?._id) return;
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const [advRes, driversRes] = await Promise.all([
+                axios.get(`/api/admin/advances/${selectedCompany._id}?month=${month}&year=${year}&isFreelancer=false`, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                }),
+                axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&isFreelancer=false`, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                })
+            ]);
+            setAdvances(advRes.data || []);
+            setDrivers(driversRes.data.drivers || []);
+        } catch (err) { console.error('Error fetching advance data:', err); }
+    };
+
+    const handleAddAdvance = async (e) => {
+        e.preventDefault();
+        setSubmittingAdvance(true);
+        setAdvanceMessage({ type: '', text: '' });
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            if (editingAdvanceId) {
+                await axios.put(`/api/admin/advances/${editingAdvanceId}`, {
+                    ...advanceFormData,
+                    companyId: selectedCompany._id
+                }, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+                setAdvanceMessage({ type: 'success', text: 'Advance updated successfully!' });
+            } else {
+                await axios.post('/api/admin/advances', {
+                    ...advanceFormData,
+                    companyId: selectedCompany._id
+                }, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+                setAdvanceMessage({ type: 'success', text: 'Advance recorded successfully!' });
+            }
+
+            setTimeout(() => {
+                setShowAdvanceModal(false);
+                setEditingAdvanceId(null);
+                setAdvanceFormData({
+                    driverId: '',
+                    amount: '',
+                    date: new Date().toISOString().split('T')[0],
+                    remark: ''
+                });
+                setAdvanceMessage({ type: '', text: '' });
+                fetchSalaries();
+                fetchAdvanceData();
+            }, 1500);
+        } catch (err) {
+            setAdvanceMessage({ type: 'error', text: err.response?.data?.message || 'Operation failed' });
+        } finally {
+            setSubmittingAdvance(false);
+        }
+    };
+
+    const handleEditClick = (advance) => {
+        setEditingAdvanceId(advance._id);
+        setAdvanceFormData({
+            driverId: advance.driver?._id || '',
+            amount: advance.amount || '',
+            date: advance.date ? new Date(advance.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            remark: advance.remark || ''
+        });
+        setShowAdvanceModal(true);
+    };
+
+    const handleDeleteAdvance = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this advance record?')) return;
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.delete(`/api/admin/advances/${id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            fetchSalaries();
+            fetchAdvanceData();
+        } catch (err) {
+            console.error('Failed to delete advance:', err);
+            alert('Failed to delete advance record');
+        }
     };
 
     const fetchDriverDetails = async (driverId) => {
@@ -59,6 +163,11 @@ const DriverSalaries = () => {
         s.mobile?.includes(searchTerm)
     );
 
+    const filteredAdvances = advances.filter(a =>
+        a.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        a.remark?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
     const totalPayout = filteredSalaries.reduce((sum, s) => sum + (s.netPayable || 0), 0);
 
     // Summary from details
@@ -79,15 +188,15 @@ const DriverSalaries = () => {
             <header className="flex-resp" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', padding: '30px 0', marginBottom: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{ width: 'clamp(40px,10vw,50px)', height: 'clamp(40px,10vw,50px)', background: 'linear-gradient(135deg, white, #f8fafc)', borderRadius: '16px', padding: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
-                        <DollarSign size={28} color="#10b981" />
+                        <IndianRupee size={28} color="#fbbf24" />
                     </div>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }}></div>
-                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Financials</span>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Payroll System</span>
                         </div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(24px,5vw,32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
-                            Driver <span className="text-gradient-green">Salaries</span>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                            Driver <span className="text-gradient-yellow">Salaries</span>
                         </h1>
                     </div>
                 </div>
@@ -109,15 +218,29 @@ const DriverSalaries = () => {
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{ background: 'transparent', border: 'none', color: 'white', height: '45px', outline: 'none' }} />
                     </div>
+                    <button
+                        onClick={() => setShowAdvanceModal(true)}
+                        className="btn-primary"
+                        style={{ height: '45px', padding: '0 20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                    >
+                        <Plus size={18} /> RECORD ADVANCE
+                    </button>
                 </div>
             </header>
 
-            {/* Total Payout Card */}
-            <div className="glass-card" style={{ padding: '20px', marginBottom: '30px', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid rgba(16,185,129,0.2)', display: 'inline-block' }}>
-                <p style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(16,185,129,0.8)', marginBottom: '4px', textTransform: 'uppercase' }}>
-                    Total Net Payable ({new Date(0, month - 1).toLocaleString('default', { month: 'short' })} {year})
-                </p>
-                <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {totalPayout.toLocaleString()}</h3>
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
+                <div className="glass-card" style={{ flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                    <p style={{ fontSize: '11px', fontWeight: '800', color: '#10b981', marginBottom: '4px', textTransform: 'uppercase' }}>
+                        Total Net Payable ({new Date(0, month - 1).toLocaleString('default', { month: 'short' })} {year})
+                    </p>
+                    <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {totalPayout.toLocaleString()}</h3>
+                </div>
+                <div className="glass-card" style={{ flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(244,63,94,0.1) 0%, rgba(244,63,94,0.05) 100%)', border: '1px solid rgba(244,63,94,0.2)' }}>
+                    <p style={{ fontSize: '11px', fontWeight: '800', color: '#f43f5e', marginBottom: '4px', textTransform: 'uppercase' }}>
+                        Total Advances Issued
+                    </p>
+                    <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredAdvances.reduce((sum, a) => sum + (a.amount || 0), 0).toLocaleString()}</h3>
+                </div>
             </div>
 
             {/* Desktop Table */}
@@ -185,6 +308,189 @@ const DriverSalaries = () => {
                     </div>
                 ))}
             </div>
+
+            {/* Advance Payment History Section */}
+            <div style={{ marginTop: '60px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+                    <div style={{ width: '4px', height: '24px', background: '#fbbf24', borderRadius: '2px' }}></div>
+                    <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Advance <span style={{ color: '#fbbf24' }}>Payment History</span></h2>
+                </div>
+
+                <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
+                        <thead>
+                            <tr style={{ textAlign: 'left' }}>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remarks</th>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredAdvances.length === 0 ? (
+                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(30, 41, 59, 0.2)', borderRadius: '30px', border: '2px dashed rgba(255,255,255,0.05)' }}>
+                                    <IndianRupee size={60} style={{ margin: '0 auto 20px', opacity: 0.1, color: '#fbbf24' }} />
+                                    <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>No Advance Records</h3>
+                                    <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>Record a new advance to start tracking.</p>
+                                </td></tr>
+                            ) : filteredAdvances.map((advance, idx) => (
+                                <motion.tr
+                                    key={advance._id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.03 }}
+                                    className="glass-card-hover-effect"
+                                    style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}
+                                >
+                                    <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
+                                                {advance.driver?.name?.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <div style={{ color: 'white', fontWeight: '700' }}>{advance.driver?.name}</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{advance.driver?.mobile}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>
+                                            {new Date(advance.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <div style={{ color: 'white', fontWeight: '800' }}>₹ {advance.amount?.toLocaleString()}</div>
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                            {advance.remark || '-'}
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '20px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleEditClick(advance); }}
+                                                style={{
+                                                    background: 'rgba(56, 189, 248, 0.1)',
+                                                    color: '#38bdf8',
+                                                    border: 'none',
+                                                    padding: '8px',
+                                                    borderRadius: '8px',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteAdvance(advance._id); }}
+                                                style={{
+                                                    background: 'rgba(244, 63, 94, 0.1)',
+                                                    color: '#f43f5e',
+                                                    border: 'none',
+                                                    padding: '8px',
+                                                    borderRadius: '8px',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s'
+                                                }}
+                                            >
+                                                <X size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </motion.tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                    {filteredAdvances.map(advance => (
+                        <div key={advance._id} className="glass-card" style={{ padding: '16px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '14px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
+                                        {advance.driver?.name?.charAt(0)}
+                                    </div>
+                                    <div>
+                                        <div style={{ fontWeight: '800', color: 'white' }}>{advance.driver?.name}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{new Date(advance.date).toLocaleDateString()}</div>
+                                    </div>
+                                </div>
+                                <div style={{ textAlign: 'right' }}>
+                                    <div style={{ color: '#fbbf24', fontWeight: '800' }}>₹{advance.amount}</div>
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px', justifyContent: 'flex-end' }}>
+                                        <button onClick={() => handleEditClick(advance)} style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '10px' }}>Edit</button>
+                                        <button onClick={() => handleDeleteAdvance(advance._id)} style={{ background: 'transparent', border: 'none', color: '#f43f5e', fontSize: '10px' }}>Delete</button>
+                                    </div>
+                                </div>
+                            </div>
+                            {advance.remark && <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>"{advance.remark}"</p>}
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* RECORD ADVANCE MODAL */}
+            <AnimatePresence>
+                {showAdvanceModal && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', zIndex: 1100, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+                        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
+                            className="glass-card" style={{ width: '100%', maxWidth: '480px', padding: '40px', border: '1px solid rgba(255,255,255,0.1)', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
+                                <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>{editingAdvanceId ? 'Edit Advance' : 'Record Advance'}</h2>
+                                <button onClick={() => { setShowAdvanceModal(false); setEditingAdvanceId(null); }} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
+                            </div>
+
+                            <form onSubmit={handleAddAdvance} style={{ display: 'grid', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Select Driver</label>
+                                    <select
+                                        className="input-field"
+                                        required
+                                        value={advanceFormData.driverId}
+                                        onChange={(e) => setAdvanceFormData({ ...advanceFormData, driverId: e.target.value })}
+                                        style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white' }}
+                                    >
+                                        <option value="" style={{ background: '#1e293b', color: 'white' }}>Choose a driver...</option>
+                                        {drivers.map(d => (
+                                            <option key={d._id} value={d._id} style={{ background: '#1e293b', color: 'white' }}>
+                                                {d.name} ({d.mobile})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <div>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Amount</label>
+                                        <input type="number" className="input-field" required value={advanceFormData.amount} onChange={(e) => setAdvanceFormData({ ...advanceFormData, amount: e.target.value })} style={{ width: '100%', height: '50px' }} placeholder="₹ 0" />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Date</label>
+                                        <input type="date" className="input-field" required value={advanceFormData.date} onChange={(e) => setAdvanceFormData({ ...advanceFormData, date: e.target.value })} style={{ width: '100%', height: '50px' }} />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Remark</label>
+                                    <textarea className="input-field" value={advanceFormData.remark} onChange={(e) => setAdvanceFormData({ ...advanceFormData, remark: e.target.value })} style={{ width: '100%', padding: '15px' }} rows="2" placeholder="Ex: Fuel advance, Family need..." />
+                                </div>
+
+                                {advanceMessage.text && (
+                                    <div style={{ padding: '12px', borderRadius: '10px', background: advanceMessage.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)', color: advanceMessage.type === 'success' ? '#10b981' : '#f43f5e', border: `1px solid ${advanceMessage.type === 'success' ? 'rgba(16,185,129,0.2)' : 'rgba(244,63,94,0.2)'}`, fontSize: '13px', fontWeight: '700' }}>
+                                        {advanceMessage.text}
+                                    </div>
+                                )}
+
+                                <button type="submit" disabled={submittingAdvance} className="btn-primary" style={{ height: '50px', fontWeight: '900', fontSize: '15px' }}>
+                                    {submittingAdvance ? 'PROCESSING...' : (editingAdvanceId ? 'UPDATE ADVANCE' : 'CONFIRM ADVANCE')}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
 
             {/* DETAIL MODAL */}
             <AnimatePresence>
@@ -269,77 +575,55 @@ const DriverSalaries = () => {
                                                 <thead>
                                                     <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                                         <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Date</th>
-                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Wage</th>
+                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>WAGES</th>
+                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Same Day Return</th>
+                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Parking</th>
+                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Night</th>
                                                         <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Bonus</th>
                                                         <th style={{ padding: '12px', textAlign: 'right', color: 'white' }}>Total</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {det?.breakdown?.map((day, idx) => (
-                                                        <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                                            <td style={{ padding: '12px', color: 'white' }}>
-                                                                {new Date(day.date).toLocaleDateString()}
-                                                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{day.type || 'Duty'}</div>
-                                                                {day.remarks && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{day.remarks}</div>}
-                                                            </td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.wage}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.bonuses}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{day.total}</td>
-                                                        </tr>
-                                                    ))}
+                                                    {det?.breakdown?.map((day, idx) => {
+                                                        const externalParking = det.parkingEntries?.filter(p => {
+                                                            const pDate = new Date(p.date).toISOString().split('T')[0];
+                                                            return pDate === day.date;
+                                                        }).reduce((s, p) => s + (Number(p.amount) || 0), 0) || 0;
+
+                                                        const dayParking = externalParking + (day.parking || 0);
+                                                        const rowTotal = (day.wage || 0) + (day.sameDayReturn || 0) + (day.nightStay || 0) + (day.otherBonuses || 0) + dayParking;
+
+                                                        return (
+                                                            <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                                <td style={{ padding: '12px', color: 'white' }}>
+                                                                    {new Date(day.date).toLocaleDateString()}
+                                                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{day.type || 'Duty'}</div>
+                                                                    {day.remarks && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{day.remarks}</div>}
+                                                                </td>
+                                                                <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.wage || 0}</td>
+                                                                <td style={{ padding: '12px', textAlign: 'right', color: '#38bdf8', fontWeight: '600' }}>₹{day.sameDayReturn || 0}</td>
+                                                                <td style={{ padding: '12px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{dayParking || 0}</td>
+                                                                <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '600' }}>₹{day.nightStay || 0}</td>
+                                                                <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.otherBonuses || 0}</td>
+                                                                <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{rowTotal.toLocaleString()}</td>
+                                                            </tr>
+                                                        );
+                                                    })}
                                                     {det?.breakdown?.length === 0 && (
-                                                        <tr><td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No completed duties found this month.</td></tr>
+                                                        <tr><td colSpan="7" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No completed duties found this month.</td></tr>
                                                     )}
                                                     {/* Wages Subtotal row */}
                                                     {det?.breakdown?.length > 0 && (
-                                                        <tr style={{ background: 'rgba(14,165,233,0.05)', borderTop: '1px solid rgba(14,165,233,0.15)' }}>
-                                                            <td colSpan="3" style={{ padding: '12px', color: '#38bdf8', fontWeight: '700', fontSize: '12px' }}>Wages Subtotal</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#38bdf8', fontWeight: '900' }}>₹{totalWages.toLocaleString()}</td>
+                                                        <tr style={{ background: 'rgba(16,185,129,0.05)', borderTop: '2px solid rgba(16,185,129,0.15)' }}>
+                                                            <td colSpan="6" style={{ padding: '15px 12px', color: '#10b981', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>Grand Total (Wages + Parking + Bonuses)</td>
+                                                            <td style={{ padding: '15px 12px', textAlign: 'right', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹{grandTotal.toLocaleString()}</td>
                                                         </tr>
                                                     )}
                                                 </tbody>
                                             </table>
                                         </div>
 
-                                        {/* ─── PARKING SECTION ─── */}
-                                        <h3 style={{ fontSize: '14px', color: 'white', marginBottom: '15px', borderLeft: '3px solid #f59e0b', paddingLeft: '10px' }}>
-                                            Reimbursable Parking
-                                            {parkingTotal > 0 && <span style={{ marginLeft: '10px', color: '#f59e0b', fontWeight: '900' }}>₹{parkingTotal.toLocaleString()}</span>}
-                                        </h3>
-                                        <div style={{ overflowX: 'auto', marginBottom: '30px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
-                                                <thead>
-                                                    <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                        <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Date</th>
-                                                        <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Location / Remark</th>
-                                                        <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Source</th>
-                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'white' }}>Amount</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {det?.parkingEntries?.length > 0 ? det.parkingEntries.map((p, idx) => (
-                                                        <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                                            <td style={{ padding: '12px', color: 'white' }}>{new Date(p.date).toLocaleDateString()}</td>
-                                                            <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{p.location || p.remark || '—'}</td>
-                                                            <td style={{ padding: '12px' }}>
-                                                                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: p.source === 'Driver' ? 'rgba(14,165,233,0.1)' : 'rgba(245,158,11,0.1)', color: p.source === 'Driver' ? '#38bdf8' : '#f59e0b', fontWeight: '700' }}>
-                                                                    {p.source || 'Admin'}
-                                                                </span>
-                                                            </td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#f59e0b', fontWeight: '700' }}>₹{p.amount}</td>
-                                                        </tr>
-                                                    )) : (
-                                                        <tr><td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No parking entries this month.</td></tr>
-                                                    )}
-                                                    {det?.parkingEntries?.length > 0 && (
-                                                        <tr style={{ background: 'rgba(245,158,11,0.05)', borderTop: '1px solid rgba(245,158,11,0.15)' }}>
-                                                            <td colSpan="3" style={{ padding: '12px', color: '#f59e0b', fontWeight: '700', fontSize: '12px' }}>Parking Subtotal</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#f59e0b', fontWeight: '900' }}>₹{parkingTotal.toLocaleString()}</td>
-                                                        </tr>
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
+
 
                                         {/* ─── ADVANCES TABLE ─── */}
                                         <h3 style={{ fontSize: '14px', color: 'white', marginBottom: '15px', borderLeft: '3px solid #f43f5e', paddingLeft: '10px' }}>Advances Taken (This Month)</h3>

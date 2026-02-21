@@ -224,19 +224,41 @@ const Warranties = () => {
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
             <SEO title="Parts Warranty Hub" description="Track and manage vehicle part warranties, claims and renewals." />
 
-            <header className="flex-resp" style={{ justifyContent: 'space-between', padding: '30px 0', gap: '20px' }}>
-                <div>
-                    <h1 className="resp-title" style={{ color: 'white', margin: 0, letterSpacing: '-1px' }}>
-                        Warranty <span className="text-gradient">Manager</span>
-                    </h1>
-                    <p className="resp-subtitle" style={{ marginTop: '5px' }}>Track Battery, Tyres and Engine Parts warranties.</p>
+            <header className="flex-resp" style={{
+                justifyContent: 'space-between',
+                padding: '30px 0',
+                gap: '20px',
+                alignItems: 'center'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{
+                        width: 'clamp(40px,10vw,50px)',
+                        height: 'clamp(40px,10vw,50px)',
+                        background: 'linear-gradient(135deg, white, #f8fafc)',
+                        borderRadius: '16px',
+                        padding: '8px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                    }}>
+                        <ShieldCheck size={28} color="#fbbf24" />
+                    </div>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Asset Protection</span>
+                        </div>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                            Parts <span className="text-gradient-yellow">Warranty</span> Hub
+                        </h1>
+                    </div>
                 </div>
 
                 <div className="flex-resp" style={{ gap: '15px' }}>
                     <button
-                        className="btn-primary"
                         onClick={() => setShowModal(true)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black', border: 'none', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)' }}
                     >
                         <Plus size={20} /> <span className="hide-mobile">Add Warranty</span><span className="show-mobile">Add</span>
                     </button>
@@ -423,26 +445,24 @@ const Warranties = () => {
             {/* Add Warranty Modal */}
             <AnimatePresence>
                 {showModal && (
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '15px', overflowY: 'auto' }}>
                         <motion.div
-                            initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            className="glass-card"
-                            style={{ maxWidth: '800px', width: '100%', maxHeight: '90vh', overflowY: 'auto', padding: '35px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.15)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
+                            initial={{ y: 50, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            exit={{ y: 50, opacity: 0 }}
+                            className="premium-glass"
+                            style={{ width: '100%', maxWidth: '800px', padding: '0', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a', overflow: 'visible', margin: 'auto', borderRadius: '24px' }}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '20px' }}>
+                            <div style={{ padding: '24px 30px', background: 'linear-gradient(to right, #1e293b, #0f172a)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
                                 <div>
-                                    <h2 style={{ color: 'white', margin: 0, fontSize: '24px', fontWeight: '800', letterSpacing: '-0.5px' }}>New Warranty Record</h2>
-                                    <p style={{ margin: '5px 0 0 0', color: 'var(--text-muted)', fontSize: '14px' }}>Enter the details of the purchased part.</p>
+                                    <h2 style={{ color: 'white', fontSize: '20px', margin: 0, fontWeight: '800' }}>New Warranty Record</h2>
+                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', margin: '4px 0 0' }}>Asset Registration</p>
                                 </div>
-                                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'background 0.2s' }} className="hover-bg-light">
-                                    <X size={20} />
-                                </button>
+                                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '50%', padding: '10px', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
                             </div>
 
-                            <form onSubmit={handleCreate}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+                            <form onSubmit={handleCreate} style={{ padding: '25px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
                                     <div className="input-field-group">
                                         <label style={labelStyle}>Select Vehicle *</label>
                                         <div style={{ position: 'relative' }}>
@@ -453,12 +473,8 @@ const Warranties = () => {
                                                 onChange={e => setFormData({ ...formData, vehicleId: e.target.value })}
                                                 style={inputStyle}
                                             >
-                                                <option value="" style={{ background: '#1e293b' }}>Select from Fleet List...</option>
-                                                {vehicles.map(v => (
-                                                    <option key={v._id} value={v._id} style={{ background: '#1e293b' }}>
-                                                        {v.carNumber} {v.model ? `— ${v.model}` : ''}
-                                                    </option>
-                                                ))}
+                                                <option value="" style={{ background: '#1e293b' }}>Select Vehicle</option>
+                                                {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#1e293b' }}>{v.carNumber}</option>)}
                                             </select>
                                             <ChevronDown size={16} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: 'white', pointerEvents: 'none' }} />
                                         </div>
@@ -510,20 +526,19 @@ const Warranties = () => {
                                     </div>
                                 </div>
 
-                                <div className="input-field-group" style={{ marginTop: '25px' }}>
-                                    <label style={labelStyle}>Warranty Card / Receipt Image</label>
+                                <div className="input-field-group">
+                                    <label style={labelStyle}>Warranty Image</label>
                                     <div
                                         style={{
                                             background: 'rgba(255,255,255,0.03)',
                                             border: '2px dashed rgba(255,255,255,0.1)',
                                             borderRadius: '16px',
-                                            padding: '20px',
+                                            padding: imagePreview ? '5px' : '20px',
                                             textAlign: 'center',
                                             position: 'relative',
                                             cursor: 'pointer',
-                                            transition: 'all 0.2s'
+                                            overflow: 'hidden'
                                         }}
-                                        className="hover-border-primary"
                                     >
                                         <input
                                             type="file"
@@ -531,30 +546,46 @@ const Warranties = () => {
                                                 setWarrantyImage(e.target.files[0]);
                                                 if (e.target.files[0]) setImagePreview(URL.createObjectURL(e.target.files[0]));
                                             }}
-                                            style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+                                            style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer', zIndex: 10, width: '100%', height: '100%' }}
                                         />
 
                                         {imagePreview ? (
-                                            <div style={{ position: 'relative', width: '100%', height: '150px' }}>
-                                                <img src={imagePreview} style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: '8px' }} />
-                                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }} className="show-on-hover">
-                                                    <span style={{ color: 'white', fontWeight: '600' }}>Change Image</span>
+                                            <div style={{ position: 'relative', width: '100%', height: '150px', borderRadius: '12px', overflow: 'hidden' }}>
+                                                <img src={imagePreview} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: 'opacity 0.2s' }} onMouseEnter={e => e.currentTarget.style.opacity = 1} onMouseLeave={e => e.currentTarget.style.opacity = 0}>
+                                                    <div style={{ color: 'white', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <Camera size={20} /> Change Image
+                                                    </div>
                                                 </div>
                                             </div>
                                         ) : (
-                                            <div style={{ padding: '20px' }}>
-                                                <div style={{ width: '50px', height: '50px', background: 'rgba(255,255,255,0.05)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 10px' }}>
-                                                    <Camera size={24} style={{ opacity: 0.5 }} />
-                                                </div>
-                                                <p style={{ margin: 0, fontWeight: '600', color: 'white' }}>Click to upload image</p>
-                                                <p style={{ margin: '5px 0 0 0', fontSize: '12px', color: 'var(--text-muted)' }}>Supports JPG, PNG (Max 5MB)</p>
+                                            <div>
+                                                <Camera size={24} style={{ opacity: 0.5, marginBottom: '10px' }} />
+                                                <p style={{ margin: 0, fontWeight: '600', color: 'white', fontSize: '14px' }}>Click to upload</p>
                                             </div>
                                         )}
                                     </div>
                                 </div>
 
-                                <button type="submit" disabled={submitting} className="btn-primary" style={{ width: '100%', marginTop: '30px', height: '56px', fontSize: '16px', fontWeight: '800', letterSpacing: '0.5px' }}>
-                                    {submitting ? 'PROCESSING...' : 'SAVE WARRANTY RECORD'}
+                                <button
+                                    type="submit"
+                                    disabled={submitting}
+                                    style={{
+                                        height: '56px',
+                                        background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                                        borderRadius: '16px',
+                                        fontWeight: '900',
+                                        fontSize: '16px',
+                                        color: 'black',
+                                        border: 'none',
+                                        boxShadow: '0 12px 24px -8px rgba(251, 191, 36, 0.5)',
+                                        cursor: submitting ? 'not-allowed' : 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px'
+                                    }}
+                                >
+                                    {submitting ? 'Saving...' : 'Save Warranty'}
                                 </button>
                             </form>
                         </motion.div>
@@ -629,7 +660,7 @@ const Warranties = () => {
                     </div>
                 )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 

@@ -17,7 +17,7 @@ const Fastag = () => {
     // Recharge Modal State
     const [showModal, setShowModal] = useState(false);
     const [selectedVehicle, setSelectedVehicle] = useState(null);
-    const [rechargeData, setRechargeData] = useState({ amount: '', method: '', remarks: '' });
+    const [rechargeData, setRechargeData] = useState({ amount: '', method: '', remarks: '', date: new Date().toISOString().split('T')[0] });
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
@@ -78,7 +78,7 @@ const Fastag = () => {
             setMessage({ type: 'success', text: 'Top-up successful!' });
             setTimeout(() => {
                 setShowModal(false);
-                setRechargeData({ amount: '', method: '', remarks: '' });
+                setRechargeData({ amount: '', method: '', remarks: '', date: new Date().toISOString().split('T')[0] });
                 setMessage({ type: '', text: '' });
                 fetchVehicles();
             }, 1000);
@@ -131,21 +131,29 @@ const Fastag = () => {
                 alignItems: 'center',
                 gap: '20px'
             }}>
-                <div>
-                    <h1 className="resp-title" style={{ margin: 0, fontWeight: '900', letterSpacing: '-1px', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{
-                            background: 'linear-gradient(135deg, #3b82f6, #2563eb)',
-                            padding: '10px',
-                            borderRadius: '14px',
-                            boxShadow: '0 8px 20px rgba(37, 99, 235, 0.4)'
-                        }}>
-                            <Zap size={24} color="white" fill="white" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{
+                        width: 'clamp(40px,10vw,50px)',
+                        height: 'clamp(40px,10vw,50px)',
+                        background: 'linear-gradient(135deg, white, #f8fafc)',
+                        borderRadius: '16px',
+                        padding: '8px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                    }}>
+                        <CreditCard size={28} color="#fbbf24" />
+                    </div>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Electronic Toll System</span>
                         </div>
-                        Fastag Manager
-                    </h1>
-                    <p className="resp-subtitle" style={{ marginTop: '8px', color: 'var(--text-muted)' }}>
-                        Track balances & recharge company vehicles
-                    </p>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                            Fastag <span className="text-gradient-yellow">Manager</span>
+                        </h1>
+                    </div>
                 </div>
 
                 <div className="flex-resp" style={{ gap: '15px' }}>
@@ -173,8 +181,8 @@ const Fastag = () => {
                             padding: '14px 24px',
                             fontSize: '14px',
                             borderRadius: '14px',
-                            background: 'linear-gradient(135deg, #f59e0b, #d97706)',
-                            boxShadow: '0 8px 25px rgba(245, 158, 11, 0.4)'
+                            background: 'linear-gradient(135deg, #fcd34d, #fbbf24)',
+                            boxShadow: '0 8px 25px rgba(251, 191, 36, 0.4)'
                         }}
                     >
                         <Plus size={20} strokeWidth={3} /> NEW RECHARGE
@@ -360,7 +368,7 @@ const Fastag = () => {
                             className="glass-card"
                             style={{ width: '90%', maxWidth: '450px', padding: '0', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
                         >
-                            <div style={{ padding: '30px', background: 'linear-gradient(135deg, var(--primary), #2563eb)' }}>
+                            <div style={{ padding: '30px', background: 'linear-gradient(135deg, #fbbf24, #f59e0b)' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                                     <div>
                                         <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>Top Up Funds</h2>
@@ -396,6 +404,18 @@ const Fastag = () => {
                                             </select>
                                             <ChevronDown size={16} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', color: 'var(--text-muted)' }} />
                                         </div>
+                                    </div>
+
+                                    <div>
+                                        <label style={{ fontSize: '11px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>Recharge Date</label>
+                                        <input
+                                            type="date"
+                                            className="input-field"
+                                            required
+                                            value={rechargeData.date}
+                                            onChange={(e) => setRechargeData({ ...rechargeData, date: e.target.value })}
+                                            style={{ height: '50px', fontWeight: '600', background: 'rgba(255,255,255,0.05)', colorScheme: 'dark' }}
+                                        />
                                     </div>
 
                                     <div>
@@ -461,8 +481,8 @@ const Fastag = () => {
                                             width: '100%',
                                             fontSize: '15px',
                                             letterSpacing: '0.5px',
-                                            background: submitting ? 'var(--text-muted)' : 'linear-gradient(135deg, var(--primary), #2563eb)',
-                                            boxShadow: submitting ? 'none' : '0 8px 20px rgba(37, 99, 235, 0.3)'
+                                            background: submitting ? 'var(--text-muted)' : 'linear-gradient(135deg, #10b981, #34d399)',
+                                            boxShadow: submitting ? 'none' : '0 8px 20px rgba(16, 185, 129, 0.3)'
                                         }}
                                     >
                                         {submitting ? 'PROCESSING RECHARGE...' : 'CONFIRM RECHARGE'}
