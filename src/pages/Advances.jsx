@@ -18,10 +18,15 @@ const Advances = () => {
 
     // Add Advance Modal State
     const [showModal, setShowModal] = useState(false);
+    const getLocalYYYYMMDD = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
     const [formData, setFormData] = useState({
         driverId: '',
         amount: '',
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalYYYYMMDD(),
         remark: ''
     });
     const [submitting, setSubmitting] = useState(false);
@@ -72,7 +77,7 @@ const Advances = () => {
                 setFormData({
                     driverId: '',
                     amount: '',
-                    date: new Date().toISOString().split('T')[0],
+                    date: getLocalYYYYMMDD(),
                     remark: ''
                 });
                 setMessage({ type: '', text: '' });

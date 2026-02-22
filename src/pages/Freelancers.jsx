@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee } from 'lucide-react';
+import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
@@ -117,16 +117,16 @@ const Freelancers = () => {
         time: new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16),
         pickUpLocation: ''
     });
-    const [punchOutData, setPunchOutData] = useState({ km: '', time: new Date().toISOString().slice(0, 16), fuelAmount: '0', parkingAmount: '0', review: '', dailyWage: '', dropLocation: '' });
-    const [advanceData, setAdvanceData] = useState({ amount: '', remark: '', date: new Date().toISOString().slice(0, 10), advanceType: 'Office', givenBy: 'Office' });
+    const [punchOutData, setPunchOutData] = useState({ km: '', time: '', fuelAmount: '0', parkingAmount: '0', review: '', dailyWage: '', dropLocation: '' });
+    const [advanceData, setAdvanceData] = useState({ amount: '', remark: '', date: '', advanceType: 'Office', givenBy: 'Office' });
     const [manualData, setManualData] = useState({
         driverId: '',
         vehicleId: '',
-        date: new Date().toISOString().split('T')[0],
+        date: '',
         punchInKM: '',
         punchOutKM: '',
-        punchInTime: new Date().toISOString().slice(0, 10) + 'T08:00',
-        punchOutTime: new Date().toISOString().slice(0, 10) + 'T20:00',
+        punchInTime: '',
+        punchOutTime: '',
         pickUpLocation: '',
         dropLocation: '',
         fuelAmount: '0',
@@ -138,13 +138,59 @@ const Freelancers = () => {
         review: ''
     });
 
+    const getLocalYYYYMMDD = (date = new Date()) => {
+        const d = new Date(date);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${y}-${m}-${day}`;
+    };
+
+    const getLocalYYYYMMDDHHMM = (date = new Date()) => {
+        const d = new Date(date);
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        const hh = String(d.getHours()).padStart(2, '0');
+        const min = String(d.getMinutes()).padStart(2, '0');
+        return `${y}-${m}-${day}T${hh}:${min}`;
+    };
+
+    useEffect(() => {
+        const dStr = getLocalYYYYMMDD();
+        const dtStr = getLocalYYYYMMDDHHMM();
+
+        setPunchInData(prev => ({
+            ...prev,
+            date: dStr,
+            time: dtStr
+        }));
+
+        setPunchOutData(prev => ({
+            ...prev,
+            time: dtStr
+        }));
+
+        setAdvanceData(prev => ({
+            ...prev,
+            date: dStr
+        }));
+
+        setManualData(prev => ({
+            ...prev,
+            date: dStr,
+            punchInTime: dStr + 'T08:00',
+            punchOutTime: dStr + 'T20:00'
+        }));
+    }, []);
+
     const getOneEightyDaysAgo = () => {
         const d = new Date();
         d.setDate(d.getDate() - 180);
-        return d.toISOString().split('T')[0];
+        return getLocalYYYYMMDD(d);
     };
 
-    const getToday = () => new Date().toISOString().split('T')[0];
+    const getToday = () => getLocalYYYYMMDD();
 
     const [fromDate, setFromDate] = useState(getOneEightyDaysAgo());
     const [toDate, setToDate] = useState(getToday());
@@ -162,7 +208,11 @@ const Freelancers = () => {
             const { data } = await axios.get(`/api/admin/reports/${selectedCompany._id}?from=${fromDate}&to=${toDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
-            setAttendance((data.attendance || []).filter(a => a.driver?.isFreelancer));
+            // Filter attendance for freelancers
+            const freelancerAttendance = (data.attendance || []).filter(a =>
+                a.isFreelancer || a.driver?.isFreelancer || a.driver?.name?.includes('(F)')
+            );
+            setAttendance(freelancerAttendance);
         } catch (err) { console.error('Logistic error:', err); }
     }, [selectedCompany, fromDate, toDate]);
 
@@ -170,12 +220,13 @@ const Freelancers = () => {
         if (!selectedCompany?._id) return;
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/admin/advances/${selectedCompany._id}?isFreelancer=true`, {
+            // Added from/to to ensure consistency even if called directly
+            const { data } = await axios.get(`/api/admin/advances/${selectedCompany._id}?isFreelancer=true&from=${fromDate}&to=${toDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setAdvances(data || []);
         } catch (err) { console.error('Logistic error:', err); }
-    }, [selectedCompany]);
+    }, [selectedCompany, fromDate, toDate]);
 
     const fetchFreelancers = useCallback(async () => {
         if (!selectedCompany?._id) return;
@@ -201,17 +252,21 @@ const Freelancers = () => {
         } catch (err) { console.error('Logistic error:', err); }
     }, [selectedCompany]);
 
+    // Master Data Effect (Company change only)
     useEffect(() => {
-        const loadAllData = () => {
-            if (selectedCompany) {
-                fetchFreelancers();
-                fetchVehicles();
-                fetchAttendance();
-                fetchAdvances();
-            }
-        };
-        loadAllData();
-    }, [selectedCompany, fromDate, toDate, fetchFreelancers, fetchVehicles, fetchAttendance, fetchAdvances]);
+        if (selectedCompany) {
+            fetchFreelancers();
+            fetchVehicles();
+        }
+    }, [selectedCompany, fetchFreelancers, fetchVehicles]);
+
+    // Filtered Data Effect (Company or Date changes)
+    useEffect(() => {
+        if (selectedCompany) {
+            fetchAttendance();
+            fetchAdvances();
+        }
+    }, [selectedCompany, fromDate, toDate, fetchAttendance, fetchAdvances]);
 
 
     const handleCreate = async (e) => {
@@ -638,28 +693,81 @@ const Freelancers = () => {
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            background: 'rgba(255,255,255,0.03)',
-                            padding: '0 12px',
-                            borderRadius: '12px',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            height: '44px',
-                            flex: '1 1 220px',
-                            maxWidth: '300px',
-                            justifyContent: 'space-between'
+                            gap: '12px',
+                            flex: '1 1 auto',
+                            maxWidth: '450px'
                         }}>
-                            <input
-                                type="date"
-                                value={fromDate}
-                                onChange={e => setFromDate(e.target.value)}
-                                style={{ background: 'transparent', color: 'white', border: 'none', fontSize: '12px', outline: 'none', width: '100%' }}
-                            />
-                            <span style={{ color: 'rgba(255,255,255,0.2)', margin: '0 8px' }}>-</span>
-                            <input
-                                type="date"
-                                value={toDate}
-                                onChange={e => setToDate(e.target.value)}
-                                style={{ background: 'transparent', color: 'white', border: 'none', fontSize: '12px', outline: 'none', width: '100%', textAlign: 'right' }}
-                            />
+                            {/* FROM DATE */}
+                            <div
+                                onClick={(e) => {
+                                    const input = e.currentTarget.querySelector('input');
+                                    if (input) {
+                                        try { input.showPicker(); } catch (err) { input.focus(); }
+                                    }
+                                }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    padding: '0 15px',
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    height: '44px',
+                                    flex: 1,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease'
+                                }}
+                                className="glass-card-hover-effect"
+                            >
+                                <div style={{ display: 'flex', flexDirection: 'column', marginRight: '10px' }}>
+                                    <span style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase', opacity: 0.7 }}>From</span>
+                                    <Calendar size={12} style={{ color: 'white', opacity: 0.5 }} />
+                                </div>
+                                <input
+                                    type="date"
+                                    value={fromDate}
+                                    onChange={e => setFromDate(e.target.value)}
+                                    onClick={e => e.stopPropagation()}
+                                    style={{ background: 'transparent', color: 'white', border: 'none', fontSize: '13px', outline: 'none', width: '100%', cursor: 'pointer' }}
+                                />
+                            </div>
+
+                            <span style={{ color: 'rgba(255,255,255,0.1)', fontWeight: 'bold' }}>-</span>
+
+                            {/* TO DATE */}
+                            <div
+                                onClick={(e) => {
+                                    const input = e.currentTarget.querySelector('input');
+                                    if (input) {
+                                        try { input.showPicker(); } catch (err) { input.focus(); }
+                                    }
+                                }}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    padding: '0 15px',
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    height: '44px',
+                                    flex: 1,
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s ease'
+                                }}
+                                className="glass-card-hover-effect"
+                            >
+                                <div style={{ display: 'flex', flexDirection: 'column', marginRight: '10px' }}>
+                                    <span style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase', opacity: 0.7 }}>To</span>
+                                    <Calendar size={12} style={{ color: 'white', opacity: 0.5 }} />
+                                </div>
+                                <input
+                                    type="date"
+                                    value={toDate}
+                                    onChange={e => setToDate(e.target.value)}
+                                    onClick={e => e.stopPropagation()}
+                                    style={{ background: 'transparent', color: 'white', border: 'none', fontSize: '13px', outline: 'none', width: '100%', cursor: 'pointer' }}
+                                />
+                            </div>
                         </div>
 
                         <button

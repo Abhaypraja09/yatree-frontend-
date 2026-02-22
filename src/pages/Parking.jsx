@@ -101,6 +101,8 @@ const ParkingPage = () => {
     const [activeTab, setActiveTab] = useState('parking'); // 'parking' | 'carservices'
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [vehicles, setVehicles] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDriver, setFilterDriver] = useState('All');
     const [dateRange, setDateRange] = useState({
@@ -110,6 +112,7 @@ const ParkingPage = () => {
 
     // Form State
     const [formData, setFormData] = useState({
+        vehicleId: '',
         driverId: '',
         driver: '', // Will start storing name here too for legacy/display
         amount: '',
@@ -128,6 +131,7 @@ const ParkingPage = () => {
             fetchEntries();
             fetchPendingEntries();
             fetchDrivers();
+            fetchVehicles();
             fetchCarServiceEntries();
         }
     }, [selectedCompany, dateRange]);
@@ -199,6 +203,20 @@ const ParkingPage = () => {
         } catch (err) { console.error(err); }
     };
 
+    const fetchVehicles = async () => {
+        if (!selectedCompany?._id) return;
+        try {
+            const userInfoStr = localStorage.getItem('userInfo');
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+            if (!userInfo?.token) return;
+
+            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setVehicles(data.vehicles || []);
+        } catch (err) { console.error(err); }
+    };
+
     const handleCreate = async (e) => {
         e.preventDefault();
         setSubmitting(true);
@@ -207,14 +225,24 @@ const ParkingPage = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            await axios.post('/api/admin/parking', {
-                ...formData,
-                companyId: selectedCompany._id
-            }, {
-                headers: { Authorization: `Bearer ${userInfo.token}` }
-            });
+            if (editingId) {
+                await axios.put(`/api/admin/parking/${editingId}`, {
+                    ...formData,
+                    companyId: selectedCompany._id
+                }, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+                alert('Parking entry updated successfully');
+            } else {
+                await axios.post('/api/admin/parking', {
+                    ...formData,
+                    companyId: selectedCompany._id
+                }, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+                alert('Parking entry added successfully');
+            }
 
-            alert('Parking entry added successfully');
             setShowModal(false);
             resetForm();
             fetchEntries();
@@ -259,7 +287,9 @@ const ParkingPage = () => {
     };
 
     const handleEdit = (entry) => {
+        setEditingId(entry._id);
         setFormData({
+            vehicleId: entry.vehicle?._id || '',
             driverId: entry.driverId?._id || '',
             driver: entry.driver || '',
             amount: entry.amount || '',
@@ -292,7 +322,9 @@ const ParkingPage = () => {
     };
 
     const resetForm = () => {
+        setEditingId(null);
         setFormData({
+            vehicleId: '',
             driverId: '',
             driver: '',
             amount: '',

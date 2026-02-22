@@ -13,7 +13,8 @@ import {
     User,
     Car,
     FileText,
-    Camera
+    Camera,
+    IndianRupee
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -31,11 +32,16 @@ const ActiveLogs = () => {
     const [filterVehicle, setFilterVehicle] = useState('All');
     const [viewPhoto, setViewPhoto] = useState(null);
 
+    const getLocalYYYYMMDD = () => {
+        const d = new Date();
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    };
+
     // Form State
     const [formData, setFormData] = useState({
         vehicleId: '',
         driverId: '',
-        date: new Date().toISOString().split('T')[0],
+        date: getLocalYYYYMMDD(),
         location: '',
         description: '',
         amount: '',
@@ -73,8 +79,8 @@ const ActiveLogs = () => {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 
             const [vRes, dRes] = await Promise.all([
-                axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=all`, { headers: { Authorization: `Bearer ${userInfo.token}` } }),
-                axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false`, { headers: { Authorization: `Bearer ${userInfo.token}` } })
+                axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=fleet`, { headers: { Authorization: `Bearer ${userInfo.token}` } }),
+                axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&isFreelancer=false`, { headers: { Authorization: `Bearer ${userInfo.token}` } })
             ]);
 
             setVehicles(vRes.data.vehicles || []);
@@ -133,7 +139,7 @@ const ActiveLogs = () => {
         setFormData({
             vehicleId: '',
             driverId: '',
-            date: new Date().toISOString().split('T')[0],
+            date: getLocalYYYYMMDD(),
             location: '',
             description: '',
             amount: '',
@@ -157,349 +163,470 @@ const ActiveLogs = () => {
     const resolvedCount = filteredLogs.filter(l => l.status === 'Resolved').length;
 
     // Helper to render status badge
-    const StatusBadge = ({ status }) => (
-        <span style={{
-            fontSize: '10px',
-            backgroundColor: status === 'Resolved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)',
-            color: status === 'Resolved' ? '#10b981' : '#f59e0b',
-            padding: '4px 8px',
-            borderRadius: '6px',
-            fontWeight: '800',
-            textTransform: 'uppercase',
-            whiteSpace: 'nowrap'
-        }}>
-            {status}
-        </span>
-    );
+    const StatusBadge = ({ status }) => {
+        const getStyles = () => {
+            switch (status) {
+                case 'Resolved': return { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: 'rgba(16, 185, 129, 0.2)' };
+                case 'In Repair': return { bg: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: 'rgba(56, 189, 248, 0.2)' };
+                default: return { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: 'rgba(245, 158, 11, 0.2)' };
+            }
+        };
+        const styles = getStyles();
+        return (
+            <span style={{
+                fontSize: '10px',
+                backgroundColor: styles.bg,
+                color: styles.color,
+                border: `1px solid ${styles.border}`,
+                padding: '4px 10px',
+                borderRadius: '8px',
+                fontWeight: '900',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px'
+            }}>
+                <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: styles.color }}></span>
+                {status}
+            </span>
+        );
+    };
 
     return (
-        <div className="container-fluid" style={{ paddingBottom: '40px' }}>
-            <SEO title="Active Accident Logs" description="Track and manage vehicle accidents and incidents." />
+        <div className="container-fluid" style={{ paddingBottom: '60px', paddingTop: '20px' }}>
+            <SEO title="Active Incident Logs" description="Track and manage vehicle accidents and incidents with precision." />
 
-            <header className="flex-resp" style={{ justifyContent: 'space-between', padding: '30px 0', gap: '20px', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{
-                        width: 'clamp(40px,10vw,50px)',
-                        height: 'clamp(40px,10vw,50px)',
-                        background: 'linear-gradient(135deg, white, #f8fafc)',
-                        borderRadius: '16px',
-                        padding: '8px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
-                    }}>
-                        <AlertTriangle size={28} color="#fbbf24" />
-                    </div>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
-                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Safety</span>
+            {/* Premium Header */}
+            <header style={{ marginBottom: '40px' }}>
+                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+                        <motion.div
+                            initial={{ rotate: -10, scale: 0.9 }}
+                            animate={{ rotate: 0, scale: 1 }}
+                            style={{
+                                width: '60px',
+                                height: '60px',
+                                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                                borderRadius: '18px',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                boxShadow: '0 10px 30px rgba(251, 191, 36, 0.3)',
+                                flexShrink: 0
+                            }}
+                        >
+                            <AlertTriangle size={32} color="#0f172a" />
+                        </motion.div>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 10px #fbbf24' }}></span>
+                                <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Safety & Compliance</span>
+                            </div>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(28px, 5vw, 36px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
+                                Active <span className="text-gradient-yellow">Incident Logs</span>
+                            </h1>
                         </div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
-                            Incident <span className="text-gradient-yellow">Logs</span>
-                        </h1>
+                    </div>
+
+                    <div className="flex-resp" style={{ gap: '12px' }}>
+                        <button
+                            className="btn-primary"
+                            onClick={() => setShowModal(true)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                height: '54px',
+                                padding: '0 28px',
+                                borderRadius: '16px',
+                                fontWeight: '900',
+                                fontSize: '14px',
+                                letterSpacing: '0.5px'
+                            }}
+                        >
+                            <Plus size={22} strokeWidth={3} />
+                            <span>NEW INCIDENT</span>
+                        </button>
                     </div>
                 </div>
 
-                <div className="flex-resp" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                    <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '100%', maxWidth: '300px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: 1 }}>
-                        <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)' }} />
+                {/* Filters Row */}
+                <div className="flex-resp" style={{ marginTop: '35px', gap: '15px' }}>
+                    <div style={{ position: 'relative', flex: '1', minWidth: 'min(100%, 350px)' }}>
+                        <Search size={20} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                         <input
                             type="text"
-                            placeholder="Search incidents..."
+                            placeholder="Search vehicle number, driver name, or description..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ background: 'transparent', border: 'none', color: 'white', height: '50px', width: '100%', outline: 'none', fontSize: '14px' }}
+                            className="input-field"
+                            style={{ paddingLeft: '55px', height: '54px', borderRadius: '18px', fontSize: '15px' }}
                         />
                     </div>
 
-                    <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', height: '50px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: '0 1 auto' }}>
-                        <Car size={18} style={{ marginRight: '10px', color: 'var(--primary)' }} />
+                    <div className="glass-card" style={{ padding: '4px', borderRadius: '20px', display: 'flex', gap: '4px', background: 'rgba(255,255,255,0.03)' }}>
                         <select
                             value={filterVehicle}
                             onChange={(e) => setFilterVehicle(e.target.value)}
-                            style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '700', cursor: 'pointer', maxWidth: '150px' }}
+                            className="input-field"
+                            style={{ height: '46px', border: 'none', background: 'transparent', width: '160px', fontWeight: '700', fontSize: '13px' }}
                         >
-                            <option value="All">All Vehicles</option>
+                            <option value="All" style={{ background: '#0f172a' }}>All Vehicles</option>
                             {vehicles.map(v => (
-                                <option key={v._id} value={v._id} style={{ background: '#1e293b' }}>{v.carNumber}</option>
+                                <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber}</option>
                             ))}
                         </select>
+                        <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '8px 4px' }}></div>
+                        <select
+                            value={filterStatus}
+                            onChange={(e) => setFilterStatus(e.target.value)}
+                            className="input-field"
+                            style={{ height: '46px', border: 'none', background: 'transparent', width: '140px', fontWeight: '700', fontSize: '13px' }}
+                        >
+                            <option value="All" style={{ background: '#0f172a' }}>All Status</option>
+                            <option value="Pending" style={{ background: '#0f172a' }}>Pending</option>
+                            <option value="In Repair" style={{ background: '#0f172a' }}>In Repair</option>
+                            <option value="Resolved" style={{ background: '#0f172a' }}>Resolved</option>
+                        </select>
                     </div>
-                    <button
-                        className="btn-primary"
-                        onClick={() => setShowModal(true)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', whiteSpace: 'nowrap' }}
-                    >
-                        <Plus size={20} /> <span className="hide-mobile">New Incident</span><span className="show-mobile">Add</span>
-                    </button>
                 </div>
             </header>
 
             {/* Stats Row */}
-            <div className="stats-grid">
-                <div className="glass-card stat-card" style={{ background: 'rgba(244, 63, 94, 0.05)', borderColor: 'rgba(244, 63, 94, 0.1)' }}>
-                    <div className="stat-card-header">
-                        <div className="stat-card-icon" style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e' }}><AlertTriangle size={18} /></div>
-                        <p className="stat-card-label">Total Incidents</p>
+            <div className="stats-grid" style={{ marginBottom: '40px', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
+                <motion.div
+                    whileHover={{ translateY: -5 }}
+                    className="glass-card"
+                    style={{ background: 'linear-gradient(145deg, rgba(244, 63, 94, 0.08), rgba(244, 63, 94, 0.02))', borderColor: 'rgba(244, 63, 94, 0.15)', padding: '25px' }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                        <div style={{ padding: '10px', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px', color: '#f43f5e' }}>
+                            <AlertTriangle size={20} />
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#f43f5e', letterSpacing: '1px' }}>INCIDENTS</span>
                     </div>
-                    <h2 className="stat-card-value">{filteredLogs.length}</h2>
-                </div>
+                    <h2 style={{ fontSize: '32px', fontWeight: '900', color: 'white', margin: 0 }}>{filteredLogs.length}</h2>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '5px', fontWeight: '600' }}>Active reports recorded</p>
+                </motion.div>
 
-                <div className="glass-card stat-card" style={{ background: 'rgba(245, 158, 11, 0.05)', borderColor: 'rgba(245, 158, 11, 0.1)' }}>
-                    <div className="stat-card-header">
-                        <div className="stat-card-icon" style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b' }}><Clock size={18} /></div>
-                        <p className="stat-card-label">Est. Cost</p>
+                <motion.div
+                    whileHover={{ translateY: -5 }}
+                    className="glass-card"
+                    style={{ background: 'linear-gradient(145deg, rgba(251, 191, 36, 0.08), rgba(251, 191, 36, 0.02))', borderColor: 'rgba(251, 191, 36, 0.15)', padding: '25px' }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                        <div style={{ padding: '10px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', color: '#fbbf24' }}>
+                            <IndianRupee size={20} />
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px' }}>EST. COST</span>
                     </div>
-                    <h2 className="stat-card-value">₹{totalEstLoss.toLocaleString()}</h2>
-                </div>
+                    <h2 style={{ fontSize: '32px', fontWeight: '900', color: 'white', margin: 0 }}>₹{totalEstLoss.toLocaleString()}</h2>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '5px', fontWeight: '600' }}>Projected financial impact</p>
+                </motion.div>
 
-                <div className="glass-card stat-card" style={{ background: 'rgba(16, 185, 129, 0.05)', borderColor: 'rgba(16, 185, 129, 0.1)' }}>
-                    <div className="stat-card-header">
-                        <div className="stat-card-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}><CheckCircle2 size={18} /></div>
-                        <p className="stat-card-label">Resolved</p>
+                <motion.div
+                    whileHover={{ translateY: -5 }}
+                    className="glass-card"
+                    style={{ background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02))', borderColor: 'rgba(16, 185, 129, 0.15)', padding: '25px' }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                        <div style={{ padding: '10px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', color: '#10b981' }}>
+                            <CheckCircle2 size={20} />
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#10b981', letterSpacing: '1px' }}>RESOLVED</span>
                     </div>
-                    <h2 className="stat-card-value">{resolvedCount}</h2>
-                </div>
+                    <h2 style={{ fontSize: '32px', fontWeight: '900', color: 'white', margin: 0 }}>{resolvedCount}</h2>
+                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '5px', fontWeight: '600' }}>Closed incident cases</p>
+                </motion.div>
             </div>
 
-            {
-                loading ? (
-                    <div style={{ padding: '80px', textAlign: 'center' }}>
-                        <div className="spinner" style={{ margin: '0 auto' }}></div>
-                        <p style={{ color: 'var(--text-muted)', marginTop: '20px', fontSize: '14px' }}>Loading logs...</p>
+            {loading ? (
+                <div style={{ padding: '100px', textAlign: 'center' }}>
+                    <div className="spinner" style={{ margin: '0 auto', width: '40px', height: '40px' }}></div>
+                    <p style={{ color: 'var(--text-muted)', marginTop: '20px', fontSize: '14px', fontWeight: '700', letterSpacing: '1px' }}>RETRIEVING SECURE DATA...</p>
+                </div>
+            ) : filteredLogs.length === 0 ? (
+                <div className="glass-card" style={{ padding: '80px 40px', textAlign: 'center', borderStyle: 'dashed', borderWidth: '2px', background: 'rgba(255,255,255,0.01)' }}>
+                    <div style={{ width: '80px', height: '80px', background: 'rgba(255,255,255,0.03)', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 25px' }}>
+                        <AlertTriangle size={40} style={{ color: 'rgba(255,255,255,0.1)' }} />
                     </div>
-                ) : filteredLogs.length === 0 ? (
-                    <div className="glass-card" style={{ padding: '60px', textAlign: 'center' }}>
-                        <AlertTriangle size={48} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
-                        <h3 style={{ color: 'white' }}>No incidents recorded</h3>
-                        <p style={{ color: 'var(--text-muted)' }}>Use the "New Incident" button to log vehicle damage.</p>
-                    </div>
-                ) : (
-                    <>
-                        {/* DESKTOP VIEW: TABLE */}
-                        <div className="glass-card hide-mobile" style={{ padding: 0, overflow: 'hidden' }}>
-                            <div className="table-responsive">
-                                <table className="activity-table" style={{ width: '100%' }}>
-                                    <thead>
-                                        <tr>
-                                            <th>Date & Loc</th>
-                                            <th>Vehicle / Driver</th>
-                                            <th>Description</th>
-                                            <th>Est. Cost</th>
-                                            <th>Status</th>
-                                            <th>Evidence</th>
-                                            <th style={{ textAlign: 'right' }}>Action</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {filteredLogs.map((log) => (
-                                            <tr key={log._id} className="hover-row">
-                                                <td>
-                                                    <div style={{ color: 'white', fontWeight: '700', fontSize: '13px' }}>{new Date(log.date).toLocaleDateString('en-GB')}</div>
-                                                    <div style={{ color: 'var(--text-muted)', fontSize: '11px', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                        <MapPin size={10} /> {log.location || 'Unknown'}
+                    <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '800' }}>No incidents recorded</h3>
+                    <p style={{ color: 'var(--text-muted)', maxWidth: '400px', margin: '10px auto 0', lineHeight: '1.6' }}>The fleet is currently operating within safety parameters. Use the "New Incident" button if an event occurs.</p>
+                </div>
+            ) : (
+                <>
+                    {/* DESKTOP VIEW: PREMIUM TABLE */}
+                    <div className="glass-card hide-mobile" style={{ padding: '10px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(15, 23, 42, 0.4)' }}>
+                        <div className="table-responsive">
+                            <table className="activity-table" style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
+                                <thead>
+                                    <tr>
+                                        <th style={{ padding: '20px 25px' }}>Incident Details</th>
+                                        <th>Personnel</th>
+                                        <th>Description</th>
+                                        <th>Impact Cost</th>
+                                        <th>Status</th>
+                                        <th>Evidence</th>
+                                        <th style={{ textAlign: 'right', paddingRight: '25px' }}>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredLogs.map((log, idx) => (
+                                        <motion.tr
+                                            key={log._id}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            className="hover-row"
+                                            style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}
+                                        >
+                                            <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
+                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{new Date(log.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                                <div style={{ color: 'rgba(251, 191, 36, 0.7)', fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: '700' }}>
+                                                    <MapPin size={12} /> {log.location || 'Not Specified'}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '20px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fbbf24', fontWeight: '800', fontSize: '13px' }}>
+                                                        {log.vehicle?.carNumber?.slice(-2)}
                                                     </div>
-                                                </td>
-                                                <td>
-                                                    <div className="vehicle-badge" style={{ marginBottom: '4px' }}>{log.vehicle?.carNumber || 'Unknown'}</div>
-                                                    <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{log.driver?.name}</div>
-                                                </td>
-                                                <td style={{ maxWidth: '300px' }}>
-                                                    <div style={{ color: 'white', fontSize: '13px', lineHeight: '1.4', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
-                                                        {log.description}
+                                                    <div>
+                                                        <div style={{ color: 'white', fontWeight: '700', fontSize: '13px' }}>{log.vehicle?.carNumber}</div>
+                                                        <div style={{ color: 'var(--text-muted)', fontSize: '11px' }}>{log.driver?.name}</div>
                                                     </div>
-                                                </td>
-                                                <td>
-                                                    <div style={{ color: '#f43f5e', fontWeight: '800' }}>₹{Number(log.amount || 0).toLocaleString()}</div>
-                                                </td>
-                                                <td>
-                                                    <StatusBadge status={log.status} />
-                                                </td>
-                                                <td>
-                                                    {log.photos && log.photos.length > 0 ? (
-                                                        <div style={{ display: 'flex', gap: '6px' }}>
-                                                            {log.photos.slice(0, 3).map((p, i) => (
-                                                                <div key={i} className="img-overlay" style={{ position: 'relative', cursor: 'zoom-in', transition: '0.2s' }}>
-                                                                    <img
-                                                                        src={p}
-                                                                        onClick={() => setViewPhoto(p)}
-                                                                        style={{ width: '32px', height: '32px', borderRadius: '6px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }}
-                                                                    />
-                                                                </div>
-                                                            ))}
-                                                            {log.photos.length > 3 && (
-                                                                <div style={{ width: '32px', height: '32px', borderRadius: '6px', background: 'rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '10px', color: 'white', fontWeight: '700' }}>
-                                                                    +{log.photos.length - 3}
-                                                                </div>
-                                                            )}
-                                                        </div>
-                                                    ) : (
-                                                        <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px' }}>No img</span>
-                                                    )}
-                                                </td>
-                                                <td style={{ textAlign: 'right' }}>
-                                                    <button
-                                                        onClick={() => handleDelete(log._id)}
-                                                        className="action-button"
-                                                        style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '6px 10px' }}
-                                                    >
-                                                        <Trash2 size={14} />
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '20px', maxWidth: '300px' }}>
+                                                <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', lineHeight: '1.5', overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>
+                                                    {log.description}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '20px' }}>
+                                                <div style={{ color: '#f43f5e', fontWeight: '900', fontSize: '15px' }}>₹{Number(log.amount || 0).toLocaleString()}</div>
+                                            </td>
+                                            <td style={{ padding: '20px' }}>
+                                                <StatusBadge status={log.status} />
+                                            </td>
+                                            <td style={{ padding: '20px' }}>
+                                                {log.photos && log.photos.length > 0 ? (
+                                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                                        {log.photos.slice(0, 3).map((p, i) => (
+                                                            <motion.div
+                                                                key={i}
+                                                                whileHover={{ scale: 1.1 }}
+                                                                style={{ position: 'relative', cursor: 'pointer' }}
+                                                                onClick={() => setViewPhoto(p)}
+                                                            >
+                                                                <img
+                                                                    src={p}
+                                                                    style={{ width: '38px', height: '38px', borderRadius: '10px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }}
+                                                                    alt="evidence"
+                                                                />
+                                                            </motion.div>
+                                                        ))}
+                                                        {log.photos.length > 3 && (
+                                                            <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '11px', color: 'white', fontWeight: '800' }}>
+                                                                +{log.photos.length - 3}
+                                                            </div>
+                                                        )}
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'rgba(255,255,255,0.2)', fontSize: '11px', fontWeight: '600' }}>
+                                                        <Camera size={14} /> NO EVIDENCE
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '20px 25px', textAlign: 'right', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                                <button
+                                                    onClick={() => handleDelete(log._id)}
+                                                    style={{
+                                                        background: 'rgba(244, 63, 94, 0.1)',
+                                                        color: '#f43f5e',
+                                                        border: '1px solid rgba(244, 63, 94, 0.2)',
+                                                        width: '36px',
+                                                        height: '36px',
+                                                        borderRadius: '10px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        transition: '0.2s'
+                                                    }}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </td>
+                                        </motion.tr>
+                                    ))}
+                                </tbody>
+                            </table>
                         </div>
+                    </div>
 
-                        {/* MOBILE VIEW: CARDS */}
-                        <div className="show-mobile">
-                            <div style={{ display: 'grid', gap: '15px' }}>
-                                {filteredLogs.map((log) => (
-                                    <motion.div
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        key={log._id}
-                                        className="glass-card"
-                                        style={{ padding: '15px' }}
-                                    >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                    {/* MOBILE VIEW: ENHANCED CARDS */}
+                    <div className="show-mobile">
+                        <div style={{ display: 'grid', gap: '20px' }}>
+                            {filteredLogs.map((log) => (
+                                <motion.div
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    key={log._id}
+                                    className="glass-card"
+                                    style={{ padding: '20px', background: 'rgba(30, 41, 59, 0.6)', borderRadius: '20px' }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
+                                        <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                            <div style={{ width: '40px', height: '40px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fbbf24' }}>
+                                                <Car size={20} />
+                                            </div>
                                             <div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                                                    <span className="vehicle-badge" style={{ fontSize: '12px' }}>{log.vehicle?.carNumber || 'N/A'}</span>
-                                                    <StatusBadge status={log.status} />
-                                                </div>
-                                                <div style={{ color: 'var(--text-muted)', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                    <User size={12} /> {log.driver?.name || 'Unknown'}
-                                                </div>
-                                            </div>
-                                            <div style={{ textAlign: 'right' }}>
-                                                <div style={{ color: '#f43f5e', fontWeight: '800', fontSize: '16px' }}>₹{Number(log.amount || 0).toLocaleString()}</div>
-                                                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px' }}>{new Date(log.date).toLocaleDateString('en-GB')}</div>
+                                                <div style={{ fontWeight: '900', color: 'white', fontSize: '15px' }}>{log.vehicle?.carNumber || 'N/A'}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '600' }}>{log.driver?.name || 'Unknown Driver'}</div>
                                             </div>
                                         </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ color: '#f43f5e', fontWeight: '900', fontSize: '18px' }}>₹{Number(log.amount || 0).toLocaleString()}</div>
+                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '700' }}>{new Date(log.date).toLocaleDateString()}</div>
+                                        </div>
+                                    </div>
 
-                                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '10px', marginBottom: '12px' }}>
-                                            <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Description</p>
-                                            <p style={{ color: 'white', fontSize: '13px', lineHeight: '1.4', margin: 0 }}>{log.description}</p>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '8px', fontSize: '11px', color: 'var(--primary)' }}>
-                                                <MapPin size={12} /> {log.location || 'Location not tagged'}
+                                    <div style={{ background: 'rgba(0,0,0,0.25)', padding: '15px', borderRadius: '14px', marginBottom: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
+                                            <StatusBadge status={log.status} />
+                                            <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)', margin: '0 5px' }}></div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#fbbf24', fontWeight: '700' }}>
+                                                <MapPin size={12} /> {log.location || 'Unknown Loc'}
                                             </div>
                                         </div>
+                                        <p style={{ color: 'rgba(255,255,255,0.9)', fontSize: '13px', lineHeight: '1.6', margin: 0 }}>{log.description}</p>
+                                    </div>
 
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-                                            <div style={{ display: 'flex', gap: '5px' }}>
-                                                {log.photos && log.photos.map((p, i) => (
-                                                    <img
-                                                        key={i}
-                                                        src={p}
-                                                        onClick={() => setViewPhoto(p)}
-                                                        style={{ width: '40px', height: '40px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }}
-                                                    />
-                                                ))}
-                                            </div>
-                                            <button
-                                                onClick={() => handleDelete(log._id)}
-                                                style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', width: '32px', height: '32px', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '15px' }}>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            {log.photos && log.photos.slice(0, 4).map((p, i) => (
+                                                <img
+                                                    key={i}
+                                                    src={p}
+                                                    onClick={() => setViewPhoto(p)}
+                                                    style={{ width: '44px', height: '44px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.08)' }}
+                                                    alt="evidence"
+                                                />
+                                            ))}
                                         </div>
-                                    </motion.div>
-                                ))}
-                            </div>
+                                        <button
+                                            onClick={() => handleDelete(log._id)}
+                                            style={{ background: 'rgba(244, 63, 94, 0.12)', color: '#f43f5e', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(244, 63, 94, 0.1)' }}
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    </div>
+                                </motion.div>
+                            ))}
                         </div>
-                    </>
-                )
-            }
+                    </div>
+                </>
+            )}
 
-            {/* Create Modal */}
+            {/* CREATE INCIDENT MODAL REFRESH */}
             <AnimatePresence>
                 {showModal && (
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
                         <motion.div
-                            initial={{ scale: 0.95, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.95, opacity: 0 }}
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
                             className="glass-card modal-content"
                             style={{
-                                maxWidth: '600px',
+                                maxWidth: '640px',
                                 width: '100%',
                                 maxHeight: '90vh',
-                                overflowY: 'auto'
+                                padding: '40px',
+                                background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                                borderRadius: '28px',
+                                border: '1px solid rgba(255,255,255,0.12)',
+                                boxShadow: '0 30px 60px rgba(0,0,0,0.6)'
                             }}
                         >
-                            <div className="modal-header" style={{ marginBottom: '20px' }}>
-                                <h2 className="modal-title">Log New Incident</h2>
-                                <button onClick={() => setShowModal(false)} className="modal-close-btn"><XCircle size={20} /></button>
+                            <div className="modal-header" style={{ marginBottom: '35px', alignItems: 'flex-start' }}>
+                                <div>
+                                    <h2 style={{ fontSize: '28px', fontWeight: '900', color: 'white', margin: 0, letterSpacing: '-1px' }}>New Incident Report</h2>
+                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', marginTop: '6px', fontWeight: '600' }}>Comprehensive documentation for safety auditing.</p>
+                                </div>
+                                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '8px', color: 'white' }}><XCircle size={24} /></button>
                             </div>
 
                             <form onSubmit={handleCreate}>
-                                <div style={{ display: 'grid', gap: '20px' }}>
-                                    <div>
-                                        <label className="input-label">Vehicle Involved</label>
-                                        <select className="input-field" value={formData.vehicleId} onChange={e => setFormData({ ...formData, vehicleId: e.target.value })} required>
-                                            <option value="">-- Select Vehicle --</option>
-                                            {vehicles.map(v => <option key={v._id} value={v._id}>{v.carNumber} ({v.model})</option>)}
-                                        </select>
-                                    </div>
-
-                                    <div>
-                                        <label className="input-label">Driver</label>
-                                        <select className="input-field" value={formData.driverId} onChange={e => setFormData({ ...formData, driverId: e.target.value })} required>
-                                            <option value="">-- Select Driver --</option>
-                                            {drivers.map(d => <option key={d._id} value={d._id}>{d.name} ({d.mobile})</option>)}
-                                        </select>
-                                    </div>
-
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div style={{ display: 'grid', gap: '25px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                         <div>
-                                            <label className="input-label">Date</label>
-                                            <input type="date" className="input-field" value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required />
+                                            <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Vehicle Identification</label>
+                                            <select className="input-field" style={{ height: '54px', borderRadius: '15px' }} value={formData.vehicleId} onChange={e => setFormData({ ...formData, vehicleId: e.target.value })} required>
+                                                <option value="" style={{ background: '#0f172a' }}>Select Vehicle</option>
+                                                {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber} ({v.model})</option>)}
+                                            </select>
                                         </div>
                                         <div>
-                                            <label className="input-label">Est. Cost</label>
-                                            <input type="number" className="input-field" value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} placeholder="0.00" />
+                                            <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Personnel In-Charge</label>
+                                            <select className="input-field" style={{ height: '54px', borderRadius: '15px' }} value={formData.driverId} onChange={e => setFormData({ ...formData, driverId: e.target.value })} required>
+                                                <option value="" style={{ background: '#0f172a' }}>Select Driver</option>
+                                                {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Incident Date</label>
+                                            <input type="date" className="input-field" style={{ height: '54px', borderRadius: '15px' }} value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required />
+                                        </div>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Estimated Recovery Cost</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <span style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', fontWeight: '900', fontSize: '15px' }}>₹</span>
+                                                <input type="number" className="input-field" style={{ height: '54px', borderRadius: '15px', paddingLeft: '35px' }} value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} placeholder="0.00" />
+                                            </div>
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="input-label">Location</label>
-                                        <input type="text" className="input-field" value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} placeholder="e.g. Highway 44" required />
-                                    </div>
-
-                                    <div>
-                                        <label className="input-label">Description</label>
-                                        <textarea className="input-field" style={{ minHeight: '80px', resize: 'vertical' }} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Describe damage details..." required />
-                                    </div>
-
-                                    <div>
-                                        <label className="input-label">Evidence Photos</label>
-                                        <div style={{ position: 'relative', overflow: 'hidden' }}>
-                                            <input type="file" multiple onChange={e => setPhotos(e.target.files)} className="input-field" style={{ paddingTop: '10px' }} />
-                                            <Camera size={18} style={{ position: 'absolute', right: '15px', top: '15px', color: 'var(--text-muted)' }} />
+                                        <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Precise Location</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <MapPin size={18} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                                            <input type="text" className="input-field" style={{ height: '54px', borderRadius: '15px', paddingLeft: '50px' }} value={formData.location} onChange={e => setFormData({ ...formData, location: e.target.value })} placeholder="e.g. NH-44, Near Toll Plaza" required />
                                         </div>
                                     </div>
 
                                     <div>
-                                        <label className="input-label">Current Status</label>
-                                        <select className="input-field" value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
-                                            <option value="Pending">Pending Review</option>
-                                            <option value="In Repair">In Repair</option>
-                                            <option value="Resolved">Resolved / Closed</option>
-                                        </select>
+                                        <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Incident Narrative / Damage Details</label>
+                                        <textarea className="input-field" style={{ minHeight: '100px', resize: 'vertical', borderRadius: '15px', paddingTop: '15px' }} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Provide a detailed description of the event and visible damages..." required />
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px' }}>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Upload Evidence (Photos)</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <input type="file" multiple onChange={e => setPhotos(e.target.files)} className="input-field" style={{ height: '54px', borderRadius: '15px', paddingTop: '15px', cursor: 'pointer' }} />
+                                                <Camera size={20} style={{ position: 'absolute', right: '18px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24' }} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Process Status</label>
+                                            <select className="input-field" style={{ height: '54px', borderRadius: '15px', fontWeight: '700' }} value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
+                                                <option value="Pending" style={{ background: '#0f172a' }}>Pending Review</option>
+                                                <option value="In Repair" style={{ background: '#0f172a' }}>In Repair Process</option>
+                                                <option value="Resolved" style={{ background: '#0f172a' }}>Resolved / Closed</option>
+                                            </select>
+                                        </div>
                                     </div>
 
                                     <button
                                         type="submit"
                                         disabled={submitting}
                                         className="btn-primary"
-                                        style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px', height: '50px', marginTop: '10px' }}
+                                        style={{ width: '100%', height: '60px', borderRadius: '18px', fontSize: '16px', fontWeight: '900', letterSpacing: '1px', marginTop: '10px', textTransform: 'uppercase' }}
                                     >
-                                        {submitting ? 'Processing...' : <><CheckCircle2 size={18} /> Submit Incident Report</>}
+                                        {submitting ? 'PROCESSING SECURE RECORD...' : 'SUBMIT AUTHORIZED INCIDENT REPORT'}
                                     </button>
                                 </div>
                             </form>
@@ -508,15 +635,28 @@ const ActiveLogs = () => {
                 )}
             </AnimatePresence>
 
-            {/* Photo View Modal */}
-            {
-                viewPhoto && (
-                    <div onClick={() => setViewPhoto(null)} style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'zoom-out', padding: '20px' }}>
-                        <img src={viewPhoto} style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
-                    </div>
-                )
-            }
-        </div >
+            {/* HIGH-RES PHOTO LIGHTBOX */}
+            <AnimatePresence>
+                {viewPhoto && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setViewPhoto(null)}
+                        style={{ position: 'fixed', inset: 0, zIndex: 3000, background: 'rgba(0,0,0,0.96)', backdropFilter: 'blur(15px)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'zoom-out', padding: '40px' }}
+                    >
+                        <motion.img
+                            initial={{ scale: 0.9, rotate: -2 }}
+                            animate={{ scale: 1, rotate: 0 }}
+                            src={viewPhoto}
+                            style={{ maxWidth: '100%', maxHeight: '85vh', borderRadius: '24px', boxShadow: '0 40px 100px rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}
+                            alt="Incident Evidence"
+                        />
+                        <div style={{ position: 'absolute', top: '30px', right: '30px', background: 'rgba(255,255,255,0.1)', color: 'white', borderRadius: '50%', padding: '10px' }}><XCircle size={32} /></div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
     );
 };
 
