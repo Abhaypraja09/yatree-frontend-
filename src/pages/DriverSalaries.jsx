@@ -584,31 +584,40 @@ const DriverSalaries = () => {
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {det?.breakdown?.map((day, idx) => {
-                                                        const externalParking = det.parkingEntries?.filter(p => {
-                                                            const pDate = new Date(p.date).toISOString().split('T')[0];
-                                                            return pDate === day.date;
-                                                        }).reduce((s, p) => s + (Number(p.amount) || 0), 0) || 0;
-
-                                                        const dayParking = externalParking + (day.parking || 0);
-                                                        const rowTotal = (day.wage || 0) + (day.sameDayReturn || 0) + (day.nightStay || 0) + (day.otherBonuses || 0) + dayParking;
-
-                                                        return (
-                                                            <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                                                <td style={{ padding: '12px', color: 'white' }}>
-                                                                    {new Date(day.date).toLocaleDateString()}
-                                                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{day.type || 'Duty'}</div>
-                                                                    {day.remarks && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{day.remarks}</div>}
-                                                                </td>
-                                                                <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.wage || 0}</td>
-                                                                <td style={{ padding: '12px', textAlign: 'right', color: '#38bdf8', fontWeight: '600' }}>₹{day.sameDayReturn || 0}</td>
-                                                                <td style={{ padding: '12px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{dayParking || 0}</td>
-                                                                <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '600' }}>₹{day.nightStay || 0}</td>
-                                                                <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.otherBonuses || 0}</td>
-                                                                <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{rowTotal.toLocaleString()}</td>
-                                                            </tr>
-                                                        );
-                                                    })}
+                                                    {det?.breakdown?.map((day, idx) => (
+                                                        <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                            <td style={{ padding: '12px', color: 'white' }}>
+                                                                {new Date(day.date).toLocaleDateString()}
+                                                                <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{day.type || 'Duty'}</div>
+                                                                {day.remarks && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{day.remarks}</div>}
+                                                            </td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.wage || 0}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#38bdf8', fontWeight: '600' }}>₹{day.sameDayReturn || 0}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{day.parking || 0}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '600' }}>₹{day.nightStay || 0}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.otherBonuses || 0}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{(day.total || 0).toLocaleString()}</td>
+                                                        </tr>
+                                                    ))}
+                                                    {/* Standalone Parking Entries */}
+                                                    {det?.parkingEntries?.filter(p => {
+                                                        const pDateStr = new Date(p.date).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0];
+                                                        return !det?.breakdown?.some(d => d.date === pDateStr);
+                                                    }).map((p, idx) => (
+                                                        <tr key={`p-${idx}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: 'rgba(245,158,11,0.02)' }}>
+                                                            <td style={{ padding: '12px', color: 'white' }}>
+                                                                {new Date(p.date).toLocaleDateString()}
+                                                                <div style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '800' }}>STANDALONE PARKING</div>
+                                                                {p.remark && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{p.remark}</div>}
+                                                            </td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{p.amount || 0}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{(p.amount || 0).toLocaleString()}</td>
+                                                        </tr>
+                                                    ))}
                                                     {det?.breakdown?.length === 0 && (
                                                         <tr><td colSpan="7" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No completed duties found this month.</td></tr>
                                                     )}
