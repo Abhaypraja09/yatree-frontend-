@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from '../api/axios';
 import {
     Users, Clock, Fuel, X, Camera, LogIn, IndianRupee, Activity,
-    Calendar, ChevronLeft, ChevronRight
+    Calendar, ChevronLeft, ChevronRight, Car, Search, Filter,
+    CheckCircle2, AlertCircle, History, MapPin, Phone
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -10,295 +11,13 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
 
-const EditAttendanceModal = ({ item, onClose, onUpdate, vehicles, drivers }) => {
-    const [formData, setFormData] = useState({
-        vehicleId: item.vehicle?._id || '',
-        driverId: item.driver?._id || '',
-        startKm: item.punchIn?.km || '',
-        status: item.status || 'active',
-        remarks: item.punchOut?.remarks || ''
-    });
-    const [updating, setUpdating] = useState(false);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setUpdating(true);
-        try {
-            await onUpdate(item._id, formData);
-            onClose();
-        } catch (error) {
-            console.error(error);
-            alert('Failed to update attendance');
-        } finally {
-            setUpdating(false);
-        }
-    };
-
-    return (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(5px)', zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px' }}>
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="glass-card"
-                style={{ width: '100%', maxWidth: '500px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', padding: '0' }}
-            >
-                <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '700' }}>Edit Active Log</h3>
-                    <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={20} /></button>
-                </div>
-                <form onSubmit={handleSubmit} style={{ padding: '20px' }}>
-                    <div style={{ marginBottom: '15px' }}>
-                        <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Vehicle</label>
-                        <select
-                            className="input-field"
-                            value={formData.vehicleId}
-                            onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-                            style={{ background: '#1e293b' }}
-                        >
-                            {vehicles?.map(v => (
-                                <option key={v._id} value={v._id}>{v.carNumber} ({v.model})</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-                        <div>
-                            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Start KM</label>
-                            <input
-                                type="number"
-                                className="input-field"
-                                value={formData.startKm}
-                                onChange={(e) => setFormData({ ...formData, startKm: e.target.value })}
-                            />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Status</label>
-                            <select
-                                className="input-field"
-                                value={formData.status}
-                                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                                style={{ background: '#1e293b' }}
-                            >
-                                <option value="active">Active</option>
-                                <option value="completed">Completed</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', marginBottom: '8px' }}>Remarks / Destination</label>
-                        <textarea
-                            className="input-field"
-                            value={formData.remarks}
-                            onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                            rows={3}
-                        />
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button type="button" onClick={onClose} style={{ flex: 1, padding: '12px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', color: 'white', border: 'none', fontWeight: '700', cursor: 'pointer' }}>Cancel</button>
-                        <button type="submit" disabled={updating} className="btn-primary" style={{ flex: 1, padding: '12px', borderRadius: '10px', fontWeight: '700', cursor: 'pointer' }}>
-                            {updating ? 'Updating...' : 'Save Changes'}
-                        </button>
-                    </div>
-                </form>
-            </motion.div>
-        </div>
-    );
-};
-
-const AddFuelModal = ({ item, onClose, onSuccess }) => {
-    const [formData, setFormData] = useState({
-        amount: '',
-        odometer: item.vehicle?.lastOdometer || '',
-        quantity: '',
-        fuelType: 'Diesel',
-        paymentSource: 'Yatree Office'
-    });
-    const [loading, setLoading] = useState(false);
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        try {
-            const userInfoRaw = localStorage.getItem('userInfo');
-            const userInfo = JSON.parse(userInfoRaw);
-
-            await axios.post('/api/admin/fuel', {
-                ...formData,
-                vehicleId: item.vehicle?._id,
-                companyId: item.company,
-                driver: item.driver?.name,
-                date: new Date()
-            }, { headers: { Authorization: `Bearer ${userInfo.token}` } });
-
-            await axios.put(`/api/admin/attendance/${item._id}`, {
-                fuel: {
-                    filled: true,
-                    amount: (item.fuel?.amount || 0) + Number(formData.amount),
-                    entries: [...(item.fuel?.entries || []), {
-                        amount: Number(formData.amount),
-                        km: Number(formData.odometer),
-                        fuelType: formData.fuelType,
-                        paymentSource: formData.paymentSource
-                    }]
-                }
-            }, { headers: { Authorization: `Bearer ${userInfo.token}` } });
-
-            onSuccess();
-        } catch (error) {
-            console.error(error);
-            alert('Failed to record fuel');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 3000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px' }}>
-            <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card" style={{ width: '100%', maxWidth: '450px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', padding: '25px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <div>
-                        <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '900' }}>RECORD FUEL</h3>
-                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: '4px 0 0 0', fontWeight: '700' }}>V: {item.vehicle?.carNumber} | D: {item.driver?.name}</p>
-                    </div>
-                    <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
-                </div>
-
-                <form onSubmit={handleSubmit}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-                        <div>
-                            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '1px' }}>Amount (₹)</label>
-                            <input type="number" required className="input-field" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} placeholder="e.g. 2000" style={{ background: '#1e293b' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '1px' }}>Odometer (KM)</label>
-                            <input type="number" required className="input-field" value={formData.odometer} onChange={(e) => setFormData({ ...formData, odometer: e.target.value })} placeholder="Current KM" style={{ background: '#1e293b' }} />
-                        </div>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '20px' }}>
-                        <div>
-                            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '1px' }}>Quantity (Ltrs)</label>
-                            <input type="number" step="0.01" required className="input-field" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} placeholder="Liters filled" style={{ background: '#1e293b' }} />
-                        </div>
-                        <div>
-                            <label style={{ display: 'block', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '1px' }}>Fuel Type</label>
-                            <select className="input-field" value={formData.fuelType} onChange={(e) => setFormData({ ...formData, fuelType: e.target.value })} style={{ background: '#1e293b' }}>
-                                <option value="Diesel">Diesel</option>
-                                <option value="Petrol">Petrol</option>
-                                <option value="CNG">CNG</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <button type="submit" disabled={loading} className="btn-primary" style={{ width: '100%', padding: '14px', borderRadius: '12px', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
-                        {loading ? 'Processing...' : <><Fuel size={18} /> SAVE FUEL ENTRY</>}
-                    </button>
-                </form>
-            </motion.div>
-        </div>
-    );
-};
-
-const AttendanceModal = ({ item, onClose, onApproveReject }) => {
-    return (
-        <div className="modal-overlay" onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', zIndex: 3000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px' }}>
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.95, opacity: 0 }}
-                className="glass-card"
-                style={{ width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', padding: '25px' }}
-                onClick={(e) => e.stopPropagation()}
-            >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-                    <h2 style={{ color: 'white', margin: 0, fontSize: '20px', fontWeight: '900' }}>Duty Session Details</h2>
-                    <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={18} /></button>
-                </div>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
-                    {/* Punch In */}
-                    <div style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '20px', borderRadius: '16px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
-                        <h3 style={{ color: '#10b981', margin: '0 0 15px 0', fontSize: '14px', fontWeight: '900', textTransform: 'uppercase' }}>Duty Started</h3>
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <p style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '900', marginBottom: '8px' }}>SELFIE</p>
-                                <img src={item.punchIn?.selfie} alt="Start Selfie" style={{ width: '100%', aspectRatio: '1', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => window.open(item.punchIn?.selfie)} />
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <p style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '900', marginBottom: '8px' }}>KM METER</p>
-                                <img src={item.punchIn?.kmPhoto} alt="KM Photo" style={{ width: '100%', aspectRatio: '1', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => window.open(item.punchIn?.kmPhoto)} />
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <p style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '900', marginBottom: '8px' }}>CAR PHOTO</p>
-                                <img src={item.punchIn?.carSelfie} alt="Car Selfie" style={{ width: '100%', aspectRatio: '1', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => window.open(item.punchIn?.carSelfie)} />
-                            </div>
-                        </div>
-                    </div>
-
-                    {/* Punch Out */}
-                    <div style={{ background: item.punchOut?.time ? 'rgba(244, 63, 94, 0.05)' : 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '16px', border: `1px solid ${item.punchOut?.time ? 'rgba(244, 63, 94, 0.1)' : 'rgba(255,255,255,0.05)'}` }}>
-                        <h3 style={{ color: item.punchOut?.time ? '#f43f5e' : 'rgba(255,255,255,0.4)', margin: '0 0 15px 0', fontSize: '14px', fontWeight: '900', textTransform: 'uppercase' }}>Duty Ended</h3>
-                        {item.punchOut?.time ? (
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '10px' }}>
-                                <div style={{ textAlign: 'center' }}>
-                                    <p style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '900', marginBottom: '8px' }}>SELFIE</p>
-                                    <img src={item.punchOut?.selfie} alt="End Selfie" style={{ width: '100%', aspectRatio: '1', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => window.open(item.punchOut?.selfie)} />
-                                </div>
-                                <div style={{ textAlign: 'center' }}>
-                                    <p style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '900', marginBottom: '8px' }}>KM METER</p>
-                                    <img src={item.punchOut?.kmPhoto} alt="KM Photo" style={{ width: '100%', aspectRatio: '1', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => window.open(item.punchOut?.kmPhoto)} />
-                                </div>
-                                <div style={{ textAlign: 'center' }}>
-                                    <p style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '900', marginBottom: '8px' }}>CAR PHOTO</p>
-                                    <img src={item.punchOut?.carSelfie} alt="Car Selfie" style={{ width: '100%', aspectRatio: '1', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer' }} onClick={() => window.open(item.punchOut?.carSelfie)} />
-                                </div>
-                            </div>
-                        ) : (
-                            <div style={{ height: '100px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'rgba(255,255,255,0.2)' }}>
-                                <Clock size={24} />
-                                <p style={{ fontSize: '11px', marginTop: '10px', fontWeight: '600' }}>Active on trip...</p>
-                            </div>
-                        )}
-                    </div>
-                </div>
-
-                {/* Additional Info */}
-                <div style={{ marginTop: '25px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                    <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
-                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '900', marginBottom: '8px' }}>FUEL RECORDED</p>
-                        <h4 style={{ color: 'white', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Fuel size={18} fill="#f43f5e" color="#f43f5e" />
-                            ₹{(() => {
-                                const recordedFuel = item.fuel?.amount || 0;
-                                const pendingFuel = item.pendingExpenses?.filter(e => e.type === 'fuel' && e.status === 'pending').reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
-                                return recordedFuel + pendingFuel;
-                            })()}
-                        </h4>
-                    </div>
-                    <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
-                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '900', marginBottom: '8px' }}>TOTAL DISTANCE</p>
-                        <h4 style={{ color: 'white', margin: 0 }}>{item.totalKM || 0} KM</h4>
-                    </div>
-                    <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
-                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '900', marginBottom: '8px' }}>TOLLS & PARKING</p>
-                        <h4 style={{ color: '#10b981', margin: 0 }}>₹{item.punchOut?.tollParkingAmount || 0}</h4>
-                    </div>
-                </div>
-
-                {/* Remarks */}
-                {item.punchOut?.remarks && (
-                    <div style={{ marginTop: '20px', padding: '15px', background: 'rgba(16, 185, 129, 0.03)', border: '1px solid rgba(16, 185, 129, 0.1)', borderRadius: '12px' }}>
-                        <p style={{ fontSize: '10px', color: '#10b981', fontWeight: '900', marginBottom: '8px' }}>REMARKS / DESTINATION</p>
-                        <p style={{ color: 'white', fontSize: '14px', margin: 0, fontWeight: '600' }}>{item.punchOut.remarks}</p>
-                    </div>
-                )}
-            </motion.div>
-        </div>
-    );
-};
-
 const LiveFeed = () => {
     const { user } = useAuth();
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState('drivers'); // 'drivers', 'vehicles', 'history'
+    const [searchQuery, setSearchQuery] = useState('');
     const dateInputRef = useRef(null);
 
     const getTodayLocal = () => {
@@ -311,12 +30,6 @@ const LiveFeed = () => {
     const formatDate = (dateStr) => {
         return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
     };
-    const [loading, setLoading] = useState(true);
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [editingItem, setEditingItem] = useState(null);
-    const [quickFuelItem, setQuickFuelItem] = useState(null);
-    const [allVehicles, setAllVehicles] = useState([]);
-    const [allDrivers, setAllDrivers] = useState([]);
 
     const fetchFeed = async () => {
         if (!selectedCompany) return;
@@ -335,298 +48,429 @@ const LiveFeed = () => {
         }
     };
 
-    const fetchResources = async () => {
-        if (!selectedCompany?._id) return;
-        try {
-            const userInfoRaw = localStorage.getItem('userInfo');
-            const userInfo = JSON.parse(userInfoRaw);
-            const [vRes, dRes] = await Promise.all([
-                axios.get(`/api/admin/vehicles/${selectedCompany._id}`, { headers: { Authorization: `Bearer ${userInfo.token}` } }),
-                axios.get(`/api/admin/drivers/${selectedCompany._id}`, { headers: { Authorization: `Bearer ${userInfo.token}` } })
-            ]);
-            setAllVehicles(vRes.data.vehicles || []);
-            setAllDrivers(dRes.data.drivers || []);
-        } catch (err) { console.error(err); }
-    };
-
     useEffect(() => {
         fetchFeed();
-        fetchResources();
         const interval = setInterval(fetchFeed, 60000); // Auto refresh every minute
         return () => clearInterval(interval);
     }, [selectedCompany, selectedDate]);
 
-    const handleUpdateAttendance = async (id, data) => {
-        const userInfoRaw = localStorage.getItem('userInfo');
-        const userInfo = JSON.parse(userInfoRaw);
-        await axios.put(`/api/admin/attendance/${id}`, data, {
-            headers: { Authorization: `Bearer ${userInfo.token}` }
-        });
-        fetchFeed();
-        alert('Record updated successfully');
-    };
+    const filteredDrivers = stats?.liveDriversFeed?.filter(d =>
+        d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        d.mobile.includes(searchQuery)
+    ) || [];
 
-    const handleApproveRejectExpense = async (attendanceId, expenseId, status) => {
-        try {
-            const userInfoRaw = localStorage.getItem('userInfo');
-            const userInfo = JSON.parse(userInfoRaw);
-            await axios.patch(`/api/admin/attendance/${attendanceId}/expense/${expenseId}`, { status }, {
-                headers: { Authorization: `Bearer ${userInfo.token}` }
-            });
-            fetchFeed();
-        } catch (err) {
-            console.error('Error processing expense', err);
-            alert('Failed to process expense');
-        }
-    };
+    const filteredVehicles = stats?.liveVehiclesFeed?.filter(v =>
+        v.carNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        v.model.toLowerCase().includes(searchQuery.toLowerCase())
+    ) || [];
 
-    const handleFuelSuccess = () => {
-        setQuickFuelItem(null);
-        fetchFeed();
-        alert('Fuel recorded successfully');
-    };
+    // History is derived from attendanceToday (stats.attendanceDetails)
+    const dutyHistory = stats?.attendanceDetails || [];
 
-    if (loading && !stats) return <div style={{ color: 'white', padding: '40px' }}>Loading Live Feed...</div>;
+    const TabButton = ({ id, label, icon: Icon, count }) => (
+        <button
+            onClick={() => setActiveTab(id)}
+            style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                padding: '12px 24px',
+                borderRadius: '14px',
+                border: 'none',
+                background: activeTab === id ? 'rgba(255, 255, 255, 0.1)' : 'transparent',
+                color: activeTab === id ? 'white' : 'rgba(255, 255, 255, 0.5)',
+                fontWeight: '800',
+                cursor: 'pointer',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                position: 'relative'
+            }}
+        >
+            <Icon size={18} strokeWidth={activeTab === id ? 2.5 : 2} />
+            <span style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</span>
+            {count !== undefined && (
+                <span style={{
+                    background: activeTab === id ? '#0ea5e9' : 'rgba(255,255,255,0.1)',
+                    color: activeTab === id ? 'white' : 'rgba(255,255,255,0.4)',
+                    padding: '2px 8px',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    marginLeft: '4px'
+                }}>
+                    {count}
+                </span>
+            )}
+            {activeTab === id && (
+                <motion.div
+                    layoutId="activeTab"
+                    style={{
+                        position: 'absolute',
+                        bottom: 0,
+                        left: '20%',
+                        right: '20%',
+                        height: '3px',
+                        background: '#0ea5e9',
+                        borderRadius: '10px 10px 0 0'
+                    }}
+                />
+            )}
+        </button>
+    );
 
     return (
         <div style={{ padding: 'clamp(15px, 4vw, 40px)', minHeight: '100vh', background: 'radial-gradient(circle at top right, #1e293b, #0f172a)' }}>
-            <SEO title="Live Feed" description="Real-time driver activity and mission control." />
+            <SEO title="Live Fleet Control" description="Real-time mission control for drivers and vehicles." />
 
-            <header style={{ paddingBottom: '30px', marginBottom: '30px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+            <header style={{ marginBottom: '30px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
                         <div style={{
-                            width: 'clamp(40px,10vw,50px)',
-                            height: 'clamp(40px,10vw,50px)',
-                            background: 'linear-gradient(135deg, white, #f8fafc)',
-                            borderRadius: '16px',
-                            padding: '8px',
+                            width: '56px',
+                            height: '56px',
+                            background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                            borderRadius: '18px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                            boxShadow: '0 10px 25px rgba(14, 165, 233, 0.3)',
+                            border: '1px solid rgba(255,255,255,0.2)'
                         }}>
-                            <Activity size={28} color="#fbbf24" />
+                            <Activity size={30} color="white" />
                         </div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
-                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>System Mission Control</span>
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
+                                <span style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>REAL-TIME MISSION CONTROL</span>
                             </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', cursor: 'pointer' }}>
-                                Live <span className="text-gradient-yellow">Feed</span>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(28px, 6vw, 40px)', fontWeight: '950', margin: 0, letterSpacing: '-2px' }}>
+                                Live <span style={{ color: '#0ea5e9' }}>Feed</span> Hub
                             </h1>
                         </div>
                     </div>
-                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '10px' }}>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <div style={{ display: 'flex', gap: '2px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <button
-                                    onClick={() => {
-                                        const d = new Date(selectedDate);
-                                        d.setDate(d.getDate() - 1);
-                                        setSelectedDate(d.toISOString().split('T')[0]);
-                                    }}
-                                    style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: '#334155', color: '#ffffff', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
-                                >
-                                    <ChevronLeft size={16} strokeWidth={3} />
-                                </button>
 
-                                <div
-                                    style={{ position: 'relative', cursor: 'pointer' }}
-                                    onClick={() => {
-                                        if (dateInputRef.current) {
-                                            if (typeof dateInputRef.current.showPicker === 'function') {
-                                                dateInputRef.current.showPicker();
-                                            } else {
-                                                dateInputRef.current.click();
-                                            }
-                                        }
-                                    }}
-                                >
-                                    <div style={{ height: '30px', padding: '0 12px', background: '#334155', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '8px', border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap' }}>
-                                        <Calendar size={14} color="#ffffff" />
-                                        <span style={{ color: '#ffffff', fontSize: '12px', fontWeight: '700' }}>{formatDate(selectedDate)}</span>
-                                    </div>
-                                    <input
-                                        type="date"
-                                        ref={dateInputRef}
-                                        value={selectedDate}
-                                        onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-                                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', opacity: 0, pointerEvents: 'none' }}
-                                    />
-                                </div>
-
-                                <button
-                                    onClick={() => {
-                                        const d = new Date(selectedDate);
-                                        d.setDate(d.getDate() + 1);
-                                        setSelectedDate(d.toISOString().split('T')[0]);
-                                    }}
-                                    style={{ width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', borderRadius: '8px', background: '#334155', color: '#ffffff', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
-                                >
-                                    <ChevronRight size={16} strokeWidth={3} />
-                                </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '6px', borderRadius: '16px', display: 'flex', gap: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <button
+                                onClick={() => {
+                                    const d = new Date(selectedDate);
+                                    d.setDate(d.getDate() - 1);
+                                    setSelectedDate(d.toISOString().split('T')[0]);
+                                }}
+                                style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer' }}
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            <div
+                                onClick={() => dateInputRef.current?.showPicker()}
+                                style={{ height: '36px', padding: '0 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '10px', color: 'white', fontWeight: '800', fontSize: '13px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                            >
+                                <Calendar size={16} color="#0ea5e9" />
+                                {formatDate(selectedDate)}
+                                <input
+                                    type="date"
+                                    ref={dateInputRef}
+                                    value={selectedDate}
+                                    onChange={(e) => setSelectedDate(e.target.value)}
+                                    style={{ visibility: 'hidden', width: 0, position: 'absolute' }}
+                                />
                             </div>
                             <button
-                                onClick={() => setSelectedDate(getTodayLocal())}
-                                style={{ padding: '0 10px', height: '28px', borderRadius: '8px', background: selectedDate === getTodayLocal() ? '#fbbf24' : 'rgba(255,255,255,0.05)', color: selectedDate === getTodayLocal() ? '#000' : 'white', fontWeight: '800', border: 'none', fontSize: '10px', textTransform: 'uppercase', cursor: 'pointer' }}
+                                onClick={() => {
+                                    const d = new Date(selectedDate);
+                                    d.setDate(d.getDate() + 1);
+                                    setSelectedDate(d.toISOString().split('T')[0]);
+                                }}
+                                style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer' }}
                             >
-                                Today
+                                <ChevronRight size={20} />
                             </button>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', margin: 0 }}>ACTIVE SESSIONS</p>
-                            <h2 style={{ color: 'white', margin: 0, fontWeight: '900' }}>{stats?.attendanceDetails?.length || 0}</h2>
                         </div>
                     </div>
                 </div>
             </header>
 
-            <div className="glass-card" style={{ border: '1px solid rgba(255,255,255,0.05)', padding: '0' }}>
-                <div className="activity-table-wrapper hide-mobile">
-                    <table className="activity-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr style={{ textAlign: 'left', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                <th style={{ padding: '20px' }}>Driver Details</th>
-                                <th style={{ padding: '20px' }}>Vehicle & Fuel</th>
-                                <th style={{ padding: '20px' }}>Status</th>
-                                <th style={{ padding: '20px', textAlign: 'right' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {stats?.attendanceDetails?.map((item) => (
-                                <tr key={item._id} className="hover-row" style={{ borderBottom: '1px solid rgba(255,255,255,0.02)' }}>
-                                    <td style={{ padding: '20px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: item.driver?.isFreelancer ? 'rgba(129, 140, 248, 0.1)' : 'rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${item.driver?.isFreelancer ? 'rgba(129, 140, 248, 0.3)' : 'rgba(255,255,255,0.08)'}` }}>
-                                                <Users size={18} color={item.driver?.isFreelancer ? '#818cf8' : 'rgba(255,255,255,0.6)'} />
-                                            </div>
-                                            <div>
-                                                <div style={{ fontWeight: '900', color: 'white', fontSize: '14px' }}>
-                                                    {item.driver?.name}
-                                                </div>
-                                                {item.driver?.isFreelancer && <div style={{ fontSize: '9px', fontWeight: '900', color: '#818cf8', textTransform: 'uppercase', marginTop: '-2px' }}>Freelancer Driver</div>}
-                                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px' }}>
-                                                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>{item.driver?.mobile}</span>
-                                                    {item.punchIn?.time && (
-                                                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                                            <LogIn size={10} /> {new Date(item.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '20px' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                <span className="vehicle-badge" style={{ background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: '1px solid rgba(14, 165, 233, 0.2)', padding: '4px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: '900' }}>
-                                                    {item.vehicle?.carNumber}
-                                                </span>
-                                                {(() => {
-                                                    const recordedFuel = item.fuel?.amount || 0;
-                                                    const pendingFuel = item.pendingExpenses?.filter(e => e.type === 'fuel' && e.status === 'pending').reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
-                                                    const totalFuel = recordedFuel + pendingFuel;
+            {/* Quick Stats Grid */}
+            <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                gap: '15px',
+                marginBottom: '30px'
+            }}>
+                {[
+                    { label: 'PRESENT DRIVERS', value: stats?.countPunchIns || 0, total: stats?.liveDriversFeed?.length || 0, icon: Users, color: '#10b981' },
+                    { label: 'VEHICLES IN USE', value: stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use').length || 0, total: stats?.totalVehicles || 0, icon: Car, color: '#0ea5e9' },
+                    { label: 'COMPLETED DUTIES', value: stats?.countPunchOuts || 0, icon: CheckCircle2, color: '#8b5cf6' },
+                    { label: 'IDLE FLEET', value: stats?.liveVehiclesFeed?.filter(v => v.status === 'Idle').length || 0, icon: Clock, color: 'rgba(255,255,255,0.4)' }
+                ].map((stat, i) => (
+                    <motion.div
+                        key={i}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: i * 0.1 }}
+                        className="glass-card"
+                        style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px', border: '1px solid rgba(255,255,255,0.05)' }}
+                    >
+                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: `${stat.color}15`, display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${stat.color}25` }}>
+                            <stat.icon size={22} color={stat.color} />
+                        </div>
+                        <div>
+                            <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>{stat.label}</p>
+                            <h3 style={{ margin: '2px 0 0 0', color: 'white', fontSize: '20px', fontWeight: '900' }}>
+                                {stat.value}{stat.total ? <span style={{ fontSize: '13px', opacity: 0.3, fontWeight: '700' }}> / {stat.total}</span> : ''}
+                            </h3>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
 
-                                                    if (totalFuel > 0 || item.pendingExpenses?.some(e => e.type === 'fuel' && e.status === 'pending')) {
-                                                        return (
-                                                            <div style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '4px 8px', borderRadius: '8px', display: 'flex', alignItems: 'center', gap: '4px', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
-                                                                <Fuel size={12} fill="#f43f5e" />
-                                                                <span style={{ fontSize: '10px', fontWeight: '900' }}>₹{totalFuel} FUEL</span>
-                                                            </div>
-                                                        );
-                                                    }
-                                                    return null;
-                                                })()}
-                                            </div>
-                                            {item.punchOut?.remarks && (
-                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>Dest: {item.punchOut.remarks}</span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '20px' }}>
-                                        <span className="status-pill staff-badge" style={{
-                                            background: item.status === 'completed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(56, 189, 248, 0.1)',
-                                            color: item.status === 'completed' ? '#10b981' : '#38bdf8',
-                                            padding: '4px 10px',
-                                            borderRadius: '8px',
-                                            fontWeight: '900',
-                                            fontSize: '10px'
-                                        }}>
-                                            {item.status === 'completed' ? 'CONCLUDED' : 'ON DUTY'}
-                                        </span>
-                                    </td>
-                                    <td style={{ padding: '20px', textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                            <button onClick={() => setSelectedItem(item)} className="action-button" style={{ background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(14, 165, 233, 0.2)', fontWeight: '800', fontSize: '11px', cursor: 'pointer' }}>Details</button>
-                                            <button onClick={() => setEditingItem(item)} className="action-button" style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', fontWeight: '800', fontSize: '11px', cursor: 'pointer' }}>Edit</button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
+            {/* Main Content Area */}
+            <div className="glass-card" style={{ padding: '0', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                {/* Navbar & Search */}
+                <div style={{ padding: '15px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', background: 'rgba(0,0,0,0.1)' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length} />
+                        <TabButton id="vehicles" label="Fleet" icon={Car} count={stats?.totalVehicles} />
+                        <TabButton id="history" label="Activity Logs" icon={History} />
+                    </div>
+
+                    <div style={{ position: 'relative', flex: '1', maxWidth: '300px' }}>
+                        <Search style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={16} />
+                        <input
+                            type="text"
+                            placeholder={`Search ${activeTab}...`}
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            style={{ width: '100%', padding: '10px 15px 10px 40px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: 'white', fontSize: '13px', fontWeight: '600' }}
+                        />
+                    </div>
                 </div>
 
-                {/* Mobile Cards */}
-                <div className="show-mobile" style={{ padding: '15px', display: 'grid', gap: '15px' }}>
-                    {stats?.attendanceDetails?.map((item) => (
-                        <div key={item._id} className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                        <Users size={20} color="#38bdf8" />
-                                    </div>
-                                    <div>
-                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>{item.driver?.name}</div>
-                                        {item.driver?.isFreelancer && <div style={{ fontSize: '10px', fontWeight: '900', color: '#818cf8', textTransform: 'uppercase', marginTop: '2px' }}>Freelancer Driver</div>}
-                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '600' }}>
-                                            {item.vehicle?.carNumber}
-                                            {(() => {
-                                                const recordedFuel = item.fuel?.amount || 0;
-                                                const pendingFuel = item.pendingExpenses?.filter(e => e.type === 'fuel' && e.status === 'pending').reduce((sum, e) => sum + (e.amount || 0), 0) || 0;
-                                                const totalFuel = recordedFuel + pendingFuel;
-
-                                                if (totalFuel > 0 || item.pendingExpenses?.some(e => e.type === 'fuel' && e.status === 'pending')) {
-                                                    return (
-                                                        <span style={{ color: '#f43f5e', marginLeft: '8px', fontSize: '10px', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
-                                                            <Fuel size={10} fill="#f43f5e" /> ₹{totalFuel}
-                                                        </span>
-                                                    );
-                                                }
-                                                return null;
-                                            })()}
+                {/* Content Grid */}
+                <div style={{ padding: '25px', maxHeight: '70vh', overflowY: 'auto' }} className="custom-scrollbar">
+                    <AnimatePresence mode="wait">
+                        {activeTab === 'drivers' && (
+                            <motion.div
+                                key="drivers"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}
+                            >
+                                {filteredDrivers.sort((a, b) => (a.status === 'Present' ? -1 : 1)).map((driver) => (
+                                    <div key={driver._id} style={{
+                                        padding: '16px',
+                                        background: driver.status === 'Present' ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.02)',
+                                        borderRadius: '20px',
+                                        border: `1px solid ${driver.status === 'Present' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.05)'}`,
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                            <div style={{ position: 'relative' }}>
+                                                <div style={{
+                                                    width: '48px',
+                                                    height: '48px',
+                                                    borderRadius: '14px',
+                                                    background: driver.isFreelancer ? 'rgba(129, 140, 248, 0.1)' : 'rgba(255,255,255,0.05)',
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    border: `1px solid ${driver.isFreelancer ? 'rgba(129, 140, 248, 0.2)' : 'rgba(255,255,255,0.1)'}`
+                                                }}>
+                                                    <Users size={24} color={driver.status === 'Present' ? '#10b981' : (driver.isFreelancer ? '#818cf8' : 'rgba(255,255,255,0.3)')} />
+                                                </div>
+                                                <div style={{
+                                                    position: 'absolute',
+                                                    bottom: '-2px',
+                                                    right: '-2px',
+                                                    width: '14px',
+                                                    height: '14px',
+                                                    borderRadius: '50%',
+                                                    background: driver.status === 'Present' ? '#10b981' : '#334155',
+                                                    border: '3px solid #1e293b',
+                                                    boxShadow: driver.status === 'Present' ? '0 0 10px #10b981' : 'none'
+                                                }}></div>
+                                            </div>
+                                            <div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <h4 style={{ margin: 0, color: 'white', fontSize: '15px', fontWeight: '900' }}>{driver.name}</h4>
+                                                    {!driver.isFreelancer && (
+                                                        <span style={{ fontSize: '8px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', padding: '2px 6px', borderRadius: '4px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>CO.</span>
+                                                    )}
+                                                </div>
+                                                {driver.isFreelancer && (
+                                                    <div style={{ fontSize: '9px', fontWeight: '900', color: '#818cf8', textTransform: 'uppercase', marginTop: '1px' }}>
+                                                        Freelancer
+                                                    </div>
+                                                )}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                                    <Phone size={10} color="rgba(255,255,255,0.3)" />
+                                                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>{driver.mobile}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            {driver.status === 'Present' ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+                                                    <span style={{ fontSize: '10px', background: '#10b98120', color: '#10b981', padding: '3px 10px', borderRadius: '8px', fontWeight: '900', border: '1px solid rgba(16, 185, 129, 0.2)' }}>ON DUTY</span>
+                                                    {driver.currentAttendance?.vehicle?.carNumber && (
+                                                        <div style={{ fontSize: '12px', color: '#0ea5e9', fontWeight: '900', background: 'rgba(14, 165, 233, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>#{driver.currentAttendance.vehicle.carNumber.split('#')[0].slice(-4)}</div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.15)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Off Duty</span>
+                                            )}
                                         </div>
                                     </div>
-                                </div>
-                                <span style={{ background: item.status === 'completed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(56, 189, 248, 0.1)', color: item.status === 'completed' ? '#10b981' : '#38bdf8', padding: '4px 8px', borderRadius: '6px', fontSize: '9px', fontWeight: '900' }}>
-                                    {item.status === 'completed' ? 'CONCLUDED' : 'ACTIVE'}
-                                </span>
-                            </div>
-                            <div style={{ marginTop: '15px', display: 'flex', gap: '8px' }}>
-                                <button onClick={() => setSelectedItem(item)} style={{ flex: 1, padding: '10px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: '1px solid rgba(14, 165, 233, 0.2)', borderRadius: '10px', fontSize: '11px', fontWeight: '800' }}>DETAILS</button>
-                                <button onClick={() => setEditingItem(item)} style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', fontSize: '11px', fontWeight: '800' }}>EDIT</button>
-                            </div>
-                        </div>
-                    ))}
+                                ))}
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'vehicles' && (
+                            <motion.div
+                                key="vehicles"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}
+                            >
+                                {filteredVehicles.sort((a, b) => (a.status !== 'Idle' ? -1 : 1)).map((vehicle) => (
+                                    <div key={vehicle._id} style={{
+                                        padding: '16px',
+                                        background: vehicle.status !== 'Idle' ? 'rgba(14, 165, 233, 0.05)' : 'rgba(255,255,255,0.02)',
+                                        borderRadius: '20px',
+                                        border: `1px solid ${vehicle.status !== 'Idle' ? 'rgba(14, 165, 233, 0.15)' : 'rgba(255,255,255,0.05)'}`,
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                                <Car size={24} color={vehicle.status !== 'Idle' ? '#0ea5e9' : 'rgba(255,255,255,0.3)'} />
+                                            </div>
+                                            <div>
+                                                <h4 style={{ margin: 0, color: 'white', fontSize: '15px', fontWeight: '900' }}>{vehicle.carNumber.split('#')[0]}</h4>
+                                                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>{vehicle.model}</span>
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            {vehicle.status !== 'Idle' ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+                                                    <span style={{
+                                                        fontSize: '10px',
+                                                        background: vehicle.status === 'In Use' ? '#0ea5e920' : '#8b5cf620',
+                                                        color: vehicle.status === 'In Use' ? '#0ea5e9' : '#8b5cf6',
+                                                        padding: '3px 10px',
+                                                        borderRadius: '8px',
+                                                        fontWeight: '900'
+                                                    }}>
+                                                        {vehicle.status.toUpperCase()}
+                                                    </span>
+                                                    {vehicle.currentDriver && (
+                                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontWeight: '800' }}>👤 {vehicle.currentDriver.name}</div>
+                                                    )}
+                                                </div>
+                                            ) : (
+                                                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>IDLE</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                ))}
+                            </motion.div>
+                        )}
+
+                        {activeTab === 'history' && (
+                            <motion.div
+                                key="history"
+                                initial={{ opacity: 0, x: 20 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -20 }}
+                                style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+                            >
+                                {dutyHistory.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.2)' }}>
+                                        <Clock size={40} style={{ marginBottom: '10px', opacity: 0.5 }} />
+                                        <p style={{ fontWeight: '700' }}>No activity logs for this date.</p>
+                                    </div>
+                                ) : (
+                                    dutyHistory.map((log) => (
+                                        <div key={log._id} style={{
+                                            padding: '20px',
+                                            background: 'rgba(255,255,255,0.02)',
+                                            borderRadius: '20px',
+                                            border: '1px solid rgba(255,255,255,0.05)',
+                                            display: 'grid',
+                                            gridTemplateColumns: '1.2fr 1fr 1fr 1fr 0.5fr',
+                                            alignItems: 'center',
+                                            gap: '20px'
+                                        }}>
+                                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                    <Users size={20} color="#8b5cf6" />
+                                                </div>
+                                                <div>
+                                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{log.driver?.name}</div>
+                                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>{log.driver?.mobile}</div>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                    <Car size={20} color="#0ea5e9" />
+                                                </div>
+                                                <div>
+                                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{log.vehicle?.carNumber}</div>
+                                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>{log.vehicle?.model}</div>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                    <LogIn size={20} color="#10b981" />
+                                                </div>
+                                                <div>
+                                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{new Date(log.punchIn?.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>{log.punchIn?.km} KM START</div>
+                                                </div>
+                                            </div>
+
+                                            <div>
+                                                {log.punchOut?.time ? (
+                                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(244, 63, 94, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                            <Clock size={20} color="#f43f5e" />
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{new Date(log.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>{log.punchOut.km} KM END</div>
+                                                        </div>
+                                                    </div>
+                                                ) : (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#38bdf8' }}>
+                                                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#38bdf8' }} />
+                                                        <span style={{ fontSize: '11px', fontWeight: '900', textTransform: 'uppercase' }}>In Progress...</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div style={{ textAlign: 'right' }}>
+                                                {log.totalKM && <div style={{ fontSize: '16px', fontWeight: '950', color: 'white' }}>{log.totalKM} <span style={{ fontSize: '10px', opacity: 0.4 }}>KM</span></div>}
+                                            </div>
+                                        </div>
+                                    ))
+                                )}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
             </div>
 
-            <AnimatePresence>
-                {selectedItem && <AttendanceModal item={selectedItem} onClose={() => setSelectedItem(null)} onApproveReject={handleApproveRejectExpense} />}
-                {editingItem && <EditAttendanceModal item={editingItem} onClose={() => setEditingItem(null)} onUpdate={handleUpdateAttendance} vehicles={allVehicles} drivers={allDrivers} />}
-                {quickFuelItem && <AddFuelModal item={quickFuelItem} onClose={() => setQuickFuelItem(null)} onSuccess={handleFuelSuccess} />}
-            </AnimatePresence>
-
             <style>{`
-                @keyframes pulse {
-                    0% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
-                    70% { box-shadow: 0 0 0 10px rgba(16, 185, 129, 0); }
-                    100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0); }
-                }
-                .hover-row:hover { background: rgba(255,255,255,0.03); }
-                .glass-card { backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); }
+                .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); borderRadius: 10px; }
+                .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+                .glass-card { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
             `}</style>
         </div>
     );

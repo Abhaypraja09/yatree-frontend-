@@ -390,6 +390,7 @@ const AdminDashboard = () => {
                             <StatCard icon={CreditCard} label="PARKING (MONTHLY)" value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
                             <StatCard icon={CreditCard} label="TOTAL FASTAG BALANCE" value={`₹${stats.totalFastagBalance?.toLocaleString() || 0}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/fastag')} />
                             <StatCard icon={Activity} label="TOTAL DUTIES TODAY" value={stats.countPunchIns} color="#3b82f6" loading={loading} onClick={() => { }} trend="LIVE" />
+                            <StatCard icon={Calendar} label="NIGHT STAYS TODAY" value={stats.dailyNightStayCount || 0} color="#f59e0b" loading={loading} onClick={() => { }} />
                         </div>
 
 
@@ -521,6 +522,57 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
                         )}
+
+                        {/* LIVE STATUS OVERVIEW ROW */}
+                        <div className="dashboard-feeds-container" style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+                            gap: '20px',
+                            marginTop: '10px',
+                            marginBottom: '20px'
+                        }}>
+                            {/* Driver Overview Card */}
+                            <motion.div
+                                whileHover={{ y: -5 }}
+                                onClick={() => navigate('/admin/live-feed')}
+                                className="glass-card"
+                                style={{ padding: '24px', cursor: 'pointer', border: '1px solid rgba(16, 185, 129, 0.2)', background: 'rgba(16, 185, 129, 0.03)' }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                        <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                            <Users color="#10b981" size={24} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '900' }}>Driver Presence</h3>
+                                            <p style={{ margin: 0, fontSize: '12px', color: 'rgba(16, 185, 129, 0.6)', fontWeight: '700' }}>{stats.countPunchIns} Present Today</p>
+                                        </div>
+                                    </div>
+                                    <ArrowUpRight color="rgba(16, 185, 129, 0.4)" />
+                                </div>
+                            </motion.div>
+
+                            {/* Vehicle Overview Card */}
+                            <motion.div
+                                whileHover={{ y: -5 }}
+                                onClick={() => navigate('/admin/live-feed')}
+                                className="glass-card"
+                                style={{ padding: '24px', cursor: 'pointer', border: '1px solid rgba(14, 165, 233, 0.2)', background: 'rgba(14, 165, 233, 0.03)' }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                        <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                            <Car color="#0ea5e9" size={24} />
+                                        </div>
+                                        <div>
+                                            <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '900' }}>Fleet Utilization</h3>
+                                            <p style={{ margin: 0, fontSize: '12px', color: 'rgba(14, 165, 233, 0.6)', fontWeight: '700' }}>{stats.liveVehiclesFeed?.filter(v => v.status !== 'Idle').length} In Operation</p>
+                                        </div>
+                                    </div>
+                                    <ArrowUpRight color="rgba(14, 165, 233, 0.4)" />
+                                </div>
+                            </motion.div>
+                        </div>
 
                     </motion.div>
                 )}

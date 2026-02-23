@@ -22,7 +22,8 @@ import {
     IndianRupee,
     Trash2,
     AlertTriangle,
-    FileText
+    FileText,
+    Edit2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -152,7 +153,13 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                 {item.punchOut?.allowanceTA > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>TA:</span> <span style={{ color: '#10b981', fontWeight: '800' }}>+₹{item.punchOut.allowanceTA}</span></div>}
                                 {item.punchOut?.nightStayAmount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>Stay:</span> <span style={{ color: '#10b981', fontWeight: '800' }}>+₹{item.punchOut.nightStayAmount}</span></div>}
-                                {item.outsideTrip?.occurred && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>Bonus:</span> <span style={{ color: 'var(--primary)', fontWeight: '800' }}>+₹{item.outsideTrip.bonusAmount}</span></div>}
+                                {item.outsideTrip?.occurred && (
+                                    <div style={{ padding: '8px', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '8px', marginTop: '5px', border: '1px solid rgba(56, 189, 248, 0.1)' }}>
+                                        <p style={{ fontSize: '9px', color: '#38bdf8', fontWeight: '800', margin: '0 0 4px 0' }}>DRIVER'S SELECTION</p>
+                                        <p style={{ fontSize: '12px', color: 'white', fontWeight: '700', margin: 0 }}>{item.outsideTrip.tripType || 'Outside Trip'}</p>
+                                        {item.outsideTrip.bonusAmount > 0 && <p style={{ fontSize: '11px', color: '#10b981', fontWeight: '800', margin: '4px 0 0 0' }}>+₹{item.outsideTrip.bonusAmount}</p>}
+                                    </div>
+                                )}
 
                                 {borderTaxRecords.filter(b => b.date === item.date && b.vehicle?._id === item.vehicle?._id).map((bt, idx) => (
                                     <div key={idx} style={{ padding: '6px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '6px', fontSize: '11px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
@@ -168,8 +175,14 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
 
                     <div className="flex-resp" style={{ marginTop: '20px', gap: '12px', display: 'flex' }}>
                         <div className="glass-card" style={{ padding: '15px', flex: '1', minWidth: '120px', textAlign: 'center', background: 'rgba(16, 185, 129, 0.03)' }}>
-                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '5px', fontWeight: '800' }}>DAILY SALARY</p>
-                            <h3 style={{ color: '#10b981', margin: 0, fontSize: '20px', fontWeight: '900' }}>₹{(item.dailyWage || item.driver?.dailyWage || item.vehicle?.dutyAmount || 500).toLocaleString()}</h3>
+                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '5px', fontWeight: '800' }}>TOTAL PAYABLE</p>
+                            <h3 style={{ color: '#10b981', margin: 0, fontSize: '20px', fontWeight: '900' }}>
+                                ₹{((item.dailyWage || item.driver?.dailyWage || item.vehicle?.dutyAmount || 500) +
+                                    (item.punchOut?.allowanceTA || 0) +
+                                    (item.punchOut?.nightStayAmount || 0) +
+                                    (item.outsideTrip?.bonusAmount || 0)).toLocaleString()}
+                            </h3>
+                            <p style={{ fontSize: '8px', color: 'var(--text-muted)', marginTop: '4px' }}>Base + Incentives</p>
                         </div>
                         <div className="glass-card" style={{ padding: '15px', flex: '1', minWidth: '120px', textAlign: 'center', background: 'rgba(16, 185, 129, 0.03)' }}>
                             <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '5px', fontWeight: '800' }}>DISTANCE</p>
@@ -234,6 +247,104 @@ const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
     </div>
 );
 
+const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
+    const [formData, setFormData] = useState({
+        allowanceTA: item.punchOut?.allowanceTA || 0,
+        nightStayAmount: item.punchOut?.nightStayAmount || 0,
+        bonusAmount: item.outsideTrip?.bonusAmount || 0,
+        remarks: item.punchOut?.remarks || '',
+        status: item.status || 'incomplete'
+    });
+
+    const handleSubmit = (e) => {
+        e.preventDefault();
+        onUpdate(item._id, formData);
+    };
+
+    return (
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+            <motion.div
+                initial={{ scale: 0.95, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                className="glass-card modal-content"
+                style={{ width: '100%', maxWidth: '450px', padding: '25px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px' }}
+            >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                    <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Edit Report</h2>
+                    <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: 'none', padding: '8px', borderRadius: '50%', display: 'flex', cursor: 'pointer' }}>
+                        <X size={18} />
+                    </button>
+                </div>
+
+                {item.outsideTrip?.tripType && (
+                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '12px', borderRadius: '12px', marginBottom: '20px' }}>
+                        <p style={{ margin: 0, fontSize: '10px', color: '#38bdf8', fontWeight: '800', textTransform: 'uppercase' }}>Driver's Selection</p>
+                        <p style={{ margin: '4px 0 0', color: 'white', fontSize: '14px', fontWeight: '700' }}>{item.outsideTrip.tripType}</p>
+                        <p style={{ margin: '4px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>Please enter the amounts below based on this selection.</p>
+                    </div>
+                )}
+
+                <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
+                    <div className="form-group">
+                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Same Day Allowance (TA)</label>
+                        <input
+                            type="number"
+                            className="input-field"
+                            value={formData.allowanceTA}
+                            onChange={(e) => setFormData({ ...formData, allowanceTA: e.target.value })}
+                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Night Stay Amount</label>
+                        <input
+                            type="number"
+                            className="input-field"
+                            value={formData.nightStayAmount}
+                            onChange={(e) => setFormData({ ...formData, nightStayAmount: e.target.value })}
+                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Other Bonus / Trip Incentive</label>
+                        <input
+                            type="number"
+                            className="input-field"
+                            value={formData.bonusAmount}
+                            onChange={(e) => setFormData({ ...formData, bonusAmount: e.target.value })}
+                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Duty Remarks / Destination</label>
+                        <textarea
+                            className="input-field"
+                            value={formData.remarks}
+                            onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
+                            style={{ width: '100%', minHeight: '100px', marginBottom: 0, paddingTop: '12px' }}
+                        />
+                    </div>
+
+                    <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <input
+                            type="checkbox"
+                            id="statusComplete"
+                            checked={formData.status === 'completed'}
+                            onChange={(e) => setFormData({ ...formData, status: e.target.checked ? 'completed' : 'incomplete' })}
+                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
+                        />
+                        <label htmlFor="statusComplete" style={{ color: 'white', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>Mark Duty as Completed</label>
+                    </div>
+
+                    <button type="submit" className="btn-primary" style={{ height: '52px', fontWeight: '900', marginTop: '10px', fontSize: '14px' }}>
+                        SAVE UPDATED DETAILS
+                    </button>
+                </form>
+            </motion.div>
+        </div>
+    );
+};
+
 const Reports = () => {
     const { selectedCompany } = useCompany();
 
@@ -259,6 +370,7 @@ const Reports = () => {
     const [partsWarrantyRecords, setPartsWarrantyRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState(null);
+    const [editingItem, setEditingItem] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
     const [selectedReports, setSelectedReports] = useState(['drivers']);
@@ -322,6 +434,21 @@ const Reports = () => {
             console.error('Error fetching reports', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleUpdateAttendance = async (id, updateData) => {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.put(`/api/admin/attendance/${id}`, updateData, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setEditingItem(null);
+            fetchReports();
+            alert('Report updated successfully');
+        } catch (error) {
+            console.error('Error updating record:', error);
+            alert('Failed to update record: ' + (error.response?.data?.message || error.message));
         }
     };
 
@@ -983,7 +1110,9 @@ const Reports = () => {
                                 const driverDayKey = `${driverUniqueId}_${report.date}`;
                                 let showSalary = 0;
                                 if (driverUniqueId && !paidInUI.has(driverDayKey)) {
-                                    showSalary = report.dailyWage || report.driver?.dailyWage || report.vehicle?.dutyAmount || 500;
+                                    showSalary = (report.dailyWage || report.driver?.dailyWage || report.vehicle?.dutyAmount || 500) +
+                                        (report.punchOut?.allowanceTA || 0) +
+                                        (report.punchOut?.nightStayAmount || 0);
                                     paidInUI.add(driverDayKey);
                                 }
                                 return (
@@ -1016,27 +1145,50 @@ const Reports = () => {
                                                         {report.driver?.name || report.vehicle?.driverName || (report.vehicle?.isOutsideCar ? 'Outside Car' : (typeof report.driver === 'string' ? report.driver : 'N/A'))}
                                                     </p>
                                                     <p style={{ fontSize: '11px', color: 'var(--text-muted)', margin: '2px 0 0 0' }}>{report.driver?.mobile || '-'}</p>
+                                                    {report.entryType === 'attendance' && report.outsideTrip?.tripType && (
+                                                        <p style={{ fontSize: '10px', color: '#38bdf8', margin: '4px 0 0 0', fontWeight: '800' }}>
+                                                            🚗 {report.outsideTrip.tripType}
+                                                        </p>
+                                                    )}
+                                                    {report.entryType === 'attendance' && report.punchOut?.remarks && (
+                                                        <p style={{ fontSize: '10px', color: 'var(--primary)', margin: '4px 0 0 0', fontWeight: '700', opacity: 0.8 }}>
+                                                            📝 {report.punchOut.remarks}
+                                                        </p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>
                                         <td style={{ padding: '18px 25px' }}>
-                                            <span style={{
-                                                fontSize: '10px',
-                                                fontWeight: '800',
-                                                textTransform: 'uppercase',
-                                                padding: '4px 10px',
-                                                borderRadius: '6px',
-                                                background: report.entryType === 'attendance' ? 'rgba(16, 185, 129, 0.1)' :
-                                                    report.entryType === 'fuel' ? 'rgba(34, 197, 94, 0.1)' :
-                                                        report.entryType === 'parking' ? 'rgba(99, 102, 241, 0.1)' :
-                                                            report.entryType === 'advance' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.05)',
-                                                color: report.entryType === 'attendance' ? '#10b981' :
-                                                    report.entryType === 'fuel' ? '#22c55e' :
-                                                        report.entryType === 'parking' ? '#6366f1' :
-                                                            report.entryType === 'advance' ? '#6366f1' : 'white'
-                                            }}>
-                                                {report.entryType}
-                                            </span>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <span style={{
+                                                    fontSize: '10px',
+                                                    fontWeight: '800',
+                                                    textTransform: 'uppercase',
+                                                    padding: '4px 10px',
+                                                    borderRadius: '6px',
+                                                    background: report.entryType === 'attendance' ? 'rgba(16, 185, 129, 0.1)' :
+                                                        report.entryType === 'fuel' ? 'rgba(34, 197, 94, 0.1)' :
+                                                            report.entryType === 'parking' ? 'rgba(99, 102, 241, 0.1)' :
+                                                                report.entryType === 'advance' ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255,255,255,0.05)',
+                                                    color: report.entryType === 'attendance' ? '#10b981' :
+                                                        report.entryType === 'fuel' ? '#22c55e' :
+                                                            report.entryType === 'parking' ? '#6366f1' :
+                                                                report.entryType === 'advance' ? '#6366f1' : 'white',
+                                                    textAlign: 'center'
+                                                }}>
+                                                    {report.entryType}
+                                                </span>
+                                                {report.entryType === 'attendance' && report.status === 'incomplete' && (
+                                                    <span style={{ fontSize: '8px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '2px 6px', borderRadius: '4px', fontWeight: '800', textAlign: 'center' }}>
+                                                        INCOMPLETE
+                                                    </span>
+                                                )}
+                                                {report.entryType === 'attendance' && report.status === 'completed' && (
+                                                    <span style={{ fontSize: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 6px', borderRadius: '4px', fontWeight: '800', textAlign: 'center' }}>
+                                                        COMPLETED
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td style={{ padding: '18px 25px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontWeight: '700', fontSize: '14px' }}>
@@ -1045,8 +1197,8 @@ const Reports = () => {
                                             </div>
                                             {report.entryType === 'attendance' && (report.punchOut?.allowanceTA > 0 || report.punchOut?.nightStayAmount > 0) && (
                                                 <div style={{ display: 'flex', gap: '4px', marginTop: '4px' }}>
-                                                    {report.punchOut.allowanceTA > 0 && <span style={{ fontSize: '9px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>DAY +100</span>}
-                                                    {report.punchOut.nightStayAmount > 0 && <span style={{ fontSize: '9px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>NIGHT +500</span>}
+                                                    {report.punchOut.allowanceTA > 0 && <span style={{ fontSize: '9px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>DAY +{report.punchOut.allowanceTA}</span>}
+                                                    {report.punchOut.nightStayAmount > 0 && <span style={{ fontSize: '9px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>NIGHT +{report.punchOut.nightStayAmount}</span>}
                                                 </div>
                                             )}
                                         </td>
@@ -1085,9 +1237,16 @@ const Reports = () => {
                                             ) : '--'}
                                         </td>
                                         <td style={{ padding: '18px 25px' }}>
-                                            <span style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>
-                                                ₹{(report.amount || showSalary || 0).toLocaleString()}
-                                            </span>
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <span style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>
+                                                    ₹{(report.amount || showSalary || 0).toLocaleString()}
+                                                </span>
+                                                {report.entryType === 'attendance' && showSalary > 0 && (
+                                                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '600' }}>
+                                                        (W:{report.dailyWage || report.driver?.dailyWage || 500} + B:{(report.punchOut?.allowanceTA || 0) + (report.punchOut?.nightStayAmount || 0)})
+                                                    </span>
+                                                )}
+                                            </div>
                                         </td>
                                         <td style={{ padding: '18px 25px' }}>
                                             {report.entryType === 'advance' ? (
@@ -1111,6 +1270,15 @@ const Reports = () => {
                                                         style={{ padding: '8px 15px', color: 'var(--primary)', border: '1px solid rgba(14, 165, 233, 0.1)', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '800' }}
                                                     >
                                                         <Eye size={14} /> VIEW
+                                                    </button>
+                                                )}
+                                                {report.entryType === 'attendance' && (
+                                                    <button
+                                                        onClick={() => setEditingItem(report)}
+                                                        className="glass-card"
+                                                        style={{ padding: '8px 15px', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.1)', display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '800' }}
+                                                    >
+                                                        <Edit2 size={14} /> EDIT
                                                     </button>
                                                 )}
                                                 <button
@@ -1148,7 +1316,9 @@ const Reports = () => {
                                 const driverDayKey = `${driverUniqueId}_${report.date}`;
                                 let showSalary = 0;
                                 if (driverUniqueId && !paidInUI.has(driverDayKey)) {
-                                    showSalary = report.dailyWage || report.driver?.dailyWage || report.vehicle?.dutyAmount || 500;
+                                    showSalary = (report.dailyWage || report.driver?.dailyWage || report.vehicle?.dutyAmount || 500) +
+                                        (report.punchOut?.allowanceTA || 0) +
+                                        (report.punchOut?.nightStayAmount || 0);
                                     paidInUI.add(driverDayKey);
                                 }
                                 return (
@@ -1169,6 +1339,9 @@ const Reports = () => {
                                                         {report.driver?.name || (report.vehicle?.isOutsideCar ? 'Outside Car' : (typeof report.driver === 'string' ? report.driver : 'N/A'))}
                                                     </div>
                                                     <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{report.vehicle?.carNumber?.split('#')[0] || (typeof report.carNumber === 'string' ? report.carNumber : '--')}</div>
+                                                    {report.entryType === 'attendance' && report.punchOut?.remarks && (
+                                                        <div style={{ fontSize: '11px', color: 'var(--primary)', marginTop: '2px', fontWeight: '600' }}>{report.punchOut.remarks}</div>
+                                                    )}
                                                     <div style={{ marginTop: '4px' }}>
                                                         <span style={{
                                                             fontSize: '10px',
@@ -1204,8 +1377,8 @@ const Reports = () => {
                                             </span>
                                             {report.entryType === 'attendance' && (report.punchOut?.allowanceTA > 0 || report.punchOut?.nightStayAmount > 0) && (
                                                 <div style={{ display: 'flex', gap: '4px' }}>
-                                                    {report.punchOut.allowanceTA > 0 && <span style={{ fontSize: '9px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>+100</span>}
-                                                    {report.punchOut.nightStayAmount > 0 && <span style={{ fontSize: '9px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>+500</span>}
+                                                    {report.punchOut.allowanceTA > 0 && <span style={{ fontSize: '9px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>+{report.punchOut.allowanceTA}</span>}
+                                                    {report.punchOut.nightStayAmount > 0 && <span style={{ fontSize: '9px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '1px 4px', borderRadius: '3px', fontWeight: '800' }}>+{report.punchOut.nightStayAmount}</span>}
                                                 </div>
                                             )}
                                         </div>
@@ -1247,6 +1420,14 @@ const Reports = () => {
                                                         <Eye size={14} /> View
                                                     </button>
                                                 )}
+                                                {report.entryType === 'attendance' && (
+                                                    <button
+                                                        onClick={() => setEditingItem(report)}
+                                                        style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '700' }}
+                                                    >
+                                                        <Edit2 size={14} />
+                                                    </button>
+                                                )}
                                                 <button
                                                     onClick={() => handleDelete(report)}
                                                     style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '8px 12px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.2)', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '700' }}
@@ -1269,6 +1450,13 @@ const Reports = () => {
                         item={selectedItem}
                         onClose={() => setSelectedItem(null)}
                         borderTaxRecords={borderTaxRecords}
+                    />
+                )}
+                {editingItem && (
+                    <EditAttendanceModal
+                        item={editingItem}
+                        onClose={() => setEditingItem(null)}
+                        onUpdate={handleUpdateAttendance}
                     />
                 )}
             </AnimatePresence>

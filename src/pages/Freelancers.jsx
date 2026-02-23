@@ -4,6 +4,7 @@ import axios from '../api/axios';
 import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useCompany } from '../context/CompanyContext';
+import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 
 // Sub-components for cleaner code
@@ -1186,149 +1187,151 @@ const Freelancers = () => {
                 )}
 
                 {/* Manual Duty Entry Modal */}
-                {showManualModal && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', zIndex: 1100, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '15px', overflowY: 'auto' }}>
-                        <motion.div
-                            initial={{ y: 50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 50, opacity: 0 }}
-                            className="premium-glass"
-                            style={{ width: '100%', maxWidth: '600px', padding: '0', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a', overflow: 'visible', margin: 'auto', borderRadius: '24px' }}
-                        >
-                            <div style={{ padding: '24px 30px', background: 'linear-gradient(to right, #1e293b, #0f172a)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
-                                <div>
-                                    <h2 style={{ color: 'white', fontSize: '20px', margin: 0, fontWeight: '800' }}>Manual Duty Entry</h2>
-                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', margin: '4px 0 0' }}>Record Past Trip</p>
-                                </div>
-                                <button onClick={() => setShowManualModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '50%', padding: '10px', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
-                            </div>
-
-                            <form onSubmit={handleManualEntry} style={{ padding: '25px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                <AnimatePresence>
+                    {showManualModal && (
+                        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', zIndex: 1100, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '15px', overflowY: 'auto' }}>
+                            <motion.div
+                                initial={{ y: 50, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: 50, opacity: 0 }}
+                                className="premium-glass"
+                                style={{ width: '100%', maxWidth: '600px', padding: '0', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a', overflow: 'visible', margin: 'auto', borderRadius: '24px' }}
+                            >
+                                <div style={{ padding: '24px 30px', background: 'linear-gradient(to right, #1e293b, #0f172a)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
                                     <div>
-                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Freelancer *</label>
-                                        <select
-                                            className="input-field"
-                                            required
-                                            value={manualData.driverId}
-                                            onChange={e => {
-                                                const d = drivers.find(drv => drv._id === e.target.value);
-                                                setManualData({ ...manualData, driverId: e.target.value, dailyWage: d?.dailyWage || '' });
+                                        <h2 style={{ color: 'white', fontSize: '20px', margin: 0, fontWeight: '800' }}>Manual Duty Entry</h2>
+                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', margin: '4px 0 0' }}>Record Past Trip</p>
+                                    </div>
+                                    <button onClick={() => setShowManualModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '50%', padding: '10px', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
+                                </div>
+
+                                <form onSubmit={handleManualEntry} style={{ padding: '25px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Freelancer *</label>
+                                            <select
+                                                className="input-field"
+                                                required
+                                                value={manualData.driverId}
+                                                onChange={e => {
+                                                    const d = drivers.find(drv => drv._id === e.target.value);
+                                                    setManualData({ ...manualData, driverId: e.target.value, dailyWage: d?.dailyWage || '' });
+                                                }}
+                                                style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
+                                            >
+                                                <option value="" style={{ background: '#0f172a' }}>Select Driver</option>
+                                                {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name.split(' (F)')[0]}</option>)}
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Vehicle *</label>
+                                            <select
+                                                className="input-field"
+                                                required
+                                                value={manualData.vehicleId}
+                                                onChange={e => setManualData({ ...manualData, vehicleId: e.target.value })}
+                                                style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
+                                            >
+                                                <option value="" style={{ background: '#0f172a' }}>Select Car</option>
+                                                {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber?.split('#')[0]} - {v.model}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <Field label="Duty Date *" type="date" value={manualData.date} onChange={v => setManualData({ ...manualData, date: v })} required />
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
+                                        <Field label="Punch-In Time *" type="datetime-local" value={manualData.punchInTime} onChange={v => setManualData({ ...manualData, punchInTime: v })} required />
+                                        <Field label="Punch-Out Time *" type="datetime-local" value={manualData.punchOutTime} onChange={v => setManualData({ ...manualData, punchOutTime: v })} required />
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
+                                        <Field label="Starting KM *" type="number" value={manualData.punchInKM} onChange={v => setManualData({ ...manualData, punchInKM: v })} required />
+                                        <Field label="Closing KM *" type="number" value={manualData.punchOutKM} onChange={v => setManualData({ ...manualData, punchOutKM: v })} required />
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
+                                        <Field label="Pick-up Location" value={manualData.pickUpLocation} onChange={v => setManualData({ ...manualData, pickUpLocation: v })} />
+                                        <Field label="Drop Location" value={manualData.dropLocation} onChange={v => setManualData({ ...manualData, dropLocation: v })} />
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
+                                        <Field label="Fuel Spent (₹)" type="number" value={manualData.fuelAmount} onChange={v => setManualData({ ...manualData, fuelAmount: v })} />
+                                        <Field label="Parking/Toll (₹)" type="number" value={manualData.parkingAmount} onChange={v => setManualData({ ...manualData, parkingAmount: v })} />
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', alignItems: 'end' }}>
+                                        <Field label="Duty Salary (Wage) *" type="number" value={manualData.dailyWage} onChange={v => setManualData({ ...manualData, dailyWage: v })} required />
+                                        <Field label="Extra Bonus (₹)" type="number" value={manualData.otherBonus} onChange={v => setManualData({ ...manualData, otherBonus: v })} />
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
+                                        <div
+                                            style={{
+                                                padding: '12px',
+                                                background: 'rgba(255,255,255,0.02)',
+                                                borderRadius: '12px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                cursor: 'pointer',
+                                                border: manualData.allowanceTA ? '1px solid #fbbf24' : '1px solid rgba(255,255,255,0.05)'
                                             }}
-                                            style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
+                                            onClick={() => setManualData({ ...manualData, allowanceTA: !manualData.allowanceTA })}
                                         >
-                                            <option value="" style={{ background: '#0f172a' }}>Select Driver</option>
-                                            {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name.split(' (F)')[0]}</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Vehicle *</label>
-                                        <select
-                                            className="input-field"
-                                            required
-                                            value={manualData.vehicleId}
-                                            onChange={e => setManualData({ ...manualData, vehicleId: e.target.value })}
-                                            style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
+                                            <input type="checkbox" checked={manualData.allowanceTA} readOnly />
+                                            <div style={{ fontSize: '12px' }}>
+                                                <div style={{ color: 'white', fontWeight: '700' }}>Day Bonus</div>
+                                                <div style={{ color: '#fbbf24', fontWeight: '800' }}>+ ₹100</div>
+                                            </div>
+                                        </div>
+                                        <div
+                                            style={{
+                                                padding: '12px',
+                                                background: 'rgba(255,255,255,0.02)',
+                                                borderRadius: '12px',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                cursor: 'pointer',
+                                                border: manualData.nightStayAmount ? '1px solid #fbbf24' : '1px solid rgba(255,255,255,0.05)'
+                                            }}
+                                            onClick={() => setManualData({ ...manualData, nightStayAmount: !manualData.nightStayAmount })}
                                         >
-                                            <option value="" style={{ background: '#0f172a' }}>Select Car</option>
-                                            {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber?.split('#')[0]} - {v.model}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <Field label="Duty Date *" type="date" value={manualData.date} onChange={v => setManualData({ ...manualData, date: v })} required />
-
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
-                                    <Field label="Punch-In Time *" type="datetime-local" value={manualData.punchInTime} onChange={v => setManualData({ ...manualData, punchInTime: v })} required />
-                                    <Field label="Punch-Out Time *" type="datetime-local" value={manualData.punchOutTime} onChange={v => setManualData({ ...manualData, punchOutTime: v })} required />
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
-                                    <Field label="Starting KM *" type="number" value={manualData.punchInKM} onChange={v => setManualData({ ...manualData, punchInKM: v })} required />
-                                    <Field label="Closing KM *" type="number" value={manualData.punchOutKM} onChange={v => setManualData({ ...manualData, punchOutKM: v })} required />
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
-                                    <Field label="Pick-up Location" value={manualData.pickUpLocation} onChange={v => setManualData({ ...manualData, pickUpLocation: v })} />
-                                    <Field label="Drop Location" value={manualData.dropLocation} onChange={v => setManualData({ ...manualData, dropLocation: v })} />
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
-                                    <Field label="Fuel Spent (₹)" type="number" value={manualData.fuelAmount} onChange={v => setManualData({ ...manualData, fuelAmount: v })} />
-                                    <Field label="Parking/Toll (₹)" type="number" value={manualData.parkingAmount} onChange={v => setManualData({ ...manualData, parkingAmount: v })} />
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', alignItems: 'end' }}>
-                                    <Field label="Duty Salary (Wage) *" type="number" value={manualData.dailyWage} onChange={v => setManualData({ ...manualData, dailyWage: v })} required />
-                                    <Field label="Extra Bonus (₹)" type="number" value={manualData.otherBonus} onChange={v => setManualData({ ...manualData, otherBonus: v })} />
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
-                                    <div
-                                        style={{
-                                            padding: '12px',
-                                            background: 'rgba(255,255,255,0.02)',
-                                            borderRadius: '12px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                            cursor: 'pointer',
-                                            border: manualData.allowanceTA ? '1px solid #fbbf24' : '1px solid rgba(255,255,255,0.05)'
-                                        }}
-                                        onClick={() => setManualData({ ...manualData, allowanceTA: !manualData.allowanceTA })}
-                                    >
-                                        <input type="checkbox" checked={manualData.allowanceTA} readOnly />
-                                        <div style={{ fontSize: '12px' }}>
-                                            <div style={{ color: 'white', fontWeight: '700' }}>Day Bonus</div>
-                                            <div style={{ color: '#fbbf24', fontWeight: '800' }}>+ ₹100</div>
+                                            <input type="checkbox" checked={manualData.nightStayAmount} readOnly />
+                                            <div style={{ fontSize: '12px' }}>
+                                                <div style={{ color: 'white', fontWeight: '700' }}>Night Bonus</div>
+                                                <div style={{ color: '#fbbf24', fontWeight: '800' }}>+ ₹200</div>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div
-                                        style={{
-                                            padding: '12px',
-                                            background: 'rgba(255,255,255,0.02)',
-                                            borderRadius: '12px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                            cursor: 'pointer',
-                                            border: manualData.nightStayAmount ? '1px solid #fbbf24' : '1px solid rgba(255,255,255,0.05)'
-                                        }}
-                                        onClick={() => setManualData({ ...manualData, nightStayAmount: !manualData.nightStayAmount })}
-                                    >
-                                        <input type="checkbox" checked={manualData.nightStayAmount} readOnly />
-                                        <div style={{ fontSize: '12px' }}>
-                                            <div style={{ color: 'white', fontWeight: '700' }}>Night Bonus</div>
-                                            <div style={{ color: '#fbbf24', fontWeight: '800' }}>+ ₹200</div>
-                                        </div>
-                                    </div>
-                                </div>
 
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    style={{
-                                        height: '56px',
-                                        background: 'linear-gradient(135deg, #fbbf24, #d97706)',
-                                        borderRadius: '16px',
-                                        fontWeight: '900',
-                                        fontSize: '16px',
-                                        color: 'black',
-                                        border: 'none',
-                                        boxShadow: '0 12px 24px -8px rgba(251, 191, 36, 0.5)',
-                                        cursor: submitting ? 'not-allowed' : 'pointer',
-                                        transition: 'all 0.3s ease',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '1px',
-                                        marginTop: '10px'
-                                    }}
-                                >
-                                    {submitting ? 'Saving...' : 'Record Duty'}
-                                </button>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
+                                    <button
+                                        type="submit"
+                                        disabled={submitting}
+                                        style={{
+                                            height: '56px',
+                                            background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                                            borderRadius: '16px',
+                                            fontWeight: '900',
+                                            fontSize: '16px',
+                                            color: 'black',
+                                            border: 'none',
+                                            boxShadow: '0 12px 24px -8px rgba(251, 191, 36, 0.5)',
+                                            cursor: submitting ? 'not-allowed' : 'pointer',
+                                            transition: 'all 0.3s ease',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '1px',
+                                            marginTop: '10px'
+                                        }}
+                                    >
+                                        {submitting ? 'Saving...' : 'Record Duty'}
+                                    </button>
+                                </form>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
 
                 {/* Punch Out Modal */}
                 {showPunchOutModal && (

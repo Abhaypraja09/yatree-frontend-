@@ -231,7 +231,7 @@ const DriverSalaries = () => {
             <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
                 <div className="glass-card" style={{ flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid rgba(16,185,129,0.2)' }}>
                     <p style={{ fontSize: '11px', fontWeight: '800', color: '#10b981', marginBottom: '4px', textTransform: 'uppercase' }}>
-                        Total Net Payable ({new Date(0, month - 1).toLocaleString('default', { month: 'short' })} {year})
+                        Total ({new Date(0, month - 1).toLocaleString('default', { month: 'short' })} {year})
                     </p>
                     <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {totalPayout.toLocaleString()}</h3>
                 </div>
@@ -248,17 +248,17 @@ const DriverSalaries = () => {
                 <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
                     <thead>
                         <tr style={{ textAlign: 'left' }}>
-                            {['Driver', 'Daily Wage', 'Duty Days', 'Total Earnings', 'Advances (This Month)', 'Pending Balance', 'Net Payable'].map(h => (
-                                <th key={h} style={{ padding: '15px 25px', color: h === 'Net Payable' ? '#10b981' : 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
+                            {['Driver', 'Daily Wage', 'Duty Days', 'Nights', 'Earnings', 'Advances', 'Total'].map(h => (
+                                <th key={h} style={{ padding: '15px 20px', color: h === 'Total' ? '#10b981' : 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
                             ))}
                         </tr>
                     </thead>
                     <tbody>
                         <AnimatePresence>
                             {loading ? (
-                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'white' }}>Loading report...</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: 'white' }}>Loading report...</td></tr>
                             ) : filteredSalaries.length === 0 ? (
-                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No records found for this period.</td></tr>
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No records found for this period.</td></tr>
                             ) : (
                                 filteredSalaries.map((s, idx) => (
                                     <motion.tr key={s.driverId} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
@@ -269,12 +269,18 @@ const DriverSalaries = () => {
                                             <div style={{ fontWeight: '700', color: 'white' }}>{s.name}</div>
                                             <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{s.mobile}</div>
                                         </td>
-                                        <td style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.7)', fontWeight: '600', fontFamily: 'monospace' }}>₹ {s.dailyWage}</td>
-                                        <td style={{ padding: '20px 25px', color: 'white', fontWeight: '800' }}>{s.workingDays || 0}</td>
-                                        <td style={{ padding: '20px 25px', color: '#38bdf8', fontWeight: '700' }}>₹ {s.totalEarned}</td>
-                                        <td style={{ padding: '20px 25px', color: '#f43f5e', fontWeight: '700' }}>₹ {s.totalAdvances}</td>
-                                        <td style={{ padding: '20px 25px', color: '#f59e0b', fontWeight: '700' }}>₹ {s.pendingAdvance}</td>
-                                        <td style={{ padding: '20px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {s.netPayable}</td>
+                                        <td style={{ padding: '20px 20px', color: 'rgba(255,255,255,0.7)', fontWeight: '600', fontFamily: 'monospace' }}>₹ {s.dailyWage}</td>
+                                        <td style={{ padding: '20px 20px', color: 'white', fontWeight: '800' }}>{s.workingDays || 0}</td>
+                                        <td style={{ padding: '20px 20px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                {s.nightStayCount > 0 && <span style={{ fontSize: '10px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '2px 6px', borderRadius: '4px', fontWeight: '800' }}>{s.nightStayCount} NIGHTS</span>}
+                                                {s.sameDayCount > 0 && <span style={{ fontSize: '10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 6px', borderRadius: '4px', fontWeight: '800' }}>{s.sameDayCount} DAY</span>}
+                                                {!(s.nightStayCount > 0 || s.sameDayCount > 0) && <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>-</span>}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '20px 20px', color: '#38bdf8', fontWeight: '700' }}>₹ {s.totalEarned}</td>
+                                        <td style={{ padding: '20px 20px', color: '#f43f5e', fontWeight: '700' }}>₹ {s.totalAdvances}</td>
+                                        <td style={{ padding: '20px 20px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {s.netPayable}</td>
                                     </motion.tr>
                                 ))
                             )}
@@ -293,12 +299,19 @@ const DriverSalaries = () => {
                                 <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '12px' }}>{s.mobile}</p>
                             </div>
                             <div style={{ textAlign: 'right' }}>
-                                <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: '#10b981' }}>NET PAYABLE</p>
+                                <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: '#10b981' }}>TOTAL</p>
                                 <h3 style={{ margin: 0, color: '#10b981', fontSize: '18px' }}>₹ {s.netPayable}</h3>
                             </div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px' }}>
-                            {[['DAILY WAGE', `₹ ${s.dailyWage}`, 'rgba(255,255,255,0.7)'], ['DUTY DAYS', s.workingDays, 'white'], ['TOTAL EARNINGS', `₹ ${s.totalEarned}`, 'white'], ['ADVANCES', `₹ ${s.totalAdvances}`, '#f43f5e']].map(([label, val, color]) => (
+                            {[
+                                ['DAILY WAGE', `₹ ${s.dailyWage}`, 'rgba(255,255,255,0.7)'],
+                                ['DUTY DAYS', s.workingDays, 'white'],
+                                ['NIGHTS', s.nightStayCount || 0, '#f59e0b'],
+                                ['SAME DAY', s.sameDayCount || 0, '#10b981'],
+                                ['EARNINGS', `₹ ${s.totalEarned}`, 'white'],
+                                ['ADVANCES', `₹ ${s.totalAdvances}`, '#f43f5e']
+                            ].map(([label, val, color]) => (
                                 <div key={label} style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '8px' }}>
                                     <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '10px' }}>{label}</p>
                                     <p style={{ margin: '4px 0 0', color, fontWeight: '700' }}>{val}</p>
@@ -562,7 +575,7 @@ const DriverSalaries = () => {
                                         {/* NET PAYABLE BANNER */}
                                         <div style={{ background: netPayable >= 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))' : 'linear-gradient(135deg, rgba(244,63,94,0.15), rgba(244,63,94,0.05))', border: `1px solid ${netPayable >= 0 ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'}`, borderRadius: '12px', padding: '16px 20px', marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <div>
-                                                <div style={{ fontSize: '11px', fontWeight: '800', color: netPayable >= 0 ? '#10b981' : '#f43f5e', textTransform: 'uppercase', marginBottom: '4px' }}>Net Payable This Month</div>
+                                                <div style={{ fontSize: '11px', fontWeight: '800', color: netPayable >= 0 ? '#10b981' : '#f43f5e', textTransform: 'uppercase', marginBottom: '4px' }}>Total This Month</div>
                                                 <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>₹{grandTotal.toLocaleString()} earned − ₹{totalAdvances.toLocaleString()} advances</div>
                                             </div>
                                             <div style={{ color: netPayable >= 0 ? '#10b981' : '#f43f5e', fontWeight: '900', fontSize: '26px' }}>₹{Math.abs(netPayable).toLocaleString()}</div>
