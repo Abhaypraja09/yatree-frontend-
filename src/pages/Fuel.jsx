@@ -617,7 +617,7 @@ const FuelPage = () => {
                             value={filterVehicle}
                             onChange={(e) => setFilterVehicle(e.target.value)}
                         >
-                            <option value="All" style={{ background: '#1e293b' }}>All Vehicles</option>
+                            <option value="All" style={{ background: '#1e293b' }}>Filter Vehicles</option>
                             {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#1e293b' }}>{v.carNumber}</option>)}
                         </select>
                     </div>

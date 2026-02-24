@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
-import { Car, Lock, Phone, AlertCircle } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Lock, Phone, AlertCircle, ChevronRight, Globe, Shield, User, Landmark } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 
 const Login = () => {
@@ -12,6 +13,7 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
 
     const { login } = useAuth();
+    const { language, setLanguage, t } = useLanguage();
     const navigate = useNavigate();
 
     const handleSubmit = async (e) => {
@@ -20,121 +22,159 @@ const Login = () => {
         setIsLoading(true);
         try {
             const user = await login(mobile, password);
-            if (user.role === 'Admin') {
-                navigate('/admin');
-            } else if (user.role === 'Executive') {
-                navigate('/admin/freelancers');
-            } else if (user.role === 'Staff') {
-                navigate('/staff');
-            } else {
-                navigate('/driver');
-            }
+            if (user.role === 'Admin') navigate('/admin');
+            else if (user.role === 'Executive') navigate('/admin/freelancers');
+            else if (user.role === 'Staff') navigate('/staff');
+            else navigate('/driver');
         } catch (err) {
-            console.error('Login Error Object:', err);
             const msg = err.response?.data?.message || err.message || 'Invalid credentials';
-            const detailed = err.response?.data?.error ? ` (${err.response.data.error})` : '';
-            setError(msg + detailed);
+            setError(msg);
         } finally {
             setIsLoading(false);
         }
     };
 
     return (
-        <div className="login-container" style={{
+        <div style={{
+            minHeight: '100vh',
+            background: '#0D111D',
             display: 'flex',
             justifyContent: 'center',
             alignItems: 'center',
-            height: '100vh',
-            padding: '20px'
+            padding: '20px',
+            fontFamily: "'Inter', sans-serif"
         }}>
-            <SEO title="Admin Login" description="Access the FleetCRM Management Portal to manage your taxi fleet and drivers." />
+            <SEO title="Login | Yatree Destination" />
+
             <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="glass-card"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
                 style={{
+                    maxWidth: '440px',
                     width: '100%',
-                    maxWidth: '400px',
+                    background: '#161B2A',
+                    borderRadius: '24px',
                     padding: '40px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
                     textAlign: 'center'
                 }}
             >
-                <div style={{
-                    display: 'flex',
-                    flexDirection: 'column',
-                    alignItems: 'center',
-                    marginBottom: '30px'
-                }}>
-                    <img
-                        src="/logos/logo.png"
-                        alt="Yatree Destination"
-                        style={{ width: '120px', height: 'auto', marginBottom: '20px' }}
-                    />
-                    <h1 style={{ fontSize: '24px', fontWeight: '700', color: 'white' }}>Yatree Destination</h1>
-                    <p style={{ color: 'var(--text-muted)', marginTop: '5px' }}>Management Portal</p>
+                {/* Logo Area */}
+                <div style={{ marginBottom: '40px' }}>
+                    <img src="/logos/logo.png" alt="Yatree" style={{ width: '100px', marginBottom: '20px' }} />
+                    <h2 style={{ fontSize: '28px', fontWeight: '900', color: 'white', margin: '0 0 5px 0' }}>Yatree Destination</h2>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '15px', fontWeight: '500', margin: 0, letterSpacing: '0.5px' }}>
+                        SECURE ACCESS PORTAL
+                    </p>
                 </div>
 
-                {error && (
-                    <div style={{
-                        background: 'rgba(244, 63, 94, 0.1)',
-                        border: '1px solid var(--accent)',
-                        color: 'var(--accent)',
-                        padding: '10px',
-                        borderRadius: '8px',
-                        marginBottom: '20px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '10px',
-                        fontSize: '14px'
-                    }}>
-                        <AlertCircle size={16} />
-                        {error}
-                    </div>
-                )}
+                <AnimatePresence mode="wait">
+                    {error && (
+                        <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            style={{
+                                background: 'rgba(244, 63, 94, 0.1)',
+                                color: '#f43f5e',
+                                padding: '12px',
+                                borderRadius: '12px',
+                                marginBottom: '20px',
+                                fontSize: '13px',
+                                fontWeight: '600',
+                                border: '1px solid rgba(244, 63, 94, 0.2)'
+                            }}
+                        >
+                            {error}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
 
                 <form onSubmit={handleSubmit} style={{ textAlign: 'left' }}>
                     <div style={{ marginBottom: '20px' }}>
-                        <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', color: 'var(--text-muted)' }}>Username or Mobile</label>
+                        <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '8px', fontWeight: '500' }}>Username or Mobile</label>
                         <div style={{ position: 'relative' }}>
-                            <Phone size={18} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
+                            <Phone size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
                             <input
                                 type="text"
-                                className="input-field"
-                                style={{ paddingLeft: '40px' }}
                                 placeholder="Username or Mobile"
                                 value={mobile}
                                 onChange={(e) => setMobile(e.target.value)}
                                 required
+                                style={{
+                                    width: '100%', height: '52px', background: '#1c2235',
+                                    border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px',
+                                    padding: '0 15px 0 45px', color: 'white', fontSize: '15px', outline: 'none'
+                                }}
                             />
                         </div>
                     </div>
 
-                    <div style={{ marginBottom: '25px' }}>
-                        <label style={{ display: 'block', fontSize: '14px', marginBottom: '8px', color: 'var(--text-muted)' }}>Password</label>
+                    <div style={{ marginBottom: '30px' }}>
+                        <label style={{ display: 'block', fontSize: '13px', color: 'rgba(255,255,255,0.5)', marginBottom: '8px', fontWeight: '500' }}>Password</label>
                         <div style={{ position: 'relative' }}>
-                            <Lock size={18} style={{ position: 'absolute', left: '12px', top: '14px', color: 'var(--text-muted)' }} />
+                            <Lock size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
                             <input
                                 type="password"
-                                className="input-field"
-                                style={{ paddingLeft: '40px' }}
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 required
+                                style={{
+                                    width: '100%', height: '52px', background: '#1c2235',
+                                    border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px',
+                                    padding: '0 15px 0 45px', color: 'white', fontSize: '15px', outline: 'none'
+                                }}
                             />
                         </div>
                     </div>
 
                     <button
                         type="submit"
-                        className="btn-primary"
-                        style={{ width: '100%' }}
                         disabled={isLoading}
+                        style={{
+                            width: '100%',
+                            height: '52px',
+                            background: '#FFB82B',
+                            color: '#000',
+                            border: 'none',
+                            borderRadius: '12px',
+                            fontWeight: '800',
+                            fontSize: '16px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '10px',
+                            transition: '0.3s',
+                            boxShadow: '0 10px 20px -10px rgba(255, 184, 43, 0.4)'
+                        }}
                     >
-                        {isLoading ? 'Signing In...' : 'Sign In'}
+                        {isLoading ? <div className="spinner"></div> : 'Sign In'}
                     </button>
                 </form>
+
+                <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '20px' }}>
+                    <button onClick={() => setLanguage('en')} style={{ background: 'none', border: 'none', color: language === 'en' ? '#FFB82B' : 'rgba(255,255,255,0.2)', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>English</button>
+                    <button onClick={() => setLanguage('hi')} style={{ background: 'none', border: 'none', color: language === 'hi' ? '#FFB82B' : 'rgba(255,255,255,0.2)', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>हिन्दी</button>
+                </div>
             </motion.div>
+
+            <style>{`
+                .spinner {
+                    width: 24px;
+                    height: 24px;
+                    border: 3px solid rgba(0, 0, 0, 0.1);
+                    border-radius: 50%;
+                    border-top: 3px solid #000;
+                    animation: spin 1s linear infinite;
+                }
+                @keyframes spin {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+            `}</style>
         </div>
     );
 };

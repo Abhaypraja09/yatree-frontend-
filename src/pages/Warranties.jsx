@@ -314,7 +314,7 @@ const Warranties = () => {
                             onChange={(e) => setFilterVehicle(e.target.value)}
                             style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '600', cursor: 'pointer', minWidth: '120px' }}
                         >
-                            <option value="All" style={{ background: '#1e293b' }}>All Vehicles</option>
+                            <option value="All" style={{ background: '#1e293b' }}>Filter Vehicles</option>
                             {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#1e293b' }}>{v.carNumber}</option>)}
                         </select>
                         <ChevronDown size={14} style={{ marginLeft: '8px', opacity: 0.5 }} />

@@ -311,8 +311,24 @@ const LiveFeed = () => {
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
                                             {driver.status === 'Present' ? (
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
-                                                    <span style={{ fontSize: '10px', background: '#10b98120', color: '#10b981', padding: '3px 10px', borderRadius: '8px', fontWeight: '900', border: '1px solid rgba(16, 185, 129, 0.2)' }}>ON DUTY</span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                                                    {driver.fuelAmount > 0 && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                                                            <Fuel size={12} color="#f59e0b" />
+                                                            <span style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '950' }}>₹{driver.fuelAmount}</span>
+                                                        </div>
+                                                    )}
+                                                    <span style={{
+                                                        fontSize: '10px',
+                                                        background: driver.status === 'Present' ? '#10b98120' : (driver.status === 'Lapsed' ? '#f59e0b20' : 'rgba(255,255,255,0.05)'),
+                                                        color: driver.status === 'Present' ? '#10b981' : (driver.status === 'Lapsed' ? '#f59e0b' : 'rgba(255,255,255,0.3)'),
+                                                        padding: '3px 10px',
+                                                        borderRadius: '8px',
+                                                        fontWeight: '900',
+                                                        border: `1px solid ${driver.status === 'Present' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.1)'}`
+                                                    }}>
+                                                        {driver.status === 'Present' ? 'ON DUTY' : (driver.status === 'Lapsed' ? 'LAPSED' : 'OFF DUTY')}
+                                                    </span>
                                                     {driver.currentAttendance?.vehicle?.carNumber && (
                                                         <div style={{ fontSize: '12px', color: '#0ea5e9', fontWeight: '900', background: 'rgba(14, 165, 233, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>#{driver.currentAttendance.vehicle.carNumber.split('#')[0].slice(-4)}</div>
                                                     )}
@@ -355,17 +371,26 @@ const LiveFeed = () => {
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
                                             {vehicle.status !== 'Idle' ? (
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
-                                                    <span style={{
-                                                        fontSize: '10px',
-                                                        background: vehicle.status === 'In Use' ? '#0ea5e920' : '#8b5cf620',
-                                                        color: vehicle.status === 'In Use' ? '#0ea5e9' : '#8b5cf6',
-                                                        padding: '3px 10px',
-                                                        borderRadius: '8px',
-                                                        fontWeight: '900'
-                                                    }}>
-                                                        {vehicle.status.toUpperCase()}
-                                                    </span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        {vehicle.fuelAmount > 0 && (
+                                                            <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '3px 8px', borderRadius: '6px', display: 'flex', alignItems: 'center', border: '1px solid rgba(245, 158, 11, 0.2)', gap: '4px' }}>
+                                                                <Fuel size={12} color="#f59e0b" />
+                                                                <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '950' }}>₹{vehicle.fuelAmount}</span>
+                                                            </div>
+                                                        )}
+                                                        <span style={{
+                                                            fontSize: '10px',
+                                                            background: vehicle.status === 'In Use' ? '#0ea5e920' : (vehicle.status === 'Lapsed' ? '#f59e0b20' : '#8b5cf620'),
+                                                            color: vehicle.status === 'In Use' ? '#0ea5e9' : (vehicle.status === 'Lapsed' ? '#f59e0b' : '#8b5cf6'),
+                                                            padding: '3px 10px',
+                                                            borderRadius: '8px',
+                                                            fontWeight: '900',
+                                                            border: `1px solid ${vehicle.status === 'In Use' ? 'rgba(14, 165, 233, 0.3)' : (vehicle.status === 'Lapsed' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(139, 92, 246, 0.3)')}`
+                                                        }}>
+                                                            {vehicle.status.toUpperCase()}
+                                                        </span>
+                                                    </div>
                                                     {vehicle.currentDriver && (
                                                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontWeight: '800' }}>👤 {vehicle.currentDriver.name}</div>
                                                     )}

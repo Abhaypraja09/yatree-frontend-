@@ -272,7 +272,7 @@ const ActiveLogs = () => {
                             className="input-field"
                             style={{ height: '46px', border: 'none', background: 'transparent', width: '160px', fontWeight: '700', fontSize: '13px' }}
                         >
-                            <option value="All" style={{ background: '#0f172a' }}>All Vehicles</option>
+                            <option value="All" style={{ background: '#0f172a' }}>Filter Vehicles</option>
                             {vehicles.map(v => (
                                 <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber}</option>
                             ))}

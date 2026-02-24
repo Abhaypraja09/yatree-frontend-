@@ -32,7 +32,7 @@ const Field = ({ label, value, onChange, type = "text", required = false, autoCo
             type={type}
             className="input-field"
             required={required}
-            value={value || ''}
+            value={(value === 0 || value) ? value : ''}
             onChange={e => onChange(e.target.value)}
             autoComplete={autoComplete}
             placeholder={placeholder}
@@ -139,6 +139,28 @@ const Freelancers = () => {
         review: ''
     });
 
+    const [showEditDutyModal, setShowEditDutyModal] = useState(false);
+    const [editingDuty, setEditingDuty] = useState(null);
+    const [editDutyForm, setEditDutyForm] = useState({
+        date: '',
+        driverId: '',
+        vehicleId: '',
+        startKm: '',
+        endKm: '',
+        punchInTime: '',
+        punchOutTime: '',
+        pickUpLocation: '',
+        dropLocation: '',
+        fuelAmount: '0',
+        parkingAmount: '0',
+        allowanceTA: 0,
+        nightStayAmount: 0,
+        bonusAmount: '0',
+        dailyWage: '',
+        remarks: '',
+        dutyType: ''
+    });
+
     const getLocalYYYYMMDD = (date = new Date()) => {
         const d = new Date(date);
         const y = d.getFullYear();
@@ -193,7 +215,7 @@ const Freelancers = () => {
 
     const getToday = () => getLocalYYYYMMDD();
 
-    const [fromDate, setFromDate] = useState(getOneEightyDaysAgo());
+    const [fromDate, setFromDate] = useState(getToday());
     const [toDate, setToDate] = useState(getToday());
 
     const [submitting, setSubmitting] = useState(false);
@@ -426,6 +448,63 @@ const Freelancers = () => {
         } catch (err) {
             alert(err.response?.data?.message || 'Failed to record manual duty');
         } finally { setSubmitting(false); }
+    };
+
+    const handleUpdateDuty = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+
+            if (editingDuty.isOutsideCar) {
+                // Update Outside Car (Vehicle record)
+                await axios.put(`/api/admin/vehicles/${editingDuty._id}`, {
+                    dutyAmount: editDutyForm.dailyWage,
+                    dutyType: editDutyForm.pickUpLocation, // Synced with Pick-up Location field
+                    dropLocation: editDutyForm.dropLocation,
+                    driverName: drivers.find(d => d._id === editDutyForm.driverId)?.name || editingDuty.driver?.name
+                }, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+            } else {
+                // Update Regular Attendance
+                await axios.put(`/api/admin/attendance/${editingDuty._id}`, editDutyForm, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+            }
+
+            setShowEditDutyModal(false);
+            setMessage({ type: 'success', text: 'Duty updated successfully' });
+            fetchAttendance();
+            setTimeout(() => setMessage({ type: '', text: '' }), 2000);
+        } catch (err) {
+            alert(err.response?.data?.message || 'Update failed');
+        } finally { setSubmitting(false); }
+    };
+
+    const openEditDutyModal = (duty) => {
+        setEditingDuty(duty);
+        const fallbackWage = duty.isOutsideCar ? (duty.dutyAmount || 0) : (duty.driver?.dailyWage || 500);
+        setEditDutyForm({
+            date: duty.date,
+            driverId: duty.driver?._id || duty.driver || '',
+            vehicleId: duty.vehicle?._id || duty.vehicle || '',
+            startKm: duty.punchIn?.km ?? '',
+            endKm: duty.punchOut?.km ?? '',
+            punchInTime: duty.punchIn?.time ? new Date(duty.punchIn.time).toISOString().slice(0, 16) : '',
+            punchOutTime: duty.punchOut?.time ? new Date(duty.punchOut.time).toISOString().slice(0, 16) : '',
+            pickUpLocation: duty.pickUpLocation || '',
+            dropLocation: duty.dropLocation || '',
+            fuelAmount: duty.fuel?.amount ?? '0',
+            parkingAmount: duty.punchOut?.tollParkingAmount ?? '0',
+            allowanceTA: duty.punchOut?.allowanceTA ?? 0,
+            nightStayAmount: duty.punchOut?.nightStayAmount ?? 0,
+            bonusAmount: duty.outsideTrip?.bonusAmount ?? '0',
+            dailyWage: duty.dailyWage || fallbackWage,
+            remarks: duty.punchOut?.remarks || duty.punchOut?.otherRemarks || '',
+            dutyType: duty.pickUpLocation || ''
+        });
+        setShowEditDutyModal(true);
     };
 
     const handleUpdate = async (e) => {
@@ -687,7 +766,7 @@ const Freelancers = () => {
                                 margin: 0
                             }}
                         >
-                            <option value="All" style={{ background: '#0f172a' }}>All Vehicles</option>
+                            <option value="All" style={{ background: '#0f172a' }}>Filter Vehicles</option>
                             {drivenVehicles.map(v => <option key={v} value={v} style={{ background: '#0f172a' }}>{v}</option>)}
                         </select>
 
@@ -1041,7 +1120,7 @@ const Freelancers = () => {
                                                 <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Route Details</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Timing & KM</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Financials</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remarks</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -1093,16 +1172,19 @@ const Freelancers = () => {
                                                             <div style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900', marginTop: '4px' }}>{totalKM} KM Run</div>
                                                         </td>
                                                         <td style={{ padding: '15px 25px', textAlign: 'right' }}>
-                                                            <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900' }}>₹{a.dailyWage || 0}</div>
+                                                            <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900' }}>₹{a.dailyWage || a.driver?.dailyWage || 0}</div>
                                                             <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', marginTop: '4px' }}>
                                                                 {a.fuel?.amount > 0 && <span style={{ color: '#f59e0b', fontSize: '9px', fontWeight: '900' }}>F: ₹{a.fuel.amount}</span>}
                                                                 {a.punchOut?.tollParkingAmount > 0 && <span style={{ color: '#8b5cf6', fontSize: '9px', fontWeight: '900' }}>P: ₹{a.punchOut.tollParkingAmount}</span>}
                                                             </div>
                                                         </td>
-                                                        <td style={{ padding: '15px 25px', textAlign: 'right' }}>
-                                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '600', maxWidth: '120px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                                {a.punchOut?.otherRemarks || a.punchOut?.remarks || '-'}
-                                                            </div>
+                                                        <td style={{ padding: '15px 25px', textAlign: 'center' }}>
+                                                            <button
+                                                                onClick={() => openEditDutyModal(a)}
+                                                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                            >
+                                                                <Edit2 size={14} />
+                                                            </button>
                                                         </td>
                                                     </tr>
                                                 );
@@ -1465,6 +1547,83 @@ const Freelancers = () => {
                                 <SubmitButton disabled={submitting} text="Upload" message={message} />
                             </form>
                         </div>
+                    </Modal>
+                )}
+
+                {/* Edit Duty Modal */}
+                {showEditDutyModal && (
+                    <Modal title={`Edit Duty Record`} onClose={() => setShowEditDutyModal(false)}>
+                        <form onSubmit={handleUpdateDuty} style={{ display: 'grid', gap: '20px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Duty Date *" type="date" value={editDutyForm.date} onChange={v => setEditDutyForm({ ...editDutyForm, date: v })} required />
+                                <div>
+                                    <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Vehicle *</label>
+                                    <select
+                                        className="input-field"
+                                        required
+                                        value={editDutyForm.vehicleId}
+                                        onChange={e => setEditDutyForm({ ...editDutyForm, vehicleId: e.target.value })}
+                                        style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
+                                    >
+                                        <option value="" style={{ background: '#0f172a' }}>Select Car</option>
+                                        {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber?.split('#')[0]}</option>)}
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div>
+                                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Driver *</label>
+                                <select
+                                    className="input-field"
+                                    required
+                                    value={editDutyForm.driverId}
+                                    onChange={e => setEditDutyForm({ ...editDutyForm, driverId: e.target.value })}
+                                    style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
+                                >
+                                    <option value="" style={{ background: '#0f172a' }}>Select Driver</option>
+                                    {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name.split(' (F)')[0]}</option>)}
+                                </select>
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Punch-In Time" type="datetime-local" value={editDutyForm.punchInTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchInTime: v })} />
+                                <Field label="Punch-Out Time" type="datetime-local" value={editDutyForm.punchOutTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchOutTime: v })} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Starting KM" type="number" value={editDutyForm.startKm} onChange={v => setEditDutyForm({ ...editDutyForm, startKm: v })} />
+                                <Field label="Closing KM" type="number" value={editDutyForm.endKm} onChange={v => setEditDutyForm({ ...editDutyForm, endKm: v })} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Pick-up Location" value={editDutyForm.pickUpLocation} onChange={v => setEditDutyForm({ ...editDutyForm, pickUpLocation: v })} />
+                                <Field label="Drop Location" value={editDutyForm.dropLocation} onChange={v => setEditDutyForm({ ...editDutyForm, dropLocation: v })} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Fuel Spent (₹)" type="number" value={editDutyForm.fuelAmount} onChange={v => setEditDutyForm({ ...editDutyForm, fuelAmount: v })} />
+                                <Field label="Parking/Toll (₹)" type="number" value={editDutyForm.parkingAmount} onChange={v => setEditDutyForm({ ...editDutyForm, parkingAmount: v })} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <Field label="Daily Wage (₹) *" type="number" value={editDutyForm.dailyWage} onChange={v => setEditDutyForm({ ...editDutyForm, dailyWage: v })} required />
+                                <Field label="Bonus Amount (₹)" type="number" value={editDutyForm.bonusAmount} onChange={v => setEditDutyForm({ ...editDutyForm, bonusAmount: v })} />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input type="checkbox" checked={editDutyForm.allowanceTA > 0} onChange={e => setEditDutyForm({ ...editDutyForm, allowanceTA: e.target.checked ? 100 : 0 })} />
+                                    <span style={{ fontSize: '12px', color: 'white' }}>Day Bonus</span>
+                                </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input type="checkbox" checked={editDutyForm.nightStayAmount > 0} onChange={e => setEditDutyForm({ ...editDutyForm, nightStayAmount: e.target.checked ? 200 : 0 })} />
+                                    <span style={{ fontSize: '12px', color: 'white' }}>Night Bonus</span>
+                                </div>
+                            </div>
+
+                            <Field label="Remarks" value={editDutyForm.remarks} onChange={v => setEditDutyForm({ ...editDutyForm, remarks: v })} />
+                            <SubmitButton disabled={submitting} text="Update Duty Record" message={message} />
+                        </form>
                     </Modal>
                 )}
             </div>

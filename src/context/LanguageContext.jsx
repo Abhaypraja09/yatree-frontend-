@@ -9,6 +9,16 @@ export const translations = {
         yes: 'Yes',
         no: 'No',
         capture: 'Capture',
+        access_portal: 'Access Portal',
+        welcome_back: 'Welcome Back',
+        sign_in_desc: 'Enter credentials to authorize session.',
+        identity_access: 'Identity Access',
+        security_shield: 'Security Shield',
+        secure_login: 'SECURE LOGIN',
+        management: 'MANAGEMENT',
+        staff_portal: 'STAFF PORTAL',
+        username_mobile: 'Username or Mobile',
+        password_placeholder: '••••••••',
 
         // Dashboard/Status
         noVehicle: 'No Vehicle Active',
@@ -134,6 +144,16 @@ export const translations = {
         no: 'नहीं',
         save: 'सहेजें',
         capture: 'फोटो लें',
+        access_portal: 'एक्सेस पोर्टल',
+        welcome_back: 'सुस्वागतम',
+        sign_in_desc: 'सत्र अधिकृत करने के लिए क्रेडेंशियल दर्ज करें।',
+        identity_access: 'पहचान एक्सेस',
+        security_shield: 'सुरक्षा कवच',
+        secure_login: 'सुरक्षित लॉगिन',
+        management: 'प्रबंधन',
+        staff_portal: 'स्टाफ पोर्टल',
+        username_mobile: 'यूजरनेम या मोबाइल',
+        password_placeholder: '••••••••',
 
         // Dashboard/Status
         noVehicle: 'कोई वाहन सक्रिय नहीं है',

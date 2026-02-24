@@ -383,7 +383,7 @@ const Maintenance = () => {
                             onChange={(e) => setFilterType(e.target.value)}
                             style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '700', fontSize: '14px', width: '100%', outline: 'none', cursor: 'pointer', textOverflow: 'ellipsis' }}
                         >
-                            <option value="All" style={{ background: '#1e293b', color: 'white' }}>All Categories</option>
+                            <option value="All" style={{ background: '#1e293b', color: 'white' }}>Filter Categories</option>
                             {maintenanceTypes.map(t => <option key={t} value={t} style={{ background: '#1e293b', color: 'white' }}>{t}</option>)}
                         </select>
                     </div>
@@ -400,7 +400,7 @@ const Maintenance = () => {
                             onChange={(e) => setFilterVehicle(e.target.value)}
                             style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '700', fontSize: '14px', width: '100%', outline: 'none', cursor: 'pointer', textOverflow: 'ellipsis' }}
                         >
-                            <option value="All" style={{ background: '#1e293b', color: 'white' }}>All Vehicles</option>
+                            <option value="All" style={{ background: '#1e293b', color: 'white' }}>Filter Vehicles</option>
                             {(vehicles || []).map(v => <option key={v._id} value={v._id} style={{ background: '#1e293b', color: 'white' }}>{v.carNumber}</option>)}
                         </select>
                     </div>
