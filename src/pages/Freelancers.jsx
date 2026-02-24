@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar } from 'lucide-react';
+import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -118,7 +118,7 @@ const Freelancers = () => {
         time: new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString().slice(0, 16),
         pickUpLocation: ''
     });
-    const [punchOutData, setPunchOutData] = useState({ km: '', time: '', fuelAmount: '0', parkingAmount: '0', review: '', dailyWage: '', dropLocation: '' });
+    const [punchOutData, setPunchOutData] = useState({ km: '', time: '', fuelAmount: '0', parkingAmount: '0', parkingPaidBy: 'Self', review: '', dailyWage: '', dropLocation: '' });
     const [advanceData, setAdvanceData] = useState({ amount: '', remark: '', date: '', advanceType: 'Office', givenBy: 'Office' });
     const [manualData, setManualData] = useState({
         driverId: '',
@@ -132,6 +132,7 @@ const Freelancers = () => {
         dropLocation: '',
         fuelAmount: '0',
         parkingAmount: '0',
+        parkingPaidBy: 'Self',
         allowanceTA: false,
         nightStayAmount: false,
         otherBonus: '0',
@@ -153,6 +154,7 @@ const Freelancers = () => {
         dropLocation: '',
         fuelAmount: '0',
         parkingAmount: '0',
+        parkingPaidBy: 'Self',
         allowanceTA: 0,
         nightStayAmount: 0,
         bonusAmount: '0',
@@ -215,7 +217,7 @@ const Freelancers = () => {
 
     const getToday = () => getLocalYYYYMMDD();
 
-    const [fromDate, setFromDate] = useState(getToday());
+    const [fromDate, setFromDate] = useState(getOneEightyDaysAgo());
     const [toDate, setToDate] = useState(getToday());
 
     const [submitting, setSubmitting] = useState(false);
@@ -350,7 +352,7 @@ const Freelancers = () => {
             });
             setShowPunchOutModal(false);
             const now = new Date().toISOString().slice(0, 16);
-            setPunchOutData({ km: '', time: now, fuelAmount: '0', parkingAmount: '0', review: '', dailyWage: '', dropLocation: '' });
+            setPunchOutData({ km: '', time: now, fuelAmount: '0', parkingAmount: '0', parkingPaidBy: 'Self', review: '', dailyWage: '', dropLocation: '' });
             fetchFreelancers();
             fetchVehicles();
             fetchAttendance();
@@ -438,6 +440,7 @@ const Freelancers = () => {
                 driverId: '', vehicleId: '', date: new Date().toISOString().split('T')[0],
                 punchInKM: '', punchOutKM: '', punchInTime: '', punchOutTime: '',
                 pickUpLocation: '', dropLocation: '', fuelAmount: '0', parkingAmount: '0',
+                parkingPaidBy: 'Self',
                 allowanceTA: false, nightStayAmount: false, otherBonus: '0',
                 dailyWage: '', review: ''
             });
@@ -497,6 +500,7 @@ const Freelancers = () => {
             dropLocation: duty.dropLocation || '',
             fuelAmount: duty.fuel?.amount ?? '0',
             parkingAmount: duty.punchOut?.tollParkingAmount ?? '0',
+            parkingPaidBy: duty.punchOut?.parkingPaidBy || 'Self',
             allowanceTA: duty.punchOut?.allowanceTA ?? 0,
             nightStayAmount: duty.punchOut?.nightStayAmount ?? 0,
             bonusAmount: duty.outsideTrip?.bonusAmount ?? '0',
@@ -571,7 +575,12 @@ const Freelancers = () => {
         return matchesDriver && matchesVehicle && matchesSearch;
     });
 
-    const totalSettlement = filteredAttendance.reduce((sum, a) => sum + (Number(a.dailyWage) || 0), 0);
+    const totalSettlement = filteredAttendance.reduce((sum, a) => {
+        const wage = Number(a.dailyWage) || 0;
+        const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
+        const bonus = (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0);
+        return sum + wage + parking + bonus;
+    }, 0);
     const totalAdvances = advances.filter(adv =>
         driverFilter === 'All' ? true : (adv.driver?._id === driverFilter || adv.driver === driverFilter)
     ).reduce((sum, adv) => sum + adv.amount, 0);
@@ -582,7 +591,7 @@ const Freelancers = () => {
     // Extract unique locations and vehicles for suggestions
     const uniquePickups = [...new Set(attendance.map(a => a.pickUpLocation).filter(Boolean))].sort();
     const uniqueDrops = [...new Set(attendance.map(a => a.dropLocation).filter(Boolean))].sort();
-    const drivenVehicles = [...new Set(attendance.map(a => a.vehicle?.carNumber?.split('#')[0]).filter(Boolean))].sort();
+
 
     const handleDownloadExcel = () => {
         if (filteredAttendance.length === 0) return alert('No data to download');
@@ -613,77 +622,87 @@ const Freelancers = () => {
             <SEO title="Freelancer Fleet Network" description="Onboard and manage freelance drivers for temporary duties and peak demand management." />
 
             {/* Header with Search and Stats */}
-            <header className="flex-resp" style={{
-                justifyContent: 'space-between',
-                padding: '40px 0',
-                gap: '24px'
+            <header className="glass-card dashboard-header" style={{
+                padding: 'clamp(20px, 3vw, 30px)',
+                borderRadius: '24px',
+                border: '1px solid rgba(255,255,255,0.08)',
+                marginBottom: '25px',
+                background: 'rgba(30, 41, 59, 0.4)'
             }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{
-                        width: 'clamp(40px,10vw,50px)',
-                        height: 'clamp(40px,10vw,50px)',
-                        background: 'linear-gradient(135deg, white, #f8fafc)',
-                        borderRadius: '16px',
-                        padding: '8px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
-                    }}>
-                        <Users size={28} color="#fbbf24" />
-                    </div>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
-                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>External Workforce</span>
+                <div className="mobile-stack" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: '20px', alignItems: 'center' }}>
+                    <div className="header-logo-section">
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <div className="header-logo-container" style={{
+                                background: 'linear-gradient(135deg, white, #f8fafc)',
+                                borderRadius: '16px',
+                                padding: '8px',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                                flexShrink: 0
+                            }}>
+                                <Users size={28} color="#fbbf24" />
+                            </div>
+                            <div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                    <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>External Workforce</span>
+                                </div>
+                                <h1 className="header-title" style={{ color: 'white', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', fontSize: 'clamp(20px, 5vw, 32px)' }}>
+                                    Freelancers <span className="text-gradient-yellow">Hub</span>
+                                </h1>
+                            </div>
                         </div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
-                            Freelancers <span className="text-gradient-yellow">Hub</span>
-                        </h1>
                     </div>
-                </div>
 
-                <div className="flex-resp" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap', width: '100%' }}>
-                    <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', flex: '1 1 250px', maxWidth: '100%', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                        <input
-                            type="text"
-                            placeholder={activeTab === 'logistics' ? "Search in duties..." : "Find personnel..."}
-                            value={activeTab === 'logistics' ? dutySearch : searchTerm}
-                            onChange={(e) => activeTab === 'logistics' ? setDutySearch(e.target.value) : setSearchTerm(e.target.value)}
-                            style={{ background: 'transparent', border: 'none', color: 'white', height: '50px', width: '100%', outline: 'none', fontSize: '14px', minWidth: 0, paddingRight: '15px' }}
-                        />
-                    </div>
-                    <div style={{ display: 'flex', gap: '10px', flex: '1 1 300px', maxWidth: '100%', justifyContent: 'space-between' }}>
-                        <button
-                            className="glass-card-hover-effect"
-                            onClick={() => setShowManualModal(true)}
-                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', height: '52px', padding: '0', borderRadius: '14px', fontWeight: '800', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap', cursor: 'pointer', flex: '1 1 50%', minWidth: '100px' }}
-                        >
-                            <Edit2 size={16} /> <span>Entry</span>
-                        </button>
-                        <button
-                            onClick={() => setShowAddModal(true)}
-                            style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', height: '52px', padding: '0', borderRadius: '14px', fontWeight: '800', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', border: 'none', whiteSpace: 'nowrap', flexShrink: 0, color: 'black', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)', flex: '1 1 50%', minWidth: '100px' }}
-                        >
-                            <Plus size={18} /> <span className="hide-mobile">Add Freelancer</span><span className="show-mobile">Add</span>
-                        </button>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', flex: 1, width: '100%', maxWidth: '100%' }}>
+                        <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
+                            <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)', flex: 1 }}>
+                                <Search size={18} style={{ margin: '0 12px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                                <input
+                                    type="text"
+                                    placeholder={activeTab === 'logistics' ? "Search in duties..." : "Find personnel..."}
+                                    value={activeTab === 'logistics' ? dutySearch : searchTerm}
+                                    onChange={(e) => activeTab === 'logistics' ? setDutySearch(e.target.value) : setSearchTerm(e.target.value)}
+                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '44px', width: '100%', outline: 'none', fontSize: '13px', paddingRight: '12px' }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                                <button
+                                    className="glass-card-hover-effect"
+                                    onClick={() => setShowManualModal(true)}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                    title="Manual Entry"
+                                >
+                                    <Edit2 size={16} />
+                                </button>
+                                <button
+                                    onClick={() => setShowAddModal(true)}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', border: 'none', color: 'black', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)', cursor: 'pointer' }}
+                                    title="Add Freelancer"
+                                >
+                                    <Plus size={18} />
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
 
             {/* Premium Filter Hub */}
             <div className="glass-card" style={{
-                padding: '24px',
+                padding: '20px',
                 borderRadius: '24px',
                 border: '1px solid rgba(255,255,255,0.05)',
-                marginBottom: '40px',
+                marginBottom: '30px',
                 background: 'rgba(15, 23, 42, 0.4)'
             }}>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', justifyContent: 'space-between' }}>
 
                     {/* Tabs */}
-                    <div style={{
+                    <div className="premium-scroll" style={{
                         display: 'flex',
                         background: 'rgba(0,0,0,0.2)',
                         padding: '4px',
@@ -692,7 +711,6 @@ const Freelancers = () => {
                         overflowX: 'auto',
                         whiteSpace: 'nowrap',
                         gap: '4px',
-                        flex: '0 0 auto',
                         maxWidth: '100%'
                     }}>
                         {[
@@ -707,7 +725,7 @@ const Freelancers = () => {
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '8px',
-                                    padding: '10px 20px',
+                                    padding: '10px 16px',
                                     borderRadius: '12px',
                                     border: 'none',
                                     background: activeTab === tab.id ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
@@ -715,10 +733,8 @@ const Freelancers = () => {
                                     cursor: 'pointer',
                                     fontSize: '12px',
                                     fontWeight: '800',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    boxShadow: activeTab === tab.id ? '0 4px 12px rgba(99, 102, 241, 0.1)' : 'none',
-                                    flex: '0 0 auto',
-                                    justifyContent: 'center'
+                                    transition: 'all 0.3s',
+                                    flexShrink: 0
                                 }}
                             >
                                 {tab.icon} <span style={{ letterSpacing: '0.5px' }}>{tab.label}</span>
@@ -727,163 +743,102 @@ const Freelancers = () => {
                     </div>
 
                     {/* Filter Controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', flex: '2 1 auto', justifyContent: 'flex-end', width: '100%' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flex: 1, width: '100%', justifyContent: 'flex-start' }}>
                         <select
                             value={driverFilter}
                             onChange={(e) => setDriverFilter(e.target.value)}
                             className="input-field"
                             style={{
-                                flex: '1 1 140px',
-                                maxWidth: '200px',
+                                width: '100%',
+                                maxWidth: '180px',
                                 background: 'rgba(255,255,255,0.03)',
                                 border: '1px solid rgba(255,255,255,0.05)',
-                                color: 'white',
-                                height: '44px',
-                                borderRadius: '12px',
+                                height: '42px',
                                 fontSize: '13px',
                                 fontWeight: '700',
-                                margin: 0
+                                outline: 'none'
                             }}
                         >
-                            <option value="All" style={{ background: '#0f172a' }}>All Drivers</option>
-                            {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name.split(' (F)')[0]}</option>)}
+                            <option value="All">All Drivers</option>
+                            {drivers.map(d => <option key={d._id} value={d._id}>{d.name.split(' (F)')[0]}</option>)}
                         </select>
 
-                        <select
-                            value={vehicleFilter}
-                            onChange={(e) => setVehicleFilter(e.target.value)}
-                            className="input-field"
-                            style={{
-                                flex: '1 1 140px',
-                                maxWidth: '200px',
-                                background: 'rgba(255,255,255,0.03)',
-                                border: '1px solid rgba(255,255,255,0.05)',
-                                color: 'white',
-                                height: '44px',
-                                borderRadius: '12px',
-                                fontSize: '13px',
-                                fontWeight: '700',
-                                margin: 0
-                            }}
-                        >
-                            <option value="All" style={{ background: '#0f172a' }}>Filter Vehicles</option>
-                            {drivenVehicles.map(v => <option key={v} value={v} style={{ background: '#0f172a' }}>{v}</option>)}
-                        </select>
+                        <div className="date-selector-container" style={{ width: '100%', maxWidth: '280px' }}>
+                            <div className="date-selector-inner" style={{ padding: '2px', height: '42px' }}>
+                                <button
+                                    onClick={() => {
+                                        const d = new Date(toDate);
+                                        d.setDate(d.getDate() - 1);
+                                        setToDate(d.toISOString().split('T')[0]);
+                                    }}
+                                    style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                                >
+                                    <ChevronLeft size={16} />
+                                </button>
 
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            flex: '1 1 auto',
-                            maxWidth: '450px'
-                        }}>
-                            {/* FROM DATE */}
-                            <div
-                                onClick={(e) => {
-                                    const input = e.currentTarget.querySelector('input');
-                                    if (input) {
-                                        try { input.showPicker(); } catch (err) { input.focus(); }
-                                    }
-                                }}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    background: 'rgba(255,255,255,0.03)',
-                                    padding: '0 15px',
-                                    borderRadius: '12px',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    height: '44px',
-                                    flex: 1,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease'
-                                }}
-                                className="glass-card-hover-effect"
-                            >
-                                <div style={{ display: 'flex', flexDirection: 'column', marginRight: '10px' }}>
-                                    <span style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase', opacity: 0.7 }}>From</span>
-                                    <Calendar size={12} style={{ color: 'white', opacity: 0.5 }} />
+                                <div
+                                    onClick={() => document.getElementById('main-date-picker').showPicker()}
+                                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+                                >
+                                    <Calendar size={14} color="#fbbf24" />
+                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>
+                                        {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
+                                    </span>
+                                    <input
+                                        id="main-date-picker"
+                                        type="date"
+                                        value={toDate}
+                                        onChange={(e) => setToDate(e.target.value)}
+                                        style={{ visibility: 'hidden', width: 0, position: 'absolute' }}
+                                    />
                                 </div>
-                                <input
-                                    type="date"
-                                    value={fromDate}
-                                    onChange={e => setFromDate(e.target.value)}
-                                    onClick={e => e.stopPropagation()}
-                                    style={{ background: 'transparent', color: 'white', border: 'none', fontSize: '13px', outline: 'none', width: '100%', cursor: 'pointer' }}
-                                />
-                            </div>
 
-                            <span style={{ color: 'rgba(255,255,255,0.1)', fontWeight: 'bold' }}>-</span>
-
-                            {/* TO DATE */}
-                            <div
-                                onClick={(e) => {
-                                    const input = e.currentTarget.querySelector('input');
-                                    if (input) {
-                                        try { input.showPicker(); } catch (err) { input.focus(); }
-                                    }
-                                }}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    background: 'rgba(255,255,255,0.03)',
-                                    padding: '0 15px',
-                                    borderRadius: '12px',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    height: '44px',
-                                    flex: 1,
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease'
-                                }}
-                                className="glass-card-hover-effect"
-                            >
-                                <div style={{ display: 'flex', flexDirection: 'column', marginRight: '10px' }}>
-                                    <span style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: 'bold', textTransform: 'uppercase', opacity: 0.7 }}>To</span>
-                                    <Calendar size={12} style={{ color: 'white', opacity: 0.5 }} />
-                                </div>
-                                <input
-                                    type="date"
-                                    value={toDate}
-                                    onChange={e => setToDate(e.target.value)}
-                                    onClick={e => e.stopPropagation()}
-                                    style={{ background: 'transparent', color: 'white', border: 'none', fontSize: '13px', outline: 'none', width: '100%', cursor: 'pointer' }}
-                                />
-                            </div>
-                        </div>
+                                <button
+                                    onClick={() => {
+                                        const d = new Date(toDate);
+                                        d.setDate(d.getDate() + 1);
+                                        setToDate(d.toISOString().split('T')[0]);
+                                    }}
+                                    style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                >
+                                    <ChevronRight size={16} />
+                                </button>
+                            </div >
+                        </div >
 
                         <button
                             onClick={handleDownloadExcel}
-                            className="glass-card-hover-effect"
                             style={{
-                                flex: '0 0 auto',
-                                height: '44px',
-                                width: '44px',
+                                height: '42px',
+                                padding: '0 15px',
                                 borderRadius: '12px',
                                 background: 'rgba(16,185,129,0.1)',
                                 color: '#10b981',
                                 border: '1px solid rgba(16,185,129,0.2)',
                                 display: 'flex',
                                 alignItems: 'center',
-                                justifyContent: 'center',
-                                cursor: 'pointer'
+                                gap: '8px',
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '800'
                             }}
                             title="Export Reports"
                         >
-                            <Download size={18} />
+                            <Download size={16} /> <span className="hide-mobile">Excel</span>
                         </button>
-                    </div>
-                </div>
-            </div>
+                    </div >
+                </div >
+            </div >
+
 
             {/* Content Tabs */}
             <div style={{ position: 'relative', minHeight: '600px' }}>
                 {/* PERSONNEL TAB */}
                 {activeTab === 'personnel' && (
-                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
-
-
+                    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
                         {/* Driver Table View */}
                         <div style={{ borderRadius: '24px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <div style={{ overflowX: 'auto' }}>
+                            <div className="scroll-x">
                                 <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1000px' }}>
                                     <thead>
                                         <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -983,20 +938,19 @@ const Freelancers = () => {
                                 </table>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
 
-                {/* ACCOUNTS TAB - ULTRA-SIMPLIFIED SETTLEMENT DESIGN */}
+                {/* ACCOUNTS TAB */}
                 {activeTab === 'accounts' && (
-                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        {/* Settlement Summary Table (Simplified) */}
+                    <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
                         <div style={{ marginBottom: '32px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
                                 <div style={{ width: '3px', height: '16px', background: '#6366f1', borderRadius: '4px' }}></div>
                                 <h4 style={{ margin: 0, color: 'white', fontSize: '15px', fontWeight: '800' }}>Driver Wise Settlement</h4>
                             </div>
                             <div style={{ borderRadius: '20px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div style={{ overflowX: 'auto' }}>
+                                <div className="scroll-x">
                                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                         <thead>
                                             <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -1010,23 +964,18 @@ const Freelancers = () => {
                                         <tbody>
                                             {drivers.map(driver => {
                                                 const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
-                                                const dEarned = dAttendance.reduce((s, a) => s + (Number(a.dailyWage) || 0), 0);
+                                                const dEarned = dAttendance.reduce((s, a) => {
+                                                    const wage = Number(a.dailyWage) || 0;
+                                                    const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
+                                                    const bonus = (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0);
+                                                    return s + wage + parking + bonus;
+                                                }, 0);
                                                 const dKM = dAttendance.reduce((s, a) => s + (a.totalKM || (a.punchOut?.km - a.punchIn?.km) || 0), 0);
                                                 const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
                                                 const dAdvanced = dAdvances.reduce((s, adv) => s + adv.amount, 0);
-
-                                                // Calculate breakdown of who gave how much
-                                                const providerTotals = dAdvances.reduce((acc, adv) => {
-                                                    const by = adv.givenBy || 'Office';
-                                                    acc[by] = (acc[by] || 0) + adv.amount;
-                                                    return acc;
-                                                }, {});
-                                                const breakdownText = Object.entries(providerTotals)
-                                                    .map(([name, amt]) => `${name} (₹${amt})`)
-                                                    .join(', ');
+                                                const breakdownText = dAdvances.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map(adv => `${new Date(adv.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} (₹${adv.amount})`).join(', ') + (dAdvances.length > 5 ? '...' : '');
 
                                                 const dBalance = dEarned - dAdvanced;
-
                                                 if (dEarned === 0 && dAdvanced === 0) return null;
 
                                                 return (
@@ -1050,7 +999,7 @@ const Freelancers = () => {
                                                         </td>
                                                         <td style={{ padding: '15px 20px', textAlign: 'right' }}>
                                                             <div style={{ color: '#10b981', fontWeight: '900', fontSize: '16px' }}>₹{dEarned.toLocaleString()}</div>
-                                                            <div style={{ color: 'rgba(16, 185, 129, 0.4)', fontSize: '9px', fontWeight: '800' }}>TOTAL WAGES</div>
+                                                            <div style={{ color: 'rgba(16, 185, 129, 0.4)', fontSize: '9px', fontWeight: '800' }}>Wages + Parking + Bonus</div>
                                                         </td>
                                                         <td style={{ padding: '15px 20px', textAlign: 'right' }}>
                                                             <div style={{ color: '#f43f5e', fontWeight: '900', fontSize: '16px' }}>₹{dAdvanced.toLocaleString()}</div>
@@ -1076,31 +1025,12 @@ const Freelancers = () => {
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </motion.div>
                 )}
+
                 {/* LOGISTICS TAB */}
                 {activeTab === 'logistics' && (
-                    <div style={{ animation: 'fadeIn 0.5s ease' }}>
-                        {/* Summary bar */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', marginBottom: '28px' }}>
-                            <div style={{ background: 'rgba(16,185,129,0.07)', border: '1px solid rgba(16,185,129,0.18)', borderRadius: '16px', padding: '18px 20px' }}>
-                                <p style={{ color: 'rgba(16,185,129,0.7)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Total Duties</p>
-                                <h3 style={{ color: 'white', fontSize: '26px', fontWeight: '900', margin: 0 }}>{filteredAttendance.length}</h3>
-                            </div>
-                            <div style={{ background: 'rgba(14,165,233,0.07)', border: '1px solid rgba(14,165,233,0.18)', borderRadius: '16px', padding: '18px 20px' }}>
-                                <p style={{ color: 'rgba(14,165,233,0.7)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Total KM</p>
-                                <h3 style={{ color: 'white', fontSize: '26px', fontWeight: '900', margin: 0 }}>
-                                    {filteredAttendance.reduce((s, a) => s + (a.totalKM || (a.punchOut?.km - a.punchIn?.km) || 0), 0).toLocaleString()}
-                                </h3>
-                            </div>
-                            <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.18)', borderRadius: '16px', padding: '18px 20px' }}>
-                                <p style={{ color: 'rgba(245,158,11,0.7)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 4px 0' }}>Total Earned</p>
-                                <h3 style={{ color: 'white', fontSize: '26px', fontWeight: '900', margin: 0 }}>
-                                    ₹{filteredAttendance.reduce((s, a) => s + (Number(a.dailyWage) || 0), 0).toLocaleString()}
-                                </h3>
-                            </div>
-                        </div>
-
+                    <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
                         {/* Duty Table View */}
                         {filteredAttendance.length === 0 ? (
                             <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '20px' }}>
@@ -1110,7 +1040,7 @@ const Freelancers = () => {
                             </div>
                         ) : (
                             <div style={{ borderRadius: '24px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div style={{ overflowX: 'auto' }}>
+                                <div className="scroll-x">
                                     <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px' }}>
                                         <thead>
                                             <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -1119,7 +1049,7 @@ const Freelancers = () => {
                                                 <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Route Details</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Timing & KM</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Financials</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Financials (+ Parking)</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                                             </tr>
                                         </thead>
@@ -1175,7 +1105,15 @@ const Freelancers = () => {
                                                             <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900' }}>₹{a.dailyWage || a.driver?.dailyWage || 0}</div>
                                                             <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', marginTop: '4px' }}>
                                                                 {a.fuel?.amount > 0 && <span style={{ color: '#f59e0b', fontSize: '9px', fontWeight: '900' }}>F: ₹{a.fuel.amount}</span>}
-                                                                {a.punchOut?.tollParkingAmount > 0 && <span style={{ color: '#8b5cf6', fontSize: '9px', fontWeight: '900' }}>P: ₹{a.punchOut.tollParkingAmount}</span>}
+                                                                {a.punchOut?.tollParkingAmount > 0 && (
+                                                                    <span style={{
+                                                                        color: a.punchOut?.parkingPaidBy === 'Office' ? 'rgba(255,255,255,0.4)' : '#8b5cf6',
+                                                                        fontSize: '9px', fontWeight: '900',
+                                                                        textDecoration: a.punchOut?.parkingPaidBy === 'Office' ? 'line-through' : 'none'
+                                                                    }}>
+                                                                        P: ₹{a.punchOut.tollParkingAmount}{a.punchOut?.parkingPaidBy === 'Office' ? ' (O)' : ' (S)'}
+                                                                    </span>
+                                                                )}
                                                             </div>
                                                         </td>
                                                         <td style={{ padding: '15px 25px', textAlign: 'center' }}>
@@ -1194,79 +1132,85 @@ const Freelancers = () => {
                                 </div>
                             </div>
                         )}
-                    </div>
+                    </motion.div>
                 )}
             </div>
 
             {/* Modals Implementation */}
-            <div>
+            < div >
                 {/* Add Freelancer Modal */}
-                {showAddModal && (
-                    <Modal title="Add New Freelancer" onClose={() => setShowAddModal(false)}>
-                        <form onSubmit={handleCreate} style={{ display: 'grid', gap: '20px' }}>
-                            <Field label="Full Name *" value={formData.name} onChange={v => setFormData({ ...formData, name: v })} required />
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Mobile Number *" value={formData.mobile} onChange={v => setFormData({ ...formData, mobile: v })} required />
-                                <Field label="License Number" value={formData.licenseNumber} onChange={v => setFormData({ ...formData, licenseNumber: v })} />
-                            </div>
-                            <Field label="Daily Wage (₹)" type="number" value={formData.dailyWage} onChange={v => setFormData({ ...formData, dailyWage: v })} />
-                            <SubmitButton disabled={submitting} text="Register Freelancer" message={message} />
-                        </form>
-                    </Modal>
-                )}
+                {
+                    showAddModal && (
+                        <Modal title="Add New Freelancer" onClose={() => setShowAddModal(false)}>
+                            <form onSubmit={handleCreate} style={{ display: 'grid', gap: '20px' }}>
+                                <Field label="Full Name *" value={formData.name} onChange={v => setFormData({ ...formData, name: v })} required />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <Field label="Mobile Number *" value={formData.mobile} onChange={v => setFormData({ ...formData, mobile: v })} required />
+                                    <Field label="License Number" value={formData.licenseNumber} onChange={v => setFormData({ ...formData, licenseNumber: v })} />
+                                </div>
+                                <Field label="Daily Wage (₹)" type="number" value={formData.dailyWage} onChange={v => setFormData({ ...formData, dailyWage: v })} />
+                                <SubmitButton disabled={submitting} text="Register Freelancer" message={message} />
+                            </form>
+                        </Modal>
+                    )
+                }
 
                 {/* Edit Freelancer Modal */}
-                {showEditModal && (
-                    <Modal title={`Edit Freelancer: ${editingDriver?.name}`} onClose={() => setShowEditModal(false)}>
-                        <form onSubmit={handleUpdate} style={{ display: 'grid', gap: '20px' }}>
-                            <Field label="Full Name *" value={editForm.name} onChange={v => setEditForm({ ...editForm, name: v })} required />
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Mobile Number *" value={editForm.mobile} onChange={v => setEditForm({ ...editForm, mobile: v })} required />
-                                <Field label="License Number" value={editForm.licenseNumber} onChange={v => setEditForm({ ...editForm, licenseNumber: v })} />
-                            </div>
-                            <Field label="Daily Wage (₹)" type="number" value={editForm.dailyWage} onChange={v => setEditForm({ ...editForm, dailyWage: v })} />
-                            <SubmitButton disabled={submitting} text="Update Freelancer" message={message} />
-                        </form>
-                    </Modal>
-                )}
+                {
+                    showEditModal && (
+                        <Modal title={`Edit Freelancer: ${editingDriver?.name}`} onClose={() => setShowEditModal(false)}>
+                            <form onSubmit={handleUpdate} style={{ display: 'grid', gap: '20px' }}>
+                                <Field label="Full Name *" value={editForm.name} onChange={v => setEditForm({ ...editForm, name: v })} required />
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Mobile Number *" value={editForm.mobile} onChange={v => setEditForm({ ...editForm, mobile: v })} required />
+                                    <Field label="License Number" value={editForm.licenseNumber} onChange={v => setEditForm({ ...editForm, licenseNumber: v })} />
+                                </div>
+                                <Field label="Daily Wage (₹)" type="number" value={editForm.dailyWage} onChange={v => setEditForm({ ...editForm, dailyWage: v })} />
+                                <SubmitButton disabled={submitting} text="Update Freelancer" message={message} />
+                            </form>
+                        </Modal>
+                    )
+                }
 
                 {/* Punch In Modal */}
-                {showPunchInModal && (
-                    <Modal title={`Assign Duty: ${selectedDriver?.name}`} onClose={() => setShowPunchInModal(false)}>
-                        <form onSubmit={handlePunchIn} style={{ display: 'grid', gap: '25px' }}>
-                            <div>
-                                <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Select Vehicle *</label>
-                                <input
-                                    type="text"
-                                    list="vehicle-list"
-                                    className="input-field"
-                                    placeholder="Type car number..."
-                                    required
-                                    value={vehicleSearch}
-                                    onChange={e => {
-                                        setVehicleSearch(e.target.value);
-                                        const found = vehicles.find(v => v.carNumber?.split('#')[0]?.toUpperCase() === e.target.value.toUpperCase());
-                                        if (found) setPunchInData({ ...punchInData, vehicleId: found._id });
-                                    }}
-                                />
-                                <datalist id="vehicle-list">
-                                    {vehicles.filter(v => !v.currentDriver).map(v => (
-                                        <option key={v._id} value={v.carNumber?.split('#')[0]}>{v.model}</option>
-                                    ))}
-                                </datalist>
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Duty Date *" type="date" value={punchInData.date} onChange={v => setPunchInData({ ...punchInData, date: v })} required />
-                                <Field label="Punch-In Time *" type="datetime-local" value={punchInData.time} onChange={v => setPunchInData({ ...punchInData, time: v })} required />
-                            </div>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Starting KM *" type="number" value={punchInData.km} onChange={v => setPunchInData({ ...punchInData, km: v })} required />
-                                <Field label="Pick-up Location" value={punchInData.pickUpLocation} onChange={v => setPunchInData({ ...punchInData, pickUpLocation: v })} />
-                            </div>
-                            <SubmitButton disabled={submitting} text="Start Duty" />
-                        </form>
-                    </Modal>
-                )}
+                {
+                    showPunchInModal && (
+                        <Modal title={`Assign Duty: ${selectedDriver?.name}`} onClose={() => setShowPunchInModal(false)}>
+                            <form onSubmit={handlePunchIn} style={{ display: 'grid', gap: '25px' }}>
+                                <div>
+                                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Select Vehicle *</label>
+                                    <input
+                                        type="text"
+                                        list="vehicle-list"
+                                        className="input-field"
+                                        placeholder="Type car number..."
+                                        required
+                                        value={vehicleSearch}
+                                        onChange={e => {
+                                            setVehicleSearch(e.target.value);
+                                            const found = vehicles.find(v => v.carNumber?.split('#')[0]?.toUpperCase() === e.target.value.toUpperCase());
+                                            if (found) setPunchInData({ ...punchInData, vehicleId: found._id });
+                                        }}
+                                    />
+                                    <datalist id="vehicle-list">
+                                        {vehicles.filter(v => !v.currentDriver).map(v => (
+                                            <option key={v._id} value={v.carNumber?.split('#')[0]}>{v.model}</option>
+                                        ))}
+                                    </datalist>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Duty Date *" type="date" value={punchInData.date} onChange={v => setPunchInData({ ...punchInData, date: v })} required />
+                                    <Field label="Punch-In Time *" type="datetime-local" value={punchInData.time} onChange={v => setPunchInData({ ...punchInData, time: v })} required />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Starting KM *" type="number" value={punchInData.km} onChange={v => setPunchInData({ ...punchInData, km: v })} required />
+                                    <Field label="Pick-up Location" value={punchInData.pickUpLocation} onChange={v => setPunchInData({ ...punchInData, pickUpLocation: v })} />
+                                </div>
+                                <SubmitButton disabled={submitting} text="Start Duty" />
+                            </form>
+                        </Modal>
+                    )
+                }
 
                 {/* Manual Duty Entry Modal */}
                 <AnimatePresence>
@@ -1339,7 +1283,24 @@ const Freelancers = () => {
 
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
                                         <Field label="Fuel Spent (₹)" type="number" value={manualData.fuelAmount} onChange={v => setManualData({ ...manualData, fuelAmount: v })} />
-                                        <Field label="Parking/Toll (₹)" type="number" value={manualData.parkingAmount} onChange={v => setManualData({ ...manualData, parkingAmount: v })} />
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '15px' }}>
+                                            <Field label="Parking/Toll (₹)" type="number" value={manualData.parkingAmount} onChange={v => setManualData({ ...manualData, parkingAmount: v })} />
+                                            <div>
+                                                <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Paid By</label>
+                                                <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setManualData({ ...manualData, parkingPaidBy: 'Self' })}
+                                                        style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: manualData.parkingPaidBy === 'Self' ? '#fbbf24' : 'transparent', color: manualData.parkingPaidBy === 'Self' ? 'black' : 'white', fontSize: '12px', fontWeight: '800', cursor: 'pointer' }}
+                                                    >Self</button>
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setManualData({ ...manualData, parkingPaidBy: 'Office' })}
+                                                        style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: manualData.parkingPaidBy === 'Office' ? '#fbbf24' : 'transparent', color: manualData.parkingPaidBy === 'Office' ? 'black' : 'white', fontSize: '12px', fontWeight: '800', cursor: 'pointer' }}
+                                                    >Office</button>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
 
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', alignItems: 'end' }}>
@@ -1416,218 +1377,260 @@ const Freelancers = () => {
                 </AnimatePresence>
 
                 {/* Punch Out Modal */}
-                {showPunchOutModal && (
-                    <Modal title={`Duty Completion: ${selectedDriver?.name}`} onClose={() => setShowPunchOutModal(false)}>
-                        <form onSubmit={handlePunchOut} style={{ display: 'grid', gap: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Closing KM *" type="number" value={punchOutData.km} onChange={v => setPunchOutData({ ...punchOutData, km: v })} required />
-                                <Field label="Drop Location" value={punchOutData.dropLocation} onChange={v => setPunchOutData({ ...punchOutData, dropLocation: v })} />
-                            </div>
-                            <Field label="Punch-Out Time *" type="datetime-local" value={punchOutData.time} onChange={v => setPunchOutData({ ...punchOutData, time: v })} required />
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Fuel Spent (₹)" type="number" value={punchOutData.fuelAmount} onChange={v => setPunchOutData({ ...punchOutData, fuelAmount: v })} />
-                                <Field label="Parking/Toll (₹)" type="number" value={punchOutData.parkingAmount} onChange={v => setPunchOutData({ ...punchOutData, parkingAmount: v })} />
-                            </div>
-                            <Field label="Duty Salary (Wage) *" type="number" value={punchOutData.dailyWage} onChange={v => setPunchOutData({ ...punchOutData, dailyWage: v })} required />
-                            <Field label="Remarks" value={punchOutData.review} onChange={v => setPunchOutData({ ...punchOutData, review: v })} />
-                            <SubmitButton disabled={submitting} text="Finish Duty" />
-                        </form>
-                    </Modal>
-                )}
+                {
+                    showPunchOutModal && (
+                        <Modal title={`Duty Completion: ${selectedDriver?.name}`} onClose={() => setShowPunchOutModal(false)}>
+                            <form onSubmit={handlePunchOut} style={{ display: 'grid', gap: '20px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Closing KM *" type="number" value={punchOutData.km} onChange={v => setPunchOutData({ ...punchOutData, km: v })} required />
+                                    <Field label="Drop Location" value={punchOutData.dropLocation} onChange={v => setPunchOutData({ ...punchOutData, dropLocation: v })} />
+                                </div>
+                                <Field label="Punch-Out Time *" type="datetime-local" value={punchOutData.time} onChange={v => setPunchOutData({ ...punchOutData, time: v })} required />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <Field label="Fuel Spent (₹)" type="number" value={punchOutData.fuelAmount} onChange={v => setPunchOutData({ ...punchOutData, fuelAmount: v })} />
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '15px' }}>
+                                        <Field label="Parking/Toll (₹)" type="number" value={punchOutData.parkingAmount} onChange={v => setPunchOutData({ ...punchOutData, parkingAmount: v })} />
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Paid By</label>
+                                            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPunchOutData({ ...punchOutData, parkingPaidBy: 'Self' })}
+                                                    style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: punchOutData.parkingPaidBy === 'Self' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                                >Self</button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setPunchOutData({ ...punchOutData, parkingPaidBy: 'Office' })}
+                                                    style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: punchOutData.parkingPaidBy === 'Office' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                                >Office</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <Field label="Duty Salary (Wage) *" type="number" value={punchOutData.dailyWage} onChange={v => setPunchOutData({ ...punchOutData, dailyWage: v })} required />
+                                <Field label="Remarks" value={punchOutData.review} onChange={v => setPunchOutData({ ...punchOutData, review: v })} />
+                                <SubmitButton disabled={submitting} text="Finish Duty" />
+                            </form>
+                        </Modal>
+                    )
+                }
 
                 {/* Enhanced Advance Payment Modal */}
-                {showAdvanceModal && (
-                    <Modal title="Financial Disbursement" onClose={() => setShowAdvanceModal(false)}>
-                        <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                            <div style={{
-                                width: '70px', height: '70px', borderRadius: '24px', background: 'rgba(16, 185, 129, 0.1)',
-                                display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 15px',
-                                border: '1px solid rgba(16, 185, 129, 0.2)'
-                            }}>
-                                <Download size={32} style={{ color: '#10b981', transform: 'rotate(180deg)' }} />
-                            </div>
-                            <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: '0 0 5px 0' }}>Disburse Advance</h3>
-                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: 0 }}>Processing payment for <span style={{ color: '#6366f1', fontWeight: '800' }}>{selectedDriver?.name?.split(' (F)')[0]}</span></p>
-                        </div>
-
-                        <form onSubmit={handleAddAdvance} style={{ display: 'grid', gap: '25px' }}>
-                            <div>
-                                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Payment Amount (₹) *</label>
-                                <div style={{ position: 'relative' }}>
-                                    <span style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontSize: '20px', fontWeight: '900' }}>₹</span>
-                                    <input
-                                        type="number"
-                                        className="input-field"
-                                        required
-                                        value={advanceData.amount}
-                                        onChange={v => setAdvanceData({ ...advanceData, amount: v.target.value })}
-                                        placeholder="0.00"
-                                        style={{
-                                            paddingLeft: '45px', fontSize: '24px', fontWeight: '900', height: '70px',
-                                            background: 'rgba(5, 8, 15, 0.4)', border: '1px solid rgba(255,255,255,0.1)',
-                                            color: 'white', borderRadius: '20px'
-                                        }}
-                                    />
+                {
+                    showAdvanceModal && (
+                        <Modal title="Financial Disbursement" onClose={() => setShowAdvanceModal(false)}>
+                            <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                                <div style={{
+                                    width: '70px', height: '70px', borderRadius: '24px', background: 'rgba(16, 185, 129, 0.1)',
+                                    display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 15px',
+                                    border: '1px solid rgba(16, 185, 129, 0.2)'
+                                }}>
+                                    <Download size={32} style={{ color: '#10b981', transform: 'rotate(180deg)' }} />
                                 </div>
+                                <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: '0 0 5px 0' }}>Disburse Advance</h3>
+                                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: 0 }}>Processing payment for <span style={{ color: '#6366f1', fontWeight: '800' }}>{selectedDriver?.name?.split(' (F)')[0]}</span></p>
+                            </div>
 
-                                {/* Quick Amounts */}
-                                <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }}>
-                                    {[500, 1000, 2000, 5000].map(amt => (
-                                        <button
-                                            key={amt}
-                                            type="button"
-                                            onClick={() => setAdvanceData({ ...advanceData, amount: amt.toString() })}
+                            <form onSubmit={handleAddAdvance} style={{ display: 'grid', gap: '25px' }}>
+                                <div>
+                                    <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Payment Amount (₹) *</label>
+                                    <div style={{ position: 'relative' }}>
+                                        <span style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontSize: '20px', fontWeight: '900' }}>₹</span>
+                                        <input
+                                            type="number"
+                                            className="input-field"
+                                            required
+                                            value={advanceData.amount}
+                                            onChange={v => setAdvanceData({ ...advanceData, amount: v.target.value })}
+                                            placeholder="0.00"
                                             style={{
-                                                flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)',
-                                                background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)',
-                                                fontSize: '11px', fontWeight: '900', cursor: 'pointer', transition: 'all 0.3s'
+                                                paddingLeft: '45px', fontSize: '24px', fontWeight: '900', height: '70px',
+                                                background: 'rgba(5, 8, 15, 0.4)', border: '1px solid rgba(255,255,255,0.1)',
+                                                color: 'white', borderRadius: '20px'
                                             }}
-                                            onMouseEnter={e => e.currentTarget.style.border = '1px solid rgba(16, 185, 129, 0.3)'}
-                                            onMouseLeave={e => e.currentTarget.style.border = '1px solid rgba(255,255,255,0.05)'}
-                                        >
-                                            +₹{amt}
-                                        </button>
-                                    ))}
+                                        />
+                                    </div>
+
+                                    {/* Quick Amounts */}
+                                    <div style={{ display: 'flex', gap: '8px', marginTop: '15px' }}>
+                                        {[500, 1000, 2000, 5000].map(amt => (
+                                            <button
+                                                key={amt}
+                                                type="button"
+                                                onClick={() => setAdvanceData({ ...advanceData, amount: amt.toString() })}
+                                                style={{
+                                                    flex: 1, padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)',
+                                                    background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)',
+                                                    fontSize: '11px', fontWeight: '900', cursor: 'pointer', transition: 'all 0.3s'
+                                                }}
+                                                onMouseEnter={e => e.currentTarget.style.border = '1px solid rgba(16, 185, 129, 0.3)'}
+                                                onMouseLeave={e => e.currentTarget.style.border = '1px solid rgba(255,255,255,0.05)'}
+                                            >
+                                                +₹{amt}
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '15px' }}>
-                                <Field label="Value Date *" type="date" value={advanceData.date} onChange={v => setAdvanceData({ ...advanceData, date: v })} required />
-                                <Field label="Authorized By *" value={advanceData.givenBy} onChange={v => setAdvanceData({ ...advanceData, givenBy: v })} required />
-                            </div>
-
-                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '15px' }}>Classification</p>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    {['Office', 'Staff', 'Other'].map(type => (
-                                        <button
-                                            key={type}
-                                            type="button"
-                                            onClick={() => setAdvanceData({ ...advanceData, advanceType: type })}
-                                            style={{
-                                                flex: 1, padding: '12px', borderRadius: '14px',
-                                                background: advanceData.advanceType === type ? 'rgba(99, 102, 241, 0.15)' : 'rgba(5, 8, 15, 0.3)',
-                                                color: advanceData.advanceType === type ? '#818cf8' : 'rgba(255,255,255,0.3)',
-                                                fontWeight: '900', fontSize: '12px', cursor: 'pointer',
-                                                border: advanceData.advanceType === type ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(255,255,255,0.02)'
-                                            }}
-                                        >
-                                            {type.toUpperCase()}
-                                        </button>
-                                    ))}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Value Date *" type="date" value={advanceData.date} onChange={v => setAdvanceData({ ...advanceData, date: v })} required />
+                                    <Field label="Authorized By *" value={advanceData.givenBy} onChange={v => setAdvanceData({ ...advanceData, givenBy: v })} required />
                                 </div>
-                            </div>
 
-                            <Field label="Transaction Reference / Remark" placeholder="e.g. Fuel Advance, Emergency..." value={advanceData.remark} onChange={v => setAdvanceData({ ...advanceData, remark: v })} />
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '15px' }}>Classification</p>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        {['Office', 'Staff', 'Other'].map(type => (
+                                            <button
+                                                key={type}
+                                                type="button"
+                                                onClick={() => setAdvanceData({ ...advanceData, advanceType: type })}
+                                                style={{
+                                                    flex: 1, padding: '12px', borderRadius: '14px',
+                                                    background: advanceData.advanceType === type ? 'rgba(99, 102, 241, 0.15)' : 'rgba(5, 8, 15, 0.3)',
+                                                    color: advanceData.advanceType === type ? '#818cf8' : 'rgba(255,255,255,0.3)',
+                                                    fontWeight: '900', fontSize: '12px', cursor: 'pointer',
+                                                    border: advanceData.advanceType === type ? '1px solid rgba(99, 102, 241, 0.3)' : '1px solid rgba(255,255,255,0.02)'
+                                                }}
+                                            >
+                                                {type.toUpperCase()}
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
 
-                            <SubmitButton disabled={submitting} text="DISBURSE FUNDS" message={message} />
-                        </form>
-                    </Modal>
-                )}
+                                <Field label="Transaction Reference / Remark" placeholder="e.g. Fuel Advance, Emergency..." value={advanceData.remark} onChange={v => setAdvanceData({ ...advanceData, remark: v })} />
+
+                                <SubmitButton disabled={submitting} text="DISBURSE FUNDS" message={message} />
+                            </form>
+                        </Modal>
+                    )
+                }
 
                 {/* Document Modal */}
-                {showDocumentModal && (
-                    <Modal title={`Documents: ${selectedDriver?.name}`} onClose={() => setShowDocumentModal(false)}>
-                        <div style={{ display: 'grid', gap: '25px' }}>
-                            {selectedDriver?.documents?.map((doc, i) => (
-                                <div key={i} style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between' }}>
-                                    <div>
-                                        <p style={{ color: 'white', fontWeight: '700', margin: 0 }}>{doc.documentType}</p>
-                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: 0 }}>{doc.expiryDate ? `Expires: ${new Date(doc.expiryDate).toLocaleDateString()}` : 'Lifetime'}</p>
+                {
+                    showDocumentModal && (
+                        <Modal title={`Documents: ${selectedDriver?.name}`} onClose={() => setShowDocumentModal(false)}>
+                            <div style={{ display: 'grid', gap: '25px' }}>
+                                {selectedDriver?.documents?.map((doc, i) => (
+                                    <div key={i} style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between' }}>
+                                        <div>
+                                            <p style={{ color: 'white', fontWeight: '700', margin: 0 }}>{doc.documentType}</p>
+                                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: 0 }}>{doc.expiryDate ? `Expires: ${new Date(doc.expiryDate).toLocaleDateString()}` : 'Lifetime'}</p>
+                                        </div>
+                                        <a href={doc.imageUrl} target="_blank" rel="noreferrer" style={{ color: '#6366f1', fontSize: '11px', fontWeight: '800' }}>VIEW</a>
                                     </div>
-                                    <a href={doc.imageUrl} target="_blank" rel="noreferrer" style={{ color: '#6366f1', fontSize: '11px', fontWeight: '800' }}>VIEW</a>
-                                </div>
-                            ))}
-                            <form onSubmit={handleUploadDocument} style={{ display: 'grid', gap: '15px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                    <Field label="Type" value={documentForm.documentType} onChange={v => setDocumentForm({ ...documentForm, documentType: v })} />
-                                    <Field label="Expiry" type="date" value={documentForm.expiryDate} onChange={v => setDocumentForm({ ...documentForm, expiryDate: v })} />
-                                </div>
-                                <input type="file" onChange={e => setDocumentFile(e.target.files[0])} className="input-field" style={{ height: '48px', paddingTop: '10px' }} />
-                                <SubmitButton disabled={submitting} text="Upload" message={message} />
-                            </form>
-                        </div>
-                    </Modal>
-                )}
+                                ))}
+                                <form onSubmit={handleUploadDocument} style={{ display: 'grid', gap: '15px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <Field label="Type" value={documentForm.documentType} onChange={v => setDocumentForm({ ...documentForm, documentType: v })} />
+                                        <Field label="Expiry" type="date" value={documentForm.expiryDate} onChange={v => setDocumentForm({ ...documentForm, expiryDate: v })} />
+                                    </div>
+                                    <input type="file" onChange={e => setDocumentFile(e.target.files[0])} className="input-field" style={{ height: '48px', paddingTop: '10px' }} />
+                                    <SubmitButton disabled={submitting} text="Upload" message={message} />
+                                </form>
+                            </div>
+                        </Modal>
+                    )
+                }
 
                 {/* Edit Duty Modal */}
-                {showEditDutyModal && (
-                    <Modal title={`Edit Duty Record`} onClose={() => setShowEditDutyModal(false)}>
-                        <form onSubmit={handleUpdateDuty} style={{ display: 'grid', gap: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Duty Date *" type="date" value={editDutyForm.date} onChange={v => setEditDutyForm({ ...editDutyForm, date: v })} required />
+                {
+                    showEditDutyModal && (
+                        <Modal title={`Edit Duty Record`} onClose={() => setShowEditDutyModal(false)}>
+                            <form onSubmit={handleUpdateDuty} style={{ display: 'grid', gap: '20px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Duty Date *" type="date" value={editDutyForm.date} onChange={v => setEditDutyForm({ ...editDutyForm, date: v })} required />
+                                    <div>
+                                        <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Vehicle *</label>
+                                        <select
+                                            className="input-field"
+                                            required
+                                            value={editDutyForm.vehicleId}
+                                            onChange={e => setEditDutyForm({ ...editDutyForm, vehicleId: e.target.value })}
+                                            style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
+                                        >
+                                            <option value="" style={{ background: '#0f172a' }}>Select Car</option>
+                                            {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber?.split('#')[0]}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div>
-                                    <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Vehicle *</label>
+                                    <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Driver *</label>
                                     <select
                                         className="input-field"
                                         required
-                                        value={editDutyForm.vehicleId}
-                                        onChange={e => setEditDutyForm({ ...editDutyForm, vehicleId: e.target.value })}
+                                        value={editDutyForm.driverId}
+                                        onChange={e => setEditDutyForm({ ...editDutyForm, driverId: e.target.value })}
                                         style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
                                     >
-                                        <option value="" style={{ background: '#0f172a' }}>Select Car</option>
-                                        {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber?.split('#')[0]}</option>)}
+                                        <option value="" style={{ background: '#0f172a' }}>Select Driver</option>
+                                        {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name.split(' (F)')[0]}</option>)}
                                     </select>
                                 </div>
-                            </div>
 
-                            <div>
-                                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Driver *</label>
-                                <select
-                                    className="input-field"
-                                    required
-                                    value={editDutyForm.driverId}
-                                    onChange={e => setEditDutyForm({ ...editDutyForm, driverId: e.target.value })}
-                                    style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
-                                >
-                                    <option value="" style={{ background: '#0f172a' }}>Select Driver</option>
-                                    {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name.split(' (F)')[0]}</option>)}
-                                </select>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Punch-In Time" type="datetime-local" value={editDutyForm.punchInTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchInTime: v })} />
-                                <Field label="Punch-Out Time" type="datetime-local" value={editDutyForm.punchOutTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchOutTime: v })} />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Starting KM" type="number" value={editDutyForm.startKm} onChange={v => setEditDutyForm({ ...editDutyForm, startKm: v })} />
-                                <Field label="Closing KM" type="number" value={editDutyForm.endKm} onChange={v => setEditDutyForm({ ...editDutyForm, endKm: v })} />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Pick-up Location" value={editDutyForm.pickUpLocation} onChange={v => setEditDutyForm({ ...editDutyForm, pickUpLocation: v })} />
-                                <Field label="Drop Location" value={editDutyForm.dropLocation} onChange={v => setEditDutyForm({ ...editDutyForm, dropLocation: v })} />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Fuel Spent (₹)" type="number" value={editDutyForm.fuelAmount} onChange={v => setEditDutyForm({ ...editDutyForm, fuelAmount: v })} />
-                                <Field label="Parking/Toll (₹)" type="number" value={editDutyForm.parkingAmount} onChange={v => setEditDutyForm({ ...editDutyForm, parkingAmount: v })} />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                <Field label="Daily Wage (₹) *" type="number" value={editDutyForm.dailyWage} onChange={v => setEditDutyForm({ ...editDutyForm, dailyWage: v })} required />
-                                <Field label="Bonus Amount (₹)" type="number" value={editDutyForm.bonusAmount} onChange={v => setEditDutyForm({ ...editDutyForm, bonusAmount: v })} />
-                            </div>
-
-                            <div style={{ display: 'flex', gap: '15px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <input type="checkbox" checked={editDutyForm.allowanceTA > 0} onChange={e => setEditDutyForm({ ...editDutyForm, allowanceTA: e.target.checked ? 100 : 0 })} />
-                                    <span style={{ fontSize: '12px', color: 'white' }}>Day Bonus</span>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Punch-In Time" type="datetime-local" value={editDutyForm.punchInTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchInTime: v })} />
+                                    <Field label="Punch-Out Time" type="datetime-local" value={editDutyForm.punchOutTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchOutTime: v })} />
                                 </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <input type="checkbox" checked={editDutyForm.nightStayAmount > 0} onChange={e => setEditDutyForm({ ...editDutyForm, nightStayAmount: e.target.checked ? 200 : 0 })} />
-                                    <span style={{ fontSize: '12px', color: 'white' }}>Night Bonus</span>
-                                </div>
-                            </div>
 
-                            <Field label="Remarks" value={editDutyForm.remarks} onChange={v => setEditDutyForm({ ...editDutyForm, remarks: v })} />
-                            <SubmitButton disabled={submitting} text="Update Duty Record" message={message} />
-                        </form>
-                    </Modal>
-                )}
-            </div>
-        </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Starting KM" type="number" value={editDutyForm.startKm} onChange={v => setEditDutyForm({ ...editDutyForm, startKm: v })} />
+                                    <Field label="Closing KM" type="number" value={editDutyForm.endKm} onChange={v => setEditDutyForm({ ...editDutyForm, endKm: v })} />
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Pick-up Location" value={editDutyForm.pickUpLocation} onChange={v => setEditDutyForm({ ...editDutyForm, pickUpLocation: v })} />
+                                    <Field label="Drop Location" value={editDutyForm.dropLocation} onChange={v => setEditDutyForm({ ...editDutyForm, dropLocation: v })} />
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Fuel Spent (₹)" type="number" value={editDutyForm.fuelAmount} onChange={v => setEditDutyForm({ ...editDutyForm, fuelAmount: v })} />
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '15px' }}>
+                                        <Field label="Parking/Toll (₹)" type="number" value={editDutyForm.parkingAmount} onChange={v => setEditDutyForm({ ...editDutyForm, parkingAmount: v })} />
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Paid By</label>
+                                            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Self' })}
+                                                    style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Self' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                                >Self</button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Office' })}
+                                                    style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Office' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                                >Office</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Daily Wage (₹) *" type="number" value={editDutyForm.dailyWage} onChange={v => setEditDutyForm({ ...editDutyForm, dailyWage: v })} required />
+                                    <Field label="Bonus Amount (₹)" type="number" value={editDutyForm.bonusAmount} onChange={v => setEditDutyForm({ ...editDutyForm, bonusAmount: v })} />
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '15px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <input type="checkbox" checked={editDutyForm.allowanceTA > 0} onChange={e => setEditDutyForm({ ...editDutyForm, allowanceTA: e.target.checked ? 100 : 0 })} />
+                                        <span style={{ fontSize: '12px', color: 'white' }}>Day Bonus</span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        <input type="checkbox" checked={editDutyForm.nightStayAmount > 0} onChange={e => setEditDutyForm({ ...editDutyForm, nightStayAmount: e.target.checked ? 200 : 0 })} />
+                                        <span style={{ fontSize: '12px', color: 'white' }}>Night Bonus</span>
+                                    </div>
+                                </div>
+
+                                <Field label="Remarks" value={editDutyForm.remarks} onChange={v => setEditDutyForm({ ...editDutyForm, remarks: v })} />
+                                <SubmitButton disabled={submitting} text="Update Duty Record" message={message} />
+                            </form>
+                        </Modal>
+                    )
+                }
+            </div >
+        </div >
     );
 };
 

@@ -1298,136 +1298,150 @@ const ParkingPage = () => {
                                         <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '50%', padding: '10px', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
                                     </div>
 
-                                    <form onSubmit={handleCreate} style={{ padding: '25px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <Car size={18} style={{ position: 'absolute', left: '15px', top: '16px', color: 'var(--primary)' }} />
-                                                <select
-                                                    className="input-field"
-                                                    style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px 0 45px', width: '100%', outline: 'none', cursor: 'pointer' }}
-                                                    value={formData.vehicleId || ''}
-                                                    onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-                                                    required
-                                                >
-                                                    <option value="" style={{ background: '#1e293b' }}>Select Vehicle</option>
-                                                    {vehicles.map(v => (
-                                                        <option key={v._id} value={v._id} style={{ background: '#1e293b' }}>{v.carNumber}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
+                                    <form onSubmit={handleCreate} style={{ padding: 'clamp(20px, 5vw, 30px)' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
 
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <User size={18} style={{ position: 'absolute', left: '15px', top: '16px', color: 'var(--primary)' }} />
-                                                <select
-                                                    className="input-field"
-                                                    style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px 0 45px', width: '100%', outline: 'none', cursor: 'pointer' }}
-                                                    value={formData.driverId || ''}
-                                                    onChange={(e) => {
-                                                        const selected = drivers.find(d => d._id === e.target.value);
-                                                        setFormData({ ...formData, driverId: e.target.value, driver: selected ? selected.name : '' });
-                                                    }}
-                                                    required
-                                                >
-                                                    <option value="" style={{ background: '#1e293b' }}>Select Driver</option>
-                                                    {drivers.map(d => (
-                                                        <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name}</option>
-                                                    ))}
-                                                </select>
-                                            </div>
-                                        </div>
+                                            {/* Vehicle and Driver */}
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '20px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle *</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <Car size={18} style={{ position: 'absolute', left: '15px', top: '16px', color: 'var(--primary)' }} />
+                                                        <select
+                                                            className="input-field"
+                                                            style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px 0 45px', width: '100%', outline: 'none', cursor: 'pointer' }}
+                                                            value={formData.vehicleId || ''}
+                                                            onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                                                            required
+                                                        >
+                                                            <option value="" style={{ background: '#0f172a' }}>Select Vehicle</option>
+                                                            {vehicles.map(v => (
+                                                                <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
 
-                                        <div style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                                            gap: '15px'
-                                        }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount (₹)</label>
-                                                <div style={{ position: 'relative' }}>
-                                                    <span style={{ position: 'absolute', left: '15px', top: '16px', color: '#34d399', fontWeight: '900' }}>₹</span>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver *</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <User size={18} style={{ position: 'absolute', left: '15px', top: '16px', color: 'var(--primary)' }} />
+                                                        <select
+                                                            className="input-field"
+                                                            style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px 0 45px', width: '100%', outline: 'none', cursor: 'pointer' }}
+                                                            value={formData.driverId || ''}
+                                                            onChange={(e) => {
+                                                                const selected = drivers.find(d => d._id === e.target.value);
+                                                                setFormData({ ...formData, driverId: e.target.value, driver: selected ? selected.name : '' });
+                                                            }}
+                                                            required
+                                                        >
+                                                            <option value="" style={{ background: '#0f172a' }}>Select Driver</option>
+                                                            {drivers.map(d => (
+                                                                <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name}</option>
+                                                            ))}
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Amount and Date */}
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '20px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount (₹) *</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <span style={{ position: 'absolute', left: '15px', top: '16px', color: '#34d399', fontWeight: '900' }}>₹</span>
+                                                        <input
+                                                            type="number"
+                                                            placeholder="0.00"
+                                                            className="input-field"
+                                                            style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px 0 32px', width: '100%', outline: 'none' }}
+                                                            value={formData.amount}
+                                                            onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                                                            required
+                                                        />
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Date *</label>
                                                     <input
-                                                        type="number"
-                                                        placeholder="0.00"
+                                                        type="date"
                                                         className="input-field"
-                                                        style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px 0 32px', width: '100%', outline: 'none' }}
-                                                        value={formData.amount}
-                                                        onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                                                        style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', width: '100%', outline: 'none', colorScheme: 'dark' }}
+                                                        value={formData.date}
+                                                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                                         required
                                                     />
                                                 </div>
                                             </div>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</label>
-                                                <input
-                                                    type="date"
-                                                    className="input-field"
-                                                    style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', width: '100%', outline: 'none', colorScheme: 'dark' }}
-                                                    value={formData.date}
-                                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                                />
-                                            </div>
-                                        </div>
 
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                            <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Parking Photo (Camera)</label>
-                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                                {formData.receiptPhoto ? (
-                                                    <div style={{ position: 'relative' }}>
-                                                        <img src={getImageUrl(formData.receiptPhoto)} alt="Receipt" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover' }} />
-                                                        <button type="button" onClick={() => setFormData({ ...formData, receiptPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                                            {/* Photo Upload */}
+                                            <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                                <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px' }}>Parking Receipt Photo</p>
+                                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+                                                    {formData.receiptPhoto ? (
+                                                        <div style={{ position: 'relative' }}>
+                                                            <img src={getImageUrl(formData.receiptPhoto)} alt="Receipt" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                                            <button type="button" onClick={() => setFormData({ ...formData, receiptPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                                            <div
+                                                                onClick={() => setShowCamera(true)}
+                                                                style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)', transition: 'all 0.3s ease' }}
+                                                            >
+                                                                <Camera size={20} color="var(--text-muted)" />
+                                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Camera</span>
+                                                            </div>
+                                                            <label style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)', transition: 'all 0.3s ease' }}>
+                                                                <ImageIcon size={20} color="var(--text-muted)" />
+                                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Gallery</span>
+                                                                <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
+                                                            </label>
+                                                        </div>
+                                                    )}
+                                                    <div style={{ flex: '1 1 200px' }}>
+                                                        <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>Upload or capture a photo of the parking receipt.</p>
+                                                        <p style={{ margin: '4px 0 0', color: 'var(--text-muted)', fontSize: '10px' }}>Max size: 5MB (JPG, PNG)</p>
                                                     </div>
-                                                ) : (
-                                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                                        <button
-                                                            type="button"
-                                                            onClick={() => setShowCamera(true)}
-                                                            style={{
-                                                                width: '80px', height: '80px', borderRadius: '20px', background: 'linear-gradient(135deg, #fbbf24, #d97706)', border: 'none', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.3s ease', color: 'black', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.3)'
-                                                            }}
-                                                        >
-                                                            <Camera size={24} />
-                                                            <span style={{ fontSize: '10px', marginTop: '4px', fontWeight: '900' }}>Camera</span>
-                                                        </button>
-
-                                                        <label style={{
-                                                            width: '80px', height: '80px', borderRadius: '20px', background: 'rgba(255,255,255,0.05)', border: '2px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.3s ease'
-                                                        }}>
-                                                            <ImageIcon size={20} color="rgba(255,255,255,0.3)" />
-                                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '800' }}>Gallery</span>
-                                                            <input type="file" hidden onChange={handleFileUpload} accept="image/*" />
-                                                        </label>
-                                                    </div>
-                                                )}
-                                                <div style={{ flex: '1 1 200px' }}>
-                                                    <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Use <b>Camera</b> for direct photo or <b>Gallery</b>.</p>
                                                 </div>
                                             </div>
-                                        </div>
 
-                                        <button
-                                            type="submit"
-                                            disabled={submitting}
-                                            style={{
-                                                height: '56px',
-                                                background: 'linear-gradient(135deg, #fbbf24, #d97706)',
-                                                borderRadius: '16px',
-                                                fontWeight: '900',
-                                                fontSize: '16px',
-                                                color: 'black',
-                                                border: 'none',
-                                                boxShadow: '0 12px 24px -8px rgba(251, 191, 36, 0.5)',
-                                                cursor: submitting ? 'not-allowed' : 'pointer',
-                                                transition: 'all 0.3s ease',
-                                                textTransform: 'uppercase',
-                                                letterSpacing: '1px'
-                                            }}
-                                        >
-                                            {submitting ? 'Saving...' : 'Save Record'}
-                                        </button>
+                                            {/* Form Actions */}
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px' }}>
+                                                <button
+                                                    type="submit"
+                                                    disabled={submitting}
+                                                    className="btn-primary"
+                                                    style={{
+                                                        height: '56px',
+                                                        borderRadius: '14px',
+                                                        fontWeight: '900',
+                                                        fontSize: '16px',
+                                                        background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                                                        color: 'black',
+                                                        border: 'none'
+                                                    }}
+                                                >
+                                                    {submitting ? 'Saving...' : (editingId ? 'Update Record' : 'Save Record')}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setShowModal(false)}
+                                                    style={{
+                                                        height: '56px',
+                                                        background: 'rgba(255,255,255,0.05)',
+                                                        color: 'white',
+                                                        border: '1px solid rgba(255,255,255,0.1)',
+                                                        borderRadius: '14px',
+                                                        fontWeight: '700',
+                                                        cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        </div>
                                     </form>
                                 </motion.div>
                             </div>

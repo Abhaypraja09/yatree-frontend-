@@ -848,112 +848,137 @@ const FuelPage = () => {
                                 <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}><X size={20} /></button>
                             </div>
 
-                            <form onSubmit={handleCreate} style={{ padding: '30px' }}>
-                                <div className="form-grid-2">
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Vehicle Number *</label>
-                                        <select
-                                            className="input-field" value={formData.vehicleId} required
-                                            onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-                                        >
-                                            <option value="" style={{ background: '#1e293b' }}>-- Select Car --</option>
-                                            {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#1e293b' }}>{v.carNumber} ({v.model})</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fuel Type</label>
-                                        <div style={{ display: 'flex', gap: '10px' }}>
-                                            {['Diesel', 'Petrol', 'CNG'].map(t => (
-                                                <button
-                                                    key={t} type="button"
-                                                    onClick={() => setFormData({ ...formData, fuelType: t })}
-                                                    style={{ flex: 1, height: '45px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: formData.fuelType === t ? (t === 'Diesel' ? '#f59e0b' : '#0ea5e9') : 'rgba(255,255,255,0.05)', color: formData.fuelType === t ? 'black' : 'white', fontWeight: '800', cursor: 'pointer', transition: 'all 0.2s' }}
-                                                >
-                                                    {t}
-                                                </button>
-                                            ))}
+                            <form onSubmit={handleCreate} style={{ padding: 'clamp(20px, 5vw, 30px)' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                                    {/* Vehicle and Type Selection */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '20px' }}>
+                                        <div>
+                                            <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Vehicle Number *</label>
+                                            <select
+                                                className="input-field"
+                                                value={formData.vehicleId}
+                                                required
+                                                onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                                                style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }}
+                                            >
+                                                <option value="" style={{ background: '#0f172a' }}>-- Select Car --</option>
+                                                {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber} ({v.model})</option>)}
+                                            </select>
                                         </div>
-                                    </div>
-                                </div>
-
-                                <div className="form-grid-3">
-                                    <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Date</label>
-                                        <input type="date" className="input-field" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required />
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Amount (₹) *</label>
-                                        <input type="number" className="input-field" placeholder="e.g. 5000" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required />
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Quantity (L) *</label>
-                                        <input type="number" step="0.01" className="input-field" placeholder="e.g. 50" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} required />
-                                    </div>
-                                </div>
-
-                                <div className="form-grid-3">
-                                    <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Rate (₹/L)</label>
-                                        <input type="number" step="0.01" className="input-field" value={formData.rate} onChange={(e) => setFormData({ ...formData, rate: e.target.value })} placeholder="Auto-calculated" />
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Odometer (KM) *</label>
-                                        <input type="number" className="input-field" placeholder="Current Reading" value={formData.odometer} onChange={(e) => setFormData({ ...formData, odometer: e.target.value })} required />
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Payment Source</label>
-                                        <select className="input-field" value={formData.paymentSource} onChange={(e) => setFormData({ ...formData, paymentSource: e.target.value })}>
-                                            <option value="Yatree Office" style={{ background: '#1e293b' }}>Yatree Office (Default)</option>
-                                            <option value="Guest / Client" style={{ background: '#1e293b' }}>Guest / Client</option>
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="form-grid-2">
-                                    <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Fuel Station Name</label>
-                                        <input className="input-field" placeholder="e.g. HP Petrol Pump" value={formData.stationName} onChange={(e) => setFormData({ ...formData, stationName: e.target.value })} />
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Driver Name / ID *</label>
-                                        <input className="input-field" placeholder="Who fueled the car?" value={formData.driver} onChange={(e) => setFormData({ ...formData, driver: e.target.value })} required />
-                                    </div>
-                                </div>
-
-                                <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)', marginTop: '20px' }}>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px' }}>Fuel Slip / Receipt Photo</p>
-                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                        {formData.slipPhoto ? (
-                                            <div style={{ position: 'relative' }}>
-                                                <img src={getImageUrl(formData.slipPhoto)} alt="Slip" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover' }} />
-                                                <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                                        <div>
+                                            <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fuel Type</label>
+                                            <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '5px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', height: '50px' }}>
+                                                {['Diesel', 'Petrol', 'CNG'].map(t => (
+                                                    <button
+                                                        key={t} type="button"
+                                                        onClick={() => setFormData({ ...formData, fuelType: t })}
+                                                        style={{
+                                                            flex: 1,
+                                                            height: '100%',
+                                                            borderRadius: '10px',
+                                                            border: 'none',
+                                                            background: formData.fuelType === t ? (t === 'Diesel' ? '#f59e0b' : '#0ea5e9') : 'transparent',
+                                                            color: formData.fuelType === t ? 'black' : 'rgba(255,255,255,0.5)',
+                                                            fontWeight: '800',
+                                                            fontSize: '12px',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        {t}
+                                                    </button>
+                                                ))}
                                             </div>
-                                        ) : (
-                                            <label onClick={() => setActiveCamera(true)} style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                                <ImageIcon size={20} color="var(--text-muted)" />
-                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Camera</span>
-                                            </label>
-                                        )}
-                                        <div style={{ flex: 1 }}>
-                                            <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0 }}>Snap a photo of the fuel bill.</p>
-                                            <p style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: '4px' }}>Max size: 5MB (JPG, PNG)</p>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div style={{ display: 'flex', gap: '15px', marginTop: '20px' }}>
-                                    <button
-                                        type="submit" disabled={submitting} className="btn-primary"
-                                        style={{ flex: 2, height: '60px', borderRadius: '16px', fontSize: '16px', fontWeight: '900', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', border: 'none' }}
-                                    >
-                                        {submitting ? 'Saving...' : (editingId ? 'Update Entry' : 'Save Fuel Entry')}
-                                    </button>
-                                    <button
-                                        type="button" onClick={() => setShowModal(false)}
-                                        style={{ flex: 1, background: 'rgba(255,255,255,0.05)', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '700', cursor: 'pointer' }}
-                                    >
-                                        Cancel
-                                    </button>
+                                    {/* Core Transaction Details */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '15px' }}>
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Date *</label>
+                                            <input type="date" className="input-field" value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} required style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
+                                        </div>
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Amount (₹) *</label>
+                                            <input type="number" className="input-field" placeholder="e.g. 5000" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
+                                        </div>
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Quantity (L) *</label>
+                                            <input type="number" step="0.01" className="input-field" placeholder="e.g. 50" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} required style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
+                                        </div>
+                                    </div>
+
+                                    {/* Operational Details */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '15px' }}>
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Rate (₹/L)</label>
+                                            <input type="number" step="0.01" className="input-field" value={formData.rate} onChange={(e) => setFormData({ ...formData, rate: e.target.value })} placeholder="Auto-calculated" style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', color: 'rgba(255,255,255,0.5)', padding: '0 15px' }} />
+                                        </div>
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Odometer (KM) *</label>
+                                            <input type="number" className="input-field" placeholder="Current Reading" value={formData.odometer} onChange={(e) => setFormData({ ...formData, odometer: e.target.value })} required style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
+                                        </div>
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Payment Source</label>
+                                            <select className="input-field" value={formData.paymentSource} onChange={(e) => setFormData({ ...formData, paymentSource: e.target.value })} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }}>
+                                                <option value="Yatree Office" style={{ background: '#0f172a' }}>Yatree Office (Default)</option>
+                                                <option value="Guest / Client" style={{ background: '#0f172a' }}>Guest / Client</option>
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    {/* Vendor and Personnel */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '20px' }}>
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fuel Station Name</label>
+                                            <input className="input-field" placeholder="e.g. HP Petrol Pump" value={formData.stationName} onChange={(e) => setFormData({ ...formData, stationName: e.target.value })} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
+                                        </div>
+                                        <div>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Driver Name / ID *</label>
+                                            <input className="input-field" placeholder="Who fueled the car?" value={formData.driver} onChange={(e) => setFormData({ ...formData, driver: e.target.value })} required style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
+                                        </div>
+                                    </div>
+
+                                    {/* Slip Upload */}
+                                    <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px' }}>Fuel Slip / Receipt Photo</p>
+                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                            {formData.slipPhoto ? (
+                                                <div style={{ position: 'relative' }}>
+                                                    <img src={getImageUrl(formData.slipPhoto)} alt="Slip" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                                    <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                                                </div>
+                                            ) : (
+                                                <div onClick={() => setActiveCamera(true)} style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                                    <ImageIcon size={20} color="var(--text-muted)" />
+                                                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Camera</span>
+                                                </div>
+                                            )}
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0 }}>Snap a photo of the fuel bill.</p>
+                                                <p style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: '4px' }}>Max size: 5MB (JPG, PNG)</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Form Actions */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '15px', marginTop: '10px' }}>
+                                        <button
+                                            type="submit"
+                                            disabled={submitting}
+                                            className="btn-primary"
+                                            style={{ height: '56px', borderRadius: '14px', fontSize: '16px', fontWeight: '900', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', border: 'none', color: 'black' }}
+                                        >
+                                            {submitting ? 'Saving...' : (editingId ? 'Update Entry' : 'Save Fuel Entry')}
+                                        </button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowModal(false)}
+                                            style={{ height: '56px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', fontWeight: '700', cursor: 'pointer' }}
+                                        >
+                                            Cancel
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </motion.div>

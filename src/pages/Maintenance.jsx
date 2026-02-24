@@ -34,7 +34,7 @@ const Maintenance = () => {
     const [filterType, setFilterType] = useState('All');
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [filterVehicle, setFilterVehicle] = useState('All');
+    const [filterGarage, setFilterGarage] = useState('All');
 
     // Form State
     const [formData, setFormData] = useState({
@@ -183,7 +183,7 @@ const Maintenance = () => {
     const resetForm = () => {
         setFormData({
             vehicleId: '',
-            maintenanceType: 'Regular Service',
+            maintenanceType: '',
             category: '',
             partsChanged: [],
             description: '',
@@ -243,13 +243,15 @@ const Maintenance = () => {
         XLSX.writeFile(wb, `Maintenance_Report_${selectedCompany?.name}_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
+    const uniqueGarages = [...new Set(records.map(r => r.garageName || r.vendorName).filter(Boolean))].sort();
+
     const filteredRecords = (records || []).filter(r => {
         const matchesSearch = (r.vehicle?.carNumber?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
             r.maintenanceType?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
             r.garageName?.toLowerCase()?.includes(searchTerm.toLowerCase()));
-        const matchesType = filterType === 'All' || r.maintenanceType === filterType;
-        const matchesVehicle = filterVehicle === 'All' || r.vehicle?._id === filterVehicle;
-        return matchesSearch && matchesType && matchesVehicle;
+        const matchesType = filterType === 'All' || (r.maintenanceType && r.maintenanceType.split(', ').includes(filterType));
+        const matchesGarage = filterGarage === 'All' || (r.garageName || r.vendorName) === filterGarage;
+        return matchesSearch && matchesType && matchesGarage;
     });
 
     const totalMaintenanceCost = filteredRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
@@ -259,48 +261,50 @@ const Maintenance = () => {
             <SEO title="Vehicle Maintenance" description="Track and manage your fleet's maintenance schedules and repair histories." />
 
             {/* Header Section */}
-            <header className="flex-resp" style={{
+            <header className="mobile-stack" style={{
+                display: 'flex',
                 justifyContent: 'space-between',
                 padding: '30px 0',
                 gap: '20px',
-                flexWrap: 'wrap'
+                alignItems: 'center'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{
-                        width: 'clamp(40px,10vw,50px)',
-                        height: 'clamp(40px,10vw,50px)',
+                        width: 'clamp(46px, 10vw, 56px)',
+                        height: 'clamp(46px, 10vw, 56px)',
                         background: 'linear-gradient(135deg, white, #f8fafc)',
                         borderRadius: '16px',
                         padding: '8px',
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                        flexShrink: 0
                     }}>
-                        <Wrench size={28} color="#fbbf24" />
+                        <Wrench size={26} color="#fbbf24" />
                     </div>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
                             <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Health</span>
                         </div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
                             Vehicle <span className="text-gradient-yellow">Maintenance</span>
                         </h1>
                     </div>
                 </div>
 
-                <div className="flex-resp mobile-search-row" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="mobile-stack" style={{ display: 'flex', gap: '12px', flex: '1', justifyContent: 'flex-end', width: '100%' }}>
+                    <div style={{ display: 'flex', gap: '8px', width: '100%', maxWidth: '100%' }}>
                         <select
                             value={selectedMonth}
                             onChange={(e) => setSelectedMonth(Number(e.target.value))}
                             className="input-field"
-                            style={{ height: '50px', width: '130px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px' }}
+                            style={{ height: '48px', flex: 1, borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 12px', fontSize: '13px' }}
                         >
                             {Array.from({ length: 12 }, (_, i) => (
                                 <option key={i + 1} value={i + 1} style={{ background: '#0f172a' }}>
-                                    {new Date(2000, i).toLocaleString('default', { month: 'long' })}
+                                    {new Date(2000, i).toLocaleString('default', { month: 'short' })}
                                 </option>
                             ))}
                         </select>
@@ -309,7 +313,7 @@ const Maintenance = () => {
                             value={selectedYear}
                             onChange={(e) => setSelectedYear(Number(e.target.value))}
                             className="input-field"
-                            style={{ height: '50px', width: '100px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px' }}
+                            style={{ height: '48px', width: '90px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 12px', fontSize: '13px' }}
                         >
                             {Array.from({ length: 5 }, (_, i) => {
                                 const year = new Date().getFullYear() - 2 + i;
@@ -317,36 +321,37 @@ const Maintenance = () => {
                             })}
                         </select>
                     </div>
-                    <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '100%', maxWidth: '300px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: 1 }}>
-                        <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)' }} />
-                        <input
-                            type="text"
-                            placeholder="Search by car, type, garage..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{
-                                background: 'transparent', border: 'none', color: 'white', height: '50px', width: '100%', outline: 'none', fontSize: '14px'
-                            }}
-                        />
+
+                    <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
+                        <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', flex: 1, borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)' }}>
+                            <Search size={16} style={{ margin: '0 12px', color: 'rgba(255,255,255,0.3)' }} />
+                            <input
+                                type="text"
+                                placeholder="Search records..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{
+                                    background: 'transparent', border: 'none', color: 'white', height: '48px', width: '100%', outline: 'none', fontSize: '13px'
+                                }}
+                            />
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                                onClick={downloadExcel}
+                                style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                title="Export Excel"
+                            >
+                                <FileSpreadsheet size={18} />
+                            </button>
+                            <button
+                                onClick={() => { setEditingId(null); resetForm(); setShowModal(true); }}
+                                style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', border: 'none', color: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)' }}
+                                title="Add Record"
+                            >
+                                <Plus size={20} />
+                            </button>
+                        </div>
                     </div>
-                    <button
-                        className="btn-primary"
-                        onClick={downloadExcel}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '52px', padding: '0 20px', borderRadius: '14px', fontWeight: '800', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', whiteSpace: 'nowrap', flexShrink: 0 }}
-                    >
-                        <FileSpreadsheet size={18} /> <span className="hide-mobile">Export Excel</span><span className="show-mobile">Excel</span>
-                    </button>
-                    <button
-                        className="btn-primary"
-                        onClick={() => {
-                            setEditingId(null);
-                            resetForm();
-                            setShowModal(true);
-                        }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', whiteSpace: 'nowrap' }}
-                    >
-                        <Plus size={20} /> <span className="hide-mobile">Add Record</span><span className="show-mobile">Add</span>
-                    </button>
                 </div>
             </header>
 
@@ -390,18 +395,18 @@ const Maintenance = () => {
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#0ea5e9' }}>
-                        <Car size={20} />
+                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#8b5cf6' }}>
+                        <MapPin size={20} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Vehicle Filter</p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Garage Filter</p>
                         <select
-                            value={filterVehicle}
-                            onChange={(e) => setFilterVehicle(e.target.value)}
+                            value={filterGarage}
+                            onChange={(e) => setFilterGarage(e.target.value)}
                             style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '700', fontSize: '14px', width: '100%', outline: 'none', cursor: 'pointer', textOverflow: 'ellipsis' }}
                         >
-                            <option value="All" style={{ background: '#1e293b', color: 'white' }}>Filter Vehicles</option>
-                            {(vehicles || []).map(v => <option key={v._id} value={v._id} style={{ background: '#1e293b', color: 'white' }}>{v.carNumber}</option>)}
+                            <option value="All" style={{ background: '#1e293b', color: 'white' }}>All Garages</option>
+                            {uniqueGarages.map(g => <option key={g} value={g} style={{ background: '#1e293b', color: 'white' }}>{g}</option>)}
                         </select>
                     </div>
                 </motion.div>
@@ -637,144 +642,214 @@ const Maintenance = () => {
                                 <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
                             </div>
 
-
-                            <form onSubmit={handleCreate} style={{ padding: '30px' }}>
-                                <div className="form-grid-2">
+                            <form onSubmit={handleCreate} style={{ padding: 'clamp(20px, 5vw, 30px)' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                                    {/* Maintenance Type Selection */}
                                     <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Select Vehicle *</label>
-                                        <select
-                                            className="input-field"
-                                            value={formData.vehicleId}
-                                            onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
-                                            required
-                                        >
-                                            <option value="" style={{ background: '#1e293b', color: 'white' }}>-- Choose Car --</option>
-                                            {(vehicles || []).map(v => <option key={v._id} value={v._id} style={{ background: '#1e293b', color: 'white' }}>{v.carNumber} ({v.model})</option>)}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Maintenance Type *</label>
-                                        <select
-                                            className="input-field"
-                                            value={formData.maintenanceType}
-                                            onChange={(e) => setFormData({ ...formData, maintenanceType: e.target.value, category: '' })}
-                                            required
-                                        >
-                                            {maintenanceTypes.map(t => <option key={t} value={t} style={{ background: '#1e293b', color: 'white' }}>{t}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="form-grid-2">
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Sub-Category</label>
-                                        <select
-                                            className="input-field"
-                                            value={formData.category}
-                                            onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                                        >
-                                            <option value="" style={{ background: '#1e293b', color: 'white' }}>Select Category</option>
-                                            {(subCategories[formData.maintenanceType] || []).map(c => <option key={c} value={c} style={{ background: '#1e293b', color: 'white' }}>{c}</option>)}
-                                            <option value="Other" style={{ background: '#1e293b', color: 'white' }}>Other / Custom</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Current KM Reading</label>
-                                        <input
-                                            type="number"
-                                            className="input-field"
-                                            placeholder="e.g. 45000"
-                                            value={formData.currentKm}
-                                            onChange={(e) => setFormData({ ...formData, currentKm: e.target.value })}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div style={{ marginBottom: '25px' }}>
-                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Maintenance Description</label>
-                                    <textarea
-                                        className="input-field"
-                                        style={{ height: '80px', paddingTop: '12px' }}
-                                        placeholder="Detailed notes about the work done..."
-                                        value={formData.description}
-                                        onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                                    ></textarea>
-                                </div>
-
-                                <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
-                                    <p style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '20px' }}>Workshop & Billing</p>
-                                    <div className="form-grid-3">
-                                        <div>
-                                            <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Garage Name</label>
-                                            <input className="input-field" placeholder="e.g. Bosch Service" value={formData.garageName} onChange={(e) => setFormData({ ...formData, garageName: e.target.value })} />
-                                        </div>
-                                        <div>
-                                            <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Bill Number</label>
-                                            <input className="input-field" placeholder="INV-001" value={formData.billNumber} onChange={(e) => setFormData({ ...formData, billNumber: e.target.value })} />
-                                        </div>
-                                        <div>
-                                            <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Bill Date</label>
-                                            <input type="date" className="input-field" value={formData.billDate} onChange={(e) => setFormData({ ...formData, billDate: e.target.value })} />
+                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>Maintenance Type (Multiple) *</label>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                            {maintenanceTypes.map(t => {
+                                                const isSelected = formData.maintenanceType.split(', ').includes(t);
+                                                return (
+                                                    <button
+                                                        key={t}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            let current = formData.maintenanceType ? formData.maintenanceType.split(', ').filter(Boolean) : [];
+                                                            if (current.includes(t)) {
+                                                                current = current.filter(x => x !== t);
+                                                            } else {
+                                                                current.push(t);
+                                                            }
+                                                            setFormData({ ...formData, maintenanceType: current.join(', ') });
+                                                        }}
+                                                        style={{
+                                                            padding: '8px 16px',
+                                                            borderRadius: '100px',
+                                                            fontSize: '12px',
+                                                            fontWeight: '700',
+                                                            border: isSelected ? '1px solid rgba(99, 102, 241, 0.4)' : '1px solid transparent',
+                                                            background: isSelected ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255,255,255,0.05)',
+                                                            color: isSelected ? '#818cf8' : 'rgba(255,255,255,0.5)',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s ease'
+                                                        }}
+                                                    >
+                                                        {t}
+                                                    </button>
+                                                );
+                                            })}
                                         </div>
                                     </div>
-                                    <div className="form-grid-3">
+
+                                    {/* Vehicle and Basic Info */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 250px), 1fr))', gap: '20px' }}>
                                         <div>
-                                            <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Amount *</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }}>₹</span>
-                                                <input type="number" className="input-field" style={{ paddingLeft: '30px' }} placeholder="0.00" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Payment Mode</label>
-                                            <select className="input-field" value={formData.paymentMode} onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}>
-                                                <option value="Cash" style={{ background: '#1e293b', color: 'white' }}>Cash</option>
-                                                <option value="UPI" style={{ background: '#1e293b', color: 'white' }}>UPI / GPay</option>
-                                                <option value="Bank Transfer" style={{ background: '#1e293b', color: 'white' }}>Bank Transfer</option>
-                                                <option value="Credit Card" style={{ background: '#1e293b', color: 'white' }}>Credit Card</option>
+                                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Vehicle *</label>
+                                            <select
+                                                className="input-field"
+                                                value={formData.vehicleId}
+                                                onChange={(e) => setFormData({ ...formData, vehicleId: e.target.value })}
+                                                required
+                                                style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }}
+                                            >
+                                                <option value="" style={{ background: '#0f172a' }}>Select Car</option>
+                                                {(vehicles || []).map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber} ({v.model})</option>)}
                                             </select>
                                         </div>
                                         <div>
-                                            <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Bill Photo</label>
-                                            <input type="file" onChange={(e) => setBillPhoto(e.target.files[0])} style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }} />
+                                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Current KM Reading *</label>
+                                            <input
+                                                type="number"
+                                                className="input-field"
+                                                placeholder="e.g. 45000"
+                                                value={formData.currentKm}
+                                                onChange={(e) => setFormData({ ...formData, currentKm: e.target.value })}
+                                                required
+                                                style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }}
+                                            />
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="form-grid-2">
-                                    <div style={{ padding: '20px', background: showNextService ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.02)', borderRadius: '16px', border: showNextService ? '1px solid rgba(16, 185, 129, 0.1)' : '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s ease' }}>
-                                        <div
-                                            onClick={() => setShowNextService(!showNextService)}
-                                            style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: showNextService ? '15px' : '0' }}
-                                        >
-                                            <p style={{ color: showNextService ? '#10b981' : 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Next Service Reminder</p>
-                                            <div style={{ width: '40px', height: '20px', background: showNextService ? '#10b981' : 'rgba(255,255,255,0.1)', borderRadius: '20px', position: 'relative', transition: 'all 0.3s ease' }}>
-                                                <div style={{ width: '16px', height: '16px', background: 'white', borderRadius: '50%', position: 'absolute', top: '2px', left: showNextService ? '22px' : '2px', transition: 'all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)' }}></div>
+                                    {/* Sub-Categories */}
+                                    <div>
+                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px', display: 'block' }}>
+                                            Select Sub-Categories (Multiple)
+                                        </label>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                {(() => {
+                                                    const selectedTypes = formData.maintenanceType.split(', ').filter(Boolean);
+                                                    const availableSubCats = [...new Set(selectedTypes.flatMap(t => subCategories[t] || []))];
+                                                    return availableSubCats.map(cat => {
+                                                        const isSelected = formData.category.split(', ').includes(cat);
+                                                        return (
+                                                            <button
+                                                                key={cat}
+                                                                type="button"
+                                                                onClick={() => {
+                                                                    let current = formData.category ? formData.category.split(', ').filter(Boolean) : [];
+                                                                    if (current.includes(cat)) {
+                                                                        current = current.filter(c => c !== cat);
+                                                                    } else {
+                                                                        current.push(cat);
+                                                                    }
+                                                                    setFormData({ ...formData, category: current.join(', ') });
+                                                                }}
+                                                                style={{
+                                                                    padding: '8px 16px',
+                                                                    borderRadius: '100px',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '700',
+                                                                    border: isSelected ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid transparent',
+                                                                    background: isSelected ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)',
+                                                                    color: isSelected ? '#fbbf24' : 'rgba(255,255,255,0.4)',
+                                                                    boxShadow: isSelected ? '0 0 15px rgba(251, 191, 36, 0.2)' : 'none',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.2s ease'
+                                                                }}
+                                                            >
+                                                                {cat}
+                                                            </button>
+                                                        );
+                                                    });
+                                                })()}
+                                            </div>
+                                            <input
+                                                type="text"
+                                                className="input-field"
+                                                style={{ height: '40px', fontSize: '13px', background: 'transparent', borderBottom: '1px solid rgba(255,255,255,0.1)', borderRadius: 0, paddingLeft: 0 }}
+                                                placeholder="Add custom or other items (comma separated)..."
+                                                value={formData.category}
+                                                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* Description */}
+                                    <div>
+                                        <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Maintenance Description</label>
+                                        <textarea
+                                            className="input-field"
+                                            style={{ height: '80px', paddingTop: '12px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
+                                            placeholder="Detailed notes about the work done..."
+                                            value={formData.description}
+                                            onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                                        ></textarea>
+                                    </div>
+
+                                    {/* Workshop & Billing */}
+                                    <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <p style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '20px' }}>Workshop & Billing</p>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '15px' }}>
+                                            <div>
+                                                <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Garage Name *</label>
+                                                <input required className="input-field" style={{ borderRadius: '10px' }} placeholder="e.g. Bosch Service" value={formData.garageName} onChange={(e) => setFormData({ ...formData, garageName: e.target.value })} />
+                                            </div>
+                                            <div>
+                                                <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Bill Number</label>
+                                                <input className="input-field" style={{ borderRadius: '10px' }} placeholder="INV-001" value={formData.billNumber} onChange={(e) => setFormData({ ...formData, billNumber: e.target.value })} />
+                                            </div>
+                                            <div>
+                                                <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Bill Date *</label>
+                                                <input required type="date" className="input-field" style={{ borderRadius: '10px' }} value={formData.billDate} onChange={(e) => setFormData({ ...formData, billDate: e.target.value })} />
+                                            </div>
+                                            <div>
+                                                <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Amount (₹) *</label>
+                                                <input required type="number" className="input-field" style={{ borderRadius: '10px' }} placeholder="0.00" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
+                                            </div>
+                                            <div>
+                                                <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Payment Mode</label>
+                                                <select className="input-field" style={{ borderRadius: '10px' }} value={formData.paymentMode} onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}>
+                                                    <option value="Cash" style={{ background: '#1e293b' }}>Cash</option>
+                                                    <option value="UPI" style={{ background: '#1e293b' }}>UPI / GPay</option>
+                                                    <option value="Bank Transfer" style={{ background: '#1e293b' }}>Bank Transfer</option>
+                                                    <option value="Credit Card" style={{ background: '#1e293b' }}>Credit Card</option>
+                                                </select>
+                                            </div>
+                                            <div>
+                                                <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Bill Photo</label>
+                                                <input type="file" onChange={(e) => setBillPhoto(e.target.files[0])} style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', width: '100%' }} />
                                             </div>
                                         </div>
-
-                                        {showNextService && (
-                                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ display: 'grid', gap: '15px' }}>
-                                                <input type="number" className="input-field" placeholder="Next Service KM" value={formData.nextServiceKm} onChange={(e) => setFormData({ ...formData, nextServiceKm: e.target.value })} />
-                                            </motion.div>
-                                        )}
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', gap: '15px' }}>
-                                        <button
-                                            type="submit"
-                                            disabled={submitting}
-                                            className="btn-primary"
-                                            style={{ height: '60px', borderRadius: '16px', fontSize: '16px', fontWeight: '900' }}
-                                        >
-                                            {submitting ? 'Saving...' : (editingId ? 'Update Record' : 'Save Maintenance Entry')}
-                                        </button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setShowModal(false)}
-                                            style={{ height: '50px', background: 'rgba(255,255,255,0.05)', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '700', cursor: 'pointer' }}
-                                        >
-                                            Discard
-                                        </button>
+
+                                    {/* Reminders & Actions */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
+                                        <div style={{ padding: '20px', background: showNextService ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.02)', borderRadius: '16px', border: showNextService ? '1px solid rgba(16, 185, 129, 0.1)' : '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s ease' }}>
+                                            <div
+                                                onClick={() => setShowNextService(!showNextService)}
+                                                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: showNextService ? '15px' : '0' }}
+                                            >
+                                                <p style={{ color: showNextService ? '#10b981' : 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Next Service Reminder</p>
+                                                <div style={{ width: '40px', height: '20px', background: showNextService ? '#10b981' : 'rgba(255,255,255,0.1)', borderRadius: '20px', position: 'relative', transition: 'all 0.3s ease' }}>
+                                                    <div style={{ width: '16px', height: '16px', background: 'white', borderRadius: '50%', position: 'absolute', top: '2px', left: showNextService ? '22px' : '2px', transition: 'all 0.3s ease' }}></div>
+                                                </div>
+                                            </div>
+
+                                            {showNextService && (
+                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ display: 'grid', gap: '15px' }}>
+                                                    <input type="number" className="input-field" style={{ borderRadius: '10px' }} placeholder="Next Service KM" value={formData.nextServiceKm} onChange={(e) => setFormData({ ...formData, nextServiceKm: e.target.value })} />
+                                                </motion.div>
+                                            )}
+                                        </div>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                            <button
+                                                type="submit"
+                                                disabled={submitting}
+                                                className="btn-primary"
+                                                style={{ height: '54px', borderRadius: '12px', fontSize: '15px', fontWeight: '900', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black', border: 'none' }}
+                                            >
+                                                {submitting ? 'Saving...' : (editingId ? 'Update Record' : 'Save Record')}
+                                            </button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowModal(false)}
+                                                style={{ height: '44px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                            >
+                                                Discard
+                                            </button>
+                                        </div>
                                     </div>
                                 </div>
                             </form>
