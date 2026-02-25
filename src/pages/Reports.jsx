@@ -372,6 +372,7 @@ const Reports = () => {
     const [selectedItem, setSelectedItem] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterVehicle, setFilterVehicle] = useState('All');
 
     const [selectedReports, setSelectedReports] = useState(['drivers']);
 
@@ -876,10 +877,14 @@ const Reports = () => {
         const term = searchTerm.toLowerCase();
         const driverName = (item.driver?.name || item.driverName || '').toLowerCase();
         const carNum = (item.vehicle?.carNumber || item.carNumber || '').toLowerCase();
-        return driverName.includes(term) || carNum.includes(term);
+        const matchesSearch = driverName.includes(term) || carNum.includes(term);
+        const matchesVehicle = filterVehicle === 'All' || carNum === filterVehicle.toLowerCase();
+        return matchesSearch && matchesVehicle;
     };
 
-    const finalUnifiedList = getUnifiedData().filter(searchFilter);
+    const unifiedData = getUnifiedData();
+    const uniqueVehicles = [...new Set(unifiedData.map(r => r.vehicle?.carNumber || r.carNumber).filter(Boolean))].sort();
+    const finalUnifiedList = unifiedData.filter(searchFilter);
     const filteredReports = finalUnifiedList; // for backward compatibility in mapping
 
     return (
@@ -1061,7 +1066,7 @@ const Reports = () => {
 
             {/* Filter Bar */}
             < div className="flex-resp" style={{ marginBottom: '30px', gap: '15px' }}>
-                <div style={{ position: 'relative', flex: 1, minWidth: 'min(100%, 300px)' }}>
+                <div style={{ position: 'relative', flex: 2, minWidth: 'min(100%, 300px)' }}>
                     <input
                         type="text"
                         placeholder="Search driver or car number..."
@@ -1073,6 +1078,17 @@ const Reports = () => {
                     <Search size={20} style={{ position: 'absolute', left: '16px', top: '15px', color: 'var(--text-muted)' }} />
                 </div>
 
+                <div style={{ flex: 1, minWidth: '200px' }}>
+                    <select
+                        value={filterVehicle}
+                        onChange={(e) => setFilterVehicle(e.target.value)}
+                        className="input-field"
+                        style={{ width: '100%', height: '50px', borderRadius: '15px', marginBottom: 0, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '700' }}
+                    >
+                        <option value="All" style={{ background: '#0f172a' }}>Filter by Car Number</option>
+                        {uniqueVehicles.map(v => <option key={v} value={v} style={{ background: '#0f172a' }}>{v}</option>)}
+                    </select>
+                </div>
             </div >
 
             <div className="scroll-x glass-card hide-mobile" style={{ padding: '0', border: '1px solid rgba(255,255,255,0.05)' }}>

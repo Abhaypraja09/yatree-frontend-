@@ -814,9 +814,9 @@ const Drivers = () => {
                                     <div>
                                         <label className="input-label">Vehicle *</label>
                                         <select className="input-field" value={manualDutyForm.vehicleId} onChange={(e) => setManualDutyForm({ ...manualDutyForm, vehicleId: e.target.value })} required style={{ appearance: 'auto' }}>
-                                            <option value="">Select Vehicle</option>
+                                            <option value="" style={{ background: '#1e293b', color: 'white' }}>Select Vehicle</option>
                                             {vehicles.map(v => (
-                                                <option key={v._id} value={v._id} style={{ color: 'black' }}>{v.carNumber} ({v.model})</option>
+                                                <option key={v._id} value={v._id} style={{ background: '#1e293b', color: 'white' }}>{v.carNumber} ({v.model})</option>
                                             ))}
                                         </select>
                                     </div>

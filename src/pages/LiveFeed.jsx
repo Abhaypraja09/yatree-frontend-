@@ -16,7 +16,7 @@ const LiveFeed = () => {
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('drivers'); // 'drivers', 'vehicles', 'history'
+    const [activeTab, setActiveTab] = useState('vehicles'); // 'drivers', 'vehicles', 'history'
     const [searchQuery, setSearchQuery] = useState('');
     const dateInputRef = useRef(null);
 
@@ -201,8 +201,8 @@ const LiveFeed = () => {
                 {/* Navbar & Search */}
                 <div style={{ padding: '10px 15px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '15px', background: 'rgba(0,0,0,0.1)' }}>
                     <div className="premium-scroll" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '5px' }}>
-                        <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length} />
                         <TabButton id="vehicles" label="Fleet" icon={Car} count={stats?.totalVehicles} />
+                        <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length} />
                         <TabButton id="history" label="Activity" icon={History} />
                     </div>
 

@@ -306,7 +306,8 @@ const FuelPage = () => {
             driver: entry.driver || '',
             fuelType: entry.fuelType || 'Diesel',
             quantity: entry.quantity ? entry.quantity : '', // Pre-fill if driver submitted
-            rate: (entry.quantity && entry.amount) ? (entry.amount / entry.quantity).toFixed(2) : ''
+            rate: (entry.quantity && entry.amount) ? (entry.amount / entry.quantity).toFixed(2) : '',
+            slipPhoto: entry.slipPhoto || ''
         });
         setShowApprovalModal(true);
     };
@@ -945,17 +946,24 @@ const FuelPage = () => {
                                         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                             {formData.slipPhoto ? (
                                                 <div style={{ position: 'relative' }}>
-                                                    <img src={getImageUrl(formData.slipPhoto)} alt="Slip" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
-                                                    <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                                                    <img src={getImageUrl(formData.slipPhoto)} alt="Slip" onClick={() => { setSelectedImage(formData.slipPhoto); setShowImageModal(true); }} style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} title="Click to view slip" />
+                                                    <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}><X size={14} /></button>
                                                 </div>
                                             ) : (
-                                                <div onClick={() => setActiveCamera(true)} style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                                    <ImageIcon size={20} color="var(--text-muted)" />
-                                                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Camera</span>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <div onClick={() => setActiveCamera(true)} style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                                        <ImageIcon size={20} color="var(--text-muted)" />
+                                                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Camera</span>
+                                                    </div>
+                                                    <label style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                                        <Plus size={20} color="var(--text-muted)" />
+                                                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Upload</span>
+                                                        <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                                                    </label>
                                                 </div>
                                             )}
                                             <div style={{ flex: 1 }}>
-                                                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0 }}>Snap a photo of the fuel bill.</p>
+                                                <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: 0 }}>Snap a photo or upload fuel bill.</p>
                                                 <p style={{ color: 'var(--text-muted)', fontSize: '10px', marginTop: '4px' }}>Max size: 5MB (JPG, PNG)</p>
                                             </div>
                                         </div>
@@ -1082,14 +1090,21 @@ const FuelPage = () => {
                                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                         {formData.slipPhoto ? (
                                             <div style={{ position: 'relative' }}>
-                                                <img src={getImageUrl(formData.slipPhoto)} alt="Slip" style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover' }} />
-                                                <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={14} /></button>
+                                                <img src={getImageUrl(formData.slipPhoto)} alt="Slip" onClick={() => { setSelectedImage(formData.slipPhoto); setShowImageModal(true); }} style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} title="Click to view slip" />
+                                                <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}><X size={14} /></button>
                                             </div>
                                         ) : (
-                                            <label onClick={() => setActiveCamera(true)} style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                                <Plus size={20} color="var(--text-muted)" />
-                                                <span style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>Upload</span>
-                                            </label>
+                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                <div onClick={() => setActiveCamera(true)} style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                                    <ImageIcon size={20} color="var(--text-muted)" />
+                                                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Camera</span>
+                                                </div>
+                                                <label style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                                    <Plus size={20} color="var(--text-muted)" />
+                                                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Upload</span>
+                                                    <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                                                </label>
+                                            </div>
                                         )}
                                         <div style={{ flex: 1 }}>
                                             {!formData.slipPhoto && <p style={{ color: '#f59e0b', fontSize: '12px', margin: 0, fontWeight: '700' }}>⚠ No slip attached!</p>}

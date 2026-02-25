@@ -243,7 +243,10 @@ const Maintenance = () => {
         XLSX.writeFile(wb, `Maintenance_Report_${selectedCompany?.name}_${new Date().toISOString().split('T')[0]}.xlsx`);
     };
 
+    const [filterVehicle, setFilterVehicle] = useState('All');
+
     const uniqueGarages = [...new Set(records.map(r => r.garageName || r.vendorName).filter(Boolean))].sort();
+    const uniqueVehicles = [...new Set(records.map(r => r.vehicle?.carNumber).filter(Boolean))].sort();
 
     const filteredRecords = (records || []).filter(r => {
         const matchesSearch = (r.vehicle?.carNumber?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
@@ -251,7 +254,8 @@ const Maintenance = () => {
             r.garageName?.toLowerCase()?.includes(searchTerm.toLowerCase()));
         const matchesType = filterType === 'All' || (r.maintenanceType && r.maintenanceType.split(', ').includes(filterType));
         const matchesGarage = filterGarage === 'All' || (r.garageName || r.vendorName) === filterGarage;
-        return matchesSearch && matchesType && matchesGarage;
+        const matchesVehicle = filterVehicle === 'All' || r.vehicle?.carNumber === filterVehicle;
+        return matchesSearch && matchesType && matchesGarage && matchesVehicle;
     });
 
     const totalMaintenanceCost = filteredRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
@@ -407,6 +411,23 @@ const Maintenance = () => {
                         >
                             <option value="All" style={{ background: '#1e293b', color: 'white' }}>All Garages</option>
                             {uniqueGarages.map(g => <option key={g} value={g} style={{ background: '#1e293b', color: 'white' }}>{g}</option>)}
+                        </select>
+                    </div>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fbbf24' }}>
+                        <Car size={20} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Car Filter</p>
+                        <select
+                            value={filterVehicle}
+                            onChange={(e) => setFilterVehicle(e.target.value)}
+                            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '700', fontSize: '14px', width: '100%', outline: 'none', cursor: 'pointer', textOverflow: 'ellipsis' }}
+                        >
+                            <option value="All" style={{ background: '#1e293b', color: 'white' }}>All Cars</option>
+                            {uniqueVehicles.map(v => <option key={v} value={v} style={{ background: '#1e293b', color: 'white' }}>{v}</option>)}
                         </select>
                     </div>
                 </motion.div>

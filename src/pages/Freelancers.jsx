@@ -1245,8 +1245,8 @@ const Freelancers = () => {
                                                 }}
                                                 style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
                                             >
-                                                <option value="" style={{ background: '#0f172a' }}>Select Driver</option>
-                                                {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name.split(' (F)')[0]}</option>)}
+                                                <option value="" style={{ background: '#0f172a', color: 'white' }}>Select Driver</option>
+                                                {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a', color: 'white' }}>{d.name.split(' (F)')[0]}</option>)}
                                             </select>
                                         </div>
                                         <div>
@@ -1258,8 +1258,8 @@ const Freelancers = () => {
                                                 onChange={e => setManualData({ ...manualData, vehicleId: e.target.value })}
                                                 style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
                                             >
-                                                <option value="" style={{ background: '#0f172a' }}>Select Car</option>
-                                                {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber?.split('#')[0]} - {v.model}</option>)}
+                                                <option value="" style={{ background: '#0f172a', color: 'white' }}>Select Car</option>
+                                                {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a', color: 'white' }}>{v.carNumber?.split('#')[0]} - {v.model}</option>)}
                                             </select>
                                         </div>
                                     </div>
@@ -1550,8 +1550,8 @@ const Freelancers = () => {
                                             onChange={e => setEditDutyForm({ ...editDutyForm, vehicleId: e.target.value })}
                                             style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
                                         >
-                                            <option value="" style={{ background: '#0f172a' }}>Select Car</option>
-                                            {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber?.split('#')[0]}</option>)}
+                                            <option value="" style={{ background: '#0f172a', color: 'white' }}>Select Car</option>
+                                            {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a', color: 'white' }}>{v.carNumber?.split('#')[0]}</option>)}
                                         </select>
                                     </div>
                                 </div>
@@ -1565,8 +1565,8 @@ const Freelancers = () => {
                                         onChange={e => setEditDutyForm({ ...editDutyForm, driverId: e.target.value })}
                                         style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
                                     >
-                                        <option value="" style={{ background: '#0f172a' }}>Select Driver</option>
-                                        {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name.split(' (F)')[0]}</option>)}
+                                        <option value="" style={{ background: '#0f172a', color: 'white' }}>Select Driver</option>
+                                        {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a', color: 'white' }}>{d.name.split(' (F)')[0]}</option>)}
                                     </select>
                                 </div>
 
