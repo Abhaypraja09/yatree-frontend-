@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
-    MapPin, Plus, Search, Trash2, Calendar, History, Car, User, Shield, FileSpreadsheet, Edit, IndianRupee, Eye, X, Image as ImageIcon, Camera
+    MapPin, Plus, Search, Trash2, Calendar, History, Car, User, Shield, FileSpreadsheet, Edit, IndianRupee, Eye, X, Image as ImageIcon, Camera, ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -97,6 +97,8 @@ const ParkingPage = () => {
     const [entries, setEntries] = useState([]);
     const [drivers, setDrivers] = useState([]);
     const [pendingEntries, setPendingEntries] = useState([]);
+    const [rejectedEntries, setRejectedEntries] = useState([]);
+    const [showRejected, setShowRejected] = useState(false);
     const [carServiceEntries, setCarServiceEntries] = useState([]);
     const [activeTab, setActiveTab] = useState('parking'); // 'parking' | 'carservices'
     const [loading, setLoading] = useState(true);
@@ -130,6 +132,7 @@ const ParkingPage = () => {
         if (selectedCompany) {
             fetchEntries();
             fetchPendingEntries();
+            fetchRejectedEntries();
             fetchDrivers();
             fetchVehicles();
             fetchCarServiceEntries();
@@ -155,6 +158,20 @@ const ParkingPage = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setPendingEntries(data || []);
+        } catch (err) { console.error(err); }
+    };
+
+    const fetchRejectedEntries = async () => {
+        if (!selectedCompany?._id) return;
+        try {
+            const userInfoStr = localStorage.getItem('userInfo');
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+            if (!userInfo?.token) return;
+
+            const { data } = await axios.get(`/api/admin/parking/pending/${selectedCompany._id}?status=rejected`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setRejectedEntries(data || []);
         } catch (err) { console.error(err); }
     };
 
@@ -279,6 +296,7 @@ const ParkingPage = () => {
                 { headers: { Authorization: `Bearer ${userInfo.token}` } }
             );
             fetchPendingEntries();
+            fetchRejectedEntries();
             fetchEntries();
         } catch (err) {
             console.error(err);
@@ -580,8 +598,9 @@ const ParkingPage = () => {
                 width: 'fit-content'
             }}>
                 {[
-                    { key: 'parking', label: '🅿️ Parking Logs', count: pendingParking.length, badge: unreadParking > 0 },
-                    { key: 'carservices', label: '🚗 Car Services', count: pendingOther.length, badge: unreadOther > 0 }
+                    { key: 'parking', label: '🅿️ Parking Logs', count: pendingParking.length, badge: unreadParking > 0, activeColor: 'linear-gradient(135deg, #6366f1, #4f46e5)', activeShadow: '0 4px 16px rgba(99,102,241,0.35)' },
+                    { key: 'carservices', label: '🚗 Car Services', count: pendingOther.length, badge: unreadOther > 0, activeColor: 'linear-gradient(135deg, #f59e0b, #d97706)', activeShadow: '0 4px 16px rgba(245,158,11,0.35)' },
+                    { key: 'rejected', label: '🚫 Rejected', count: rejectedEntries.length, badge: rejectedEntries.length > 0, activeColor: 'linear-gradient(135deg, #f43f5e, #e11d48)', activeShadow: '0 4px 16px rgba(244,63,94,0.35)' }
                 ].map(tab => (
                     <button
                         key={tab.key}
@@ -594,15 +613,9 @@ const ParkingPage = () => {
                             border: 'none',
                             cursor: 'pointer',
                             transition: 'all 0.25s ease',
-                            background: activeTab === tab.key
-                                ? tab.key === 'carservices'
-                                    ? 'linear-gradient(135deg, #f59e0b, #d97706)'
-                                    : 'linear-gradient(135deg, #6366f1, #4f46e5)'
-                                : 'transparent',
+                            background: activeTab === tab.key ? tab.activeColor : 'transparent',
                             color: activeTab === tab.key ? 'white' : 'rgba(255,255,255,0.45)',
-                            boxShadow: activeTab === tab.key
-                                ? tab.key === 'carservices' ? '0 4px 16px rgba(245,158,11,0.35)' : '0 4px 16px rgba(99,102,241,0.35)'
-                                : 'none',
+                            boxShadow: activeTab === tab.key ? tab.activeShadow : 'none',
                             position: 'relative'
                         }}
                     >
@@ -612,7 +625,7 @@ const ParkingPage = () => {
                                 position: 'absolute',
                                 top: '-6px',
                                 right: '-6px',
-                                background: '#f43f5e',
+                                background: tab.key === 'rejected' ? '#f43f5e' : '#f43f5e',
                                 color: 'white',
                                 borderRadius: '50%',
                                 width: '18px',
@@ -911,7 +924,14 @@ const ParkingPage = () => {
                                                 {serviceLabel}
                                             </span>
                                             <p style={{ color: 'white', fontSize: '13px', fontWeight: '700', margin: '4px 0 0' }}>{entry.driver}</p>
-                                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: '0' }}>{entry.carNumber}</p>
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
+                                                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>{entry.carNumber}</span>
+                                                {entry.date && (
+                                                    <span style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', border: '1px solid rgba(99,102,241,0.2)' }}>
+                                                        {new Date(entry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '10px' }}>
@@ -944,6 +964,212 @@ const ParkingPage = () => {
                         })}
                     </div>
                 </div>
+            )}
+
+
+            {/* ══════════════════════════════════════════
+                REJECTED REQUESTS TAB
+               ══════════════════════════════════════════ */}
+            {activeTab === 'rejected' && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.35 }}>
+                    {/* Header Stats */}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+                        {[
+                            {
+                                label: 'Total Rejected',
+                                value: rejectedEntries.length,
+                                icon: '🚫', color: '#f43f5e', bg: 'rgba(244,63,94,0.08)', border: 'rgba(244,63,94,0.2)'
+                            },
+                            {
+                                label: 'Parking Rejected',
+                                value: rejectedEntries.filter(e => e.type === 'parking').length,
+                                icon: '🅿️', color: '#818cf8', bg: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.2)'
+                            },
+                            {
+                                label: 'Services Rejected',
+                                value: rejectedEntries.filter(e => e.type === 'other').length,
+                                icon: '🚗', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)'
+                            },
+                            {
+                                label: 'Total Amount',
+                                value: `₹${rejectedEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0).toLocaleString()}`,
+                                icon: '💰', color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)'
+                            }
+                        ].map((stat, i) => (
+                            <motion.div key={i} whileHover={{ y: -4 }} className="glass-card" style={{ padding: '20px 24px', background: stat.bg, border: `1px solid ${stat.border}`, borderRadius: '18px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                <span style={{ fontSize: '28px' }}>{stat.icon}</span>
+                                <div>
+                                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 4px', letterSpacing: '1px' }}>{stat.label}</p>
+                                    <h2 style={{ color: stat.color, fontSize: '24px', fontWeight: '900', margin: 0 }}>{stat.value}</h2>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+
+                    {/* Rejected Entries Grid */}
+                    {rejectedEntries.length === 0 ? (
+                        <div className="glass-card" style={{ padding: '60px 20px', textAlign: 'center', borderRadius: '24px', border: '1px solid rgba(244,63,94,0.1)' }}>
+                            <span style={{ fontSize: '56px', display: 'block', marginBottom: '16px' }}>✅</span>
+                            <h3 style={{ color: 'white', fontWeight: '800', margin: '0 0 8px' }}>No Rejected Entries</h3>
+                            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px', margin: 0 }}>All requests have been approved or are pending review</p>
+                        </div>
+                    ) : (
+                        <>
+                            {/* Sub-filter tabs */}
+                            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+                                {[
+                                    { key: 'all', label: 'All', count: rejectedEntries.length },
+                                    { key: 'parking', label: '🅿️ Parking', count: rejectedEntries.filter(e => e.type === 'parking').length },
+                                    { key: 'other', label: '🚗 Services', count: rejectedEntries.filter(e => e.type === 'other').length }
+                                ].map(sf => {
+                                    const isActive = (window._rejFilter || 'all') === sf.key;
+                                    return null; // We'll show all for simplicity
+                                })}
+                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
+                                {rejectedEntries.map((entry) => {
+                                    const typeLabel = entry.type === 'other' ? (entry.fuelType || 'Service') : 'Parking';
+                                    const typeColor = entry.type === 'other' ? '#f59e0b' : '#818cf8';
+                                    const typeBg = entry.type === 'other' ? 'rgba(245,158,11,0.1)' : 'rgba(129,140,248,0.1)';
+                                    const typeBorder = entry.type === 'other' ? 'rgba(245,158,11,0.2)' : 'rgba(129,140,248,0.2)';
+                                    return (
+                                        <motion.div
+                                            key={entry._id}
+                                            initial={{ opacity: 0, scale: 0.97 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            whileHover={{ y: -4, boxShadow: '0 12px 40px rgba(244,63,94,0.15)' }}
+                                            style={{
+                                                border: '1px solid rgba(244,63,94,0.15)',
+                                                background: 'linear-gradient(145deg, rgba(244,63,94,0.05), rgba(15,23,42,0.7))',
+                                                borderRadius: '20px',
+                                                overflow: 'hidden',
+                                                transition: 'box-shadow 0.3s'
+                                            }}
+                                        >
+                                            {/* Top accent stripe */}
+                                            <div style={{ height: '3px', background: 'linear-gradient(90deg, #f43f5e 0%, #f59e0b 50%, transparent 100%)' }} />
+
+                                            <div style={{ padding: '20px' }}>
+                                                {/* Header: Photo + Amount + Badges */}
+                                                <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start', marginBottom: '16px' }}>
+                                                    {/* Slip Photo */}
+                                                    {entry.slipPhoto ? (
+                                                        <div style={{ position: 'relative', flexShrink: 0 }}>
+                                                            <img
+                                                                src={getImageUrl(entry.slipPhoto)}
+                                                                onClick={() => { setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
+                                                                style={{ width: '64px', height: '64px', borderRadius: '14px', objectFit: 'cover', cursor: 'pointer', border: '2px solid rgba(244,63,94,0.25)', filter: 'grayscale(10%)' }}
+                                                                alt="slip"
+                                                            />
+                                                            <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#f43f5e', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 2px 8px rgba(244,63,94,0.5)' }}>
+                                                                <X size={11} color="white" />
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div style={{ width: '64px', height: '64px', borderRadius: '14px', background: 'rgba(244,63,94,0.07)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', border: '2px dashed rgba(244,63,94,0.2)', flexShrink: 0, gap: '4px' }}>
+                                                            <Eye size={22} color="rgba(244,63,94,0.35)" />
+                                                            <span style={{ color: 'rgba(244,63,94,0.35)', fontSize: '8px', fontWeight: '800' }}>NO SLIP</span>
+                                                        </div>
+                                                    )}
+
+                                                    {/* Amount + Badges */}
+                                                    <div style={{ flex: 1, minWidth: 0 }}>
+                                                        <div style={{ color: '#cbd5e1', fontWeight: '900', fontSize: '24px', letterSpacing: '-0.5px', lineHeight: 1, marginBottom: '8px' }}>
+                                                            ₹{(Number(entry.amount) || 0).toLocaleString()}
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                                                            <span style={{ background: 'rgba(244,63,94,0.12)', color: '#f43f5e', padding: '3px 9px', borderRadius: '8px', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase', border: '1px solid rgba(244,63,94,0.22)', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>✕ REJECTED</span>
+                                                            <span style={{ background: typeBg, color: typeColor, padding: '3px 9px', borderRadius: '8px', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', border: `1px solid ${typeBorder}`, whiteSpace: 'nowrap' }}>{typeLabel}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                {/* Info Card */}
+                                                <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '14px', padding: '14px', marginBottom: '16px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <div style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'rgba(99,102,241,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                <User size={14} color="#818cf8" />
+                                                            </div>
+                                                            <span style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{entry.driver || 'Unknown Driver'}</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <Car size={12} color="#64748b" />
+                                                            <span style={{ color: '#64748b', fontWeight: '700', fontSize: '12px' }}>{entry.carNumber || 'N/A'}</span>
+                                                        </div>
+                                                    </div>
+                                                    {entry.date && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                                                            <Calendar size={12} color="#64748b" />
+                                                            <span style={{ color: '#64748b', fontSize: '12px', fontWeight: '600' }}>
+                                                                {new Date(entry.date).toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                                                            </span>
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Action Buttons */}
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                                    <button
+                                                        onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'approved')}
+                                                        style={{
+                                                            background: 'linear-gradient(135deg, #10b981, #059669)',
+                                                            color: 'white',
+                                                            border: 'none',
+                                                            padding: '12px 10px',
+                                                            borderRadius: '12px',
+                                                            fontWeight: '800',
+                                                            fontSize: '12px',
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            gap: '6px',
+                                                            boxShadow: '0 4px 12px rgba(16,185,129,0.25)',
+                                                            transition: 'all 0.2s',
+                                                            letterSpacing: '0.3px'
+                                                        }}
+                                                        onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 20px rgba(16,185,129,0.4)'; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 12px rgba(16,185,129,0.25)'; }}
+                                                    >
+                                                        ✓ Re-Approve
+                                                    </button>
+                                                    <button
+                                                        onClick={() => {
+                                                            if (window.confirm('Permanently delete this rejected entry? This action cannot be undone.')) {
+                                                                handleApproveReject(entry.attendanceId, entry._id, 'deleted');
+                                                            }
+                                                        }}
+                                                        style={{
+                                                            background: 'rgba(244,63,94,0.08)',
+                                                            color: '#f43f5e',
+                                                            border: '1px solid rgba(244,63,94,0.25)',
+                                                            padding: '12px 10px',
+                                                            borderRadius: '12px',
+                                                            fontWeight: '800',
+                                                            fontSize: '12px',
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            justifyContent: 'center',
+                                                            gap: '6px',
+                                                            transition: 'all 0.2s',
+                                                            letterSpacing: '0.3px'
+                                                        }}
+                                                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(244,63,94,0.18)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                                                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(244,63,94,0.08)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                                    >
+                                                        🗑 Delete Forever
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </motion.div>
+                                    );
+                                })}
+                            </div>
+                        </>
+                    )}
+                </motion.div>
             )}
 
             {/* ══ PARKING TAB CONTENT ══ */}

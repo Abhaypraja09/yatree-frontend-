@@ -464,9 +464,7 @@ const OutsideCars = () => {
                                 <td style={{ padding: '20px 25px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                         <div style={{ fontWeight: '900', fontSize: '18px', color: 'white', letterSpacing: '0.5px' }}>{v.carNumber?.split('#')[0]}</div>
-                                        {v.dutyType?.includes(' + ') && (
-                                            <span style={{ fontSize: '9px', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', padding: '3px 8px', borderRadius: '6px', fontWeight: '900', border: '1px solid rgba(251, 191, 36, 0.2)' }}>COMBINED</span>
-                                        )}
+
                                     </div>
                                     <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>{v.model}</div>
                                 </td>
@@ -540,9 +538,7 @@ const OutsideCars = () => {
                                     <div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                             <span style={{ fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '0.5px' }}>{v.carNumber?.split('#')[0]}</span>
-                                            {v.dutyType?.includes(' + ') && (
-                                                <span style={{ fontSize: '8px', background: 'rgba(251, 191, 36, 0.2)', color: '#fbbf24', padding: '2px 6px', borderRadius: '4px', fontWeight: '900', textTransform: 'uppercase' }}>Combined</span>
-                                            )}
+
                                         </div>
                                         <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: '600' }}>{v.model}</div>
                                     </div>

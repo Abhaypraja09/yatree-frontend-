@@ -23,6 +23,7 @@ const StaffPortal = lazy(() => import('./pages/StaffPortal'));
 const ActiveLogs = lazy(() => import('./pages/ActiveLogs'));
 const Warranties = lazy(() => import('./pages/Warranties'));
 const DriverSalaries = lazy(() => import('./pages/DriverSalaries'));
+const VehicleMonthlyDetails = lazy(() => import('./pages/VehicleMonthlyDetails'));
 const LiveFeed = lazy(() => import('./pages/LiveFeed'));
 import Sidebar from './components/Sidebar';
 import { CompanyProvider } from './context/CompanyContext';
@@ -163,6 +164,7 @@ const AdminRoutes = () => {
       <Route path="parking" element={<Parking />} />
       <Route path="freelancers" element={<Freelancers />} />
       <Route path="reports" element={<Reports />} />
+      <Route path="vehicle-month-details" element={<VehicleMonthlyDetails />} />
 
       <Route path="fuel" element={<Fuel />} />
       <Route path="accident-logs" element={<ActiveLogs />} />

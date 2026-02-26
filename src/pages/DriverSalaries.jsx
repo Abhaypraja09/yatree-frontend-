@@ -516,7 +516,7 @@ const DriverSalaries = () => {
                             {/* Modal Header */}
                             <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to right, rgba(255,255,255,0.02), transparent)', position: 'sticky', top: 0, backdropFilter: 'blur(10px)', zIndex: 5 }}>
                                 <div>
-                                    <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Salary Breakdown</h2>
+                                    <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Salary Breakdown {selectedDriverDetails?.vID && <span style={{ fontSize: '10px', color: '#fbbf24' }}>({selectedDriverDetails.vID})</span>}</h2>
                                     {driverName && <p style={{ color: 'var(--primary)', fontSize: '13px', margin: '4px 0 0', fontWeight: '600' }}>{driverName}</p>}
                                 </div>
                                 <button onClick={() => setShowDetailModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}>

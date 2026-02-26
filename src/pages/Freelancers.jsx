@@ -106,7 +106,7 @@ const Freelancers = () => {
     const [documentForm, setDocumentForm] = useState({ documentType: 'Driving License', expiryDate: '' });
     const [documentFile, setDocumentFile] = useState(null);
     const location = useLocation();
-    const [activeTab, setActiveTab] = useState(location.state?.tab || 'personnel');
+    const [activeTab, setActiveTab] = useState(location.state?.tab || 'logistics');
 
     // Form States
     const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '' });
@@ -221,8 +221,6 @@ const Freelancers = () => {
     const [toDate, setToDate] = useState(getToday());
 
     const [submitting, setSubmitting] = useState(false);
-    const [vehicleSearch, setVehicleSearch] = useState('');
-    const [dutySearch, setDutySearch] = useState('');
     const [message, setMessage] = useState({ type: '', text: '' });
 
 
@@ -567,11 +565,11 @@ const Freelancers = () => {
     const filteredAttendance = attendance.filter(a => {
         const matchesDriver = driverFilter === 'All' || a.driver?._id === driverFilter || a.driver === driverFilter;
         const matchesVehicle = vehicleFilter === 'All' || a.vehicle?._id === vehicleFilter || a.vehicle?.carNumber?.split('#')[0] === vehicleFilter;
-        const matchesSearch = !dutySearch ||
-            a.driver?.name?.toLowerCase().includes(dutySearch.toLowerCase()) ||
-            a.vehicle?.carNumber?.toLowerCase().includes(dutySearch.toLowerCase()) ||
-            a.pickUpLocation?.toLowerCase().includes(dutySearch.toLowerCase()) ||
-            a.dropLocation?.toLowerCase().includes(dutySearch.toLowerCase());
+        const matchesSearch = !searchTerm ||
+            a.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            a.vehicle?.carNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            a.pickUpLocation?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            a.dropLocation?.toLowerCase().includes(searchTerm.toLowerCase());
         return matchesDriver && matchesVehicle && matchesSearch;
     });
 
@@ -656,31 +654,53 @@ const Freelancers = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '15px', flex: 1, width: '100%', maxWidth: '100%' }}>
-                        <div style={{ display: 'flex', gap: '10px', width: '100%' }}>
-                            <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)', flex: 1 }}>
-                                <Search size={18} style={{ margin: '0 12px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                                <input
-                                    type="text"
-                                    placeholder={activeTab === 'logistics' ? "Search in duties..." : "Find personnel..."}
-                                    value={activeTab === 'logistics' ? dutySearch : searchTerm}
-                                    onChange={(e) => activeTab === 'logistics' ? setDutySearch(e.target.value) : setSearchTerm(e.target.value)}
-                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '44px', width: '100%', outline: 'none', fontSize: '13px', paddingRight: '12px' }}
-                                />
+                    <div style={{ display: 'flex', gap: '15px', flex: 1, width: '100%', maxWidth: '100%', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', gap: '10px', width: '100%', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <div style={{ display: 'flex', gap: '8px', flex: '1 1 100%', alignItems: 'center', flexWrap: 'wrap' }}>
+                                <select
+                                    value={driverFilter}
+                                    onChange={(e) => setDriverFilter(e.target.value)}
+                                    style={{
+                                        background: 'rgba(255,255,255,0.05)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '12px',
+                                        color: 'white',
+                                        height: '44px',
+                                        padding: '0 12px',
+                                        fontSize: '13px',
+                                        fontWeight: '700',
+                                        outline: 'none',
+                                        minWidth: '140px'
+                                    }}
+                                >
+                                    <option value="All">All Drivers</option>
+                                    {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name.split(' (F)')[0]}</option>)}
+                                </select>
+
+                                <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)', flex: 2 }}>
+                                    <Search size={18} style={{ margin: '0 12px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                                    <input
+                                        type="text"
+                                        placeholder="Search..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        style={{ background: 'transparent', border: 'none', color: 'white', height: '44px', width: '100%', outline: 'none', fontSize: '13px', paddingRight: '12px' }}
+                                    />
+                                </div>
                             </div>
 
                             <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                                 <button
                                     className="glass-card-hover-effect"
                                     onClick={() => setShowManualModal(true)}
-                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s' }}
                                     title="Manual Entry"
                                 >
                                     <Edit2 size={16} />
                                 </button>
                                 <button
                                     onClick={() => setShowAddModal(true)}
-                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', border: 'none', color: 'black', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)', cursor: 'pointer' }}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', border: 'none', color: 'black', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)', cursor: 'pointer', transition: 'all 0.3s' }}
                                     title="Add Freelancer"
                                 >
                                     <Plus size={18} />
@@ -714,8 +734,8 @@ const Freelancers = () => {
                         maxWidth: '100%'
                     }}>
                         {[
-                            { id: 'personnel', label: 'Drivers', icon: <UserIcon size={14} /> },
                             { id: 'logistics', label: 'Duties', icon: <Car size={14} /> },
+                            { id: 'personnel', label: 'Drivers', icon: <UserIcon size={14} /> },
                             { id: 'accounts', label: 'Settlement', icon: <IndianRupee size={14} /> }
                         ].map(tab => (
                             <button
@@ -743,83 +763,112 @@ const Freelancers = () => {
                     </div>
 
                     {/* Filter Controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', flex: 1, width: '100%', justifyContent: 'flex-start' }}>
-                        <select
-                            value={driverFilter}
-                            onChange={(e) => setDriverFilter(e.target.value)}
-                            className="input-field"
-                            style={{
-                                width: '100%',
-                                maxWidth: '180px',
-                                background: 'rgba(255,255,255,0.03)',
-                                border: '1px solid rgba(255,255,255,0.05)',
-                                height: '42px',
-                                fontSize: '13px',
-                                fontWeight: '700',
-                                outline: 'none'
-                            }}
-                        >
-                            <option value="All">All Drivers</option>
-                            {drivers.map(d => <option key={d._id} value={d._id}>{d.name.split(' (F)')[0]}</option>)}
-                        </select>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1, width: '100%', justifyContent: 'flex-end' }}>
 
-                        <div className="date-selector-container" style={{ width: '100%', maxWidth: '280px' }}>
-                            <div className="date-selector-inner" style={{ padding: '2px', height: '42px' }}>
-                                <button
-                                    onClick={() => {
-                                        const d = new Date(toDate);
-                                        d.setDate(d.getDate() - 1);
-                                        setToDate(d.toISOString().split('T')[0]);
-                                    }}
-                                    style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'white' }}
-                                >
-                                    <ChevronLeft size={16} />
-                                </button>
+                        {/* Premium Modern Calendar UI */}
+                        <div style={{
+                            background: 'rgba(0,0,0,0.25)',
+                            padding: '4px',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                        }}>
+                            <button
+                                onClick={() => {
+                                    const d = new Date(toDate);
+                                    d.setDate(d.getDate() - 1);
+                                    setToDate(d.toISOString().split('T')[0]);
+                                }}
+                                style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    color: 'rgba(255,255,255,0.6)',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                                className="calendar-nav-btn"
+                            >
+                                <ChevronLeft size={18} />
+                            </button>
 
-                                <div
-                                    onClick={() => document.getElementById('main-date-picker').showPicker()}
-                                    style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
-                                >
-                                    <Calendar size={14} color="#fbbf24" />
-                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>
-                                        {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
-                                    </span>
-                                    <input
-                                        id="main-date-picker"
-                                        type="date"
-                                        value={toDate}
-                                        onChange={(e) => setToDate(e.target.value)}
-                                        style={{ visibility: 'hidden', width: 0, position: 'absolute' }}
-                                    />
-                                </div>
+                            <div
+                                onClick={() => document.getElementById('main-date-picker').showPicker()}
+                                style={{
+                                    padding: '0 15px',
+                                    height: '36px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    cursor: 'pointer',
+                                    background: 'rgba(251, 191, 36, 0.1)',
+                                    borderRadius: '10px',
+                                    border: '1px solid rgba(251, 191, 36, 0.15)',
+                                    transition: 'all 0.2s'
+                                }}
+                                className="calendar-date-display"
+                            >
+                                <Calendar size={15} color="#fbbf24" strokeWidth={2.5} />
+                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '900', letterSpacing: '0.5px' }}>
+                                    {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                </span>
+                                <input
+                                    id="main-date-picker"
+                                    type="date"
+                                    value={toDate}
+                                    onChange={(e) => setToDate(e.target.value)}
+                                    style={{ visibility: 'hidden', width: 0, position: 'absolute' }}
+                                />
+                            </div>
 
-                                <button
-                                    onClick={() => {
-                                        const d = new Date(toDate);
-                                        d.setDate(d.getDate() + 1);
-                                        setToDate(d.toISOString().split('T')[0]);
-                                    }}
-                                    style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                >
-                                    <ChevronRight size={16} />
-                                </button>
-                            </div >
-                        </div >
+                            <button
+                                onClick={() => {
+                                    const d = new Date(toDate);
+                                    d.setDate(d.getDate() + 1);
+                                    setToDate(d.toISOString().split('T')[0]);
+                                }}
+                                style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    color: 'rgba(255,255,255,0.6)',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                                className="calendar-nav-btn"
+                            >
+                                <ChevronRight size={18} />
+                            </button>
+                        </div>
 
                         <button
                             onClick={handleDownloadExcel}
                             style={{
-                                height: '42px',
-                                padding: '0 15px',
-                                borderRadius: '12px',
-                                background: 'rgba(16,185,129,0.1)',
+                                background: 'rgba(16, 185, 129, 0.1)',
+                                border: '1px solid rgba(16, 185, 129, 0.2)',
                                 color: '#10b981',
-                                border: '1px solid rgba(16,185,129,0.2)',
+                                padding: '0 15px',
+                                height: '44px',
+                                borderRadius: '13px',
                                 display: 'flex',
                                 alignItems: 'center',
                                 gap: '8px',
+                                fontSize: '11px',
+                                fontWeight: '900',
                                 cursor: 'pointer',
-                                fontSize: '12px',
                                 fontWeight: '800'
                             }}
                             title="Export Reports"
@@ -920,9 +969,7 @@ const Freelancers = () => {
                                                                     style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)', padding: '8px 15px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
                                                                 >START</button>
                                                             )}
-                                                            <button onClick={() => { setSelectedDriver(d); setShowAdvanceModal(true); }} title="Add Advance" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(16,185,129,0.1)', color: '#10b981', border: '1px solid rgba(16,185,129,0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
-                                                                <IndianRupee size={13} />
-                                                            </button>
+                                                            {/* Advance button removed, moved to Settlement */}
                                                             <button onClick={() => openEditModal(d)} title="Edit" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
                                                                 <Edit2 size={13} />
                                                             </button>
@@ -949,80 +996,101 @@ const Freelancers = () => {
                                 <div style={{ width: '3px', height: '16px', background: '#6366f1', borderRadius: '4px' }}></div>
                                 <h4 style={{ margin: 0, color: 'white', fontSize: '15px', fontWeight: '800' }}>Driver Wise Settlement</h4>
                             </div>
-                            <div style={{ borderRadius: '20px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div className="scroll-x">
-                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                        <thead>
-                                            <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <th style={{ padding: '15px 20px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Driver Details</th>
-                                                <th style={{ padding: '15px 20px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Stats (Duties/KM)</th>
-                                                <th style={{ padding: '15px 20px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Total Earned</th>
-                                                <th style={{ padding: '15px 20px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Total Advances</th>
-                                                <th style={{ padding: '15px 20px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Net Balance</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {drivers.map(driver => {
-                                                const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
-                                                const dEarned = dAttendance.reduce((s, a) => {
-                                                    const wage = Number(a.dailyWage) || 0;
-                                                    const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
-                                                    const bonus = (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0);
-                                                    return s + wage + parking + bonus;
-                                                }, 0);
-                                                const dKM = dAttendance.reduce((s, a) => s + (a.totalKM || (a.punchOut?.km - a.punchIn?.km) || 0), 0);
-                                                const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
-                                                const dAdvanced = dAdvances.reduce((s, adv) => s + adv.amount, 0);
-                                                const breakdownText = dAdvances.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5).map(adv => `${new Date(adv.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} (₹${adv.amount})`).join(', ') + (dAdvances.length > 5 ? '...' : '');
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '20px' }}>
+                                {drivers.map(driver => {
+                                    const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
+                                    const dEarned = dAttendance.reduce((s, a) => {
+                                        const wage = Number(a.dailyWage) || 0;
+                                        const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
+                                        const bonus = (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0);
+                                        return s + wage + parking + bonus;
+                                    }, 0);
+                                    const dKM = dAttendance.reduce((s, a) => s + (a.totalKM || (a.punchOut?.km - a.punchIn?.km) || 0), 0);
+                                    const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
+                                    const dAdvanced = dAdvances.reduce((s, adv) => s + adv.amount, 0);
+                                    const breakdownText = dAdvances.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3).map(adv => `${new Date(adv.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} (₹${adv.amount})`).join(' • ') + (dAdvances.length > 3 ? '...' : '');
 
-                                                const dBalance = dEarned - dAdvanced;
-                                                if (dEarned === 0 && dAdvanced === 0) return null;
+                                    const dBalance = dEarned - dAdvanced;
+                                    if (dEarned === 0 && dAdvanced === 0) return null;
 
-                                                return (
-                                                    <tr key={driver._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.02)', transition: 'background 0.2s' }} className="ledger-row">
-                                                        <td style={{ padding: '15px 20px' }}>
-                                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '16px', marginBottom: '4px' }}>{driver.name}</div>
-                                                            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                    <Phone size={10} /> {driver.mobile}
-                                                                </div>
-                                                                {driver.licenseNumber && (
-                                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                        <span style={{ fontSize: '9px', fontWeight: '900', background: 'rgba(255,255,255,0.05)', padding: '1px 4px', borderRadius: '4px' }}>DL</span> {driver.licenseNumber}
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                        </td>
-                                                        <td style={{ padding: '15px 20px', textAlign: 'center' }}>
-                                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{dAttendance.length} Trips</div>
-                                                            <div style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginTop: '2px' }}>{dKM.toLocaleString()} KM Record</div>
-                                                        </td>
-                                                        <td style={{ padding: '15px 20px', textAlign: 'right' }}>
-                                                            <div style={{ color: '#10b981', fontWeight: '900', fontSize: '16px' }}>₹{dEarned.toLocaleString()}</div>
-                                                            <div style={{ color: 'rgba(16, 185, 129, 0.4)', fontSize: '9px', fontWeight: '800' }}>Wages + Parking + Bonus</div>
-                                                        </td>
-                                                        <td style={{ padding: '15px 20px', textAlign: 'right' }}>
-                                                            <div style={{ color: '#f43f5e', fontWeight: '900', fontSize: '16px' }}>₹{dAdvanced.toLocaleString()}</div>
-                                                            <div style={{ color: 'rgba(244, 63, 94, 0.4)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase', marginTop: '2px' }}>
-                                                                {breakdownText || 'No Advances'}
-                                                            </div>
-                                                        </td>
-                                                        <td style={{ padding: '15px 20px', textAlign: 'right' }}>
-                                                            <div style={{
-                                                                padding: '8px 16px', borderRadius: '12px',
-                                                                background: dBalance >= 0 ? 'rgba(16, 185, 129, 0.08)' : 'rgba(244, 63, 94, 0.08)',
-                                                                color: dBalance >= 0 ? '#10b981' : '#f43f5e',
-                                                                fontSize: '17px', fontWeight: '900',
-                                                                display: 'inline-block',
-                                                                border: `1px solid ${dBalance >= 0 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)'}`
-                                                            }}>₹{dBalance.toLocaleString()}</div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            }).filter(Boolean)}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                    return (
+                                        <div key={driver._id} className="glass-card" style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', padding: '25px', position: 'relative', overflow: 'hidden' }}>
+                                            {/* Header */}
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '25px' }}>
+                                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                                    <div style={{ width: '45px', height: '45px', borderRadius: '14px', background: 'linear-gradient(135deg, #4f46e5, #9333ea)', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 8px 20px rgba(147, 51, 234, 0.25)' }}>
+                                                        <UserIcon size={20} color="white" />
+                                                    </div>
+                                                    <div>
+                                                        <h3 style={{ margin: 0, color: 'white', fontSize: '16px', fontWeight: '900' }}>{driver.name.split(' (F)')[0]}</h3>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                                            <Phone size={10} color="rgba(255,255,255,0.4)" />
+                                                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800' }}>{driver.mobile}</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ textAlign: 'right' }}>
+                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Net Balance</div>
+                                                    <div style={{
+                                                        color: dBalance >= 0 ? '#10b981' : '#f43f5e',
+                                                        fontSize: '24px', fontWeight: '950', letterSpacing: '-0.5px',
+                                                        textShadow: dBalance >= 0 ? '0 0 20px rgba(16, 185, 129, 0.3)' : '0 0 20px rgba(244, 63, 94, 0.3)'
+                                                    }}>
+                                                        ₹{dBalance.toLocaleString()}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Stats Grid */}
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '25px' }}>
+                                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }}></div> Total Earned
+                                                    </div>
+                                                    <div style={{ color: 'white', fontSize: '18px', fontWeight: '950' }}>₹{dEarned.toLocaleString()}</div>
+                                                    <div style={{ color: '#818cf8', fontSize: '11px', fontWeight: '800', marginTop: '4px' }}>{dAttendance.length} duties • {dKM.toLocaleString()} KM</div>
+                                                </div>
+
+                                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f43f5e' }}></div> Advances Taken
+                                                    </div>
+                                                    <div style={{ color: '#f43f5e', fontSize: '18px', fontWeight: '950' }}>₹{dAdvanced.toLocaleString()}</div>
+                                                    <div style={{ color: 'rgba(244, 63, 94, 0.6)', fontSize: '11px', fontWeight: '800', marginTop: '4px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                        {breakdownText || 'Clean record'}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Action Buttons */}
+                                            <div style={{ display: 'flex', gap: '12px' }}>
+                                                <button
+                                                    onClick={() => { setSelectedDriver(driver); setShowAdvanceModal(true); }}
+                                                    style={{
+                                                        flex: 1,
+                                                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.25))',
+                                                        color: '#10b981',
+                                                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                                                        padding: '12px',
+                                                        borderRadius: '14px',
+                                                        fontSize: '12px',
+                                                        fontWeight: '900',
+                                                        cursor: 'pointer',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'center',
+                                                        gap: '6px',
+                                                        transition: 'all 0.3s'
+                                                    }}
+                                                    className="btn-hover-glow"
+                                                >
+                                                    <Plus size={14} /> ADD ADVANCE
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                }).filter(Boolean)}
                             </div>
                         </div>
                     </motion.div>
@@ -1474,13 +1542,12 @@ const Freelancers = () => {
 
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                                     <Field label="Value Date *" type="date" value={advanceData.date} onChange={v => setAdvanceData({ ...advanceData, date: v })} required />
-                                    <Field label="Authorized By *" value={advanceData.givenBy} onChange={v => setAdvanceData({ ...advanceData, givenBy: v })} required />
                                 </div>
 
                                 <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '15px' }}>Classification</p>
                                     <div style={{ display: 'flex', gap: '10px' }}>
-                                        {['Office', 'Staff', 'Other'].map(type => (
+                                        {['Office', 'Staff'].map(type => (
                                             <button
                                                 key={type}
                                                 type="button"

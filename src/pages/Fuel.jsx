@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
-    Fuel, Plus, Search, Trash2, Calendar, MapPin, Gauge, Droplets, CreditCard, History, Car, Filter, ChevronDown, User, ArrowUpRight, TrendingUp, Edit, Shield, FileSpreadsheet, Eye, X, Image as ImageIcon
+    Fuel, Plus, Search, Trash2, Calendar, MapPin, Gauge, Droplets, CreditCard, History, Car, Filter, ChevronDown, User, ArrowUpRight, TrendingUp, Edit, Shield, FileSpreadsheet, Eye, X, Image as ImageIcon, Navigation
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -591,7 +591,17 @@ const FuelPage = () => {
                     <div>
                         <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Liters</p>
                         <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{totalLiters.toFixed(2)} L</h2>
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>Combined usage</span>
+                    </div>
+                </motion.div>
+
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', borderLeft: '4px solid #8b5cf6' }}>
+                    <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#8b5cf6' }}>
+                        <Navigation size={24} />
+                    </div>
+                    <div>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Distance</p>
+                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{totalDistance.toLocaleString()} KM</h2>
+                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>Total run</span>
                     </div>
                 </motion.div>
 

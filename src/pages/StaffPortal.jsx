@@ -33,6 +33,8 @@ const StaffPortal = () => {
     const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'attendance', 'leaves', 'salary'
     const [currentTime, setCurrentTime] = useState(new Date());
     const [report, setReport] = useState(null);
+    const [cycles, setCycles] = useState([]);
+    const [selectedCycleIndex, setSelectedCycleIndex] = useState(0);
 
     const [cameraActive, setCameraActive] = useState(false);
     const [capturedPhoto, setCapturedPhoto] = useState(null);
@@ -54,7 +56,7 @@ const StaffPortal = () => {
                 fetchStatus(),
                 fetchHistory(),
                 fetchLeaves(),
-                fetchReport()
+                fetchCycles()
             ]);
             setLoading(false);
         };
@@ -63,14 +65,23 @@ const StaffPortal = () => {
         return () => clearInterval(timer);
     }, []);
 
-    const fetchReport = async () => {
+    const fetchCycles = async () => {
         try {
-            const { data } = await axios.get('/api/staff/report');
-            setReport(data);
+            const { data } = await axios.get('/api/staff/salary-cycles');
+            setCycles(data);
+            if (data && data.length > 0) {
+                setReport(data[selectedCycleIndex]);
+            }
         } catch (error) {
-            console.error('Error fetching report:', error);
+            console.error('Error fetching cycles:', error);
         }
     };
+
+    useEffect(() => {
+        if (cycles && cycles.length > selectedCycleIndex) {
+            setReport(cycles[selectedCycleIndex]);
+        }
+    }, [selectedCycleIndex, cycles]);
 
     const fetchLeaves = async () => {
         try {
@@ -198,7 +209,7 @@ const StaffPortal = () => {
             setCapturedPhoto(null);
             fetchStatus();
             fetchHistory();
-            fetchReport();
+            fetchCycles();
         } catch (error) {
             alert(error.response?.data?.message || 'Error processing punch.');
         } finally {
@@ -244,7 +255,12 @@ const StaffPortal = () => {
                         </div>
                         <div>
                             <h2 style={{ fontSize: '20px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>{user?.name}</h2>
-                            <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', margin: 0 }}>OFFICE OPERATIONS</p>
+                            <p style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', margin: '2px 0 0' }}>{user?.designation || 'Staff Member'}</p>
+                            {user?.joiningDate && (
+                                <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)', fontWeight: '600', margin: '2px 0 0' }}>
+                                    📅 Joined: {new Date(user.joiningDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })} · Cycle: {new Date(user.joiningDate).getDate()}th
+                                </p>
+                            )}
                         </div>
                     </div>
                     <button
@@ -435,13 +451,16 @@ const StaffPortal = () => {
                                     <div key={item._id} style={{ background: 'rgba(30, 41, 59, 0.4)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <div>
                                             <div style={{ fontWeight: '900', fontSize: '15px' }}>{item.date}</div>
-                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', fontWeight: '700' }}>
+                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 {item.status === 'present' ? 'FULL DAY DUTY' : item.status.toUpperCase()}
+                                                {item.punchIn?.location?.address === 'Admin Added' && (
+                                                    <span style={{ background: 'rgba(251,191,36,0.12)', color: '#fbbf24', padding: '2px 7px', borderRadius: '6px', fontSize: '9px', fontWeight: '900', border: '1px solid rgba(251,191,36,0.2)' }}>ADMIN</span>
+                                                )}
                                             </div>
                                         </div>
                                         <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                             <div style={{ textAlign: 'right' }}>
-                                                <div style={{ fontSize: '13px', fontWeight: '900', color: '#10b981' }}>{new Date(item.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</div>
+                                                <div style={{ fontSize: '13px', fontWeight: '900', color: '#10b981' }}>{item.punchIn?.time ? new Date(item.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</div>
                                                 <div style={{ fontSize: '13px', fontWeight: '900', color: '#f43f5e', marginTop: '4px' }}>{item.punchOut?.time ? new Date(item.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</div>
                                             </div>
                                             <ChevronRight size={16} color="rgba(255,255,255,0.1)" />
@@ -527,6 +546,27 @@ const StaffPortal = () => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -10 }}
                         >
+                            {/* Salary Cycle Selector */}
+                            {cycles.length > 0 && (
+                                <div style={{ marginBottom: '20px' }}>
+                                    <label style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', marginBottom: '8px', display: 'block', letterSpacing: '1px' }}>
+                                        SELECT SALARY CYCLE
+                                    </label>
+                                    <select
+                                        className="input-field"
+                                        style={{ height: '52px', background: 'rgba(30,41,59,0.8)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '16px', fontWeight: '700' }}
+                                        value={selectedCycleIndex}
+                                        onChange={(e) => setSelectedCycleIndex(parseInt(e.target.value))}
+                                    >
+                                        {cycles.map((c, idx) => (
+                                            <option key={idx} value={idx}>
+                                                {c.cycleLabel} {idx === 0 ? '(Current)' : ''}
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                            )}
+
                             <div style={{
                                 background: 'linear-gradient(135deg, #0f172a, #020617)',
                                 padding: '40px 30px',
@@ -538,9 +578,11 @@ const StaffPortal = () => {
                                 overflow: 'hidden'
                             }}>
                                 <div style={{ position: 'absolute', top: '-20%', right: '-20%', width: '60%', height: '60%', background: 'radial-gradient(circle, rgba(16, 185, 129, 0.1) 0%, transparent 70%)', filter: 'blur(40px)' }}></div>
-                                <p style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px' }}>Monthly Payroll Estimate</p>
+                                <p style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '15px' }}>{selectedCycleIndex === 0 ? 'Current Cycle Estimate' : 'Cycle Earnings'}</p>
                                 <h1 style={{ fontSize: '56px', fontWeight: '900', color: '#10b981', margin: 0 }}>₹{report?.finalSalary?.toLocaleString() || '0'}</h1>
-                                <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '10px', fontWeight: '600' }}>FOR CYCLE: {report?.month}/{report?.year}</p>
+                                <p style={{ fontSize: '12px', color: '#0ea5e9', marginTop: '10px', fontWeight: '800' }}>
+                                    {report?.cycleLabel || ''}
+                                </p>
                             </div>
 
                             <div style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.06)', overflow: 'hidden' }}>
@@ -558,7 +600,10 @@ const StaffPortal = () => {
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ fontSize: '14px', color: 'rgba(244, 63, 94, 0.6)', fontWeight: '700' }}>Leaves (Over Emergency Buffer)</span>
-                                        <span style={{ fontWeight: '900', color: '#f43f5e' }}>-₹{report?.deduction?.toLocaleString() || '0'}</span>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <span style={{ fontWeight: '900', color: '#f43f5e', display: 'block' }}>-₹{report?.deduction?.toLocaleString() || '0'}</span>
+                                            {report?.extraLeaves > 0 && <span style={{ fontSize: '10px', color: 'rgba(244,63,94,0.6)', fontWeight: '700' }}>({report.extraLeaves} extra leave{report.extraLeaves > 1 ? 's' : ''})</span>}
+                                        </div>
                                     </div>
                                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                                         <span style={{ fontSize: '14px', color: 'rgba(16, 185, 129, 0.6)', fontWeight: '700' }}>Sunday Bonuses</span>

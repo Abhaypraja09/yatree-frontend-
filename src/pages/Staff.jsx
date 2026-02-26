@@ -60,7 +60,8 @@ const Staff = () => {
         email: '',
         designation: '',
         shiftTiming: { start: '09:00', end: '18:00' },
-        officeLocation: { latitude: '', longitude: '', address: '', radius: 200 }
+        officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
+        joiningDate: new Date().toISOString().split('T')[0]
     });
 
     const [locationLoading, setLocationLoading] = useState(false);
@@ -70,6 +71,8 @@ const Staff = () => {
     const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth() + 1).toString());
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
     const [selectedStaffReport, setSelectedStaffReport] = useState(null);
+    const [showBackdateModal, setShowBackdateModal] = useState(false);
+    const [backdateForm, setBackdateForm] = useState({ staffId: '', date: new Date().toISOString().split('T')[0], status: 'present', punchInTime: '', punchOutTime: '' });
 
     useEffect(() => {
         if (selectedCompany) {
@@ -189,7 +192,8 @@ const Staff = () => {
             setFormData({
                 name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
                 email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
-                officeLocation: { latitude: '', longitude: '', address: '', radius: 200 }
+                officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
+                joiningDate: new Date().toISOString().split('T')[0]
             });
         } catch (error) {
             alert(error.response?.data?.message || 'Error adding staff');
@@ -1096,7 +1100,7 @@ const Staff = () => {
 
                                                 return (
                                                     <motion.div
-                                                        key={day}
+                                                        key={dateStr}
                                                         whileHover={{ scale: 1.05, background: 'rgba(255,255,255,0.05)' }}
                                                         style={{
                                                             aspectRatio: '1',

@@ -11,24 +11,50 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
 
+import { DateTime } from 'luxon';
+
 const LiveFeed = () => {
     const { user } = useAuth();
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
+    const [lastUpdated, setLastUpdated] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState('vehicles'); // 'drivers', 'vehicles', 'history'
+    const [activeTab, setActiveTab] = useState('drivers'); // 'drivers', 'vehicles', 'history'
     const [searchQuery, setSearchQuery] = useState('');
+    const [currentTimeIST, setCurrentTimeIST] = useState(DateTime.now().setZone('Asia/Kolkata').toFormat('hh:mm:ss a'));
     const dateInputRef = useRef(null);
 
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTimeIST(DateTime.now().setZone('Asia/Kolkata').toFormat('hh:mm:ss a'));
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
+
     const getTodayLocal = () => {
-        const d = new Date();
-        const offset = d.getTimezoneOffset();
-        const localDate = new Date(d.getTime() - (offset * 60 * 1000));
-        return localDate.toISOString().split('T')[0];
+        return DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd');
     };
 
     const formatDate = (dateStr) => {
-        return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+        if (!dateStr) return 'N/A';
+        return DateTime.fromISO(dateStr).setLocale('en-IN').toFormat('dd MMM yyyy');
+    };
+
+    const formatTime = (timeStr) => {
+        if (!timeStr) return '--:--';
+        // Handle both ISO strings and JavaScript Date objects
+        const dt = typeof timeStr === 'string' ? DateTime.fromISO(timeStr) : DateTime.fromJSDate(timeStr);
+        return dt.setZone('Asia/Kolkata').toFormat('hh:mm a');
+    };
+
+    const formatDuration = (start, end) => {
+        if (!start || !end) return '0h';
+        const d1 = typeof start === 'string' ? DateTime.fromISO(start) : DateTime.fromJSDate(start);
+        const d2 = typeof end === 'string' ? DateTime.fromISO(end) : DateTime.fromJSDate(end);
+        const diff = d2.diff(d1, ['hours', 'minutes']).toObject();
+        const h = Math.floor(Math.abs(diff.hours || 0));
+        const m = Math.floor(Math.abs(diff.minutes || 0));
+        return `${h}h ${m}m`;
     };
 
     const fetchFeed = async () => {
@@ -41,6 +67,7 @@ const LiveFeed = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setStats(data);
+            setLastUpdated(DateTime.now().setZone('Asia/Kolkata').toFormat('hh:mm:ss a'));
         } catch (err) {
             console.error('Error fetching feed', err);
         } finally {
@@ -64,9 +91,9 @@ const LiveFeed = () => {
         v.model.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
 
-    // History is derived from dutyHistoryThisMonth (last 30 days) filtered up to selectedDate and by searchQuery
+    // History is filtered for the selectedDate and by searchQuery
     const dutyHistory = (stats?.dutyHistoryThisMonth || [])
-        .filter(log => new Date(log.date) <= new Date(selectedDate))
+        .filter(log => log.date === selectedDate)
         .filter(log =>
             searchQuery === '' ||
             log.driver?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -151,6 +178,17 @@ const LiveFeed = () => {
                             <h1 style={{ color: 'white', fontSize: 'clamp(24px, 6vw, 40px)', fontWeight: '950', margin: 0, letterSpacing: '-2px' }}>
                                 Live <span style={{ color: '#0ea5e9' }}>Feed</span> Hub
                             </h1>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginTop: '4px' }}>
+                                {lastUpdated && (
+                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>
+                                        LAST SYNC: {lastUpdated}
+                                    </div>
+                                )}
+                                <div style={{ borderLeft: '1px solid rgba(255,255,255,0.1)', height: '10px' }}></div>
+                                <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '800', letterSpacing: '0.5px' }}>
+                                    {currentTimeIST}
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -191,6 +229,28 @@ const LiveFeed = () => {
                                 <ChevronRight size={20} />
                             </button>
                         </div>
+                        <button
+                            onClick={fetchFeed}
+                            disabled={loading}
+                            style={{
+                                width: '45px',
+                                height: '45px',
+                                borderRadius: '14px',
+                                background: loading ? 'rgba(255,255,255,0.02)' : 'rgba(14, 165, 233, 0.1)',
+                                border: '1px solid rgba(14, 165, 233, 0.2)',
+                                color: '#0ea5e9',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                transition: 'all 0.3s'
+                            }}
+                            title="Refresh Feed"
+                        >
+                            <motion.div animate={{ rotate: loading ? 360 : 0 }} transition={{ repeat: loading ? Infinity : 0, duration: 1, ease: 'linear' }}>
+                                <History size={20} />
+                            </motion.div>
+                        </button>
                     </div>
                 </div>
             </header>
@@ -201,8 +261,8 @@ const LiveFeed = () => {
                 {/* Navbar & Search */}
                 <div style={{ padding: '10px 15px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '15px', background: 'rgba(0,0,0,0.1)' }}>
                     <div className="premium-scroll" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '5px' }}>
-                        <TabButton id="vehicles" label="Fleet" icon={Car} count={stats?.totalVehicles} />
                         <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length} />
+                        <TabButton id="vehicles" label="Fleet" icon={Car} count={stats?.totalVehicles} />
                         <TabButton id="history" label="Activity" icon={History} />
                     </div>
 
@@ -329,8 +389,8 @@ const LiveFeed = () => {
                                                                         </div>
 
                                                                         <div style={{ display: 'flex', gap: '6px', fontSize: '9px', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>
-                                                                            {att.punchIn?.time && <span>IN: {new Date(att.punchIn.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>}
-                                                                            {att.punchOut?.time && <span>| OUT: {new Date(att.punchOut.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>}
+                                                                            {att.punchIn?.time && <span>IN: {formatTime(att.punchIn.time)}</span>}
+                                                                            {att.punchOut?.time && <span>| OUT: {formatTime(att.punchOut.time)}</span>}
                                                                         </div>
                                                                     </div>
                                                                 );
@@ -424,8 +484,8 @@ const LiveFeed = () => {
                                                                     </div>
 
                                                                     <div style={{ display: 'flex', gap: '6px', fontSize: '9px', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>
-                                                                        {att.punchIn?.time && <span>IN: {new Date(att.punchIn.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>}
-                                                                        {att.punchOut?.time && <span>| OUT: {new Date(att.punchOut.time).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>}
+                                                                        {att.punchIn?.time && <span>IN: {formatTime(att.punchIn.time)}</span>}
+                                                                        {att.punchOut?.time && <span>| OUT: {formatTime(att.punchOut.time)}</span>}
                                                                     </div>
                                                                 </div>
                                                             );
@@ -519,7 +579,7 @@ const LiveFeed = () => {
                                                 <div>
                                                     <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: '800', marginBottom: '4px', textTransform: 'uppercase' }}>Punch In</div>
                                                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                                                        <span style={{ color: '#10b981', fontSize: '16px', fontWeight: '900' }}>{log.punchIn?.time ? new Date(log.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+                                                        <span style={{ color: '#10b981', fontSize: '16px', fontWeight: '900' }}>{formatTime(log.punchIn?.time)}</span>
                                                         <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: '700' }}>{log.punchIn?.km || 0} KM</span>
                                                     </div>
                                                     <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
@@ -534,7 +594,7 @@ const LiveFeed = () => {
                                                     {log.punchOut?.time ? (
                                                         <>
                                                             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                                                                <span style={{ color: '#f43f5e', fontSize: '16px', fontWeight: '900' }}>{new Date(log.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                                <span style={{ color: '#f43f5e', fontSize: '16px', fontWeight: '900' }}>{formatTime(log.punchOut.time)}</span>
                                                                 <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: '700' }}>{log.punchOut.km || 0} KM</span>
                                                             </div>
                                                             <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
@@ -569,15 +629,12 @@ const LiveFeed = () => {
                                                         <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: '800' }}>Total Duty KM:</span>
                                                         <span style={{ fontSize: '16px', color: 'white', fontWeight: '900' }}>{log.totalKM || 0} <span style={{ fontSize: '10px', opacity: 0.5 }}>KM</span></span>
                                                     </div>
-                                                    {log.status === 'completed' && log.punchOut?.time && log.punchIn?.time && (() => {
-                                                        const hrs = ((new Date(log.punchOut.time) - new Date(log.punchIn.time)) / (1000 * 60 * 60)).toFixed(1);
-                                                        return (
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                                                                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: '800' }}>Duration:</span>
-                                                                <span style={{ fontSize: '13px', color: '#8b5cf6', fontWeight: '900' }}>{hrs} Hours</span>
-                                                            </div>
-                                                        );
-                                                    })()}
+                                                    {log.status === 'completed' && log.punchOut?.time && log.punchIn?.time && (
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                                                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: '800' }}>Duration:</span>
+                                                            <span style={{ fontSize: '13px', color: '#8b5cf6', fontWeight: '900' }}>{formatDuration(log.punchIn.time, log.punchOut.time)}</span>
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>

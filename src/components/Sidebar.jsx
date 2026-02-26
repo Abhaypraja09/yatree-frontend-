@@ -42,12 +42,13 @@ const Sidebar = ({ isOpen, onClose }) => {
         { path: '/admin/parking', icon: MapPin, label: 'Parking' },
         { path: '/admin/staff', icon: Users, label: 'Staff Management' },
         { path: '/admin/reports', icon: ClipboardList, label: 'Daily Reports' },
+        { path: '/admin/vehicle-month-details', icon: ClipboardList, label: 'Car Logs' },
         { path: '/admin/accident-logs', icon: AlertTriangle, label: 'Active Logs' },
         { path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins' },
     ];
 
     const menuItems = user.role === 'Executive'
-        ? allMenuItems.filter(item => ['Dashboard', 'Live Feed', 'Freelancers', 'Outside Cars', 'Maintenance', 'Parts Warranty', 'Fuel', 'Parking', 'Daily Reports', 'Active Logs', 'Staff Management', 'Driver Salaries'].includes(item.label))
+        ? allMenuItems.filter(item => ['Dashboard', 'Live Feed', 'Freelancers', 'Outside Cars', 'Maintenance', 'Parts Warranty', 'Fuel', 'Parking', 'Daily Reports', 'Car Logs', 'Active Logs', 'Staff Management', 'Driver Salaries'].includes(item.label))
         : allMenuItems;
 
     const logoMap = {
