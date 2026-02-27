@@ -29,7 +29,9 @@ import {
     Printer,
     FileText,
     Settings,
-    LayoutDashboard
+    LayoutDashboard,
+    ShieldCheck,
+    DollarSign
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -73,6 +75,8 @@ const Staff = () => {
     const [selectedStaffReport, setSelectedStaffReport] = useState(null);
     const [showBackdateModal, setShowBackdateModal] = useState(false);
     const [backdateForm, setBackdateForm] = useState({ staffId: '', date: new Date().toISOString().split('T')[0], status: 'present', punchInTime: '', punchOutTime: '' });
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingStaffId, setEditingStaffId] = useState(null);
 
     useEffect(() => {
         if (selectedCompany) {
@@ -183,11 +187,21 @@ const Staff = () => {
     const handleAddStaff = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/admin/staff', {
-                ...formData,
-                companyId: selectedCompany._id
-            });
+            if (isEditing) {
+                await axios.put(`/api/admin/staff/${editingStaffId}`, {
+                    ...formData,
+                    companyId: selectedCompany._id
+                });
+                alert('Staff updated successfully');
+            } else {
+                await axios.post('/api/admin/staff', {
+                    ...formData,
+                    companyId: selectedCompany._id
+                });
+            }
             setShowAddModal(false);
+            setIsEditing(false);
+            setEditingStaffId(null);
             fetchStaff();
             setFormData({
                 name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
@@ -196,7 +210,41 @@ const Staff = () => {
                 joiningDate: new Date().toISOString().split('T')[0]
             });
         } catch (error) {
-            alert(error.response?.data?.message || 'Error adding staff');
+            alert(error.response?.data?.message || 'Error processing staff request');
+        }
+    };
+
+    const handleEditStaff = (staff) => {
+        setFormData({
+            name: staff.name || '',
+            mobile: staff.mobile || '',
+            username: staff.username || '',
+            password: '', // Don't show hashed password
+            salary: staff.salary || 0,
+            monthlyLeaveAllowance: staff.monthlyLeaveAllowance || 4,
+            email: staff.email || '',
+            designation: staff.designation || '',
+            shiftTiming: staff.shiftTiming || { start: '09:00', end: '18:00' },
+            officeLocation: staff.officeLocation || { latitude: '', longitude: '', address: '', radius: 200 },
+            joiningDate: staff.joiningDate ? new Date(staff.joiningDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+        });
+        setEditingStaffId(staff._id);
+        setIsEditing(true);
+        setShowAddModal(true);
+    };
+
+    const handleBackdateSubmit = async (e) => {
+        e.preventDefault();
+        try {
+            await axios.post('/api/admin/staff-attendance/backdate', {
+                ...backdateForm,
+                companyId: selectedCompany._id
+            });
+            setShowBackdateModal(false);
+            alert('Attendance added successfully');
+            fetchAttendance();
+        } catch (error) {
+            alert(error.response?.data?.message || 'Error adding attendance');
         }
     };
 
@@ -239,228 +287,286 @@ const Staff = () => {
             <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '30%', height: '30%', background: 'radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }}></div>
             <div style={{ position: 'absolute', bottom: '10%', left: '-10%', width: '40%', height: '40%', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }}></div>
 
-            <header style={{
-                paddingBottom: '30px',
-                marginBottom: '40px',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
-                position: 'relative',
-                zIndex: 2
-            }}>
-                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'flex-start', gap: '24px' }}>
-                    <div style={{ flex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-                            <div style={{
-                                width: '56px',
-                                height: '56px',
-                                background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
-                                borderRadius: '18px',
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                boxShadow: '0 10px 30px rgba(14, 165, 233, 0.3)',
-                                position: 'relative',
-                                overflow: 'hidden'
-                            }}>
-                                <Users size={28} color="white" />
-                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(rgba(255,255,255,0.2), transparent)', pointerEvents: 'none' }}></div>
+            {/* Header Section */}
+            <header style={{ marginBottom: '40px', position: 'relative', zIndex: 10 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '30px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <div style={{
+                            width: '70px',
+                            height: '70px',
+                            background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                            borderRadius: '24px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            boxShadow: '0 15px 35px rgba(14, 165, 233, 0.4)',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}>
+                            <Users size={32} color="white" />
+                            <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'linear-gradient(rgba(255,255,255,0.2), transparent)', pointerEvents: 'none' }}></div>
+                        </div>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
+                                <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '2px' }}>Operational Control</span>
                             </div>
-                            <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                                    <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', letterSpacing: '2px', textTransform: 'uppercase' }}>Human Resources</span>
-                                    <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></div>
-                                    <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Asset Ops</span>
-                                </div>
-                                <h1 style={{ color: 'white', fontSize: 'clamp(28px, 6vw, 36px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
-                                    Staff <span style={{ background: 'linear-gradient(to right, #0ea5e9, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Ecosystem</span>
-                                </h1>
-                            </div>
+                            <h1 style={{ color: 'white', fontSize: '38px', fontWeight: '950', margin: '4px 0', letterSpacing: '-1.5px' }}>Staff Ecosystem</h1>
                         </div>
                     </div>
 
-                    <div className="flex-resp" style={{ gap: '15px', alignItems: 'center' }}>
-                        <div style={{
-                            background: 'rgba(15, 23, 42, 0.4)',
-                            borderRadius: '16px',
-                            padding: '6px',
-                            display: 'flex',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            backdropFilter: 'blur(10px)'
-                        }}>
-                            {['list', 'attendance', 'leaves', 'summary'].map((t) => (
-                                <button
-                                    key={t}
-                                    onClick={() => setView(t)}
-                                    style={{
-                                        padding: '10px 20px',
-                                        borderRadius: '12px',
-                                        border: 'none',
-                                        background: view === t ? 'linear-gradient(135deg, #0ea5e9, #6366f1)' : 'transparent',
-                                        color: 'white',
-                                        fontWeight: '800',
-                                        fontSize: '11px',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                        textTransform: 'uppercase',
-                                        boxShadow: view === t ? '0 4px 15px rgba(14, 165, 233, 0.2)' : 'none'
-                                    }}
-                                >
-                                    {t === 'attendance' ? 'LOGS' : t}
-                                    {t === 'leaves' && pendingLeaves.length > 0 &&
-                                        <span style={{ background: '#f43f5e', padding: '1px 7px', borderRadius: '20px', fontSize: '9px', marginLeft: '6px', border: '1px solid rgba(255,255,255,0.2)' }}>{pendingLeaves.length}</span>
-                                    }
-                                </button>
-                            ))}
-                        </div>
-
+                    <div style={{ display: 'flex', gap: '15px' }}>
+                        <motion.button
+                            whileHover={{ scale: 1.05, boxShadow: '0 20px 30px -10px rgba(99, 102, 241, 0.4)' }}
+                            whileTap={{ scale: 0.95 }}
+                            onClick={() => {
+                                setFormData({
+                                    name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
+                                    email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
+                                    officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
+                                    joiningDate: new Date().toISOString().split('T')[0]
+                                });
+                                setIsEditing(false);
+                                setEditingStaffId(null);
+                                setShowAddModal(true);
+                            }}
+                            style={{ padding: '0 30px', height: '56px', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', color: 'white', border: 'none', borderRadius: '18px', fontWeight: '900', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '12px' }}
+                        >
+                            <UserPlus size={20} /> ONBOARD STAFF
+                        </motion.button>
                         <motion.button
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
-                            onClick={() => setShowAddModal(true)}
-                            style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px',
-                                height: '52px',
-                                padding: '0 24px',
-                                fontSize: '13px',
-                                fontWeight: '900',
-                                background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '16px',
-                                cursor: 'pointer',
-                                boxShadow: '0 10px 20px -5px rgba(99, 102, 241, 0.4)'
-                            }}
+                            onClick={() => setShowBackdateModal(true)}
+                            style={{ padding: '0 25px', height: '56px', background: 'rgba(30, 41, 59, 0.6)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.2)', borderRadius: '18px', fontWeight: '900', fontSize: '14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', backdropFilter: 'blur(10px)' }}
                         >
-                            <Plus size={20} /> <span className="hide-mobile">ONBOARD STAFF</span><span className="show-mobile">ADD</span>
+                            <Clock size={20} /> RECORD ATTENDANCE
                         </motion.button>
                     </div>
                 </div>
+
+                {/* Statistics Dashboard */}
+                {view !== 'summary' && (
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginTop: '40px' }}>
+                        {[
+                            { label: 'Total Workforce', value: staffList.length, sub: 'Active Personnel', icon: Users, color: '#0ea5e9' },
+                            { label: 'Present Today', value: attendanceList.filter(a => a.date === new Date().toISOString().split('T')[0] && a.status === 'present').length, sub: 'Officers on Duty', icon: ShieldCheck, color: '#10b981' },
+                            { label: 'Pending Leaves', value: pendingLeaves.length, sub: 'Action Required', icon: FileText, color: '#f43f5e', alert: pendingLeaves.length > 0 },
+                            { label: 'Monthly Accrual', value: `Rs. ${staffList.reduce((acc, s) => acc + (s.currentCycle?.earnedSalary || 0), 0).toLocaleString()}`, sub: 'Calculated Liability', icon: IndianRupee, color: '#fbbf24' }
+                        ].map((stat, i) => (
+                            <motion.div
+                                key={i}
+                                whileHover={{ y: -stat.alert ? 10 : -3 }}
+                                style={{
+                                    background: 'rgba(15, 23, 42, 0.4)',
+                                    border: `1px solid ${stat.alert ? 'rgba(244, 63, 94, 0.3)' : 'rgba(255,255,255,0.06)'}`,
+                                    borderRadius: '28px',
+                                    padding: '24px',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    backdropFilter: 'blur(20px)',
+                                    boxShadow: stat.alert ? '0 10px 30px rgba(244, 63, 94, 0.1)' : 'none'
+                                }}
+                            >
+                                <div style={{ position: 'absolute', top: '-10px', right: '-10px', width: '80px', height: '80px', background: `radial-gradient(circle, ${stat.color}15 0%, transparent 70%)` }}></div>
+                                <p style={{ margin: 0, color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>{stat.label}</p>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginTop: '12px' }}>
+                                    <div>
+                                        <h2 style={{ margin: 0, color: 'white', fontSize: '28px', fontWeight: '950', letterSpacing: '-1px' }}>{stat.value}</h2>
+                                        <p style={{ margin: '4px 0 0 0', color: stat.color, fontSize: '12px', fontWeight: '800' }}>{stat.sub}</p>
+                                    </div>
+                                    <div style={{ background: `${stat.color}15`, padding: '10px', borderRadius: '12px', color: stat.color }}>
+                                        <stat.icon size={24} />
+                                    </div>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                )}
             </header>
 
-            {/* Filter Bar */}
-            <div className="flex-resp" style={{ gap: '20px', marginBottom: '30px' }}>
-                <div style={{ flex: 1, minWidth: '0', position: 'relative' }}>
-                    <input
-                        type="text"
-                        placeholder="Search staff..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="input-field"
-                        style={{ width: '100%', paddingLeft: '45px', marginBottom: 0, height: '52px', fontSize: '14px' }}
-                    />
-                    <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
+            {/* Navigation & Search Control Center */}
+            <div style={{
+                background: 'rgba(15, 23, 42, 0.3)',
+                padding: '12px',
+                borderRadius: '24px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: '20px',
+                marginBottom: '40px',
+                border: '1px solid rgba(255,255,255,0.05)',
+                backdropFilter: 'blur(30px)',
+                position: 'sticky',
+                top: '20px',
+                zIndex: 100
+            }}>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                    {[
+                        { id: 'list', label: 'WORKFORCE', icon: Users },
+                        { id: 'attendance', label: 'LOGS', icon: Clock },
+                        { id: 'leaves', label: 'LEAVES', icon: Calendar },
+                        { id: 'summary', label: 'FINANCE', icon: IndianRupee }
+                    ].map((t) => (
+                        <button
+                            key={t.id}
+                            onClick={() => setView(t.id)}
+                            style={{
+                                padding: '12px 20px',
+                                borderRadius: '16px',
+                                border: 'none',
+                                background: view === t.id ? 'linear-gradient(135deg, #0ea5e9, #6366f1)' : 'transparent',
+                                color: view === t.id ? 'white' : 'rgba(255,255,255,0.4)',
+                                fontWeight: '900',
+                                fontSize: '11px',
+                                cursor: 'pointer',
+                                transition: '0.3s',
+                                textTransform: 'uppercase',
+                                letterSpacing: '1px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px'
+                            }}
+                        >
+                            <t.icon size={14} />
+                            {t.label}
+                            {t.id === 'leaves' && pendingLeaves.length > 0 &&
+                                <span style={{ background: '#f43f5e', padding: '2px 6px', borderRadius: '8px', fontSize: '9px', color: 'white' }}>{pendingLeaves.length}</span>
+                            }
+                        </button>
+                    ))}
                 </div>
 
-                {view === 'attendance' && (
-                    <div className="flex-resp" style={{ gap: '10px', width: '100%', flex: 1, justifyContent: 'flex-end' }}>
-                        <div style={{ position: 'relative', flex: 1, minWidth: '0' }}>
+                <div style={{ display: 'flex', gap: '12px', flex: 1, justifyContent: 'flex-end', maxWidth: '600px' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
+                        <input
+                            type="text"
+                            placeholder="Search by Identity or Mobile..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{ width: '100%', height: '48px', background: 'rgba(0, 0, 0, 0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '0 45px', color: 'white', fontSize: '13px', fontWeight: '600' }}
+                        />
+                        <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
+                    </div>
+
+                    <div style={{ height: '48px', padding: '0 20px', background: 'rgba(255,255,255,0.03)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Filter size={14} color="rgba(255,255,255,0.4)" />
+                        {view === 'attendance' ? (
                             <input
                                 type="date"
-                                className="input-field"
                                 value={filterDate}
                                 onChange={(e) => setFilterDate(e.target.value)}
-                                style={{ width: '100%', marginBottom: 0, height: '52px', paddingLeft: '45px', fontSize: '14px' }}
+                                style={{ background: 'none', border: 'none', color: 'white', fontSize: '12px', fontWeight: '900', outline: 'none', colorScheme: 'dark' }}
                             />
-                            <Calendar size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)' }} />
-                        </div>
-
-                        <button
-                            onClick={exportToExcel}
-                            className="btn-primary"
-                            style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', gap: '8px', height: '52px', padding: '0 20px', fontSize: '12px', fontWeight: '900' }}
-                        >
-                            <Download size={20} /> <span className="hide-mobile">EXPORT EXCEL</span><span className="show-mobile">EXCEL</span>
-                        </button>
+                        ) : view === 'summary' ? (
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <select value={selectedMonth} onChange={(e) => setSelectedMonth(e.target.value)} style={{ background: 'none', border: 'none', color: 'white', fontWeight: '900', outline: 'none' }}>
+                                    {Array.from({ length: 12 }, (_, i) => <option key={i + 1} value={(i + 1).toString()}>{new Date(2000, i).toLocaleString('default', { month: 'short' }).toUpperCase()}</option>)}
+                                </select>
+                                <select value={selectedYear} onChange={(e) => setSelectedYear(e.target.value)} style={{ background: 'none', border: 'none', color: 'white', fontWeight: '900', outline: 'none' }}>
+                                    <option value="2025">2025</option>
+                                    <option value="2026">2026</option>
+                                </select>
+                            </div>
+                        ) : (
+                            <span style={{ fontSize: '12px', fontWeight: '900', color: 'rgba(255,255,255,0.4)' }}>FILTER INACTIVE</span>
+                        )}
                     </div>
-                )}
-
-                {view === 'summary' && (
-                    <div className="flex-resp" style={{ gap: '10px', width: '100%', flex: 1, justifyContent: 'flex-end' }}>
-                        <select
-                            className="input-field"
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
-                            style={{ width: '150px', marginBottom: 0, height: '52px' }}
-                        >
-                            {Array.from({ length: 12 }, (_, i) => (
-                                <option key={i + 1} value={(i + 1).toString()}>
-                                    {new Date(2000, i).toLocaleString('default', { month: 'long' })}
-                                </option>
-                            ))}
-                        </select>
-                        <select
-                            className="input-field"
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(e.target.value)}
-                            style={{ width: '120px', marginBottom: 0, height: '52px' }}
-                        >
-                            <option value="2025">2025</option>
-                            <option value="2026">2026</option>
-                        </select>
-                    </div>
-                )}
+                </div>
             </div>
 
-            {view === 'list' ? (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '24px' }}>
+            {view === 'list' && (
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(360px, 1fr))', gap: '25px' }}>
                     {filteredStaff.map((staff, idx) => (
                         <motion.div
                             key={staff._id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.05 }}
-                            whileHover={{ y: -5, boxShadow: '0 20px 40px -10px rgba(0,0,0,0.5)' }}
+                            initial={{ opacity: 0, scale: 0.95 }}
+                            animate={{ opacity: 1, scale: 1 }}
+                            transition={{ delay: idx * 0.03 }}
+                            whileHover={{ y: -8 }}
                             style={{
                                 background: 'rgba(30, 41, 59, 0.4)',
-                                backdropFilter: 'blur(10px)',
-                                borderRadius: '24px',
-                                padding: '28px',
-                                border: '1px solid rgba(255,255,255,0.06)',
+                                borderRadius: '32px',
+                                padding: '30px',
+                                border: '1px solid rgba(255,255,255,0.08)',
                                 position: 'relative',
-                                overflow: 'hidden'
+                                overflow: 'hidden',
+                                backdropFilter: 'blur(10px)'
                             }}
                         >
-                            <div style={{ position: 'absolute', top: 0, right: 0, width: '100px', height: '100px', background: 'radial-gradient(circle, rgba(14, 165, 233, 0.05) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
+                            <div style={{ position: 'absolute', top: 0, right: 0, width: '150px', height: '150px', background: 'radial-gradient(circle, rgba(14, 165, 233, 0.08) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
 
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '20px', marginBottom: '24px' }}>
-                                <div style={{
-                                    width: '64px',
-                                    height: '64px',
-                                    borderRadius: '20px',
-                                    background: staff.status === 'blocked' ? '#334155' : 'linear-gradient(135deg, #0ea5e9, #6366f1)',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    color: 'white',
-                                    fontSize: '26px',
-                                    fontWeight: '900',
-                                    boxShadow: staff.status === 'blocked' ? 'none' : '0 10px 20px rgba(14, 165, 233, 0.2)'
-                                }}>
-                                    {(staff.name || '?').charAt(0)}
+                            {/* Card Top: Identity */}
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '25px' }}>
+                                <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
+                                    <div style={{
+                                        width: '64px', height: '64px', borderRadius: '22px',
+                                        background: staff.status === 'blocked' ? 'rgba(244, 63, 94, 0.1)' : 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                        fontSize: '26px', fontWeight: '950', color: 'white',
+                                        boxShadow: staff.status === 'blocked' ? 'none' : '0 10px 20px rgba(14, 165, 233, 0.2)'
+                                    }}>
+                                        {(staff.name || '?').charAt(0)}
+                                    </div>
+                                    <div>
+                                        <h3 style={{ margin: 0, fontSize: '22px', fontWeight: '950', letterSpacing: '-0.8px', color: 'white' }}>{staff.name}</h3>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                            <span style={{ fontSize: '12px', fontWeight: '800', color: '#10b981' }}>{staff.designation || 'Specialist'}</span>
+                                            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></div>
+                                            <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)' }}>ID: {staff.username}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div style={{ flex: 1 }}>
-                                    <h3 style={{ margin: 0, color: 'white', fontSize: '20px', fontWeight: '900', letterSpacing: '-0.5px' }}>{staff.name || 'Unnamed Staff'}</h3>
-                                    <p style={{ margin: '4px 0 0 0', color: '#10b981', fontSize: '13px', fontWeight: '700' }}>{staff.designation || 'Staff Member'}</p>
+                                <div style={{
+                                    background: staff.status === 'blocked' ? 'rgba(244, 63, 94, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                                    padding: '4px 12px', borderRadius: '10px',
+                                    fontSize: '10px', fontWeight: '900', color: staff.status === 'blocked' ? '#f43f5e' : '#10b981',
+                                    textTransform: 'uppercase', letterSpacing: '1px'
+                                }}>
+                                    {staff.status === 'blocked' ? 'Blocked' : 'Active'}
                                 </div>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '24px' }}>
-                                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>Mobile</p>
-                                    <p style={{ margin: 0, color: 'white', fontWeight: '800', fontSize: '14px' }}>{staff.mobile || '—'}</p>
+                            {/* Card Middle: Financials */}
+                            <div style={{
+                                background: 'rgba(0, 0, 0, 0.2)',
+                                borderRadius: '24px',
+                                padding: '20px',
+                                marginBottom: '25px',
+                                border: '1px solid rgba(255,255,255,0.03)'
+                            }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                                    <div>
+                                        <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Cycle Earnings</p>
+                                        <h2 style={{ margin: '4px 0 0 0', fontSize: '28px', fontWeight: '950', color: '#fbbf24', letterSpacing: '-1px' }}>₹{staff.currentCycle?.earnedSalary?.toLocaleString() || '0'}</h2>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Presence</p>
+                                        <div style={{ marginTop: '4px', fontSize: '18px', fontWeight: '950', color: 'white' }}>{staff.currentCycle?.presentDays || 0} <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>DAYS</span></div>
+                                    </div>
                                 </div>
-                                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>Monthly Salary</p>
-                                    <p style={{ margin: 0, color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{staff.salary?.toLocaleString() || '0'}</p>
+                                <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', overflow: 'hidden' }}>
+                                    <motion.div
+                                        initial={{ width: 0 }}
+                                        animate={{ width: `${Math.min(((staff.currentCycle?.presentDays || 0) / 30) * 100, 100)}%` }}
+                                        style={{ height: '100%', background: 'linear-gradient(90deg, #0ea5e9, #6366f1)', borderRadius: '10px' }}
+                                    ></motion.div>
                                 </div>
-                                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>Login ID</p>
-                                    <p style={{ margin: 0, color: 'white', fontWeight: '800', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{staff.username || 'Not Set'}</p>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '10px', fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)' }}>
+                                    <span>{staff.currentCycle?.startDate || '—'}</span>
+                                    <span>{staff.currentCycle?.endDate || '—'}</span>
                                 </div>
-                                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: '0 0 6px 0', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.5px' }}>Paid Leaves</p>
-                                    <p style={{ margin: 0, color: '#fbbf24', fontWeight: '900', fontSize: '14px' }}>{staff.monthlyLeaveAllowance || 4} / Mo</p>
+                            </div>
+
+                            {/* Card Bottom: Details & Actions */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '25px' }}>
+                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <p style={{ margin: 0, fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Contact</p>
+                                    <p style={{ margin: '4px 0 0 0', fontSize: '14px', fontWeight: '800', color: 'white' }}>{staff.mobile}</p>
+                                </div>
+                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <p style={{ margin: 0, fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Monthly Base</p>
+                                    <p style={{ margin: '4px 0 0 0', fontSize: '14px', fontWeight: '800', color: 'white' }}>₹{(staff.salary || 0).toLocaleString()}</p>
                                 </div>
                             </div>
 
@@ -469,35 +575,27 @@ const Staff = () => {
                                     whileHover={{ scale: 1.02 }}
                                     onClick={() => toggleStaffStatus(staff)}
                                     style={{
-                                        flex: 2,
-                                        background: staff.status === 'blocked' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255, 255, 255, 0.05)',
-                                        color: staff.status === 'blocked' ? '#10b981' : 'white',
-                                        border: staff.status === 'blocked' ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(255,255,255,0.1)',
-                                        padding: '12px',
-                                        borderRadius: '14px',
-                                        cursor: 'pointer',
-                                        fontSize: '12px',
-                                        fontWeight: '900',
-                                        textTransform: 'uppercase'
+                                        flex: 4, height: '48px', borderRadius: '14px',
+                                        background: staff.status === 'blocked' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.05)',
+                                        color: staff.status === 'blocked' ? '#10b981' : '#f43f5e',
+                                        border: '1px solid currentColor',
+                                        fontSize: '11px', fontWeight: '900', cursor: 'pointer',
+                                        textTransform: 'uppercase', letterSpacing: '1px'
                                     }}
                                 >
-                                    {staff.status === 'blocked' ? 'UNBLOCK ACCESS' : 'BLOCK ACCESS'}
+                                    {staff.status === 'blocked' ? 'RESTORE ACCESS' : 'RESTRICT LOGINS'}
                                 </motion.button>
                                 <motion.button
-                                    whileHover={{ scale: 1.05 }}
+                                    whileHover={{ scale: 1.02 }}
+                                    onClick={() => handleEditStaff(staff)}
+                                    style={{ flex: 1, height: '48px', borderRadius: '14px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: '1px solid #0ea5e9', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                >
+                                    <Settings size={18} />
+                                </motion.button>
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
                                     onClick={() => handleDeleteStaff(staff._id)}
-                                    style={{
-                                        flex: 1,
-                                        background: 'rgba(244, 63, 94, 0.1)',
-                                        color: '#f43f5e',
-                                        border: '1px solid rgba(244, 63, 94, 0.2)',
-                                        padding: '12px',
-                                        borderRadius: '14px',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center'
-                                    }}
+                                    style={{ flex: 1, height: '48px', borderRadius: '14px', background: 'rgba(244, 63, 94, 0.05)', color: '#f43f5e', border: '1px solid #f43f5e', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
                                 >
                                     <Trash2 size={18} />
                                 </motion.button>
@@ -505,7 +603,8 @@ const Staff = () => {
                         </motion.div>
                     ))}
                 </div>
-            ) : view === 'attendance' ? (
+            )}
+            {view === 'attendance' && (
                 <div style={{ marginTop: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '25px' }}>
                         <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 15px #0ea5e9' }} />
@@ -672,7 +771,9 @@ const Staff = () => {
                     </div>
 
                 </div>
-            ) : view === 'leaves' ? (
+            )}
+
+            {view === 'leaves' && (
                 <div style={{
                     background: 'rgba(15, 23, 42, 0.4)',
                     borderRadius: '24px',
@@ -740,75 +841,123 @@ const Staff = () => {
                         </div>
                     )}
                 </div>
-            ) : (
-                <div style={{ padding: '10px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+            )}
+            {view === 'summary' && (
+                <div style={{ marginTop: '10px' }}>
+                    <div style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                        marginBottom: '35px',
+                        background: 'rgba(255, 255, 255, 0.02)',
+                        padding: '25px 30px',
+                        borderRadius: '32px',
+                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                        backdropFilter: 'blur(20px)'
+                    }}>
                         <div>
-                            <h2 style={{ fontSize: '24px', fontWeight: '900', color: 'white', margin: 0 }}>Salary Report Overview</h2>
-                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', margin: '5px 0 0 0' }}>Detailed payment list for {new Date(selectedYear, selectedMonth - 1).toLocaleString('default', { month: 'long' })}</p>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 15px #fbbf24' }}></div>
+                                <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Financial Ledger</span>
+                            </div>
+                            <h2 style={{ fontSize: '32px', fontWeight: '950', color: 'white', margin: 0, letterSpacing: '-1.2px' }}>Payroll Distribution</h2>
                         </div>
                         <div style={{ textAlign: 'right' }}>
-                            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: '0 0 4px 0', fontWeight: '900' }}>TOTAL COMPANY PAYOUT</p>
-                            <h2 style={{ fontSize: '24px', fontWeight: '900', color: '#fbbf24', margin: 0 }}>
-                                ₹{monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
+                            <p style={{ fontSize: '11px', color: '#fbbf24', margin: '0 0 5px 0', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>TOTAL SALARY</p>
+                            <h2 style={{ fontSize: '42px', fontWeight: '950', color: 'white', margin: 0, letterSpacing: '-1.5px', textShadow: '0 0 30px rgba(251, 191, 36, 0.4)' }}>
+                                <span style={{ color: '#fbbf24', fontSize: '28px', verticalAlign: 'top', marginRight: '6px' }}>Rs.</span>{monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
                             </h2>
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                        {monthlyReport.map(item => (
-                            <motion.div
-                                key={item.staffId}
-                                onClick={() => setSelectedStaffReport(item)}
-                                whileHover={{ y: -4, background: 'rgba(30, 41, 59, 0.4)' }}
-                                style={{
-                                    background: 'rgba(15, 23, 42, 0.6)',
-                                    borderRadius: '24px',
-                                    padding: '24px',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '24px',
-                                    cursor: 'pointer',
-                                    transition: '0.3s'
-                                }}
-                            >
-                                {/* Avatar/Initial */}
-                                <div style={{
-                                    width: '56px', height: '56px', borderRadius: '18px',
-                                    background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-                                    display: 'flex', justifyContent: 'center', alignItems: 'center',
-                                    fontSize: '20px', fontWeight: '900', color: 'white'
-                                }}>
-                                    {item.name.charAt(0)}
-                                </div>
+                    {monthlyReport.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(15, 23, 42, 0.3)', borderRadius: '40px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(251, 191, 36, 0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 25px' }}>
+                                <DollarSign size={32} color="#fbbf24" style={{ opacity: 0.5 }} />
+                            </div>
+                            <h3 style={{ color: 'white', margin: '0 0 10px 0', fontWeight: '900', fontSize: '20px' }}>No Fiscal Records</h3>
+                            <p style={{ color: 'rgba(255,255,255,0.3)', margin: 0, fontWeight: '700', fontSize: '15px' }}>Awaiting payroll generation for the selected cycle.</p>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                            {monthlyReport.map((item, idx) => (
+                                <motion.div
+                                    key={item.staffId}
+                                    initial={{ opacity: 0, y: 15 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.04 }}
+                                    onClick={() => setSelectedStaffReport(item)}
+                                    whileHover={{ y: -5, background: 'rgba(30, 41, 59, 0.8)', borderColor: 'rgba(251, 191, 36, 0.3)' }}
+                                    style={{
+                                        background: 'rgba(15, 23, 42, 0.5)',
+                                        borderRadius: '24px',
+                                        padding: '25px 35px',
+                                        border: '1px solid rgba(255,255,255,0.06)',
+                                        cursor: 'pointer',
+                                        transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                        position: 'relative',
+                                        overflow: 'hidden',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '30px',
+                                        flexWrap: 'wrap'
+                                    }}
+                                >
+                                    <div style={{ position: 'absolute', top: 0, right: 0, width: '150px', height: '150px', background: 'radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(30px)' }}></div>
 
-                                {/* Info Section */}
-                                <div style={{ flex: 1 }}>
-                                    <h3 style={{ fontSize: '18px', fontWeight: '800', margin: 0, color: 'white' }}>{item.name}</h3>
-                                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', margin: '4px 0 0 0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                        {item.designation || 'Staff Member'} • {item.staffId}
-                                    </p>
-                                </div>
+                                    {/* Identity Section */}
+                                    <div style={{ flex: '1 1 250px', display: 'flex', gap: '20px', alignItems: 'center', position: 'relative', zIndex: 2 }}>
+                                        <div style={{ width: '60px', height: '60px', borderRadius: '20px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), transparent)', border: '1px solid rgba(251, 191, 36, 0.3)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '24px', fontWeight: '950', color: '#fbbf24', boxShadow: '0 10px 20px rgba(251, 191, 36, 0.1)' }}>
+                                            {item.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h3 style={{ fontSize: '22px', fontWeight: '950', margin: 0, color: 'white', letterSpacing: '-0.5px' }}>{item.name}</h3>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                                                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{item.designation || 'Force Member'}</p>
+                                                <div style={{ background: 'rgba(251, 191, 36, 0.15)', padding: '4px 10px', borderRadius: '8px', color: '#fbbf24', fontSize: '9px', fontWeight: '950', letterSpacing: '1px' }}>ACTIVE</div>
+                                            </div>
+                                        </div>
+                                    </div>
 
-                                {/* Simple Stats Inline */}
-                                <div style={{ display: 'flex', gap: '40px', alignItems: 'center' }}>
-                                    <div style={{ textAlign: 'center' }}>
-                                        <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', marginBottom: '4px' }}>PRESENT</p>
-                                        <span style={{ fontSize: '16px', fontWeight: '900', color: '#10b981' }}>{item.presentDays}d</span>
+                                    {/* Stats grid */}
+                                    <div style={{ flex: '2 1 400px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '15px', position: 'relative', zIndex: 2 }}>
+                                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '15px 20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 10px rgba(14, 165, 233, 0.8)' }}></div>
+                                                <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>PRESENCE</p>
+                                            </div>
+                                            <div style={{ fontSize: '20px', fontWeight: '950', color: 'white' }}>{item.presentDays || 0}<span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginLeft: '4px' }}>D</span></div>
+                                        </div>
+                                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '15px 20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: item.extraLeaves > 0 ? '#f43f5e' : '#10b981', boxShadow: `0 0 10px ${item.extraLeaves > 0 ? 'rgba(244, 63, 94, 0.8)' : 'rgba(16, 185, 129, 0.8)'}` }}></div>
+                                                <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>LEAVES</p>
+                                            </div>
+                                            <div style={{ fontSize: '20px', fontWeight: '950', color: item.extraLeaves > 0 ? '#f43f5e' : '#10b981' }}>{item.leavesTaken || 0} <span style={{ fontSize: '11px', opacity: 0.4 }}>/ {item.allowance || 4}</span></div>
+                                        </div>
+                                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '15px 20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px rgba(99, 102, 241, 0.8)' }}></div>
+                                                <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '0.5px' }}>OVERTIME</p>
+                                            </div>
+                                            <div style={{ fontSize: '20px', fontWeight: '950', color: '#6366f1' }}>{item.sundaysWorked || 0}<span style={{ fontSize: '11px', opacity: 0.6, marginLeft: '4px' }}>D</span></div>
+                                        </div>
                                     </div>
-                                    <div style={{ textAlign: 'center' }}>
-                                        <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', marginBottom: '4px' }}>ABSENT</p>
-                                        <span style={{ fontSize: '16px', fontWeight: '900', color: item.extraLeaves > 0 ? '#f43f5e' : 'rgba(255,255,255,0.2)' }}>{item.extraLeaves}d</span>
+
+                                    {/* Payout */}
+                                    <div style={{ flex: '1 1 200px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '20px', position: 'relative', zIndex: 2 }}>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>ACCRUED PAYOUT</p>
+                                            <h2 style={{ margin: '4px 0 0 0', fontSize: '30px', fontWeight: '950', color: '#fbbf24', letterSpacing: '-1.5px', textShadow: '0 0 20px rgba(251, 191, 36, 0.2)' }}>Rs. {(item.finalSalary || 0).toLocaleString()}</h2>
+                                        </div>
+                                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fbbf24' }}>
+                                            <ChevronRight size={18} />
+                                        </div>
                                     </div>
-                                    <div style={{ textAlign: 'right', minWidth: '120px', padding: '12px 20px', background: 'rgba(255,255,255,0.03)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', marginBottom: '2px' }}>FINAL PAYOUT</p>
-                                        <span style={{ fontSize: '20px', fontWeight: '900', color: '#fbbf24' }}>₹{(item.finalSalary || 0).toLocaleString()}</span>
-                                    </div>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             )}
             <AnimatePresence>
@@ -837,8 +986,12 @@ const Staff = () => {
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px' }}>
                                 <div>
-                                    <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0, letterSpacing: '-0.8px' }}>Asset Onboarding</h2>
-                                    <p style={{ color: 'rgba(255,255,255,0.4)', margin: '4px 0 0 0', fontSize: '13px', fontWeight: '600' }}>Register new personnel to the ecosystem.</p>
+                                    <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0, letterSpacing: '-0.8px' }}>
+                                        {isEditing ? 'Update Profile' : 'Asset Onboarding'}
+                                    </h2>
+                                    <p style={{ color: 'rgba(255,255,255,0.4)', margin: '4px 0 0 0', fontSize: '13px', fontWeight: '600' }}>
+                                        {isEditing ? 'Modifying existing personnel records.' : 'Register new personnel to the ecosystem.'}
+                                    </p>
                                 </div>
                                 <motion.button
                                     whileHover={{ rotate: 90 }}
@@ -913,6 +1066,14 @@ const Staff = () => {
                                             />
                                         </div>
                                         <div className="form-group">
+                                            <label style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.5)', marginBottom: '10px', display: 'block' }}>JOINING DATE</label>
+                                            <input
+                                                type="date" required className="input-field"
+                                                style={{ height: '56px', width: '100%', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0 20px' }}
+                                                value={formData.joiningDate} onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="form-group">
                                             <label style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.5)', marginBottom: '10px', display: 'block' }}>LEAVE ALLOWANCE (MO)</label>
                                             <input
                                                 type="number" required className="input-field"
@@ -973,7 +1134,7 @@ const Staff = () => {
                                     type="submit"
                                     style={{ width: '100%', height: '60px', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', color: 'white', border: 'none', borderRadius: '20px', fontSize: '16px', fontWeight: '900', cursor: 'pointer', boxShadow: '0 20px 30px -10px rgba(99, 102, 241, 0.4)', marginTop: '10px' }}
                                 >
-                                    INITIALIZE ONBOARDING
+                                    {isEditing ? 'COMMIT UPDATES' : 'INITIALIZE ONBOARDING'}
                                 </motion.button>
                             </form>
                         </motion.div>
@@ -990,12 +1151,12 @@ const Staff = () => {
                             initial={{ opacity: 0, scale: 0.95, y: 20 }}
                             animate={{ opacity: 1, scale: 1, y: 0 }}
                             style={{
-                                maxWidth: '900px', width: '100%', maxHeight: '90vh',
-                                background: '#0f172a', borderRadius: '32px',
-                                border: '1px solid rgba(255,255,255,0.08)',
+                                maxWidth: '1000px', width: '100%', maxHeight: '90vh',
+                                background: '#080c14', borderRadius: '40px',
+                                border: '1px solid rgba(255,255,255,0.1)',
                                 overflow: 'hidden', position: 'relative',
                                 display: 'flex', flexDirection: 'column',
-                                boxShadow: '0 50px 100px -20px rgba(0,0,0,0.7)'
+                                boxShadow: '0 50px 100px -20px rgba(0,0,0,0.8)'
                             }}
                         >
                             {/* Close Button Top Right */}
@@ -1013,62 +1174,84 @@ const Staff = () => {
                             >
                                 <X size={20} />
                             </button>
-                            {/* Left Side: Summary & Receipt (40%) | Right Side: Date-wise Calendar (60%) */}
-                            <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', height: '100%', overflow: 'hidden' }}>
+                            {/* Left Side: Summary & Receipt (35%) | Right Side: Date-wise Calendar (65%) */}
+                            <div style={{ display: 'grid', gridTemplateColumns: '380px 1fr', height: '100%', overflow: 'hidden', position: 'relative' }}>
+                                <div style={{ position: 'absolute', top: '-20%', left: '-10%', width: '30%', height: '30%', background: 'radial-gradient(circle, rgba(251, 191, 36, 0.15) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }}></div>
+                                <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '30%', height: '30%', background: 'radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }}></div>
 
                                 {/* Sidebar: Financials */}
-                                <div style={{ background: '#1c2235', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column' }}>
-                                    <div style={{ background: 'linear-gradient(135deg, #FFB82B, #fbbf24)', padding: '40px 30px', textAlign: 'center' }}>
-                                        <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(0,0,0,0.4)', textTransform: 'uppercase' }}>Net Payable</p>
-                                        <h1 style={{ margin: '5px 0 0 0', fontSize: '42px', fontWeight: '900', color: '#000' }}>₹{selectedStaffReport.finalSalary.toLocaleString()}</h1>
+                                <div style={{ background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', backdropFilter: 'blur(20px)', zIndex: 2 }}>
+                                    <div style={{ padding: '40px 30px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                            <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), transparent)', border: '1px solid rgba(251, 191, 36, 0.3)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '24px', fontWeight: '950', color: '#fbbf24', boxShadow: '0 10px 20px rgba(251, 191, 36, 0.1)' }}>
+                                                {selectedStaffReport.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <h3 style={{ fontSize: '22px', fontWeight: '950', color: 'white', margin: 0, letterSpacing: '-0.5px' }}>{selectedStaffReport.name}</h3>
+                                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#fbbf24', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedStaffReport.designation || 'Specialist'}</p>
+                                            </div>
+                                        </div>
                                     </div>
 
-                                    <div style={{ padding: '30px', flex: 1, overflowY: 'auto' }}>
-                                        <div style={{ marginBottom: '30px' }}>
-                                            <h3 style={{ fontSize: '20px', fontWeight: '900', color: 'white', margin: 0 }}>{selectedStaffReport.name}</h3>
-                                            <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{selectedStaffReport.designation || 'Staff'} • {selectedMonth}/{selectedYear}</p>
-                                        </div>
+                                    <div style={{
+                                        margin: '30px',
+                                        background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), transparent)',
+                                        borderRadius: '24px',
+                                        border: '1px solid rgba(251, 191, 36, 0.2)',
+                                        padding: '30px',
+                                        textAlign: 'center',
+                                        position: 'relative',
+                                        overflow: 'hidden'
+                                    }}>
+                                        <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '2px' }}>Net Payable Limit</p>
+                                        <h1 style={{ margin: '10px 0 0 0', fontSize: '50px', fontWeight: '950', color: 'white', letterSpacing: '-2px', textShadow: '0 0 30px rgba(251, 191, 36, 0.5)' }}><span style={{ fontSize: '24px', verticalAlign: 'top', color: '#fbbf24', marginRight: '6px' }}>Rs.</span>{selectedStaffReport.finalSalary.toLocaleString()}</h1>
+                                    </div>
 
+                                    <div style={{ padding: '0 30px 30px 30px', flex: 1, overflowY: 'auto' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                                                <span style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>Base Salary</span>
-                                                <span style={{ fontWeight: '800', color: 'white' }}>₹{(selectedStaffReport.salary || 0).toLocaleString()}</span>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(255,255,255,0.4)' }}></div>
+                                                    <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '800' }}>Base Salary</span>
+                                                </div>
+                                                <span style={{ fontWeight: '950', color: 'white' }}>Rs. {(selectedStaffReport.salary || 0).toLocaleString()}</span>
                                             </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                                                <span style={{ color: '#10b981', fontWeight: '600' }}>Days Present</span>
-                                                <span style={{ fontWeight: '800', color: '#10b981' }}>{selectedStaffReport.presentDays}d</span>
+
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', alignItems: 'center', background: 'rgba(16, 185, 129, 0.05)', padding: '16px', borderRadius: '16px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px rgba(16,185,129,0.5)' }}></div>
+                                                    <span style={{ color: '#10b981', fontWeight: '800' }}>Active Presence</span>
+                                                </div>
+                                                <span style={{ fontWeight: '950', color: '#10b981' }}>{selectedStaffReport.presentDays} <small style={{ fontSize: '10px' }}>DAYS</small></span>
                                             </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                                                <span style={{ color: '#f43f5e', fontWeight: '600' }}>Days Absent</span>
-                                                <span style={{ fontWeight: '800', color: '#f43f5e' }}>{selectedStaffReport.extraLeaves}d</span>
+
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', alignItems: 'center', background: 'rgba(244, 63, 94, 0.05)', padding: '16px', borderRadius: '16px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 10px rgba(244,63,94,0.5)' }}></div>
+                                                    <span style={{ color: '#f43f5e', fontWeight: '800' }}>Deductions</span>
+                                                </div>
+                                                <span style={{ fontWeight: '950', color: '#f43f5e' }}>- Rs. {selectedStaffReport.deduction.toLocaleString()}</span>
                                             </div>
-                                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '15px 0' }}></div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                                                <span style={{ color: '#f43f5e', fontWeight: '800' }}>DEDUCTION</span>
-                                                <span style={{ fontWeight: '900', color: '#f43f5e' }}>-₹{selectedStaffReport.deduction.toLocaleString()}</span>
-                                            </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                                                <span style={{ color: '#6366f1', fontWeight: '800' }}>INCENTIVE</span>
-                                                <span style={{ fontWeight: '900', color: '#6366f1' }}>+₹{(selectedStaffReport.sundayBonus || 0).toLocaleString()}</span>
+
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', alignItems: 'center', background: 'rgba(99, 102, 241, 0.05)', padding: '16px', borderRadius: '16px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px rgba(99,102,241,0.5)' }}></div>
+                                                    <span style={{ color: '#6366f1', fontWeight: '800' }}>Incentive Bonus</span>
+                                                </div>
+                                                <span style={{ fontWeight: '950', color: '#6366f1' }}>+ Rs. {(selectedStaffReport.sundayBonus || 0).toLocaleString()}</span>
                                             </div>
                                         </div>
-                                    </div>
-
-                                    <div style={{ padding: '20px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <button onClick={() => setSelectedStaffReport(null)} style={{ width: '100%', py: '15px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '14px', fontWeight: '800', cursor: 'pointer', height: '45px' }}>
-                                            CLOSE REPORT
-                                        </button>
                                     </div>
                                 </div>
 
                                 {/* Main Content: Date-wise Attendance */}
-                                <div style={{ padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '35px' }}>
+                                <div style={{ padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '40px', zIndex: 2 }}>
 
                                     {/* Attendance Visual Insights */}
                                     <div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                                            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '900', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px' }}>Monthly Attendance Map</h4>
-                                            <div style={{ display: 'flex', gap: '15px', fontSize: '10px', fontWeight: '800', marginRight: '40px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                                            <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '950', color: 'white', letterSpacing: '-0.5px' }}>Attendance Telemetry</h4>
+                                            <div style={{ display: 'flex', gap: '20px', fontSize: '11px', fontWeight: '900', marginRight: '40px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#22c55e' }}>
                                                     <div style={{ width: '10px', height: '10px', background: '#22c55e', borderRadius: '50%', boxShadow: '0 0 10px rgba(34, 197, 94, 0.5)' }}></div> PRESENT
                                                 </div>
@@ -1079,28 +1262,16 @@ const Staff = () => {
                                         </div>
 
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
-                                            {/* Weekday Headers */}
-                                            {['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'].map(day => (
-                                                <div key={day} style={{ textAlign: 'center', fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.2)', paddingBottom: '5px' }}>{day}</div>
-                                            ))}
-
-                                            {/* Padding for first week offset */}
-                                            {Array.from({ length: new Date(selectedYear, selectedMonth - 1, 1).getDay() }).map((_, i) => (
-                                                <div key={`offset-${i}`} style={{ aspectRatio: '1', background: 'rgba(255,255,255,0.01)', borderRadius: '10px' }}></div>
-                                            ))}
-
-                                            {/* Day Cells */}
-                                            {Array.from({ length: new Date(selectedYear, selectedMonth, 0).getDate() }, (_, i) => {
-                                                const day = i + 1;
-                                                const dateStr = `${selectedYear}-${selectedMonth.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`;
-                                                const attendanceRecord = (selectedStaffReport.attendanceData || []).find(a => a.date === dateStr);
-                                                const isPresent = attendanceRecord?.status === 'present';
-                                                const isAbsent = attendanceRecord?.status === 'absent';
-                                                const isSunday = new Date(selectedYear, selectedMonth - 1, day).getDay() === 0;
+                                            {/* Cycle Day Cells */}
+                                            {(selectedStaffReport.attendanceData || []).sort((a, b) => a.date.localeCompare(b.date)).map((attendanceRecord, idx) => {
+                                                const dateObj = new Date(attendanceRecord.date);
+                                                const isPresent = attendanceRecord.status === 'present';
+                                                const isAbsent = attendanceRecord.status === 'absent';
+                                                const isSunday = dateObj.getDay() === 0;
 
                                                 return (
                                                     <motion.div
-                                                        key={dateStr}
+                                                        key={attendanceRecord.date}
                                                         whileHover={{ scale: 1.05, background: 'rgba(255,255,255,0.05)' }}
                                                         style={{
                                                             aspectRatio: '1',
@@ -1119,7 +1290,7 @@ const Staff = () => {
                                                             fontSize: '11px',
                                                             fontWeight: '900',
                                                             color: isPresent ? '#10b981' : isAbsent ? '#f43f5e' : isSunday ? '#fbbf24' : 'rgba(255,255,255,0.5)'
-                                                        }}>{day}</span>
+                                                        }}>{dateObj.getDate()}</span>
 
                                                         {isPresent ? (
                                                             <div style={{ width: '8px', height: '8px', background: '#22c55e', borderRadius: '50%', boxShadow: '0 0 12px rgba(34, 197, 94, 0.6)' }}></div>
@@ -1136,26 +1307,41 @@ const Staff = () => {
 
                                     {/* Daily Log Table */}
                                     <div>
-                                        <h4 style={{ margin: '0 0 20px 0', fontSize: '14px', fontWeight: '900', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px' }}>Daily Activity Logs</h4>
-                                        <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                                        <h4 style={{ margin: '0 0 25px 0', fontSize: '16px', fontWeight: '950', color: 'white', letterSpacing: '-0.5px' }}>Daily Activity Sequences</h4>
+                                        <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                                 <thead>
-                                                    <tr style={{ background: 'rgba(255,255,255,0.03)', textAlign: 'left' }}>
-                                                        <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '900' }}>DATE</th>
-                                                        <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '900' }}>MATCH</th>
-                                                        <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '900' }}>PUNCH IN</th>
-                                                        <th style={{ padding: '15px 20px', fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '900' }}>PUNCH OUT</th>
+                                                    <tr style={{ background: 'rgba(255,255,255,0.04)', textAlign: 'left' }}>
+                                                        <th style={{ padding: '20px', fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', letterSpacing: '1px' }}>TIMESTAMP</th>
+                                                        <th style={{ padding: '20px', fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', letterSpacing: '1px' }}>VISUAL VERIFICATION</th>
+                                                        <th style={{ padding: '20px', fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', letterSpacing: '1px' }}>SYSTEM STATUS</th>
+                                                        <th style={{ padding: '20px', fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', letterSpacing: '1px' }}>PUNCH SEQUENCE</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
-                                                    {(selectedStaffReport.attendanceData || []).map(log => (
+                                                    {(selectedStaffReport.attendanceData || []).sort((a, b) => b.date.localeCompare(a.date)).map(log => (
                                                         <tr key={log._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                                            <td style={{ padding: '15px 20px', fontSize: '13px', fontWeight: '800', color: 'white' }}>{new Date(log.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</td>
+                                                            <td style={{ padding: '15px 20px' }}>
+                                                                <div style={{ fontSize: '13px', fontWeight: '800', color: 'white' }}>{new Date(log.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
+                                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>{new Date(log.date).toLocaleDateString('en-IN', { weekday: 'short' })}</div>
+                                                            </td>
+                                                            <td style={{ padding: '15px 20px' }}>
+                                                                <div style={{ display: 'flex', gap: '5px' }}>
+                                                                    {log.punchIn?.photo ? (
+                                                                        <img src={log.punchIn.photo} style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} alt="In" />
+                                                                    ) : <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={12} style={{ opacity: 0.2 }} /></div>}
+                                                                    {log.punchOut?.photo && (
+                                                                        <img src={log.punchOut.photo} style={{ width: '32px', height: '32px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} alt="Out" />
+                                                                    )}
+                                                                </div>
+                                                            </td>
                                                             <td style={{ padding: '15px 20px' }}>
                                                                 <span style={{ fontSize: '9px', fontWeight: '900', padding: '4px 8px', borderRadius: '6px', background: log.status === 'present' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.1)', color: log.status === 'present' ? '#22c55e' : '#ef4444' }}>{log.status.toUpperCase()}</span>
                                                             </td>
-                                                            <td style={{ padding: '15px 20px', fontSize: '12px', fontWeight: '700', color: 'white' }}>{log.punchIn?.time ? new Date(log.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}</td>
-                                                            <td style={{ padding: '15px 20px', fontSize: '12px', fontWeight: '700', color: 'white' }}>{log.punchOut?.time ? new Date(log.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}</td>
+                                                            <td style={{ padding: '15px 20px' }}>
+                                                                <div style={{ fontSize: '12px', fontWeight: '800', color: '#10b981' }}>{log.punchIn?.time ? new Date(log.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}</div>
+                                                                <div style={{ fontSize: '12px', fontWeight: '800', color: '#f43f5e' }}>{log.punchOut?.time ? new Date(log.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}</div>
+                                                            </td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -1167,8 +1353,84 @@ const Staff = () => {
                         </motion.div>
                     </div>
                 )}
+                {showBackdateModal && (
+                    <div style={{
+                        position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+                        background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(10px)',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1200,
+                        padding: '20px'
+                    }}>
+                        <motion.div
+                            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+                            animate={{ opacity: 1, y: 0, scale: 1 }}
+                            exit={{ opacity: 0, scale: 0.9 }}
+                            style={{
+                                maxWidth: '500px',
+                                width: '100%',
+                                background: '#1c2235',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                borderRadius: '32px',
+                                padding: '40px',
+                                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0 }}>Add Backdated Entry</h2>
+                                <button onClick={() => setShowBackdateModal(false)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer' }}><X size={20} /></button>
+                            </div>
+                            <form onSubmit={handleBackdateSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                <div className="form-group">
+                                    <label style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.5)', marginBottom: '10px', display: 'block' }}>SELECT STAFF</label>
+                                    <select
+                                        required className="input-field"
+                                        style={{ height: '56px', width: '100%', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0 20px' }}
+                                        value={backdateForm.staffId} onChange={(e) => setBackdateForm({ ...backdateForm, staffId: e.target.value })}
+                                    >
+                                        <option value="">Choose Staff Member</option>
+                                        {staffList.map(s => <option key={s._id} value={s._id}>{s.name}</option>)}
+                                    </select>
+                                </div>
+                                <div className="form-group">
+                                    <label style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.5)', marginBottom: '10px', display: 'block' }}>ENTRY DATE</label>
+                                    <input
+                                        type="date" required className="input-field"
+                                        style={{ height: '56px', width: '100%', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0 20px' }}
+                                        value={backdateForm.date} onChange={(e) => setBackdateForm({ ...backdateForm, date: e.target.value })}
+                                    />
+                                </div>
+                                <div className="form-group">
+                                    <label style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.5)', marginBottom: '10px', display: 'block' }}>ATTENDANCE STATUS</label>
+                                    <select
+                                        required className="input-field"
+                                        style={{ height: '56px', width: '100%', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0 20px' }}
+                                        value={backdateForm.status} onChange={(e) => setBackdateForm({ ...backdateForm, status: e.target.value })}
+                                    >
+                                        <option value="present">Present (Full Day)</option>
+                                        <option value="half-day">Half-Day</option>
+                                        <option value="absent">Absent</option>
+                                    </select>
+                                </div>
+                                {backdateForm.status !== 'absent' && (
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                        <div className="form-group">
+                                            <label style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.5)', marginBottom: '10px', display: 'block' }}>PUNCH IN</label>
+                                            <input type="time" className="input-field" style={{ height: '56px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', color: 'white' }} value={backdateForm.punchInTime} onChange={(e) => setBackdateForm({ ...backdateForm, punchInTime: e.target.value })} />
+                                        </div>
+                                        <div className="form-group">
+                                            <label style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.5)', marginBottom: '10px', display: 'block' }}>PUNCH OUT</label>
+                                            <input type="time" className="input-field" style={{ height: '56px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', color: 'white' }} value={backdateForm.punchOutTime} onChange={(e) => setBackdateForm({ ...backdateForm, punchOutTime: e.target.value })} />
+                                        </div>
+                                    </div>
+                                )}
+                                <button type="submit" style={{ width: '100%', height: '56px', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', color: 'white', border: 'none', borderRadius: '16px', fontWeight: '900', cursor: 'pointer', marginTop: '10px' }}>
+                                    SAVE ENTRY
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
             </AnimatePresence>
-        </div>
+        </div >
     );
 };
 

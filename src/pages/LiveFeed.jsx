@@ -22,6 +22,8 @@ const LiveFeed = () => {
     const [activeTab, setActiveTab] = useState('drivers'); // 'drivers', 'vehicles', 'history'
     const [searchQuery, setSearchQuery] = useState('');
     const [currentTimeIST, setCurrentTimeIST] = useState(DateTime.now().setZone('Asia/Kolkata').toFormat('hh:mm:ss a'));
+    const [selectedDriver, setSelectedDriver] = useState(null);
+    const [showDriverModal, setShowDriverModal] = useState(false);
     const dateInputRef = useRef(null);
 
     useEffect(() => {
@@ -263,7 +265,6 @@ const LiveFeed = () => {
                     <div className="premium-scroll" style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '5px' }}>
                         <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length} />
                         <TabButton id="vehicles" label="Fleet" icon={Car} count={stats?.totalVehicles} />
-                        <TabButton id="history" label="Activity" icon={History} />
                     </div>
 
                     <div style={{ position: 'relative', width: '100%' }}>
@@ -293,15 +294,26 @@ const LiveFeed = () => {
                                     const statusPriority = { 'Present': 1, 'Completed': 2, 'Lapsed': 3, 'Absent': 4 };
                                     return (statusPriority[a.status] || 99) - (statusPriority[b.status] || 99);
                                 }).map((driver) => (
-                                    <div key={driver._id} style={{
-                                        padding: '16px',
-                                        background: driver.status === 'Present' ? 'rgba(16, 185, 129, 0.05)' : (driver.status === 'Completed' ? 'rgba(139, 92, 246, 0.05)' : 'rgba(255,255,255,0.02)'),
-                                        borderRadius: '20px',
-                                        border: `1px solid ${driver.status === 'Present' ? 'rgba(16, 185, 129, 0.15)' : (driver.status === 'Completed' ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255,255,255,0.05)')}`,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '15px'
-                                    }}>
+                                    <div key={driver._id}
+                                        onClick={() => {
+                                            setSelectedDriver(driver);
+                                            setShowDriverModal(true);
+                                        }}
+                                        style={{
+                                            padding: '16px',
+                                            background: driver.status === 'Present' ? 'rgba(16, 185, 129, 0.05)' : (driver.status === 'Completed' ? 'rgba(139, 92, 246, 0.05)' : 'rgba(255,255,255,0.02)'),
+                                            borderRadius: '20px',
+                                            border: `1px solid ${driver.status === 'Present' ? 'rgba(16, 185, 129, 0.15)' : (driver.status === 'Completed' ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255,255,255,0.05)')}`,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '15px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease-in-out',
+                                            position: 'relative',
+                                            zIndex: 1
+                                        }}
+                                        className="driver-card-hover"
+                                    >
                                         <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flex: 1, minWidth: 0 }}>
                                             <div style={{ position: 'relative', flexShrink: 0 }}>
                                                 <div style={{
@@ -509,54 +521,126 @@ const LiveFeed = () => {
                             </motion.div>
                         )}
 
-                        {activeTab === 'history' && (
-                            <motion.div
-                                key="history"
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
-                            >
-                                {dutyHistory.length === 0 ? (
-                                    <div style={{ textAlign: 'center', padding: '40px', color: 'rgba(255,255,255,0.2)' }}>
-                                        <Clock size={40} style={{ marginBottom: '10px', opacity: 0.5 }} />
-                                        <p style={{ fontWeight: '700' }}>No activity logs for this date.</p>
+                    </AnimatePresence>
+                </div>
+            </div>
+
+            {/* Premium Driver Detail Modal */}
+            <AnimatePresence>
+                {showDriverModal && selectedDriver && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            background: 'rgba(0,0,0,0.85)',
+                            backdropFilter: 'blur(10px)',
+                            zIndex: 1000,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            padding: '20px'
+                        }}
+                        onClick={() => setShowDriverModal(false)}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                            animate={{ scale: 1, y: 0, opacity: 1 }}
+                            exit={{ scale: 0.9, y: 20, opacity: 0 }}
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                width: '100%',
+                                maxWidth: '700px',
+                                maxHeight: '90vh',
+                                background: '#1e293b',
+                                borderRadius: '32px',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
+                            }}
+                        >
+                            {/* Modal Header */}
+                            <div style={{ padding: '24px 30px', background: 'rgba(14, 165, 233, 0.1)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                    <div style={{
+                                        width: '50px',
+                                        height: '50px',
+                                        borderRadius: '16px',
+                                        background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                                        display: 'flex',
+                                        justifyContent: 'center',
+                                        alignItems: 'center',
+                                        boxShadow: '0 8px 16px rgba(14, 165, 233, 0.2)'
+                                    }}>
+                                        <Users size={24} color="white" />
                                     </div>
-                                ) : (
-                                    dutyHistory.map((log) => (
-                                        <div key={log._id} style={{
-                                            padding: '20px',
-                                            background: 'rgba(255,255,255,0.02)',
-                                            borderRadius: '20px',
-                                            border: '1px solid rgba(255,255,255,0.05)',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            gap: '15px'
-                                        }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '15px' }}>
-                                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
-                                                    <div style={{ padding: '6px 12px', background: 'rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', fontWeight: '900', fontSize: '12px' }}>
-                                                        {new Date(log.date).toLocaleDateString('en-GB')}
+                                    <div>
+                                        <h3 style={{ margin: 0, color: 'white', fontSize: '20px', fontWeight: '900', letterSpacing: '-0.5px' }}>{selectedDriver.name}</h3>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                                            <Phone size={12} color="rgba(255,255,255,0.4)" />
+                                            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontWeight: '700' }}>{selectedDriver.mobile}</span>
+                                            {selectedDriver.isFreelancer && <span style={{ fontSize: '10px', background: 'rgba(129, 140, 248, 0.2)', color: '#8bafff', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>FREELANCER</span>}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button
+                                    onClick={() => setShowDriverModal(false)}
+                                    style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+
+                            {/* Modal Body */}
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '30px' }} className="custom-scrollbar">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
+                                    {selectedDriver.attendances && selectedDriver.attendances.length > 0 ? (
+                                        selectedDriver.attendances.map((att, idx) => (
+                                            <div key={idx} style={{
+                                                background: 'rgba(255,255,255,0.02)',
+                                                borderRadius: '24px',
+                                                border: '1px solid rgba(255,255,255,0.05)',
+                                                padding: '24px',
+                                                display: 'flex',
+                                                flexDirection: 'column',
+                                                gap: '20px'
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                        <div style={{ padding: '6px 14px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '10px', color: '#0ea5e9', fontWeight: '900', fontSize: '13px' }}>
+                                                            SHIFT #{idx + 1}
+                                                        </div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <Car size={16} color="#0ea5e9" />
+                                                            <span style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{att.vehicle?.carNumber || 'N/A'}</span>
+                                                        </div>
                                                     </div>
-                                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                        <Users size={16} color="#8b5cf6" />
-                                                        <span style={{ color: 'white', fontWeight: '800', fontSize: '13px' }}>{log.driver?.name || 'Unknown Driver'}</span>
-                                                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>{log.driver?.mobile}</span>
-                                                    </div>
-                                                    <div style={{ width: '1px', height: '14px', background: 'rgba(255,255,255,0.2)' }}></div>
-                                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                                        <Car size={16} color="#0ea5e9" />
-                                                        <span style={{ color: '#0ea5e9', fontWeight: '800', fontSize: '13px' }}>{log.vehicle?.carNumber?.split('#')[0] || 'Unknown Vehicle'}</span>
+                                                    <div style={{
+                                                        padding: '6px 12px',
+                                                        borderRadius: '8px',
+                                                        fontSize: '11px',
+                                                        fontWeight: '900',
+                                                        background: att.status === 'completed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(14, 165, 233, 0.1)',
+                                                        color: att.status === 'completed' ? '#10b981' : '#0ea5e9',
+                                                        border: `1px solid ${att.status === 'completed' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(14, 165, 233, 0.2)'}`
+                                                    }}>
+                                                        {att.status?.toUpperCase() || 'ON DUTY'}
                                                     </div>
                                                 </div>
+
+                                                {/* Expenses & Fuel Badges in Modal */}
                                                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-                                                    {log.fuel && log.fuel.amount > 0 && (
+                                                    {att.fuel?.amount > 0 && (
                                                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(245, 158, 11, 0.1)', padding: '4px 10px', borderRadius: '6px', color: '#f59e0b', fontSize: '11px', fontWeight: '800' }}>
-                                                            <Fuel size={12} /> ₹{log.fuel.amount} Fuel
+                                                            <Fuel size={12} /> ₹{att.fuel.amount} Fuel
                                                         </span>
                                                     )}
                                                     {(() => {
-                                                        const parkingExpense = log.approvedExpenses?.find(e => e.type === 'parking');
+                                                        const parkingExpense = att.approvedExpenses?.find(e => e.type === 'parking');
                                                         if (parkingExpense && parkingExpense.amount > 0) {
                                                             return (
                                                                 <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(56, 189, 248, 0.1)', padding: '4px 10px', borderRadius: '6px', color: '#38bdf8', fontSize: '11px', fontWeight: '800' }}>
@@ -566,85 +650,145 @@ const LiveFeed = () => {
                                                         }
                                                         return null;
                                                     })()}
-                                                    {log.status === 'completed' ? (
-                                                        <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', border: '1px solid rgba(16, 185, 129, 0.3)' }}>DUTY COMPLETED</span>
-                                                    ) : (
-                                                        <span style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', border: '1px solid rgba(244, 63, 94, 0.3)' }}>ON DUTY</span>
+                                                    {att.outsideTrip?.occurred && (
+                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(139, 92, 246, 0.1)', padding: '4px 10px', borderRadius: '6px', color: '#8b5cf6', fontSize: '11px', fontWeight: '800' }}>
+                                                            <Activity size={12} /> Outstation {att.outsideTrip.tripType}
+                                                        </span>
                                                     )}
                                                 </div>
-                                            </div>
 
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '15px', background: 'rgba(0,0,0,0.2)', padding: '15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                {/* IN */}
-                                                <div>
-                                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: '800', marginBottom: '4px', textTransform: 'uppercase' }}>Punch In</div>
-                                                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                                                        <span style={{ color: '#10b981', fontSize: '16px', fontWeight: '900' }}>{formatTime(log.punchIn?.time)}</span>
-                                                        <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: '700' }}>{log.punchIn?.km || 0} KM</span>
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                                    {/* Punch In Details */}
+                                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                                                        <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <LogIn size={12} /> Punch In
+                                                        </div>
+                                                        <div style={{ marginBottom: '15px' }}>
+                                                            <div style={{ fontSize: '24px', color: 'white', fontWeight: '950' }}>{formatTime(att.punchIn?.time)}</div>
+                                                            <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Odometer: {att.punchIn?.km || 0} KM</div>
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                            {att.punchIn?.selfie && (
+                                                                <div style={{ textAlign: 'center' }}>
+                                                                    <img src={att.punchIn.selfie} onClick={() => window.open(att.punchIn.selfie)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>SELFIE</div>
+                                                                </div>
+                                                            )}
+                                                            {att.punchIn?.kmPhoto && (
+                                                                <div style={{ textAlign: 'center' }}>
+                                                                    <img src={att.punchIn.kmPhoto} onClick={() => window.open(att.punchIn.kmPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>METER</div>
+                                                                </div>
+                                                            )}
+                                                            {att.punchIn?.carSelfie && (
+                                                                <div style={{ textAlign: 'center' }}>
+                                                                    <img src={att.punchIn.carSelfie} onClick={() => window.open(att.punchIn.carSelfie)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>CAR</div>
+                                                                </div>
+                                                            )}
+                                                        </div>
                                                     </div>
-                                                    <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
-                                                        {log.punchIn?.selfie && <img src={log.punchIn.selfie} onClick={() => window.open(log.punchIn.selfie)} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} title="Driver Selfie" loading="lazy" />}
-                                                        {log.punchIn?.kmPhoto && <img src={log.punchIn.kmPhoto} onClick={() => window.open(log.punchIn.kmPhoto)} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} title="Meter Reading" loading="lazy" />}
-                                                        {log.punchIn?.carSelfie && <img src={log.punchIn.carSelfie} onClick={() => window.open(log.punchIn.carSelfie)} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} title="Car Photo" loading="lazy" />}
+
+                                                    {/* Punch Out Details */}
+                                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '20px', border: '1px solid rgba(244, 63, 94, 0.1)' }}>
+                                                        <div style={{ fontSize: '10px', color: '#f43f5e', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <X size={12} /> Punch Out
+                                                        </div>
+                                                        {att.punchOut?.time ? (
+                                                            <>
+                                                                <div style={{ marginBottom: '15px' }}>
+                                                                    <div style={{ fontSize: '24px', color: 'white', fontWeight: '950' }}>{formatTime(att.punchOut.time)}</div>
+                                                                    <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Odometer: {att.punchOut.km || 0} KM</div>
+                                                                </div>
+                                                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                                    {att.punchOut?.selfie && (
+                                                                        <div style={{ textAlign: 'center' }}>
+                                                                            <img src={att.punchOut.selfie} onClick={() => window.open(att.punchOut.selfie)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>SELFIE</div>
+                                                                        </div>
+                                                                    )}
+                                                                    {att.punchOut?.kmPhoto && (
+                                                                        <div style={{ textAlign: 'center' }}>
+                                                                            <img src={att.punchOut.kmPhoto} onClick={() => window.open(att.punchOut.kmPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>METER</div>
+                                                                        </div>
+                                                                    )}
+                                                                    {att.punchOut?.carSelfie && (
+                                                                        <div style={{ textAlign: 'center' }}>
+                                                                            <img src={att.punchOut.carSelfie} onClick={() => window.open(att.punchOut.carSelfie)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>CAR</div>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                            </>
+                                                        ) : (
+                                                            <div style={{ height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '8px' }}>
+                                                                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 15px #0ea5e9' }} />
+                                                                <div style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: '900', letterSpacing: '1px' }}>IN PROGRESS</div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 </div>
-                                                {/* OUT */}
-                                                <div style={{ borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '15px' }}>
-                                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: '800', marginBottom: '4px', textTransform: 'uppercase' }}>Punch Out</div>
-                                                    {log.punchOut?.time ? (
-                                                        <>
-                                                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                                                                <span style={{ color: '#f43f5e', fontSize: '16px', fontWeight: '900' }}>{formatTime(log.punchOut.time)}</span>
-                                                                <span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: '700' }}>{log.punchOut.km || 0} KM</span>
-                                                            </div>
-                                                            <div style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
-                                                                {log.punchOut?.selfie && <img src={log.punchOut.selfie} onClick={() => window.open(log.punchOut.selfie)} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} title="Driver Selfie" loading="lazy" />}
-                                                                {log.punchOut?.kmPhoto && <img src={log.punchOut.kmPhoto} onClick={() => window.open(log.punchOut.kmPhoto)} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} title="Meter Reading" loading="lazy" />}
-                                                                {log.punchOut?.carSelfie && <img src={log.punchOut.carSelfie} onClick={() => window.open(log.punchOut.carSelfie)} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} title="Car Photo" loading="lazy" />}
-                                                            </div>
-                                                        </>
-                                                    ) : (
-                                                        <div style={{ color: '#38bdf8', fontSize: '12px', fontWeight: '800', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                            <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#38bdf8' }} />
-                                                            IN PROGRESS
-                                                        </div>
-                                                    )}
+
+                                                {/* Duty Summary */}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 20px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <div style={{ textAlign: 'center', flex: 1 }}>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Travel Distance</div>
+                                                        <div style={{ fontSize: '18px', color: 'white', fontWeight: '950' }}>{att.totalKM || (att.punchOut?.km ? att.punchOut.km - (att.punchIn?.km || 0) : 0)} <span style={{ fontSize: '11px', opacity: 0.5 }}>KM</span></div>
+                                                    </div>
+                                                    <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+                                                    <div style={{ textAlign: 'center', flex: 1 }}>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Duty Duration</div>
+                                                        <div style={{ fontSize: '18px', color: '#8b5cf6', fontWeight: '950' }}>{att.punchIn?.time && att.punchOut?.time ? formatDuration(att.punchIn.time, att.punchOut.time) : '--'}</div>
+                                                    </div>
                                                 </div>
-                                                {/* EXPENSES EVIDENCE */}
-                                                {(log.fuel?.slipPhoto || log.approvedExpenses?.some(e => e.receiptPhoto)) && (
-                                                    <div style={{ borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '15px' }}>
-                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: '800', marginBottom: '4px', textTransform: 'uppercase' }}>Evidence</div>
-                                                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                                                            {log.fuel?.slipPhoto && <img src={log.fuel.slipPhoto} onClick={() => window.open(log.fuel.slipPhoto)} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} title="Fuel Slip" loading="lazy" />}
-                                                            {log.approvedExpenses?.map((e, idx) => e.receiptPhoto && (
-                                                                <img key={idx} src={e.receiptPhoto} onClick={() => window.open(e.receiptPhoto)} style={{ width: '40px', height: '40px', borderRadius: '4px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }} title={`${e.type} Receipt`} loading="lazy" />
-                                                            ))}
-                                                        </div>
+
+                                                {/* Locations if available */}
+                                                {(att.punchIn?.location?.address || att.punchOut?.location?.address) && (
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                                        {att.punchIn?.location?.address && (
+                                                            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                                                <MapPin size={14} color="#10b981" style={{ marginTop: '2px' }} />
+                                                                <div>
+                                                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>START LOCATION</div>
+                                                                    <div style={{ fontSize: '12px', color: 'white', fontWeight: '600' }}>{att.punchIn.location.address}</div>
+                                                                </div>
+                                                            </div>
+                                                        )}
+                                                        {att.punchOut?.location?.address && (
+                                                            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                                                                <MapPin size={14} color="#f43f5e" style={{ marginTop: '2px' }} />
+                                                                <div>
+                                                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>END LOCATION</div>
+                                                                    <div style={{ fontSize: '12px', color: 'white', fontWeight: '600' }}>{att.punchOut.location.address}</div>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
                                                 )}
-
-                                                {/* SUMMARY */}
-                                                <div style={{ borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '15px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: '800' }}>Total Duty KM:</span>
-                                                        <span style={{ fontSize: '16px', color: 'white', fontWeight: '900' }}>{log.totalKM || 0} <span style={{ fontSize: '10px', opacity: 0.5 }}>KM</span></span>
-                                                    </div>
-                                                    {log.status === 'completed' && log.punchOut?.time && log.punchIn?.time && (
-                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-                                                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: '800' }}>Duration:</span>
-                                                            <span style={{ fontSize: '13px', color: '#8b5cf6', fontWeight: '900' }}>{formatDuration(log.punchIn.time, log.punchOut.time)}</span>
-                                                        </div>
-                                                    )}
-                                                </div>
                                             </div>
+                                        ))
+                                    ) : (
+                                        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(0,0,0,0.1)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                            <Clock size={48} color="rgba(255,255,255,0.1)" style={{ marginBottom: '15px' }} />
+                                            <h4 style={{ margin: 0, color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>No Attendance Recorded for this date.</h4>
                                         </div>
-                                    ))
-                                )}
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
-            </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            <div style={{ padding: '20px 30px', background: 'rgba(0,0,0,0.2)', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'flex-end' }}>
+                                <button
+                                    onClick={() => setShowDriverModal(false)}
+                                    style={{ padding: '12px 30px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontWeight: '800', cursor: 'pointer' }}
+                                >
+                                    Close Details
+                                </button>
+                            </div>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             <style>{`
                 .custom-scrollbar::-webkit-scrollbar { width: 6px; }
@@ -652,6 +796,15 @@ const LiveFeed = () => {
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); borderRadius: 10px; }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
                 .glass-card { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+                .driver-card-hover:hover {
+                    transform: translateY(-5px);
+                    background: rgba(255,255,255,0.08) !important;
+                    border-color: rgba(255,255,255,0.2) !important;
+                    box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                }
+                .driver-card-hover:active {
+                    transform: translateY(0);
+                }
             `}</style>
         </div>
     );
