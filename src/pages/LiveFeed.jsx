@@ -396,7 +396,7 @@ const LiveFeed = () => {
                                                                                 border: `1px solid ${chipBorder}`,
                                                                                 whiteSpace: 'nowrap'
                                                                             }}>
-                                                                                {attStatus} {driver.attendances.length > 1 ? `#${idx + 1}` : ''}
+                                                                                {attStatus}
                                                                             </span>
                                                                         </div>
 
@@ -491,7 +491,7 @@ const LiveFeed = () => {
                                                                             border: `1px solid ${chipBorder}`,
                                                                             whiteSpace: 'nowrap'
                                                                         }}>
-                                                                            {attStatus} {vehicle.attendances.length > 1 ? `#${idx + 1}` : ''}
+                                                                            {attStatus}
                                                                         </span>
                                                                     </div>
 
@@ -634,11 +634,53 @@ const LiveFeed = () => {
 
                                                 {/* Expenses & Fuel Badges in Modal */}
                                                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                    {/* Approved Fuel Block */}
                                                     {att.fuel?.amount > 0 && (
-                                                        <span style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(245, 158, 11, 0.1)', padding: '4px 10px', borderRadius: '6px', color: '#f59e0b', fontSize: '11px', fontWeight: '800' }}>
-                                                            <Fuel size={12} /> ₹{att.fuel.amount} Fuel
-                                                        </span>
+                                                        <div style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '8px',
+                                                            background: 'rgba(16, 185, 129, 0.1)',
+                                                            padding: '6px 12px',
+                                                            borderRadius: '10px',
+                                                            border: '1px solid rgba(16, 185, 129, 0.2)',
+                                                            boxShadow: '0 2px 10px rgba(16, 185, 129, 0.05)'
+                                                        }}>
+                                                            <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: '#10b981', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                <Fuel size={14} color="white" />
+                                                            </div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>₹{att.fuel.amount}</span>
+                                                                <span style={{ color: '#10b981', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                                    Verified & Approved <CheckCircle2 size={10} />
+                                                                </span>
+                                                            </div>
+                                                        </div>
                                                     )}
+
+                                                    {/* Pending Fuel Block */}
+                                                    {att.pendingExpenses?.filter(e => e.type === 'fuel' && e.status === 'pending').map((pf, pidx) => (
+                                                        <div key={pidx} style={{
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '8px',
+                                                            background: 'rgba(245, 158, 11, 0.1)',
+                                                            padding: '6px 12px',
+                                                            borderRadius: '10px',
+                                                            border: '1px solid rgba(245, 158, 11, 0.2)',
+                                                            boxShadow: '0 2px 10px rgba(245, 158, 11, 0.05)'
+                                                        }}>
+                                                            <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: '#f59e0b', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                <Fuel size={14} color="white" />
+                                                            </div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>₹{pf.amount}</span>
+                                                                <span style={{ color: '#f59e0b', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                                    Admin Approval Pending <Clock size={10} className="pulse-animation" />
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                    ))}
                                                     {(() => {
                                                         const parkingExpense = att.approvedExpenses?.find(e => e.type === 'parking');
                                                         if (parkingExpense && parkingExpense.amount > 0) {
@@ -796,6 +838,13 @@ const LiveFeed = () => {
                 .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); borderRadius: 10px; }
                 .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
                 .glass-card { backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); }
+                .pulse-animation {
+                    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+                }
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; transform: scale(1); }
+                    50% { opacity: 0.5; transform: scale(0.9); }
+                }
                 .driver-card-hover:hover {
                     transform: translateY(-5px);
                     background: rgba(255,255,255,0.08) !important;

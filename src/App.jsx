@@ -25,6 +25,7 @@ const Warranties = lazy(() => import('./pages/Warranties'));
 const DriverSalaries = lazy(() => import('./pages/DriverSalaries'));
 const VehicleMonthlyDetails = lazy(() => import('./pages/VehicleMonthlyDetails'));
 const LiveFeed = lazy(() => import('./pages/LiveFeed'));
+const EventManagement = lazy(() => import('./pages/EventManagement'));
 import Sidebar from './components/Sidebar';
 import { CompanyProvider } from './context/CompanyContext';
 
@@ -160,6 +161,7 @@ const AdminRoutes = () => {
       <Route index element={<AdminDashboard />} />
       <Route path="live-feed" element={<LiveFeed />} />
       <Route path="outside-cars" element={<OutsideCars />} />
+      <Route path="event-management" element={<EventManagement />} />
       <Route path="maintenance" element={<Maintenance />} />
       <Route path="parking" element={<Parking />} />
       <Route path="freelancers" element={<Freelancers />} />

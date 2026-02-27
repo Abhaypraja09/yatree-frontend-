@@ -205,114 +205,114 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    <div className="date-selector-container">
-                        <div className="date-selector-inner">
-                            <div style={{ display: 'flex', gap: '2px', flex: 1 }}>
-                                <button
-                                    onClick={() => {
-                                        const d = new Date(selectedDate);
-                                        d.setDate(d.getDate() - 1);
-                                        setSelectedDate(d.toISOString().split('T')[0]);
-                                    }}
-                                    style={{
-                                        width: '36px',
-                                        height: '36px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        borderRadius: '8px',
-                                        background: '#334155',
-                                        color: '#ffffff',
-                                        cursor: 'pointer',
-                                        border: '1px solid rgba(255,255,255,0.2)',
-                                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-                                    }}
-                                >
-                                    <ChevronLeft size={20} strokeWidth={3} />
-                                </button>
+                    <div className="date-selector-wrapper" style={{ flexShrink: 0 }}>
+                        <div style={{
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            padding: '4px',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '5px',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                        }}>
+                            <button
+                                onClick={() => {
+                                    const d = new Date(selectedDate);
+                                    d.setDate(d.getDate() - 1);
+                                    setSelectedDate(d.toISOString().split('T')[0]);
+                                }}
+                                style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    color: 'rgba(255,255,255,0.6)',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <ChevronLeft size={18} strokeWidth={2.5} />
+                            </button>
 
-                                <div
-                                    style={{ position: 'relative', flex: 1, cursor: 'pointer' }}
-                                    onClick={() => {
-                                        if (dateInputRef.current) {
-                                            if (typeof dateInputRef.current.showPicker === 'function') {
-                                                dateInputRef.current.showPicker();
-                                            } else {
-                                                dateInputRef.current.click();
-                                            }
+                            <div
+                                onClick={() => {
+                                    if (dateInputRef.current) {
+                                        if (typeof dateInputRef.current.showPicker === 'function') {
+                                            dateInputRef.current.showPicker();
+                                        } else {
+                                            dateInputRef.current.click();
                                         }
-                                    }}
-                                >
-                                    <div
-                                        style={{
-                                            height: '36px',
-                                            padding: '0 15px',
-                                            background: '#334155',
-                                            borderRadius: '8px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '10px',
-                                            border: '1px solid rgba(255,255,255,0.2)',
-                                            boxShadow: '0 2px 5px rgba(0,0,0,0.2)',
-                                            whiteSpace: 'nowrap',
-                                            pointerEvents: 'none'
-                                        }}
-                                    >
-                                        <Calendar size={16} color="#ffffff" />
-                                        <span style={{ color: '#ffffff', fontSize: '14px', fontWeight: '700' }}>{formatDate(selectedDate)}</span>
-                                    </div>
-                                    <input
-                                        type="date"
-                                        ref={dateInputRef}
-                                        value={selectedDate}
-                                        onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-                                        style={{
-                                            position: 'absolute',
-                                            top: 0,
-                                            left: 0,
-                                            width: '100%',
-                                            height: '100%',
-                                            opacity: 0,
-                                            pointerEvents: 'none'
-                                        }}
-                                    />
-                                </div>
-
-                                <button
-                                    onClick={() => {
-                                        const d = new Date(selectedDate);
-                                        d.setDate(d.getDate() + 1);
-                                        setSelectedDate(d.toISOString().split('T')[0]);
-                                    }}
-                                    style={{
-                                        width: '36px',
-                                        height: '36px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        borderRadius: '8px',
-                                        background: '#334155',
-                                        color: '#ffffff',
-                                        cursor: 'pointer',
-                                        border: '1px solid rgba(255,255,255,0.2)',
-                                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-                                    }}
-                                >
-                                    <ChevronRight size={20} strokeWidth={3} />
-                                </button>
+                                    }
+                                }}
+                                style={{
+                                    padding: '0 15px',
+                                    height: '36px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    cursor: 'pointer',
+                                    background: 'rgba(251, 191, 36, 0.1)',
+                                    borderRadius: '10px',
+                                    border: '1px solid rgba(251, 191, 36, 0.15)',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <Calendar size={15} color="#fbbf24" strokeWidth={2.5} />
+                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '900', letterSpacing: '0.5px' }}>
+                                    {new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
+                                </span>
+                                <input
+                                    type="date"
+                                    ref={dateInputRef}
+                                    value={selectedDate}
+                                    onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
+                                    style={{ visibility: 'hidden', width: 0, position: 'absolute' }}
+                                />
                             </div>
+
+                            <button
+                                onClick={() => {
+                                    const d = new Date(selectedDate);
+                                    d.setDate(d.getDate() + 1);
+                                    setSelectedDate(d.toISOString().split('T')[0]);
+                                }}
+                                style={{
+                                    width: '36px',
+                                    height: '36px',
+                                    borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    color: 'rgba(255,255,255,0.6)',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <ChevronRight size={18} strokeWidth={2.5} />
+                            </button>
 
                             <button
                                 onClick={() => setSelectedDate(getTodayLocal())}
                                 style={{
+                                    marginLeft: '5px',
                                     padding: '0 12px',
-                                    height: '30px',
-                                    borderRadius: '8px',
-                                    background: selectedDate === getTodayLocal() ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
-                                    color: selectedDate === getTodayLocal() ? 'black' : 'white',
-                                    fontWeight: '800',
-                                    fontSize: '10px',
-                                    textTransform: 'uppercase'
+                                    height: '36px',
+                                    borderRadius: '10px',
+                                    background: selectedDate === getTodayLocal() ? '#fbbf24' : 'rgba(255,255,255,0.05)',
+                                    color: selectedDate === getTodayLocal() ? 'black' : 'rgba(255,255,255,0.4)',
+                                    fontWeight: '900',
+                                    fontSize: '11px',
+                                    textTransform: 'uppercase',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s'
                                 }}
                             >
                                 Today

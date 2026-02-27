@@ -17,7 +17,8 @@ import {
     MapPin,
     AlertTriangle,
     ShieldCheck,
-    Activity
+    Activity,
+    Briefcase
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
@@ -34,6 +35,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         { path: '/admin/driver-salaries', icon: IndianRupee, label: 'Driver Salaries' },
         { path: '/admin/vehicles', icon: Car, label: 'Vehicles' },
         { path: '/admin/outside-cars', icon: Car, label: 'Outside Cars' },
+        { path: '/admin/event-management', icon: Briefcase, label: 'Event Management' },
         { path: '/admin/border-tax', icon: ShieldAlert, label: 'Border Tax' },
         { path: '/admin/fastag', icon: ClipboardList, label: 'Fastag' },
         { path: '/admin/maintenance', icon: Wrench, label: 'Maintenance' },
@@ -48,7 +50,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     ];
 
     const menuItems = user.role === 'Executive'
-        ? allMenuItems.filter(item => ['Dashboard', 'Live Feed', 'Freelancers', 'Outside Cars', 'Maintenance', 'Parts Warranty', 'Fuel', 'Parking', 'Daily Reports', 'Car Logs', 'Active Logs', 'Staff Management', 'Driver Salaries'].includes(item.label))
+        ? allMenuItems.filter(item => ['Dashboard', 'Live Feed', 'Freelancers', 'Outside Cars', 'Event Management', 'Maintenance', 'Parts Warranty', 'Fuel', 'Parking', 'Daily Reports', 'Car Logs', 'Active Logs', 'Staff Management', 'Driver Salaries'].includes(item.label))
         : allMenuItems;
 
     const logoMap = {

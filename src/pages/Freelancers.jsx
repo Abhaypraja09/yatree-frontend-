@@ -217,8 +217,8 @@ const Freelancers = () => {
 
     const getToday = () => getLocalYYYYMMDD();
 
-    const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(getToday());
+    const [isRange, setIsRange] = useState(true);
+    const [fromDate, setFromDate] = useState(getOneEightyDaysAgo());
     const [toDate, setToDate] = useState(getToday());
 
     const [submitting, setSubmitting] = useState(false);
