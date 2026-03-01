@@ -217,7 +217,7 @@ const Freelancers = () => {
 
     const getToday = () => getLocalYYYYMMDD();
 
-    const [isRange, setIsRange] = useState(true);
+    const [isRange, setIsRange] = useState(false);
     const [fromDate, setFromDate] = useState(getOneEightyDaysAgo());
     const [toDate, setToDate] = useState(getToday());
 
@@ -782,12 +782,19 @@ const Freelancers = () => {
 
                             {isRange && (
                                 <div
-                                    onClick={() => document.getElementById('from-date-picker').showPicker()}
+                                    onClick={() => {
+                                        const el = document.getElementById('from-date-picker');
+                                        if (el) {
+                                            if (typeof el.showPicker === 'function') el.showPicker();
+                                            else el.click();
+                                        }
+                                    }}
                                     style={{
                                         padding: '0 12px', height: '36px', display: 'flex',
                                         alignItems: 'center', gap: '8px', cursor: 'pointer',
                                         background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px',
-                                        border: '1px solid rgba(99, 102, 241, 0.15)'
+                                        border: '1px solid rgba(99, 102, 241, 0.15)',
+                                        position: 'relative'
                                     }}
                                 >
                                     <span style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900' }}>FROM:</span>
@@ -799,18 +806,34 @@ const Freelancers = () => {
                                         type="date"
                                         value={fromDate}
                                         onChange={(e) => setFromDate(e.target.value)}
-                                        style={{ visibility: 'hidden', width: 0, position: 'absolute' }}
+                                        style={{
+                                            position: 'absolute',
+                                            opacity: 0,
+                                            width: '100%',
+                                            height: '100%',
+                                            left: 0,
+                                            top: 0,
+                                            cursor: 'pointer',
+                                            zIndex: 1
+                                        }}
                                     />
                                 </div>
                             )}
 
                             <div
-                                onClick={() => document.getElementById('main-date-picker').showPicker()}
+                                onClick={() => {
+                                    const el = document.getElementById('main-date-picker');
+                                    if (el) {
+                                        if (typeof el.showPicker === 'function') el.showPicker();
+                                        else el.click();
+                                    }
+                                }}
                                 style={{
                                     padding: '0 15px', height: '36px', display: 'flex',
                                     alignItems: 'center', gap: '8px', cursor: 'pointer',
                                     background: 'rgba(251, 191, 36, 0.1)', borderRadius: '10px',
-                                    border: '1px solid rgba(251, 191, 36, 0.15)'
+                                    border: '1px solid rgba(251, 191, 36, 0.15)',
+                                    position: 'relative'
                                 }}
                             >
                                 {isRange && <span style={{ color: '#fbbf24', fontSize: '11px', fontWeight: '900' }}>TO:</span>}
@@ -826,7 +849,16 @@ const Freelancers = () => {
                                         setToDate(e.target.value);
                                         if (!isRange) setFromDate(e.target.value);
                                     }}
-                                    style={{ visibility: 'hidden', width: 0, position: 'absolute' }}
+                                    style={{
+                                        position: 'absolute',
+                                        opacity: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        left: 0,
+                                        top: 0,
+                                        cursor: 'pointer',
+                                        zIndex: 1
+                                    }}
                                 />
                             </div>
 

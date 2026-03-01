@@ -22,7 +22,9 @@ const Staff = () => {
     const [showAddModal, setShowAddModal] = useState(false);
     const [view, setView] = useState('list'); // 'list', 'attendance', 'leaves', 'summary'
     const [searchTerm, setSearchTerm] = useState('');
-    const [filterDate, setFilterDate] = useState(new Date().toISOString().split('T')[0]);
+    const [isRange, setIsRange] = useState(false);
+    const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
+    const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
     const [filterStaff, setFilterStaff] = useState('all');
 
     const [formData, setFormData] = useState({
@@ -54,7 +56,7 @@ const Staff = () => {
                 fetchMonthlyReport();
             }
         }
-    }, [selectedCompany, filterDate, view, selectedMonth, selectedYear]);
+    }, [selectedCompany, fromDate, toDate, view, selectedMonth, selectedYear]);
 
     const fetchPendingLeaves = async () => {
         if (!selectedCompany?._id) return;
@@ -122,7 +124,7 @@ const Staff = () => {
         const ws = XLSX.utils.json_to_sheet(dataToExport);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Staff Attendance");
-        XLSX.writeFile(wb, `Staff_Attendance_${filterDate}.xlsx`);
+        XLSX.writeFile(wb, `Staff_Attendance_${isRange ? `${fromDate}_to_${toDate}` : toDate}.xlsx`);
     };
 
 
@@ -259,7 +261,9 @@ const Staff = () => {
     );
 
     const filteredAttendance = attendanceList.filter(record => {
-        const matchesDate = record.date === filterDate;
+        const matchesDate = isRange
+            ? (record.date >= fromDate && record.date <= toDate)
+            : record.date === toDate;
         const matchesStaff = filterStaff === 'all' || record.staff?._id === filterStaff;
         return matchesDate && matchesStaff;
     });
@@ -539,17 +543,129 @@ const Staff = () => {
                     </div>
 
                     {view === 'attendance' && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '15px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
-                                <Calendar size={20} color="#0ea5e9" />
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '6px', borderRadius: '18px', gap: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <button
+                                onClick={() => {
+                                    const d = new Date(toDate);
+                                    d.setDate(d.getDate() - 1);
+                                    const newDate = d.toISOString().split('T')[0];
+                                    setToDate(newDate);
+                                    if (!isRange) setFromDate(newDate);
+                                }}
+                                style={{
+                                    width: '36px', height: '36px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)',
+                                    border: '1px solid rgba(255,255,255,0.05)', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                }}
+                            >
+                                <ChevronLeft size={18} />
+                            </button>
+
+                            {isRange && (
+                                <div
+                                    onClick={() => {
+                                        const el = document.getElementById('from-date-picker-staff');
+                                        if (el) {
+                                            if (typeof el.showPicker === 'function') el.showPicker();
+                                            else el.click();
+                                        }
+                                    }}
+                                    style={{
+                                        padding: '0 12px', height: '36px', display: 'flex',
+                                        alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                        background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px',
+                                        border: '1px solid rgba(99, 102, 241, 0.15)',
+                                        position: 'relative', minWidth: '100px'
+                                    }}
+                                >
+                                    <span style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900' }}>FROM:</span>
+                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '900' }}>
+                                        {new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                    </span>
+                                    <input
+                                        id="from-date-picker-staff"
+                                        type="date"
+                                        value={fromDate}
+                                        onChange={(e) => setFromDate(e.target.value)}
+                                        style={{
+                                            position: 'absolute', opacity: 0, width: '100%', height: '100%',
+                                            left: 0, top: 0, cursor: 'pointer', zIndex: 1
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            <div
+                                onClick={() => {
+                                    const el = document.getElementById('main-date-picker-staff');
+                                    if (el) {
+                                        if (typeof el.showPicker === 'function') el.showPicker();
+                                        else el.click();
+                                    }
+                                }}
+                                style={{
+                                    padding: '0 15px', height: '36px', display: 'flex',
+                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                    background: 'rgba(14, 165, 233, 0.1)', borderRadius: '10px',
+                                    border: '1px solid rgba(14, 165, 233, 0.15)',
+                                    position: 'relative', minWidth: '100px'
+                                }}
+                            >
+                                {isRange && <span style={{ color: '#0ea5e9', fontSize: '11px', fontWeight: '900' }}>TO:</span>}
+                                {!isRange && <Calendar size={14} color="#0ea5e9" />}
+                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>
+                                    {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                </span>
+                                <input
+                                    id="main-date-picker-staff"
+                                    type="date"
+                                    value={toDate}
+                                    onChange={(e) => {
+                                        setToDate(e.target.value);
+                                        if (!isRange) setFromDate(e.target.value);
+                                    }}
+                                    style={{
+                                        position: 'absolute', opacity: 0, width: '100%', height: '100%',
+                                        left: 0, top: 0, cursor: 'pointer', zIndex: 1
+                                    }}
+                                />
                             </div>
-                            <input
-                                type="date"
-                                className="premium-compact-input"
-                                value={filterDate}
-                                onChange={(e) => setFilterDate(e.target.value)}
-                                style={{ height: '48px', margin: 0, width: '180px' }}
-                            />
+
+                            <button
+                                onClick={() => {
+                                    const d = new Date(toDate);
+                                    d.setDate(d.getDate() + 1);
+                                    const newDate = d.toISOString().split('T')[0];
+                                    setToDate(newDate);
+                                    if (!isRange) setFromDate(newDate);
+                                }}
+                                style={{
+                                    width: '36px', height: '36px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)',
+                                    border: '1px solid rgba(255,255,255,0.05)', display: 'flex',
+                                    alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                }}
+                            >
+                                <ChevronRight size={18} />
+                            </button>
+
+                            <button
+                                onClick={() => {
+                                    const next = !isRange;
+                                    setIsRange(next);
+                                    if (!next) setFromDate(toDate);
+                                }}
+                                style={{
+                                    marginLeft: '5px', padding: '0 10px', height: '36px',
+                                    borderRadius: '10px', border: 'none', cursor: 'pointer',
+                                    background: isRange ? '#0ea5e9' : 'rgba(255,255,255,0.05)',
+                                    color: isRange ? 'white' : 'rgba(255,255,255,0.4)',
+                                    fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
+                                }}
+                            >
+                                {isRange ? 'Range ON' : 'Single'}
+                            </button>
                         </div>
                     )}
 
