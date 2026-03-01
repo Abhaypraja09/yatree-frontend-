@@ -240,15 +240,6 @@ const AdminDashboard = () => {
                             </button>
 
                             <div
-                                onClick={() => {
-                                    if (dateInputRef.current) {
-                                        if (typeof dateInputRef.current.showPicker === 'function') {
-                                            dateInputRef.current.showPicker();
-                                        } else {
-                                            dateInputRef.current.click();
-                                        }
-                                    }
-                                }}
                                 style={{
                                     padding: '0 15px',
                                     height: '36px',
@@ -259,7 +250,9 @@ const AdminDashboard = () => {
                                     background: 'rgba(251, 191, 36, 0.1)',
                                     borderRadius: '10px',
                                     border: '1px solid rgba(251, 191, 36, 0.15)',
-                                    transition: 'all 0.2s'
+                                    transition: 'all 0.2s',
+                                    position: 'relative',
+                                    overflow: 'hidden'
                                 }}
                             >
                                 <Calendar size={15} color="#fbbf24" strokeWidth={2.5} />
@@ -268,10 +261,19 @@ const AdminDashboard = () => {
                                 </span>
                                 <input
                                     type="date"
-                                    ref={dateInputRef}
                                     value={selectedDate}
                                     onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-                                    style={{ visibility: 'hidden', width: 0, position: 'absolute' }}
+                                    style={{
+                                        position: 'absolute',
+                                        opacity: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        left: 0,
+                                        top: 0,
+                                        cursor: 'pointer',
+                                        zIndex: 2,
+                                        pointerEvents: 'auto'
+                                    }}
                                 />
                             </div>
 

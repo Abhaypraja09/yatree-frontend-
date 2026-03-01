@@ -1,349 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import {
-    Calendar as CalendarIcon,
-    Search,
-    Download,
-    Eye,
-    Filter,
-    ArrowUpRight,
-    ArrowDownLeft,
-    MapPin,
-    X,
-    User as UserIcon,
-    Users,
-    Car,
-    Shield,
-    Wallet,
-    LayoutGrid,
-    CheckCircle2,
-    Fuel,
-    Wrench,
-    IndianRupee,
-    Trash2,
-    AlertTriangle,
-    FileText,
-    Edit2
+    Calendar as CalendarIcon, Search, Download, Eye, Filter, ArrowUpRight, ArrowDownLeft,
+    MapPin, X, User as UserIcon, Users, Car, Shield, Wallet, LayoutGrid, CheckCircle2,
+    Fuel, Wrench, IndianRupee, Trash2, AlertTriangle, FileText, Edit2, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 
-const AttendanceModal = ({ item, onClose, borderTaxRecords }) => (
-    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-        <style>{`
-            .grid-1-2-2-3 { display: grid; grid-template-columns: 1fr; }
-            @media(min-width: 768px) { .grid-1-2-2-3 { grid-template-columns: 1fr 1fr; } }
-            
-            .grid-1-2-3-4 { display: grid; grid-template-columns: 1fr; }
-            @media(min-width: 640px) { .grid-1-2-3-4 { grid-template-columns: 1fr 1fr; } }
-            @media(min-width: 1024px) { .grid-1-2-3-4 { grid-template-columns: 1fr 1fr 1fr; } }
-            
-            /* Hide scrollbar for modal content */
-            .modal-content::-webkit-scrollbar { width: 8px; }
-            .modal-content::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
-            .modal-content::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
-        `}</style>
-        <motion.div
-            initial={{ scale: 0.95, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            className="glass-card modal-content"
-            style={{ width: '100%', maxWidth: '900px', maxHeight: '92vh', overflowY: 'auto' }}
-        >
-            <div className="modal-header" style={{ position: 'sticky', top: 0, background: 'var(--bg-dark)', zIndex: 10, margin: '-20px -20px 20px -20px', padding: '15px 20px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                <h2 className="modal-title">Report Detail: {item.driver?.name || item.driverName || 'Report'}</h2>
-                <button onClick={onClose} className="modal-close-btn"><X size={18} /></button>
-            </div>
+// Optimized Imports
+import AttendanceModal from '../components/reports/AttendanceModal';
+import EditAttendanceModal from '../components/reports/EditAttendanceModal';
 
-            {item.entryType === 'attendance' ? (
-                <>
-                    <div className="grid-1-2-2-3" style={{ gap: '20px' }}>
-                        {/* Punch In */}
-                        <div>
-                            <h3 className="modal-section-title" style={{ borderColor: '#10b981' }}>Punch In Details</h3>
-                            <div className="photo-grid">
-                                <div>
-                                    <p className="photo-label">SELFIE</p>
-                                    <img src={item.punchIn?.selfie} className="photo-thumbnail" onClick={() => window.open(item.punchIn?.selfie)} loading="lazy" />
-                                </div>
-                                <div>
-                                    <p className="photo-label">KM METER</p>
-                                    <img src={item.punchIn?.kmPhoto} className="photo-thumbnail" onClick={() => window.open(item.punchIn?.kmPhoto)} loading="lazy" />
-                                </div>
-                                <div>
-                                    <p className="photo-label">CAR PHOTO</p>
-                                    <img src={item.punchIn?.carSelfie} className="photo-thumbnail" onClick={() => window.open(item.punchIn?.carSelfie)} loading="lazy" />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Punch Out */}
-                        <div>
-                            <h3 className="modal-section-title" style={{ borderColor: '#f43f5e' }}>Punch Out Details</h3>
-                            {item.punchOut?.time ? (
-                                <div className="photo-grid">
-                                    <div>
-                                        <p className="photo-label">SELFIE</p>
-                                        <img src={item.punchOut?.selfie} className="photo-thumbnail" onClick={() => window.open(item.punchOut?.selfie)} loading="lazy" />
-                                    </div>
-                                    <div>
-                                        <p className="photo-label">KM METER</p>
-                                        <img src={item.punchOut?.kmPhoto} className="photo-thumbnail" onClick={() => window.open(item.punchOut?.kmPhoto)} loading="lazy" />
-                                    </div>
-                                    <div>
-                                        <p className="photo-label">CAR PHOTO</p>
-                                        <img src={item.punchOut?.carSelfie} className="photo-thumbnail" onClick={() => window.open(item.punchOut?.carSelfie)} loading="lazy" />
-                                    </div>
-                                </div>
-                            ) : (
-                                <div style={{ height: '80px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '12px' }}>
-                                    <p style={{ fontSize: '12px', margin: 0, fontWeight: '600' }}>Driver currently on road...</p>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Expenditure & Extras */}
-                    <div className="resp-grid grid-1-2-3-4" style={{ marginTop: '25px', gap: '15px' }}>
-                        <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
-                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '12px', fontWeight: '800', textTransform: 'uppercase' }}>Fuel Management</p>
-                            {item.fuel?.filled ? (
-                                <div style={{ display: 'grid', gap: '10px' }}>
-                                    {(item.fuel.entries && item.fuel.entries.length > 0) ? (
-                                        item.fuel.entries.map((entry, idx) => (
-                                            <div key={idx} style={{ display: 'flex', gap: '10px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '8px', borderRadius: '8px' }}>
-                                                <img src={entry.slipPhoto} onClick={() => window.open(entry.slipPhoto)} style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', cursor: 'pointer' }} loading="lazy" />
-                                                <div style={{ flex: 1 }}>
-                                                    <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', margin: 0 }}>₹{entry.amount}</p>
-                                                    <p style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '10px', margin: 0 }}>{entry.km} KM</p>
-                                                </div>
-                                            </div>
-                                        ))
-                                    ) : (
-                                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                            {item.fuel.slipPhoto && <img src={item.fuel.slipPhoto} onClick={() => window.open(item.fuel.slipPhoto)} style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover', cursor: 'pointer' }} />}
-                                            <div style={{ flex: 1 }}>
-                                                <p style={{ color: 'white', fontWeight: '800', fontSize: '16px', margin: 0 }}>₹{item.fuel.amount}</p>
-                                                <p style={{ color: 'var(--primary)', fontWeight: '700', fontSize: '11px', margin: 0 }}>{item.fuel.km || '--'} KM</p>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            ) : null}
-                        </div>
-
-                        <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
-                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '12px', fontWeight: '800', textTransform: 'uppercase' }}>Tolls & Parking</p>
-                            {item.punchOut?.tollParkingAmount > 0 || (item.parking && item.parking.length > 0) ? (
-                                <div>
-                                    <p style={{ color: 'white', fontWeight: '800', fontSize: '16px', margin: 0 }}>₹{item.punchOut?.tollParkingAmount || item.parking?.reduce((s, p) => s + (p.amount || 0), 0)}</p>
-                                    {item.parking && item.parking.length > 0 && (
-                                        <div style={{ display: 'flex', gap: '4px', marginTop: '10px', flexWrap: 'wrap' }}>
-                                            {item.parking.map((p, idx) => (
-                                                <img key={idx} src={p.slipPhoto} onClick={() => window.open(p.slipPhoto)} style={{ width: '30px', height: '30px', borderRadius: '4px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-                                            ))}
-                                        </div>
-                                    )}
-                                </div>
-                            ) : null}
-                        </div>
-
-                        <div className="glass-card" style={{ padding: '15px', background: 'rgba(255,255,255,0.02)' }}>
-                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '12px', fontWeight: '800', textTransform: 'uppercase' }}>Incentives & Taxes</p>
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                {item.punchOut?.allowanceTA > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>TA:</span> <span style={{ color: '#10b981', fontWeight: '800' }}>+₹{item.punchOut.allowanceTA}</span></div>}
-                                {item.punchOut?.nightStayAmount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px' }}><span style={{ color: 'var(--text-muted)' }}>Stay:</span> <span style={{ color: '#10b981', fontWeight: '800' }}>+₹{item.punchOut.nightStayAmount}</span></div>}
-                                {item.outsideTrip?.occurred && (
-                                    <div style={{ padding: '8px', background: 'rgba(56, 189, 248, 0.05)', borderRadius: '8px', marginTop: '5px', border: '1px solid rgba(56, 189, 248, 0.1)' }}>
-                                        <p style={{ fontSize: '9px', color: '#38bdf8', fontWeight: '800', margin: '0 0 4px 0' }}>DRIVER'S SELECTION</p>
-                                        <p style={{ fontSize: '12px', color: 'white', fontWeight: '700', margin: 0 }}>{item.outsideTrip.tripType || 'Outside Trip'}</p>
-                                        {item.outsideTrip.bonusAmount > 0 && <p style={{ fontSize: '11px', color: '#10b981', fontWeight: '800', margin: '4px 0 0 0' }}>+₹{item.outsideTrip.bonusAmount}</p>}
-                                    </div>
-                                )}
-
-                                {borderTaxRecords.filter(b => b.date === item.date && b.vehicle?._id === item.vehicle?._id).map((bt, idx) => (
-                                    <div key={idx} style={{ padding: '6px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '6px', fontSize: '11px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <span style={{ color: 'white' }}>{bt.borderName}</span>
-                                            <span style={{ color: '#10b981', fontWeight: '900' }}>₹{bt.amount}</span>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex-resp" style={{ marginTop: '20px', gap: '12px', display: 'flex' }}>
-                        <div className="glass-card" style={{ padding: '15px', flex: '1', minWidth: '120px', textAlign: 'center', background: 'rgba(16, 185, 129, 0.03)' }}>
-                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '5px', fontWeight: '800' }}>TOTAL PAYABLE</p>
-                            <h3 style={{ color: '#10b981', margin: 0, fontSize: '20px', fontWeight: '900' }}>
-                                ₹{((item.dailyWage || item.driver?.dailyWage || item.vehicle?.dutyAmount || 500) +
-                                    (item.punchOut?.allowanceTA || 0) +
-                                    (item.punchOut?.nightStayAmount || 0) +
-                                    (item.outsideTrip?.bonusAmount || 0)).toLocaleString()}
-                            </h3>
-                            <p style={{ fontSize: '8px', color: 'var(--text-muted)', marginTop: '4px' }}>Base + Incentives</p>
-                        </div>
-                        <div className="glass-card" style={{ padding: '15px', flex: '1', minWidth: '120px', textAlign: 'center', background: 'rgba(16, 185, 129, 0.03)' }}>
-                            <p style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '5px', fontWeight: '800' }}>DISTANCE</p>
-                            <h3 style={{ color: '#10b981', margin: 0, fontSize: '20px', fontWeight: '900' }}>{item.totalKM || '0'} KM</h3>
-                        </div>
-                    </div>
-
-                    {/* Duty Details Section */}
-                    {item.punchOut?.remarks && (
-                        <div className="glass-card" style={{ padding: '15px', marginTop: '15px', border: '1px solid rgba(16, 185, 129, 0.2)', background: 'rgba(16, 185, 129, 0.02)' }}>
-                            <p style={{ fontSize: '9px', color: '#10b981', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Duty Remarks / Destination</p>
-                            <p style={{ color: 'white', fontSize: '13px', lineHeight: '1.6', margin: 0, fontWeight: '600' }}>{item.punchOut.remarks}</p>
-                        </div>
-                    )}
-
-                    {/* Issues Section */}
-                    {item.punchOut?.otherRemarks && (
-                        <div className="glass-card" style={{ padding: '15px', marginTop: '12px', border: '1px solid rgba(244, 63, 94, 0.2)', background: 'rgba(244, 63, 94, 0.02)' }}>
-                            <p style={{ fontSize: '9px', color: '#f43f5e', marginBottom: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Maintenance Remarks</p>
-                            <p style={{ color: 'white', fontSize: '13px', lineHeight: '1.5', margin: 0 }}>{item.punchOut.otherRemarks}</p>
-                        </div>
-                    )}
-                </>
-            ) : (
-                <div style={{ padding: '20px' }}>
-                    <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap' }}>
-                        {(item.billPhoto || item.receiptPhoto || item.slipPhoto) && (
-                            <div style={{ flex: '0 0 300px' }}>
-                                <p className="photo-label">RECEIPT / BILL PHOTO</p>
-                                <img src={item.billPhoto || item.receiptPhoto || item.slipPhoto} style={{ width: '100%', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }} onClick={() => window.open(item.billPhoto || item.receiptPhoto || item.slipPhoto)} />
-                            </div>
-                        )}
-                        <div style={{ flex: 1, minWidth: '250px' }}>
-                            <h3 className="modal-section-title" style={{ borderColor: 'var(--primary)' }}>Entry Details</h3>
-                            <div className="glass-card" style={{ padding: '20px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                <div>
-                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>CATEGORY</p>
-                                    <p style={{ color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase' }}>{item.entryType}</p>
-                                </div>
-                                <div>
-                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>AMOUNT</p>
-                                    <p style={{ color: '#10b981', fontSize: '24px', fontWeight: '900' }}>₹{item.amount}</p>
-                                </div>
-                                <div>
-                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>VEHICLE</p>
-                                    <p style={{ color: 'white', fontWeight: '800' }}>{item.vehicle?.carNumber || item.carNumber || '--'}</p>
-                                </div>
-                                <div>
-                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>ODOMETER</p>
-                                    <p style={{ color: 'white', fontWeight: '800' }}>{item.odometer || item.km || '--'} KM</p>
-                                </div>
-                                <div style={{ gridColumn: 'span 2' }}>
-                                    <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>REMARKS / DESCRIPTION</p>
-                                    <p style={{ color: 'white', fontSize: '14px' }}>{item.remarks || item.location || item.description || '--'}</p>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            )}
-        </motion.div>
-    </div>
-);
-
-const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
-    const [formData, setFormData] = useState({
-        allowanceTA: item.punchOut?.allowanceTA || 0,
-        nightStayAmount: item.punchOut?.nightStayAmount || 0,
-        bonusAmount: item.outsideTrip?.bonusAmount || 0,
-        remarks: item.punchOut?.remarks || '',
-        status: item.status || 'incomplete'
-    });
-
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        onUpdate(item._id, formData);
-    };
-
-    return (
-        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-            <motion.div
-                initial={{ scale: 0.95, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                className="glass-card modal-content"
-                style={{ width: '100%', maxWidth: '450px', padding: '25px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px' }}
-            >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-                    <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Edit Report</h2>
-                    <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: 'none', padding: '8px', borderRadius: '50%', display: 'flex', cursor: 'pointer' }}>
-                        <X size={18} />
-                    </button>
-                </div>
-
-                {item.outsideTrip?.tripType && (
-                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '12px', borderRadius: '12px', marginBottom: '20px' }}>
-                        <p style={{ margin: 0, fontSize: '10px', color: '#38bdf8', fontWeight: '800', textTransform: 'uppercase' }}>Driver's Selection</p>
-                        <p style={{ margin: '4px 0 0', color: 'white', fontSize: '14px', fontWeight: '700' }}>{item.outsideTrip.tripType}</p>
-                        <p style={{ margin: '4px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>Please enter the amounts below based on this selection.</p>
-                    </div>
-                )}
-
-                <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
-                    <div className="form-group">
-                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Same Day Allowance (TA)</label>
-                        <input
-                            type="number"
-                            className="input-field"
-                            value={formData.allowanceTA}
-                            onChange={(e) => setFormData({ ...formData, allowanceTA: e.target.value })}
-                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Night Stay Amount</label>
-                        <input
-                            type="number"
-                            className="input-field"
-                            value={formData.nightStayAmount}
-                            onChange={(e) => setFormData({ ...formData, nightStayAmount: e.target.value })}
-                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Other Bonus / Trip Incentive</label>
-                        <input
-                            type="number"
-                            className="input-field"
-                            value={formData.bonusAmount}
-                            onChange={(e) => setFormData({ ...formData, bonusAmount: e.target.value })}
-                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Duty Remarks / Destination</label>
-                        <textarea
-                            className="input-field"
-                            value={formData.remarks}
-                            onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                            style={{ width: '100%', minHeight: '100px', marginBottom: 0, paddingTop: '12px' }}
-                        />
-                    </div>
-
-                    <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <input
-                            type="checkbox"
-                            id="statusComplete"
-                            checked={formData.status === 'completed'}
-                            onChange={(e) => setFormData({ ...formData, status: e.target.checked ? 'completed' : 'incomplete' })}
-                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                        />
-                        <label htmlFor="statusComplete" style={{ color: 'white', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>Mark Duty as Completed</label>
-                    </div>
-
-                    <button type="submit" className="btn-primary" style={{ height: '52px', fontWeight: '900', marginTop: '10px', fontSize: '14px' }}>
-                        SAVE UPDATED DETAILS
-                    </button>
-                </form>
-            </motion.div>
-        </div>
-    );
-};
+// AttendanceModal and EditAttendanceModal have been moved to separate files for performance and organization.
 
 const Reports = () => {
     const { selectedCompany } = useCompany();
@@ -356,8 +26,9 @@ const Reports = () => {
         return date.toISOString().split('T')[0];
     };
 
-    const [startDate, setStartDate] = useState(getOneEightyDaysAgo());
-    const [endDate, setEndDate] = useState(getToday());
+    const [isRange, setIsRange] = useState(true);
+    const [fromDate, setFromDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
+    const [toDate, setToDate] = useState(getToday());
 
     const [reports, setReports] = useState([]);
     const [fastagRecharges, setFastagRecharges] = useState([]);
@@ -409,7 +80,7 @@ const Reports = () => {
         if (selectedCompany) {
             fetchReports();
         }
-    }, [selectedCompany, startDate, endDate]);
+    }, [selectedCompany, fromDate, toDate]);
 
     const fetchReports = async () => {
         if (!selectedCompany?._id) return;
@@ -418,7 +89,7 @@ const Reports = () => {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             if (!userInfo) return;
 
-            const { data } = await axios.get(`/api/admin/reports/${selectedCompany._id}?from=${startDate}&to=${endDate}`, {
+            const { data } = await axios.get(`/api/admin/reports/${selectedCompany._id}?from=${fromDate}&to=${toDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
 
@@ -559,7 +230,7 @@ const Reports = () => {
         }
 
         XLSX.utils.book_append_sheet(wb, ws, "Daily Operational Log");
-        XLSX.writeFile(wb, `Daily_Log_${selectedCompany.name}_${startDate}.xlsx`);
+        XLSX.writeFile(wb, `Daily_Log_${selectedCompany.name}_${fromDate}.xlsx`);
     };
 
     const handleExportConfig = async () => {
@@ -783,109 +454,72 @@ const Reports = () => {
             ws['!cols'] = colWidths;
         });
 
-        XLSX.writeFile(wb, `Premium_Fleet_Export_${startDate}.xlsx`);
+        XLSX.writeFile(wb, `Premium_Fleet_Export_${fromDate}_to_${toDate}.xlsx`);
     };
 
-    const getUnifiedData = () => {
+    // OPTIMIZATION: Memoize Unified Data computation
+    const unifiedData = React.useMemo(() => {
         let combined = [];
-        // Helper to get date string
         const getEntryDate = (d) => {
             if (!d) return "";
             if (typeof d === 'string') return d.split('T')[0];
-            try {
-                return new Date(d).toISOString().split('T')[0];
-            } catch (e) {
-                return "";
-            }
+            try { return new Date(d).toISOString().split('T')[0]; } catch (e) { return ""; }
         };
 
         // 1. Attendance
-        if (selectedReports.includes('drivers') || selectedReports.includes('freelancers') || selectedReports.includes('outsideCars') || selectedReports.includes('vehicles')) {
+        if (selectedReports.some(r => ['drivers', 'freelancers', 'outsideCars', 'vehicles'].includes(r))) {
             const filteredAtt = reports.filter(r => {
                 const isOutside = r.vehicle?.isOutsideCar || r.isOutsideCar;
                 const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
-
                 if (selectedReports.includes('outsideCars') && isOutside) return true;
                 if (selectedReports.includes('freelancers') && isFreelancer) return true;
                 if (selectedReports.includes('drivers') && !isOutside && !isFreelancer) return true;
-                if (selectedReports.includes('vehicles')) return true;
-                return false;
+                return selectedReports.includes('vehicles');
             });
             combined = [...combined, ...filteredAtt.map(r => ({ ...r, entryType: 'attendance' }))];
         }
 
-        // 2. Fuel
-        if (selectedReports.includes('fuel') || selectedReports.includes('vehicles')) {
-            combined = [...combined, ...fuelRecords.map(f => ({ ...f, entryType: 'fuel', date: getEntryDate(f.date) }))];
-        }
+        // 2-9. Other categories
+        const adder = (list, type, dateField) => {
+            if (selectedReports.includes(type) || (type !== 'advances' && type !== 'fastag' && selectedReports.includes('vehicles'))) {
+                combined = [...combined, ...list.map(item => ({ ...item, entryType: type, date: getEntryDate(item[dateField]) }))];
+            }
+        };
 
-        // 3. Maintenance
-        if (selectedReports.includes('maintenance') || selectedReports.includes('vehicles')) {
-            combined = [...combined, ...maintenanceRecords.map(m => ({ ...m, entryType: 'maintenance', date: getEntryDate(m.billDate) }))];
-        }
+        adder(fuelRecords, 'fuel', 'date');
+        adder(maintenanceRecords, 'maintenance', 'billDate');
+        adder(advanceRecords, 'advance', 'date');
+        adder(borderTaxRecords, 'borderTax', 'date');
+        adder(fastagRecharges, 'fastag', 'date');
+        adder(parkingRecords, 'parking', 'date');
+        adder(accidentLogs, 'accidentLog', 'date');
 
-        // 4. Advances
-        if (selectedReports.includes('advances')) {
-            combined = [...combined, ...advanceRecords.map(a => ({ ...a, entryType: 'advance', date: getEntryDate(a.date) }))];
-        }
-
-        // 5. Border Tax
-        if (selectedReports.includes('borderTax') || selectedReports.includes('vehicles')) {
-            combined = [...combined, ...borderTaxRecords.map(b => ({ ...b, entryType: 'borderTax' }))];
-        }
-
-        // 6. Fastag
-        if (selectedReports.includes('fastag')) {
-            combined = [...combined, ...fastagRecharges.map(f => ({ ...f, entryType: 'fastag', date: getEntryDate(f.date) }))];
-        }
-
-        // 7. Parking
-        if (selectedReports.includes('parking')) {
-            combined = [...combined, ...parkingRecords.map(p => ({ ...p, entryType: 'parking', date: getEntryDate(p.date) }))];
-        }
-
-        // 8. Accident Logs
-        if (selectedReports.includes('accidentLogs')) {
-            combined = [...combined, ...accidentLogs.map(a => ({
-                ...a,
-                entryType: 'accidentLog',
-                date: getEntryDate(a.date),
-                receiptPhoto: a.photos && a.photos.length > 0 ? a.photos[0] : null
-            }))];
-        }
-
-        // 9. Parts Warranty
         if (selectedReports.includes('partsWarranty')) {
             combined = [...combined, ...partsWarrantyRecords.map(p => ({
-                ...p,
-                entryType: 'partsWarranty',
-                date: getEntryDate(p.purchaseDate),
-                amount: p.cost,
-                description: `${p.partName} (${p.brandName}) - Ends: ${getEntryDate(p.warrantyEndDate)}`,
-                receiptPhoto: p.warrantyCardImage
+                ...p, entryType: 'partsWarranty', date: getEntryDate(p.purchaseDate),
+                amount: p.cost, description: `${p.partName} (${p.brandName})`, receiptPhoto: p.warrantyCardImage
             }))];
         }
 
-        return combined.sort((a, b) => {
-            const dateA = a.date || "";
-            const dateB = b.date || "";
-            return dateB.localeCompare(dateA);
-        });
-    };
+        return combined.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+    }, [reports, fuelRecords, maintenanceRecords, advanceRecords, borderTaxRecords, fastagRecharges, parkingRecords, accidentLogs, partsWarrantyRecords, selectedReports]);
 
-    const searchFilter = (item) => {
+    const uniqueVehicles = React.useMemo(() =>
+        [...new Set(unifiedData.map(r => r.vehicle?.carNumber || r.carNumber).filter(Boolean))].sort()
+        , [unifiedData]);
+
+    const filteredReports = React.useMemo(() => {
         const term = searchTerm.toLowerCase();
-        const driverName = (item.driver?.name || item.driverName || '').toLowerCase();
-        const carNum = (item.vehicle?.carNumber || item.carNumber || '').toLowerCase();
-        const matchesSearch = driverName.includes(term) || carNum.includes(term);
-        const matchesVehicle = filterVehicle === 'All' || carNum === filterVehicle.toLowerCase();
-        return matchesSearch && matchesVehicle;
-    };
+        const vFilter = filterVehicle.toLowerCase();
 
-    const unifiedData = getUnifiedData();
-    const uniqueVehicles = [...new Set(unifiedData.map(r => r.vehicle?.carNumber || r.carNumber).filter(Boolean))].sort();
-    const finalUnifiedList = unifiedData.filter(searchFilter);
-    const filteredReports = finalUnifiedList; // for backward compatibility in mapping
+        return unifiedData.filter(item => {
+            const driverName = (item.driver?.name || item.driverName || '').toLowerCase();
+            const carNum = (item.vehicle?.carNumber || item.carNumber || '').toLowerCase();
+            const matchesSearch = !term || driverName.includes(term) || carNum.includes(term);
+            const matchesVehicle = vFilter === 'all' || carNum === vFilter;
+            return matchesSearch && matchesVehicle;
+        });
+    }, [unifiedData, searchTerm, filterVehicle]);
 
     return (
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
@@ -922,40 +556,135 @@ const Reports = () => {
                 </div>
 
                 <div className="flex-resp" style={{ gap: '12px', flexWrap: 'wrap', justifyContent: 'flex-end', flex: '1 1 auto' }}>
-                    <div className="mobile-stack" style={{ gap: '15px', display: 'flex', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        <div style={{ position: 'relative', flex: '1 1 140px' }}>
-                            <span style={{ position: 'absolute', top: '-18px', left: '0', fontSize: '9px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>From</span>
-                            <input
-                                type="date"
-                                value={startDate}
-                                onChange={(e) => setStartDate(e.target.value)}
-                                className="input-field"
-                                style={{
-                                    height: '45px',
-                                    marginBottom: 0,
-                                    width: '100%',
-                                    minWidth: '130px',
-                                    padding: '0 12px'
-                                }}
-                            />
+                    {/* Premium Modern Calendar UI */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        background: 'rgba(0,0,0,0.25)',
+                        padding: '4px',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                    }}>
+                        <button
+                            onClick={() => {
+                                const d = new Date(fromDate);
+                                d.setDate(d.getDate() - 1);
+                                const newDate = d.toISOString().split('T')[0];
+                                setFromDate(newDate);
+                                if (!isRange) setToDate(newDate);
+                                else {
+                                    const dt = new Date(toDate);
+                                    dt.setDate(dt.getDate() - 1);
+                                    setToDate(dt.toISOString().split('T')[0]);
+                                }
+                            }}
+                            style={{
+                                width: '36px', height: '36px', borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.03)', border: 'none',
+                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                            {isRange && (
+                                <div style={{
+                                    padding: '0 15px', height: '36px', display: 'flex',
+                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                    background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px',
+                                    border: '1px solid rgba(99, 102, 241, 0.15)',
+                                    position: 'relative', overflow: 'hidden'
+                                }}>
+                                    <span style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
+                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
+                                        {new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                    </span>
+                                    <input
+                                        type="date"
+                                        value={fromDate}
+                                        onChange={(e) => setFromDate(e.target.value)}
+                                        style={{
+                                            position: 'absolute', opacity: 0, inset: 0,
+                                            width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            <div style={{
+                                padding: '0 15px', height: '36px', display: 'flex',
+                                alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                                borderRadius: '10px',
+                                border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(99, 102, 241, 0.2)'}`,
+                                position: 'relative', overflow: 'hidden'
+                            }}>
+                                {isRange ? (
+                                    <span style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>TO:</span>
+                                ) : (
+                                    <Calendar size={14} color="#818cf8" />
+                                )}
+                                <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
+                                    {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: isRange ? undefined : 'numeric' }).toUpperCase()}
+                                </span>
+                                <input
+                                    type="date"
+                                    value={toDate}
+                                    onChange={(e) => {
+                                        setToDate(e.target.value);
+                                        if (!isRange) setFromDate(e.target.value);
+                                    }}
+                                    style={{
+                                        position: 'absolute', opacity: 0, inset: 0,
+                                        width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
+                                    }}
+                                />
+                            </div>
                         </div>
-                        <div style={{ position: 'relative', flex: '1 1 140px' }}>
-                            <span style={{ position: 'absolute', top: '-18px', left: '0', fontSize: '9px', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>To</span>
-                            <input
-                                type="date"
-                                value={endDate}
-                                onChange={(e) => setEndDate(e.target.value)}
-                                className="input-field"
-                                style={{
-                                    height: '45px',
-                                    marginBottom: 0,
-                                    width: '100%',
-                                    minWidth: '130px',
-                                    padding: '0 12px'
-                                }}
-                            />
-                        </div>
+
+                        <button
+                            onClick={() => {
+                                const d = new Date(toDate);
+                                d.setDate(d.getDate() + 1);
+                                const newDate = d.toISOString().split('T')[0];
+                                setToDate(newDate);
+                                if (!isRange) setFromDate(newDate);
+                                else {
+                                    const df = new Date(fromDate);
+                                    df.setDate(df.getDate() + 1);
+                                    setFromDate(df.toISOString().split('T')[0]);
+                                }
+                            }}
+                            style={{
+                                width: '36px', height: '36px', borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.03)', border: 'none',
+                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                        >
+                            <ChevronRight size={18} />
+                        </button>
                     </div>
+                    <button
+                        onClick={() => {
+                            const next = !isRange;
+                            setIsRange(next);
+                            if (!next) setFromDate(toDate);
+                        }}
+                        style={{
+                            marginLeft: '5px', padding: '0 10px', height: '36px',
+                            borderRadius: '10px', border: 'none', cursor: 'pointer',
+                            background: isRange ? '#6366f1' : 'rgba(255,255,255,0.05)',
+                            color: isRange ? 'white' : 'rgba(255,255,255,0.4)',
+                            fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
+                        }}
+                    >
+                        {isRange ? 'Range ON' : 'Single'}
+                    </button>
                     <button
                         onClick={handleExportTableData}
                         className="btn-primary"
@@ -986,8 +715,8 @@ const Reports = () => {
                                 <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>START:</span>
                                 <input
                                     type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
+                                    value={fromDate}
+                                    onChange={(e) => setFromDate(e.target.value)}
                                     style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', outline: 'none', cursor: 'pointer' }}
                                 />
                             </div>
@@ -996,8 +725,8 @@ const Reports = () => {
                                 <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800' }}>END:</span>
                                 <input
                                     type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
+                                    value={toDate}
+                                    onChange={(e) => setToDate(e.target.value)}
                                     style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', outline: 'none', cursor: 'pointer' }}
                                 />
                             </div>

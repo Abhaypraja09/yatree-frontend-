@@ -6,7 +6,7 @@ import {
     Users, Plus, Search, Clock, MapPin, User, MoreVertical, IndianRupee, Calendar, Download, X,
     ChevronLeft, ChevronRight, UserPlus, Eye, Trash2, Filter, ArrowUpRight, ArrowDownLeft,
     ShieldCheck, Lock, Unlock, Settings, LayoutDashboard, AlertCircle, CheckCircle, Info,
-    Camera, Printer, FileText, DollarSign, Phone, Edit2, TrendingUp, History, CheckCircle2, XCircle
+    Camera, Printer, FileText, Phone, Edit2, TrendingUp, History, CheckCircle2, XCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -483,7 +483,7 @@ const Staff = () => {
                             { id: 'list', label: 'WORKFORCE', icon: Users },
                             { id: 'attendance', label: 'LOGS', icon: Clock },
                             { id: 'leaves', label: 'LEAVES', icon: Calendar },
-                            { id: 'summary', label: 'PAYROLL', icon: DollarSign }
+                            { id: 'summary', label: 'PAYROLL', icon: IndianRupee }
                         ].map((t) => (
                             <button
                                 key={t.id}
@@ -820,11 +820,11 @@ const Staff = () => {
                                         border: '1px solid rgba(251, 191, 36, 0.2)',
                                         boxShadow: '0 5px 15px -5px rgba(251, 191, 36, 0.2)'
                                     }}>
-                                        <DollarSign size={20} color="#fbbf24" />
+                                        <IndianRupee size={20} color="#fbbf24" />
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '18px', fontWeight: '1000', color: 'white', letterSpacing: '-0.5px' }}>₹{(staff.salary || 0).toLocaleString()}</div>
-                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>ANNUAL BASIS</div>
+                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>MONTHLY BASIS</div>
                                     </div>
                                 </div>
 
@@ -1094,7 +1094,7 @@ const Staff = () => {
                                 <div style={{ textAlign: 'right' }}>
                                     <p style={{ fontSize: '11px', color: '#fbbf24', margin: '0 0 5px 0', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>TOTAL SALARY</p>
                                     <h2 style={{ fontSize: '42px', fontWeight: '950', color: 'white', margin: 0, letterSpacing: '-1.5px', textShadow: '0 0 30px rgba(251, 191, 36, 0.4)' }}>
-                                        <span style={{ color: '#fbbf24', fontSize: '28px', verticalAlign: 'top', marginRight: '6px' }}>Rs.</span>{monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
+                                        <span style={{ color: '#fbbf24', fontSize: '28px', verticalAlign: 'top', marginRight: '6px' }}>₹</span>{monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
                                     </h2>
                                 </div>
                             </div>
@@ -1102,7 +1102,7 @@ const Staff = () => {
                             {monthlyReport.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(15, 23, 42, 0.3)', borderRadius: '40px', border: '1px dashed rgba(255,255,255,0.1)' }}>
                                     <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(251, 191, 36, 0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 25px' }}>
-                                        <DollarSign size={32} color="#fbbf24" style={{ opacity: 0.5 }} />
+                                        <IndianRupee size={32} color="#fbbf24" style={{ opacity: 0.5 }} />
                                     </div>
                                     <h3 style={{ color: 'white', margin: '0 0 10px 0', fontWeight: '900', fontSize: '20px' }}>No Fiscal Records</h3>
                                     <p style={{ color: 'rgba(255,255,255,0.3)', margin: 0, fontWeight: '700', fontSize: '15px' }}>Awaiting payroll generation for the selected cycle.</p>

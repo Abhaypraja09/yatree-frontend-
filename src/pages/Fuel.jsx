@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
-    Fuel, Plus, Search, Trash2, Calendar, MapPin, Gauge, Droplets, CreditCard, History, Car, Filter, ChevronDown, User, ArrowUpRight, TrendingUp, Edit, Shield, FileSpreadsheet, Eye, X, Image as ImageIcon, Navigation
+    Fuel, Plus, Search, Trash2, Calendar, MapPin, Gauge, Droplets, CreditCard, History, Car, Filter, ChevronDown, User, ArrowUpRight, TrendingUp, Edit, Shield, FileSpreadsheet, Eye, X, Image as ImageIcon, Navigation, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -101,10 +101,9 @@ const FuelPage = () => {
     const [selectedPending, setSelectedPending] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterVehicle, setFilterVehicle] = useState('All');
-    const [dateRange, setDateRange] = useState({
-        from: new Date(Date.now() - 180 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-        to: new Date().toISOString().split('T')[0]
-    });
+    const [isRange, setIsRange] = useState(true);
+    const [fromDate, setFromDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
+    const [toDate, setToDate] = useState(new Date().toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
 
     // Form State
     const [formData, setFormData] = useState({
@@ -133,7 +132,7 @@ const FuelPage = () => {
             fetchPendingEntries();
             fetchVehicles();
         }
-    }, [selectedCompany, dateRange]);
+    }, [selectedCompany, fromDate, toDate]);
 
     const fetchPendingEntries = async () => {
         if (!selectedCompany?._id) return;
@@ -157,7 +156,7 @@ const FuelPage = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            const { data } = await axios.get(`/api/admin/fuel/${selectedCompany._id}?from=${dateRange.from}&to=${dateRange.to}`, {
+            const { data } = await axios.get(`/api/admin/fuel/${selectedCompany._id}?from=${fromDate}&to=${toDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setEntries(data || []);
@@ -459,22 +458,135 @@ const FuelPage = () => {
                 </div>
 
                 <div className="flex-resp" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-end' }}>
-                        <input
-                            type="date"
-                            className="input-field"
-                            style={{ height: '52px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', width: 'auto', minWidth: '130px', flex: '1 1 130px' }}
-                            value={dateRange.from}
-                            onChange={(e) => setDateRange({ ...dateRange, from: e.target.value })}
-                        />
-                        <input
-                            type="date"
-                            className="input-field"
-                            style={{ height: '52px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', width: 'auto', minWidth: '130px', flex: '1 1 130px' }}
-                            value={dateRange.to}
-                            onChange={(e) => setDateRange({ ...dateRange, to: e.target.value })}
-                        />
+                    {/* Premium Modern Calendar UI */}
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        background: 'rgba(0,0,0,0.25)',
+                        padding: '4px',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                    }}>
+                        <button
+                            onClick={() => {
+                                const d = new Date(fromDate);
+                                d.setDate(d.getDate() - 1);
+                                const newDate = d.toISOString().split('T')[0];
+                                setFromDate(newDate);
+                                if (!isRange) setToDate(newDate);
+                                else {
+                                    const dt = new Date(toDate);
+                                    dt.setDate(dt.getDate() - 1);
+                                    setToDate(dt.toISOString().split('T')[0]);
+                                }
+                            }}
+                            style={{
+                                width: '36px', height: '36px', borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.03)', border: 'none',
+                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                            {isRange && (
+                                <div style={{
+                                    padding: '0 15px', height: '36px', display: 'flex',
+                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                    background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px',
+                                    border: '1px solid rgba(99, 102, 241, 0.15)',
+                                    position: 'relative', overflow: 'hidden'
+                                }}>
+                                    <span style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
+                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
+                                        {new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                    </span>
+                                    <input
+                                        type="date"
+                                        value={fromDate}
+                                        onChange={(e) => setFromDate(e.target.value)}
+                                        style={{
+                                            position: 'absolute', opacity: 0, inset: 0,
+                                            width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            <div style={{
+                                padding: '0 15px', height: '36px', display: 'flex',
+                                alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                                borderRadius: '10px',
+                                border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(99, 102, 241, 0.2)'}`,
+                                position: 'relative', overflow: 'hidden'
+                            }}>
+                                {isRange ? (
+                                    <span style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>TO:</span>
+                                ) : (
+                                    <Calendar size={14} color="#818cf8" />
+                                )}
+                                <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
+                                    {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: isRange ? undefined : 'numeric' }).toUpperCase()}
+                                </span>
+                                <input
+                                    type="date"
+                                    value={toDate}
+                                    onChange={(e) => {
+                                        setToDate(e.target.value);
+                                        if (!isRange) setFromDate(e.target.value);
+                                    }}
+                                    style={{
+                                        position: 'absolute', opacity: 0, inset: 0,
+                                        width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
+                                    }}
+                                />
+                            </div>
+                        </div>
+
+                        <button
+                            onClick={() => {
+                                const d = new Date(toDate);
+                                d.setDate(d.getDate() + 1);
+                                const newDate = d.toISOString().split('T')[0];
+                                setToDate(newDate);
+                                if (!isRange) setFromDate(newDate);
+                                else {
+                                    const df = new Date(fromDate);
+                                    df.setDate(df.getDate() + 1);
+                                    setFromDate(df.toISOString().split('T')[0]);
+                                }
+                            }}
+                            style={{
+                                width: '36px', height: '36px', borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.03)', border: 'none',
+                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                        >
+                            <ChevronRight size={18} />
+                        </button>
                     </div>
+                    <button
+                        onClick={() => {
+                            const next = !isRange;
+                            setIsRange(next);
+                            if (!next) setFromDate(toDate);
+                        }}
+                        style={{
+                            marginLeft: '5px', padding: '0 10px', height: '36px',
+                            borderRadius: '10px', border: 'none', cursor: 'pointer',
+                            background: isRange ? '#6366f1' : 'rgba(255,255,255,0.05)',
+                            color: isRange ? 'white' : 'rgba(255,255,255,0.4)',
+                            fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
+                        }}
+                    >
+                        {isRange ? 'Range ON' : 'Single'}
+                    </button>
                     <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', maxWidth: '300px', width: '100%', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 200px' }}>
                         <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
                         <input

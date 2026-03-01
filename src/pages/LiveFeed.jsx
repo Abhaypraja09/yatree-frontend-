@@ -207,17 +207,32 @@ const LiveFeed = () => {
                                 <ChevronLeft size={20} />
                             </button>
                             <div
-                                onClick={() => dateInputRef.current?.showPicker()}
-                                style={{ height: '36px', padding: '0 16px', borderRadius: '12px', background: 'rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', gap: '10px', color: 'white', fontWeight: '800', fontSize: '13px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                                style={{
+                                    height: '36px', padding: '0 16px', borderRadius: '12px',
+                                    background: 'rgba(255, 255, 255, 0.08)', display: 'flex',
+                                    alignItems: 'center', gap: '10px', color: 'white',
+                                    fontWeight: '800', fontSize: '13px', cursor: 'pointer',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    position: 'relative', overflow: 'hidden'
+                                }}
                             >
                                 <Calendar size={16} color="#0ea5e9" />
                                 {formatDate(selectedDate)}
                                 <input
                                     type="date"
-                                    ref={dateInputRef}
                                     value={selectedDate}
                                     onChange={(e) => setSelectedDate(e.target.value)}
-                                    style={{ visibility: 'hidden', width: 0, position: 'absolute' }}
+                                    style={{
+                                        position: 'absolute',
+                                        opacity: 0,
+                                        width: '100%',
+                                        height: '100%',
+                                        left: 0,
+                                        top: 0,
+                                        cursor: 'pointer',
+                                        zIndex: 2,
+                                        pointerEvents: 'auto'
+                                    }}
                                 />
                             </div>
                             <button
@@ -363,13 +378,17 @@ const LiveFeed = () => {
                                                     {driver.attendances && driver.attendances.length > 0 ? (
                                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
                                                             {driver.attendances.map((att, idx) => {
+                                                                // Derive true status from punchOut time — never trust att.status alone
+                                                                const isActuallyCompleted = att.status === 'completed' && !!att.punchOut?.time;
+                                                                const isLapsed = att.status === 'incomplete' && driver.status === 'Lapsed';
+
                                                                 let attStatus = 'ON DUTY';
                                                                 let chipBg = '#10b98120', chipColor = '#10b981', chipBorder = 'rgba(16, 185, 129, 0.2)';
 
-                                                                if (att.status === 'completed') {
+                                                                if (isActuallyCompleted) {
                                                                     attStatus = 'COMPLETED';
                                                                     chipBg = '#8b5cf620'; chipColor = '#8b5cf6'; chipBorder = 'rgba(139, 92, 246, 0.2)';
-                                                                } else if (att.status === 'incomplete' && driver.status === 'Lapsed') {
+                                                                } else if (isLapsed) {
                                                                     attStatus = 'LAPSED';
                                                                     chipBg = '#f59e0b20'; chipColor = '#f59e0b'; chipBorder = 'rgba(245, 158, 11, 0.2)';
                                                                 }
@@ -458,13 +477,17 @@ const LiveFeed = () => {
                                                     )}
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', alignItems: 'flex-end' }}>
                                                         {vehicle.attendances.map((att, idx) => {
+                                                            // Derive true status from punchOut time — never trust att.status alone
+                                                            const isActuallyCompleted = att.status === 'completed' && !!att.punchOut?.time;
+                                                            const isLapsed = att.status === 'incomplete' && vehicle.status === 'Lapsed';
+
                                                             let attStatus = 'ON DUTY';
                                                             let chipBg = '#0ea5e920', chipColor = '#0ea5e9', chipBorder = 'rgba(14, 165, 233, 0.3)';
 
-                                                            if (att.status === 'completed') {
+                                                            if (isActuallyCompleted) {
                                                                 attStatus = 'COMPLETED';
                                                                 chipBg = '#8b5cf620'; chipColor = '#8b5cf6'; chipBorder = 'rgba(139, 92, 246, 0.3)';
-                                                            } else if (att.status === 'incomplete' && vehicle.status === 'Lapsed') {
+                                                            } else if (isLapsed) {
                                                                 attStatus = 'LAPSED';
                                                                 chipBg = '#f59e0b20'; chipColor = '#f59e0b'; chipBorder = 'rgba(245, 158, 11, 0.3)';
                                                             }
@@ -624,11 +647,11 @@ const LiveFeed = () => {
                                                         borderRadius: '8px',
                                                         fontSize: '11px',
                                                         fontWeight: '900',
-                                                        background: att.status === 'completed' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(14, 165, 233, 0.1)',
-                                                        color: att.status === 'completed' ? '#10b981' : '#0ea5e9',
-                                                        border: `1px solid ${att.status === 'completed' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(14, 165, 233, 0.2)'}`
+                                                        background: (att.status === 'completed' && !!att.punchOut?.time) ? 'rgba(139, 92, 246, 0.1)' : 'rgba(14, 165, 233, 0.1)',
+                                                        color: (att.status === 'completed' && !!att.punchOut?.time) ? '#8b5cf6' : '#0ea5e9',
+                                                        border: `1px solid ${(att.status === 'completed' && !!att.punchOut?.time) ? 'rgba(139, 92, 246, 0.2)' : 'rgba(14, 165, 233, 0.2)'}`
                                                     }}>
-                                                        {att.status?.toUpperCase() || 'ON DUTY'}
+                                                        {(att.status === 'completed' && !!att.punchOut?.time) ? 'COMPLETED' : (att.punchOut?.time ? 'COMPLETED' : 'ON DUTY')}
                                                     </div>
                                                 </div>
 
