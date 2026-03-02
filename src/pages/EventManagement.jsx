@@ -25,9 +25,18 @@ const EventManagement = () => {
         return d.toISOString().split('T')[0];
     };
 
-    const [isRange, setIsRange] = useState(true);
+    const [isRange, setIsRange] = useState(false);
     const [fromDate, setFromDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
     const [toDate, setToDate] = useState(getToday());
+
+    /* navigate dates */
+    const shiftDays = (n) => {
+        const f = new Date(fromDate);
+        f.setDate(f.getDate() + n);
+        const fStr = f.toISOString().split('T')[0];
+        setFromDate(fStr);
+        if (!isRange) setToDate(fStr);
+    };
 
     const [showEventModal, setShowEventModal] = useState(false);
     const [showRecordModal, setShowRecordModal] = useState(false);
@@ -352,18 +361,7 @@ const EventManagement = () => {
                         boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                     }}>
                         <button
-                            onClick={() => {
-                                const d = new Date(fromDate);
-                                d.setDate(d.getDate() - 1);
-                                const newDate = d.toISOString().split('T')[0];
-                                setFromDate(newDate);
-                                if (!isRange) setToDate(newDate);
-                                else {
-                                    const dt = new Date(toDate);
-                                    dt.setDate(dt.getDate() - 1);
-                                    setToDate(dt.toISOString().split('T')[0]);
-                                }
-                            }}
+                            onClick={() => shiftDays(-1)}
                             style={{
                                 width: '36px', height: '36px', borderRadius: '12px',
                                 background: 'rgba(255,255,255,0.03)', border: 'none',
@@ -391,6 +389,7 @@ const EventManagement = () => {
                                         type="date"
                                         value={fromDate}
                                         onChange={(e) => setFromDate(e.target.value)}
+                                        onClick={(e) => e.target.showPicker?.()}
                                         style={{
                                             position: 'absolute', opacity: 0, inset: 0,
                                             width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
@@ -422,6 +421,7 @@ const EventManagement = () => {
                                         setToDate(e.target.value);
                                         if (!isRange) setFromDate(e.target.value);
                                     }}
+                                    onClick={(e) => e.target.showPicker?.()}
                                     style={{
                                         position: 'absolute', opacity: 0, inset: 0,
                                         width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
@@ -431,18 +431,7 @@ const EventManagement = () => {
                         </div>
 
                         <button
-                            onClick={() => {
-                                const d = new Date(toDate);
-                                d.setDate(d.getDate() + 1);
-                                const newDate = d.toISOString().split('T')[0];
-                                setToDate(newDate);
-                                if (!isRange) setFromDate(newDate);
-                                else {
-                                    const df = new Date(fromDate);
-                                    df.setDate(df.getDate() + 1);
-                                    setFromDate(df.toISOString().split('T')[0]);
-                                }
-                            }}
+                            onClick={() => shiftDays(1)}
                             style={{
                                 width: '36px', height: '36px', borderRadius: '12px',
                                 background: 'rgba(255,255,255,0.03)', border: 'none',
@@ -467,7 +456,7 @@ const EventManagement = () => {
                             fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
                         }}
                     >
-                        {isRange ? 'Range ON' : 'Single'}
+                        {isRange ? 'Range' : 'Single'}
                     </button>
                 </div>
             </header>

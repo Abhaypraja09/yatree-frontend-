@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, Camera, Image as ImageIcon, Eye } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
+import AttendanceModal from '../components/reports/AttendanceModal';
 
 // Sub-components for cleaner code
 const Modal = ({ title, onClose, children }) => (
@@ -81,6 +82,60 @@ const SubmitButton = ({ disabled, text, message }) => (
     </div>
 );
 
+const PhotoUpload = ({ label, icon: Icon, onFileSelect, previewFile }) => {
+    const [preview, setPreview] = useState(null);
+
+    useEffect(() => {
+        if (previewFile) {
+            const reader = new FileReader();
+            reader.onloadend = () => setPreview(reader.result);
+            reader.readAsDataURL(previewFile);
+        } else {
+            setPreview(null);
+        }
+    }, [previewFile]);
+
+    return (
+        <div style={{ position: 'relative' }}>
+            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>{label}</label>
+            <label style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                height: '100px',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px dashed rgba(255,255,255,0.1)',
+                borderRadius: '16px',
+                cursor: 'pointer',
+                overflow: 'hidden',
+                transition: 'all 0.3s'
+            }}
+                onMouseEnter={e => e.currentTarget.style.borderColor = '#fbbf24'}
+                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
+            >
+                {preview ? (
+                    <img src={preview} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                    <>
+                        <Icon size={24} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: '8px' }} />
+                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>CLICK TO UPLOAD</span>
+                    </>
+                )}
+                <input
+                    type="file"
+                    accept="image/*"
+                    style={{ display: 'none' }}
+                    onChange={e => {
+                        const file = e.target.files[0];
+                        if (file) onFileSelect(file);
+                    }}
+                />
+            </label>
+        </div>
+    );
+};
+
 
 const Freelancers = () => {
     const { selectedCompany } = useCompany();
@@ -98,6 +153,7 @@ const Freelancers = () => {
     const [editingDriver, setEditingDriver] = useState(null);
     const [driverFilter, setDriverFilter] = useState('All');
     const [attendance, setAttendance] = useState([]);
+    const [selectedItem, setSelectedItem] = useState(null);
     const [advances, setAdvances] = useState([]);
     const [vehicleFilter, setVehicleFilter] = useState('All');
     const [showAdvanceModal, setShowAdvanceModal] = useState(false);
@@ -139,6 +195,9 @@ const Freelancers = () => {
         dailyWage: '',
         review: ''
     });
+
+    const [punchInPhotos, setPunchInPhotos] = useState({ selfie: null, kmPhoto: null });
+    const [punchOutPhotos, setPunchOutPhotos] = useState({ selfie: null, kmPhoto: null });
 
     const [showEditDutyModal, setShowEditDutyModal] = useState(false);
     const [editingDuty, setEditingDuty] = useState(null);
@@ -217,9 +276,18 @@ const Freelancers = () => {
 
     const getToday = () => getLocalYYYYMMDD();
 
-    const [isRange, setIsRange] = useState(true);
+    const [isRange, setIsRange] = useState(false);
     const [fromDate, setFromDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
     const [toDate, setToDate] = useState(getToday());
+
+    /* navigate dates */
+    const shiftDays = (n) => {
+        const f = new Date(fromDate);
+        f.setDate(f.getDate() + n);
+        const fStr = f.toISOString().split('T')[0];
+        setFromDate(fStr);
+        if (!isRange) setToDate(fStr);
+    };
 
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -237,7 +305,7 @@ const Freelancers = () => {
                 a.isFreelancer || a.driver?.isFreelancer || a.driver?.name?.includes('(F)')
             );
             setAttendance(freelancerAttendance);
-        } catch (err) { console.error('Logistic error:', err); }
+        } catch (err) { console.error('fetchAttendance error:', err?.response?.status, err?.response?.config?.url || err.message); }
     }, [selectedCompany, fromDate, toDate]);
 
     const fetchAdvances = useCallback(async () => {
@@ -249,7 +317,7 @@ const Freelancers = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setAdvances(data || []);
-        } catch (err) { console.error('Logistic error:', err); }
+        } catch (err) { console.error('fetchAdvances error:', err?.response?.status, err?.response?.config?.url || err.message); }
     }, [selectedCompany, fromDate, toDate]);
 
     const fetchFreelancers = useCallback(async () => {
@@ -261,7 +329,7 @@ const Freelancers = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setDrivers(data.drivers || []);
-        } catch (err) { console.error('Logistic error:', err); }
+        } catch (err) { console.error('fetchFreelancers error:', err?.response?.status, err?.response?.config?.url || err.message); }
         finally { setLoading(false); }
     }, [selectedCompany]);
 
@@ -273,7 +341,7 @@ const Freelancers = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setVehicles(data.vehicles || []);
-        } catch (err) { console.error('Logistic error:', err); }
+        } catch (err) { console.error('fetchVehicles error:', err?.response?.status, err?.response?.config?.url || err.message); }
     }, [selectedCompany]);
 
     // Master Data Effect (Company change only)
@@ -318,15 +386,21 @@ const Freelancers = () => {
         setSubmitting(true);
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            // Use provided time and date for flexible scheduling
-            await axios.post('/api/admin/freelancers/punch-in', {
-                ...punchInData,
-                driverId: selectedDriver._id
-            }, {
-                headers: { Authorization: `Bearer ${userInfo.token}` }
+            const fd = new FormData();
+            Object.keys(punchInData).forEach(key => fd.append(key, punchInData[key]));
+            fd.append('driverId', selectedDriver._id);
+            if (punchInPhotos.selfie) fd.append('selfie', punchInPhotos.selfie);
+            if (punchInPhotos.kmPhoto) fd.append('kmPhoto', punchInPhotos.kmPhoto);
+
+            await axios.post('/api/admin/freelancers/punch-in', fd, {
+                headers: {
+                    Authorization: `Bearer ${userInfo.token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             setShowPunchInModal(false);
             setVehicleSearch('');
+            setPunchInPhotos({ selfie: null, kmPhoto: null });
             const localNow = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString();
             setPunchInData({
                 vehicleId: '',
@@ -347,10 +421,20 @@ const Freelancers = () => {
         setSubmitting(true);
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            await axios.post('/api/admin/freelancers/punch-out', { ...punchOutData, driverId: selectedDriver._id }, {
-                headers: { Authorization: `Bearer ${userInfo.token}` }
+            const fd = new FormData();
+            Object.keys(punchOutData).forEach(key => fd.append(key, punchOutData[key]));
+            fd.append('driverId', selectedDriver._id);
+            if (punchOutPhotos.selfie) fd.append('selfie', punchOutPhotos.selfie);
+            if (punchOutPhotos.kmPhoto) fd.append('kmPhoto', punchOutPhotos.kmPhoto);
+
+            await axios.post('/api/admin/freelancers/punch-out', fd, {
+                headers: {
+                    Authorization: `Bearer ${userInfo.token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
             });
             setShowPunchOutModal(false);
+            setPunchOutPhotos({ selfie: null, kmPhoto: null });
             const now = new Date().toISOString().slice(0, 16);
             setPunchOutData({ km: '', time: now, fuelAmount: '0', parkingAmount: '0', parkingPaidBy: 'Self', review: '', dailyWage: '', dropLocation: '' });
             fetchFreelancers();
@@ -763,18 +847,7 @@ const Freelancers = () => {
                             boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                         }}>
                             <button
-                                onClick={() => {
-                                    const d = new Date(fromDate);
-                                    d.setDate(d.getDate() - 1);
-                                    const newDate = d.toISOString().split('T')[0];
-                                    setFromDate(newDate);
-                                    if (!isRange) setToDate(newDate);
-                                    else {
-                                        const dt = new Date(toDate);
-                                        dt.setDate(dt.getDate() - 1);
-                                        setToDate(dt.toISOString().split('T')[0]);
-                                    }
-                                }}
+                                onClick={() => shiftDays(-1)}
                                 style={{
                                     width: '36px', height: '36px', borderRadius: '12px',
                                     background: 'rgba(255,255,255,0.03)', border: 'none',
@@ -802,6 +875,7 @@ const Freelancers = () => {
                                             type="date"
                                             value={fromDate}
                                             onChange={(e) => setFromDate(e.target.value)}
+                                            onClick={(e) => e.target.showPicker?.()}
                                             style={{
                                                 position: 'absolute', opacity: 0, inset: 0,
                                                 width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
@@ -833,6 +907,7 @@ const Freelancers = () => {
                                             setToDate(e.target.value);
                                             if (!isRange) setFromDate(e.target.value);
                                         }}
+                                        onClick={(e) => e.target.showPicker?.()}
                                         style={{
                                             position: 'absolute', opacity: 0, inset: 0,
                                             width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
@@ -842,18 +917,7 @@ const Freelancers = () => {
                             </div>
 
                             <button
-                                onClick={() => {
-                                    const d = new Date(toDate);
-                                    d.setDate(d.getDate() + 1);
-                                    const newDate = d.toISOString().split('T')[0];
-                                    setToDate(newDate);
-                                    if (!isRange) setFromDate(newDate);
-                                    else {
-                                        const df = new Date(fromDate);
-                                        df.setDate(df.getDate() + 1);
-                                        setFromDate(df.toISOString().split('T')[0]);
-                                    }
-                                }}
+                                onClick={() => shiftDays(1)}
                                 style={{
                                     width: '36px', height: '36px', borderRadius: '12px',
                                     background: 'rgba(255,255,255,0.03)', border: 'none',
@@ -864,7 +928,6 @@ const Freelancers = () => {
                                 <ChevronRight size={18} />
                             </button>
                         </div>
-
                         <button
                             onClick={() => {
                                 const next = !isRange;
@@ -879,7 +942,7 @@ const Freelancers = () => {
                                 fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
                             }}
                         >
-                            {isRange ? 'Range ON' : 'Single'}
+                            {isRange ? 'Range' : 'Single'}
                         </button>
                     </div>
 
@@ -898,7 +961,6 @@ const Freelancers = () => {
                             fontSize: '11px',
                             fontWeight: '900',
                             cursor: 'pointer',
-                            fontWeight: '800'
                         }}
                         title="Export Reports"
                     >
@@ -1030,6 +1092,7 @@ const Freelancers = () => {
                                     {baseDrivers.map(driver => {
                                         const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
                                         const dEarned = dAttendance.reduce((s, a) => {
+                                            if (a.status !== 'completed' && !a.punchOut?.time) return s;
                                             const wage = Number(a.dailyWage) || 0;
                                             const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
                                             const bonus = (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0);
@@ -1251,12 +1314,22 @@ const Freelancers = () => {
                                                                 </div>
                                                             </td>
                                                             <td style={{ padding: '15px 25px', textAlign: 'center' }}>
-                                                                <button
-                                                                    onClick={() => openEditDutyModal(a)}
-                                                                    style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                >
-                                                                    <Edit2 size={14} />
-                                                                </button>
+                                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                                                    <button
+                                                                        onClick={() => setSelectedItem({ ...a, entryType: 'attendance' })}
+                                                                        style={{ background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        title="View Proof"
+                                                                    >
+                                                                        <Eye size={14} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => openEditDutyModal(a)}
+                                                                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        title="Edit"
+                                                                    >
+                                                                        <Edit2 size={14} />
+                                                                    </button>
+                                                                </div>
                                                             </td>
                                                         </tr>
                                                     );
@@ -1323,12 +1396,20 @@ const Freelancers = () => {
                                     onChange={e => {
                                         setVehicleSearch(e.target.value);
                                         const found = vehicles.find(v => v.carNumber?.split('#')[0]?.toUpperCase() === e.target.value.toUpperCase());
-                                        if (found) setPunchInData({ ...punchInData, vehicleId: found._id });
+                                        if (found) {
+                                            setPunchInData({
+                                                ...punchInData,
+                                                vehicleId: found._id,
+                                                km: found.lastOdometer || ''
+                                            });
+                                        }
                                     }}
                                 />
                                 <datalist id="vehicle-list">
                                     {vehicles.filter(v => !v.currentDriver).map(v => (
-                                        <option key={v._id} value={v.carNumber?.split('#')[0]}>{v.model}</option>
+                                        <option key={v._id} value={v.carNumber?.split('#')[0]}>
+                                            {v.model} (Last KM: {v.lastOdometer || 0})
+                                        </option>
                                     ))}
                                 </datalist>
                             </div>
@@ -1337,8 +1418,30 @@ const Freelancers = () => {
                                 <Field label="Punch-In Time *" type="datetime-local" value={punchInData.time} onChange={v => setPunchInData({ ...punchInData, time: v })} required />
                             </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                <Field label="Starting KM *" type="number" value={punchInData.km} onChange={v => setPunchInData({ ...punchInData, km: v })} required />
+                                <div style={{ position: 'relative' }}>
+                                    <Field label="Starting KM *" type="number" value={punchInData.km} onChange={v => setPunchInData({ ...punchInData, km: v })} required />
+                                    {punchInData.vehicleId && (
+                                        <div style={{ position: 'absolute', top: '0', right: '0', fontSize: '10px', color: '#fbbf24', fontWeight: '800' }}>
+                                            LAST: {vehicles.find(v => v._id === punchInData.vehicleId)?.lastOdometer || 0}
+                                        </div>
+                                    )}
+                                </div>
                                 <Field label="Pick-up Location" value={punchInData.pickUpLocation} onChange={v => setPunchInData({ ...punchInData, pickUpLocation: v })} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <PhotoUpload
+                                    label="Driver Selfie *"
+                                    icon={Camera}
+                                    onFileSelect={f => setPunchInPhotos({ ...punchInPhotos, selfie: f })}
+                                    previewFile={punchInPhotos.selfie}
+                                />
+                                <PhotoUpload
+                                    label="Odometer Photo *"
+                                    icon={ImageIcon}
+                                    onFileSelect={f => setPunchInPhotos({ ...punchInPhotos, kmPhoto: f })}
+                                    previewFile={punchInPhotos.kmPhoto}
+                                />
                             </div>
                             <SubmitButton disabled={submitting} text="Start Duty" />
                         </form>
@@ -1515,9 +1618,23 @@ const Freelancers = () => {
                     showPunchOutModal && (
                         <Modal title={`Duty Completion: ${selectedDriver?.name}`} onClose={() => setShowPunchOutModal(false)}>
                             <form onSubmit={handlePunchOut} style={{ display: 'grid', gap: '20px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                    <Field label="Closing KM *" type="number" value={punchOutData.km} onChange={v => setPunchOutData({ ...punchOutData, km: v })} required />
-                                    <Field label="Drop Location" value={punchOutData.dropLocation} onChange={v => setPunchOutData({ ...punchOutData, dropLocation: v })} />
+                                <div style={{ padding: '15px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '5px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                                        <div>
+                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase' }}>Starting KM</div>
+                                            <div style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{attendance.find(a => a.driver?._id === selectedDriver?._id && a.status === 'incomplete')?.punchIn?.km || 0}</div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase' }}>Trip Distance</div>
+                                            <div style={{ color: '#fbbf24', fontSize: '18px', fontWeight: '900' }}>
+                                                {punchOutData.km ? (Number(punchOutData.km) - (attendance.find(a => a.driver?._id === selectedDriver?._id && a.status === 'incomplete')?.punchIn?.km || 0)) : 0} KM
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '15px' }}>
+                                        <Field label="Closing KM (Actual) *" type="number" value={punchOutData.km} onChange={v => setPunchOutData({ ...punchOutData, km: v })} required />
+                                        <Field label="Drop Location" value={punchOutData.dropLocation} onChange={v => setPunchOutData({ ...punchOutData, dropLocation: v })} />
+                                    </div>
                                 </div>
                                 <Field label="Punch-Out Time *" type="datetime-local" value={punchOutData.time} onChange={v => setPunchOutData({ ...punchOutData, time: v })} required />
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
@@ -1542,6 +1659,22 @@ const Freelancers = () => {
                                     </div>
                                 </div>
                                 <Field label="Duty Salary (Wage) *" type="number" value={punchOutData.dailyWage} onChange={v => setPunchOutData({ ...punchOutData, dailyWage: v })} required />
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <PhotoUpload
+                                        label="End Session Selfie"
+                                        icon={Camera}
+                                        onFileSelect={f => setPunchOutPhotos({ ...punchOutPhotos, selfie: f })}
+                                        previewFile={punchOutPhotos.selfie}
+                                    />
+                                    <PhotoUpload
+                                        label="Closing KM Photo"
+                                        icon={ImageIcon}
+                                        onFileSelect={f => setPunchOutPhotos({ ...punchOutPhotos, kmPhoto: f })}
+                                        previewFile={punchOutPhotos.kmPhoto}
+                                    />
+                                </div>
+
                                 <Field label="Remarks" value={punchOutData.review} onChange={v => setPunchOutData({ ...punchOutData, review: v })} />
                                 <SubmitButton disabled={submitting} text="Finish Duty" />
                             </form>
@@ -1668,99 +1801,107 @@ const Freelancers = () => {
                 }
 
                 {/* Edit Duty Modal */}
-                {
-                    showEditDutyModal && (
-                        <Modal title={`Edit Duty Record`} onClose={() => setShowEditDutyModal(false)}>
-                            <form onSubmit={handleUpdateDuty} style={{ display: 'grid', gap: '20px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                    <Field label="Duty Date *" type="date" value={editDutyForm.date} onChange={v => setEditDutyForm({ ...editDutyForm, date: v })} required />
-                                    <div>
-                                        <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Vehicle *</label>
-                                        <select
-                                            className="input-field"
-                                            required
-                                            value={editDutyForm.vehicleId}
-                                            onChange={e => setEditDutyForm({ ...editDutyForm, vehicleId: e.target.value })}
-                                            style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
-                                        >
-                                            <option value="" style={{ background: '#0f172a', color: 'white' }}>Select Car</option>
-                                            {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a', color: 'white' }}>{v.carNumber?.split('#')[0]}</option>)}
-                                        </select>
-                                    </div>
-                                </div>
-
+                {showEditDutyModal && (
+                    <Modal title={`Edit Duty Record`} onClose={() => setShowEditDutyModal(false)}>
+                        <form onSubmit={handleUpdateDuty} style={{ display: 'grid', gap: '20px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                <Field label="Duty Date *" type="date" value={editDutyForm.date} onChange={v => setEditDutyForm({ ...editDutyForm, date: v })} required />
                                 <div>
-                                    <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Driver *</label>
+                                    <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Vehicle *</label>
                                     <select
                                         className="input-field"
                                         required
-                                        value={editDutyForm.driverId}
-                                        onChange={e => setEditDutyForm({ ...editDutyForm, driverId: e.target.value })}
+                                        value={editDutyForm.vehicleId}
+                                        onChange={e => setEditDutyForm({ ...editDutyForm, vehicleId: e.target.value })}
                                         style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
                                     >
-                                        <option value="" style={{ background: '#0f172a', color: 'white' }}>Select Driver</option>
-                                        {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a', color: 'white' }}>{d.name.split(' (F)')[0]}</option>)}
+                                        <option value="" style={{ background: '#0f172a', color: 'white' }}>Select Car</option>
+                                        {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a', color: 'white' }}>{v.carNumber?.split('#')[0]}</option>)}
                                     </select>
                                 </div>
+                            </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                    <Field label="Punch-In Time" type="datetime-local" value={editDutyForm.punchInTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchInTime: v })} />
-                                    <Field label="Punch-Out Time" type="datetime-local" value={editDutyForm.punchOutTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchOutTime: v })} />
-                                </div>
+                            <div>
+                                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Driver *</label>
+                                <select
+                                    className="input-field"
+                                    required
+                                    value={editDutyForm.driverId}
+                                    onChange={e => setEditDutyForm({ ...editDutyForm, driverId: e.target.value })}
+                                    style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
+                                >
+                                    <option value="" style={{ background: '#0f172a', color: 'white' }}>Select Driver</option>
+                                    {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a', color: 'white' }}>{d.name.split(' (F)')[0]}</option>)}
+                                </select>
+                            </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                    <Field label="Starting KM" type="number" value={editDutyForm.startKm} onChange={v => setEditDutyForm({ ...editDutyForm, startKm: v })} />
-                                    <Field label="Closing KM" type="number" value={editDutyForm.endKm} onChange={v => setEditDutyForm({ ...editDutyForm, endKm: v })} />
-                                </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                <Field label="Punch-In Time" type="datetime-local" value={editDutyForm.punchInTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchInTime: v })} />
+                                <Field label="Punch-Out Time" type="datetime-local" value={editDutyForm.punchOutTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchOutTime: v })} />
+                            </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                    <Field label="Pick-up Location" value={editDutyForm.pickUpLocation} onChange={v => setEditDutyForm({ ...editDutyForm, pickUpLocation: v })} />
-                                    <Field label="Drop Location" value={editDutyForm.dropLocation} onChange={v => setEditDutyForm({ ...editDutyForm, dropLocation: v })} />
-                                </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                <Field label="Starting KM" type="number" value={editDutyForm.startKm} onChange={v => setEditDutyForm({ ...editDutyForm, startKm: v })} />
+                                <Field label="Closing KM" type="number" value={editDutyForm.endKm} onChange={v => setEditDutyForm({ ...editDutyForm, endKm: v })} />
+                            </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                    <Field label="Fuel Spent (₹)" type="number" value={editDutyForm.fuelAmount} onChange={v => setEditDutyForm({ ...editDutyForm, fuelAmount: v })} />
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '15px' }}>
-                                        <Field label="Parking/Toll (₹)" type="number" value={editDutyForm.parkingAmount} onChange={v => setEditDutyForm({ ...editDutyForm, parkingAmount: v })} />
-                                        <div>
-                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Paid By</label>
-                                            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Self' })}
-                                                    style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Self' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
-                                                >Self</button>
-                                                <button
-                                                    type="button"
-                                                    onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Office' })}
-                                                    style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Office' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
-                                                >Office</button>
-                                            </div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                <Field label="Pick-up Location" value={editDutyForm.pickUpLocation} onChange={v => setEditDutyForm({ ...editDutyForm, pickUpLocation: v })} />
+                                <Field label="Drop Location" value={editDutyForm.dropLocation} onChange={v => setEditDutyForm({ ...editDutyForm, dropLocation: v })} />
+                            </div>
+
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                <Field label="Fuel Spent (₹)" type="number" value={editDutyForm.fuelAmount} onChange={v => setEditDutyForm({ ...editDutyForm, fuelAmount: v })} />
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '15px' }}>
+                                    <Field label="Parking/Toll (₹)" type="number" value={editDutyForm.parkingAmount} onChange={v => setEditDutyForm({ ...editDutyForm, parkingAmount: v })} />
+                                    <div>
+                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Paid By</label>
+                                        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Self' })}
+                                                style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Self' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                            >Self</button>
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Office' })}
+                                                style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Office' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                            >Office</button>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                    <Field label="Daily Wage (₹) *" type="number" value={editDutyForm.dailyWage} onChange={v => setEditDutyForm({ ...editDutyForm, dailyWage: v })} required />
-                                    <Field label="Bonus Amount (₹)" type="number" value={editDutyForm.bonusAmount} onChange={v => setEditDutyForm({ ...editDutyForm, bonusAmount: v })} />
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                <Field label="Daily Wage (₹) *" type="number" value={editDutyForm.dailyWage} onChange={v => setEditDutyForm({ ...editDutyForm, dailyWage: v })} required />
+                                <Field label="Bonus Amount (₹)" type="number" value={editDutyForm.bonusAmount} onChange={v => setEditDutyForm({ ...editDutyForm, bonusAmount: v })} />
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input type="checkbox" checked={editDutyForm.allowanceTA > 0} onChange={e => setEditDutyForm({ ...editDutyForm, allowanceTA: e.target.checked ? 100 : 0 })} />
+                                    <span style={{ fontSize: '12px', color: 'white' }}>Day Bonus</span>
                                 </div>
-
-                                <div style={{ display: 'flex', gap: '15px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <input type="checkbox" checked={editDutyForm.allowanceTA > 0} onChange={e => setEditDutyForm({ ...editDutyForm, allowanceTA: e.target.checked ? 100 : 0 })} />
-                                        <span style={{ fontSize: '12px', color: 'white' }}>Day Bonus</span>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <input type="checkbox" checked={editDutyForm.nightStayAmount > 0} onChange={e => setEditDutyForm({ ...editDutyForm, nightStayAmount: e.target.checked ? 200 : 0 })} />
-                                        <span style={{ fontSize: '12px', color: 'white' }}>Night Bonus</span>
-                                    </div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <input type="checkbox" checked={editDutyForm.nightStayAmount > 0} onChange={e => setEditDutyForm({ ...editDutyForm, nightStayAmount: e.target.checked ? 200 : 0 })} />
+                                    <span style={{ fontSize: '12px', color: 'white' }}>Night Bonus</span>
                                 </div>
+                            </div>
 
-                                <Field label="Remarks" value={editDutyForm.remarks} onChange={v => setEditDutyForm({ ...editDutyForm, remarks: v })} />
-                                <SubmitButton disabled={submitting} text="Update Duty Record" message={message} />
-                            </form>
-                        </Modal>
+                            <Field label="Remarks" value={editDutyForm.remarks} onChange={v => setEditDutyForm({ ...editDutyForm, remarks: v })} />
+                            <SubmitButton disabled={submitting} text="Update Duty Record" message={message} />
+                        </form>
+                    </Modal>
+                )}
+
+                <AnimatePresence>
+                    {selectedItem && (
+                        <AttendanceModal
+                            item={selectedItem}
+                            onClose={() => setSelectedItem(null)}
+                        />
                     )}
+                </AnimatePresence>
             </div>
             <style>{`
                 @media (max-width: 768px) {
@@ -1803,9 +1944,8 @@ const Freelancers = () => {
                 }
                 .premium-row {
                     transition: all 0.3s ease !important;
-                }
             `}</style>
-        </div >
+        </div>
     );
 };
 

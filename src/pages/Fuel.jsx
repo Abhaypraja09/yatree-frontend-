@@ -101,9 +101,18 @@ const FuelPage = () => {
     const [selectedPending, setSelectedPending] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterVehicle, setFilterVehicle] = useState('All');
-    const [isRange, setIsRange] = useState(true);
+    const [isRange, setIsRange] = useState(false);
     const [fromDate, setFromDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
     const [toDate, setToDate] = useState(new Date().toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
+
+    /* navigate dates */
+    const shiftDays = (n) => {
+        const f = new Date(fromDate);
+        f.setDate(f.getDate() + n);
+        const fStr = f.toISOString().split('T')[0];
+        setFromDate(fStr);
+        if (!isRange) setToDate(fStr);
+    };
 
     // Form State
     const [formData, setFormData] = useState({
@@ -470,18 +479,7 @@ const FuelPage = () => {
                         boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                     }}>
                         <button
-                            onClick={() => {
-                                const d = new Date(fromDate);
-                                d.setDate(d.getDate() - 1);
-                                const newDate = d.toISOString().split('T')[0];
-                                setFromDate(newDate);
-                                if (!isRange) setToDate(newDate);
-                                else {
-                                    const dt = new Date(toDate);
-                                    dt.setDate(dt.getDate() - 1);
-                                    setToDate(dt.toISOString().split('T')[0]);
-                                }
-                            }}
+                            onClick={() => shiftDays(-1)}
                             style={{
                                 width: '36px', height: '36px', borderRadius: '12px',
                                 background: 'rgba(255,255,255,0.03)', border: 'none',
@@ -509,6 +507,7 @@ const FuelPage = () => {
                                         type="date"
                                         value={fromDate}
                                         onChange={(e) => setFromDate(e.target.value)}
+                                        onClick={(e) => e.target.showPicker?.()}
                                         style={{
                                             position: 'absolute', opacity: 0, inset: 0,
                                             width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
@@ -540,6 +539,7 @@ const FuelPage = () => {
                                         setToDate(e.target.value);
                                         if (!isRange) setFromDate(e.target.value);
                                     }}
+                                    onClick={(e) => e.target.showPicker?.()}
                                     style={{
                                         position: 'absolute', opacity: 0, inset: 0,
                                         width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
@@ -549,18 +549,7 @@ const FuelPage = () => {
                         </div>
 
                         <button
-                            onClick={() => {
-                                const d = new Date(toDate);
-                                d.setDate(d.getDate() + 1);
-                                const newDate = d.toISOString().split('T')[0];
-                                setToDate(newDate);
-                                if (!isRange) setFromDate(newDate);
-                                else {
-                                    const df = new Date(fromDate);
-                                    df.setDate(df.getDate() + 1);
-                                    setFromDate(df.toISOString().split('T')[0]);
-                                }
-                            }}
+                            onClick={() => shiftDays(1)}
                             style={{
                                 width: '36px', height: '36px', borderRadius: '12px',
                                 background: 'rgba(255,255,255,0.03)', border: 'none',
@@ -585,7 +574,7 @@ const FuelPage = () => {
                             fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
                         }}
                     >
-                        {isRange ? 'Range ON' : 'Single'}
+                        {isRange ? 'Range' : 'Single'}
                     </button>
                     <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', maxWidth: '300px', width: '100%', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 200px' }}>
                         <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />

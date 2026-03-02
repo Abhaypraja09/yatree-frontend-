@@ -479,7 +479,7 @@ const StaffPortal = () => {
                                                     <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(255,255,255,0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                                         <Camera size={24} />
                                                     </div>
-                                                    INITIATE ARRIVAL
+                                                    PUNCH IN
                                                 </motion.button>
                                             ) : status.attendance?.punchOut?.time ? (
                                                 <motion.div
@@ -499,7 +499,7 @@ const StaffPortal = () => {
                                                     <div style={{ width: '48px', height: '48px', borderRadius: '50%', background: '#10b981', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 20px #10b981' }}>
                                                         <CheckCircle2 size={28} color="white" />
                                                     </div>
-                                                    <span style={{ color: '#10b981', fontSize: '18px', fontWeight: '1000', letterSpacing: '1px' }}>SHIFT SECURED</span>
+                                                    <span style={{ color: '#10b981', fontSize: '18px', fontWeight: '800', letterSpacing: '1px' }}>PUNCHED IN</span>
                                                 </motion.div>
                                             ) : (
                                                 <motion.button
@@ -518,7 +518,7 @@ const StaffPortal = () => {
                                                     <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(255,255,255,0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                                         <LogOut size={24} />
                                                     </div>
-                                                    TERMINATE DEPLOY
+                                                    PUNCH OUT
                                                 </motion.button>
                                             )}
                                         </div>
@@ -544,9 +544,9 @@ const StaffPortal = () => {
                                         <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px' }}>
                                             <IndianRupee size={20} color="#10b981" />
                                         </div>
-                                        <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Accrued Yield</p>
+                                        <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Estimated Salary</p>
                                         <h2 style={{ fontSize: '36px', margin: '4px 0', fontWeight: '950', color: 'white', letterSpacing: '-1px' }}>₹{report?.finalSalary?.toLocaleString() || '0'}</h2>
-                                        <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: '#10b981', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{report?.presentDays || 0} COMPLETED CYCLES</p>
+                                        <p style={{ margin: '10px 0 0 0', fontSize: '11px', color: '#10b981', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{report?.presentDays || 0} DAYS PRESENT</p>
                                     </motion.div>
 
                                     <motion.div
@@ -566,7 +566,7 @@ const StaffPortal = () => {
                                         <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center', marginBottom: '20px' }}>
                                             <TrendingUp size={20} color="#6366f1" />
                                         </div>
-                                        <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Efficiency Index</p>
+                                        <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Attendance Score</p>
                                         <h2 style={{ fontSize: '36px', margin: '4px 0', fontWeight: '950', color: 'white', letterSpacing: '-1px' }}>{Math.round(((report?.presentDays || 0) / 26) * 100)}%</h2>
                                         <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', marginTop: '15px', overflow: 'hidden' }}>
                                             <motion.div
@@ -592,7 +592,7 @@ const StaffPortal = () => {
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
                                 <h3 style={{ fontSize: '20px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '12px', margin: 0, letterSpacing: '-0.5px' }}>
-                                    <Clock size={22} color="#0ea5e9" /> ACTIVITY VAULT
+                                    <Clock size={22} color="#0ea5e9" /> ATTENDANCE LOGS
                                 </h3>
                                 <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{history.length} RECORDS FOUND</span>
                             </div>
@@ -681,7 +681,7 @@ const StaffPortal = () => {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.03)' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 <MapPin size={10} color="#0ea5e9" />
-                                                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>HUB VERIFIED</span>
+                                                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>LOCATION VERIFIED</span>
                                             </div>
                                             {item.punchIn?.time && item.punchOut?.time && (
                                                 <div style={{ fontSize: '13px', fontWeight: '900', color: '#0ea5e9' }}>
@@ -689,7 +689,7 @@ const StaffPortal = () => {
                                                         const diff = new Date(item.punchOut.time) - new Date(item.punchIn.time);
                                                         const h = Math.floor(diff / 3600000);
                                                         const m = Math.floor((diff % 3600000) / 60000);
-                                                        return `${h}H ${m}M TRANSIT`;
+                                                        return `${h}H ${m}M SHIFT`;
                                                     })()}
                                                 </div>
                                             )}
@@ -714,23 +714,23 @@ const StaffPortal = () => {
                                     <div style={{ width: '44px', height: '44px', borderRadius: '15px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
                                         <Calendar size={22} color="#fbbf24" />
                                     </div>
-                                    ABSENCE PROTOCOL
+                                    LEAVE REQUEST
                                 </h3>
 
                                 <form onSubmit={handleLeaveRequest} style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
                                     <div className="resp-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
                                         <div className="premium-input-group">
-                                            <label className="premium-label">DEPARTURE CYCLE</label>
+                                            <label className="premium-label">FROM DATE</label>
                                             <input type="date" required className="premium-compact-input" value={leaveForm.startDate} onChange={(e) => setLeaveForm({ ...leaveForm, startDate: e.target.value })} />
                                         </div>
                                         <div className="premium-input-group">
-                                            <label className="premium-label">RETURN CYCLE</label>
+                                            <label className="premium-label">TO DATE</label>
                                             <input type="date" required className="premium-compact-input" value={leaveForm.endDate} onChange={(e) => setLeaveForm({ ...leaveForm, endDate: e.target.value })} />
                                         </div>
                                     </div>
 
                                     <div className="premium-input-group">
-                                        <label className="premium-label">CLASSIFICATION</label>
+                                        <label className="premium-label">LEAVE TYPE</label>
                                         <select className="premium-compact-input" value={leaveForm.type} onChange={(e) => setLeaveForm({ ...leaveForm, type: e.target.value })}>
                                             <option value="Sick Leave">Medical / Recuperation</option>
                                             <option value="Casual Leave">Scheduled Absence</option>
@@ -739,8 +739,8 @@ const StaffPortal = () => {
                                     </div>
 
                                     <div className="premium-input-group">
-                                        <label className="premium-label">CONTEXTUAL BRIEF</label>
-                                        <textarea className="premium-compact-input" rows="3" value={leaveForm.reason} onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })} style={{ height: 'auto', paddingTop: '16px', resize: 'none' }} placeholder="Provide mission-critical details..." />
+                                        <label className="premium-label">REASON FOR LEAVE</label>
+                                        <textarea className="premium-compact-input" rows="3" value={leaveForm.reason} onChange={(e) => setLeaveForm({ ...leaveForm, reason: e.target.value })} style={{ height: 'auto', paddingTop: '16px', resize: 'none' }} placeholder="Please explain why you need leave..." />
                                     </div>
 
                                     <motion.button
@@ -762,20 +762,20 @@ const StaffPortal = () => {
                                             marginTop: '10px'
                                         }}
                                     >
-                                        {submittingLeave ? 'TRANSMITTING...' : 'AUTHORIZE REQUEST'}
+                                        {submittingLeave ? 'SENDING...' : 'SUBMIT REQUEST'}
                                     </motion.button>
                                 </form>
                             </div>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
                                 <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 10px #fbbf24' }}></div>
-                                <h3 style={{ fontSize: '18px', fontWeight: '950', margin: 0, letterSpacing: '-0.5px' }}>SIGNAL HISTORY</h3>
+                                <h3 style={{ fontSize: '18px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' }}>MY LEAVE HISTORY</h3>
                             </div>
 
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                 {leaves.length === 0 ? (
                                     <div style={{ padding: '60px 40px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '35px', border: '1px dashed rgba(255,255,255,0.05)' }}>
-                                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '2px' }}>NO DATA STREAMS</p>
+                                        <p style={{ margin: 0, color: 'rgba(255,255,255,0.3)', fontWeight: '900', letterSpacing: '2px' }}>NO LEAVE REQUESTS</p>
                                     </div>
                                 ) : leaves.map(leave => (
                                     <motion.div

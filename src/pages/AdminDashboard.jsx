@@ -357,7 +357,7 @@ const AdminDashboard = () => {
                     >
                         <div className="stats-grid">
                             {/* Row 1 */}
-                            <StatCard icon={Users} label="TOTAL DRIVER SALARY" value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/advances')} trend="MONTHLY" />
+                            <StatCard icon={Users} label="TOTAL DRIVER SALARY" value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/driver-salaries')} trend="MONTHLY" />
                             <StatCard icon={CreditCard} label="TODAY'S DRIVER ADVANCE" value={`₹${(stats.dailyAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/advances')} trend="TODAY" />
                             <StatCard icon={IndianRupee} label="TODAY'S FASTAG FEED" value={`₹${stats.dailyFastagTotal?.toLocaleString() || 0}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/fastag')} trend="TODAY" />
                             <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />

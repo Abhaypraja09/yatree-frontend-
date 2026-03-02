@@ -107,9 +107,18 @@ const ParkingPage = () => {
     const [vehicles, setVehicles] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDriver, setFilterDriver] = useState('All');
-    const [isRange, setIsRange] = useState(true);
+    const [isRange, setIsRange] = useState(false);
     const [fromDate, setFromDate] = useState(new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getFullYear() + '-' + String(new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getMonth() + 1).padStart(2, '0') + '-01');
     const [toDate, setToDate] = useState(new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).toISOString().split('T')[0]);
+
+    /* navigate dates */
+    const shiftDays = (n) => {
+        const f = new Date(fromDate);
+        f.setDate(f.getDate() + n);
+        const fStr = f.toISOString().split('T')[0];
+        setFromDate(fStr);
+        if (!isRange) setToDate(fStr);
+    };
 
     // Form State
     const [formData, setFormData] = useState({
@@ -543,18 +552,7 @@ const ParkingPage = () => {
                             boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
                         }}>
                             <button
-                                onClick={() => {
-                                    const d = new Date(fromDate);
-                                    d.setDate(d.getDate() - 1);
-                                    const newDate = d.toISOString().split('T')[0];
-                                    setFromDate(newDate);
-                                    if (!isRange) setToDate(newDate);
-                                    else {
-                                        const dt = new Date(toDate);
-                                        dt.setDate(dt.getDate() - 1);
-                                        setToDate(dt.toISOString().split('T')[0]);
-                                    }
-                                }}
+                                onClick={() => shiftDays(-1)}
                                 style={{
                                     width: '36px', height: '36px', borderRadius: '12px',
                                     background: 'rgba(255,255,255,0.03)', border: 'none',
@@ -582,6 +580,7 @@ const ParkingPage = () => {
                                             type="date"
                                             value={fromDate}
                                             onChange={(e) => setFromDate(e.target.value)}
+                                            onClick={(e) => e.target.showPicker?.()}
                                             style={{
                                                 position: 'absolute', opacity: 0, inset: 0,
                                                 width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
@@ -613,6 +612,7 @@ const ParkingPage = () => {
                                             setToDate(e.target.value);
                                             if (!isRange) setFromDate(e.target.value);
                                         }}
+                                        onClick={(e) => e.target.showPicker?.()}
                                         style={{
                                             position: 'absolute', opacity: 0, inset: 0,
                                             width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
@@ -622,18 +622,7 @@ const ParkingPage = () => {
                             </div>
 
                             <button
-                                onClick={() => {
-                                    const d = new Date(toDate);
-                                    d.setDate(d.getDate() + 1);
-                                    const newDate = d.toISOString().split('T')[0];
-                                    setToDate(newDate);
-                                    if (!isRange) setFromDate(newDate);
-                                    else {
-                                        const df = new Date(fromDate);
-                                        df.setDate(df.getDate() + 1);
-                                        setFromDate(df.toISOString().split('T')[0]);
-                                    }
-                                }}
+                                onClick={() => shiftDays(1)}
                                 style={{
                                     width: '36px', height: '36px', borderRadius: '12px',
                                     background: 'rgba(255,255,255,0.03)', border: 'none',
@@ -658,7 +647,7 @@ const ParkingPage = () => {
                                 fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
                             }}
                         >
-                            {isRange ? 'Range ON' : 'Single'}
+                            {isRange ? 'Range' : 'Single'}
                         </button>
                     </div>
                 </div>
