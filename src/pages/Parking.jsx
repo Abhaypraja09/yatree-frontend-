@@ -138,7 +138,12 @@ const ParkingPage = () => {
 
     useEffect(() => {
         if (selectedCompany) {
+            fetchEntries();
+            fetchPendingEntries();
+            fetchRejectedEntries();
             fetchCarServiceEntries();
+            fetchDrivers();
+            fetchVehicles();
         }
     }, [selectedCompany, fromDate, toDate]);
 
