@@ -98,6 +98,7 @@ const FuelPage = () => {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [showApprovalModal, setShowApprovalModal] = useState(false);
+    const [drivers, setDrivers] = useState([]);
     const [selectedPending, setSelectedPending] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterVehicle, setFilterVehicle] = useState('All');
@@ -138,8 +139,9 @@ const FuelPage = () => {
     useEffect(() => {
         if (selectedCompany) {
             fetchEntries();
-            fetchPendingEntries();
             fetchVehicles();
+            fetchPendingEntries();
+            fetchDrivers();
         }
     }, [selectedCompany, fromDate, toDate]);
 
@@ -187,6 +189,20 @@ const FuelPage = () => {
         } catch (err) { console.error(err); }
     };
 
+    const fetchDrivers = async () => {
+        if (!selectedCompany?._id) return;
+        try {
+            const userInfoStr = localStorage.getItem('userInfo');
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+            if (!userInfo?.token) return;
+
+            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setDrivers(data.drivers || []);
+        } catch (err) { console.error(err); }
+    };
+
     const handleCreate = async (e) => {
         e.preventDefault();
         setSubmitting(true);
@@ -222,6 +238,24 @@ const FuelPage = () => {
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const resetForm = () => {
+        setFormData({
+            vehicleId: '',
+            fuelType: 'Diesel',
+            date: new Date().toISOString().split('T')[0],
+            amount: '',
+            quantity: '',
+            rate: '',
+            odometer: '',
+            stationName: '',
+            paymentMode: 'Cash',
+            paymentSource: 'Yatree Office',
+            driver: '',
+            slipPhoto: ''
+        });
+        setEditingId(null);
     };
 
     const handleEdit = (entry) => {
@@ -343,23 +377,7 @@ const FuelPage = () => {
 
 
 
-    const resetForm = () => {
-        setEditingId(null);
-        setFormData({
-            vehicleId: '',
-            fuelType: 'Diesel',
-            date: new Date().toISOString().split('T')[0],
-            amount: '',
-            quantity: '',
-            rate: '',
-            odometer: '',
-            stationName: '',
-            paymentMode: 'Cash',
-            paymentSource: 'Yatree Office',
-            driver: '',
-            slipPhoto: ''
-        });
-    };
+
 
     const downloadExcel = () => {
         const dataToExport = filteredEntries.map(e => ({
@@ -1045,9 +1063,37 @@ const FuelPage = () => {
                                             <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fuel Station Name</label>
                                             <input className="input-field" placeholder="e.g. HP Petrol Pump" value={formData.stationName} onChange={(e) => setFormData({ ...formData, stationName: e.target.value })} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
                                         </div>
-                                        <div>
-                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Driver Name / ID *</label>
-                                            <input className="input-field" placeholder="Who fueled the car?" value={formData.driver} onChange={(e) => setFormData({ ...formData, driver: e.target.value })} required style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
+                                        <div style={{ display: 'flex', gap: '15px' }}>
+                                            <div style={{ flex: 1 }}>
+                                                <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Company Driver</label>
+                                                <select
+                                                    className="input-field"
+                                                    value={!drivers.find(d => d.name === formData.driver && d.isFreelancer) ? formData.driver : ''}
+                                                    onChange={(e) => setFormData({ ...formData, driver: e.target.value })}
+                                                    disabled={!!(formData.driver && drivers.find(d => d.name === formData.driver && d.isFreelancer))}
+                                                    style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 10px', cursor: 'pointer', opacity: (formData.driver && drivers.find(d => d.name === formData.driver && d.isFreelancer)) ? 0.3 : 1 }}
+                                                >
+                                                    <option value="" style={{ background: '#1e293b' }}>Select Company</option>
+                                                    {drivers.filter(d => !d.isFreelancer).map(d => (
+                                                        <option key={d._id} value={d.name} style={{ background: '#1e293b' }}>{d.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
+                                            <div style={{ flex: 1 }}>
+                                                <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Freelancer</label>
+                                                <select
+                                                    className="input-field"
+                                                    value={drivers.find(d => d.name === formData.driver && d.isFreelancer) ? formData.driver : ''}
+                                                    onChange={(e) => setFormData({ ...formData, driver: e.target.value })}
+                                                    disabled={!!(formData.driver && drivers.find(d => d.name === formData.driver && !d.isFreelancer))}
+                                                    style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 10px', cursor: 'pointer', opacity: (formData.driver && drivers.find(d => d.name === formData.driver && !d.isFreelancer)) ? 0.3 : 1 }}
+                                                >
+                                                    <option value="" style={{ background: '#1e293b' }}>Select Free.</option>
+                                                    {drivers.filter(d => d.isFreelancer).map(d => (
+                                                        <option key={d._id} value={d.name} style={{ background: '#1e293b' }}>{d.name}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
 

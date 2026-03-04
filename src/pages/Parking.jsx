@@ -108,8 +108,32 @@ const ParkingPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDriver, setFilterDriver] = useState('All');
     const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getFullYear() + '-' + String(new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).getMonth() + 1).padStart(2, '0') + '-01');
-    const [toDate, setToDate] = useState(new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Kolkata' })).toISOString().split('T')[0]);
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [fromDate, setFromDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
+    const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+
+    // Unified date filter logic: When Monthly dropdown is used, it updates the range.
+    useEffect(() => {
+        const firstDay = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
+        const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
+        const lastDayStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+        if (!isRange) {
+            // In single mode, we still show the month's data but UI only shows current selected day
+            setFromDate(firstDay);
+            // If it's the current month, default to today, else last day of that month
+            const today = new Date();
+            if (today.getFullYear() === selectedYear && (today.getMonth() + 1) === selectedMonth) {
+                setToDate(today.toISOString().split('T')[0]);
+            } else {
+                setToDate(lastDayStr);
+            }
+        } else {
+            setFromDate(firstDay);
+            setToDate(lastDayStr);
+        }
+    }, [selectedMonth, selectedYear, isRange]);
 
     /* navigate dates */
     const shiftDays = (n) => {
@@ -221,7 +245,7 @@ const ParkingPage = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&isFreelancer=false`, {
+            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setDrivers(data.drivers || []);
@@ -381,8 +405,8 @@ const ParkingPage = () => {
         const matchesSearch = (carNum.toLowerCase().includes(searchTerm.toLowerCase()) ||
             drvName.toLowerCase().includes(searchTerm.toLowerCase()));
 
-        const isFreelancer = e.driverId?.isFreelancer || e.driver?.includes('(F)');
-        if (isFreelancer) return false;
+        // const isFreelancer = e.driverId?.isFreelancer || e.driver?.includes('(F)');
+        // if (isFreelancer) return false;
 
         const matchesDriver = filterDriver === 'All' || (e.driverId?._id === filterDriver) || (e.driver === filterDriver);
         return matchesSearch && matchesDriver;
@@ -531,16 +555,29 @@ const ParkingPage = () => {
                             />
                         </div>
 
-                        <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', height: '48px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 200px', background: 'rgba(0,0,0,0.2)' }}>
-                            <User size={18} style={{ marginRight: '10px', color: 'var(--primary)' }} />
+                        <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', height: '48px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 150px', background: 'rgba(0,0,0,0.2)' }}>
+                            <Calendar size={18} style={{ marginRight: '10px', color: '#fbbf24' }} />
                             <select
-                                value={filterDriver}
-                                onChange={(e) => setFilterDriver(e.target.value)}
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(Number(e.target.value))}
                                 style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%' }}
                             >
-                                <option value="All" style={{ background: '#1e293b' }}>All Drivers</option>
-                                {drivers.map(d => (
-                                    <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name}</option>
+                                {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                                    <option key={m} value={m} style={{ background: '#1e293b' }}>
+                                        {new Date(0, m - 1).toLocaleString('default', { month: 'long' })}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', height: '48px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flex: '0 1 100px', background: 'rgba(0,0,0,0.2)' }}>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%' }}
+                            >
+                                {[2024, 2025, 2026, 2027].map(y => (
+                                    <option key={y} value={y} style={{ background: '#1e293b' }}>{y}</option>
                                 ))}
                             </select>
                         </div>
@@ -638,22 +675,40 @@ const ParkingPage = () => {
                                 <ChevronRight size={18} />
                             </button>
                         </div>
-                        <button
-                            onClick={() => {
-                                const next = !isRange;
-                                setIsRange(next);
-                                if (!next) setFromDate(toDate);
-                            }}
-                            style={{
-                                marginLeft: '5px', padding: '0 10px', height: '36px',
-                                borderRadius: '10px', border: 'none', cursor: 'pointer',
-                                background: isRange ? '#6366f1' : 'rgba(255,255,255,0.05)',
-                                color: isRange ? 'white' : 'rgba(255,255,255,0.4)',
-                                fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
-                            }}
-                        >
-                            {isRange ? 'Range' : 'Single'}
-                        </button>
+
+                        <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', height: '48px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 200px', background: 'rgba(0,0,0,0.2)' }}>
+                            <User size={18} style={{ marginRight: '10px', color: 'var(--primary)' }} />
+                            <select
+                                value={filterDriver}
+                                onChange={(e) => setFilterDriver(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%' }}
+                            >
+                                <option value="All" style={{ background: '#1e293b' }}>All Drivers</option>
+                                {drivers.map(d => (
+                                    <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name}</option>
+                                ))}
+                            </select>
+                        </div>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                            <button
+                                onClick={() => {
+                                    const next = !isRange;
+                                    setIsRange(next);
+                                    if (!next) setFromDate(toDate);
+                                }}
+                                style={{
+                                    padding: '0 12px', height: '36px',
+                                    borderRadius: '10px', border: 'none', cursor: 'pointer',
+                                    background: isRange ? '#fbbf24' : 'rgba(255,255,255,0.05)',
+                                    color: isRange ? 'black' : 'rgba(255,255,255,0.4)',
+                                    fontSize: '10px', fontWeight: '900', textTransform: 'uppercase',
+                                    display: 'flex', alignItems: 'center', gap: '6px'
+                                }}
+                            >
+                                <Plus size={12} style={{ transform: isRange ? 'rotate(45deg)' : 'none', transition: '0.3s' }} />
+                                {isRange ? 'Range' : 'Single'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -1621,24 +1676,44 @@ const ParkingPage = () => {
                                                 </div>
 
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                    <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver *</label>
-                                                    <div style={{ position: 'relative' }}>
-                                                        <User size={18} style={{ position: 'absolute', left: '15px', top: '16px', color: 'var(--primary)' }} />
-                                                        <select
-                                                            className="input-field"
-                                                            style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px 0 45px', width: '100%', outline: 'none', cursor: 'pointer' }}
-                                                            value={formData.driverId || ''}
-                                                            onChange={(e) => {
-                                                                const selected = drivers.find(d => d._id === e.target.value);
-                                                                setFormData({ ...formData, driverId: e.target.value, driver: selected ? selected.name : '' });
-                                                            }}
-                                                            required
-                                                        >
-                                                            <option value="" style={{ background: '#0f172a' }}>Select Driver</option>
-                                                            {drivers.map(d => (
-                                                                <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name}</option>
-                                                            ))}
-                                                        </select>
+                                                    <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver (Company / Freelancer)</label>
+                                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                                        <div style={{ flex: 1, position: 'relative' }}>
+                                                            <User size={14} style={{ position: 'absolute', left: '12px', top: '16px', color: 'rgba(255,255,255,0.2)' }} />
+                                                            <select
+                                                                className="input-field"
+                                                                style={{ height: '48px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 10px 0 35px', width: '100%', outline: 'none', cursor: 'pointer', fontSize: '12px', opacity: (formData.driverId && drivers.find(d => d._id === formData.driverId && d.isFreelancer)) ? 0.3 : 1 }}
+                                                                value={!drivers.find(d => d._id === formData.driverId && d.isFreelancer) ? formData.driverId : ''}
+                                                                onChange={(e) => {
+                                                                    const selected = drivers.find(d => d._id === e.target.value);
+                                                                    setFormData({ ...formData, driverId: e.target.value, driver: selected ? selected.name : '' });
+                                                                }}
+                                                                disabled={!!(formData.driverId && drivers.find(d => d._id === formData.driverId && d.isFreelancer))}
+                                                            >
+                                                                <option value="" style={{ background: '#0f172a' }}>Co. Driver</option>
+                                                                {drivers.filter(d => !d.isFreelancer).map(d => (
+                                                                    <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
+                                                        <div style={{ flex: 1, position: 'relative' }}>
+                                                            <User size={14} style={{ position: 'absolute', left: '12px', top: '16px', color: 'rgba(255,255,255,0.2)' }} />
+                                                            <select
+                                                                className="input-field"
+                                                                style={{ height: '48px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 10px 0 35px', width: '100%', outline: 'none', cursor: 'pointer', fontSize: '12px', opacity: (formData.driverId && drivers.find(d => d._id === formData.driverId && !d.isFreelancer)) ? 0.3 : 1 }}
+                                                                value={drivers.find(d => d._id === formData.driverId && d.isFreelancer) ? formData.driverId : ''}
+                                                                onChange={(e) => {
+                                                                    const selected = drivers.find(d => d._id === e.target.value);
+                                                                    setFormData({ ...formData, driverId: e.target.value, driver: selected ? selected.name : '' });
+                                                                }}
+                                                                disabled={!!(formData.driverId && drivers.find(d => d._id === formData.driverId && !d.isFreelancer))}
+                                                            >
+                                                                <option value="" style={{ background: '#0f172a' }}>Freelancer</option>
+                                                                {drivers.filter(d => d.isFreelancer).map(d => (
+                                                                    <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name}</option>
+                                                                ))}
+                                                            </select>
+                                                        </div>
                                                     </div>
                                                 </div>
                                             </div>

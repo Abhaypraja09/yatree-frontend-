@@ -358,21 +358,22 @@ const AdminDashboard = () => {
                         <div className="stats-grid">
                             {/* Row 1 */}
                             <StatCard icon={Users} label="TOTAL DRIVER SALARY" value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/driver-salaries')} trend="MONTHLY" />
-                            <StatCard icon={CreditCard} label="TODAY'S DRIVER ADVANCE" value={`₹${(stats.dailyAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/advances')} trend="TODAY" />
-                            <StatCard icon={IndianRupee} label="TODAY'S FASTAG FEED" value={`₹${stats.dailyFastagTotal?.toLocaleString() || 0}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/fastag')} trend="TODAY" />
                             <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
-                            <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
                             <StatCard icon={TrendingUp} label="OUTSIDE CARS (MONTHLY)" value={`₹${(stats.monthlyOutsideCarsTotal || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/outside-cars')} />
+                            <StatCard icon={AlertTriangle} label="TOTAL ACCIDENT COST" value={`₹${(stats.monthlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} trend="ALL TIME" />
+                            <StatCard icon={IndianRupee} label="TODAY'S FASTAG FEED" value={`₹${stats.dailyFastagTotal?.toLocaleString() || 0}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/fastag')} trend="TODAY" />
+                            <StatCard icon={CreditCard} label="TODAY'S DRIVER ADVANCE" value={`₹${(stats.dailyAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/driver-salaries')} trend="TODAY" />
+                            <StatCard icon={Users} label="FREELANCERS (MONTHLY)" value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />
+
+                            <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
 
                             <StatCard icon={CreditCard} label="PARKING (MONTHLY)" value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
-                            <StatCard icon={Users} label="FREELANCERS (MONTHLY)" value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />
                             <StatCard icon={ShieldCheck} label="WARRANTY COST (TOTAL)" value={`₹${(stats.totalWarrantyCost || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/warranties')} />
                             <StatCard icon={Users} label="CURRENT DRIVERS" value={stats.totalDrivers} color="#0ea5e9" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/freelancers' : '/admin/drivers')} />
                             <StatCard icon={Car} label="FLEET SIZE" value={stats.totalVehicles} color="#8b5cf6" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
                             <StatCard icon={Briefcase} label="TOTAL STAFF" value={stats.totalStaff} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/staff')} />
 
                             <StatCard icon={Activity} label="TOTAL DUTIES" value={stats.countPunchIns} color="#3b82f6" loading={loading} onClick={() => { }} trend="LIVE" />
-                            <StatCard icon={AlertTriangle} label="TOTAL ACCIDENT COST" value={`₹${(stats.monthlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} trend="ALL TIME" />
                         </div>
 
 

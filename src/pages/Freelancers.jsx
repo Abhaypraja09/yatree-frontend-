@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, Camera, Image as ImageIcon, Eye } from 'lucide-react';
+import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -159,6 +159,23 @@ const Freelancers = () => {
     const [showAdvanceModal, setShowAdvanceModal] = useState(false);
     const [showManualModal, setShowManualModal] = useState(false);
     const [showDocumentModal, setShowDocumentModal] = useState(false);
+    const [showQuickExpenseModal, setShowQuickExpenseModal] = useState(false);
+    const [quickExpenseType, setQuickExpenseType] = useState('fuel'); // 'fuel' or 'parking'
+    const [quickExpenseData, setQuickExpenseData] = useState({
+        amount: '',
+        date: new Date().toISOString().split('T')[0],
+        vehicleId: '',
+        location: '',
+        remark: '',
+        slipPhoto: '',
+        fuelType: 'Diesel',
+        quantity: '',
+        rate: '',
+        odometer: '',
+        stationName: '',
+        paymentMode: 'Cash',
+        paymentSource: 'Yatree Office'
+    });
     const [documentForm, setDocumentForm] = useState({ documentType: 'Driving License', expiryDate: '' });
     const [documentFile, setDocumentFile] = useState(null);
     const location = useLocation();
@@ -196,8 +213,8 @@ const Freelancers = () => {
         review: ''
     });
 
-    const [punchInPhotos, setPunchInPhotos] = useState({ selfie: null, kmPhoto: null });
-    const [punchOutPhotos, setPunchOutPhotos] = useState({ selfie: null, kmPhoto: null });
+    const [punchInPhotos, setPunchInPhotos] = useState({ kmPhoto: null });
+    const [punchOutPhotos, setPunchOutPhotos] = useState({ kmPhoto: null });
 
     const [showEditDutyModal, setShowEditDutyModal] = useState(false);
     const [editingDuty, setEditingDuty] = useState(null);
@@ -268,6 +285,15 @@ const Freelancers = () => {
         }));
     }, []);
 
+    useEffect(() => {
+        if (quickExpenseData.amount && quickExpenseData.quantity) {
+            const calculatedRate = (Number(quickExpenseData.amount) / Number(quickExpenseData.quantity)).toFixed(2);
+            if (quickExpenseData.rate !== calculatedRate) {
+                setQuickExpenseData(prev => ({ ...prev, rate: calculatedRate }));
+            }
+        }
+    }, [quickExpenseData.amount, quickExpenseData.quantity]);
+
     const getOneEightyDaysAgo = () => {
         const d = new Date();
         d.setDate(d.getDate() - 180);
@@ -320,6 +346,17 @@ const Freelancers = () => {
         } catch (err) { console.error('fetchAdvances error:', err?.response?.status, err?.response?.config?.url || err.message); }
     }, [selectedCompany, fromDate, toDate]);
 
+    const handleDeleteDuty = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this duty record?')) return;
+        try {
+            await axios.delete(`/api/admin/attendance/${id}`);
+            fetchAttendance();
+            alert('Duty record deleted successfully');
+        } catch (error) {
+            alert('Error deleting duty record');
+        }
+    };
+
     const fetchFreelancers = useCallback(async () => {
         if (!selectedCompany?._id) return;
         setLoading(true);
@@ -361,6 +398,68 @@ const Freelancers = () => {
     }, [selectedCompany, fromDate, toDate, fetchAttendance, fetchAdvances]);
 
 
+    const handleQuickExpenseSubmit = async (e) => {
+        e.preventDefault();
+        setSubmitting(true);
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const fd = new FormData();
+            fd.append('driverId', selectedDriver._id);
+            fd.append('driver', selectedDriver.name);
+            fd.append('amount', quickExpenseData.amount);
+            fd.append('date', quickExpenseData.date);
+            fd.append('companyId', selectedCompany._id);
+            fd.append('vehicleId', quickExpenseData.vehicleId);
+            fd.append('remark', quickExpenseData.remark || '');
+            fd.append('type', quickExpenseType);
+
+            if (quickExpenseType === 'fuel') {
+                fd.append('fuelType', quickExpenseData.fuelType);
+                fd.append('quantity', quickExpenseData.quantity);
+                fd.append('rate', quickExpenseData.rate);
+                fd.append('odometer', quickExpenseData.odometer);
+                fd.append('stationName', quickExpenseData.stationName);
+                fd.append('paymentMode', quickExpenseData.paymentMode);
+                fd.append('paymentSource', quickExpenseData.paymentSource);
+            }
+
+            if (quickExpenseData.location) fd.append('location', quickExpenseData.location);
+            if (quickExpenseData.slipPhoto) fd.append('slipPhoto', quickExpenseData.slipPhoto);
+
+            const endpoint = quickExpenseType === 'fuel' ? '/api/admin/fuel' : '/api/admin/parking';
+            await axios.post(endpoint, fd, {
+                headers: {
+                    Authorization: `Bearer ${userInfo.token}`,
+                    'Content-Type': 'multipart/form-data'
+                }
+            });
+
+            setMessage({ type: 'success', text: `${quickExpenseType.toUpperCase()} record added!` });
+            setTimeout(() => {
+                setShowQuickExpenseModal(false);
+                setQuickExpenseData({
+                    amount: '',
+                    date: new Date().toISOString().split('T')[0],
+                    vehicleId: '',
+                    location: '',
+                    remark: '',
+                    slipPhoto: '',
+                    fuelType: 'Diesel',
+                    quantity: '',
+                    rate: '',
+                    odometer: '',
+                    stationName: '',
+                    paymentMode: 'Cash',
+                    paymentSource: 'Yatree Office'
+                });
+                setMessage({ type: '', text: '' });
+                fetchAttendance(); // Refresh to show if needed
+            }, 1000);
+        } catch (err) {
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to save' });
+        } finally { setSubmitting(false); }
+    };
+
     const handleCreate = async (e) => {
         e.preventDefault();
         setSubmitting(true);
@@ -389,7 +488,6 @@ const Freelancers = () => {
             const fd = new FormData();
             Object.keys(punchInData).forEach(key => fd.append(key, punchInData[key]));
             fd.append('driverId', selectedDriver._id);
-            if (punchInPhotos.selfie) fd.append('selfie', punchInPhotos.selfie);
             if (punchInPhotos.kmPhoto) fd.append('kmPhoto', punchInPhotos.kmPhoto);
 
             await axios.post('/api/admin/freelancers/punch-in', fd, {
@@ -400,7 +498,7 @@ const Freelancers = () => {
             });
             setShowPunchInModal(false);
             setVehicleSearch('');
-            setPunchInPhotos({ selfie: null, kmPhoto: null });
+            setPunchInPhotos({ kmPhoto: null });
             const localNow = new Date(new Date().getTime() - (new Date().getTimezoneOffset() * 60000)).toISOString();
             setPunchInData({
                 vehicleId: '',
@@ -424,7 +522,6 @@ const Freelancers = () => {
             const fd = new FormData();
             Object.keys(punchOutData).forEach(key => fd.append(key, punchOutData[key]));
             fd.append('driverId', selectedDriver._id);
-            if (punchOutPhotos.selfie) fd.append('selfie', punchOutPhotos.selfie);
             if (punchOutPhotos.kmPhoto) fd.append('kmPhoto', punchOutPhotos.kmPhoto);
 
             await axios.post('/api/admin/freelancers/punch-out', fd, {
@@ -434,7 +531,7 @@ const Freelancers = () => {
                 }
             });
             setShowPunchOutModal(false);
-            setPunchOutPhotos({ selfie: null, kmPhoto: null });
+            setPunchOutPhotos({ kmPhoto: null });
             const now = new Date().toISOString().slice(0, 16);
             setPunchOutData({ km: '', time: now, fuelAmount: '0', parkingAmount: '0', parkingPaidBy: 'Self', review: '', dailyWage: '', dropLocation: '' });
             fetchFreelancers();
@@ -1060,6 +1157,20 @@ const Freelancers = () => {
                                                                     >START</button>
                                                                 )}
                                                                 {/* Advance button removed, moved to Settlement */}
+                                                                <button
+                                                                    onClick={() => { setSelectedDriver(d); setQuickExpenseType('fuel'); setShowQuickExpenseModal(true); }}
+                                                                    title="Add Fuel"
+                                                                    style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(234, 179, 8, 0.1)', color: '#eab308', border: '1px solid rgba(234, 179, 8, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                                                >
+                                                                    <Fuel size={13} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => { setSelectedDriver(d); setQuickExpenseType('parking'); setShowQuickExpenseModal(true); }}
+                                                                    title="Add Parking"
+                                                                    style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                                                >
+                                                                    <MapPin size={13} />
+                                                                </button>
                                                                 <button onClick={() => openEditModal(d)} title="Edit" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
                                                                     <Edit2 size={13} />
                                                                 </button>
@@ -1084,11 +1195,11 @@ const Freelancers = () => {
                     activeTab === 'accounts' && (
                         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
                             <div style={{ marginBottom: '32px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                    <div style={{ width: '3px', height: '16px', background: '#6366f1', borderRadius: '4px' }}></div>
-                                    <h4 style={{ margin: 0, color: 'white', fontSize: '15px', fontWeight: '800' }}>Driver Wise Settlement</h4>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                                    <div style={{ width: '4px', height: '24px', background: 'linear-gradient(to bottom, #6366f1, #a855f7)', borderRadius: '4px' }}></div>
+                                    <h4 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '900', letterSpacing: '-0.5px' }}>Financial Settlement <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: '500', fontSize: '14px', marginLeft: '10px' }}>• Master Ledger</span></h4>
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                     {baseDrivers.map(driver => {
                                         const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
                                         const dEarned = dAttendance.reduce((s, a) => {
@@ -1107,115 +1218,161 @@ const Freelancers = () => {
                                         if (dEarned === 0 && dAdvanced === 0) return null;
 
                                         return (
-                                            <div key={driver._id} className="glass-card premium-row" style={{
-                                                background: 'rgba(15, 23, 42, 0.6)',
-                                                border: '1px solid rgba(255,255,255,0.05)',
-                                                borderRadius: '20px',
-                                                padding: '20px',
-                                                position: 'relative',
-                                                overflow: 'hidden',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: '20px'
-                                            }}>
-                                                {/* Row Layout for Desktop, Stack for Mobile handled via class */}
+                                            <motion.div
+                                                key={driver._id}
+                                                whileHover={{ y: -5, boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)' }}
+                                                className="glass-card premium-row"
+                                                style={{
+                                                    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.4) 100%)',
+                                                    border: '1px solid rgba(255,255,255,0.06)',
+                                                    borderRadius: '28px',
+                                                    padding: '24px',
+                                                    position: 'relative',
+                                                    overflow: 'hidden',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: '24px',
+                                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                }}
+                                            >
+                                                {/* Background Accent */}
+                                                <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: dBalance >= 0 ? 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(244, 63, 94, 0.08) 0%, transparent 70%)', filter: 'blur(30px)', pointerEvents: 'none' }}></div>
+
                                                 <div className="settlement-row-header" style={{
                                                     display: 'flex',
                                                     justifyContent: 'space-between',
                                                     alignItems: 'center',
                                                     flexWrap: 'wrap',
-                                                    gap: '20px'
+                                                    gap: '24px'
                                                 }}>
-                                                    {/* Left: Driver Info */}
-                                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', minWidth: '220px' }}>
-                                                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'linear-gradient(135deg, #4f46e5, #9333ea)', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 8px 20px rgba(147, 51, 234, 0.25)', flexShrink: 0 }}>
-                                                            <UserIcon size={20} color="white" />
+                                                    {/* Left: Driver Identity */}
+                                                    <div style={{ display: 'flex', gap: '18px', alignItems: 'center', minWidth: '220px' }}>
+                                                        <div style={{ position: 'relative' }}>
+                                                            <div style={{
+                                                                width: '56px', height: '56px', borderRadius: '18px',
+                                                                background: 'linear-gradient(135deg, #4f46e5, #9333ea)',
+                                                                display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                                                boxShadow: '0 12px 24px -6px rgba(147, 51, 234, 0.4)',
+                                                                flexShrink: 0,
+                                                                border: '1px solid rgba(255,255,255,0.1)'
+                                                            }}>
+                                                                <UserIcon size={24} color="white" />
+                                                            </div>
+                                                            <div style={{
+                                                                position: 'absolute', bottom: '-4px', right: '-4px',
+                                                                width: '18px', height: '18px', borderRadius: '50%',
+                                                                background: '#10b981', border: '3px solid #1e293b',
+                                                                boxShadow: '0 0 10px rgba(16, 185, 129, 0.5)'
+                                                            }}></div>
                                                         </div>
                                                         <div>
-                                                            <h3 style={{ margin: 0, color: 'white', fontSize: '17px', fontWeight: '900', letterSpacing: '-0.3px' }}>{driver.name.split(' (F)')[0]}</h3>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                                                                <Phone size={10} color="rgba(255,255,255,0.4)" />
-                                                                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '800' }}>{driver.mobile}</span>
+                                                            <h3 style={{ margin: 0, color: 'white', fontSize: '19px', fontWeight: '950', letterSpacing: '-0.5px' }}>{driver.name.split(' (F)')[0]}</h3>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                                                                <Phone size={12} color="rgba(255,255,255,0.3)" />
+                                                                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '800' }}>{driver.mobile}</span>
                                                             </div>
                                                         </div>
                                                     </div>
 
-                                                    {/* Middle: Stats */}
-                                                    <div className="settlement-stats-grid" style={{
-                                                        display: 'flex',
-                                                        gap: 'clamp(20px, 4vw, 50px)',
-                                                        alignItems: 'center',
-                                                        flexWrap: 'wrap',
+                                                    {/* Middle: Rich Stats Grid */}
+                                                    <div style={{
+                                                        display: 'grid',
+                                                        gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+                                                        gap: '30px',
                                                         flex: 1,
-                                                        justifyContent: 'center'
+                                                        padding: '0 20px'
                                                     }}>
                                                         <div style={{ textAlign: 'center' }}>
-                                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px' }}>Total Duties</div>
-                                                            <div style={{ color: 'white', fontSize: '18px', fontWeight: '950' }}>{dAttendance.length}</div>
-                                                            <div style={{ color: 'rgba(99, 102, 241, 0.6)', fontSize: '10px', fontWeight: '700', marginTop: '2px' }}>{dKM.toLocaleString()} KM</div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
+                                                                <Car size={12} color="rgba(255,255,255,0.2)" />
+                                                                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Duty</span>
+                                                            </div>
+                                                            <div style={{ color: 'white', fontSize: '20px', fontWeight: '950' }}>{dAttendance.length} <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>TRIPS</span></div>
+                                                            <div style={{ color: '#818cf8', fontSize: '11px', fontWeight: '800', marginTop: '4px' }}>{dKM.toLocaleString()} KM</div>
                                                         </div>
+
                                                         <div style={{ textAlign: 'center' }}>
-                                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px' }}>Gross Earning</div>
-                                                            <div style={{ color: '#10b981', fontSize: '18px', fontWeight: '950' }}>₹{dEarned.toLocaleString()}</div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
+                                                                <TrendingUp size={12} color="#10b981" style={{ opacity: 0.5 }} />
+                                                                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Gross Salary</span>
+                                                            </div>
+                                                            <div style={{ color: '#10b981', fontSize: '20px', fontWeight: '950' }}>₹{dEarned.toLocaleString()}</div>
+                                                            <div style={{ color: 'rgba(16, 185, 129, 0.4)', fontSize: '10px', fontWeight: '800', marginTop: '4px' }}>EARNED TOTAL</div>
                                                         </div>
+
                                                         <div style={{ textAlign: 'center' }}>
-                                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px' }}>Paid Advance</div>
-                                                            <div style={{ color: '#f43f5e', fontSize: '18px', fontWeight: '950' }}>₹{dAdvanced.toLocaleString()}</div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
+                                                                <History size={12} color="#f43f5e" style={{ opacity: 0.5 }} />
+                                                                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Paid</span>
+                                                            </div>
+                                                            <div style={{ color: '#f43f5e', fontSize: '20px', fontWeight: '950' }}>₹{dAdvanced.toLocaleString()}</div>
+                                                            <div style={{ color: 'rgba(244, 63, 94, 0.4)', fontSize: '10px', fontWeight: '800', marginTop: '4px' }}>DISBURSED</div>
                                                         </div>
                                                     </div>
 
-                                                    {/* Right: Net Balance & Action */}
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '25px', minWidth: '200px', justifyContent: 'flex-end' }}>
+                                                    {/* Right: Net Payable Highlight */}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '30px', minWidth: '240px', justifyContent: 'flex-end' }}>
                                                         <div style={{ textAlign: 'right' }}>
-                                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Net Outstanding</div>
+                                                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>NET PAYABLE</span>
                                                             <div style={{
                                                                 color: dBalance >= 0 ? '#10b981' : '#f43f5e',
-                                                                fontSize: '28px', fontWeight: '950', letterSpacing: '-0.8px',
-                                                                textShadow: dBalance >= 0 ? '0 0 20px rgba(16, 185, 129, 0.2)' : '0 0 20px rgba(244, 63, 94, 0.2)'
+                                                                fontSize: '32px', fontWeight: '1000', letterSpacing: '-1.5px',
+                                                                marginTop: '2px',
+                                                                textShadow: dBalance >= 0 ? '0 0 20px rgba(16, 185, 129, 0.25)' : '0 0 20px rgba(244, 63, 94, 0.25)'
                                                             }}>
                                                                 ₹{dBalance.toLocaleString()}
                                                             </div>
                                                         </div>
                                                         <button
-                                                            onClick={() => { setSelectedDriver(driver); setShowAdvanceModal(true); }}
+                                                            onClick={(e) => { e.stopPropagation(); setSelectedDriver(driver); setShowAdvanceModal(true); }}
                                                             style={{
                                                                 background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                                                                 color: 'white',
                                                                 border: 'none',
-                                                                width: '44px',
-                                                                height: '44px',
-                                                                borderRadius: '14px',
+                                                                width: '52px',
+                                                                height: '52px',
+                                                                borderRadius: '16px',
                                                                 cursor: 'pointer',
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 justifyContent: 'center',
-                                                                transition: 'all 0.3s',
-                                                                boxShadow: '0 8px 15px rgba(16, 185, 129, 0.2)',
+                                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                boxShadow: '0 12px 24px -6px rgba(16, 185, 129, 0.3)',
                                                                 flexShrink: 0
                                                             }}
-                                                            title="Add Advance Payment"
+                                                            className="hover-pop"
+                                                            title="Process Payment"
                                                         >
-                                                            <Plus size={20} />
+                                                            <Plus size={24} />
                                                         </button>
                                                     </div>
                                                 </div>
 
-                                                {/* Bottom: Recent History Strip */}
-                                                {dAdvances.length > 0 && (
-                                                    <div style={{
-                                                        background: 'rgba(0,0,0,0.2)',
-                                                        borderRadius: '12px',
-                                                        padding: '10px 15px',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '12px',
-                                                        border: '1px solid rgba(255,255,255,0.02)'
-                                                    }}>
-                                                        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Timeline</div>
-                                                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '700' }}>{breakdownText}</div>
+                                                {/* Bottom Info Bar */}
+                                                <div style={{
+                                                    background: 'rgba(0,0,0,0.25)',
+                                                    borderRadius: '16px',
+                                                    padding: '12px 20px',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'space-between',
+                                                    border: '1px solid rgba(255,255,255,0.03)'
+                                                }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Recent Audit</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.2px' }}>
+                                                            {dAdvances.length > 0 ? breakdownText : 'No previous transactions found in this period'}
+                                                        </div>
                                                     </div>
-                                                )}
-                                            </div>
+                                                    {dEarned > 0 && (
+                                                        <div style={{ display: 'flex', gap: '12px' }}>
+                                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>
+                                                                AVG SALARY / DUTY: <span style={{ color: '#fbbf24', fontWeight: '900' }}>₹{Math.round(dEarned / dAttendance.length).toLocaleString()}</span>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </motion.div>
                                         );
                                     }).filter(Boolean)}
                                 </div>
@@ -1329,6 +1486,13 @@ const Freelancers = () => {
                                                                     >
                                                                         <Edit2 size={14} />
                                                                     </button>
+                                                                    <button
+                                                                        onClick={() => handleDeleteDuty(a._id)}
+                                                                        style={{ background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        title="Delete"
+                                                                    >
+                                                                        <Trash2 size={14} />
+                                                                    </button>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -1429,17 +1593,11 @@ const Freelancers = () => {
                                 <Field label="Pick-up Location" value={punchInData.pickUpLocation} onChange={v => setPunchInData({ ...punchInData, pickUpLocation: v })} />
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '20px' }}>
                                 <PhotoUpload
-                                    label="Driver Selfie *"
+                                    label="KM Reading Photo"
                                     icon={Camera}
-                                    onFileSelect={f => setPunchInPhotos({ ...punchInPhotos, selfie: f })}
-                                    previewFile={punchInPhotos.selfie}
-                                />
-                                <PhotoUpload
-                                    label="Odometer Photo *"
-                                    icon={ImageIcon}
-                                    onFileSelect={f => setPunchInPhotos({ ...punchInPhotos, kmPhoto: f })}
+                                    onFileSelect={(file) => setPunchInPhotos({ ...punchInPhotos, kmPhoto: file })}
                                     previewFile={punchInPhotos.kmPhoto}
                                 />
                             </div>
@@ -1660,16 +1818,10 @@ const Freelancers = () => {
                                 </div>
                                 <Field label="Duty Salary (Wage) *" type="number" value={punchOutData.dailyWage} onChange={v => setPunchOutData({ ...punchOutData, dailyWage: v })} required />
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                    <PhotoUpload
-                                        label="End Session Selfie"
-                                        icon={Camera}
-                                        onFileSelect={f => setPunchOutPhotos({ ...punchOutPhotos, selfie: f })}
-                                        previewFile={punchOutPhotos.selfie}
-                                    />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
                                     <PhotoUpload
                                         label="Closing KM Photo"
-                                        icon={ImageIcon}
+                                        icon={Camera}
                                         onFileSelect={f => setPunchOutPhotos({ ...punchOutPhotos, kmPhoto: f })}
                                         previewFile={punchOutPhotos.kmPhoto}
                                     />
@@ -1902,6 +2054,166 @@ const Freelancers = () => {
                         />
                     )}
                 </AnimatePresence>
+
+                <AnimatePresence>
+                    {showQuickExpenseModal && (
+                        <div style={{ position: 'fixed', inset: 0, background: 'rgba(5, 8, 15, 0.9)', zIndex: 11000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', backdropFilter: 'blur(12px)' }}>
+                            <motion.div
+                                initial={{ y: 50, opacity: 0 }}
+                                animate={{ y: 0, opacity: 1 }}
+                                exit={{ y: 50, opacity: 0 }}
+                                className="premium-glass"
+                                style={{ width: '100%', maxWidth: '600px', padding: '35px', maxHeight: '95vh', overflowY: 'auto', borderRadius: '32px' }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                    <div>
+                                        <h2 style={{ color: 'white', fontSize: '24px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>
+                                            Add {quickExpenseType === 'fuel' ? 'Fuel' : 'Parking'}
+                                        </h2>
+                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '800', marginTop: '4px', textTransform: 'uppercase' }}>
+                                            FOR {selectedDriver?.name.split(' (F)')[0]}
+                                        </p>
+                                    </div>
+                                    <button onClick={() => setShowQuickExpenseModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', height: '40px', width: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+                                </div>
+
+                                <form onSubmit={handleQuickExpenseSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                    {quickExpenseType === 'fuel' ? (
+                                        <>
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                                                <div>
+                                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Vehicle Number *</label>
+                                                    <select
+                                                        className="input-field"
+                                                        value={quickExpenseData.vehicleId}
+                                                        required
+                                                        onChange={(e) => setQuickExpenseData({ ...quickExpenseData, vehicleId: e.target.value })}
+                                                        style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
+                                                    >
+                                                        <option value="" style={{ background: '#0f172a' }}>-- Select Car --</option>
+                                                        {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber} ({v.model})</option>)}
+                                                    </select>
+                                                </div>
+                                                <div>
+                                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fuel Type</label>
+                                                    <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '5px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', height: '52px' }}>
+                                                        {['Diesel', 'Petrol', 'CNG'].map((t) => (
+                                                            <button
+                                                                key={t}
+                                                                type="button"
+                                                                onClick={() => setQuickExpenseData({ ...quickExpenseData, fuelType: t })}
+                                                                style={{
+                                                                    flex: 1,
+                                                                    border: 'none',
+                                                                    borderRadius: '10px',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '800',
+                                                                    cursor: 'pointer',
+                                                                    transition: 'all 0.3s',
+                                                                    background: quickExpenseData.fuelType === t ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'transparent',
+                                                                    color: quickExpenseData.fuelType === t ? 'white' : 'rgba(255,255,255,0.4)',
+                                                                    boxShadow: quickExpenseData.fuelType === t ? '0 4px 12px rgba(245, 158, 11, 0.2)' : 'none'
+                                                                }}
+                                                            >
+                                                                {t}
+                                                            </button>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                                <Field label="Amount (₹) *" value={quickExpenseData.amount} onChange={v => setQuickExpenseData({ ...quickExpenseData, amount: v })} type="number" required placeholder="e.g. 5000" />
+                                                <Field label="Quantity (L) *" value={quickExpenseData.quantity} onChange={v => setQuickExpenseData({ ...quickExpenseData, quantity: v })} type="number" required placeholder="e.g. 50" />
+                                            </div>
+
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                                <Field label="Rate (₹/L)" value={quickExpenseData.rate} onChange={v => setQuickExpenseData({ ...quickExpenseData, rate: v })} placeholder="Auto-calculated" readOnly />
+                                                <Field label="Date *" value={quickExpenseData.date} onChange={v => setQuickExpenseData({ ...quickExpenseData, date: v })} type="date" required />
+                                            </div>
+
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                                <Field label="Odometer (KM) *" value={quickExpenseData.odometer} onChange={v => setQuickExpenseData({ ...quickExpenseData, odometer: v })} type="number" required placeholder="Current Reading" />
+                                                <div>
+                                                    <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Payment Source</label>
+                                                    <select
+                                                        className="input-field"
+                                                        value={quickExpenseData.paymentSource}
+                                                        onChange={(e) => setQuickExpenseData({ ...quickExpenseData, paymentSource: e.target.value })}
+                                                        style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
+                                                    >
+                                                        <option value="Yatree Office" style={{ background: '#0f172a' }}>Yatree Office (Default)</option>
+                                                        <option value="Driver App" style={{ background: '#0f172a' }}>Personal Pay / Driver</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <Field label="Fuel Station Name" value={quickExpenseData.stationName} onChange={v => setQuickExpenseData({ ...quickExpenseData, stationName: v })} placeholder="e.g. HP Petrol Pump" />
+                                        </>
+                                    ) : (
+                                        <>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                                <Field label="Amount (₹) *" value={quickExpenseData.amount} onChange={v => setQuickExpenseData({ ...quickExpenseData, amount: v })} type="number" required />
+                                                <Field label="Date *" value={quickExpenseData.date} onChange={v => setQuickExpenseData({ ...quickExpenseData, date: v })} type="date" required />
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Vehicle *</label>
+                                                <select
+                                                    className="input-field"
+                                                    required
+                                                    value={quickExpenseData.vehicleId}
+                                                    onChange={e => setQuickExpenseData({ ...quickExpenseData, vehicleId: e.target.value })}
+                                                    style={{ height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '0 15px', color: 'white' }}
+                                                >
+                                                    <option value="" style={{ background: '#0f172a' }}>Select Vehicle</option>
+                                                    {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber}</option>)}
+                                                </select>
+                                            </div>
+                                            <Field label="Location" value={quickExpenseData.location} onChange={v => setQuickExpenseData({ ...quickExpenseData, location: v })} placeholder="Enter location" />
+                                        </>
+                                    )}
+
+                                    <Field label="Remarks" value={quickExpenseData.remark} onChange={v => setQuickExpenseData({ ...quickExpenseData, remark: v })} placeholder="Optional remarks" />
+
+                                    <div style={{ padding: '25px', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '15px' }}>
+                                            {quickExpenseType === 'fuel' ? 'FUEL SLIP / RECEIPT PHOTO' : 'PARKING RECEIPT PHOTO'}
+                                        </p>
+                                        <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                                            {quickExpenseData.slipPhoto ? (
+                                                <div style={{ position: 'relative' }}>
+                                                    <img src={URL.createObjectURL(quickExpenseData.slipPhoto)} alt="Slip" style={{ width: '100px', height: '100px', borderRadius: '16px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)' }} />
+                                                    <button type="button" onClick={() => setQuickExpenseData({ ...quickExpenseData, slipPhoto: '' })} style={{ position: 'absolute', top: '-10px', right: '-10px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '28px', height: '28px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 10px rgba(0,0,0,0.3)' }}>×</button>
+                                                </div>
+                                            ) : (
+                                                <div style={{ display: 'flex', gap: '15px' }}>
+                                                    <label style={{ width: '90px', height: '90px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '2px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                                        <Camera size={24} color="rgba(255,255,255,0.2)" />
+                                                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', marginTop: '8px' }}>CAMERA</span>
+                                                        <input type="file" hidden accept="image/*" capture="environment" onChange={e => { if (e.target.files[0]) setQuickExpenseData({ ...quickExpenseData, slipPhoto: e.target.files[0] }) }} />
+                                                    </label>
+                                                    <label style={{ width: '90px', height: '90px', borderRadius: '20px', background: 'rgba(255,255,255,0.02)', border: '2px dashed rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                                        <Plus size={24} color="rgba(255,255,255,0.2)" />
+                                                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', marginTop: '8px' }}>UPLOAD</span>
+                                                        <input type="file" hidden accept="image/*" onChange={e => { if (e.target.files[0]) setQuickExpenseData({ ...quickExpenseData, slipPhoto: e.target.files[0] }) }} />
+                                                    </label>
+                                                </div>
+                                            )}
+                                            <div style={{ flex: 1 }}>
+                                                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', margin: 0, fontWeight: '600', lineHeight: '1.4' }}>
+                                                    Snap a photo or upload fuel bill.<br />
+                                                    <span style={{ fontSize: '10px' }}>Max size: 5MB (JPG, PNG)</span>
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <SubmitButton disabled={submitting} text={`SAVE ${quickExpenseType.toUpperCase()} ENTRY`} message={message} />
+                                </form>
+                            </motion.div>
+                        </div>
+                    )}
+                </AnimatePresence>
             </div>
             <style>{`
                 @media (max-width: 768px) {
@@ -1944,6 +2256,7 @@ const Freelancers = () => {
                 }
                 .premium-row {
                     transition: all 0.3s ease !important;
+                }
             `}</style>
         </div>
     );

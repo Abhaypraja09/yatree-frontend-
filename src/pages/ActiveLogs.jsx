@@ -50,6 +50,10 @@ const ActiveLogs = () => {
     const [photos, setPhotos] = useState([]);
     const [submitting, setSubmitting] = useState(false);
 
+    // Simple Month/Year filter
+    const [filterMonth, setFilterMonth] = useState(new Date().getMonth()); // 0-indexed
+    const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+
     useEffect(() => {
         if (selectedCompany) {
             fetchLogs();
@@ -156,7 +160,9 @@ const ActiveLogs = () => {
         );
         const matchesStatus = filterStatus === 'All' || log.status === filterStatus;
         const matchesVehicle = filterVehicle === 'All' || log.vehicle?._id === filterVehicle;
-        return matchesSearch && matchesStatus && matchesVehicle;
+        const logDate = new Date(log.date);
+        const matchesDate = logDate.getMonth() === filterMonth && logDate.getFullYear() === filterYear;
+        return matchesSearch && matchesStatus && matchesVehicle && matchesDate;
     });
 
     const totalEstLoss = filteredLogs.reduce((sum, log) => sum + (Number(log.amount) || 0), 0);
@@ -252,7 +258,7 @@ const ActiveLogs = () => {
                 </div>
 
                 {/* Filters Row */}
-                <div className="flex-resp" style={{ marginTop: '35px', gap: '15px' }}>
+                <div className="flex-resp" style={{ marginTop: '35px', gap: '15px', flexWrap: 'wrap' }}>
                     <div style={{ position: 'relative', flex: '1', minWidth: 'min(100%, 350px)' }}>
                         <Search size={20} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                         <input
@@ -290,6 +296,30 @@ const ActiveLogs = () => {
                             <option value="Resolved" style={{ background: '#0f172a' }}>Resolved</option>
                         </select>
                     </div>
+                </div>
+
+                {/* Simple Month/Year Filter */}
+                <div style={{ marginTop: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <select
+                        value={filterMonth}
+                        onChange={e => setFilterMonth(Number(e.target.value))}
+                        className="input-field"
+                        style={{ height: '48px', borderRadius: '14px', padding: '0 20px', fontWeight: '700', fontSize: '14px', width: '160px' }}
+                    >
+                        {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, i) => (
+                            <option key={i} value={i} style={{ background: '#0f172a' }}>{m}</option>
+                        ))}
+                    </select>
+                    <select
+                        value={filterYear}
+                        onChange={e => setFilterYear(Number(e.target.value))}
+                        className="input-field"
+                        style={{ height: '48px', borderRadius: '14px', padding: '0 20px', fontWeight: '700', fontSize: '14px', width: '110px' }}
+                    >
+                        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                            <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                        ))}
+                    </select>
                 </div>
             </header>
 

@@ -462,7 +462,29 @@ const StaffPortal = () => {
                                         </div>
 
                                         <div style={{ marginTop: '60px', display: 'flex', justifyContent: 'center' }}>
-                                            {!status?.attendance ? (
+                                            {(status?.onLeave || status?.attendance?.status === 'absent') ? (
+                                                <motion.div
+                                                    initial={{ scale: 0.9, opacity: 0 }}
+                                                    animate={{ scale: 1, opacity: 1 }}
+                                                    style={{
+                                                        background: 'rgba(251, 191, 36, 0.1)',
+                                                        padding: '30px 40px',
+                                                        borderRadius: '35px',
+                                                        border: '1px solid rgba(251, 191, 36, 0.2)',
+                                                        display: 'inline-flex',
+                                                        flexDirection: 'column',
+                                                        alignItems: 'center',
+                                                        gap: '15px'
+                                                    }}>
+                                                    <div style={{ width: '56px', height: '56px', borderRadius: '50%', background: '#fbbf24', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 0 20px rgba(251, 191, 36, 0.4)' }}>
+                                                        <Calendar size={28} color="#000" />
+                                                    </div>
+                                                    <div style={{ textAlign: 'center' }}>
+                                                        <h4 style={{ margin: 0, color: '#fbbf24', fontSize: '18px', fontWeight: '900', letterSpacing: '0.5px' }}>ON APPROVED LEAVE</h4>
+                                                        <p style={{ margin: '6px 0 0 0', color: 'rgba(251, 191, 36, 0.6)', fontSize: '13px', fontWeight: '700' }}>Access restricted for today.</p>
+                                                    </div>
+                                                </motion.div>
+                                            ) : !status?.attendance ? (
                                                 <motion.button
                                                     whileHover={{ scale: 1.05, y: -4, boxShadow: '0 25px 50px -12px rgba(14, 165, 233, 0.6)' }}
                                                     whileTap={{ scale: 0.95 }}

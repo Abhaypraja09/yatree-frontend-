@@ -16,12 +16,7 @@ const fmtTime = (t) => t ? new Date(t).toLocaleTimeString('en-IN', { hour: '2-di
 
 /* ─── Photo card ─── */
 const PhotoCard = ({ url, label }) => {
-    if (!url) return (
-        <div style={{ padding: '18px', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.07)', textAlign: 'center', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
-            <Camera size={18} color="rgba(255,255,255,0.15)" />
-            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '800', textTransform: 'uppercase' }}>{label} — Not Captured</span>
-        </div>
-    );
+    if (!url) return null;
     return (
         <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }} onClick={() => window.open(url, '_blank')}>
             <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 2, background: 'rgba(0,0,0,0.7)', padding: '3px 8px', borderRadius: '6px', fontSize: '9px', color: 'rgba(255,255,255,0.8)', fontWeight: '800', textTransform: 'uppercase' }}>{label}</div>
@@ -104,11 +99,13 @@ const AttendanceModal = ({ item, onClose }) => {
             {/* ── LEFT: Punch In ── */}
             <div style={{ background: 'rgba(16,185,129,0.04)', borderRadius: '18px', padding: '22px', border: '1px solid rgba(16,185,129,0.1)' }}>
                 <SH color="#10b981" icon={ArrowUpRight} title="Punch-In Proof" time={fmtTime(item.punchIn?.time)} />
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-                    <PhotoCard url={item.punchIn?.selfie} label="Driver Selfie" />
-                    <PhotoCard url={item.punchIn?.kmPhoto} label="Start KM" />
-                    {item.punchIn?.carSelfie && <div style={{ gridColumn: '1/-1' }}><PhotoCard url={item.punchIn.carSelfie} label="Vehicle" /></div>}
-                </div>
+                {(item.punchIn?.selfie || item.punchIn?.kmPhoto || item.punchIn?.carSelfie) && (
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+                        <PhotoCard url={item.punchIn?.selfie} label="Driver Selfie" />
+                        <PhotoCard url={item.punchIn?.kmPhoto} label="Start KM" />
+                        {item.punchIn?.carSelfie && <div style={{ gridColumn: '1/-1' }}><PhotoCard url={item.punchIn.carSelfie} label="Vehicle" /></div>}
+                    </div>
+                )}
                 <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '14px' }}>
                     <Stat label="Opening KM" value={openKM != null ? `${openKM} km` : '--'} color="#38bdf8" />
                     <Stat label="Date" value={fmt(item.date)} />
@@ -121,11 +118,13 @@ const AttendanceModal = ({ item, onClose }) => {
                 <SH color={isCompleted ? '#f43f5e' : '#f59e0b'} icon={ArrowDownLeft} title={isCompleted ? 'Punch-Out Proof' : 'On Duty'} time={fmtTime(item.punchOut?.time)} />
                 {isCompleted ? (
                     <>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-                            <PhotoCard url={item.punchOut?.selfie} label="Driver Selfie" />
-                            <PhotoCard url={item.punchOut?.kmPhoto} label="Close KM" />
-                            {item.punchOut?.carSelfie && <div style={{ gridColumn: '1/-1' }}><PhotoCard url={item.punchOut.carSelfie} label="Vehicle" /></div>}
-                        </div>
+                        {(item.punchOut?.selfie || item.punchOut?.kmPhoto || item.punchOut?.carSelfie) && (
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+                                <PhotoCard url={item.punchOut?.selfie} label="Driver Selfie" />
+                                <PhotoCard url={item.punchOut?.kmPhoto} label="Close KM" />
+                                {item.punchOut?.carSelfie && <div style={{ gridColumn: '1/-1' }}><PhotoCard url={item.punchOut.carSelfie} label="Vehicle" /></div>}
+                            </div>
+                        )}
                         <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '14px' }}>
                             <Stat label="Closing KM" value={closeKM != null ? `${closeKM} km` : '--'} color="#f43f5e" />
                             <Stat label="Total KM Run" value={totalKM != null ? `${totalKM} km` : '--'} color="white"

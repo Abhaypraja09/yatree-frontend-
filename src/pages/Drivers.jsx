@@ -417,11 +417,11 @@ const Drivers = () => {
                         <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{blockedDrivers}</h3>
                     </div>
                 </motion.div>
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="glass-card glass-card-hover-effect" style={{ padding: 'clamp(15px, 2.5vw, 20px)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.03)', cursor: 'pointer' }} onClick={() => navigate('/admin/freelancers')}>
-                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ fontSize: '18px', fontWeight: '900' }}>F</div></div>
+                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="glass-card" style={{ padding: 'clamp(15px, 2.5vw, 20px)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.03)', cursor: 'default' }}>
+                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><ShieldAlert size={22} /></div>
                     <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Freelancers</p>
-                        <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{freelancersCount}</h3>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>On-Call Support</p>
+                        <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>READY</h3>
                     </div>
                 </motion.div>
             </div>
