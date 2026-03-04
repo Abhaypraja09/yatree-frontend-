@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin } from 'lucide-react';
+import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -179,7 +179,8 @@ const Freelancers = () => {
     const [documentForm, setDocumentForm] = useState({ documentType: 'Driving License', expiryDate: '' });
     const [documentFile, setDocumentFile] = useState(null);
     const location = useLocation();
-    const [activeTab, setActiveTab] = useState(location.state?.tab || 'logistics');
+    const [activeTab, setActiveTab] = useState(location.state?.tab || 'personnel');
+    const [expandedLedger, setExpandedLedger] = useState(null);
 
     // Form States
     const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '' });
@@ -403,38 +404,51 @@ const Freelancers = () => {
         setSubmitting(true);
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const fd = new FormData();
-            fd.append('driverId', selectedDriver._id);
-            fd.append('driver', selectedDriver.name);
-            fd.append('amount', quickExpenseData.amount);
-            fd.append('date', quickExpenseData.date);
-            fd.append('companyId', selectedCompany._id);
-            fd.append('vehicleId', quickExpenseData.vehicleId);
-            fd.append('remark', quickExpenseData.remark || '');
-            fd.append('type', quickExpenseType);
+            let uploadedImageUrl = '';
 
-            if (quickExpenseType === 'fuel') {
-                fd.append('fuelType', quickExpenseData.fuelType);
-                fd.append('quantity', quickExpenseData.quantity);
-                fd.append('rate', quickExpenseData.rate);
-                fd.append('odometer', quickExpenseData.odometer);
-                fd.append('stationName', quickExpenseData.stationName);
-                fd.append('paymentMode', quickExpenseData.paymentMode);
-                fd.append('paymentSource', quickExpenseData.paymentSource);
+            if (quickExpenseData.slipPhoto && typeof quickExpenseData.slipPhoto !== 'string') {
+                const uploadData = new FormData();
+                uploadData.append('file', quickExpenseData.slipPhoto);
+                const uploadRes = await axios.post('/api/admin/upload', uploadData, {
+                    headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${userInfo.token}` }
+                });
+                uploadedImageUrl = uploadRes.data.url;
+            } else if (typeof quickExpenseData.slipPhoto === 'string') {
+                uploadedImageUrl = quickExpenseData.slipPhoto;
             }
 
-            if (quickExpenseData.location) fd.append('location', quickExpenseData.location);
-            if (quickExpenseData.slipPhoto) fd.append('slipPhoto', quickExpenseData.slipPhoto);
+            const payload = {
+                driverId: selectedDriver._id,
+                driver: selectedDriver.name,
+                amount: quickExpenseData.amount,
+                date: quickExpenseData.date,
+                companyId: selectedCompany._id,
+                vehicleId: quickExpenseData.vehicleId,
+                remark: quickExpenseData.remark || '',
+                type: quickExpenseType,
+                slipPhoto: uploadedImageUrl
+            };
 
-            const endpoint = quickExpenseType === 'fuel' ? '/api/admin/fuel' : '/api/admin/parking';
-            await axios.post(endpoint, fd, {
+            if (quickExpenseType === 'fuel') {
+                payload.fuelType = quickExpenseData.fuelType;
+                payload.quantity = quickExpenseData.quantity;
+                payload.rate = quickExpenseData.rate;
+                payload.odometer = quickExpenseData.odometer;
+                payload.stationName = quickExpenseData.stationName;
+                payload.paymentMode = quickExpenseData.paymentMode;
+                payload.paymentSource = quickExpenseData.paymentSource;
+            }
+
+            if (quickExpenseData.location) payload.location = quickExpenseData.location;
+
+            const endpoint = '/api/admin/expenses/pending';
+            await axios.post(endpoint, payload, {
                 headers: {
-                    Authorization: `Bearer ${userInfo.token}`,
-                    'Content-Type': 'multipart/form-data'
+                    Authorization: `Bearer ${userInfo.token}`
                 }
             });
 
-            setMessage({ type: 'success', text: `${quickExpenseType.toUpperCase()} record added!` });
+            setMessage({ type: 'success', text: `${quickExpenseType.toUpperCase()} sent for approval!` });
             setTimeout(() => {
                 setShowQuickExpenseModal(false);
                 setQuickExpenseData({
@@ -901,8 +915,8 @@ const Freelancers = () => {
                         maxWidth: '100%'
                     }}>
                         {[
-                            { id: 'logistics', label: 'Duties', icon: <Car size={14} /> },
                             { id: 'personnel', label: 'Drivers', icon: <UserIcon size={14} /> },
+                            { id: 'logistics', label: 'Duties', icon: <Car size={14} /> },
                             { id: 'accounts', label: 'Settlement', icon: <IndianRupee size={14} /> }
                         ].map(tab => (
                             <button
@@ -1212,15 +1226,16 @@ const Freelancers = () => {
                                         const dKM = dAttendance.reduce((s, a) => s + (a.totalKM || (a.punchOut?.km - a.punchIn?.km) || 0), 0);
                                         const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
                                         const dAdvanced = dAdvances.reduce((s, adv) => s + adv.amount, 0);
-                                        const breakdownText = dAdvances.sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 3).map(adv => `${new Date(adv.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })} (₹${adv.amount})`).join(' • ') + (dAdvances.length > 3 ? '...' : '');
-
                                         const dBalance = dEarned - dAdvanced;
+
+                                        const isExpanded = expandedLedger === driver._id;
+
                                         if (dEarned === 0 && dAdvanced === 0) return null;
 
                                         return (
                                             <motion.div
                                                 key={driver._id}
-                                                whileHover={{ y: -5, boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)' }}
+                                                layout
                                                 className="glass-card premium-row"
                                                 style={{
                                                     background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.4) 100%)',
@@ -1231,9 +1246,11 @@ const Freelancers = () => {
                                                     overflow: 'hidden',
                                                     display: 'flex',
                                                     flexDirection: 'column',
-                                                    gap: '24px',
-                                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                    gap: '12px',
+                                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                    cursor: 'pointer'
                                                 }}
+                                                onClick={() => setExpandedLedger(isExpanded ? null : driver._id)}
                                             >
                                                 {/* Background Accent */}
                                                 <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: dBalance >= 0 ? 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(244, 63, 94, 0.08) 0%, transparent 70%)', filter: 'blur(30px)', pointerEvents: 'none' }}></div>
@@ -1258,12 +1275,6 @@ const Freelancers = () => {
                                                             }}>
                                                                 <UserIcon size={24} color="white" />
                                                             </div>
-                                                            <div style={{
-                                                                position: 'absolute', bottom: '-4px', right: '-4px',
-                                                                width: '18px', height: '18px', borderRadius: '50%',
-                                                                background: '#10b981', border: '3px solid #1e293b',
-                                                                boxShadow: '0 0 10px rgba(16, 185, 129, 0.5)'
-                                                            }}></div>
                                                         </div>
                                                         <div>
                                                             <h3 style={{ margin: 0, color: 'white', fontSize: '19px', fontWeight: '950', letterSpacing: '-0.5px' }}>{driver.name.split(' (F)')[0]}</h3>
@@ -1274,10 +1285,10 @@ const Freelancers = () => {
                                                         </div>
                                                     </div>
 
-                                                    {/* Middle: Rich Stats Grid */}
-                                                    <div style={{
+                                                    {/* Middle: Stats */}
+                                                    <div className="settlement-stats-grid" style={{
                                                         display: 'grid',
-                                                        gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))',
+                                                        gridTemplateColumns: 'repeat(3, 1fr)',
                                                         gap: '30px',
                                                         flex: 1,
                                                         padding: '0 20px'
@@ -1288,90 +1299,152 @@ const Freelancers = () => {
                                                                 <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Duty</span>
                                                             </div>
                                                             <div style={{ color: 'white', fontSize: '20px', fontWeight: '950' }}>{dAttendance.length} <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>TRIPS</span></div>
-                                                            <div style={{ color: '#818cf8', fontSize: '11px', fontWeight: '800', marginTop: '4px' }}>{dKM.toLocaleString()} KM</div>
                                                         </div>
 
                                                         <div style={{ textAlign: 'center' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
                                                                 <TrendingUp size={12} color="#10b981" style={{ opacity: 0.5 }} />
-                                                                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Gross Salary</span>
+                                                                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Gross</span>
                                                             </div>
                                                             <div style={{ color: '#10b981', fontSize: '20px', fontWeight: '950' }}>₹{dEarned.toLocaleString()}</div>
-                                                            <div style={{ color: 'rgba(16, 185, 129, 0.4)', fontSize: '10px', fontWeight: '800', marginTop: '4px' }}>EARNED TOTAL</div>
                                                         </div>
 
                                                         <div style={{ textAlign: 'center' }}>
                                                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '8px' }}>
                                                                 <History size={12} color="#f43f5e" style={{ opacity: 0.5 }} />
-                                                                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Paid</span>
+                                                                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Paid</span>
                                                             </div>
                                                             <div style={{ color: '#f43f5e', fontSize: '20px', fontWeight: '950' }}>₹{dAdvanced.toLocaleString()}</div>
-                                                            <div style={{ color: 'rgba(244, 63, 94, 0.4)', fontSize: '10px', fontWeight: '800', marginTop: '4px' }}>DISBURSED</div>
                                                         </div>
                                                     </div>
 
-                                                    {/* Right: Net Payable Highlight */}
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '30px', minWidth: '240px', justifyContent: 'flex-end' }}>
+                                                    {/* Right: Net & Actions */}
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', minWidth: '240px', justifyContent: 'flex-end' }}>
                                                         <div style={{ textAlign: 'right' }}>
                                                             <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>NET PAYABLE</span>
                                                             <div style={{
                                                                 color: dBalance >= 0 ? '#10b981' : '#f43f5e',
-                                                                fontSize: '32px', fontWeight: '1000', letterSpacing: '-1.5px',
-                                                                marginTop: '2px',
-                                                                textShadow: dBalance >= 0 ? '0 0 20px rgba(16, 185, 129, 0.25)' : '0 0 20px rgba(244, 63, 94, 0.25)'
+                                                                fontSize: '28px', fontWeight: '1000', letterSpacing: '-1.5px',
+                                                                marginTop: '2px'
                                                             }}>
                                                                 ₹{dBalance.toLocaleString()}
                                                             </div>
                                                         </div>
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); setSelectedDriver(driver); setShowAdvanceModal(true); }}
-                                                            style={{
-                                                                background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                                                                color: 'white',
-                                                                border: 'none',
-                                                                width: '52px',
-                                                                height: '52px',
-                                                                borderRadius: '16px',
-                                                                cursor: 'pointer',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                justifyContent: 'center',
-                                                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                                boxShadow: '0 12px 24px -6px rgba(16, 185, 129, 0.3)',
-                                                                flexShrink: 0
-                                                            }}
-                                                            className="hover-pop"
-                                                            title="Process Payment"
-                                                        >
-                                                            <Plus size={24} />
-                                                        </button>
+                                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                                            <button
+                                                                onClick={(e) => { e.stopPropagation(); setSelectedDriver(driver); setShowAdvanceModal(true); }}
+                                                                style={{
+                                                                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                                                    color: 'white', border: 'none', width: '44px', height: '44px', borderRadius: '14px',
+                                                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                    transition: 'all 0.3s', boxShadow: '0 8px 16px -4px rgba(16, 185, 129, 0.3)'
+                                                                }}
+                                                                title="Process Payment"
+                                                            >
+                                                                <Plus size={20} />
+                                                            </button>
+                                                            <div style={{
+                                                                width: '44px', height: '44px', borderRadius: '14px',
+                                                                background: 'rgba(255,255,255,0.05)', display: 'flex',
+                                                                alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.4)',
+                                                                transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s'
+                                                            }}>
+                                                                <ChevronDown size={20} />
+                                                            </div>
+                                                        </div>
                                                     </div>
                                                 </div>
 
-                                                {/* Bottom Info Bar */}
-                                                <div style={{
-                                                    background: 'rgba(0,0,0,0.25)',
-                                                    borderRadius: '16px',
-                                                    padding: '12px 20px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    justifyContent: 'space-between',
-                                                    border: '1px solid rgba(255,255,255,0.03)'
-                                                }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Recent Audit</div>
-                                                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.2px' }}>
-                                                            {dAdvances.length > 0 ? breakdownText : 'No previous transactions found in this period'}
-                                                        </div>
-                                                    </div>
-                                                    {dEarned > 0 && (
-                                                        <div style={{ display: 'flex', gap: '12px' }}>
-                                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>
-                                                                AVG SALARY / DUTY: <span style={{ color: '#fbbf24', fontWeight: '900' }}>₹{Math.round(dEarned / dAttendance.length).toLocaleString()}</span>
+                                                {/* Expanded Section */}
+                                                <AnimatePresence>
+                                                    {isExpanded && (
+                                                        <motion.div
+                                                            initial={{ height: 0, opacity: 0 }}
+                                                            animate={{ height: 'auto', opacity: 1 }}
+                                                            exit={{ height: 0, opacity: 0 }}
+                                                            style={{ overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '12px' }}
+                                                            onClick={(e) => e.stopPropagation()}
+                                                        >
+                                                            <div style={{ padding: '24px 0 10px 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '30px' }}>
+                                                                {/* Earning History */}
+                                                                <div>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                                                        <Car size={14} color="#818cf8" />
+                                                                        <h5 style={{ margin: 0, color: 'white', fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Duty Earnings Log</h5>
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', paddingRight: '8px' }} className="premium-scroll">
+                                                                        {dAttendance.length === 0 ? (
+                                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', padding: '15px', background: 'rgba(0,0,0,0.1)', borderRadius: '12px', textAlign: 'center' }}>No duty records found</div>
+                                                                        ) : dAttendance.sort((a, b) => new Date(b.date || b.punchIn?.time) - new Date(a.date || a.punchIn?.time)).map((a, idx) => {
+                                                                            const wage = Number(a.dailyWage) || 0;
+                                                                            const bonus = (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0);
+                                                                            const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
+                                                                            const total = wage + bonus + parking;
+                                                                            return (
+                                                                                <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '12px 16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                                    <div>
+                                                                                        <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{new Date(a.date || a.punchIn?.time).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
+                                                                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '600', marginTop: '2px' }}>{a.vehicle?.carNumber?.split('#')[0]} • {a.totalKM || 0} KM</div>
+                                                                                    </div>
+                                                                                    <div style={{ textAlign: 'right' }}>
+                                                                                        <div style={{ color: '#818cf8', fontSize: '14px', fontWeight: '900' }}>₹{total.toLocaleString()}</div>
+                                                                                        <div style={{ color: 'rgba(129, 140, 248, 0.4)', fontSize: '9px', fontWeight: '800' }}>W:₹{wage} {bonus > 0 && `• B:₹${bonus}`}</div>
+                                                                                    </div>
+                                                                                </div>
+                                                                            );
+                                                                        })}
+                                                                    </div>
+                                                                </div>
+
+                                                                {/* Payment History */}
+                                                                <div>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                                                        <History size={14} color="#f43f5e" />
+                                                                        <h5 style={{ margin: 0, color: 'white', fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Payment & Advance History</h5>
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', paddingRight: '8px' }} className="premium-scroll">
+                                                                        {dAdvances.length === 0 ? (
+                                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', padding: '15px', background: 'rgba(0,0,0,0.1)', borderRadius: '12px', textAlign: 'center' }}>No payment records found</div>
+                                                                        ) : dAdvances.sort((a, b) => new Date(b.date) - new Date(a.date)).map((adv, idx) => (
+                                                                            <div key={idx} style={{ background: 'rgba(244, 63, 94, 0.03)', padding: '12px 16px', borderRadius: '16px', border: '1px solid rgba(244, 63, 94, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                                <div>
+                                                                                    <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{new Date(adv.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
+                                                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '600', marginTop: '2px', textTransform: 'uppercase' }}>{adv.remark || 'N/A'} • {adv.advanceType}</div>
+                                                                                </div>
+                                                                                <div style={{ textAlign: 'right' }}>
+                                                                                    <div style={{ color: '#f43f5e', fontSize: '14px', fontWeight: '900' }}>₹{adv.amount.toLocaleString()}</div>
+                                                                                    <div style={{ color: 'rgba(244, 63, 94, 0.4)', fontSize: '9px', fontWeight: '800' }}>PAID OUT</div>
+                                                                                </div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
+
+                                                {!isExpanded && (
+                                                    <div style={{
+                                                        background: 'rgba(0,0,0,0.25)',
+                                                        borderRadius: '16px',
+                                                        padding: '12px 20px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        justifyContent: 'space-between',
+                                                        border: '1px solid rgba(255,255,255,0.03)'
+                                                    }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Quick Log</div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.2px' }}>
+                                                                {dAdvances.length > 0 ? `Latest: ${new Date(dAdvances.sort((a, b) => new Date(b.date) - new Date(a.date))[0].date).toLocaleDateString()} (₹${dAdvances[0].amount})` : 'No previous transactions found'}
                                                             </div>
                                                         </div>
-                                                    )}
-                                                </div>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>
+                                                            CLICK TO VIEW FULL LEDGER
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </motion.div>
                                         );
                                     }).filter(Boolean)}

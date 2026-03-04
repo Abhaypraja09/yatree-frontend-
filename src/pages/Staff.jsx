@@ -516,10 +516,10 @@ const Staff = () => {
             <main style={{ padding: isMobile ? '20px 0' : '40px', maxWidth: '1600px', margin: '0 auto' }}>
                 {/* Dashboard Intelligence Row Body */}
                 {/* Dashboard Intelligence Row Body */}
-                <div className="resp-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '50px' }}>
+                <div className="resp-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '50px' }}>
                     {[
                         { label: 'STAFF STRENGTH', value: staffList.length, icon: Users, color: '#3b82f6', sub: 'Active Personnel', trend: '+2 this week' },
-                        { label: 'TODAY\'S ATTENDANCE', value: attendanceList.filter(r => r.date === new Date().toISOString().split('T')[0]).length, icon: ShieldCheck, color: '#10b981', sub: 'On Duty Now', trend: '98% compliance' },
+                        { label: "TODAY'S ATTENDANCE", value: attendanceList.filter(r => r.date === new Date().toISOString().split('T')[0]).length, icon: ShieldCheck, color: '#10b981', sub: 'On Duty Now', trend: '98% compliance' },
                         { label: 'PENDING LEAVES', value: pendingLeaves.length, icon: Calendar, color: '#f59e0b', sub: 'Awaiting Review', trend: 'Priority 1-3' },
                         { label: 'TOTAL PAYOUT', value: `₹${monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}`, icon: IndianRupee, color: '#fbbf24', sub: `${new Date(0, Number(selectedMonth) - 1).toLocaleString('default', { month: 'long' })} Salary`, trend: 'Budget normal' }
                     ].map((stat, i) => (
@@ -528,10 +528,10 @@ const Staff = () => {
                             initial={{ opacity: 0, y: 30 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.1, duration: 0.5 }}
-                            whileHover={{ y: -8 }}
+                            whileHover={{ y: -8, boxShadow: `0 20px 40px -10px ${stat.color}40`, borderColor: `${stat.color}50` }}
                             style={{
-                                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.4) 100%)',
-                                padding: '32px',
+                                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.7) 100%)',
+                                padding: '30px',
                                 borderRadius: '35px',
                                 border: '1px solid rgba(255,255,255,0.06)',
                                 backdropFilter: 'blur(30px)',
@@ -540,33 +540,37 @@ const Staff = () => {
                                 display: 'flex',
                                 flexDirection: 'column',
                                 gap: '22px',
-                                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)',
-                                cursor: 'default'
+                                boxShadow: '0 15px 35px -10px rgba(0,0,0,0.5)',
+                                cursor: 'pointer',
+                                transition: 'all 0.3s ease'
                             }}
                         >
-                            <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: '130px', height: '130px', background: `${stat.color}08`, borderRadius: '50%', filter: 'blur(45px)' }}></div>
+                            <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '150px', height: '150px', background: `radial-gradient(circle, ${stat.color}20 0%, transparent 70%)`, borderRadius: '50%', filter: 'blur(30px)', pointerEvents: 'none' }}></div>
+                            <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: '100px', height: '100px', background: `radial-gradient(circle, ${stat.color}10 0%, transparent 70%)`, borderRadius: '50%', filter: 'blur(20px)', pointerEvents: 'none' }}></div>
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 1 }}>
                                 <div style={{
-                                    width: '60px', height: '60px', borderRadius: '20px', background: `${stat.color}15`,
+                                    width: '64px', height: '64px', borderRadius: '22px', background: `linear-gradient(135deg, ${stat.color}20, ${stat.color}10)`,
                                     display: 'flex', justifyContent: 'center', alignItems: 'center', color: stat.color,
-                                    border: `1px solid ${stat.color}25`,
-                                    boxShadow: `0 10px 20px -5px ${stat.color}20`
+                                    border: `1px solid ${stat.color}30`,
+                                    boxShadow: `0 10px 25px -5px ${stat.color}30`
                                 }}>
                                     <stat.icon size={28} />
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.35)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px' }}>{stat.label}</span>
-                                    <div style={{ fontSize: '38px', fontWeight: '1000', color: 'white', letterSpacing: '-2px', marginTop: '6px', textShadow: `0 0 20px ${stat.color}20` }}>{stat.value}</div>
+                                    <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px' }}>{stat.label}</span>
+                                    <div style={{ fontSize: '40px', fontWeight: '1000', color: 'white', letterSpacing: '-2px', marginTop: '4px', textShadow: `0 0 20px ${stat.color}30` }}>
+                                        {stat.value}
+                                    </div>
                                 </div>
                             </div>
 
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '5px', background: 'rgba(0,0,0,0.25)', padding: '14px 20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', background: 'rgba(0,0,0,0.3)', padding: '16px 20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.02)', zIndex: 1 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: stat.color, boxShadow: `0 0 8px ${stat.color}` }}></div>
-                                    <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: '700' }}>{stat.sub}</span>
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: stat.color, boxShadow: `0 0 10px ${stat.color}` }}></div>
+                                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontWeight: '700' }}>{stat.sub}</span>
                                 </div>
-                                <span style={{ fontSize: '10px', color: stat.color, fontWeight: '950', background: `${stat.color}15`, padding: '5px 10px', borderRadius: '9px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{stat.trend}</span>
+                                <span style={{ fontSize: '10px', color: stat.color, fontWeight: '950', background: `${stat.color}15`, padding: '6px 12px', borderRadius: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>{stat.trend}</span>
                             </div>
                         </motion.div>
                     ))}
@@ -825,10 +829,12 @@ const Staff = () => {
                         </div>
 
                         {filteredStaff.length === 0 ? (
-                            <div style={{ background: 'rgba(15, 23, 42, 0.4)', padding: '100px', textAlign: 'center', borderRadius: '40px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                <Users size={64} style={{ opacity: 0.1, marginBottom: '20px' }} />
-                                <h3 style={{ margin: 0, color: 'white', fontWeight: '700', fontSize: '20px' }}>No Staff Members Found</h3>
-                                <p style={{ margin: '8px 0 0 0', color: 'rgba(255,255,255,0.3)', fontWeight: '500' }}>No records found matching your search term.</p>
+                            <div style={{ background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.2) 100%)', padding: '100px', textAlign: 'center', borderRadius: '40px', border: '1px dashed rgba(59, 130, 246, 0.2)', backdropFilter: 'blur(10px)', boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)' }}>
+                                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 25px' }}>
+                                    <Users size={40} color="#3b82f6" style={{ opacity: 0.5 }} />
+                                </div>
+                                <h3 style={{ margin: 0, color: 'white', fontWeight: '900', fontSize: '24px', letterSpacing: '-0.5px' }}>No Staff Members Found</h3>
+                                <p style={{ margin: '10px 0 0 0', color: 'rgba(255,255,255,0.4)', fontWeight: '500', fontSize: '15px' }}>Your team list is currently empty or no matches were found.</p>
                             </div>
                         ) : filteredStaff.map((staff, idx) => (
                             <motion.div
@@ -839,92 +845,102 @@ const Staff = () => {
                                 onClick={() => handleStaffClick(staff)}
                                 className="staff-card-hover"
                                 style={{
-                                    background: 'rgba(15, 23, 42, 0.4)',
-                                    padding: isMobile ? '20px' : '20px 25px',
-                                    borderRadius: '24px',
-                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%)',
+                                    padding: isMobile ? '20px' : '24px 30px',
+                                    borderRadius: '30px',
+                                    border: '1px solid rgba(255,255,255,0.04)',
                                     display: 'grid',
                                     gridTemplateColumns: isMobile ? '1fr' : '2fr 1.5fr 1.5fr 1.5fr 1fr',
                                     alignItems: 'center',
                                     gap: '20px',
                                     cursor: 'pointer',
-                                    transition: 'all 0.3s ease',
-                                    position: 'relative'
+                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    boxShadow: '0 15px 35px -10px rgba(0,0,0,0.3)'
                                 }}
                             >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: staff.status === 'blocked' ? '#f43f5e' : 'linear-gradient(to bottom, #3b82f6, #6366f1)' }}></div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', paddingLeft: '10px' }}>
                                     <div style={{ position: 'relative' }}>
                                         <div style={{
-                                            width: '56px', height: '56px', borderRadius: '18px',
+                                            width: '64px', height: '64px', borderRadius: '22px',
                                             background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-                                            padding: '2px'
+                                            padding: '2px',
+                                            boxShadow: '0 10px 20px -5px rgba(59, 130, 246, 0.4)'
                                         }}>
-                                            <div style={{ width: '100%', height: '100%', borderRadius: '16px', overflow: 'hidden', background: '#0f172a', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '20px', color: 'white' }}>
+                                            <div style={{ width: '100%', height: '100%', borderRadius: '20px', overflow: 'hidden', background: '#0f172a', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '24px', color: 'white' }}>
                                                 {staff.profilePhoto ? <img src={staff.profilePhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : staff.name?.charAt(0)}
                                             </div>
                                         </div>
                                         <div style={{
-                                            position: 'absolute', bottom: '-2px', right: '-2px',
-                                            width: '14px', height: '14px', borderRadius: '50%',
+                                            position: 'absolute', bottom: '-4px', right: '-4px',
+                                            width: '18px', height: '18px', borderRadius: '50%',
                                             background: staff.status === 'blocked' ? '#ef4444' : '#10b981',
                                             border: '3px solid #0f172a',
-                                            animation: staff.status === 'blocked' ? 'none' : 'profilePulse 2s infinite'
-                                        }}></div>
+                                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                            boxShadow: '0 0 10px rgba(0,0,0,0.5)'
+                                        }}>
+                                            {staff.status !== 'blocked' && <div style={{ width: '6px', height: '6px', background: 'white', borderRadius: '50%' }}></div>}
+                                        </div>
                                     </div>
                                     <div>
-                                        <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px' }}>{staff.name}</h3>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                                            <span style={{ color: '#3b82f6', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{staff.designation || 'Specialist'}</span>
-                                            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></div>
-                                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px' }}>ID: {staff._id.slice(-4).toUpperCase()}</span>
+                                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px' }}>{staff.name}</h3>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
+                                            <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{staff.designation || 'Staff'}</span>
+                                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '600' }}>#{staff._id.slice(-4).toUpperCase()}</span>
                                         </div>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(255,255,255,0.7)', fontSize: '13px', fontWeight: '600' }}>
-                                        <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                            <Phone size={14} color="#6366f1" />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontWeight: '600' }}>
+                                        <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                            <Phone size={16} color="#0ea5e9" />
                                         </div>
                                         <span>{staff.mobile}</span>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(255,255,255,0.7)', fontSize: '13px', fontWeight: '600' }}>
-                                        <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                            <Calendar size={14} color="#3b82f6" />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontWeight: '600' }}>
+                                        <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                            <Calendar size={16} color="#8b5cf6" />
                                         </div>
                                         <span>{new Date(staff.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
                                     </div>
                                 </div>
 
                                 <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
-                                            <IndianRupee size={16} color="#fbbf24" />
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                        <div style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
+                                            <IndianRupee size={20} color="#fbbf24" />
                                         </div>
                                         <div>
-                                            <div style={{ fontSize: '18px', fontWeight: '900', color: 'white' }}>₹{(staff.salary || 0).toLocaleString()}</div>
-                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase' }}>Basic Salary</div>
+                                            <div style={{ fontSize: '20px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px' }}>₹{(staff.salary || 0).toLocaleString()}</div>
+                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Basic Salary</div>
                                         </div>
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
                                     <motion.button
-                                        whileHover={{ scale: 1.1, background: 'rgba(59, 130, 246, 0.1)' }}
+                                        whileHover={{ scale: 1.1, background: 'rgba(59, 130, 246, 0.2)', y: -2 }}
+                                        whileTap={{ scale: 0.95 }}
                                         onClick={(e) => { e.stopPropagation(); handleEditStaff(staff); }}
-                                        style={{ width: '38px', height: '38px', background: 'rgba(255,255,255,0.02)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                        title="Edit Profile"
+                                        style={{ width: '44px', height: '44px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: '0.2s' }}
                                     >
-                                        <Edit2 size={16} />
+                                        <Edit2 size={18} />
                                     </motion.button>
                                     <motion.button
-                                        whileHover={{ scale: 1.1, background: 'rgba(244, 63, 94, 0.1)' }}
+                                        whileHover={{ scale: 1.1, background: 'rgba(244, 63, 94, 0.2)', y: -2 }}
+                                        whileTap={{ scale: 0.95 }}
                                         onClick={(e) => { e.stopPropagation(); handleDeleteStaff(staff._id); }}
-                                        style={{ width: '38px', height: '38px', background: 'rgba(255,255,255,0.02)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', borderRadius: '12px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                        title="Delete Employee"
+                                        style={{ width: '44px', height: '44px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', borderRadius: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: '0.2s' }}
                                     >
-                                        <Trash2 size={16} />
+                                        <Trash2 size={18} />
                                     </motion.button>
                                 </div>
                             </motion.div>
@@ -944,23 +960,26 @@ const Staff = () => {
                         backdropFilter: 'blur(10px)',
                         boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
                     }}>
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', color: 'white', padding: '16px' }}>
+                        <div style={{ overflowX: 'auto', padding: '10px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
                                 <thead>
                                     <tr style={{ textAlign: 'left' }}>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>STAFF NAME</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>IN / OUT TIMES</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>PHOTOS</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>LOCATION</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>ACTIONS</th>
+                                        <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
+                                        <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>IN / OUT TIMES</th>
+                                        <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>EVIDENCE</th>
+                                        <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LOCATION</th>
+                                        <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS</th>
                                     </tr>
                                 </thead>
-                                <tbody style={{ padding: '0 10px' }}>
+                                <tbody>
                                     {filteredAttendance.length === 0 ? (
                                         <tr>
-                                            <td colSpan="5" style={{ padding: '100px', textAlign: 'center', opacity: 0.3 }}>
-                                                <History size={48} style={{ opacity: 0.1, marginBottom: '16px' }} />
-                                                <p style={{ margin: 0, fontWeight: '700' }}>No attendance records found for this date.</p>
+                                            <td colSpan="5">
+                                                <div style={{ padding: '100px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.05)' }}>
+                                                    <History size={48} color="#0ea5e9" style={{ opacity: 0.2, marginBottom: '20px' }} />
+                                                    <p style={{ margin: 0, fontWeight: '800', fontSize: '18px', color: 'white' }}>No Attendance found</p>
+                                                    <p style={{ margin: '8px 0 0 0', fontWeight: '500', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>There are no records for this date range.</p>
+                                                </div>
                                             </td>
                                         </tr>
                                     ) : filteredAttendance.map(record => (
@@ -968,62 +987,75 @@ const Staff = () => {
                                             key={record._id}
                                             initial={{ opacity: 0, x: -10 }}
                                             animate={{ opacity: 1, x: 0 }}
+                                            whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)', scale: 1.002 }}
                                             style={{
-                                                background: 'rgba(255,255,255,0.015)',
-                                                borderRadius: '16px',
-                                                transition: '0.2s'
+                                                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0.5) 100%)',
+                                                borderRadius: '20px',
+                                                transition: 'all 0.3s ease',
+                                                boxShadow: '0 10px 20px -10px rgba(0,0,0,0.2)'
                                             }}
                                         >
-                                            <td style={{ padding: '16px 25px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
-                                                <div style={{ fontWeight: '700', color: 'white', fontSize: '15px' }}>{record.staff?.name || 'Unknown Staff'}</div>
-                                                <div style={{ fontSize: '10px', color: '#0ea5e9', marginTop: '4px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>User: {record.staff?.username || 'SYSTEM'}</div>
+                                            <td style={{ padding: '20px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#3b82f6', fontWeight: '900', fontSize: '18px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                                                        {record.staff?.name?.charAt(0) || '?'}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ fontWeight: '900', color: 'white', fontSize: '16px', letterSpacing: '-0.3px' }}>{record.staff?.name || 'Unknown Staff'}</div>
+                                                        <div style={{ fontSize: '11px', color: '#0ea5e9', marginTop: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>User: {record.staff?.username || 'SYSTEM'}</div>
+                                                    </div>
+                                                </div>
                                             </td>
-                                            <td style={{ padding: '16px 25px' }}>
+                                            <td style={{ padding: '20px 25px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                                     {record.status === 'absent' ? (
-                                                        <div style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', padding: '6px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', letterSpacing: '1px' }}>
+                                                        <div style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '900', letterSpacing: '1px', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
                                                             ON LEAVE / ABSENT
                                                         </div>
                                                     ) : (
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontSize: '13px', fontWeight: '900' }}>
-                                                                <ArrowUpRight size={14} />
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontSize: '13px', fontWeight: '900' }}>
+                                                                <div style={{ width: '24px', height: '24px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                    <ArrowUpRight size={14} />
+                                                                </div>
                                                                 {record.punchIn?.time ? new Date(record.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A'}
                                                             </div>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: record.punchOut?.time ? '#f43f5e' : '#0ea5e9', fontSize: '13px', fontWeight: '900' }}>
-                                                                <ArrowDownLeft size={14} />
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: record.punchOut?.time ? '#f43f5e' : '#0ea5e9', fontSize: '13px', fontWeight: '900' }}>
+                                                                <div style={{ width: '24px', height: '24px', borderRadius: '8px', background: record.punchOut?.time ? 'rgba(244, 63, 94, 0.1)' : 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                    <ArrowDownLeft size={14} />
+                                                                </div>
                                                                 {record.punchOut?.time
                                                                     ? new Date(record.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
-                                                                    : 'ACTIVE'
+                                                                    : 'ACTIVE SHIFT'
                                                                 }
                                                             </div>
                                                         </div>
                                                     )}
                                                 </div>
                                             </td>
-                                            <td style={{ padding: '16px 25px' }}>
-                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ display: 'flex', gap: '12px' }}>
                                                     {record.punchIn?.photo ? (
-                                                        <motion.div whileHover={{ scale: 1.1 }} onClick={() => setSelectedPhoto(record.punchIn.photo)} style={{ position: 'relative', cursor: 'pointer' }}>
-                                                            <img src={record.punchIn.photo} style={{ width: '44px', height: '44px', borderRadius: '12px', objectFit: 'cover', border: '1px solid rgba(16,185,129,0.2)' }} alt="" />
-                                                            <div style={{ position: 'absolute', top: -3, right: -3, background: '#10b981', padding: '2px', borderRadius: '50%' }}><ArrowUpRight size={8} color="white" /></div>
+                                                        <motion.div whileHover={{ scale: 1.1, translateY: -2 }} onClick={() => setSelectedPhoto(record.punchIn.photo)} style={{ position: 'relative', cursor: 'zoom-in' }}>
+                                                            <img src={record.punchIn.photo} style={{ width: '50px', height: '50px', borderRadius: '14px', objectFit: 'cover', border: '2px solid rgba(16,185,129,0.3)', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }} alt="" />
+                                                            <div style={{ position: 'absolute', top: -5, right: -5, background: '#10b981', padding: '4px', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}><ArrowUpRight size={10} color="white" /></div>
                                                         </motion.div>
-                                                    ) : <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={16} style={{ opacity: 0.1 }} /></div>}
+                                                    ) : <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={18} style={{ opacity: 0.2 }} /></div>}
 
                                                     {record.punchOut?.photo ? (
-                                                        <motion.div whileHover={{ scale: 1.1 }} onClick={() => setSelectedPhoto(record.punchOut.photo)} style={{ position: 'relative', cursor: 'pointer' }}>
-                                                            <img src={record.punchOut.photo} style={{ width: '44px', height: '44px', borderRadius: '12px', objectFit: 'cover', border: '1px solid rgba(244,63,94,0.2)' }} alt="" />
-                                                            <div style={{ position: 'absolute', top: -3, right: -3, background: '#f43f5e', padding: '2px', borderRadius: '50%' }}><ArrowDownLeft size={8} color="white" /></div>
+                                                        <motion.div whileHover={{ scale: 1.1, translateY: -2 }} onClick={() => setSelectedPhoto(record.punchOut.photo)} style={{ position: 'relative', cursor: 'zoom-in' }}>
+                                                            <img src={record.punchOut.photo} style={{ width: '50px', height: '50px', borderRadius: '14px', objectFit: 'cover', border: '2px solid rgba(244,63,94,0.3)', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }} alt="" />
+                                                            <div style={{ position: 'absolute', top: -5, right: -5, background: '#f43f5e', padding: '4px', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}><ArrowDownLeft size={10} color="white" /></div>
                                                         </motion.div>
                                                     ) : record.punchOut?.time ? (
-                                                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={16} style={{ opacity: 0.1 }} /></div>
+                                                        <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={18} style={{ opacity: 0.2 }} /></div>
                                                     ) : null}
                                                 </div>
                                             </td>
-                                            <td style={{ padding: '16px 25px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
-                                                        <MapPin size={18} color="#0ea5e9" />
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                    <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
+                                                        <MapPin size={20} color="#0ea5e9" />
                                                     </div>
                                                     <div style={{ maxWidth: '240px' }}>
                                                         <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1033,7 +1065,7 @@ const Staff = () => {
                                                             <a
                                                                 href={`https://www.google.com/maps?q=${record.punchIn.location.latitude},${record.punchIn.location.longitude}`}
                                                                 target="_blank" rel="noreferrer"
-                                                                style={{ fontSize: '9px', color: '#fbbf24', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '3px', display: 'block', textDecoration: 'none' }}
+                                                                style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px', display: 'inline-block', textDecoration: 'none', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px' }}
                                                             >
                                                                 OPEN MAP →
                                                             </a>
@@ -1041,26 +1073,27 @@ const Staff = () => {
                                                     </div>
                                                 </div>
                                             </td>
-                                            <td style={{ padding: '16px 25px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px' }}>
+                                            <td style={{ padding: '20px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px' }}>
                                                 <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                                     <motion.button
-                                                        whileHover={{ scale: 1.1, background: 'rgba(244, 63, 94, 0.2)' }}
-                                                        whileTap={{ scale: 0.9 }}
+                                                        whileHover={{ scale: 1.1, background: 'rgba(244, 63, 94, 0.2)', y: -2 }}
+                                                        whileTap={{ scale: 0.95 }}
                                                         onClick={() => handleDeleteStaffAttendance(record._id)}
                                                         style={{
-                                                            width: '40px',
-                                                            height: '40px',
-                                                            borderRadius: '12px',
+                                                            width: '44px',
+                                                            height: '44px',
+                                                            borderRadius: '14px',
                                                             background: 'rgba(244, 63, 94, 0.1)',
                                                             color: '#f43f5e',
-                                                            border: 'none',
+                                                            border: '1px solid rgba(244, 63, 94, 0.2)',
                                                             cursor: 'pointer',
                                                             display: 'flex',
                                                             justifyContent: 'center',
-                                                            alignItems: 'center'
+                                                            alignItems: 'center',
+                                                            transition: '0.2s'
                                                         }}
                                                     >
-                                                        <Trash2 size={16} />
+                                                        <Trash2 size={18} />
                                                     </motion.button>
                                                 </div>
                                             </td>
@@ -1083,22 +1116,25 @@ const Staff = () => {
                             backdropFilter: 'blur(10px)',
                             boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
                         }}>
-                            <div style={{ overflowX: 'auto' }}>
-                                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', color: 'white', padding: '16px' }}>
+                            <div style={{ overflowX: 'auto', padding: '10px' }}>
+                                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
                                     <thead>
                                         <tr style={{ textAlign: 'left' }}>
-                                            <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>STAFF NAME</th>
-                                            <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>LEAVE DURATION</th>
-                                            <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>REASON</th>
-                                            <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>ACTIONS</th>
+                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
+                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LEAVE DURATION</th>
+                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>REASON / DETAILS</th>
+                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS (APPROVE / REJECT)</th>
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {pendingLeaves.length === 0 ? (
                                             <tr>
-                                                <td colSpan="4" style={{ padding: '100px', textAlign: 'center', opacity: 0.3 }}>
-                                                    <Calendar size={48} style={{ opacity: 0.1, marginBottom: '16px' }} />
-                                                    <p style={{ margin: 0, fontWeight: '700' }}>No pending leave requests.</p>
+                                                <td colSpan="4">
+                                                    <div style={{ padding: '100px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.05)' }}>
+                                                        <Calendar size={48} color="#8b5cf6" style={{ opacity: 0.2, marginBottom: '20px' }} />
+                                                        <p style={{ margin: 0, fontWeight: '800', fontSize: '18px', color: 'white' }}>No Pending Leaves</p>
+                                                        <p style={{ margin: '8px 0 0 0', fontWeight: '500', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>Hooray! No leave requests are currently pending approval.</p>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ) : pendingLeaves.map(leave => (
@@ -1106,72 +1142,87 @@ const Staff = () => {
                                                 key={leave._id}
                                                 initial={{ opacity: 0, scale: 0.98 }}
                                                 animate={{ opacity: 1, scale: 1 }}
+                                                whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)', scale: 1.002 }}
                                                 style={{
-                                                    background: 'rgba(255,255,255,0.015)',
-                                                    borderRadius: '16px',
-                                                    transition: '0.2s'
+                                                    background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0.5) 100%)',
+                                                    borderRadius: '20px',
+                                                    transition: 'all 0.3s ease',
+                                                    boxShadow: '0 10px 20px -10px rgba(0,0,0,0.2)'
                                                 }}
                                             >
-                                                <td style={{ padding: '16px 25px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
-                                                    <div style={{ fontWeight: '700', fontSize: '15px' }}>{leave.staff?.name || 'Unknown'}</div>
-                                                    <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '600', marginTop: '4px', textTransform: 'uppercase' }}>ID: {leave._id.slice(-6).toUpperCase()}</div>
-                                                </td>
-                                                <td style={{ padding: '16px 25px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', fontWeight: '700', color: 'white' }}>
-                                                        {new Date(leave.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                                        <ChevronRight size={12} style={{ opacity: 0.3 }} />
-                                                        {new Date(leave.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                                    </div>
-                                                    <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase', marginTop: '4px', letterSpacing: '0.5px' }}>{leave.type} LEAVE</div>
-                                                </td>
-                                                <td style={{ padding: '16px 25px' }}>
-                                                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', maxWidth: '280px', lineHeight: '1.5', fontWeight: '400' }}>
-                                                        {leave.reason || "No reason provided."}
+                                                <td style={{ padding: '20px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#8b5cf6', fontWeight: '900', fontSize: '18px', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+                                                            {leave.staff?.name?.charAt(0) || '?'}
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontWeight: '900', color: 'white', fontSize: '16px', letterSpacing: '-0.3px' }}>{leave.staff?.name || 'Unknown Staff'}</div>
+                                                            <div style={{ fontSize: '11px', color: '#8b5cf6', marginTop: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>ID: {leave._id.slice(-6).toUpperCase()}</div>
+                                                        </div>
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '16px 25px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px', textAlign: 'right' }}>
-                                                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                                <td style={{ padding: '20px 25px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: '800', color: 'white' }}>
+                                                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px' }}>
+                                                            {new Date(leave.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                        </div>
+                                                        <ChevronRight size={14} style={{ opacity: 0.5 }} />
+                                                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px' }}>
+                                                            {new Date(leave.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '800', textTransform: 'uppercase', marginTop: '8px', letterSpacing: '1px', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px', display: 'inline-block' }}>{leave.type} LEAVE</div>
+                                                </td>
+                                                <td style={{ padding: '20px 25px' }}>
+                                                    <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', maxWidth: '320px', lineHeight: '1.6', fontWeight: '500', background: 'rgba(255,255,255,0.02)', padding: '10px 15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                                                        {leave.reason || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No reason provided.</span>}
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: '20px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px', textAlign: 'right' }}>
+                                                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
                                                         <motion.button
-                                                            whileHover={{ scale: 1.05, background: 'rgba(16, 185, 129, 0.2)' }}
+                                                            whileHover={{ scale: 1.05, background: 'rgba(16, 185, 129, 0.2)', y: -2 }}
                                                             whileTap={{ scale: 0.95 }}
                                                             onClick={() => handleLeaveAction(leave._id, 'Approved')}
                                                             style={{
                                                                 background: 'rgba(16, 185, 129, 0.1)',
                                                                 color: '#10b981',
-                                                                border: 'none',
-                                                                padding: '10px 18px',
+                                                                border: '1px solid rgba(16, 185, 129, 0.2)',
+                                                                padding: '10px 20px',
                                                                 borderRadius: '12px',
-                                                                fontSize: '11px',
-                                                                fontWeight: '700',
+                                                                fontSize: '12px',
+                                                                fontWeight: '800',
                                                                 cursor: 'pointer',
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 gap: '8px',
-                                                                letterSpacing: '0.5px'
+                                                                letterSpacing: '0.5px',
+                                                                transition: '0.2s'
                                                             }}
                                                         >
-                                                            <CheckCircle2 size={14} /> APPROVE
+                                                            <CheckCircle2 size={16} /> APPROVE
                                                         </motion.button>
                                                         <motion.button
-                                                            whileHover={{ scale: 1.05, background: 'rgba(244, 63, 94, 0.2)' }}
+                                                            whileHover={{ scale: 1.05, background: 'rgba(244, 63, 94, 0.2)', y: -2 }}
                                                             whileTap={{ scale: 0.95 }}
                                                             onClick={() => handleLeaveAction(leave._id, 'Rejected')}
                                                             style={{
                                                                 background: 'rgba(244, 63, 94, 0.1)',
                                                                 color: '#f43f5e',
-                                                                border: 'none',
-                                                                padding: '10px 18px',
+                                                                border: '1px solid rgba(244, 63, 94, 0.2)',
+                                                                padding: '10px 20px',
                                                                 borderRadius: '12px',
-                                                                fontSize: '11px',
-                                                                fontWeight: '700',
+                                                                fontSize: '12px',
+                                                                fontWeight: '800',
                                                                 cursor: 'pointer',
                                                                 display: 'flex',
                                                                 alignItems: 'center',
                                                                 gap: '8px',
-                                                                letterSpacing: '0.5px'
+                                                                letterSpacing: '0.5px',
+                                                                transition: '0.2s'
                                                             }}
                                                         >
-                                                            <XCircle size={14} /> REJECT
+                                                            <XCircle size={16} /> REJECT
                                                         </motion.button>
                                                     </div>
                                                 </td>

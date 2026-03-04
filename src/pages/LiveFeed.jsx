@@ -262,10 +262,16 @@ const LiveFeed = () => {
                     {/* 5th Box — Company vs Freelancer */}
                     {(() => {
                         const feed = stats?.liveDriversFeed || [];
-                        const companyTotal = feed.filter(d => !d.isFreelancer).length;
-                        const freelancerTotal = feed.filter(d => d.isFreelancer).length;
-                        const companyPresent = feed.filter(d => !d.isFreelancer && d.status === 'Present').length;
-                        const freelancerPresent = feed.filter(d => d.isFreelancer && d.status === 'Present').length;
+                        const companyDrivers = feed.filter(d => !d.isFreelancer);
+                        const companyTotal = companyDrivers.length;
+                        const companyActive = companyDrivers.filter(d => d.status === 'Present').length;
+                        const companyCompleted = companyDrivers.filter(d => d.status === 'Completed').length;
+                        const companyAbsent = companyDrivers.filter(d => d.status === 'Absent').length;
+
+                        const freelancerFeed = feed.filter(d => d.isFreelancer);
+                        const freelancerTotal = freelancerFeed.length;
+                        const freelancerActive = freelancerFeed.filter(d => d.status === 'Present').length;
+
                         return (
                             <motion.div
                                 initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}
@@ -277,12 +283,20 @@ const LiveFeed = () => {
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontSize: '10px', fontWeight: '900', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Company</span>
-                                        <span style={{ fontSize: '14px', fontWeight: '950', color: 'white' }}>{companyTotal} <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginLeft: '2px' }}>{companyPresent} Act</span></span>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <span style={{ fontSize: '15px', fontWeight: '950', color: 'white' }}>{companyTotal}</span>
+                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
+                                                <span style={{ color: '#10b981' }}>{companyActive} Act</span> • <span style={{ color: '#f43f5e' }}>{companyAbsent} Abs</span>
+                                            </div>
+                                        </div>
                                     </div>
                                     <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                         <span style={{ fontSize: '10px', fontWeight: '900', color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Freelancer</span>
-                                        <span style={{ fontSize: '14px', fontWeight: '950', color: 'white' }}>{freelancerTotal} <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginLeft: '2px' }}>{freelancerPresent} Act</span></span>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <span style={{ fontSize: '15px', fontWeight: '950', color: 'white' }}>{freelancerTotal}</span>
+                                            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginLeft: '5px' }}>{freelancerActive} Act</span>
+                                        </div>
                                     </div>
                                 </div>
                             </motion.div>
