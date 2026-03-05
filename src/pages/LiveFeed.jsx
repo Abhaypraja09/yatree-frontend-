@@ -234,7 +234,6 @@ const LiveFeed = () => {
                         {
                             label: 'Daily Fuel',
                             value: `₹${(stats?.dailyFuelAmount?.total || 0).toLocaleString()}`,
-                            subValue: `${stats?.dailyFuelAmount?.count || 0} Vehicles Refuelled`,
                             icon: Fuel,
                             color: '#f59e0b',
                             bg: 'rgba(245, 158, 11, 0.1)'
@@ -269,8 +268,9 @@ const LiveFeed = () => {
                         const companyAbsent = companyDrivers.filter(d => d.status === 'Absent').length;
 
                         const freelancerFeed = feed.filter(d => d.isFreelancer);
-                        const freelancerTotal = freelancerFeed.length;
                         const freelancerActive = freelancerFeed.filter(d => d.status === 'Present').length;
+                        const freelancerCompleted = freelancerFeed.filter(d => d.status === 'Completed').length;
+                        const freelancerAvailable = freelancerActive + freelancerCompleted;
 
                         return (
                             <motion.div
@@ -281,21 +281,27 @@ const LiveFeed = () => {
                                     <PieChart size={22} color="rgba(255,255,255,0.8)" />
                                 </div>
                                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                    {/* Company section */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Company</span>
+                                        <span style={{ fontSize: '9px', fontWeight: '900', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.8px' }}>COMPANY (TODAY)</span>
                                         <div style={{ textAlign: 'right' }}>
-                                            <span style={{ fontSize: '15px', fontWeight: '950', color: 'white' }}>{companyTotal}</span>
-                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
-                                                <span style={{ color: '#10b981' }}>{companyActive} Act</span> • <span style={{ color: '#f43f5e' }}>{companyAbsent} Abs</span>
+                                            <span style={{ fontSize: '18px', fontWeight: '950', color: 'white' }}>{companyActive + companyCompleted}</span>
+                                            <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
+                                                <span style={{ color: '#10b981' }}>{companyActive} Act</span> • <span style={{ color: '#8b5cf6' }}>{companyCompleted} Done</span>
                                             </div>
                                         </div>
                                     </div>
+
                                     <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
+
+                                    {/* Freelancer section */}
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Freelancer</span>
+                                        <span style={{ fontSize: '9px', fontWeight: '900', color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.8px' }}>FREELANCER (TODAY)</span>
                                         <div style={{ textAlign: 'right' }}>
-                                            <span style={{ fontSize: '15px', fontWeight: '950', color: 'white' }}>{freelancerTotal}</span>
-                                            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginLeft: '5px' }}>{freelancerActive} Act</span>
+                                            <span style={{ fontSize: '18px', fontWeight: '950', color: 'white' }}>{freelancerAvailable}</span>
+                                            <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
+                                                <span style={{ color: '#10b981' }}>{freelancerActive} Act</span> • <span style={{ color: '#818cf8' }}>{freelancerCompleted} Done</span>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
