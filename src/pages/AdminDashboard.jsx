@@ -108,7 +108,13 @@ const AdminDashboard = () => {
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
-    const dateInputRef = useRef(null);
+    const [isRange, setIsRange] = useState(false);
+    const [fromDate, setFromDate] = useState(() => {
+        const d = new Date();
+        return new Date(d.getFullYear(), d.getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0];
+    });
+    const toDateRef = useRef(null);
+    const fromDateRef = useRef(null);
 
     const getTodayLocal = () => {
         const d = new Date();
@@ -128,7 +134,10 @@ const AdminDashboard = () => {
         setLoading(true);
         try {
             const userInfo = JSON.parse(userInfoRaw);
-            const { data } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}?date=${selectedDate}`, {
+            const params = isRange
+                ? `from=${fromDate}&to=${selectedDate}`
+                : `date=${selectedDate}`;
+            const { data } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}?${params}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setStats(data);
@@ -143,7 +152,7 @@ const AdminDashboard = () => {
         fetchStats();
         const interval = setInterval(fetchStats, 60000);
         return () => clearInterval(interval);
-    }, [selectedCompany, selectedDate]);
+    }, [selectedCompany, selectedDate, fromDate, isRange]);
 
     return (
         <div className="admin-dashboard-container" style={{
@@ -214,107 +223,150 @@ const AdminDashboard = () => {
                             display: 'flex',
                             alignItems: 'center',
                             gap: '5px',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            flexWrap: 'wrap'
                         }}>
+                            {/* Mode Toggle */}
                             <button
                                 onClick={() => {
-                                    const d = new Date(selectedDate);
-                                    d.setDate(d.getDate() - 1);
-                                    setSelectedDate(d.toISOString().split('T')[0]);
+                                    const next = !isRange;
+                                    setIsRange(next);
+                                    if (!next) {
+                                        const d = new Date(selectedDate);
+                                        setFromDate(new Date(d.getFullYear(), d.getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
+                                    }
                                 }}
                                 style={{
-                                    width: '36px',
-                                    height: '36px',
-                                    borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)',
-                                    color: 'rgba(255,255,255,0.6)',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s'
+                                    padding: '0 12px', height: '36px', borderRadius: '10px',
+                                    background: isRange ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)',
+                                    color: isRange ? '#818cf8' : 'rgba(255,255,255,0.4)',
+                                    fontWeight: '900', fontSize: '10px', textTransform: 'uppercase',
+                                    letterSpacing: '0.8px',
+                                    border: `1px solid ${isRange ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                                    cursor: 'pointer', transition: 'all 0.3s', whiteSpace: 'nowrap'
                                 }}
                             >
-                                <ChevronLeft size={18} strokeWidth={2.5} />
+                                {isRange ? '⇔ Range' : '• Single'}
                             </button>
 
+                            {/* LEFT arrow — single mode */}
+                            {!isRange && (
+                                <button
+                                    onClick={() => {
+                                        const d = new Date(selectedDate);
+                                        d.setDate(d.getDate() - 1);
+                                        setSelectedDate(d.toISOString().split('T')[0]);
+                                    }}
+                                    style={{
+                                        width: '36px', height: '36px', borderRadius: '12px',
+                                        background: 'rgba(255,255,255,0.03)',
+                                        color: 'rgba(255,255,255,0.6)',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0
+                                    }}
+                                >
+                                    <ChevronLeft size={18} strokeWidth={2.5} />
+                                </button>
+                            )}
+
+                            {/* FROM date pill — range mode only */}
+                            {isRange && (
+                                <div
+                                    onClick={() => fromDateRef.current?.showPicker()}
+                                    style={{
+                                        padding: '0 14px', height: '36px', display: 'flex',
+                                        alignItems: 'center', gap: '7px', cursor: 'pointer',
+                                        background: 'rgba(99,102,241,0.1)', borderRadius: '10px',
+                                        border: '1px solid rgba(99,102,241,0.2)',
+                                        position: 'relative', userSelect: 'none'
+                                    }}
+                                >
+                                    <span style={{ color: '#818cf8', fontSize: '9px', fontWeight: '900', letterSpacing: '0.5px', pointerEvents: 'none' }}>FROM</span>
+                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '900', pointerEvents: 'none' }}>
+                                        {new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                    </span>
+                                    <input
+                                        ref={fromDateRef}
+                                        type="date"
+                                        value={fromDate}
+                                        onChange={(e) => e.target.value && setFromDate(e.target.value)}
+                                        style={{
+                                            position: 'absolute', opacity: 0, inset: 0,
+                                            width: '100%', height: '100%', cursor: 'pointer',
+                                            zIndex: -1, pointerEvents: 'none'
+                                        }}
+                                    />
+                                </div>
+                            )}
+
+                            {/* Main date pill — always shown (single date OR "TO" date in range) */}
                             <div
+                                onClick={() => toDateRef.current?.showPicker()}
                                 style={{
-                                    padding: '0 15px',
-                                    height: '36px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    cursor: 'pointer',
-                                    background: 'rgba(251, 191, 36, 0.1)',
-                                    borderRadius: '10px',
-                                    border: '1px solid rgba(251, 191, 36, 0.15)',
-                                    transition: 'all 0.2s',
-                                    position: 'relative',
-                                    overflow: 'hidden'
+                                    padding: '0 15px', height: '36px', display: 'flex',
+                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                    background: 'rgba(251,191,36,0.1)', borderRadius: '10px',
+                                    border: '1px solid rgba(251,191,36,0.15)',
+                                    transition: 'all 0.2s', position: 'relative', userSelect: 'none'
                                 }}
                             >
-                                <Calendar size={15} color="#fbbf24" strokeWidth={2.5} />
-                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '900', letterSpacing: '0.5px' }}>
+                                {isRange
+                                    ? <span style={{ color: '#fbbf24', fontSize: '9px', fontWeight: '900', letterSpacing: '0.5px', pointerEvents: 'none' }}>TO</span>
+                                    : <Calendar size={15} color="#fbbf24" strokeWidth={2.5} style={{ pointerEvents: 'none' }} />
+                                }
+                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '900', letterSpacing: '0.5px', pointerEvents: 'none' }}>
                                     {new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
                                 </span>
                                 <input
+                                    ref={toDateRef}
                                     type="date"
                                     value={selectedDate}
                                     onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
                                     style={{
-                                        position: 'absolute',
-                                        opacity: 0,
-                                        width: '100%',
-                                        height: '100%',
-                                        left: 0,
-                                        top: 0,
-                                        cursor: 'pointer',
-                                        zIndex: 2,
-                                        pointerEvents: 'auto'
+                                        position: 'absolute', opacity: 0, inset: 0,
+                                        width: '1px', height: '1px',
+                                        pointerEvents: 'none', zIndex: -1
                                     }}
                                 />
                             </div>
 
+                            {/* RIGHT arrow — single mode */}
+                            {!isRange && (
+                                <button
+                                    onClick={() => {
+                                        const d = new Date(selectedDate);
+                                        d.setDate(d.getDate() + 1);
+                                        setSelectedDate(d.toISOString().split('T')[0]);
+                                    }}
+                                    style={{
+                                        width: '36px', height: '36px', borderRadius: '12px',
+                                        background: 'rgba(255,255,255,0.03)',
+                                        color: 'rgba(255,255,255,0.6)',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0
+                                    }}
+                                >
+                                    <ChevronRight size={18} strokeWidth={2.5} />
+                                </button>
+                            )}
+
+                            {/* Today button */}
                             <button
                                 onClick={() => {
-                                    const d = new Date(selectedDate);
-                                    d.setDate(d.getDate() + 1);
-                                    setSelectedDate(d.toISOString().split('T')[0]);
+                                    setSelectedDate(getTodayLocal());
+                                    if (isRange) {
+                                        const d = new Date();
+                                        setFromDate(new Date(d.getFullYear(), d.getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
+                                    }
                                 }}
                                 style={{
-                                    width: '36px',
-                                    height: '36px',
-                                    borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)',
-                                    color: 'rgba(255,255,255,0.6)',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.2s'
-                                }}
-                            >
-                                <ChevronRight size={18} strokeWidth={2.5} />
-                            </button>
-
-                            <button
-                                onClick={() => setSelectedDate(getTodayLocal())}
-                                style={{
-                                    marginLeft: '5px',
-                                    padding: '0 12px',
-                                    height: '36px',
-                                    borderRadius: '10px',
-                                    background: selectedDate === getTodayLocal() ? '#fbbf24' : 'rgba(255,255,255,0.05)',
-                                    color: selectedDate === getTodayLocal() ? 'black' : 'rgba(255,255,255,0.4)',
-                                    fontWeight: '900',
-                                    fontSize: '11px',
-                                    textTransform: 'uppercase',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s'
+                                    marginLeft: '2px', padding: '0 12px', height: '36px', borderRadius: '10px',
+                                    background: !isRange && selectedDate === getTodayLocal() ? '#fbbf24' : 'rgba(255,255,255,0.05)',
+                                    color: !isRange && selectedDate === getTodayLocal() ? 'black' : 'rgba(255,255,255,0.4)',
+                                    fontWeight: '900', fontSize: '11px', textTransform: 'uppercase',
+                                    border: 'none', cursor: 'pointer', transition: 'all 0.3s', whiteSpace: 'nowrap'
                                 }}
                             >
                                 Today
@@ -360,7 +412,7 @@ const AdminDashboard = () => {
                             <StatCard icon={Users} label="TOTAL DRIVER SALARY" value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/driver-salaries')} trend="MONTHLY" />
                             <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
                             <StatCard icon={TrendingUp} label="OUTSIDE CARS (MONTHLY)" value={`₹${(stats.monthlyOutsideCarsTotal || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/outside-cars')} />
-                            <StatCard icon={AlertTriangle} label="TOTAL ACCIDENT COST" value={`₹${(stats.monthlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} trend="ALL TIME" />
+                            <StatCard icon={AlertTriangle} label="ACCIDENT COST (MONTHLY)" value={`₹${(stats.monthlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
                             <StatCard icon={IndianRupee} label="TODAY'S FASTAG FEED" value={`₹${stats.dailyFastagTotal?.toLocaleString() || 0}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/fastag')} trend="TODAY" />
                             <StatCard icon={CreditCard} label="TODAY'S DRIVER ADVANCE" value={`₹${(stats.dailyAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/driver-salaries')} trend="TODAY" />
                             <StatCard icon={Users} label="FREELANCERS (MONTHLY)" value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />

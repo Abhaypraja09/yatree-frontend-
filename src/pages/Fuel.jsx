@@ -436,13 +436,7 @@ const FuelPage = () => {
         return sum;
     }, 0);
 
-    const totalAmount = filteredEntries.reduce((sum, e, idx) => {
-        const hasNewerEntry = filteredEntries.slice(0, idx).some(newer => newer.vehicle?._id === e.vehicle?._id);
-        if (hasNewerEntry) {
-            return sum + (Number(e.amount) || 0);
-        }
-        return sum;
-    }, 0);
+    const totalAmount = filteredEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
     const avgMileage = totalLiters > 0 ? (totalDistance / totalLiters).toFixed(2) : 0;
 

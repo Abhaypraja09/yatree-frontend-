@@ -1111,7 +1111,8 @@ const Freelancers = () => {
                                                     </td>
                                                 </tr>
                                             ) : [...onDutyDrivers.sort((a, b) => a.name.localeCompare(b.name)), ...availableDrivers.sort((a, b) => a.name.localeCompare(b.name))].map(d => {
-                                                const isOnDuty = d.tripStatus === 'active';
+                                                const dayAttendance = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id);
+                                                const isOnDuty = d.tripStatus === 'active' || dayAttendance.some(a => a.status === 'incomplete');
                                                 const dutyCount = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id).length;
                                                 return (
                                                     <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }} className="ledger-row">
@@ -1161,12 +1162,33 @@ const Freelancers = () => {
                                                             <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                                 {isOnDuty ? (
                                                                     <button
-                                                                        onClick={() => { setSelectedDriver(d); setPunchOutData({ ...punchOutData, km: '', time: new Date().toISOString().slice(0, 16), dailyWage: d.dailyWage || '' }); setShowPunchOutModal(true); }}
+                                                                        onClick={() => {
+                                                                            setSelectedDriver(d);
+                                                                            const viewDate = toDate || getToday();
+                                                                            const viewTime = viewDate + 'T' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                                                                            setPunchOutData({
+                                                                                ...punchOutData,
+                                                                                km: '',
+                                                                                time: viewTime,
+                                                                                dailyWage: d.dailyWage || ''
+                                                                            });
+                                                                            setShowPunchOutModal(true);
+                                                                        }}
                                                                         style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '8px 15px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
                                                                     >FINISH</button>
                                                                 ) : (
                                                                     <button
-                                                                        onClick={() => { setSelectedDriver(d); setPunchInData({ ...punchInData, time: new Date().toISOString().slice(0, 16), date: new Date().toISOString().split('T')[0] }); setShowPunchInModal(true); }}
+                                                                        onClick={() => {
+                                                                            setSelectedDriver(d);
+                                                                            const viewDate = toDate || getToday();
+                                                                            const viewTime = viewDate + 'T' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                                                                            setPunchInData({
+                                                                                ...punchInData,
+                                                                                time: viewTime,
+                                                                                date: viewDate
+                                                                            });
+                                                                            setShowPunchInModal(true);
+                                                                        }}
                                                                         style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)', padding: '8px 15px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
                                                                     >START</button>
                                                                 )}
