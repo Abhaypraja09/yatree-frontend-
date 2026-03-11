@@ -17,11 +17,18 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+import { 
+    todayIST, 
+    toISTDateString, 
+    formatDateIST, 
+    formatTimeIST, 
+    formatDateTimeIST 
+} from '../utils/istUtils';
 
 const VehicleMonthlyDetails = () => {
     const { selectedCompany } = useCompany();
-    const [month, setMonth] = useState(new Date().getMonth() + 1);
-    const [year, setYear] = useState(new Date().getFullYear());
+    const [month, setMonth] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCMonth() + 1);
+    const [year, setYear] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCFullYear());
     const [data, setData] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
@@ -347,7 +354,7 @@ const VehicleMonthlyDetails = () => {
                                                     <select value="" onChange={() => { }} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: '#cbd5e1', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
                                                         <option value="" hidden>View {v.fuel.records.length} Logs</option>
                                                         {v.fuel.records.map((r, i) => (
-                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>{new Date(r.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} - ₹{r.amount.toLocaleString()}</option>
+                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>{formatDateIST(r.date)} - ₹{r.amount.toLocaleString()}</option>
                                                         ))}
                                                     </select>
                                                 ) : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px', fontWeight: '700' }}>No Logs</span>}
@@ -360,7 +367,7 @@ const VehicleMonthlyDetails = () => {
                                                     <select value="" onChange={() => { }} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '8px', color: '#fcd34d', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
                                                         <option value="" hidden>View {v.maintenance.records.length} Jobs</option>
                                                         {v.maintenance.records.map((m, i) => (
-                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>{new Date(m.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} - {m.category || 'Repair'} - ₹{m.amount.toLocaleString()}</option>
+                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>{formatDateIST(m.date)} - {m.category || 'Repair'} - ₹{m.amount.toLocaleString()}</option>
                                                         ))}
                                                     </select>
                                                 ) : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px', fontWeight: '700' }}>No Logs</span>}
@@ -373,7 +380,7 @@ const VehicleMonthlyDetails = () => {
                                                     <select value="" onChange={() => { }} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', borderRadius: '8px', color: '#93c5fd', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
                                                         <option value="" hidden>View Logs</option>
                                                         {[...((v.services?.wash?.records || []).map(r => ({ ...r, type: 'Wash' }))), ...((v.services?.puncture?.records || []).map(r => ({ ...r, type: 'Puncture' })))].sort((a, b) => new Date(b.date) - new Date(a.date)).map((r, i) => (
-                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>{r.type} - {new Date(r.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} - ₹{(r.amount || 0).toLocaleString()}</option>
+                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>{r.type} - {formatDateIST(r.date).split(' ').slice(0,2).join(' ')} - ₹{(r.amount || 0).toLocaleString()}</option>
                                                         ))}
                                                     </select>
                                                 ) : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px', fontWeight: '700' }}>No Logs</span>}
@@ -467,7 +474,7 @@ const VehicleMonthlyDetails = () => {
                                                             <span style={{ fontSize: '12px', color: 'white', fontWeight: '800' }}>{r.category || 'General'}</span>
                                                             <span style={{ fontSize: '13px', color: '#0ea5e9', fontWeight: '900' }}>₹{r.amount.toLocaleString()}</span>
                                                         </div>
-                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{new Date(r.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{formatDateIST(r.date)}</div>
                                                     </div>
                                                 ))
                                             )}

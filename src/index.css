@@ -694,6 +694,61 @@ select.input-field option {
     grid-template-columns: 1fr !important;
     gap: 15px !important;
   }
+
+  /* Freelancer Settlement Mobile */
+  .settlement-row-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 20px !important;
+  }
+
+  .settlement-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    padding: 0 !important;
+    width: 100% !important;
+    gap: 15px !important;
+  }
+
+  .settlement-stats-grid>div {
+    text-align: left !important;
+  }
+
+  .settlement-stats-grid>div>div {
+    justify-content: flex-start !important;
+  }
+
+  .settlement-row-header>div:last-child {
+    width: 100% !important;
+    justify-content: space-between !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.05) !important;
+    padding-top: 15px !important;
+  }
+}
+
+@media (max-width: 480px) {
+
+  .livefeed-stats-grid,
+  .staff-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .settlement-stats-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Event Stats Mobile */
+  .event-stats-row {
+    flex-wrap: wrap !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  .event-stats-row .stat-card {
+    flex: 1 1 45% !important;
+    padding: 12px 15px !important;
+    min-width: 0 !important;
+  }
 }
 
 .stats-grid-last-span {
@@ -1732,4 +1787,268 @@ header.dashboard-header {
   background: rgba(255, 255, 255, 0.05) !important;
   transform: scale(1.002);
   box-shadow: inset 0 0 20px rgba(255, 255, 255, 0.02);
+}
+
+/* ============================================
+   MOBILE RESPONSIVE - GLOBAL FIXES (ALL PAGES)
+   ============================================ */
+
+/* ===== LIVE FEED ===== */
+@media (max-width: 768px) {
+
+  /* Header */
+  .livefeed-header-row {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 15px !important;
+  }
+
+  /* Stats Grid - 2 columns on mobile */
+  .livefeed-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  /* Tab + Search Control Bar */
+  .livefeed-control-bar {
+    flex-direction: column !important;
+    padding: 14px !important;
+    gap: 14px !important;
+  }
+
+  .livefeed-tabs {
+    width: 100% !important;
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: flex !important;
+    gap: 4px !important;
+  }
+
+  .livefeed-tabs::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  /* Driver modal - 2 column grid becomes 1 column */
+  .livefeed-detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .livefeed-duty-summary {
+    flex-wrap: wrap !important;
+  }
+}
+
+/* ===== STAFF MANAGEMENT ===== */
+@media (max-width: 768px) {
+
+  /* Header buttons */
+  .staff-header {
+    padding: 15px !important;
+    gap: 12px !important;
+  }
+
+  .staff-header-title h1 {
+    font-size: 20px !important;
+  }
+
+  .staff-header-icon {
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  /* Nav tabs - scrollable */
+  .staff-tabs-row {
+    overflow-x: auto !important;
+    scrollbar-width: none !important;
+    -webkit-overflow-scrolling: touch !important;
+    flex-shrink: 0 !important;
+  }
+
+  .staff-tabs-row button {
+    padding: 8px 14px !important;
+    font-size: 10px !important;
+    white-space: nowrap !important;
+  }
+
+  /* Search & date controls */
+  .staff-controls-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+    padding: 14px !important;
+  }
+
+  .staff-controls-bar>div {
+    min-width: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+  }
+
+  /* Stat cards - 2 col */
+  .staff-stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 12px !important;
+  }
+
+  .staff-stat-card {
+    padding: 18px !important;
+    border-radius: 20px !important;
+  }
+
+  .staff-stat-value {
+    font-size: 28px !important;
+  }
+
+  /* Staff cards in list view */
+  .staff-list-card {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+
+  /* Attendance table - horizontal scroll */
+  .staff-attendance-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    margin: 0 -15px !important;
+    padding: 0 15px !important;
+  }
+
+  /* Modals */
+  .staff-modal-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .staff-add-modal {
+    padding: 20px !important;
+    border-radius: 20px !important;
+  }
+}
+
+/* ===== FREELANCERS ===== */
+@media (max-width: 768px) {
+  .freelancer-page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 15px !important;
+  }
+
+  /* Freelancer table - horizontal scroll */
+  .freelancer-table-wrapper {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  /* Modals */
+  .freelancer-modal-form-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .freelancer-punch-modal {
+    padding: 20px !important;
+    max-width: 95vw !important;
+  }
+
+  /* Action button row for each freelancer */
+  .freelancer-action-row {
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+  }
+}
+
+/* ===== EVENT MANAGEMENT ===== */
+@media (max-width: 768px) {
+
+  /* Header */
+  .event-page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 15px !important;
+  }
+
+  /* Stat cards - 2 col */
+  .event-stats-row {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+
+  .event-stats-row .glass-card {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  /* Filter bar */
+  .event-filter-container {
+    gap: 10px !important;
+    padding: 15px !important;
+  }
+
+  /* Action buttons row */
+  .event-action-btns {
+    flex-direction: column !important;
+    width: 100% !important;
+    align-items: stretch !important;
+  }
+
+  .event-action-btns button,
+  .event-action-btns .primary-btn,
+  .event-action-btns .secondary-btn {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* Grid rows in modal collapse */
+  .grid-row {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Modal container */
+  .modal-container {
+    max-height: 95vh !important;
+    border-radius: 18px !important;
+    margin: 10px !important;
+  }
+
+  /* Calendar controls shrink */
+  .calendar-controls {
+    flex-wrap: wrap !important;
+  }
+}
+
+/* ===== UNIVERSAL MOBILE HELPERS ===== */
+@media (max-width: 480px) {
+
+  /* Absolutely ensure nothing overflows */
+  * {
+    max-width: 100vw;
+    box-sizing: border-box;
+  }
+
+  /* Tighten all modals */
+  .modal-overlay {
+    padding: 10px !important;
+    align-items: flex-end !important;
+  }
+
+  .modal-content,
+  .modal-container {
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 94vh !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Buttons smaller on xs */
+  .primary-btn,
+  .secondary-btn {
+    height: 44px !important;
+    font-size: 12px !important;
+  }
+
+  /* Table min-width for horizontal scroll */
+  .activity-table,
+  table {
+    min-width: 500px;
+  }
 }

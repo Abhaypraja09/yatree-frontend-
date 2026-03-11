@@ -5,13 +5,14 @@ import {
     Activity, Users, Car, CreditCard, AlertTriangle, ShieldAlert,
     TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, Clock,
     ChevronLeft, ChevronRight, Filter, Search, MoreHorizontal,
-    Plus, Download, Wrench, Briefcase, Fuel, Calendar, X, IndianRupee, Camera, ShieldCheck, Shield
+    Plus, Download, Wrench, Briefcase, Fuel, Calendar, X, IndianRupee, Camera, ShieldCheck, Shield, LogIn
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
+import { todayIST, formatDateIST, firstDayOfMonthIST, nowIST } from '../utils/istUtils';
 
 const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick }) => (
     <motion.div
@@ -109,23 +110,13 @@ const AdminDashboard = () => {
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(() => {
-        const d = new Date();
-        return new Date(d.getFullYear(), d.getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0];
-    });
+    const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
     const toDateRef = useRef(null);
     const fromDateRef = useRef(null);
 
-    const getTodayLocal = () => {
-        const d = new Date();
-        const offset = d.getTimezoneOffset();
-        const localDate = new Date(d.getTime() - (offset * 60 * 1000));
-        return localDate.toISOString().split('T')[0];
-    };
+    const getTodayLocal = () => todayIST();
 
-    const formatDate = (dateStr) => {
-        return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
-    };
+    const formatDate = (dateStr) => formatDateIST(dateStr);
 
     const fetchStats = async () => {
         const userInfoRaw = localStorage.getItem('userInfo');
@@ -232,8 +223,7 @@ const AdminDashboard = () => {
                                     const next = !isRange;
                                     setIsRange(next);
                                     if (!next) {
-                                        const d = new Date(selectedDate);
-                                        setFromDate(new Date(d.getFullYear(), d.getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
+                                        setFromDate(firstDayOfMonthIST(selectedDate));
                                     }
                                 }}
                                 style={{
@@ -253,8 +243,8 @@ const AdminDashboard = () => {
                             {!isRange && (
                                 <button
                                     onClick={() => {
-                                        const d = new Date(selectedDate);
-                                        d.setDate(d.getDate() - 1);
+                                        const d = nowIST(selectedDate);
+                                        d.setUTCDate(d.getUTCDate() - 1);
                                         setSelectedDate(d.toISOString().split('T')[0]);
                                     }}
                                     style={{
@@ -284,7 +274,7 @@ const AdminDashboard = () => {
                                 >
                                     <span style={{ color: '#818cf8', fontSize: '9px', fontWeight: '900', letterSpacing: '0.5px', pointerEvents: 'none' }}>FROM</span>
                                     <span style={{ color: 'white', fontSize: '12px', fontWeight: '900', pointerEvents: 'none' }}>
-                                        {new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                        {formatDateIST(fromDate).toUpperCase()}
                                     </span>
                                     <input
                                         ref={fromDateRef}
@@ -316,7 +306,7 @@ const AdminDashboard = () => {
                                     : <Calendar size={15} color="#fbbf24" strokeWidth={2.5} style={{ pointerEvents: 'none' }} />
                                 }
                                 <span style={{ color: 'white', fontSize: '13px', fontWeight: '900', letterSpacing: '0.5px', pointerEvents: 'none' }}>
-                                    {new Date(selectedDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }).toUpperCase()}
+                                    {formatDateIST(selectedDate).toUpperCase()}
                                 </span>
                                 <input
                                     ref={toDateRef}
@@ -335,8 +325,8 @@ const AdminDashboard = () => {
                             {!isRange && (
                                 <button
                                     onClick={() => {
-                                        const d = new Date(selectedDate);
-                                        d.setDate(d.getDate() + 1);
+                                        const d = nowIST(selectedDate);
+                                        d.setUTCDate(d.getUTCDate() + 1);
                                         setSelectedDate(d.toISOString().split('T')[0]);
                                     }}
                                     style={{
@@ -357,8 +347,7 @@ const AdminDashboard = () => {
                                 onClick={() => {
                                     setSelectedDate(getTodayLocal());
                                     if (isRange) {
-                                        const d = new Date();
-                                        setFromDate(new Date(d.getFullYear(), d.getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
+                                        setFromDate(firstDayOfMonthIST());
                                     }
                                 }}
                                 style={{
@@ -425,7 +414,8 @@ const AdminDashboard = () => {
                             <StatCard icon={Car} label="FLEET SIZE" value={stats.totalVehicles} color="#8b5cf6" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
                             <StatCard icon={Briefcase} label="TOTAL STAFF" value={stats.totalStaff} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/staff')} />
 
-                            <StatCard icon={Activity} label="TOTAL DUTIES" value={stats.countPunchIns} color="#3b82f6" loading={loading} onClick={() => { }} trend="LIVE" />
+                            <StatCard icon={Activity} label="TOTAL DUTIES" value={stats.countPunchIns} color="#3b82f6" loading={loading} onClick={() => { }} trend="TODAY" />
+                            <StatCard icon={LogIn} label="ACTIVE DUTIES" value={stats.activeDutiesCount || 0} color="#10b981" loading={loading} onClick={() => { }} trend="LIVE" />
                         </div>
 
 
@@ -457,7 +447,7 @@ const AdminDashboard = () => {
                                         textTransform: 'uppercase',
                                         letterSpacing: '0.5px'
                                     }}>
-                                        Expiry Alerts (Within 30 Days)
+                                        Expiry Alerts
                                     </h3>
                                 </div>
                                 <div className="expiry-alerts-grid">
@@ -525,15 +515,11 @@ const AdminDashboard = () => {
                                                     fontSize: 'clamp(10px, 2.5vw, 12px)'
                                                 }}>
                                                     Exp: <span style={{ color: 'white', fontWeight: '700' }}>
-                                                        {new Date(alert.expiryDate).toLocaleDateString('en-IN', {
-                                                            day: '2-digit',
-                                                            month: 'short',
-                                                            year: 'numeric'
-                                                        })}
+                                                        {formatDateIST(alert.expiryDate)}
                                                     </span>
                                                 </div>
                                                 <a
-                                                    href={`https://wa.me/916367466426?text=${encodeURIComponent(`REMINDER: Vehicle document for ${alert.identifier} (${alert.documentType}) is expiring on ${new Date(alert.expiryDate).toLocaleDateString()}. Please renew it ASAP.`)}`}
+                                                    href={`https://wa.me/916367466426?text=${encodeURIComponent(`REMINDER: Vehicle document for ${alert.identifier} (${alert.documentType}) is expiring on ${formatDateIST(alert.expiryDate)}. Please renew it ASAP.`)}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     style={{

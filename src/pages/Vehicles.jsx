@@ -4,6 +4,7 @@ import { Plus, Car, AlertCircle, Trash2, Calendar, ExternalLink, Search, Wallet,
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+import { todayIST, formatDateIST } from '../utils/istUtils';
 
 const Vehicles = () => {
     const { selectedCompany } = useCompany();
@@ -126,7 +127,7 @@ const Vehicles = () => {
 
             setShowModal(false);
             setCarNumber(''); setModel('');
-            setCarType('SUV'); setDutyAmount(''); setFastagNumber(''); setFastagBalance(''); setFastagBank('');
+            setCarType('SUV'); setFastagNumber(''); setFastagBalance(''); setFastagBank('');
             setDocs({ rc: null, insurance: null, puc: null, fitness: null, permit: null });
             setDocExpiries({ rc: '', insurance: '', puc: '', fitness: '', permit: '' });
             setEditingId(null);
@@ -197,44 +198,65 @@ const Vehicles = () => {
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
             <SEO title="Manage Vehicles" description="Track and manage all vehicles in your fleet, including document status and assignments." />
 
+            {/* Fleet Health Dashboard */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '35px' }}>
+                <div className="glass-card" style={{ padding: '20px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                        <Shield size={20} color="#10b981" />
+                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#10b981' }}>TOTAL UNITS</span>
+                    </div>
+                    <div style={{ fontSize: '24px', fontWeight: '1000', color: 'white' }}>{vehicles.length}</div>
+                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>Active Fleet Assets</div>
+                </div>
+                <div className="glass-card" style={{ padding: '20px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, transparent 100%)', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                        <AlertCircle size={20} color="#fbbf24" />
+                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24' }}>ALERTS</span>
+                    </div>
+                    <div style={{ fontSize: '24px', fontWeight: '1000', color: 'white' }}>{alerts.length}</div>
+                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>Critical Document Expiries</div>
+                </div>
+                <div className="glass-card" style={{ padding: '20px', background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, transparent 100%)', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
+                        <Car size={20} color="#0ea5e9" />
+                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#0ea5e9' }}>ON DUTY</span>
+                    </div>
+                    <div style={{ fontSize: '24px', fontWeight: '1000', color: 'white' }}>{vehicles.filter(v => v.currentDriver).length}</div>
+                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>Vehicles on Active Trips</div>
+                </div>
+            </div>
+
             {alerts.length > 0 && (
-                <div style={{ marginBottom: '30px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f59e0b', marginBottom: '15px' }}>
-                        <AlertCircle size={18} />
-                        <h2 style={{ fontSize: '14px', fontWeight: '800', margin: 0, textTransform: 'uppercase', letterSpacing: '1px' }}>System Critical Alerts</h2>
+                <div style={{ marginBottom: '35px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f43f5e', marginBottom: '15px' }}>
+                        <div style={{ width: '4px', height: '16px', background: '#f43f5e', borderRadius: '4px' }}></div>
+                        <h2 style={{ fontSize: '12px', fontWeight: '900', margin: 0, textTransform: 'uppercase', letterSpacing: '1.5px' }}>Attention Required</h2>
                     </div>
                     <div className="scroll-x" style={{ display: 'flex', gap: '15px', paddingBottom: '10px' }}>
                         {alerts.map((alert, idx) => (
                             <motion.div
                                 key={idx}
-                                initial={{ opacity: 0, x: 20 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: idx * 0.1 }}
+                                initial={{ opacity: 0, scale: 0.9 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.05 }}
                                 className="glass-card"
                                 style={{
-                                    minWidth: '260px',
+                                    minWidth: '240px',
                                     padding: '16px',
-                                    borderLeft: `4px solid ${alert.daysLeft < 0 ? '#f43f5e' : (alert.daysLeft === 0 ? '#0ea5e9' : '#f59e0b')}`,
-                                    background: alert.daysLeft < 0 ? 'rgba(244, 63, 94, 0.05)' : 'rgba(245, 158, 11, 0.05)'
+                                    background: 'rgba(244, 63, 94, 0.03)',
+                                    border: '1px solid rgba(244, 63, 94, 0.1)',
+                                    borderTop: `4px solid ${alert.daysLeft < 0 ? '#f43f5e' : '#fbbf24'}`
                                 }}
                             >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                    <span style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '700' }}>{alert.identifier}</span>
-                                    <span style={{
-                                        fontSize: '10px',
-                                        color: 'white',
-                                        padding: '2px 8px',
-                                        borderRadius: '4px',
-                                        background: alert.daysLeft < 0 ? '#f43f5e' : (alert.daysLeft === 0 ? '#0ea5e9' : '#f59e0b'),
-                                        fontWeight: '800',
-                                        textTransform: 'uppercase'
-                                    }}>
-                                        {alert.daysLeft < 0 ? `${Math.abs(alert.daysLeft)} Days Ago` : (alert.daysLeft === 0 ? 'Today' : `${alert.daysLeft} Days Left`)}
-                                    </span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                                    <span style={{ fontSize: '11px', color: 'white', fontWeight: '900' }}>{alert.identifier}</span>
+                                    <div style={{ background: alert.daysLeft < 0 ? '#f43f5e' : '#fbbf24', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '9px', fontWeight: '900' }}>
+                                        {alert.daysLeft < 0 ? 'EXPIRED' : 'DUE SOON'}
+                                    </div>
                                 </div>
-                                <p style={{ color: 'white', fontWeight: '800', margin: '0 0 4px 0', fontSize: '15px' }}>{alert.documentType}</p>
-                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
-                                    Expires on: <span style={{ color: 'white' }}>{new Date(alert.expiryDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
+                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{alert.documentType}</div>
+                                <div style={{ fontSize: '14px', color: 'white', fontWeight: '1000', marginTop: '5px' }}>
+                                    {alert.daysLeft < 0 ? `${Math.abs(alert.daysLeft)} days ago` : `${alert.daysLeft} days remaining`}
                                 </div>
                             </motion.div>
                         ))}
@@ -281,7 +303,7 @@ const Vehicles = () => {
                                 style={{ paddingLeft: '48px', marginBottom: 0, height: '48px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', width: '100%' }}
                             />
                         </div>
-                        <button className="btn-primary" onClick={() => { setEditingId(null); setCarNumber(''); setModel(''); setCarType('SUV'); setDutyAmount(''); setFastagNumber(''); setFastagBalance(''); setFastagBank(''); setShowModal(true); }} style={{ height: '48px', padding: '0 15px', borderRadius: '12px', fontWeight: '800', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                        <button className="btn-primary" onClick={() => { setEditingId(null); setCarNumber(''); setModel(''); setCarType('SUV'); setFastagNumber(''); setFastagBalance(''); setFastagBank(''); setShowModal(true); }} style={{ height: '48px', padding: '0 15px', borderRadius: '12px', fontWeight: '800', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                             <Plus size={20} /> <span className="hide-mobile">Add Vehicle</span><span className="show-mobile">Add</span>
                         </button>
                     </div>
@@ -318,7 +340,6 @@ const Vehicles = () => {
                                             setModel(v.model);
                                             setPermitType(v.permitType || 'All India');
                                             setCarType(v.carType || 'SUV');
-                                            setDutyAmount(v.dutyAmount || '');
                                             setFastagNumber(v.fastagNumber || '');
                                             setFastagBalance(v.fastagBalance || '');
                                             setFastagBank(v.fastagBank || '');
@@ -343,32 +364,27 @@ const Vehicles = () => {
                                 <h3 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: '0 0 4px 0', letterSpacing: '-0.5px' }}>{v.carNumber}</h3>
                                 <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px', fontWeight: '500' }}>{v.model}</p>
 
-                                <div style={{ display: 'flex', gap: '8px', marginBottom: '25px', flexWrap: 'wrap' }}>
-                                    {['RC', 'PUC', 'INS'].map(type => {
-                                        const doc = v.documents?.find(d => d.documentType === type) ||
-                                            v.documents?.find(d => d.documentType === (type === 'INS' ? 'INSURANCE' : type));
-                                        const isExpired = doc ? new Date(doc.expiryDate) < new Date() : true;
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '25px' }}>
+                                    {['RC', 'INSURANCE', 'PERMIT', 'FITNESS'].map(type => {
+                                        const doc = v.documents?.find(d => d.documentType === type);
+                                        const isExpired = doc ? new Date(doc.expiryDate).toISOString().split('T')[0] < todayIST() : true;
                                         return (
                                             <div key={type} style={{
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                gap: '5px',
-                                                fontSize: '10px',
-                                                fontWeight: '800',
-                                                padding: '4px 8px',
-                                                borderRadius: '6px',
-                                                background: !doc ? 'rgba(255,255,255,0.03)' : (isExpired ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)'),
-                                                color: !doc ? 'var(--text-muted)' : (isExpired ? '#f43f5e' : '#10b981'),
+                                                justifyContent: 'space-between',
+                                                padding: '8px 12px',
+                                                borderRadius: '12px',
+                                                background: !doc ? 'rgba(255,255,255,0.02)' : (isExpired ? 'rgba(244, 63, 94, 0.05)' : 'rgba(16, 185, 129, 0.05)'),
                                                 border: `1px solid ${!doc ? 'rgba(255,255,255,0.05)' : (isExpired ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)')}`
                                             }}>
-                                                {!doc ? <Clock size={10} /> : (isExpired ? <XCircle size={10} /> : <CheckCircle2 size={10} />)}
-                                                {type}
+                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '900' }}>{type}</span>
+                                                <div style={{ color: !doc ? 'rgba(255,255,255,0.1)' : (isExpired ? '#f43f5e' : '#10b981') }}>
+                                                    {doc ? (isExpired ? <XCircle size={14} /> : <CheckCircle2 size={14} />) : <Clock size={14} />}
+                                                </div>
                                             </div>
                                         );
                                     })}
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '10px', fontWeight: '800', padding: '4px 8px', borderRadius: '6px', background: 'rgba(14, 165, 233, 0.05)', color: 'var(--primary)', border: '1px solid rgba(14, 165, 233, 0.1)' }}>
-                                        <MapPin size={10} /> {v.permitType}
-                                    </div>
                                 </div>
                             </div>
 
@@ -404,19 +420,12 @@ const Vehicles = () => {
                                         Manage
                                     </button>
                                 </div>
-                                <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '12px', paddingTop: '12px', justifyContent: 'space-between' }}>
+                                <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '12px', paddingTop: '12px', justifyContent: 'flex-start' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <Wallet size={14} style={{ color: 'var(--text-muted)' }} />
                                         <div>
                                             <span style={{ fontSize: '12px', color: 'white', fontWeight: '800' }}>₹{v.fastagBalance || 0}</span>
-                                            <span style={{ fontSize: '9px', color: 'var(--text-muted)', marginLeft: '4px' }}>Fastag</span>
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Shield size={14} style={{ color: 'var(--text-muted)' }} />
-                                        <div>
-                                            <span style={{ fontSize: '12px', color: 'white', fontWeight: '800' }}>₹{v.dutyAmount || 0}</span>
-                                            <span style={{ fontSize: '9px', color: 'var(--text-muted)', marginLeft: '4px' }}>Base Rate</span>
+                                            <span style={{ fontSize: '9px', color: 'var(--text-muted)', marginLeft: '4px' }}>Fastag Balance</span>
                                         </div>
                                     </div>
                                 </div>
@@ -551,6 +560,10 @@ const Vehicles = () => {
                                                 <option value="SUV" style={{ background: '#0f172a' }}>SUV / MUV</option>
                                                 <option value="Sedan" style={{ background: '#0f172a' }}>Sedan</option>
                                                 <option value="Hatchback" style={{ background: '#0f172a' }}>Hatchback</option>
+                                                <option value="Bus" style={{ background: '#0f172a' }}>Bus</option>
+                                                <option value="Mini Bus" style={{ background: '#0f172a' }}>Mini Bus</option>
+                                                <option value="Traveler" style={{ background: '#0f172a' }}>Traveler</option>
+                                                <option value="Electric Vehicle" style={{ background: '#0f172a' }}>Electric Vehicle</option>
                                                 <option value="Other" style={{ background: '#0f172a' }}>Luxury / Other</option>
                                             </select>
                                         </div>
@@ -579,13 +592,6 @@ const Vehicles = () => {
                                             <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontWeight: '900' }}>₹</div>
                                             <input type="number" className="input-field no-spinner" style={{ height: '50px', paddingLeft: '32px' }} placeholder="0.00" value={fastagBalance} onChange={(e) => setFastagBalance(e.target.value)} />
                                         </div>
-                                    </div>
-                                </div>
-                                <div className="form-group">
-                                    <label>Daily Rental / Duty Amount</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontWeight: '900' }}>₹</div>
-                                        <input type="number" className="input-field no-spinner" style={{ height: '54px', paddingLeft: '35px', fontSize: '16px', fontWeight: '800' }} placeholder="Fixed Daily Amount" value={dutyAmount} onChange={(e) => setDutyAmount(e.target.value)} />
                                     </div>
                                 </div>
                             </div>
@@ -711,86 +717,146 @@ const Vehicles = () => {
             )}
 
             {showDocsModal && (
-                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '15px' }}>
-                    <motion.div initial={{ scale: 0.95, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card modal-content" style={{ padding: '25px', width: '100%', maxWidth: '850px', maxHeight: '95vh', overflowY: 'auto' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-                            <div>
-                                <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '800', margin: 0 }}>Documents</h2>
-                                <p style={{ color: 'var(--primary)', fontSize: '13px', margin: 0, fontWeight: '600' }}>{showDocsModal.carNumber}</p>
-                            </div>
-                            <button onClick={() => setShowDocsModal(null)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
-                        </div>
-
-                        <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '20px', marginBottom: '35px' }}>
-                            {showDocsModal.documents?.map((doc, idx) => (
-                                <div key={idx} className="glass-card" style={{ padding: '12px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>{doc.documentType}</p>
-                                        <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: new Date(doc.expiryDate) < new Date() ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: new Date(doc.expiryDate) < new Date() ? '#f43f5e' : '#10b981', fontWeight: '700' }}>
-                                            {new Date(doc.expiryDate) < new Date() ? 'Expired' : 'Valid'}
-                                        </span>
-                                    </div>
-                                    <div className="img-container" style={{ position: 'relative', height: '140px', borderRadius: '10px', overflow: 'hidden', marginBottom: '10px', cursor: 'pointer' }} onClick={() => window.open(doc.imageUrl)}>
-                                        <img src={doc.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                        <div className="img-overlay" style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.4)', display: 'flex', justifyContent: 'center', alignItems: 'center', opacity: 0, transition: '0.3s' }}>
-                                            <ExternalLink size={20} color="white" />
-                                        </div>
-                                    </div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '12px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>
-                                            {(() => {
-                                                const isExpired = new Date(doc.expiryDate) < new Date();
-                                                return (
-                                                    <>
-                                                        Expires: <span style={{ color: isExpired ? '#f43f5e' : 'white', fontWeight: '800' }}>{new Date(doc.expiryDate).toLocaleDateString('en-IN')}</span>
-                                                    </>
-                                                );
-                                            })()}
-                                        </div>
-                                        <a
-                                            href={`https://wa.me/91${JSON.parse(localStorage.getItem('userInfo'))?.mobile || '9660953135'}?text=${encodeURIComponent(`ALERT: Vehicle ${showDocsModal.carNumber} document (${doc.documentType}) is expiring on ${new Date(doc.expiryDate).toLocaleDateString()}. Please take action.`)}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            style={{ color: '#25D366', background: 'rgba(37, 211, 102, 0.1)', padding: '6px', borderRadius: '8px', fontSize: '14px', textDecoration: 'none' }}
-                                            title="Send WhatsApp Reminder"
-                                        >
-                                            WA
-                                        </a>
-                                    </div>
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(15px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+                    <motion.div
+                        initial={{ scale: 0.95, opacity: 0, y: 30 }}
+                        animate={{ scale: 1, opacity: 1, y: 0 }}
+                        className="premium-glass"
+                        style={{
+                            padding: '35px',
+                            width: '100%',
+                            maxWidth: '950px',
+                            maxHeight: '90vh',
+                            overflowY: 'auto',
+                            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                            borderRadius: '32px',
+                            border: '1px solid rgba(255,255,255,0.1)',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'
+                        }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                <div style={{ width: '60px', height: '60px', borderRadius: '18px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <Shield size={32} color="#0ea5e9" />
                                 </div>
-                            ))}
-                            {(!showDocsModal.documents || showDocsModal.documents.length === 0) && (
-                                <div style={{ gridColumn: '1/-1', padding: '40px', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '16px', textAlign: 'center' }}>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', margin: 0 }}>No documents uploaded for this vehicle.</p>
-                                </div>
-                            )}
-                        </div>
-
-                        <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '25px' }}>
-                            <h3 style={{ color: 'white', fontSize: '16px', fontWeight: '700', marginBottom: '15px' }}>Quick Upload</h3>
-                            <div className="quick-upload-grid">
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px' }}>Type</label>
-                                    <select className="input-field" value={docToUpload.type} onChange={(e) => setDocToUpload({ ...docToUpload, type: e.target.value })} style={{ marginBottom: 0, height: '42px', fontSize: '13px', fontWeight: '600' }}>
-                                        <option value="">Select Type</option>
-                                        <option value="RC">RC</option>
-                                        <option value="INSURANCE">Insurance</option>
-                                        <option value="PUC">PUC</option>
-                                        <option value="FITNESS">Fitness</option>
-                                        <option value="PERMIT">Permit</option>
+                                    <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '1000', margin: 0, letterSpacing: '-1px' }}>Document Vault</h2>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
+                                        <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', fontWeight: '700' }}>{showDocsModal.carNumber}</span>
+                                        <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></span>
+                                        <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.6)', fontWeight: '700' }}>{showDocsModal.model}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <button
+                                onClick={() => setShowDocsModal(null)}
+                                style={{ background: 'rgba(255,255,255,0.05)', color: 'white', width: '44px', height: '44px', borderRadius: '50%', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                            >
+                                <XCircle size={24} />
+                            </button>
+                        </div>
+
+                        <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '25px', marginBottom: '40px' }}>
+                            {['RC', 'INSURANCE', 'PERMIT', 'FITNESS', 'PUC'].map((type) => {
+                                const doc = showDocsModal.documents?.find(d => d.documentType === type);
+                                const isExpired = doc ? new Date(doc.expiryDate).toISOString().split('T')[0] < todayIST() : true;
+
+                                return (
+                                    <div key={type} className="glass-card" style={{
+                                        padding: '20px',
+                                        background: 'rgba(255,255,255,0.02)',
+                                        border: doc ? (isExpired ? '1px solid rgba(244, 63, 94, 0.2)' : '1px solid rgba(16, 185, 129, 0.2)') : '1px solid rgba(255,255,255,0.05)',
+                                        borderRadius: '24px',
+                                        transition: 'all 0.3s ease'
+                                    }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: !doc ? 'rgba(255,255,255,0.1)' : (isExpired ? '#f43f5e' : '#10b981') }}></div>
+                                                <span style={{ fontSize: '12px', color: 'white', fontWeight: '900', letterSpacing: '1px' }}>{type}</span>
+                                            </div>
+                                            {!doc ? (
+                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>NOT UPLOADED</span>
+                                            ) : (
+                                                <div style={{ background: isExpired ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: isExpired ? '#f43f5e' : '#10b981', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: '900' }}>
+                                                    {isExpired ? 'EXPIRED' : 'VALID'}
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        {doc ? (
+                                            <>
+                                                <div
+                                                    style={{ height: '160px', borderRadius: '16px', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}
+                                                    onClick={() => window.open(doc.imageUrl)}
+                                                >
+                                                    <img src={doc.imageUrl} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                    <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.5)', opacity: 0, transition: '0.3s', display: 'flex', alignItems: 'center', justifyContent: 'center' }} onMouseEnter={(e) => e.currentTarget.style.opacity = 1} onMouseLeave={(e) => e.currentTarget.style.opacity = 0}>
+                                                        <ExternalLink size={24} color="white" />
+                                                    </div>
+                                                </div>
+                                                <div style={{ marginTop: '15px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <div>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>EXPIRY DATE</div>
+                                                        <div style={{ fontSize: '14px', color: isExpired ? '#f43f5e' : 'white', fontWeight: '900' }}>{formatDateIST(doc.expiryDate)}</div>
+                                                    </div>
+                                                    <a
+                                                        href={`https://wa.me/91${JSON.parse(localStorage.getItem('userInfo'))?.mobile || '9660953135'}?text=${encodeURIComponent(`ALERT: Vehicle ${showDocsModal.carNumber} document (${type}) is expiring on ${formatDateIST(doc.expiryDate)}. Please take action.`)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{ background: 'rgba(37, 211, 102, 0.1)', color: '#10b981', padding: '10px', borderRadius: '12px', border: '1px solid rgba(37, 211, 102, 0.2)' }}
+                                                        title="Send WhatsApp Reminder"
+                                                    >
+                                                        <Shield size={16} />
+                                                    </a>
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <div style={{ height: '160px', borderRadius: '16px', border: '2px dashed rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                                                <Plus size={32} color="rgba(255,255,255,0.1)" />
+                                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.2)', fontWeight: '700' }}>Missing Document</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+
+                        <div style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '900', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                <Plus size={20} color="#0ea5e9" /> Add / Update Document
+                            </h3>
+                            <div className="quick-upload-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Type</label>
+                                    <select className="input-field" value={docToUpload.type} onChange={(e) => setDocToUpload({ ...docToUpload, type: e.target.value })} style={{ height: '48px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)' }}>
+                                        <option value="">Select Document</option>
+                                        <option value="RC">RC (Reg. Certificate)</option>
+                                        <option value="INSURANCE">Insurance Policy</option>
+                                        <option value="PERMIT">Permit Document</option>
+                                        <option value="FITNESS">Fitness Certificate</option>
+                                        <option value="PUC">PUC Certificate</option>
                                     </select>
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px' }}>Expiry Date</label>
-                                    <input type="date" className="input-field" value={docToUpload.expiry} onChange={(e) => setDocToUpload({ ...docToUpload, expiry: e.target.value })} style={{ marginBottom: 0, height: '42px', fontSize: '13px' }} />
+                                    <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Expiry</label>
+                                    <input type="date" className="input-field" value={docToUpload.expiry} onChange={(e) => setDocToUpload({ ...docToUpload, expiry: e.target.value })} style={{ height: '48px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)' }} />
                                 </div>
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <label style={{ display: 'block', fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '6px' }}>File</label>
-                                    <input type="file" onChange={(e) => setDocToUpload({ ...docToUpload, file: e.target.files[0] })} style={{ color: 'white', fontSize: '11px', marginBottom: 0, width: '100%' }} />
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Scan / Photo</label>
+                                    <input type="file" onChange={(e) => setDocToUpload({ ...docToUpload, file: e.target.files[0] })} style={{ color: 'white', fontSize: '12px', marginTop: '10px' }} />
                                 </div>
-                                <button className="btn-primary" onClick={() => handleUploadSingleDoc(showDocsModal._id)} disabled={uploadingDoc} style={{ height: '42px', padding: '0 25px' }}>
-                                    {uploadingDoc ? 'Saving...' : 'Upload'}
-                                </button>
+                                <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                    <button
+                                        className="btn-primary"
+                                        onClick={() => handleUploadSingleDoc(showDocsModal._id)}
+                                        disabled={uploadingDoc}
+                                        style={{ height: '48px', width: '100%', borderRadius: '12px', fontWeight: '900' }}
+                                    >
+                                        {uploadingDoc ? 'Saving Asset...' : 'Save Document'}
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </motion.div>
@@ -801,6 +867,3 @@ const Vehicles = () => {
 };
 
 export default Vehicles;
-
-
-

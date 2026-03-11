@@ -11,10 +11,11 @@ import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 import AttendanceModal from '../components/reports/AttendanceModal';
 import EditAttendanceModal from '../components/reports/EditAttendanceModal';
+import { todayIST, toISTDateString, firstDayOfMonthIST, formatTimeIST } from '../utils/istUtils';
 
 /* ─── tiny helpers ─── */
-const fmt = (d) => { if (!d) return '--'; const [y, m, dd] = (typeof d === 'string' ? d.split('T')[0] : new Date(d).toISOString().split('T')[0]).split('-'); return `${dd}/${m}/${y}`; };
-const fmtTime = (t) => t ? new Date(t).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '--';
+const fmt = (d) => { if (!d) return '--'; const [y, m, dd] = (typeof d === 'string' ? d.split('T')[0] : toISTDateString(new Date(d))).split('-'); return `${dd}/${m}/${y}`; };
+const fmtTime = (t) => t ? formatTimeIST(t) : '--';
 
 /* ─── shared table theme tokens ─── */
 const TAB_CONFIG = {
@@ -127,7 +128,7 @@ const LoadingRow = ({ cols }) => (
 const Reports = () => {
     const { selectedCompany } = useCompany();
 
-    const getToday = () => new Date().toISOString().split('T')[0];
+    const getToday = () => todayIST();
 
     const [isRange, setIsRange] = useState(false);
     const [fromDate, setFromDate] = useState(getToday());
@@ -161,9 +162,7 @@ const Reports = () => {
 
         if (hasRangeTab && !isRange) {
             setIsRange(true);
-            // Default range to current month when switching to range mode
-            const first = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0];
-            setFromDate(first);
+            setFromDate(firstDayOfMonthIST());
             setToDate(getToday());
         } else if (!hasRangeTab && isRange) {
             setIsRange(false);
@@ -244,19 +243,13 @@ const Reports = () => {
 
     /* navigate dates */
     const shiftDays = (n) => {
-        const f = new Date(fromDate);
-        const t = new Date(toDate);
-
-        // Shift 'From' date by 'n' days
-        f.setDate(f.getDate() + n);
+        const f = nowIST(fromDate);
+        f.setUTCDate(f.getUTCDate() + n);
         const fStr = f.toISOString().split('T')[0];
 
         if (isRange) {
-            // In Range mode: ONLY move the start date, keep END date as is
-            // This allows user to go back in history while keeping 'Today' visible
             setFromDate(fStr);
         } else {
-            // In Single mode: Move the whole point
             setFromDate(fStr);
             setToDate(fStr);
         }
@@ -266,7 +259,7 @@ const Reports = () => {
         setIsRange(p => {
             if (!p) {
                 // Switching to Range: set to full current month
-                const first = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0];
+                const first = firstDayOfMonthIST();
                 setFromDate(first);
                 setToDate(getToday());
             } else {
@@ -376,9 +369,7 @@ const Reports = () => {
                 return (
                     <TableSection tabId="drivers" fromDate={fromDate} toDate={toDate}
                         chips={[
-                            <Chip key="s" label="Total Salary" value={`₹${totalWage.toLocaleString()}`} color="#10b981" />,
-                            <Chip key="k" label="Total KM" value={`${totalKMs} km`} color="#38bdf8" />,
-                            <Chip key="f" label="Fuel" value={`₹${totalFuel.toLocaleString()}`} color="#f59e0b" />,
+                            <Chip key="c" label="Total Duties" value={data.length} color="#10b981" />,
                         ]}
                         headers={ATT_HEADERS}
                         rows={data.map((r, i) => <AttRow key={r._id} r={r} idx={i} />)}
@@ -397,10 +388,8 @@ const Reports = () => {
                 return (
                     <TableSection tabId="freelancers" fromDate={fromDate} toDate={toDate}
                         chips={[
-                            <Chip key="s" label="Total Salary" value={`₹${totalWage.toLocaleString()}`} color="#8b5cf6" />,
-                            <Chip key="k" label="Total KM" value={`${totalKMs} km`} color="#38bdf8" />,
-                            <Chip key="f" label="Fuel" value={`₹${totalFuel.toLocaleString()}`} color="#f59e0b" />,
-                            <Chip key="p" label="Parking" value={`₹${totalParking.toLocaleString()}`} color="#818cf8" />,
+                            <Chip key="c" label="Total Duties" value={data.length} color="#8b5cf6" />,
+                            <Chip key="p" label="Total Parking" value={`₹${totalParking.toLocaleString()}`} color="#818cf8" />,
                         ]}
                         headers={ATT_HEADERS}
                         rows={data.map((r, i) => <AttRow key={r._id} r={r} idx={i} showFreelancerCols />)}

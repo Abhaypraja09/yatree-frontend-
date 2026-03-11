@@ -25,6 +25,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+import { todayIST } from '../utils/istUtils';
 
 const Warranties = () => {
     const { selectedCompany } = useCompany();
@@ -41,7 +42,7 @@ const Warranties = () => {
     const [showClaimModal, setShowClaimModal] = useState(false);
     const [selectedWarranty, setSelectedWarranty] = useState(null);
     const [claimFormData, setClaimFormData] = useState({
-        claimDate: new Date().toISOString().split('T')[0],
+        claimDate: todayIST(),
         claimStatus: 'Pending',
         replacementDate: '',
         remarks: ''
@@ -53,8 +54,8 @@ const Warranties = () => {
         partName: '',
         brandName: '',
         invoiceNumber: '',
-        purchaseDate: new Date().toISOString().split('T')[0],
-        warrantyStartDate: new Date().toISOString().split('T')[0],
+        purchaseDate: todayIST(),
+        warrantyStartDate: todayIST(),
         warrantyEndDate: '',
         warrantyPeriod: '',
         supplierName: '',
@@ -164,8 +165,8 @@ const Warranties = () => {
             partName: '',
             brandName: '',
             invoiceNumber: '',
-            purchaseDate: new Date().toISOString().split('T')[0],
-            warrantyStartDate: new Date().toISOString().split('T')[0],
+            purchaseDate: todayIST(),
+            warrantyStartDate: todayIST(),
             warrantyEndDate: '',
             warrantyPeriod: '',
             supplierName: '',

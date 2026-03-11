@@ -4,6 +4,13 @@ import { Search, Plus, X, CheckCircle, AlertCircle, IndianRupee, Calendar, User,
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
+import { 
+    todayIST, 
+    toISTDateString, 
+    formatDateIST, 
+    formatTimeIST, 
+    formatDateTimeIST 
+} from '../utils/istUtils';
 
 const Advances = () => {
     const { selectedCompany } = useCompany();
@@ -13,15 +20,12 @@ const Advances = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('All');
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedMonth, setSelectedMonth] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCFullYear());
 
     // Add Advance Modal State
     const [showModal, setShowModal] = useState(false);
-    const getLocalYYYYMMDD = () => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    };
+    const getLocalYYYYMMDD = () => todayIST();
 
     const [formData, setFormData] = useState({
         driverId: '',
@@ -191,7 +195,7 @@ const Advances = () => {
                             style={{ height: '50px', width: '110px', borderRadius: '15px' }}
                         >
                             {Array.from({ length: 5 }, (_, i) => {
-                                const year = new Date().getFullYear() - 2 + i;
+                                const year = new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCFullYear() - 2 + i;
                                 return <option key={year} value={year} style={{ background: '#0f172a' }}>{year}</option>;
                             })}
                         </select>                        <button
@@ -337,7 +341,7 @@ const Advances = () => {
                                 </td>
                                 <td style={{ padding: '20px 25px' }}>
                                     <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>
-                                        {new Date(advance.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                        {formatDateIST(advance.date)}
                                     </div>
                                 </td>
                                 <td style={{ padding: '20px 25px' }}>
@@ -399,7 +403,7 @@ const Advances = () => {
                                         </div>
                                         <div>
                                             <div style={{ fontWeight: '800', color: 'white', fontSize: '16px' }}>{advance.driver?.name}</div>
-                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{new Date(advance.date).toLocaleDateString('en-IN')}</div>
+                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{formatDateIST(advance.date)}</div>
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>

@@ -28,6 +28,13 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useLanguage } from '../context/LanguageContext';
 import SEO from '../components/SEO';
+import { 
+    todayIST, 
+    toISTDateString, 
+    formatDateIST, 
+    formatTimeIST, 
+    formatDateTimeIST 
+} from '../utils/istUtils';
 
 
 const CameraModal = ({ side, onCapture, onClose }) => {
@@ -177,8 +184,8 @@ const DriverPortal = () => {
     const [activeTab, setActiveTab] = useState('home'); // 'home' or 'ledger'
     const [ledgerData, setLedgerData] = useState(null);
     const [ledgerLoading, setLedgerLoading] = useState(false);
-    const [ledgerMonth, setLedgerMonth] = useState(new Date().getMonth() + 1); // 1-12
-    const [ledgerYear, setLedgerYear] = useState(new Date().getFullYear());
+    const [ledgerMonth, setLedgerMonth] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCMonth() + 1); // 1-12
+    const [ledgerYear, setLedgerYear] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCFullYear());
 
     useEffect(() => {
         fetchDashboard();
@@ -413,7 +420,7 @@ const DriverPortal = () => {
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.text(`Period: ${periodLabel}`, pageWidth - 15, 30, { align: 'right' });
-            doc.text(`Date: ${new Date().toLocaleDateString()}`, pageWidth - 15, 37, { align: 'right' });
+            doc.text(`Date: ${formatDateIST(new Date())}`, pageWidth - 15, 37, { align: 'right' });
 
             // 2. DRIVER & SUMMARY
             doc.setTextColor(15, 23, 42);
@@ -459,7 +466,7 @@ const DriverPortal = () => {
             doc.text('DUTY & TRIP LOGS', 15, 105);
 
             const dutyRows = ledgerData.history.map(att => ({
-                date: (att.date || '').toString().split('T')[0],
+                date: toISTDateString(att.date),
                 vehicle: att.vehicle || 'N/A',
                 totalKM: `${att.totalKM || 0} KM`,
                 wage: `Rs. ${att.dailyWage || 0}`,
@@ -495,7 +502,7 @@ const DriverPortal = () => {
             doc.text('ADVANCES & SETTLEMENTS', 15, nextY);
 
             const advRows = ledgerData.advances.map(adv => ({
-                date: new Date(adv.date).toLocaleDateString(),
+                date: formatDateIST(adv.date),
                 remark: (adv.remark || '').toUpperCase(),
                 amount: `Rs. ${adv.amount}`,
                 recovered: `Rs. ${adv.recovered || 0}`,
@@ -835,7 +842,7 @@ const DriverPortal = () => {
                                                 )}
                                                 <p className="section-subtitle" style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', fontWeight: '800', letterSpacing: '0.5px', marginBottom: '8px' }}>{t('punchIn')}</p>
                                                 <p style={{ fontSize: 'clamp(24px, 6vw, 32px)', fontWeight: '900', color: isPunchedIn ? '#10b981' : 'rgba(255,255,255,0.2)', letterSpacing: '-1px' }}>
-                                                    {isPunchedIn ? new Date(todayAttendance.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                                    {isPunchedIn ? formatTimeIST(todayAttendance.punchIn.time) : '--:--'}
                                                 </p>
                                             </div>
                                             <div
@@ -869,7 +876,7 @@ const DriverPortal = () => {
                                                     {showPunchOut && !showPunchOutForm && <ArrowRight size={14} color="#f43f5e" />}
                                                 </div>
                                                 <p style={{ fontSize: 'clamp(24px, 6vw, 32px)', fontWeight: '900', color: isPunchedOut ? '#f43f5e' : 'rgba(255,255,255,0.2)', letterSpacing: '-1px' }}>
-                                                    {isPunchedOut ? new Date(todayAttendance.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}
+                                                    {isPunchedOut ? formatTimeIST(todayAttendance.punchOut.time) : '--:--'}
                                                 </p>
                                             </div>
                                         </div>
@@ -1638,7 +1645,7 @@ const DriverPortal = () => {
                                         if (ledgerMonth === 12) { setLedgerMonth(1); setLedgerYear(y => y + 1); }
                                         else setLedgerMonth(m => m + 1);
                                     }}
-                                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'white', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px', fontWeight: '700', flexShrink: 0, opacity: (ledgerYear === new Date().getFullYear() && ledgerMonth >= new Date().getMonth() + 1) ? 0.3 : 1 }}
+                                    style={{ background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', color: 'white', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', fontSize: '18px', fontWeight: '700', flexShrink: 0, opacity: (ledgerYear === new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCFullYear() && ledgerMonth >= new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCMonth() + 1) ? 0.3 : 1 }}
                                 >›</button>
                             </div>
 
@@ -1688,7 +1695,7 @@ const DriverPortal = () => {
                                             {ledgerData?.history?.map(item => (
                                                 <div key={item._id} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <div>
-                                                        <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{(item.date || '').toString().split('T')[0]}</p>
+                                                        <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{toISTDateString(item.date)}</p>
                                                         <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{item.vehicle} • {item.totalKM} KM</p>
                                                     </div>
                                                     <div style={{ textAlign: 'right' }}>
@@ -1715,7 +1722,7 @@ const DriverPortal = () => {
                                             {ledgerData?.advances?.map(item => (
                                                 <div key={item._id} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '4px solid #f43f5e' }}>
                                                     <div>
-                                                        <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{new Date(item.date).toLocaleDateString()}</p>
+                                                        <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{formatDateIST(item.date)}</p>
                                                         <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{item.remark}</p>
                                                     </div>
                                                     <div style={{ textAlign: 'right' }}>

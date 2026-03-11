@@ -10,8 +10,12 @@ import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
-
-import { DateTime } from 'luxon';
+import { 
+    todayIST, 
+    formatDateIST, 
+    formatTimeIST, 
+    nowIST 
+} from '../utils/istUtils';
 
 const styles = `
   @keyframes pulse {
@@ -44,41 +48,37 @@ const LiveFeed = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('drivers'); // 'drivers', 'vehicles', 'history'
     const [searchQuery, setSearchQuery] = useState('');
-    const [currentTimeIST, setCurrentTimeIST] = useState(DateTime.now().setZone('Asia/Kolkata').toFormat('hh:mm:ss a'));
+    const [currentTimeIST, setCurrentTimeIST] = useState(formatTimeIST(nowIST(), true));
     const [selectedDriver, setSelectedDriver] = useState(null);
     const [showDriverModal, setShowDriverModal] = useState(false);
     const dateInputRef = useRef(null);
 
     useEffect(() => {
         const timer = setInterval(() => {
-            setCurrentTimeIST(DateTime.now().setZone('Asia/Kolkata').toFormat('hh:mm:ss a'));
+            setCurrentTimeIST(formatTimeIST(nowIST(), true));
         }, 1000);
         return () => clearInterval(timer);
     }, []);
 
-    const getTodayLocal = () => {
-        return DateTime.now().setZone('Asia/Kolkata').toFormat('yyyy-MM-dd');
-    };
+    const getTodayLocal = () => todayIST();
 
     const formatDate = (dateStr) => {
         if (!dateStr) return 'N/A';
-        return DateTime.fromISO(dateStr).setLocale('en-IN').toFormat('dd MMM yyyy');
+        return formatDateIST(dateStr);
     };
 
     const formatTime = (timeStr) => {
         if (!timeStr) return '--:--';
-        // Handle both ISO strings and JavaScript Date objects
-        const dt = typeof timeStr === 'string' ? DateTime.fromISO(timeStr) : DateTime.fromJSDate(timeStr);
-        return dt.setZone('Asia/Kolkata').toFormat('hh:mm a');
+        return formatTimeIST(timeStr);
     };
 
     const formatDuration = (start, end) => {
         if (!start || !end) return '0h';
-        const d1 = typeof start === 'string' ? DateTime.fromISO(start) : DateTime.fromJSDate(start);
-        const d2 = typeof end === 'string' ? DateTime.fromISO(end) : DateTime.fromJSDate(end);
-        const diff = d2.diff(d1, ['hours', 'minutes']).toObject();
-        const h = Math.floor(Math.abs(diff.hours || 0));
-        const m = Math.floor(Math.abs(diff.minutes || 0));
+        const d1 = nowIST(start);
+        const d2 = nowIST(end);
+        const diffMs = Math.abs(d2 - d1);
+        const h = Math.floor(diffMs / (1000 * 60 * 60));
+        const m = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
         return `${h}h ${m}m`;
     };
 
@@ -92,7 +92,7 @@ const LiveFeed = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setStats(data);
-            setLastUpdated(DateTime.now().setZone('Asia/Kolkata').toFormat('hh:mm:ss a'));
+            setLastUpdated(formatTimeIST(nowIST(), true));
         } catch (err) {
             console.error('Error fetching feed', err);
         } finally {
@@ -170,12 +170,12 @@ const LiveFeed = () => {
     );
 
     return (
-        <div style={{ padding: 'clamp(15px, 4vw, 40px)', minHeight: '100vh', background: 'radial-gradient(circle at top right, #1e293b, #0f172a)' }}>
+        <div className="livefeed-root" style={{ padding: 'clamp(15px, 4vw, 40px)', minHeight: '100vh', background: 'radial-gradient(circle at top right, #1e293b, #0f172a)', overflowX: 'hidden' }}>
             <style>{styles}</style>
             <SEO title="Live Fleet Control" description="Real-time mission control for drivers and vehicles." />
 
             <header style={{ marginBottom: '30px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px', gap: '20px', flexWrap: 'wrap' }}>
+                <div className="livefeed-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px', gap: '20px', flexWrap: 'wrap' }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                             <div style={{ width: '32px', height: '32px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
@@ -192,8 +192,8 @@ const LiveFeed = () => {
                         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '18px', display: 'flex', gap: '4px', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)' }}>
                             <button
                                 onClick={() => {
-                                    const d = new Date(selectedDate);
-                                    d.setDate(d.getDate() - 1);
+                                    const d = nowIST(selectedDate);
+                                    d.setUTCDate(d.getUTCDate() - 1);
                                     setSelectedDate(d.toISOString().split('T')[0]);
                                 }}
                                 style={{ width: '40px', height: '40px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
@@ -208,8 +208,8 @@ const LiveFeed = () => {
                             </div>
                             <button
                                 onClick={() => {
-                                    const d = new Date(selectedDate);
-                                    d.setDate(d.getDate() + 1);
+                                    const d = nowIST(selectedDate);
+                                    d.setUTCDate(d.getUTCDate() + 1);
                                     setSelectedDate(d.toISOString().split('T')[0]);
                                 }}
                                 style={{ width: '40px', height: '40px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
@@ -227,7 +227,7 @@ const LiveFeed = () => {
                 </div>
 
                 {/* Stats Grid — 5 boxes */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: '15px' }}>
+                <div className="livefeed-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '15px' }}>
                     {[
                         { label: 'Active Drivers', value: stats?.liveDriversFeed?.filter(d => d.status === 'Present').length || 0, icon: Users, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
                         { label: 'In Use Fleet', value: stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use').length || 0, icon: Car, color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.1)' },
@@ -315,14 +315,14 @@ const LiveFeed = () => {
             {/* Dashboard Container */}
             <div style={{ background: 'rgba(30, 41, 59, 0.3)', borderRadius: '32px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', backdropFilter: 'blur(30px)' }}>
                 {/* Control Bar */}
-                <div style={{ padding: '20px 30px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '30px', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                <div className="livefeed-control-bar" style={{ padding: '20px 30px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
+                    <div className="livefeed-tabs" style={{ display: 'flex', gap: '8px' }}>
                         <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length} />
                         <TabButton id="vehicles" label="Fleet" icon={Car} count={stats?.totalVehicles} />
                         <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length} />
                     </div>
 
-                    <div style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
+                    <div style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '400px', width: '100%' }}>
                         <Search style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} size={18} />
                         <input
                             type="text"
@@ -356,6 +356,7 @@ const LiveFeed = () => {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
+                                className="livefeed-cards-grid"
                                 style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '20px' }}
                             >
                                 {filteredDrivers.sort((a, b) => {
@@ -858,7 +859,7 @@ const LiveFeed = () => {
                                                     )}
                                                 </div>
 
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                                <div className="livefeed-detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                                     {/* Punch In Details */}
                                                     <div style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
                                                         <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -932,7 +933,7 @@ const LiveFeed = () => {
                                                 </div>
 
                                                 {/* Duty Summary */}
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 20px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <div className="livefeed-duty-summary" style={{ display: 'flex', justifyContent: 'space-between', padding: '15px 20px', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                                     <div style={{ textAlign: 'center', flex: 1 }}>
                                                         <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Travel Distance</div>
                                                         <div style={{ fontSize: '18px', color: 'white', fontWeight: '950' }}>{att.totalKM || (att.punchOut?.km ? att.punchOut.km - (att.punchIn?.km || 0) : 0)} <span style={{ fontSize: '11px', opacity: 0.5 }}>KM</span></div>
@@ -1055,7 +1056,77 @@ const LiveFeed = () => {
                 .driver-card-hover:active {
                     transform: translateY(0);
                 }
+
+                /* ---- LIVE FEED MOBILE FIXES ---- */
+                @media (max-width: 768px) {
+                    /* Main wrapper padding */
+                    .livefeed-root {
+                        padding: 20px 15px !important;
+                    }
+                    /* Stats: 2 columns */
+                    .livefeed-stats-grid {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                    }
+                    /* Stat card size */
+                    .livefeed-stats-grid > div {
+                        padding: 16px !important;
+                        border-radius: 18px !important;
+                    }
+                    /* Control bar stacks vertically */
+                    .livefeed-control-bar {
+                        flex-direction: column !important;
+                        padding: 15px !important;
+                        gap: 12px !important;
+                    }
+                    /* Tabs scroll horizontally */
+                    .livefeed-tabs {
+                        overflow-x: auto !important;
+                        width: 100% !important;
+                        padding-bottom: 4px !important;
+                        scrollbar-width: none !important;
+                    }
+                    .livefeed-tabs::-webkit-scrollbar { display: none; }
+                    /* Tabs button smaller */
+                    .livefeed-tabs button {
+                        white-space: nowrap !important;
+                        padding: 8px 14px !important;
+                        font-size: 10px !important;
+                    }
+                    /* Search full width */
+                    .livefeed-control-bar > div:last-child {
+                        width: 100% !important;
+                        max-width: 100% !important;
+                    }
+                    /* Driver cards go 1 column */
+                    .livefeed-cards-grid {
+                        grid-template-columns: 1fr !important;
+                    }
+                    /* Detail modal punch grid: 1 col */
+                    .livefeed-detail-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 12px !important;
+                    }
+                    /* Duty summary wrap */
+                    .livefeed-duty-summary {
+                        flex-direction: column !important;
+                        gap: 10px !important;
+                    }
+                    .livefeed-duty-summary > div:nth-child(2) {
+                        display: none !important;
+                    }
+                    /* Stat card font sizes */
+                    .livefeed-stats-grid .stat-val {
+                        font-size: 24px !important;
+                    }
+                }
+                @media (max-width: 480px) {
+                    .livefeed-stats-grid {
+                        grid-template-columns: repeat(2, 1fr) !important;
+                        gap: 10px !important;
+                    }
+                }
             `}</style>
+
         </div>
     );
 };

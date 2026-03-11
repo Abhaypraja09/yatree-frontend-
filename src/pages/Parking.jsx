@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST } from '../utils/istUtils';
 
 const CameraModal = ({ onCapture, onClose }) => {
     const videoRef = React.useRef(null);
@@ -99,8 +100,7 @@ const ParkingPage = () => {
     const [pendingEntries, setPendingEntries] = useState([]);
     const [rejectedEntries, setRejectedEntries] = useState([]);
     const [showRejected, setShowRejected] = useState(false);
-    const [carServiceEntries, setCarServiceEntries] = useState([]);
-    const [activeTab, setActiveTab] = useState('parking'); // 'parking' | 'carservices'
+    const [activeTab, setActiveTab] = useState('parking');
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState(null);
@@ -108,10 +108,10 @@ const ParkingPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDriver, setFilterDriver] = useState('All');
     const [isRange, setIsRange] = useState(false);
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [fromDate, setFromDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
-    const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+    const [selectedMonth, setSelectedMonth] = useState(nowIST().getUTCMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear());
+    const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
+    const [toDate, setToDate] = useState(todayIST());
 
     // Unified date filter logic: When Monthly dropdown is used, it updates the range.
     useEffect(() => {
@@ -125,7 +125,7 @@ const ParkingPage = () => {
             // If it's the current month, default to today, else last day of that month
             const today = new Date();
             if (today.getFullYear() === selectedYear && (today.getMonth() + 1) === selectedMonth) {
-                setToDate(today.toISOString().split('T')[0]);
+                setToDate(todayIST());
             } else {
                 setToDate(lastDayStr);
             }
@@ -137,8 +137,8 @@ const ParkingPage = () => {
 
     /* navigate dates */
     const shiftDays = (n) => {
-        const f = new Date(fromDate);
-        f.setDate(f.getDate() + n);
+        const f = nowIST(fromDate);
+        f.setUTCDate(f.getUTCDate() + n);
         const fStr = f.toISOString().split('T')[0];
         setFromDate(fStr);
         if (!isRange) setToDate(fStr);
@@ -150,14 +150,13 @@ const ParkingPage = () => {
         driverId: '',
         driver: '', // Will start storing name here too for legacy/display
         amount: '',
-        date: new Date().toISOString().split('T')[0],
+        date: todayIST(),
         receiptPhoto: ''
     });
     const [submitting, setSubmitting] = useState(false);
     const [showImageModal, setShowImageModal] = useState(false);
     const [selectedImage, setSelectedImage] = useState('');
     const [showCamera, setShowCamera] = useState(false);
-    const [lastSeenPendingOther, setLastSeenPendingOther] = useState(0);
     const [lastSeenPendingParking, setLastSeenPendingParking] = useState(0);
 
     useEffect(() => {
@@ -165,16 +164,13 @@ const ParkingPage = () => {
             fetchEntries();
             fetchPendingEntries();
             fetchRejectedEntries();
-            fetchCarServiceEntries();
             fetchDrivers();
             fetchVehicles();
         }
     }, [selectedCompany, fromDate, toDate]);
 
     useEffect(() => {
-        if (activeTab === 'carservices') {
-            setLastSeenPendingOther(pendingEntries.filter(e => e.type === 'other').length);
-        } else if (activeTab === 'parking') {
+        if (activeTab === 'parking') {
             setLastSeenPendingParking(pendingEntries.filter(e => e.type === 'parking').length);
         }
     }, [activeTab, pendingEntries]);
@@ -189,7 +185,9 @@ const ParkingPage = () => {
             const { data } = await axios.get(`/api/admin/parking/pending/${selectedCompany._id}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
-            setPendingEntries(data || []);
+            // Filter to show ONLY parking entries in this page
+            const parkingOnly = (data || []).filter(e => e.type === 'parking');
+            setPendingEntries(parkingOnly);
         } catch (err) { console.error(err); }
     };
 
@@ -203,23 +201,10 @@ const ParkingPage = () => {
             const { data } = await axios.get(`/api/admin/parking/pending/${selectedCompany._id}?status=rejected`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
-            setRejectedEntries(data || []);
+            // Filter to show ONLY parking entries in this page
+            const parkingOnly = (data || []).filter(e => e.type === 'parking');
+            setRejectedEntries(parkingOnly);
         } catch (err) { console.error(err); }
-    };
-
-    const fetchCarServiceEntries = async () => {
-        if (!selectedCompany?._id) return;
-        try {
-            const userInfoStr = localStorage.getItem('userInfo');
-            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
-            if (!userInfo?.token) return;
-
-            const { data } = await axios.get(
-                `/api/admin/car-services/${selectedCompany._id}?from=${fromDate}&to=${toDate}`,
-                { headers: { Authorization: `Bearer ${userInfo.token}` } }
-            );
-            setCarServiceEntries(data || []);
-        } catch (err) { console.error('Car services fetch error:', err); }
     };
 
     const fetchEntries = async () => {
@@ -343,7 +328,7 @@ const ParkingPage = () => {
             driverId: entry.driverId?._id || '',
             driver: entry.driver || '',
             amount: entry.amount || '',
-            date: new Date(entry.date).toISOString().split('T')[0],
+            date: toISTDateString(entry.date),
             receiptPhoto: entry.receiptPhoto || ''
         });
         setShowModal(true);
@@ -378,14 +363,14 @@ const ParkingPage = () => {
             driverId: '',
             driver: '',
             amount: '',
-            date: new Date().toISOString().split('T')[0],
+            date: todayIST(),
             receiptPhoto: ''
         });
     };
 
     const downloadExcel = () => {
         const dataToExport = filteredEntries.map(e => ({
-            'Date': new Date(e.date).toLocaleDateString('en-IN'),
+            'Date': formatDateIST(e.date),
             'Vehicle': e.vehicle?.carNumber || 'N/A',
             'Driver': e.driver || 'N/A',
             'Amount (₹)': e.amount,
@@ -395,7 +380,7 @@ const ParkingPage = () => {
         const ws = XLSX.utils.json_to_sheet(dataToExport);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Parking Logs');
-        XLSX.writeFile(wb, `Parking_Report_${selectedCompany?.name}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        XLSX.writeFile(wb, `Parking_Report_${selectedCompany?.name}_${todayIST()}.xlsx`);
     };
 
     const filteredEntries = entries.filter(e => {
@@ -417,10 +402,8 @@ const ParkingPage = () => {
     const officeAmount = filteredEntries.filter(e => e.source === 'Admin').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
     const pendingParking = pendingEntries.filter(e => e.type === 'parking');
-    const pendingOther = pendingEntries.filter(e => e.type === 'other');
 
     const unreadParking = Math.max(0, pendingParking.length - (activeTab === 'parking' ? pendingParking.length : lastSeenPendingParking));
-    const unreadOther = Math.max(0, pendingOther.length - (activeTab === 'carservices' ? pendingOther.length : lastSeenPendingOther));
 
     return (
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
@@ -564,7 +547,7 @@ const ParkingPage = () => {
                             >
                                 {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                                     <option key={m} value={m} style={{ background: '#1e293b' }}>
-                                        {new Date(0, m - 1).toLocaleString('default', { month: 'long' })}
+                                        {formatDateIST(new Date(2000, m - 1, 1), { month: 'long' })}
                                     </option>
                                 ))}
                             </select>
@@ -576,9 +559,9 @@ const ParkingPage = () => {
                                 onChange={(e) => setSelectedYear(Number(e.target.value))}
                                 style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%' }}
                             >
-                                {[2024, 2025, 2026, 2027].map(y => (
-                                    <option key={y} value={y} style={{ background: '#1e293b' }}>{y}</option>
-                                ))}
+                                    {Array.from({ length: 4 }, (_, i) => nowIST().getUTCFullYear() + i).map(y => (
+                                        <option key={y} value={y} style={{ background: '#1e293b' }}>{y}</option>
+                                    ))}
                             </select>
                         </div>
 
@@ -616,7 +599,7 @@ const ParkingPage = () => {
                                     }}>
                                         <span style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
                                         <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                            {new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                            {formatDateIST(fromDate).toUpperCase()}
                                         </span>
                                         <input
                                             type="date"
@@ -645,7 +628,7 @@ const ParkingPage = () => {
                                         <Calendar size={14} color="#818cf8" />
                                     )}
                                     <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                        {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: isRange ? undefined : 'numeric' }).toUpperCase()}
+                                        {formatDateIST(toDate).toUpperCase()}
                                     </span>
                                     <input
                                         type="date"
@@ -725,8 +708,7 @@ const ParkingPage = () => {
                 width: 'fit-content'
             }}>
                 {[
-                    { key: 'parking', label: '🅿️ Parking Logs', count: pendingParking.length, badge: unreadParking > 0, activeColor: 'linear-gradient(135deg, #6366f1, #4f46e5)', activeShadow: '0 4px 16px rgba(99,102,241,0.35)' },
-                    { key: 'carservices', label: '🚗 Car Services', count: pendingOther.length, badge: unreadOther > 0, activeColor: 'linear-gradient(135deg, #f59e0b, #d97706)', activeShadow: '0 4px 16px rgba(245,158,11,0.35)' },
+                    { key: 'parking', label: '🅿️ Parking Logs', count: pendingParking.length, badge: unreadParking > 0, activeColor: 'linear-gradient(135deg, #fbbf24, #d97706)', activeShadow: '0 4px 16px rgba(251,191,36,0.35)' },
                     { key: 'rejected', label: '🚫 Rejected', count: rejectedEntries.length, badge: rejectedEntries.length > 0, activeColor: 'linear-gradient(135deg, #f43f5e, #e11d48)', activeShadow: '0 4px 16px rgba(244,63,94,0.35)' }
                 ].map(tab => (
                     <button
@@ -741,7 +723,7 @@ const ParkingPage = () => {
                             cursor: 'pointer',
                             transition: 'all 0.25s ease',
                             background: activeTab === tab.key ? tab.activeColor : 'transparent',
-                            color: activeTab === tab.key ? 'white' : 'rgba(255,255,255,0.45)',
+                            color: activeTab === tab.key ? (tab.key === 'parking' ? 'black' : 'white') : 'rgba(255,255,255,0.45)',
                             boxShadow: activeTab === tab.key ? tab.activeShadow : 'none',
                             position: 'relative'
                         }}
@@ -752,7 +734,7 @@ const ParkingPage = () => {
                                 position: 'absolute',
                                 top: '-6px',
                                 right: '-6px',
-                                background: tab.key === 'rejected' ? '#f43f5e' : '#f43f5e',
+                                background: '#f43f5e',
                                 color: 'white',
                                 borderRadius: '50%',
                                 width: '18px',
@@ -772,323 +754,137 @@ const ParkingPage = () => {
             {/* ══════════════════════════════════════════
                 CAR SERVICES SECTION (Car Wash / Puncture)
                ══════════════════════════════════════════ */}
-            {activeTab === 'carservices' && (
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35 }}
-                >
-                    {/* Stats */}
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                        gap: '20px',
-                        marginBottom: '32px'
-                    }}>
-                        {[
-                            {
-                                label: 'Total Spent',
-                                value: `₹${carServiceEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0).toLocaleString()}`,
-                                icon: '💰', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)'
-                            },
-                            {
-                                label: 'Total Services',
-                                value: carServiceEntries.length,
-                                icon: '🔧', color: '#818cf8', bg: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.2)'
-                            },
-                            {
-                                label: 'Car Wash',
-                                value: carServiceEntries.filter(e => (e.notes || '').toLowerCase().includes('car wash')).length,
-                                icon: '🛁', color: '#22d3ee', bg: 'rgba(34,211,238,0.08)', border: 'rgba(34,211,238,0.2)'
-                            },
-                            {
-                                label: 'Puncture',
-                                value: carServiceEntries.filter(e => (e.notes || '').toLowerCase().includes('puncture')).length,
-                                icon: '🔩', color: '#10b981', bg: 'rgba(16,185,129,0.08)', border: 'rgba(16,185,129,0.2)'
-                            }
-                        ].map((stat, i) => (
-                            <motion.div
-                                key={i}
-                                whileHover={{ y: -4 }}
-                                className="glass-card"
-                                style={{
-                                    padding: '20px 24px',
-                                    background: stat.bg,
-                                    border: `1px solid ${stat.border}`,
-                                    borderRadius: '18px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '16px'
-                                }}
-                            >
-                                <span style={{ fontSize: '28px' }}>{stat.icon}</span>
-                                <div>
-                                    <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: '0 0 4px', letterSpacing: '1px' }}>{stat.label}</p>
-                                    <h2 style={{ color: stat.color, fontSize: '26px', fontWeight: '900', margin: 0 }}>{stat.value}</h2>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
 
-                    {/* Table */}
-                    <div className="glass-card" style={{ padding: '0', borderRadius: '20px', overflow: 'hidden', border: '1px solid rgba(245,158,11,0.15)' }}>
-                        <div style={{
-                            padding: '20px 24px',
-                            background: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(217,119,6,0.06))',
-                            borderBottom: '1px solid rgba(245,158,11,0.12)',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center'
-                        }}>
-                            <div>
-                                <h3 style={{ color: '#fbbf24', fontSize: '16px', fontWeight: '900', margin: 0 }}>Car Services Log</h3>
-                                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', margin: '4px 0 0' }}>Approved Car Wash & Puncture entries from drivers</p>
-                            </div>
-                            <span style={{
-                                background: 'rgba(245,158,11,0.15)',
-                                color: '#f59e0b',
-                                padding: '4px 14px',
-                                borderRadius: '20px',
-                                fontSize: '12px',
-                                fontWeight: '800',
-                                border: '1px solid rgba(245,158,11,0.25)'
-                            }}>{carServiceEntries.length} Records</span>
-                        </div>
-
-                        {carServiceEntries.length === 0 ? (
-                            <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-                                <span style={{ fontSize: '48px' }}>🚗</span>
-                                <p style={{ color: 'rgba(255,255,255,0.3)', fontWeight: '700', marginTop: '16px' }}>No car service records in this date range</p>
-                                <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '13px' }}>Car Wash & Puncture entries will appear here after driver submits and admin approves</p>
-                            </div>
-                        ) : (
-                            <div style={{ overflowX: 'auto' }}>
-                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                                    <thead>
-                                        <tr style={{ background: 'rgba(0,0,0,0.2)' }}>
-                                            {['Date', 'Driver', 'Vehicle', 'Service', 'Amount', 'Receipt'].map(h => (
-                                                <th key={h} style={{
-                                                    padding: '14px 20px',
-                                                    textAlign: 'left',
-                                                    fontSize: '11px',
-                                                    fontWeight: '800',
-                                                    color: 'rgba(255,255,255,0.4)',
-                                                    textTransform: 'uppercase',
-                                                    letterSpacing: '1px',
-                                                    borderBottom: '1px solid rgba(255,255,255,0.05)',
-                                                    whiteSpace: 'nowrap'
-                                                }}>{h}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {carServiceEntries.map((entry, i) => {
-                                            const serviceTypes = (entry.notes || 'Other').split(',').map(s => s.trim());
-                                            return (
-                                                <tr
-                                                    key={entry._id}
-                                                    style={{
-                                                        borderBottom: '1px solid rgba(255,255,255,0.04)',
-                                                        background: i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent',
-                                                        transition: 'background 0.2s'
-                                                    }}
-                                                    onMouseOver={e => e.currentTarget.style.background = 'rgba(245,158,11,0.05)'}
-                                                    onMouseOut={e => e.currentTarget.style.background = i % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent'}
-                                                >
-                                                    <td style={{ padding: '14px 20px', color: 'rgba(255,255,255,0.7)', fontSize: '13px' }}>
-                                                        {new Date(entry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                                    </td>
-                                                    <td style={{ padding: '14px 20px' }}>
-                                                        <p style={{ color: 'white', fontWeight: '700', margin: 0, fontSize: '13px' }}>{entry.driver}</p>
-                                                    </td>
-                                                    <td style={{ padding: '14px 20px', color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: '600' }}>
-                                                        {entry.vehicle?.carNumber || 'N/A'}
-                                                    </td>
-                                                    <td style={{ padding: '14px 20px' }}>
-                                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                                            {serviceTypes.map((st, j) => (
-                                                                <span key={j} style={{
-                                                                    background: st.toLowerCase().includes('wash') ? 'rgba(34,211,238,0.12)' : st.toLowerCase().includes('puncture') ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)',
-                                                                    color: st.toLowerCase().includes('wash') ? '#22d3ee' : st.toLowerCase().includes('puncture') ? '#10b981' : '#f59e0b',
-                                                                    padding: '3px 10px',
-                                                                    borderRadius: '20px',
-                                                                    fontSize: '11px',
-                                                                    fontWeight: '800',
-                                                                    border: `1px solid ${st.toLowerCase().includes('wash') ? 'rgba(34,211,238,0.2)' : st.toLowerCase().includes('puncture') ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}`,
-                                                                    textTransform: 'capitalize'
-                                                                }}>{st}</span>
-                                                            ))}
-                                                        </div>
-                                                    </td>
-                                                    <td style={{ padding: '14px 20px' }}>
-                                                        <span style={{ color: '#fbbf24', fontWeight: '900', fontSize: '15px' }}>₹{(Number(entry.amount) || 0).toLocaleString()}</span>
-                                                    </td>
-                                                    <td style={{ padding: '14px 20px' }}>
-                                                        {entry.receiptPhoto ? (
-                                                            <img
-                                                                src={getImageUrl(entry.receiptPhoto)}
-                                                                onClick={() => { setSelectedImage(entry.receiptPhoto); setShowImageModal(true); }}
-                                                                style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
-                                                                alt="receipt"
-                                                            />
-                                                        ) : (
-                                                            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px' }}>—</span>
-                                                        )}
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-                        )}
-                    </div>
-                </motion.div>
-            )}
-
-            {/* ── SHARED PENDING APPROVALS SECTION ── */}
-            {(activeTab === 'parking' ? pendingParking.length : pendingOther.length) > 0 && (
+            {/* ── PENDING APPROVALS SECTION ── */}
+            {pendingParking.length > 0 && (
                 <div style={{ marginBottom: '40px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
                         <div style={{
                             width: '40px',
                             height: '40px',
                             borderRadius: '12px',
-                            background: activeTab === 'carservices' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+                            background: 'rgba(251, 191, 36, 0.1)',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: activeTab === 'carservices' ? '#f59e0b' : '#f43f5e'
+                            color: '#fbbf24'
                         }}>
                             <Shield size={20} />
                         </div>
                         <div>
-                            <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Review Requests</h3>
+                            <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Pending Approvals</h3>
                             <p style={{
-                                color: activeTab === 'carservices' ? 'rgba(245, 158, 11, 0.6)' : 'rgba(244, 63, 94, 0.6)',
+                                color: 'rgba(251, 191, 36, 0.6)',
                                 fontSize: '11px',
                                 fontWeight: '700',
                                 textTransform: 'uppercase',
                                 margin: 0
                             }}>
-                                {(activeTab === 'parking' ? pendingParking : pendingOther).length} Pending {activeTab === 'carservices' ? 'Services' : 'Approvals'}
+                                {pendingParking.length} Parking Requests
                             </p>
                         </div>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', gap: '20px' }}>
-                        {(activeTab === 'parking' ? pendingParking : pendingOther).map((entry) => {
-                            // Determine display label based on type
-                            const serviceLabel = entry.type === 'other'
-                                ? (entry.fuelType || 'Other Service')
-                                : 'Parking';
-                            const isOtherService = entry.type === 'other';
-                            const labelColor = isOtherService ? '#f59e0b' : '#818cf8';
-                            const labelBg = isOtherService ? 'rgba(245,158,11,0.1)' : 'rgba(129,140,248,0.1)';
-                            const labelBorder = isOtherService ? 'rgba(245,158,11,0.25)' : 'rgba(129,140,248,0.25)';
-
-                            return (
-                                <motion.div
-                                    key={entry._id}
-                                    initial={{ opacity: 0, scale: 0.95 }}
-                                    animate={{ opacity: 1, scale: 1 }}
-                                    className="glass-card"
-                                    style={{
-                                        padding: '24px',
-                                        border: `1px solid ${activeTab === 'carservices' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(244, 63, 94, 0.2)'}`,
-                                        background: activeTab === 'carservices'
-                                            ? 'linear-gradient(145deg, rgba(245, 158, 11, 0.05), rgba(15, 23, 42, 0.4))'
-                                            : 'linear-gradient(145deg, rgba(244, 63, 94, 0.05), rgba(15, 23, 42, 0.4))',
-                                        borderRadius: '20px'
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
-                                        {entry.slipPhoto ? (
-                                            <div style={{ position: 'relative' }}>
-                                                <img
-                                                    src={getImageUrl(entry.slipPhoto)}
-                                                    onClick={() => { setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
-                                                    style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
-                                                />
-                                                <div style={{ position: 'absolute', bottom: '-8px', right: '-8px', background: isOtherService ? '#f59e0b' : '#f43f5e', color: 'white', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '900' }}>{isOtherService ? 'BILL' : 'SLIP'}</div>
-                                            </div>
-                                        ) : (
-                                            <div
-                                                onClick={() => { setSelectedImage(''); setShowImageModal(true); }}
-                                                style={{ width: '64px', height: '64px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                            >
-                                                <Eye size={24} color="rgba(255,255,255,0.2)" />
-                                            </div>
-                                        )}
-                                        <div style={{ flex: 1 }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '6px' }}>
-                                                <h4 style={{ color: 'white', fontWeight: '900', fontSize: '22px', margin: 0 }}>₹{entry.amount}</h4>
-                                                <span style={{
-                                                    background: activeTab === 'carservices' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-                                                    color: activeTab === 'carservices' ? '#f59e0b' : '#f43f5e',
-                                                    fontSize: '9px',
-                                                    padding: '3px 8px',
-                                                    borderRadius: '6px',
-                                                    fontWeight: '800',
-                                                    textTransform: 'uppercase',
-                                                    border: `1px solid ${activeTab === 'carservices' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(244, 63, 94, 0.2)'}`
-                                                }}>Review</span>
-                                            </div>
+                        {pendingParking.map((entry) => (
+                            <motion.div
+                                key={entry._id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                className="glass-card"
+                                style={{
+                                    padding: '24px',
+                                    border: '1px solid rgba(251, 191, 36, 0.2)',
+                                    background: 'linear-gradient(145deg, rgba(251, 191, 36, 0.05), rgba(15, 23, 42, 0.4))',
+                                    borderRadius: '20px'
+                                }}
+                            >
+                                <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
+                                    {entry.slipPhoto ? (
+                                        <div style={{ position: 'relative' }}>
+                                            <img
+                                                src={getImageUrl(entry.slipPhoto)}
+                                                onClick={() => { setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
+                                                style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                                            />
+                                            <div style={{ position: 'absolute', bottom: '-8px', right: '-8px', background: '#f43f5e', color: 'white', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '900' }}>SLIP</div>
+                                        </div>
+                                    ) : (
+                                        <div
+                                            onClick={() => { setSelectedImage(''); setShowImageModal(true); }}
+                                            style={{ width: '64px', height: '64px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                        >
+                                            <Eye size={24} color="rgba(255,255,255,0.2)" />
+                                        </div>
+                                    )}
+                                    <div style={{ flex: 1 }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '6px' }}>
+                                            <h4 style={{ color: 'white', fontWeight: '900', fontSize: '22px', margin: 0 }}>₹{entry.amount}</h4>
                                             <span style={{
-                                                display: 'inline-block',
-                                                background: labelBg,
-                                                color: labelColor,
-                                                fontSize: '10px',
-                                                padding: '2px 10px',
+                                                background: 'rgba(251, 191, 36, 0.1)',
+                                                color: '#fbbf24',
+                                                fontSize: '9px',
+                                                padding: '3px 8px',
                                                 borderRadius: '6px',
                                                 fontWeight: '800',
-                                                border: `1px solid ${labelBorder}`,
-                                                marginTop: '6px',
-                                                marginBottom: '2px',
                                                 textTransform: 'uppercase',
-                                                letterSpacing: '0.5px'
-                                            }}>
-                                                {serviceLabel}
-                                            </span>
-                                            <p style={{ color: 'white', fontSize: '13px', fontWeight: '700', margin: '4px 0 0' }}>{entry.driver}</p>
-                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
-                                                <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>{entry.carNumber}</span>
-                                                {entry.date && (
-                                                    <span style={{ background: 'rgba(99,102,241,0.12)', color: '#818cf8', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', border: '1px solid rgba(99,102,241,0.2)' }}>
-                                                        {new Date(entry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                                    </span>
-                                                )}
-                                            </div>
+                                                border: '1px solid rgba(251, 191, 36, 0.2)'
+                                            }}>Reviewing</span>
+                                        </div>
+                                        <span style={{
+                                            display: 'inline-block',
+                                            background: 'rgba(245, 158, 11, 0.1)',
+                                            color: '#f59e0b',
+                                            fontSize: '10px',
+                                            padding: '2px 10px',
+                                            borderRadius: '6px',
+                                            fontWeight: '800',
+                                            border: '1px solid rgba(245, 158, 11, 0.2)',
+                                            marginTop: '6px',
+                                            marginBottom: '2px',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px'
+                                        }}>
+                                            PARKING
+                                        </span>
+                                        <p style={{ color: 'white', fontSize: '13px', fontWeight: '700', margin: '4px 0 0' }}>{entry.driver}</p>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
+                                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>{entry.carNumber}</span>
+                                            {entry.date && (
+                                                <span style={{ background: 'rgba(251, 191, 36, 0.08)', color: '#fbbf24', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
+                                                {formatDateIST(entry.date)}
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <button
-                                            onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'approved')}
-                                            style={{
-                                                flex: 1.5,
-                                                background: '#10b981',
-                                                color: 'white',
-                                                border: 'none',
-                                                padding: '12px',
-                                                borderRadius: '12px',
-                                                fontWeight: '800',
-                                                fontSize: '14px',
-                                                cursor: 'pointer',
-                                                boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
-                                            }}
-                                        >
-                                            Approve
-                                        </button>
-                                        <button
-                                            onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'rejected')}
-                                            style={{ flex: 1, background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}
-                                        >
-                                            Reject
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            );
-                        })}
+                                </div>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button
+                                        onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'approved')}
+                                        style={{
+                                            flex: 1.5,
+                                            background: '#10b981',
+                                            color: 'white',
+                                            border: 'none',
+                                            padding: '12px',
+                                            borderRadius: '12px',
+                                            fontWeight: '800',
+                                            fontSize: '14px',
+                                            cursor: 'pointer',
+                                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
+                                        }}
+                                    >
+                                        Approve
+                                    </button>
+                                    <button
+                                        onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'rejected')}
+                                        style={{ flex: 1, background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ))}
                     </div>
                 </div>
             )}
@@ -1104,22 +900,12 @@ const ParkingPage = () => {
                         {[
                             {
                                 label: 'Total Rejected',
-                                value: rejectedEntries.length,
+                                value: rejectedEntries.filter(e => e.type === 'parking').length,
                                 icon: '🚫', color: '#f43f5e', bg: 'rgba(244,63,94,0.08)', border: 'rgba(244,63,94,0.2)'
                             },
                             {
-                                label: 'Parking Rejected',
-                                value: rejectedEntries.filter(e => e.type === 'parking').length,
-                                icon: '🅿️', color: '#818cf8', bg: 'rgba(129,140,248,0.08)', border: 'rgba(129,140,248,0.2)'
-                            },
-                            {
-                                label: 'Services Rejected',
-                                value: rejectedEntries.filter(e => e.type === 'other').length,
-                                icon: '🚗', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.2)'
-                            },
-                            {
                                 label: 'Total Amount',
-                                value: `₹${rejectedEntries.reduce((s, e) => s + (Number(e.amount) || 0), 0).toLocaleString()}`,
+                                value: `₹${rejectedEntries.filter(e => e.type === 'parking').reduce((s, e) => s + (Number(e.amount) || 0), 0).toLocaleString()}`,
                                 icon: '💰', color: '#94a3b8', bg: 'rgba(148,163,184,0.08)', border: 'rgba(148,163,184,0.2)'
                             }
                         ].map((stat, i) => (
@@ -1134,31 +920,20 @@ const ParkingPage = () => {
                     </div>
 
                     {/* Rejected Entries Grid */}
-                    {rejectedEntries.length === 0 ? (
+                    {rejectedEntries.filter(e => e.type === 'parking').length === 0 ? (
                         <div className="glass-card" style={{ padding: '60px 20px', textAlign: 'center', borderRadius: '24px', border: '1px solid rgba(244,63,94,0.1)' }}>
                             <span style={{ fontSize: '56px', display: 'block', marginBottom: '16px' }}>✅</span>
-                            <h3 style={{ color: 'white', fontWeight: '800', margin: '0 0 8px' }}>No Rejected Entries</h3>
-                            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px', margin: 0 }}>All requests have been approved or are pending review</p>
+                            <h3 style={{ color: 'white', fontWeight: '800', margin: '0 0 8px' }}>No Rejected Parking</h3>
+                            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '14px', margin: 0 }}>All parking requests have been approved or are pending review</p>
                         </div>
                     ) : (
                         <>
-                            {/* Sub-filter tabs */}
-                            <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
-                                {[
-                                    { key: 'all', label: 'All', count: rejectedEntries.length },
-                                    { key: 'parking', label: '🅿️ Parking', count: rejectedEntries.filter(e => e.type === 'parking').length },
-                                    { key: 'other', label: '🚗 Services', count: rejectedEntries.filter(e => e.type === 'other').length }
-                                ].map(sf => {
-                                    const isActive = (window._rejFilter || 'all') === sf.key;
-                                    return null; // We'll show all for simplicity
-                                })}
-                            </div>
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '16px' }}>
-                                {rejectedEntries.map((entry) => {
-                                    const typeLabel = entry.type === 'other' ? (entry.fuelType || 'Service') : 'Parking';
-                                    const typeColor = entry.type === 'other' ? '#f59e0b' : '#818cf8';
-                                    const typeBg = entry.type === 'other' ? 'rgba(245,158,11,0.1)' : 'rgba(129,140,248,0.1)';
-                                    const typeBorder = entry.type === 'other' ? 'rgba(245,158,11,0.2)' : 'rgba(129,140,248,0.2)';
+                                {rejectedEntries.filter(e => e.type === 'parking').map((entry) => {
+                                    const typeLabel = 'Parking';
+                                    const typeColor = '#818cf8';
+                                    const typeBg = 'rgba(129,140,248,0.1)';
+                                    const typeBorder = 'rgba(129,140,248,0.2)';
                                     return (
                                         <motion.div
                                             key={entry._id}
@@ -1229,7 +1004,7 @@ const ParkingPage = () => {
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                                                             <Calendar size={12} color="#64748b" />
                                                             <span style={{ color: '#64748b', fontSize: '12px', fontWeight: '600' }}>
-                                                                {new Date(entry.date).toLocaleDateString('en-IN', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                                                                {formatDateIST(entry.date, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
                                                             </span>
                                                         </div>
                                                     )}
@@ -1403,7 +1178,7 @@ const ParkingPage = () => {
                                             {filteredEntries.map((e) => (
                                                 <tr key={e._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'all 0.2s ease' }} className="hover-row">
                                                     <td style={{ padding: '18px 25px' }}>
-                                                        <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{new Date(e.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</div>
+                                                        <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{formatDateIST(e.date)}</div>
                                                     </td>
                                                     <td style={{ padding: '18px 25px' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1541,7 +1316,7 @@ const ParkingPage = () => {
                                                     <div>
                                                         <div style={{ color: 'white', fontWeight: '800', fontSize: '16px', letterSpacing: '0.5px' }}>{e.driver}</div>
                                                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                            {new Date(e.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                                            {formatDateIST(e.date, { day: '2-digit', month: 'short' })}
                                                             {e.vehicle && <span style={{ opacity: 0.6 }}>• {e.vehicle.carNumber}</span>}
                                                         </div>
                                                     </div>

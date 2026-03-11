@@ -7,6 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST } from '../utils/istUtils';
 
 
 const CameraModal = ({ onCapture, onClose }) => {
@@ -103,13 +104,13 @@ const FuelPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterVehicle, setFilterVehicle] = useState('All');
     const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
-    const [toDate, setToDate] = useState(new Date().toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
+    const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
+    const [toDate, setToDate] = useState(todayIST());
 
     /* navigate dates */
     const shiftDays = (n) => {
-        const f = new Date(fromDate);
-        f.setDate(f.getDate() + n);
+        const f = nowIST(fromDate);
+        f.setUTCDate(f.getUTCDate() + n);
         const fStr = f.toISOString().split('T')[0];
         setFromDate(fStr);
         if (!isRange) setToDate(fStr);
@@ -119,7 +120,7 @@ const FuelPage = () => {
     const [formData, setFormData] = useState({
         vehicleId: '',
         fuelType: 'Diesel',
-        date: new Date().toISOString().split('T')[0],
+        date: todayIST(),
         amount: '',
         quantity: '',
         rate: '',
@@ -244,7 +245,7 @@ const FuelPage = () => {
         setFormData({
             vehicleId: '',
             fuelType: 'Diesel',
-            date: new Date().toISOString().split('T')[0],
+            date: todayIST(),
             amount: '',
             quantity: '',
             rate: '',
@@ -263,7 +264,7 @@ const FuelPage = () => {
         setFormData({
             vehicleId: entry.vehicle?._id || '',
             fuelType: entry.fuelType || 'Diesel',
-            date: new Date(entry.date).toISOString().split('T')[0],
+            date: toISTDateString(entry.date),
             amount: entry.amount || '',
             quantity: entry.quantity || '',
             rate: entry.rate || '',
@@ -344,7 +345,7 @@ const FuelPage = () => {
             ...formData,
             amount: entry.amount,
             odometer: entry.km,
-            date: new Date(entry.date).toISOString().split('T')[0],
+            date: toISTDateString(entry.date),
             driver: entry.driver || '',
             fuelType: entry.fuelType || 'Diesel',
             quantity: entry.quantity ? entry.quantity : '', // Pre-fill if driver submitted
@@ -381,7 +382,7 @@ const FuelPage = () => {
 
     const downloadExcel = () => {
         const dataToExport = filteredEntries.map(e => ({
-            'Date': new Date(e.date).toLocaleDateString('en-IN'),
+            'Date': formatDateIST(e.date),
             'Vehicle': e.vehicle?.carNumber || 'N/A',
             'Fuel Type': e.fuelType,
             'Quantity (L)': e.quantity,
@@ -400,7 +401,7 @@ const FuelPage = () => {
         const ws = XLSX.utils.json_to_sheet(dataToExport);
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, 'Fuel Logs');
-        XLSX.writeFile(wb, `Fuel_Report_${selectedCompany?.name}_${new Date().toISOString().split('T')[0]}.xlsx`);
+        XLSX.writeFile(wb, `Fuel_Report_${selectedCompany?.name}_${todayIST()}.xlsx`);
     };
 
     // Auto-calculate rate if amount or quantity changes
@@ -514,7 +515,7 @@ const FuelPage = () => {
                                 }}>
                                     <span style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
                                     <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                        {new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                        {formatDateIST(fromDate).toUpperCase()}
                                     </span>
                                     <input
                                         type="date"
@@ -543,7 +544,7 @@ const FuelPage = () => {
                                     <Calendar size={14} color="#818cf8" />
                                 )}
                                 <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                    {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: isRange ? undefined : 'numeric' }).toUpperCase()}
+                                    {formatDateIST(toDate).toUpperCase()}
                                 </span>
                                 <input
                                     type="date"
@@ -661,7 +662,7 @@ const FuelPage = () => {
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '15px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
                                         <span>{entry.km} KM Reading</span>
-                                        <span>{new Date(entry.date).toLocaleDateString()}</span>
+                                        <span>{formatDateIST(entry.date)}</span>
                                     </div>
 
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -787,7 +788,7 @@ const FuelPage = () => {
                                     >
                                         <td style={{ padding: '20px 25px' }}>
                                             <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>
-                                                {new Date(e.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                {formatDateIST(e.date)}
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
                                                 <Car size={12} style={{ color: '#f59e0b' }} />
@@ -898,7 +899,7 @@ const FuelPage = () => {
                                     <div>
                                         <div style={{ color: 'white', fontWeight: '900', fontSize: '18px', letterSpacing: '0.5px' }}>{e.vehicle?.carNumber}</div>
                                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', fontWeight: '600' }}>
-                                            {new Date(e.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                            {formatDateIST(e.date)}
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
@@ -1212,7 +1213,7 @@ const FuelPage = () => {
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '11px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>Date</div>
-                                        <div style={{ color: 'white', fontWeight: '700' }}>{new Date(selectedPending?.date).toLocaleDateString()}</div>
+                                        <div style={{ color: 'white', fontWeight: '700' }}>{formatDateIST(selectedPending?.date)}</div>
                                     </div>
                                 </div>
 

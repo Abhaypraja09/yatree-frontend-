@@ -6,12 +6,14 @@ import {
     Users, Plus, Search, Clock, MapPin, User, MoreVertical, IndianRupee, Calendar, Download, X,
     ChevronLeft, ChevronRight, UserPlus, Eye, Trash2, Filter, ArrowUpRight, ArrowDownLeft,
     ShieldCheck, Lock, Unlock, Settings, LayoutDashboard, AlertCircle, CheckCircle, Info,
-    Camera, Printer, FileText, Phone, Edit2, TrendingUp, History, CheckCircle2, XCircle, Target
+    Camera, Printer, FileText, Phone, Edit2, TrendingUp, History, CheckCircle2, XCircle, Target,
+    CalendarX, Plane, Mail
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 import * as XLSX from 'xlsx';
 import OfficeGeofencePicker from '../components/OfficeGeofencePicker';
+import { todayIST, toISTDateString, formatDateIST, formatTimeIST, nowIST } from '../utils/istUtils';
 
 const Staff = () => {
     // Add global styles for animations and refinements
@@ -70,15 +72,15 @@ const Staff = () => {
     const [view, setView] = useState('list'); // 'list', 'attendance', 'leaves', 'summary'
     const [searchTerm, setSearchTerm] = useState('');
     const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(new Date().toISOString().split('T')[0]);
-    const [toDate, setToDate] = useState(new Date().toISOString().split('T')[0]);
+    const [fromDate, setFromDate] = useState(todayIST());
+    const [toDate, setToDate] = useState(todayIST());
     const [filterStaff, setFilterStaff] = useState('all');
 
     const [formData, setFormData] = useState({
         name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
         email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
         officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
-        joiningDate: new Date().toISOString().split('T')[0],
+        joiningDate: todayIST(),
         staffType: 'Company'
     });
 
@@ -86,18 +88,32 @@ const Staff = () => {
 
     const [pendingLeaves, setPendingLeaves] = useState([]);
     const [monthlyReport, setMonthlyReport] = useState([]);
-    const [selectedMonth, setSelectedMonth] = useState((new Date().getMonth() + 1).toString());
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
+    const [selectedMonth, setSelectedMonth] = useState((nowIST().getUTCMonth() + 1).toString());
+    const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear().toString());
     const [selectedStaffReport, setSelectedStaffReport] = useState(null);
     const [showBackdateModal, setShowBackdateModal] = useState(false);
-    const [backdateForm, setBackdateForm] = useState({ staffId: '', date: new Date().toISOString().split('T')[0], status: 'present', punchInTime: '', punchOutTime: '' });
+    const [backdateForm, setBackdateForm] = useState({ staffId: '', date: todayIST(), status: 'present', punchInTime: '', punchOutTime: '' });
+    const [monthlyTarget, setMonthlyTarget] = useState(26); // Default monthly attendance target
     const [isEditing, setIsEditing] = useState(false);
     const [editingStaffId, setEditingStaffId] = useState(null);
 
+    const handleTargetChange = (val) => {
+        const num = Number(val);
+        setMonthlyTarget(num);
+        if (selectedCompany?._id) localStorage.setItem(`staffTarget_${selectedCompany._id}`, num.toString());
+    };
+
+    useEffect(() => {
+        if (selectedCompany?._id) {
+            const savedTarget = localStorage.getItem(`staffTarget_${selectedCompany._id}`);
+            if (savedTarget) setMonthlyTarget(Number(savedTarget));
+        }
+    }, [selectedCompany]);
+
     const MIN_BACKDATE_LIMIT = (() => {
-        const d = new Date();
-        d.setDate(d.getDate() - 15);
-        return d.toISOString().split('T')[0];
+        const d = nowIST();
+        d.setUTCDate(d.getUTCDate() - 60); // Allow up to 2 months old backdated entries
+        return toISTDateString(d);
     })();
 
     useEffect(() => {
@@ -178,9 +194,9 @@ const Staff = () => {
             'Date': record.date,
             'Staff Name': record.staff?.name || 'Unknown',
             'Mobile': record.staff?.mobile || 'N/A',
-            'Punch In Time': record.punchIn?.time ? new Date(record.punchIn.time).toLocaleTimeString() : '—',
+            'Punch In Time': record.punchIn?.time ? formatTimeIST(record.punchIn.time) : '—',
             'Punch In Location': record.punchIn?.location?.address || 'N/A',
-            'Punch Out Time': record.punchOut?.time ? new Date(record.punchOut.time).toLocaleTimeString() : (record.status === 'absent' ? 'Leave' : 'On Duty'),
+            'Punch Out Time': record.punchOut?.time ? formatTimeIST(record.punchOut.time) : (record.status === 'absent' ? 'Leave' : 'On Duty'),
             'Punch Out Location': record.punchOut?.location?.address || 'N/A',
             'Status': record.status || 'Present'
         }));
@@ -250,7 +266,7 @@ const Staff = () => {
                 name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
                 email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
                 officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
-                joiningDate: new Date().toISOString().split('T')[0],
+                joiningDate: todayIST(),
                 staffType: 'Company'
             });
         } catch (error) {
@@ -271,7 +287,7 @@ const Staff = () => {
             shiftTiming: staff.shiftTiming || { start: '09:00', end: '18:00' },
             officeLocation: staff.officeLocation || { latitude: '', longitude: '', address: '', radius: 200 },
             staffType: staff.staffType || 'Company',
-            joiningDate: staff.joiningDate ? new Date(staff.joiningDate).toISOString().split('T')[0] : new Date().toISOString().split('T')[0]
+            joiningDate: staff.joiningDate ? toISTDateString(staff.joiningDate) : todayIST()
         });
         setEditingStaffId(staff._id);
         setIsEditing(true);
@@ -370,26 +386,111 @@ const Staff = () => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
     return (
-        <div style={{ padding: isMobile ? '20px 15px' : '60px 40px', background: '#020617', minHeight: '100vh', position: 'relative', overflowX: 'hidden', fontFamily: "'Outfit', sans-serif" }}>
+        <div className="livefeed-root" style={{ padding: 'clamp(15px, 4vw, 40px)', minHeight: '100vh', background: 'radial-gradient(circle at top right, #1e293b, #0f172a)', overflowX: 'hidden', fontFamily: "'Outfit', sans-serif" }}>
             <style>
                 {`
                     @media (max-width: 768px) {
-                        .resp-grid {
-                            grid-template-columns: 1fr !important;
+                        /* Legacy helpers */
+                        .resp-grid { grid-template-columns: 1fr !important; }
+                        .staff-card { grid-template-columns: 1fr !important; gap: 15px !important; }
+                        .hide-mobile { display: none !important; }
+                        .mobile-column { flex-direction: column !important; }
+
+                        /* Stats grid: 2 columns */
+                        .staff-stats-grid {
+                            grid-template-columns: repeat(2, 1fr) !important;
+                            gap: 14px !important;
                         }
-                        .staff-card {
-                            grid-template-columns: 1fr !important;
-                            gap: 15px !important;
+                        .staff-stats-grid > div {
+                            padding: 18px !important;
+                            border-radius: 22px !important;
                         }
-                        .hide-mobile {
+                        .staff-stats-grid > div > div:last-child {
+                            padding: 12px 14px !important;
+                        }
+
+                        /* Stats value font size */
+                        .staff-stats-grid .stat-number {
+                            font-size: 28px !important;
+                        }
+
+                        /* Header: shrink logo */
+                        .staff-header > div:first-child {
+                            gap: 12px !important;
+                        }
+                        .staff-header > div:first-child > div:first-child {
+                            width: 44px !important;
+                            height: 44px !important;
+                            border-radius: 14px !important;
+                        }
+                        .staff-header > div:first-child > div:first-child svg {
+                            width: 22px !important;
+                            height: 22px !important;
+                        }
+
+                        /* Hide ADD PERSONNEL text, show only icon */
+                        .add-personnel-btn span.btn-label {
                             display: none !important;
                         }
-                        .mobile-column {
+
+                        /* Controls bar stacks vertically */
+                        .staff-controls-bar {
                             flex-direction: column !important;
+                            align-items: stretch !important;
+                            gap: 12px !important;
+                        }
+                        .staff-controls-bar > * {
+                            width: 100% !important;
+                            min-width: 0 !important;
+                            max-width: 100% !important;
+                        }
+
+                        /* Tabs scroll horizontally */
+                        .staff-tabs-row {
+                            overflow-x: auto !important;
+                            -webkit-overflow-scrolling: touch !important;
+                            scrollbar-width: none !important;
+                        }
+                        .staff-tabs-row::-webkit-scrollbar { display: none; }
+                        .staff-tabs-row button {
+                            white-space: nowrap !important;
+                            padding: 8px 14px !important;
+                            font-size: 10px !important;
+                        }
+
+                        /* Staff list cards */
+                        .staff-member-card {
+                            flex-direction: column !important;
+                            align-items: flex-start !important;
+                            gap: 16px !important;
+                        }
+
+                        /* Attendance / Payroll detail flex rows */
+                        .attendance-row-grid {
+                            grid-template-columns: 1fr !important;
+                        }
+
+                        /* Modal forms single column */
+                        .staff-modal-body .grid-2col {
+                            grid-template-columns: 1fr !important;
+                        }
+                        .staff-add-modal {
+                            padding: 20px !important;
+                            border-radius: 24px !important;
+                        }
+                    }
+
+                    @media (max-width: 480px) {
+                        .staff-stats-grid {
+                            gap: 10px !important;
+                        }
+                        .staff-stats-grid > div {
+                            padding: 14px !important;
                         }
                     }
                 `}
             </style>
+
             <SEO title="Staff Management & Payroll" />
 
             {/* Photo Preview Modal */}
@@ -422,244 +523,255 @@ const Staff = () => {
             <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '30%', height: '30%', background: 'radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }}></div>
             <div style={{ position: 'absolute', bottom: '10%', left: '-10%', width: '40%', height: '40%', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }}></div>
 
-            {/* Premium Header */}
-            <header style={{
-                background: 'rgba(15, 23, 42, 0.6)',
-                backdropFilter: 'blur(40px)',
-                borderBottom: '1px solid rgba(255,255,255,0.05)',
-                padding: isMobile ? '15px 20px' : '30px 40px',
-                position: 'sticky',
-                top: 0,
-                zIndex: 1000,
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                flexWrap: 'wrap',
-                gap: '20px',
-                boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
-                    <motion.div
-                        initial={{ rotate: -10, opacity: 0 }}
-                        animate={{ rotate: 0, opacity: 1 }}
-                        style={{ width: '60px', height: '60px', borderRadius: '20px', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 15px 35px -10px rgba(59, 130, 246, 0.5)' }}>
-                        <Users size={30} color="white" />
-                    </motion.div>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}></div>
-                            <span style={{ fontSize: '10px', color: 'rgba(255, 255, 255, 0.5)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px' }}>Operational Excellence</span>
-                        </div>
-                        <h1 style={{ fontSize: '28px', fontWeight: '900', color: 'white', margin: 0, letterSpacing: '-1px' }}>Staff <span style={{ color: '#3b82f6' }}>Management</span></h1>
-                    </div>
-                </div>
-
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <motion.button
-                        whileHover={{ scale: 1.05, y: -2 }}
-                        whileTap={{ scale: 0.95 }}
-                        onClick={() => {
-                            setIsEditing(false);
-                            setFormData({
-                                name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
-                                email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
-                                officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
-                                joiningDate: new Date().toISOString().split('T')[0],
-                                staffType: 'Company'
-                            });
-                            setShowAddModal(true);
-                        }}
-                        style={{
-                            padding: '0 28px',
-                            height: '52px',
-                            background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-                            color: 'white',
-                            border: 'none',
+            <header style={{ padding: 'clamp(20px, 4vw, 40px) 0' }}>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    flexWrap: 'wrap',
+                    gap: '20px',
+                    marginBottom: '30px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{
+                            width: 'clamp(40px,10vw,50px)',
+                            height: 'clamp(40px,10vw,50px)',
+                            background: 'linear-gradient(135deg, white, #f8fafc)',
                             borderRadius: '16px',
-                            fontWeight: '800',
-                            fontSize: '13px',
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            boxShadow: '0 15px 30px -10px rgba(59, 130, 246, 0.4)',
-                            letterSpacing: '0.5px'
-                        }}
-                    >
-                        <UserPlus size={20} /> ADD PERSONNEL
-                    </motion.button>
-
-                    <button
-                        onClick={exportToExcel}
-                        style={{
-                            width: '52px',
-                            height: '52px',
-                            background: 'rgba(255,255,255,0.05)',
-                            border: '1px solid rgba(255,255,255,0.1)',
-                            borderRadius: '16px',
+                            padding: '8px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            color: 'rgba(255,255,255,0.7)',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease'
-                        }}
-                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                    >
-                        <Download size={20} />
-                    </button>
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                        }}>
+                            <Users size={32} color="#3b82f6" />
+                        </div>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>
+                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Human Resources</span>
+                            </div>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
+                                Staff <span style={{ background: 'linear-gradient(to right, #3b82f6, #2563eb)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Command</span>
+                            </h1>
+                            <p style={{ marginTop: '4px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                                Personnel Tracking: <b style={{ color: 'white' }}>{formatDateIST(todayIST())}</b>
+                            </p>
+                        </div>
+                    </div>
+
+                    <div className="flex-resp" style={{ gap: '12px' }}>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#3b82f6', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Active Staff</span>
+                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{staffList.filter(s => s.status !== 'blocked').length}</span>
+                        </motion.div>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>On Duty</span>
+                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{attendanceList.filter(r => r.date === todayIST()).length}</span>
+                        </motion.div>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            <button
+                                onClick={() => {
+                                    setIsEditing(false);
+                                    setFormData({
+                                        name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
+                                        email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
+                                        officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
+                                        joiningDate: todayIST(),
+                                        staffType: 'Company'
+                                    });
+                                    setShowAddModal(true);
+                                }}
+                                style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: 'white', border: 'none', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 8px 15px rgba(59, 130, 246, 0.2)', cursor: 'pointer' }}
+                            >
+                                <Plus size={20} /> <span className="hide-mobile">Add Personnel</span><span className="show-mobile">Add</span>
+                            </button>
+                            <button
+                                onClick={exportToExcel}
+                                className="glass-card-hover-effect"
+                                style={{
+                                    height: '52px',
+                                    width: '52px',
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    color: 'white',
+                                    display: 'flex',
+                                    justifyContent: 'center',
+                                    alignItems: 'center',
+                                    borderRadius: '14px',
+                                    cursor: 'pointer'
+                                }}
+                            >
+                                <Download size={20} />
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </header>
 
-
-            <main style={{ padding: isMobile ? '20px 0' : '40px', maxWidth: '1600px', margin: '0 auto' }}>
-                {/* Dashboard Intelligence Row Body */}
-                {/* Dashboard Intelligence Row Body */}
-                <div className="resp-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px', marginBottom: '50px' }}>
+            <main style={{ padding: '0', maxWidth: '1600px', margin: '0 auto' }}>
+                <div className="staff-stats-grid" style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gap: '20px',
+                    marginBottom: '30px'
+                }}>
                     {[
-                        { label: 'STAFF STRENGTH', value: staffList.length, icon: Users, color: '#3b82f6', sub: 'Active Personnel', trend: '+2 this week' },
-                        { label: "TODAY'S ATTENDANCE", value: attendanceList.filter(r => r.date === new Date().toISOString().split('T')[0]).length, icon: ShieldCheck, color: '#10b981', sub: 'On Duty Now', trend: '98% compliance' },
-                        { label: 'PENDING LEAVES', value: pendingLeaves.length, icon: Calendar, color: '#f59e0b', sub: 'Awaiting Review', trend: 'Priority 1-3' },
-                        { label: 'TOTAL PAYOUT', value: `₹${monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}`, icon: IndianRupee, color: '#fbbf24', sub: `${new Date(0, Number(selectedMonth) - 1).toLocaleString('default', { month: 'long' })} Salary`, trend: 'Budget normal' }
-                    ].map((stat, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 30 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.1, duration: 0.5 }}
-                            whileHover={{ y: -8, boxShadow: `0 20px 40px -10px ${stat.color}40`, borderColor: `${stat.color}50` }}
-                            style={{
-                                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.5) 0%, rgba(15, 23, 42, 0.7) 100%)',
-                                padding: '30px',
-                                borderRadius: '35px',
-                                border: '1px solid rgba(255,255,255,0.06)',
-                                backdropFilter: 'blur(30px)',
-                                position: 'relative',
-                                overflow: 'hidden',
+                        { label: 'STAFF STRENGTH', value: staffList.length, icon: Users, color: '#3b82f6', sub: 'Total Personnel' },
+                        { label: "TODAY'S ATTENDANCE", value: attendanceList.filter(r => r.date === todayIST()).length, icon: ShieldCheck, color: '#10b981', sub: 'On Duty' },
+                        { label: 'PENDING LEAVES', value: pendingLeaves.length, icon: CalendarX, color: '#f59e0b', sub: 'Awaiting Review' },
+                        { 
+                            label: 'MONTHLY TARGET', 
+                            value: attendanceList.filter(r => {
+                                const d = nowIST();
+                                const monthStr = (d.getUTCMonth() + 1).toString().padStart(2, '0');
+                                const yearStr = d.getUTCFullYear().toString();
+                                return r.date.startsWith(`${yearStr}-${monthStr}`);
+                            }).length, 
+                            icon: Target, 
+                            color: '#fbbf24', 
+                            sub: `Goal: ${monthlyTarget} days`,
+                            isTarget: true 
+                        }
+                    ].map((stat, idx) => (
+                        <div key={idx} className="glass-card" style={{
+                            padding: '24px',
+                            borderRadius: '24px',
+                            background: 'rgba(30, 41, 59, 0.4)',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}>
+                            {stat.isTarget && (
+                                <div style={{ 
+                                    position: 'absolute', bottom: 0, left: 0, height: '3px', background: '#fbbf24', 
+                                    width: `${Math.min((stat.value / (monthlyTarget || 1)) * 100, 100)}%`,
+                                    transition: 'width 1s ease-out'
+                                }}></div>
+                            )}
+                            <div>
+                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{stat.label}</div>
+                                <div style={{ color: 'white', fontSize: '32px', fontWeight: '900', letterSpacing: '-1px' }}>
+                                    {stat.value}
+                                    {stat.isTarget && <span style={{ fontSize: '14px', opacity: 0.3, marginLeft: '8px' }}>/ {monthlyTarget}</span>}
+                                </div>
+                                <div style={{ color: stat.color, fontSize: '11px', fontWeight: '700', marginTop: '4px' }}>{stat.sub}</div>
+                            </div>
+                            <div style={{
+                                width: '50px',
+                                height: '50px',
+                                borderRadius: '16px',
+                                background: `${stat.color}15`,
                                 display: 'flex',
-                                flexDirection: 'column',
-                                gap: '22px',
-                                boxShadow: '0 15px 35px -10px rgba(0,0,0,0.5)',
-                                cursor: 'pointer',
-                                transition: 'all 0.3s ease'
-                            }}
-                        >
-                            <div style={{ position: 'absolute', top: '-20%', right: '-10%', width: '150px', height: '150px', background: `radial-gradient(circle, ${stat.color}20 0%, transparent 70%)`, borderRadius: '50%', filter: 'blur(30px)', pointerEvents: 'none' }}></div>
-                            <div style={{ position: 'absolute', bottom: '-20%', left: '-10%', width: '100px', height: '100px', background: `radial-gradient(circle, ${stat.color}10 0%, transparent 70%)`, borderRadius: '50%', filter: 'blur(20px)', pointerEvents: 'none' }}></div>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', zIndex: 1 }}>
-                                <div style={{
-                                    width: '64px', height: '64px', borderRadius: '22px', background: `linear-gradient(135deg, ${stat.color}20, ${stat.color}10)`,
-                                    display: 'flex', justifyContent: 'center', alignItems: 'center', color: stat.color,
-                                    border: `1px solid ${stat.color}30`,
-                                    boxShadow: `0 10px 25px -5px ${stat.color}30`
-                                }}>
-                                    <stat.icon size={28} />
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <span style={{ fontSize: '11px', color: 'rgba(255, 255, 255, 0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '2px' }}>{stat.label}</span>
-                                    <div style={{ fontSize: '40px', fontWeight: '1000', color: 'white', letterSpacing: '-2px', marginTop: '4px', textShadow: `0 0 20px ${stat.color}30` }}>
-                                        {stat.value}
-                                    </div>
-                                </div>
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                border: `1px solid ${stat.color}20`
+                            }}>
+                                <stat.icon size={24} color={stat.color} />
                             </div>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', background: 'rgba(0,0,0,0.3)', padding: '16px 20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.02)', zIndex: 1 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: stat.color, boxShadow: `0 0 10px ${stat.color}` }}></div>
-                                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontWeight: '700' }}>{stat.sub}</span>
-                                </div>
-                                <span style={{ fontSize: '10px', color: stat.color, fontWeight: '950', background: `${stat.color}15`, padding: '6px 12px', borderRadius: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>{stat.trend}</span>
-                            </div>
-                        </motion.div>
+                        </div>
                     ))}
                 </div>
 
-                {/* Search & Navigation Bar */}
-                <div style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '24px',
-                    marginBottom: '40px',
-                    background: 'rgba(15, 23, 42, 0.4)',
+                {/* Control Bar */}
+                <div className="staff-controls-bar" style={{
+                    background: 'rgba(30, 41, 59, 0.4)',
                     padding: '12px',
                     borderRadius: '24px',
                     border: '1px solid rgba(255,255,255,0.05)',
-                    backdropFilter: 'blur(30px)'
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    alignItems: 'center',
+                    marginBottom: '25px',
+                    gap: '20px'
                 }}>
-                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '6px', borderRadius: '18px', gap: '4px' }}>
+                    <div style={{ display: 'flex', gap: '8px', overflowX: 'auto' }} className="staff-tabs-row custom-scrollbar">
                         {[
-                            { id: 'list', label: 'LIST', icon: Users },
+                            { id: 'list', label: 'STAFF LIST', icon: Users },
                             { id: 'attendance', label: 'ATTENDANCE', icon: ShieldCheck },
-                            { id: 'leaves', label: 'LEAVES', icon: Calendar },
-                            { id: 'summary', label: 'PAYROLL', icon: IndianRupee }
-                        ].map((t) => (
+                            { id: 'leaves', label: 'LEAVE MGMT', icon: Plane }
+                        ].map(tab => (
                             <button
-                                key={t.id}
-                                onClick={() => setView(t.id)}
+                                key={tab.id}
+                                onClick={() => setView(tab.id)}
                                 style={{
-                                    padding: '10px 24px',
+                                    padding: '10px 20px',
                                     borderRadius: '14px',
                                     border: 'none',
-                                    background: view === t.id ? 'linear-gradient(135deg, #3b82f6, #6366f1)' : 'transparent',
-                                    color: view === t.id ? 'white' : 'rgba(255,255,255,0.4)',
-                                    fontWeight: '800',
                                     fontSize: '11px',
+                                    fontWeight: '800',
                                     cursor: 'pointer',
-                                    transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '10px',
-                                    letterSpacing: '1px',
-                                    boxShadow: view === t.id ? '0 10px 20px -5px rgba(59, 130, 246, 0.4)' : 'none'
+                                    gap: '8px',
+                                    transition: 'all 0.3s',
+                                    background: view === tab.id ? '#3b82f6' : 'transparent',
+                                    color: view === tab.id ? 'white' : 'rgba(255,255,255,0.4)',
+                                    whiteSpace: 'nowrap'
                                 }}
                             >
-                                <t.icon size={14} />
-                                {t.label}
+                                <tab.icon size={16} />
+                                {tab.label}
                             </button>
                         ))}
                     </div>
 
-                    <div style={{ flex: 1, minWidth: '300px', maxWidth: '600px', position: 'relative' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(59, 130, 246, 0.5)' }} />
+                    <div style={{ position: 'relative', flex: 1, maxWidth: '350px' }}>
+                        <Search style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
                         <input
                             type="text"
-                            placeholder="Find staff by name, mobile or designation..."
+                            placeholder="SEARCH BY NAME..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
                                 width: '100%',
                                 height: '48px',
                                 background: 'rgba(0,0,0,0.2)',
-                                border: '1px solid rgba(255,255,255,0.06)',
-                                borderRadius: '16px',
-                                padding: '0 24px 0 55px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                borderRadius: '14px',
+                                padding: '0 15px 0 45px',
                                 color: 'white',
-                                fontSize: '14px',
-                                fontWeight: '500',
-                                transition: '0.3s',
-                                outline: 'none'
+                                fontSize: '11px',
+                                fontWeight: '800',
+                                letterSpacing: '0.5px'
                             }}
-                            onFocus={(e) => {
-                                e.target.style.borderColor = 'rgba(59, 130, 246, 0.4)';
-                                e.target.style.boxShadow = '0 0 15px rgba(59, 130, 246, 0.1)';
-                            }}
-                            onBlur={(e) => {
-                                e.target.style.borderColor = 'rgba(255,255,255,0.06)';
-                                e.target.style.boxShadow = 'none';
-                            }}
+                        />
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '14px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.05)', height: '48px' }}>
+                        <Target size={14} style={{ color: '#fbbf24', marginRight: '10px' }} />
+                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginRight: '10px' }}>GOAL:</span>
+                        <input 
+                            type="number" 
+                            value={monthlyTarget} 
+                            onChange={e => handleTargetChange(e.target.value)} 
+                            style={{ width: '40px', background: 'transparent', border: 'none', color: '#fbbf24', fontWeight: '900', fontSize: '14px', textAlign: 'center', outline: 'none' }}
                         />
                     </div>
 
                     {view === 'attendance' && (
                         <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '6px', borderRadius: '18px', gap: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <button
+                                onClick={() => setShowBackdateModal(true)}
+                                style={{
+                                    height: '36px', padding: '0 15px', borderRadius: '12px',
+                                    background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', fontWeight: '800',
+                                    border: '1px solid rgba(99, 102, 241, 0.3)', cursor: 'pointer', fontSize: '11px', textTransform: 'uppercase',
+                                    display: 'flex', alignItems: 'center', gap: '6px'
+                                }}
+                            >
+                                <History size={14} /> MANUAL ENTRY
+                            </button>
+
+                            <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }}></div>
+
+                            <button
                                 onClick={() => {
-                                    const d = new Date(toDate);
-                                    d.setDate(d.getDate() - 1);
+                                    const d = nowIST(toDate);
+                                    d.setUTCDate(d.getUTCDate() - 1);
                                     const newDate = d.toISOString().split('T')[0];
                                     setToDate(newDate);
                                     if (!isRange) setFromDate(newDate);
@@ -693,7 +805,7 @@ const Staff = () => {
                                 >
                                     <span style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900' }}>FROM:</span>
                                     <span style={{ color: 'white', fontSize: '12px', fontWeight: '900' }}>
-                                        {new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                        {formatDateIST(fromDate)}
                                     </span>
                                     <input
                                         id="from-date-picker-staff"
@@ -727,7 +839,7 @@ const Staff = () => {
                                 {isRange && <span style={{ color: '#0ea5e9', fontSize: '11px', fontWeight: '900' }}>TO:</span>}
                                 {!isRange && <Calendar size={14} color="#0ea5e9" />}
                                 <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>
-                                    {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                    {formatDateIST(toDate)}
                                 </span>
                                 <input
                                     id="main-date-picker-staff"
@@ -746,8 +858,8 @@ const Staff = () => {
 
                             <button
                                 onClick={() => {
-                                    const d = new Date(toDate);
-                                    d.setDate(d.getDate() + 1);
+                                    const d = nowIST(toDate);
+                                    d.setUTCDate(d.getUTCDate() + 1);
                                     const newDate = d.toISOString().split('T')[0];
                                     setToDate(newDate);
                                     if (!isRange) setFromDate(newDate);
@@ -808,7 +920,7 @@ const Staff = () => {
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(e.target.value)}
                             >
-                                {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 2 + i).map(y => (
+                                {Array.from({ length: 5 }, (_, i) => nowIST().getUTCFullYear() - 2 + i).map(y => (
                                     <option key={y} value={y}>{y}</option>
                                 ))}
                             </select>
@@ -817,297 +929,111 @@ const Staff = () => {
                 </div>
 
                 {/* Main Content Area */}
-                {view === 'list' && (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {/* Table Header Replacement */}
-                        <div className="hide-mobile" style={{ display: 'grid', gridTemplateColumns: '2fr 1.5fr 1.5fr 1.5fr 1fr', padding: '0 30px', marginBottom: '8px' }}>
-                            <span style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>STAFF MEMBER</span>
-                            <span style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>CONTACT INFO</span>
-                            <span style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>JOINING DATE</span>
-                            <span style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>MONTHLY SALARY</span>
-                            <span style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px', textAlign: 'right' }}>ACTIONS</span>
-                        </div>
-
-                        {filteredStaff.length === 0 ? (
-                            <div style={{ background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.4) 0%, rgba(30, 41, 59, 0.2) 100%)', padding: '100px', textAlign: 'center', borderRadius: '40px', border: '1px dashed rgba(59, 130, 246, 0.2)', backdropFilter: 'blur(10px)', boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)' }}>
-                                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(59, 130, 246, 0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 25px' }}>
-                                    <Users size={40} color="#3b82f6" style={{ opacity: 0.5 }} />
+                <div style={{ padding: '0 0 50px 0' }}>
+                    {view === 'list' && (
+                        <div className="livefeed-cards-grid" style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
+                            gap: '20px'
+                        }}>
+                            {filteredStaff.length === 0 ? (
+                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                    <Users size={40} color="rgba(255,255,255,0.2)" style={{ margin: '0 auto 15px' }} />
+                                    <h3 style={{ color: 'white', fontWeight: '800' }}>No Personnel Found</h3>
+                                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>Try adjusting your search or filters.</p>
                                 </div>
-                                <h3 style={{ margin: 0, color: 'white', fontWeight: '900', fontSize: '24px', letterSpacing: '-0.5px' }}>No Staff Members Found</h3>
-                                <p style={{ margin: '10px 0 0 0', color: 'rgba(255,255,255,0.4)', fontWeight: '500', fontSize: '15px' }}>Your team list is currently empty or no matches were found.</p>
-                            </div>
-                        ) : filteredStaff.map((staff, idx) => (
-                            <motion.div
-                                key={staff._id}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                                onClick={() => handleStaffClick(staff)}
-                                className="staff-card-hover"
-                                style={{
-                                    background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.4) 0%, rgba(15, 23, 42, 0.6) 100%)',
-                                    padding: isMobile ? '20px' : '24px 30px',
-                                    borderRadius: '30px',
-                                    border: '1px solid rgba(255,255,255,0.04)',
-                                    display: 'grid',
-                                    gridTemplateColumns: isMobile ? '1fr' : '2fr 1.5fr 1.5fr 1.5fr 1fr',
-                                    alignItems: 'center',
-                                    gap: '20px',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    position: 'relative',
-                                    overflow: 'hidden',
-                                    boxShadow: '0 15px 35px -10px rgba(0,0,0,0.3)'
-                                }}
-                            >
-                                <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: staff.status === 'blocked' ? '#f43f5e' : 'linear-gradient(to bottom, #3b82f6, #6366f1)' }}></div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', paddingLeft: '10px' }}>
-                                    <div style={{ position: 'relative' }}>
-                                        <div style={{
-                                            width: '64px', height: '64px', borderRadius: '22px',
-                                            background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
-                                            padding: '2px',
-                                            boxShadow: '0 10px 20px -5px rgba(59, 130, 246, 0.4)'
-                                        }}>
-                                            <div style={{ width: '100%', height: '100%', borderRadius: '20px', overflow: 'hidden', background: '#0f172a', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', fontSize: '24px', color: 'white' }}>
+                            ) : filteredStaff.map((staff) => (
+                                <motion.div
+                                    key={staff._id}
+                                    whileHover={{ y: -5, background: 'rgba(255,255,255,0.05)' }}
+                                    onClick={() => handleStaffClick(staff)}
+                                    style={{
+                                        padding: '24px',
+                                        background: 'rgba(255,255,255,0.02)',
+                                        borderRadius: '24px',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s ease',
+                                        position: 'relative',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '20px'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                            <div style={{
+                                                width: '56px',
+                                                height: '56px',
+                                                borderRadius: '16px',
+                                                background: staff.status === 'blocked' ? '#f43f5e' : 'linear-gradient(135deg, #3b82f6, #6366f1)',
+                                                display: 'flex',
+                                                justifyContent: 'center',
+                                                alignItems: 'center',
+                                                fontSize: '22px',
+                                                fontWeight: '900',
+                                                color: 'white',
+                                                overflow: 'hidden'
+                                            }}>
                                                 {staff.profilePhoto ? <img src={staff.profilePhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : staff.name?.charAt(0)}
                                             </div>
+                                            <div>
+                                                <h3 style={{ margin: 0, color: 'white', fontSize: '17px', fontWeight: '800' }}>{staff.name}</h3>
+                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '600', marginTop: '2px' }}>{staff.designation || 'Staff Member'}</div>
+                                            </div>
                                         </div>
-                                        <div style={{
-                                            position: 'absolute', bottom: '-4px', right: '-4px',
-                                            width: '18px', height: '18px', borderRadius: '50%',
-                                            background: staff.status === 'blocked' ? '#ef4444' : '#10b981',
-                                            border: '3px solid #0f172a',
-                                            display: 'flex', justifyContent: 'center', alignItems: 'center',
-                                            boxShadow: '0 0 10px rgba(0,0,0,0.5)'
-                                        }}>
-                                            {staff.status !== 'blocked' && <div style={{ width: '6px', height: '6px', background: 'white', borderRadius: '50%' }}></div>}
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px' }}>{staff.name}</h3>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '6px' }}>
-                                            <span style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '4px 10px', borderRadius: '8px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{staff.designation || 'Staff'}</span>
-                                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '600' }}>#{staff._id.slice(-4).toUpperCase()}</span>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontWeight: '600' }}>
-                                        <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                            <Phone size={16} color="#0ea5e9" />
-                                        </div>
-                                        <span>{staff.mobile}</span>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', color: 'rgba(255,255,255,0.8)', fontSize: '14px', fontWeight: '600' }}>
-                                        <div style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                            <Calendar size={16} color="#8b5cf6" />
-                                        </div>
-                                        <span>{new Date(staff.joiningDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })}</span>
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                        <div style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(217, 119, 6, 0.1) 100%)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
-                                            <IndianRupee size={20} color="#fbbf24" />
-                                        </div>
-                                        <div>
-                                            <div style={{ fontSize: '20px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px' }}>₹{(staff.salary || 0).toLocaleString()}</div>
-                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Basic Salary</div>
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleEditStaff(staff); }}
+                                                style={{ padding: '8px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: 'none', cursor: 'pointer' }}
+                                            >
+                                                <Edit2 size={14} />
+                                            </button>
+                                            <button
+                                                onClick={(e) => { e.stopPropagation(); handleDeleteStaff(staff._id); }}
+                                                style={{ padding: '8px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', cursor: 'pointer' }}
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                                    <motion.button
-                                        whileHover={{ scale: 1.1, background: 'rgba(59, 130, 246, 0.2)', y: -2 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={(e) => { e.stopPropagation(); handleEditStaff(staff); }}
-                                        title="Edit Profile"
-                                        style={{ width: '44px', height: '44px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: '0.2s' }}
-                                    >
-                                        <Edit2 size={18} />
-                                    </motion.button>
-                                    <motion.button
-                                        whileHover={{ scale: 1.1, background: 'rgba(244, 63, 94, 0.2)', y: -2 }}
-                                        whileTap={{ scale: 0.95 }}
-                                        onClick={(e) => { e.stopPropagation(); handleDeleteStaff(staff._id); }}
-                                        title="Delete Employee"
-                                        style={{ width: '44px', height: '44px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', borderRadius: '14px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', transition: '0.2s' }}
-                                    >
-                                        <Trash2 size={18} />
-                                    </motion.button>
-                                </div>
-                            </motion.div>
-                        ))}
-                    </div>
-                )}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: '600' }}>
+                                            <Phone size={14} color="#3b82f6" />
+                                            <span>{staff.mobile}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: '600' }}>
+                                            <Mail size={14} color="#3b82f6" />
+                                            <span style={{ fontSize: '12px', opacity: 0.8 }}>{staff.email || 'No Email'}</span>
+                                        </div>
+                                    </div>
+
+                                    <div style={{
+                                        padding: '12px',
+                                        background: 'rgba(0,0,0,0.2)',
+                                        borderRadius: '16px',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center',
+                                        border: '1px solid rgba(255,255,255,0.03)'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <IndianRupee size={12} color="#10b981" />
+                                            <span style={{ fontSize: '13px', color: 'white', fontWeight: '800' }}>₹{staff.salary?.toLocaleString()}</span>
+                                        </div>
+                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase' }}>Basic Salary</div>
+                                    </div>
+                                </motion.div>
+                            ))}
+                        </div>
+                    )}
 
 
-                {/* Redesigned Selected Staff Sidebar is removed for simplicity */}
-                {/* Attendance Logs View */}
-                {view === 'attendance' && (
-                    <div style={{
-                        background: 'rgba(15, 23, 42, 0.4)',
-                        borderRadius: '28px',
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        overflow: 'hidden',
-                        backdropFilter: 'blur(10px)',
-                        boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
-                    }}>
-                        <div style={{ overflowX: 'auto', padding: '10px' }}>
-                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
-                                <thead>
-                                    <tr style={{ textAlign: 'left' }}>
-                                        <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
-                                        <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>IN / OUT TIMES</th>
-                                        <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>EVIDENCE</th>
-                                        <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LOCATION</th>
-                                        <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredAttendance.length === 0 ? (
-                                        <tr>
-                                            <td colSpan="5">
-                                                <div style={{ padding: '100px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.05)' }}>
-                                                    <History size={48} color="#0ea5e9" style={{ opacity: 0.2, marginBottom: '20px' }} />
-                                                    <p style={{ margin: 0, fontWeight: '800', fontSize: '18px', color: 'white' }}>No Attendance found</p>
-                                                    <p style={{ margin: '8px 0 0 0', fontWeight: '500', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>There are no records for this date range.</p>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    ) : filteredAttendance.map(record => (
-                                        <motion.tr
-                                            key={record._id}
-                                            initial={{ opacity: 0, x: -10 }}
-                                            animate={{ opacity: 1, x: 0 }}
-                                            whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)', scale: 1.002 }}
-                                            style={{
-                                                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0.5) 100%)',
-                                                borderRadius: '20px',
-                                                transition: 'all 0.3s ease',
-                                                boxShadow: '0 10px 20px -10px rgba(0,0,0,0.2)'
-                                            }}
-                                        >
-                                            <td style={{ padding: '20px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#3b82f6', fontWeight: '900', fontSize: '18px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                                                        {record.staff?.name?.charAt(0) || '?'}
-                                                    </div>
-                                                    <div>
-                                                        <div style={{ fontWeight: '900', color: 'white', fontSize: '16px', letterSpacing: '-0.3px' }}>{record.staff?.name || 'Unknown Staff'}</div>
-                                                        <div style={{ fontSize: '11px', color: '#0ea5e9', marginTop: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>User: {record.staff?.username || 'SYSTEM'}</div>
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: '20px 25px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                    {record.status === 'absent' ? (
-                                                        <div style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '900', letterSpacing: '1px', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
-                                                            ON LEAVE / ABSENT
-                                                        </div>
-                                                    ) : (
-                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontSize: '13px', fontWeight: '900' }}>
-                                                                <div style={{ width: '24px', height: '24px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                                    <ArrowUpRight size={14} />
-                                                                </div>
-                                                                {record.punchIn?.time ? new Date(record.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true }) : 'N/A'}
-                                                            </div>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: record.punchOut?.time ? '#f43f5e' : '#0ea5e9', fontSize: '13px', fontWeight: '900' }}>
-                                                                <div style={{ width: '24px', height: '24px', borderRadius: '8px', background: record.punchOut?.time ? 'rgba(244, 63, 94, 0.1)' : 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                                    <ArrowDownLeft size={14} />
-                                                                </div>
-                                                                {record.punchOut?.time
-                                                                    ? new Date(record.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })
-                                                                    : 'ACTIVE SHIFT'
-                                                                }
-                                                            </div>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: '20px 25px' }}>
-                                                <div style={{ display: 'flex', gap: '12px' }}>
-                                                    {record.punchIn?.photo ? (
-                                                        <motion.div whileHover={{ scale: 1.1, translateY: -2 }} onClick={() => setSelectedPhoto(record.punchIn.photo)} style={{ position: 'relative', cursor: 'zoom-in' }}>
-                                                            <img src={record.punchIn.photo} style={{ width: '50px', height: '50px', borderRadius: '14px', objectFit: 'cover', border: '2px solid rgba(16,185,129,0.3)', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }} alt="" />
-                                                            <div style={{ position: 'absolute', top: -5, right: -5, background: '#10b981', padding: '4px', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}><ArrowUpRight size={10} color="white" /></div>
-                                                        </motion.div>
-                                                    ) : <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={18} style={{ opacity: 0.2 }} /></div>}
 
-                                                    {record.punchOut?.photo ? (
-                                                        <motion.div whileHover={{ scale: 1.1, translateY: -2 }} onClick={() => setSelectedPhoto(record.punchOut.photo)} style={{ position: 'relative', cursor: 'zoom-in' }}>
-                                                            <img src={record.punchOut.photo} style={{ width: '50px', height: '50px', borderRadius: '14px', objectFit: 'cover', border: '2px solid rgba(244,63,94,0.3)', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }} alt="" />
-                                                            <div style={{ position: 'absolute', top: -5, right: -5, background: '#f43f5e', padding: '4px', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}><ArrowDownLeft size={10} color="white" /></div>
-                                                        </motion.div>
-                                                    ) : record.punchOut?.time ? (
-                                                        <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={18} style={{ opacity: 0.2 }} /></div>
-                                                    ) : null}
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: '20px 25px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                    <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
-                                                        <MapPin size={20} color="#0ea5e9" />
-                                                    </div>
-                                                    <div style={{ maxWidth: '240px' }}>
-                                                        <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                            {record.punchIn?.location?.address || 'Location unknown'}
-                                                        </div>
-                                                        {record.punchIn?.location?.latitude && (
-                                                            <a
-                                                                href={`https://www.google.com/maps?q=${record.punchIn.location.latitude},${record.punchIn.location.longitude}`}
-                                                                target="_blank" rel="noreferrer"
-                                                                style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px', display: 'inline-block', textDecoration: 'none', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px' }}
-                                                            >
-                                                                OPEN MAP →
-                                                            </a>
-                                                        )}
-                                                    </div>
-                                                </div>
-                                            </td>
-                                            <td style={{ padding: '20px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                                    <motion.button
-                                                        whileHover={{ scale: 1.1, background: 'rgba(244, 63, 94, 0.2)', y: -2 }}
-                                                        whileTap={{ scale: 0.95 }}
-                                                        onClick={() => handleDeleteStaffAttendance(record._id)}
-                                                        style={{
-                                                            width: '44px',
-                                                            height: '44px',
-                                                            borderRadius: '14px',
-                                                            background: 'rgba(244, 63, 94, 0.1)',
-                                                            color: '#f43f5e',
-                                                            border: '1px solid rgba(244, 63, 94, 0.2)',
-                                                            cursor: 'pointer',
-                                                            display: 'flex',
-                                                            justifyContent: 'center',
-                                                            alignItems: 'center',
-                                                            transition: '0.2s'
-                                                        }}
-                                                    >
-                                                        <Trash2 size={18} />
-                                                    </motion.button>
-                                                </div>
-                                            </td>
-                                        </motion.tr>
-                                    ))}
-                                </tbody>
-                            </table>
-                        </div >
-                    </div >
-                )}
-
-                {/* Leaves Management View */}
-                {
-                    view === 'leaves' && (
+                    {/* Redesigned Selected Staff Sidebar is removed for simplicity */}
+                    {/* Attendance Logs View */}
+                    {view === 'attendance' && (
                         <div style={{
                             background: 'rgba(15, 23, 42, 0.4)',
                             borderRadius: '28px',
@@ -1121,27 +1047,28 @@ const Staff = () => {
                                     <thead>
                                         <tr style={{ textAlign: 'left' }}>
                                             <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
-                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LEAVE DURATION</th>
-                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>REASON / DETAILS</th>
-                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS (APPROVE / REJECT)</th>
+                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>IN / OUT TIMES</th>
+                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>EVIDENCE</th>
+                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LOCATION</th>
+                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {pendingLeaves.length === 0 ? (
+                                        {filteredAttendance.length === 0 ? (
                                             <tr>
-                                                <td colSpan="4">
+                                                <td colSpan="5">
                                                     <div style={{ padding: '100px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.05)' }}>
-                                                        <Calendar size={48} color="#8b5cf6" style={{ opacity: 0.2, marginBottom: '20px' }} />
-                                                        <p style={{ margin: 0, fontWeight: '800', fontSize: '18px', color: 'white' }}>No Pending Leaves</p>
-                                                        <p style={{ margin: '8px 0 0 0', fontWeight: '500', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>Hooray! No leave requests are currently pending approval.</p>
+                                                        <History size={48} color="#0ea5e9" style={{ opacity: 0.2, marginBottom: '20px' }} />
+                                                        <p style={{ margin: 0, fontWeight: '800', fontSize: '18px', color: 'white' }}>No Attendance found</p>
+                                                        <p style={{ margin: '8px 0 0 0', fontWeight: '500', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>There are no records for this date range.</p>
                                                     </div>
                                                 </td>
                                             </tr>
-                                        ) : pendingLeaves.map(leave => (
+                                        ) : filteredAttendance.map(record => (
                                             <motion.tr
-                                                key={leave._id}
-                                                initial={{ opacity: 0, scale: 0.98 }}
-                                                animate={{ opacity: 1, scale: 1 }}
+                                                key={record._id}
+                                                initial={{ opacity: 0, x: -10 }}
+                                                animate={{ opacity: 1, x: 0 }}
                                                 whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)', scale: 1.002 }}
                                                 style={{
                                                     background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0.5) 100%)',
@@ -1152,77 +1079,103 @@ const Staff = () => {
                                             >
                                                 <td style={{ padding: '20px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#8b5cf6', fontWeight: '900', fontSize: '18px', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
-                                                            {leave.staff?.name?.charAt(0) || '?'}
+                                                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#3b82f6', fontWeight: '900', fontSize: '18px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                                                            {record.staff?.name?.charAt(0) || '?'}
                                                         </div>
                                                         <div>
-                                                            <div style={{ fontWeight: '900', color: 'white', fontSize: '16px', letterSpacing: '-0.3px' }}>{leave.staff?.name || 'Unknown Staff'}</div>
-                                                            <div style={{ fontSize: '11px', color: '#8b5cf6', marginTop: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>ID: {leave._id.slice(-6).toUpperCase()}</div>
+                                                            <div style={{ fontWeight: '900', color: 'white', fontSize: '16px', letterSpacing: '-0.3px' }}>{record.staff?.name || 'Unknown Staff'}</div>
+                                                            <div style={{ fontSize: '11px', color: '#0ea5e9', marginTop: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>User: {record.staff?.username || 'SYSTEM'}</div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td style={{ padding: '20px 25px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: '800', color: 'white' }}>
-                                                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px' }}>
-                                                            {new Date(leave.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                                        </div>
-                                                        <ChevronRight size={14} style={{ opacity: 0.5 }} />
-                                                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px' }}>
-                                                            {new Date(leave.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                                        </div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                        {record.status === 'absent' ? (
+                                                            <div style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '900', letterSpacing: '1px', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
+                                                                ON LEAVE / ABSENT
+                                                            </div>
+                                                        ) : (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontSize: '13px', fontWeight: '900' }}>
+                                                                    <div style={{ width: '24px', height: '24px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                        <ArrowUpRight size={14} />
+                                                                    </div>
+                                                                    {record.punchIn?.time ? formatTimeIST(record.punchIn.time) : 'N/A'}
+                                                                </div>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: record.punchOut?.time ? '#f43f5e' : '#0ea5e9', fontSize: '13px', fontWeight: '900' }}>
+                                                                    <div style={{ width: '24px', height: '24px', borderRadius: '8px', background: record.punchOut?.time ? 'rgba(244, 63, 94, 0.1)' : 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                        <ArrowDownLeft size={14} />
+                                                                    </div>
+                                                                    {record.punchOut?.time
+                                                                        ? formatTimeIST(record.punchOut.time)
+                                                                        : 'ACTIVE SHIFT'
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                     </div>
-                                                    <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '800', textTransform: 'uppercase', marginTop: '8px', letterSpacing: '1px', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px', display: 'inline-block' }}>{leave.type} LEAVE</div>
                                                 </td>
                                                 <td style={{ padding: '20px 25px' }}>
-                                                    <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', maxWidth: '320px', lineHeight: '1.6', fontWeight: '500', background: 'rgba(255,255,255,0.02)', padding: '10px 15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
-                                                        {leave.reason || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No reason provided.</span>}
+                                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                                        {record.punchIn?.photo ? (
+                                                            <motion.div whileHover={{ scale: 1.1, translateY: -2 }} onClick={() => setSelectedPhoto(record.punchIn.photo)} style={{ position: 'relative', cursor: 'zoom-in' }}>
+                                                                <img src={record.punchIn.photo} style={{ width: '50px', height: '50px', borderRadius: '14px', objectFit: 'cover', border: '2px solid rgba(16,185,129,0.3)', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }} alt="" />
+                                                                <div style={{ position: 'absolute', top: -5, right: -5, background: '#10b981', padding: '4px', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}><ArrowUpRight size={10} color="white" /></div>
+                                                            </motion.div>
+                                                        ) : <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={18} style={{ opacity: 0.2 }} /></div>}
+
+                                                        {record.punchOut?.photo ? (
+                                                            <motion.div whileHover={{ scale: 1.1, translateY: -2 }} onClick={() => setSelectedPhoto(record.punchOut.photo)} style={{ position: 'relative', cursor: 'zoom-in' }}>
+                                                                <img src={record.punchOut.photo} style={{ width: '50px', height: '50px', borderRadius: '14px', objectFit: 'cover', border: '2px solid rgba(244,63,94,0.3)', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }} alt="" />
+                                                                <div style={{ position: 'absolute', top: -5, right: -5, background: '#f43f5e', padding: '4px', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}><ArrowDownLeft size={10} color="white" /></div>
+                                                            </motion.div>
+                                                        ) : record.punchOut?.time ? (
+                                                            <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={18} style={{ opacity: 0.2 }} /></div>
+                                                        ) : null}
                                                     </div>
                                                 </td>
-                                                <td style={{ padding: '20px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px', textAlign: 'right' }}>
-                                                    <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                                                <td style={{ padding: '20px 25px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                        <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
+                                                            <MapPin size={20} color="#0ea5e9" />
+                                                        </div>
+                                                        <div style={{ maxWidth: '240px' }}>
+                                                            <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                {record.punchIn?.location?.address || 'Location unknown'}
+                                                            </div>
+                                                            {record.punchIn?.location?.latitude && (
+                                                                <a
+                                                                    href={`https://www.google.com/maps?q=${record.punchIn.location.latitude},${record.punchIn.location.longitude}`}
+                                                                    target="_blank" rel="noreferrer"
+                                                                    style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px', display: 'inline-block', textDecoration: 'none', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px' }}
+                                                                >
+                                                                    OPEN MAP →
+                                                                </a>
+                                                            )}
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: '20px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                                         <motion.button
-                                                            whileHover={{ scale: 1.05, background: 'rgba(16, 185, 129, 0.2)', y: -2 }}
+                                                            whileHover={{ scale: 1.1, background: 'rgba(244, 63, 94, 0.2)', y: -2 }}
                                                             whileTap={{ scale: 0.95 }}
-                                                            onClick={() => handleLeaveAction(leave._id, 'Approved')}
+                                                            onClick={() => handleDeleteStaffAttendance(record._id)}
                                                             style={{
-                                                                background: 'rgba(16, 185, 129, 0.1)',
-                                                                color: '#10b981',
-                                                                border: '1px solid rgba(16, 185, 129, 0.2)',
-                                                                padding: '10px 20px',
-                                                                borderRadius: '12px',
-                                                                fontSize: '12px',
-                                                                fontWeight: '800',
-                                                                cursor: 'pointer',
-                                                                display: 'flex',
-                                                                alignItems: 'center',
-                                                                gap: '8px',
-                                                                letterSpacing: '0.5px',
-                                                                transition: '0.2s'
-                                                            }}
-                                                        >
-                                                            <CheckCircle2 size={16} /> APPROVE
-                                                        </motion.button>
-                                                        <motion.button
-                                                            whileHover={{ scale: 1.05, background: 'rgba(244, 63, 94, 0.2)', y: -2 }}
-                                                            whileTap={{ scale: 0.95 }}
-                                                            onClick={() => handleLeaveAction(leave._id, 'Rejected')}
-                                                            style={{
+                                                                width: '44px',
+                                                                height: '44px',
+                                                                borderRadius: '14px',
                                                                 background: 'rgba(244, 63, 94, 0.1)',
                                                                 color: '#f43f5e',
                                                                 border: '1px solid rgba(244, 63, 94, 0.2)',
-                                                                padding: '10px 20px',
-                                                                borderRadius: '12px',
-                                                                fontSize: '12px',
-                                                                fontWeight: '800',
                                                                 cursor: 'pointer',
                                                                 display: 'flex',
+                                                                justifyContent: 'center',
                                                                 alignItems: 'center',
-                                                                gap: '8px',
-                                                                letterSpacing: '0.5px',
                                                                 transition: '0.2s'
                                                             }}
                                                         >
-                                                            <XCircle size={16} /> REJECT
+                                                            <Trash2 size={18} />
                                                         </motion.button>
                                                     </div>
                                                 </td>
@@ -1230,145 +1183,275 @@ const Staff = () => {
                                         ))}
                                     </tbody>
                                 </table>
-                            </div>
-                        </div>
-                    )
-                }
-                {
-                    view === 'summary' && (
-                        <div style={{ marginTop: '10px' }}>
+                            </div >
+                        </div >
+                    )}
+
+                    {/* Leaves Management View */}
+                    {
+                        view === 'leaves' && (
                             <div style={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                flexWrap: 'wrap',
-                                gap: '20px',
-                                marginBottom: '35px',
-                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                                padding: '30px 40px',
-                                borderRadius: '32px',
-                                border: '1px solid rgba(255, 255, 255, 0.05)',
-                                backdropFilter: 'blur(20px)'
+                                background: 'rgba(15, 23, 42, 0.4)',
+                                borderRadius: '28px',
+                                border: '1px solid rgba(255,255,255,0.06)',
+                                overflow: 'hidden',
+                                backdropFilter: 'blur(10px)',
+                                boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
                             }}>
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                                        <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#fbbf24', boxShadow: '0 0 15px #fbbf24', transform: 'rotate(45deg)' }}></div>
-                                        <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '2px' }}>Operational Expenditure</span>
-                                    </div>
-                                    <h2 style={{ fontSize: '34px', fontWeight: '900', color: 'white', margin: 0, letterSpacing: '-1.5px' }}>Payroll Intelligence</h2>
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <p style={{ fontSize: '11px', color: '#fbbf24', margin: '0 0 5px 0', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>GROSS DISBURSEMENT</p>
-                                    <h2 style={{ fontSize: '48px', fontWeight: '1000', color: 'white', margin: 0, letterSpacing: '-2px', textShadow: '0 0 40px rgba(251, 191, 36, 0.3)' }}>
-                                        <span style={{ color: '#fbbf24', fontSize: '24px', verticalAlign: 'top', marginRight: '8px', opacity: 0.8 }}>₹</span>{monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
-                                    </h2>
+                                <div style={{ overflowX: 'auto', padding: '10px' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
+                                        <thead>
+                                            <tr style={{ textAlign: 'left' }}>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LEAVE DURATION</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>REASON / DETAILS</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS (APPROVE / REJECT)</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {pendingLeaves.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="4">
+                                                        <div style={{ padding: '100px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.05)' }}>
+                                                            <Calendar size={48} color="#8b5cf6" style={{ opacity: 0.2, marginBottom: '20px' }} />
+                                                            <p style={{ margin: 0, fontWeight: '800', fontSize: '18px', color: 'white' }}>No Pending Leaves</p>
+                                                            <p style={{ margin: '8px 0 0 0', fontWeight: '500', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>Hooray! No leave requests are currently pending approval.</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ) : pendingLeaves.map(leave => (
+                                                <motion.tr
+                                                    key={leave._id}
+                                                    initial={{ opacity: 0, scale: 0.98 }}
+                                                    animate={{ opacity: 1, scale: 1 }}
+                                                    whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)', scale: 1.002 }}
+                                                    style={{
+                                                        background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0.5) 100%)',
+                                                        borderRadius: '20px',
+                                                        transition: 'all 0.3s ease',
+                                                        boxShadow: '0 10px 20px -10px rgba(0,0,0,0.2)'
+                                                    }}
+                                                >
+                                                    <td style={{ padding: '20px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#8b5cf6', fontWeight: '900', fontSize: '18px', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
+                                                                {leave.staff?.name?.charAt(0) || '?'}
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ fontWeight: '900', color: 'white', fontSize: '16px', letterSpacing: '-0.3px' }}>{leave.staff?.name || 'Unknown Staff'}</div>
+                                                                <div style={{ fontSize: '11px', color: '#8b5cf6', marginTop: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>ID: {leave._id.slice(-6).toUpperCase()}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '20px 25px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: '800', color: 'white' }}>
+                                                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px' }}>
+                                                                {formatDateIST(leave.startDate, { day: '2-digit', month: 'short' })}
+                                                            </div>
+                                                            <ChevronRight size={14} style={{ opacity: 0.5 }} />
+                                                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px' }}>
+                                                                {formatDateIST(leave.endDate, { day: '2-digit', month: 'short' })}
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '800', textTransform: 'uppercase', marginTop: '8px', letterSpacing: '1px', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px', display: 'inline-block' }}>{leave.type} LEAVE</div>
+                                                    </td>
+                                                    <td style={{ padding: '20px 25px' }}>
+                                                        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', maxWidth: '320px', lineHeight: '1.6', fontWeight: '500', background: 'rgba(255,255,255,0.02)', padding: '10px 15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
+                                                            {leave.reason || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No reason provided.</span>}
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '20px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px', textAlign: 'right' }}>
+                                                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+                                                            <motion.button
+                                                                whileHover={{ scale: 1.05, background: 'rgba(16, 185, 129, 0.2)', y: -2 }}
+                                                                whileTap={{ scale: 0.95 }}
+                                                                onClick={() => handleLeaveAction(leave._id, 'Approved')}
+                                                                style={{
+                                                                    background: 'rgba(16, 185, 129, 0.1)',
+                                                                    color: '#10b981',
+                                                                    border: '1px solid rgba(16, 185, 129, 0.2)',
+                                                                    padding: '10px 20px',
+                                                                    borderRadius: '12px',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '800',
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '8px',
+                                                                    letterSpacing: '0.5px',
+                                                                    transition: '0.2s'
+                                                                }}
+                                                            >
+                                                                <CheckCircle2 size={16} /> APPROVE
+                                                            </motion.button>
+                                                            <motion.button
+                                                                whileHover={{ scale: 1.05, background: 'rgba(244, 63, 94, 0.2)', y: -2 }}
+                                                                whileTap={{ scale: 0.95 }}
+                                                                onClick={() => handleLeaveAction(leave._id, 'Rejected')}
+                                                                style={{
+                                                                    background: 'rgba(244, 63, 94, 0.1)',
+                                                                    color: '#f43f5e',
+                                                                    border: '1px solid rgba(244, 63, 94, 0.2)',
+                                                                    padding: '10px 20px',
+                                                                    borderRadius: '12px',
+                                                                    fontSize: '12px',
+                                                                    fontWeight: '800',
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    alignItems: 'center',
+                                                                    gap: '8px',
+                                                                    letterSpacing: '0.5px',
+                                                                    transition: '0.2s'
+                                                                }}
+                                                            >
+                                                                <XCircle size={16} /> REJECT
+                                                            </motion.button>
+                                                        </div>
+                                                    </td>
+                                                </motion.tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
                                 </div>
                             </div>
-
-                            {monthlyReport.length === 0 ? (
-                                <div style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(15, 23, 42, 0.3)', borderRadius: '40px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                    <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(251, 191, 36, 0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 25px' }}>
-                                        <IndianRupee size={32} color="#fbbf24" style={{ opacity: 0.5 }} />
+                        )
+                    }
+                    {
+                        view === 'summary' && (
+                            <div style={{ marginTop: '10px' }}>
+                                <div style={{
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center',
+                                    flexWrap: 'wrap',
+                                    gap: '20px',
+                                    marginBottom: '35px',
+                                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                                    padding: '30px 40px',
+                                    borderRadius: '32px',
+                                    border: '1px solid rgba(255, 255, 255, 0.05)',
+                                    backdropFilter: 'blur(20px)'
+                                }}>
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#fbbf24', boxShadow: '0 0 15px #fbbf24', transform: 'rotate(45deg)' }}></div>
+                                            <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '2px' }}>Operational Expenditure</span>
+                                        </div>
+                                        <h2 style={{ fontSize: '34px', fontWeight: '900', color: 'white', margin: 0, letterSpacing: '-1.5px' }}>Payroll Intelligence</h2>
                                     </div>
-                                    <h3 style={{ color: 'white', margin: '0 0 10px 0', fontWeight: '700', fontSize: '20px' }}>No Payroll Records</h3>
-                                    <p style={{ color: 'rgba(255,255,255,0.3)', margin: 0, fontWeight: '500', fontSize: '15px' }}>No records found for the selected month.</p>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <p style={{ fontSize: '11px', color: '#fbbf24', margin: '0 0 5px 0', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>GROSS DISBURSEMENT</p>
+                                        <h2 style={{ fontSize: '48px', fontWeight: '1000', color: 'white', margin: 0, letterSpacing: '-2px', textShadow: '0 0 40px rgba(251, 191, 36, 0.3)' }}>
+                                            <span style={{ color: '#fbbf24', fontSize: '24px', verticalAlign: 'top', marginRight: '8px', opacity: 0.8 }}>₹</span>{monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
+                                        </h2>
+                                    </div>
                                 </div>
-                            ) : (
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                    {monthlyReport.map((item, idx) => (
-                                        <motion.div
-                                            key={item.staffId}
-                                            initial={{ opacity: 0, y: 15 }}
-                                            animate={{ opacity: 1, y: 0 }}
-                                            transition={{ delay: idx * 0.05 }}
-                                            onClick={() => setSelectedStaffReport(item)}
-                                            whileHover={{ y: -5, background: 'rgba(30, 41, 59, 0.8)', borderColor: 'rgba(251, 191, 36, 0.3)' }}
-                                            style={{
-                                                background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.4) 100%)',
-                                                borderRadius: '28px',
-                                                padding: '28px 35px',
-                                                border: '1px solid rgba(255,255,255,0.06)',
-                                                cursor: 'pointer',
-                                                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                position: 'relative',
-                                                overflow: 'hidden',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '30px',
-                                                flexWrap: 'wrap'
-                                            }}
-                                        >
-                                            <div style={{ position: 'absolute', top: 0, right: 0, width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(251, 191, 36, 0.05) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }}></div>
 
-                                            {/* Identity Section */}
-                                            <div style={{ flex: '1 1 250px', display: 'flex', gap: '20px', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-                                                <div style={{
-                                                    width: '64px',
-                                                    height: '64px',
-                                                    borderRadius: '20px',
-                                                    background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                                {monthlyReport.length === 0 ? (
+                                    <div style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(15, 23, 42, 0.3)', borderRadius: '40px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(251, 191, 36, 0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 25px' }}>
+                                            <IndianRupee size={32} color="#fbbf24" style={{ opacity: 0.5 }} />
+                                        </div>
+                                        <h3 style={{ color: 'white', margin: '0 0 10px 0', fontWeight: '700', fontSize: '20px' }}>No Payroll Records</h3>
+                                        <p style={{ color: 'rgba(255,255,255,0.3)', margin: 0, fontWeight: '500', fontSize: '15px' }}>No records found for the selected month.</p>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                        {monthlyReport.map((item, idx) => (
+                                            <motion.div
+                                                key={item.staffId}
+                                                initial={{ opacity: 0, y: 15 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                transition={{ delay: idx * 0.05 }}
+                                                onClick={() => setSelectedStaffReport(item)}
+                                                whileHover={{ y: -5, background: 'rgba(30, 41, 59, 0.8)', borderColor: 'rgba(251, 191, 36, 0.3)' }}
+                                                style={{
+                                                    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.4) 100%)',
+                                                    borderRadius: '28px',
+                                                    padding: '28px 35px',
+                                                    border: '1px solid rgba(255,255,255,0.06)',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                    position: 'relative',
+                                                    overflow: 'hidden',
                                                     display: 'flex',
-                                                    justifyContent: 'center',
                                                     alignItems: 'center',
-                                                    fontSize: '26px',
-                                                    fontWeight: '1000',
-                                                    color: '#1e293b',
-                                                    boxShadow: '0 8px 16px -4px rgba(217, 119, 6, 0.4)'
-                                                }}>
-                                                    {item.name.charAt(0)}
-                                                </div>
-                                                <div>
-                                                    <h3 style={{ fontSize: '22px', fontWeight: '900', margin: 0, color: 'white', letterSpacing: '-0.8px' }}>{item.name}</h3>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
-                                                        <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px' }}>{item.designation || 'Specialist'}</p>
-                                                        <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></div>
-                                                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '800' }}>VERIFIED</span>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                                    gap: '30px',
+                                                    flexWrap: 'wrap'
+                                                }}
+                                            >
+                                                <div style={{ position: 'absolute', top: 0, right: 0, width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(251, 191, 36, 0.05) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }}></div>
 
-                                            {/* Stats grid */}
-                                            <div style={{ flex: '2 1 400px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', position: 'relative', zIndex: 2 }}>
-                                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}></div>
-                                                        <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>PRESENCE</p>
+                                                {/* Identity Section */}
+                                                <div style={{ flex: '1 1 250px', display: 'flex', gap: '20px', alignItems: 'center', position: 'relative', zIndex: 2 }}>
+                                                    <div style={{
+                                                        width: '64px',
+                                                        height: '64px',
+                                                        borderRadius: '20px',
+                                                        background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                                                        display: 'flex',
+                                                        justifyContent: 'center',
+                                                        alignItems: 'center',
+                                                        fontSize: '26px',
+                                                        fontWeight: '1000',
+                                                        color: '#1e293b',
+                                                        boxShadow: '0 8px 16px -4px rgba(217, 119, 6, 0.4)'
+                                                    }}>
+                                                        {item.name.charAt(0)}
                                                     </div>
-                                                    <div style={{ fontSize: '22px', fontWeight: '1000', color: 'white' }}>{item.presentDays || 0}<span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginLeft: '6px' }}>DAYS</span></div>
-                                                </div>
-                                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: item.extraLeaves > 0 ? '#f43f5e' : '#10b981', boxShadow: `0 0 10px ${item.extraLeaves > 0 ? '#f43f5e' : '#10b981'}` }}></div>
-                                                        <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>LEAVE STATUS</p>
+                                                    <div>
+                                                        <h3 style={{ fontSize: '22px', fontWeight: '900', margin: 0, color: 'white', letterSpacing: '-0.8px' }}>{item.name}</h3>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
+                                                            <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px' }}>{item.designation || 'Specialist'}</p>
+                                                            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></div>
+                                                            <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '800' }}>VERIFIED</span>
+                                                        </div>
                                                     </div>
-                                                    <div style={{ fontSize: '22px', fontWeight: '1000', color: item.extraLeaves > 0 ? '#f43f5e' : '#10b981' }}>{item.leavesTaken || 0} <span style={{ fontSize: '12px', opacity: 0.3 }}>/ {item.allowance || 4}</span></div>
                                                 </div>
-                                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px #6366f1' }}></div>
-                                                        <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>OVERTIME</p>
-                                                    </div>
-                                                    <div style={{ fontSize: '22px', fontWeight: '1000', color: '#6366f1' }}>{item.sundaysWorked || 0}<span style={{ fontSize: '12px', opacity: 0.5, marginLeft: '6px' }}>SUN</span></div>
-                                                </div>
-                                            </div>
 
-                                            {/* Payout */}
-                                            <div style={{ flex: '1 1 200px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '25px', position: 'relative', zIndex: 2 }}>
-                                                <div style={{ textAlign: 'right' }}>
-                                                    <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', letterSpacing: '1.5px' }}>NET PAYABLE</p>
-                                                    <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '1000', color: '#fbbf24', letterSpacing: '-1.5px', textShadow: '0 0 20px rgba(251, 191, 36, 0.2)' }}>₹{(item.finalSalary || 0).toLocaleString()}</h2>
+                                                {/* Stats grid */}
+                                                <div style={{ flex: '2 1 400px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', position: 'relative', zIndex: 2 }}>
+                                                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}></div>
+                                                            <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>PRESENCE</p>
+                                                        </div>
+                                                        <div style={{ fontSize: '22px', fontWeight: '1000', color: 'white' }}>{item.presentDays || 0}<span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginLeft: '6px' }}>DAYS</span></div>
+                                                    </div>
+                                                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: item.extraLeaves > 0 ? '#f43f5e' : '#10b981', boxShadow: `0 0 10px ${item.extraLeaves > 0 ? '#f43f5e' : '#10b981'}` }}></div>
+                                                            <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>LEAVE STATUS</p>
+                                                        </div>
+                                                        <div style={{ fontSize: '22px', fontWeight: '1000', color: item.extraLeaves > 0 ? '#f43f5e' : '#10b981' }}>{item.leavesTaken || 0} <span style={{ fontSize: '12px', opacity: 0.3 }}>/ {item.allowance || 4}</span></div>
+                                                    </div>
+                                                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px #6366f1' }}></div>
+                                                            <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>OVERTIME</p>
+                                                        </div>
+                                                        <div style={{ fontSize: '22px', fontWeight: '1000', color: '#6366f1' }}>{item.sundaysWorked || 0}<span style={{ fontSize: '12px', opacity: 0.5, marginLeft: '6px' }}>SUN</span></div>
+                                                    </div>
                                                 </div>
-                                                <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fbbf24' }}>
-                                                    <ChevronRight size={22} />
+
+                                                {/* Payout */}
+                                                <div style={{ flex: '1 1 200px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '25px', position: 'relative', zIndex: 2 }}>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', letterSpacing: '1.5px' }}>NET PAYABLE</p>
+                                                        <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '1000', color: '#fbbf24', letterSpacing: '-1.5px', textShadow: '0 0 20px rgba(251, 191, 36, 0.2)' }}>₹{(item.finalSalary || 0).toLocaleString()}</h2>
+                                                    </div>
+                                                    <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fbbf24' }}>
+                                                        <ChevronRight size={22} />
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        </motion.div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    )
-                }
+                                            </motion.div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        )
+                    }
+                </div>
                 <AnimatePresence>
                     {showAddModal && (
                         <div style={{
@@ -1603,83 +1686,123 @@ const Staff = () => {
                                     <div style={{ position: 'absolute', bottom: '-20%', right: '-10%', width: '30%', height: '30%', background: 'radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)', filter: 'blur(80px)', pointerEvents: 'none' }}></div>
 
                                     {/* Sidebar: Financials */}
-                                    <div style={{ background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', backdropFilter: 'blur(20px)', zIndex: 2 }}>
-                                        <div style={{ padding: '40px 30px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), transparent)', border: '1px solid rgba(251, 191, 36, 0.3)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '24px', fontWeight: '800', color: '#fbbf24' }}>
+                                    <div style={{ background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', backdropFilter: 'blur(20px)', zIndex: 2, overflowY: 'auto' }}>
+                                        <div style={{ padding: '30px 25px 20px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                                <div style={{ width: '54px', height: '54px', borderRadius: '18px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), transparent)', border: '1px solid rgba(251, 191, 36, 0.3)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '22px', fontWeight: '800', color: '#fbbf24', flexShrink: 0 }}>
                                                     {selectedStaffReport.name.charAt(0)}
                                                 </div>
                                                 <div>
-                                                    <h3 style={{ fontSize: '22px', fontWeight: '800', color: 'white', margin: 0, letterSpacing: '-0.5px' }}>{selectedStaffReport.name}</h3>
-                                                    <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedStaffReport.designation || 'Staff Member'}</p>
+                                                    <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'white', margin: 0, letterSpacing: '-0.5px' }}>{selectedStaffReport.name}</h3>
+                                                    <p style={{ margin: '3px 0 0 0', fontSize: '10px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedStaffReport.designation || 'Staff Member'}</p>
                                                 </div>
                                             </div>
                                         </div>
 
+                                        {/* Net Payout Hero */}
                                         <div style={{
-                                            margin: '30px',
+                                            margin: '16px 16px 0 16px',
                                             background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.02))',
-                                            borderRadius: '28px',
+                                            borderRadius: '20px',
                                             border: '1px solid rgba(251, 191, 36, 0.3)',
-                                            padding: '35px 20px',
+                                            padding: '20px 14px',
                                             textAlign: 'center',
                                             position: 'relative',
                                             overflow: 'hidden',
-                                            boxShadow: '0 20px 40px -15px rgba(251, 191, 36, 0.2)',
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'center',
-                                            justifyContent: 'center'
+                                            flexShrink: 0
                                         }}>
                                             <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 50%)', opacity: 0.5 }}></div>
-                                            <p style={{ margin: 0, fontSize: '11px', fontWeight: '600', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '2px', opacity: 0.8 }}>Estimated Net Payout</p>
-                                            <h1 style={{ margin: '12px 0 0 0', fontSize: '56px', fontWeight: '800', color: 'white', letterSpacing: '-2.5px', textShadow: '0 0 40px rgba(251, 191, 36, 0.4)', position: 'relative' }}>
-                                                <span style={{ fontSize: '20px', verticalAlign: 'top', color: '#fbbf24', marginRight: '4px', fontWeight: '700' }}>₹</span>
+                                            <p style={{ margin: 0, fontSize: '9px', fontWeight: '700', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '2px' }}>NET PAYABLE THIS CYCLE</p>
+                                            <h1 style={{ margin: '6px 0 0 0', fontSize: '40px', fontWeight: '900', color: 'white', letterSpacing: '-2px', textShadow: '0 0 30px rgba(251, 191, 36, 0.4)', position: 'relative' }}>
+                                                <span style={{ fontSize: '14px', verticalAlign: 'top', color: '#fbbf24', marginRight: '3px', fontWeight: '700' }}>₹</span>
                                                 {(selectedStaffReport.finalSalary || 0).toLocaleString()}
                                             </h1>
+                                            {selectedStaffReport.cycleStart && (
+                                                <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.45)', fontWeight: '600' }}>
+                                                    📅 {formatDateIST(selectedStaffReport.cycleStart, { day: '2-digit', month: 'short' })} → {formatDateIST(selectedStaffReport.cycleEnd, { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                </p>
+                                            )}
                                         </div>
 
-                                        <div style={{ padding: '0 30px 30px 30px', flex: 1, overflowY: 'auto' }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                                                <motion.div
-                                                    whileHover={{ scale: 1.02, background: 'rgba(255,255,255,0.04)' }}
-                                                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px', transition: '0.2s' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'rgba(255,255,255,0.4)' }}></div>
-                                                        <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '600' }}>Base Salary</span>
-                                                    </div>
-                                                    <span style={{ fontWeight: '700', color: 'white' }}>₹{(selectedStaffReport.salary || 0).toLocaleString()}</span>
-                                                </motion.div>
+                                        {/* Detailed Breakdown */}
+                                        <div style={{ padding: '12px 16px 24px 16px', flexGrow: 1 }}>
+                                            {/* Formula Banner */}
+                                            <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '14px', padding: '10px 12px', marginBottom: '10px' }}>
+                                                <p style={{ margin: 0, fontSize: '9px', color: '#818cf8', fontWeight: '700', letterSpacing: '0.5px' }}>📐 HOW IS SALARY CALCULATED?</p>
+                                                <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.65)', fontWeight: '600', lineHeight: '1.5' }}>
+                                                    (Present + Free Leaves + Sundays) × ₹{selectedStaffReport.perDaySalary || Math.round((selectedStaffReport.salary || 0) / 30)}/day
+                                                </p>
+                                            </div>
 
-                                                <motion.div
-                                                    whileHover={{ scale: 1.02, background: 'rgba(16, 185, 129, 0.08)' }}
-                                                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', alignItems: 'center', background: 'rgba(16, 185, 129, 0.05)', padding: '16px', borderRadius: '16px', transition: '0.2s' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px rgba(16,185,129,0.5)' }}></div>
-                                                        <span style={{ color: '#10b981', fontWeight: '600' }}>Days Present</span>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                {/* Base Salary */}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '10px 12px', borderRadius: '12px' }}>
+                                                    <div>
+                                                        <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.45)', fontWeight: '700' }}>BASE SALARY</p>
+                                                        <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '500' }}>÷30 = ₹{selectedStaffReport.perDaySalary || Math.round((selectedStaffReport.salary || 0) / 30)}/day</p>
                                                     </div>
-                                                    <span style={{ fontWeight: '700', color: '#10b981' }}>{selectedStaffReport.presentDays} <small style={{ fontSize: '10px' }}>DAYS</small></span>
-                                                </motion.div>
+                                                    <span style={{ fontWeight: '800', color: 'white', fontSize: '13px' }}>₹{(selectedStaffReport.salary || 0).toLocaleString()}</span>
+                                                </div>
 
-                                                <motion.div
-                                                    whileHover={{ scale: 1.02, background: 'rgba(244, 63, 94, 0.08)' }}
-                                                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', alignItems: 'center', background: 'rgba(244, 63, 94, 0.05)', padding: '16px', borderRadius: '16px', transition: '0.2s' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 10px rgba(244,63,94,0.5)' }}></div>
-                                                        <span style={{ color: '#f43f5e', fontWeight: '600' }}>Deductions</span>
+                                                {/* Days Present */}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(16,185,129,0.07)', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(16,185,129,0.14)' }}>
+                                                    <div>
+                                                        <p style={{ margin: 0, fontSize: '10px', color: '#10b981', fontWeight: '700' }}>✅ DAYS PRESENT</p>
+                                                        <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: 'rgba(16,185,129,0.5)', fontWeight: '500' }}>Of {selectedStaffReport.workingDaysPassed || 0} working days passed</p>
                                                     </div>
-                                                    <span style={{ fontWeight: '700', color: '#f43f5e' }}>- ₹{(selectedStaffReport.deduction || 0).toLocaleString()}</span>
-                                                </motion.div>
+                                                    <span style={{ fontWeight: '800', color: '#10b981', fontSize: '13px' }}>{selectedStaffReport.presentDays || 0} <small style={{ fontSize: '9px', opacity: 0.6 }}>days</small></span>
+                                                </div>
 
-                                                <motion.div
-                                                    whileHover={{ scale: 1.02, background: 'rgba(99, 102, 241, 0.08)' }}
-                                                    style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', alignItems: 'center', background: 'rgba(99, 102, 241, 0.05)', padding: '16px', borderRadius: '16px', transition: '0.2s' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px rgba(99,102,241,0.5)' }}></div>
-                                                        <span style={{ color: '#6366f1', fontWeight: '600' }}>Holiday Bonus</span>
+                                                {/* Free Leaves Allowance */}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(14,165,233,0.07)', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.14)' }}>
+                                                    <div>
+                                                        <p style={{ margin: 0, fontSize: '10px', color: '#0ea5e9', fontWeight: '700' }}>🎫 FREE LEAVE USED</p>
+                                                        <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: 'rgba(14,165,233,0.5)', fontWeight: '500' }}>Allowance: {selectedStaffReport.allowance || 4}/cycle (paid absences)</p>
                                                     </div>
-                                                    <span style={{ fontWeight: '700', color: '#6366f1' }}>+ ₹{(selectedStaffReport.sundayBonus || 0).toLocaleString()}</span>
-                                                </motion.div>
+                                                    <span style={{ fontWeight: '800', color: '#0ea5e9', fontSize: '13px' }}>{selectedStaffReport.paidLeavesUsed || 0} <small style={{ fontSize: '9px', opacity: 0.6 }}>days</small></span>
+                                                </div>
+
+                                                {/* Sunday Bonus */}
+                                                {(selectedStaffReport.sundaysWorked || 0) > 0 && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(99,102,241,0.07)', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(99,102,241,0.14)' }}>
+                                                        <div>
+                                                            <p style={{ margin: 0, fontSize: '10px', color: '#818cf8', fontWeight: '700' }}>☀️ SUNDAYS WORKED</p>
+                                                            <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: 'rgba(99,102,241,0.5)', fontWeight: '500' }}>Extra pay for holiday duty</p>
+                                                        </div>
+                                                        <div style={{ textAlign: 'right' }}>
+                                                            <p style={{ margin: 0, fontWeight: '800', color: '#818cf8', fontSize: '13px' }}>+{selectedStaffReport.sundaysWorked} days</p>
+                                                            <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#818cf8', fontWeight: '600' }}>+₹{(selectedStaffReport.sundayBonus || 0).toLocaleString()}</p>
+                                                        </div>
+                                                    </div>
+                                                )}
+
+                                                <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', margin: '2px 0' }}></div>
+
+                                                {/* Unpaid Absences */}
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: (selectedStaffReport.extraLeaves || 0) > 0 ? 'rgba(244,63,94,0.08)' : 'rgba(255,255,255,0.02)', padding: '10px 12px', borderRadius: '12px', border: `1px solid ${(selectedStaffReport.extraLeaves || 0) > 0 ? 'rgba(244,63,94,0.2)' : 'rgba(255,255,255,0.04)'}` }}>
+                                                    <div>
+                                                        <p style={{ margin: 0, fontSize: '10px', color: (selectedStaffReport.extraLeaves || 0) > 0 ? '#f43f5e' : 'rgba(255,255,255,0.4)', fontWeight: '700' }}>❌ UNPAID ABSENT DAYS</p>
+                                                        <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '500' }}>Beyond free allowance → deducted</p>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <p style={{ margin: 0, fontWeight: '800', color: (selectedStaffReport.extraLeaves || 0) > 0 ? '#f43f5e' : 'rgba(255,255,255,0.3)', fontSize: '13px' }}>{selectedStaffReport.extraLeaves || 0} days</p>
+                                                        {(selectedStaffReport.extraLeaves || 0) > 0 && (
+                                                            <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#f43f5e', fontWeight: '700' }}>-₹{(selectedStaffReport.deduction || 0).toLocaleString()}</p>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Final calc box */}
+                                                <div style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(251,191,36,0.03))', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '14px', padding: '12px 14px', marginTop: '2px' }}>
+                                                    <p style={{ margin: 0, fontSize: '9px', color: '#fbbf24', fontWeight: '700', letterSpacing: '1px' }}>🧮 STEP-BY-STEP</p>
+                                                    <p style={{ margin: '6px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.55)', fontWeight: '600', lineHeight: '1.7' }}>
+                                                        ({selectedStaffReport.presentDays || 0} present
+                                                        {(selectedStaffReport.paidLeavesUsed || 0) > 0 ? ` + ${selectedStaffReport.paidLeavesUsed} leave` : ''}
+                                                        {(selectedStaffReport.sundaysWorked || 0) > 0 ? ` + ${selectedStaffReport.sundaysWorked} sun` : ''})
+                                                        {' × ₹'}{selectedStaffReport.perDaySalary || Math.round((selectedStaffReport.salary || 0) / 30)}
+                                                    </p>
+                                                    <p style={{ margin: '5px 0 0 0', fontSize: '15px', fontWeight: '900', color: '#fbbf24' }}>= ₹{(selectedStaffReport.finalSalary || 0).toLocaleString()}</p>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1690,10 +1813,20 @@ const Staff = () => {
                                         {/* Attendance Visual Insights */}
                                         <div>
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
-                                                <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'white', letterSpacing: '-0.5px' }}>Attendance Monthly View</h4>
-                                                <div style={{ display: 'flex', gap: '20px', fontSize: '11px', fontWeight: '600', marginRight: '40px' }}>
+                                                <div>
+                                                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'white', letterSpacing: '-0.5px' }}>Salary Cycle Calendar</h4>
+                                                    {selectedStaffReport.cycleStart && (
+                                                        <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>
+                                                            {formatDateIST(selectedStaffReport.cycleStart, { day: '2-digit', month: 'short', year: 'numeric' })} → {formatDateIST(selectedStaffReport.cycleEnd, { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                                <div style={{ display: 'flex', gap: '14px', fontSize: '11px', fontWeight: '600', marginRight: '40px', flexWrap: 'wrap' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#22c55e' }}>
                                                         <div style={{ width: '10px', height: '10px', background: '#22c55e', borderRadius: '50%', boxShadow: '0 0 10px rgba(34, 197, 94, 0.5)' }}></div> PRESENT
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#0ea5e9' }}>
+                                                        <div style={{ width: '10px', height: '10px', background: '#0ea5e9', borderRadius: '50%', boxShadow: '0 0 10px rgba(14, 165, 233, 0.5)' }}></div> HALF DAY
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#ef4444' }}>
                                                         <div style={{ width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%', boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)' }}></div> ABSENT
@@ -1810,8 +1943,8 @@ const Staff = () => {
                                                         {(selectedStaffReport.attendanceData || []).sort((a, b) => b.date.localeCompare(a.date)).map(log => (
                                                             <tr key={log._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                                                 <td style={{ padding: '15px 20px' }}>
-                                                                    <div style={{ fontSize: '13px', fontWeight: '800', color: 'white' }}>{new Date(log.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
-                                                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>{new Date(log.date).toLocaleDateString('en-IN', { weekday: 'short' })}</div>
+                                                                    <div style={{ fontSize: '13px', fontWeight: '800', color: 'white' }}>{formatDateIST(log.date, { day: '2-digit', month: 'short' })}</div>
+                                                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>{formatDateIST(log.date, { weekday: 'short' })}</div>
                                                                 </td>
                                                                 <td style={{ padding: '15px 20px' }}>
                                                                     <div style={{ display: 'flex', gap: '8px' }}>
@@ -1831,8 +1964,8 @@ const Staff = () => {
                                                                     <span style={{ fontSize: '9px', fontWeight: '700', padding: '4px 8px', borderRadius: '6px', background: log.status === 'present' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.1)', color: log.status === 'present' ? '#22c55e' : '#ef4444' }}>{log.status.toUpperCase()}</span>
                                                                 </td>
                                                                 <td style={{ padding: '15px 20px' }}>
-                                                                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#10b981' }}>{log.punchIn?.time ? new Date(log.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}</div>
-                                                                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#f43f5e' }}>{log.punchOut?.time ? new Date(log.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--'}</div>
+                                                                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#10b981' }}>{log.punchIn?.time ? formatTimeIST(log.punchIn.time) : '--'}</div>
+                                                                    <div style={{ fontSize: '12px', fontWeight: '700', color: '#f43f5e' }}>{log.punchOut?.time ? formatTimeIST(log.punchOut.time) : '--'}</div>
                                                                 </td>
                                                             </tr>
                                                         ))}
@@ -1912,7 +2045,7 @@ const Staff = () => {
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
                                             <span style={{ fontSize: '12px', color: '#fbbf24', fontWeight: '800', letterSpacing: '0.2px' }}>Attendance Policy</span>
-                                            <span style={{ fontSize: '11px', color: 'rgba(251, 191, 36, 0.6)', fontWeight: '600' }}>Backdated entries are limited to the previous 15 days.</span>
+                                            <span style={{ fontSize: '11px', color: 'rgba(251, 191, 36, 0.6)', fontWeight: '600' }}>Backdated entries are limited to the previous 60 days (2 Months).</span>
                                         </div>
                                     </motion.div>
 
@@ -1946,7 +2079,7 @@ const Staff = () => {
                                                 required
                                                 className="premium-compact-input"
                                                 min={MIN_BACKDATE_LIMIT}
-                                                max={new Date().toISOString().split('T')[0]}
+                                                max={todayIST()}
                                                 value={backdateForm.date}
                                                 onChange={(e) => setBackdateForm({ ...backdateForm, date: e.target.value })}
                                                 style={{ background: 'rgba(255,255,255,0.04)', height: '58px', borderRadius: '18px', padding: '0 20px', fontSize: '15px' }}

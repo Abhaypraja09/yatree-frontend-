@@ -5,6 +5,15 @@ import { Plus, Minus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+import { 
+    todayIST, 
+    toISTDateString, 
+    toISTDateTimeString,
+    nowISTDateTimeString,
+    formatDateIST, 
+    formatTimeIST, 
+    formatDateTimeIST 
+} from '../utils/istUtils';
 
 const Drivers = () => {
     const navigate = useNavigate();
@@ -26,6 +35,9 @@ const Drivers = () => {
     const [editingDriver, setEditingDriver] = useState(null);
     const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '' });
     const [driverTypeFilter, setDriverTypeFilter] = useState('All');
+    const [onlyOnDuty, setOnlyOnDuty] = useState(false);
+    const [showCompletedOnly, setShowCompletedOnly] = useState(false);
+    const [backendStats, setBackendStats] = useState({ total: 0, active: 0, blocked: 0, onDuty: 0, completedToday: 0 });
 
     // Manual Duty State
     const [showManualModal, setShowManualModal] = useState(false);
@@ -33,7 +45,7 @@ const Drivers = () => {
     const [vehicles, setVehicles] = useState([]);
     const [submitting, setSubmitting] = useState(false);
     const [manualDutyForm, setManualDutyForm] = useState({
-        date: new Date().toISOString().split('T')[0],
+        date: todayIST(),
         vehicleId: '',
         punchInKM: '',
         punchOutKM: '',
@@ -47,21 +59,31 @@ const Drivers = () => {
     // Admin Punch In/Out State
     const [showPunchInModal, setShowPunchInModal] = useState(false);
     const [showPunchOutModal, setShowPunchOutModal] = useState(false);
+    const getLocalYYYYMMDDHHMM = (date = new Date()) => {
+        return toISTDateTimeString(date);
+    };
+
     const [punchInForm, setPunchInForm] = useState({
         vehicleId: '',
         km: '',
-        date: new Date().toISOString().slice(0, 16), // datetime-local format
+        date: getLocalYYYYMMDDHHMM(), // datetime-local format
         pickUpLocation: 'Office'
     });
     const [punchOutForm, setPunchOutForm] = useState({
         km: '',
-        date: new Date().toISOString().slice(0, 16), // datetime-local format
+        date: getLocalYYYYMMDDHHMM(), // datetime-local format
         fuelAmount: '',
         parkingAmount: '',
         review: '',
         dropLocation: 'Office',
         parkingPaidBy: 'Self'
     });
+
+    const getLocalYYYYMMDD = (date = new Date()) => {
+        return toISTDateString(date);
+    };
+
+    const getToday = () => getLocalYYYYMMDD();
 
     const fetchVehicles = async () => {
         if (!selectedCompany?._id) return;
@@ -92,7 +114,7 @@ const Drivers = () => {
             });
             setShowManualModal(false);
             setManualDutyForm({
-                date: new Date().toISOString().split('T')[0],
+                date: todayIST(),
                 vehicleId: '',
                 punchInKM: '',
                 punchOutKM: '',
@@ -126,7 +148,7 @@ const Drivers = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setShowPunchInModal(false);
-            setPunchInForm({ vehicleId: '', km: '', date: new Date().toISOString().slice(0, 16), pickUpLocation: 'Office' });
+            setPunchInForm({ vehicleId: '', km: '', date: getLocalYYYYMMDDHHMM(), pickUpLocation: 'Office' });
             alert('Driver Punched In successfully');
             fetchDrivers();
         } catch (err) {
@@ -150,7 +172,7 @@ const Drivers = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setShowPunchOutModal(false);
-            setPunchOutForm({ km: '', date: new Date().toISOString().slice(0, 16), fuelAmount: '', parkingAmount: '', review: '', dropLocation: 'Office', parkingPaidBy: 'Self' });
+            setPunchOutForm({ km: '', date: getLocalYYYYMMDDHHMM(), fuelAmount: '', parkingAmount: '', review: '', dropLocation: 'Office', parkingPaidBy: 'Self' });
             alert('Driver Punched Out successfully');
             fetchDrivers();
         } catch (err) {
@@ -164,7 +186,7 @@ const Drivers = () => {
         setSelectedDriverForManual(driver);
         setManualDutyForm(prev => ({
             ...prev,
-            date: new Date().toISOString().split('T')[0]
+            date: todayIST()
         }));
         setShowManualModal(true);
     };
@@ -187,7 +209,8 @@ const Drivers = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setDrivers(data.drivers || []);
-            console.log('Fetched Drivers:', data.drivers);
+            if (data.stats) setBackendStats(data.stats);
+            console.log('Fetched Drivers:', data.drivers, data.stats);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     };
@@ -282,13 +305,20 @@ const Drivers = () => {
             d.mobile?.includes(searchTerm) ||
             d.username?.toLowerCase().includes(searchTerm.toLowerCase());
 
-        return !d.isFreelancer && matchesSearch;
+        const matchesOnDuty = onlyOnDuty ? !!d.activeAttendance : true;
+        const matchesCompleted = showCompletedOnly ? !!d.dutyCompletedToday : true;
+
+        return !d.isFreelancer && matchesSearch && matchesOnDuty && matchesCompleted;
     });
 
     const staffDriversList = drivers.filter(d => !d.isFreelancer);
-    const totalDrivers = staffDriversList.length;
-    const activeDrivers = staffDriversList.filter(d => d.status === 'active').length;
-    const blockedDrivers = staffDriversList.filter(d => d.status === 'blocked').length;
+
+    // Stats from backend are more reliable because they are company-wide (not affected by browser pagination)
+    const totalDrivers = backendStats.total || staffDriversList.length;
+    const activeDrivers = backendStats.active || staffDriversList.filter(d => d.status === 'active').length;
+    const blockedDrivers = backendStats.blocked || staffDriversList.filter(d => d.status === 'blocked').length;
+    const punchedInDrivers = backendStats.onDuty || staffDriversList.filter(d => d.activeAttendance).length;
+    const completedTodayCount = backendStats.completedToday || staffDriversList.filter(d => d.dutyCompletedToday).length;
     const freelancersCount = drivers.filter(d => d.isFreelancer).length;
 
     return (
@@ -417,11 +447,53 @@ const Drivers = () => {
                         <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{blockedDrivers}</h3>
                     </div>
                 </motion.div>
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }} className="glass-card" style={{ padding: 'clamp(15px, 2.5vw, 20px)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.03)', cursor: 'default' }}>
-                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><ShieldAlert size={22} /></div>
-                    <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>On-Call Support</p>
-                        <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>READY</h3>
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.4 }}
+                    onClick={() => { setOnlyOnDuty(!onlyOnDuty); setShowCompletedOnly(false); }}
+                    className="glass-card-hover-effect"
+                    style={{
+                        padding: 'clamp(15px, 2.5vw, 20px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '15px',
+                        background: 'rgba(255,255,255,0.03)',
+                        cursor: 'pointer',
+                        border: onlyOnDuty ? '1px solid #22c55e' : '1px solid transparent',
+                        borderRadius: '16px',
+                        boxShadow: onlyOnDuty ? '0 0 15px rgba(34, 197, 94, 0.2)' : 'none'
+                    }}
+                >
+                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ width: '10px', height: '10px', background: '#22c55e', borderRadius: '50%', boxShadow: '0 0 8px #22c55e' }}></div></div>
+                    <div style={{ flex: 1 }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>On Duty</p>
+                        <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{punchedInDrivers}</h3>
+                    </div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ y: 20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.5 }}
+                    onClick={() => { setShowCompletedOnly(!showCompletedOnly); setOnlyOnDuty(false); }}
+                    className="glass-card-hover-effect"
+                    style={{
+                        padding: 'clamp(15px, 2.5vw, 20px)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '15px',
+                        background: 'rgba(255,255,255,0.03)',
+                        cursor: 'pointer',
+                        border: showCompletedOnly ? '1px solid #3b82f6' : '1px solid transparent',
+                        borderRadius: '16px',
+                        boxShadow: showCompletedOnly ? '0 0 15px rgba(59, 130, 246, 0.2)' : 'none'
+                    }}
+                >
+                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Clock size={22} /></div>
+                    <div style={{ flex: 1 }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Completed</p>
+                        <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{completedTodayCount}</h3>
                     </div>
                 </motion.div>
             </div>
@@ -432,8 +504,12 @@ const Drivers = () => {
                     <thead>
                         <tr style={{ textAlign: 'left' }}>
                             <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Personnel Profile</th>
-                            <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Contact Info</th>
-                            <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Credentials</th>
+                            {!(onlyOnDuty || showCompletedOnly) && (
+                                <>
+                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Contact Info</th>
+                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Credentials</th>
+                                </>
+                            )}
                             <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
                             <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Actions</th>
                         </tr>
@@ -441,7 +517,7 @@ const Drivers = () => {
                     <tbody>
                         <AnimatePresence>
                             {filteredDrivers.length === 0 ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '80px 0' }}>
+                                <tr><td colSpan={onlyOnDuty || showCompletedOnly ? 3 : 5} style={{ textAlign: 'center', padding: '80px 0' }}>
                                     <div style={{ background: 'rgba(255,255,255,0.02)', width: '80px', height: '80px', borderRadius: '50%', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 20px' }}>
                                         <Search size={32} style={{ opacity: 0.3, color: 'white' }} />
                                     </div>
@@ -472,21 +548,35 @@ const Drivers = () => {
                                                 <div>
                                                     <div style={{ color: 'white', fontWeight: '800', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         {driver.name}
-                                                        {driver.isFreelancer && (
-                                                            <span style={{ fontSize: '9px', background: 'rgba(139, 92, 246, 0.2)', color: '#a78bfa', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(139, 92, 246, 0.3)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Freelancer</span>
+                                                        {driver.assignedVehicle && (
+                                                            <span style={{ fontSize: '12px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: '800' }}>
+                                                                {driver.assignedVehicle.carNumber}
+                                                            </span>
+                                                        )}
+                                                        {driver.activeAttendance && (
+                                                            <span style={{ fontSize: '9px', background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: '900', textTransform: 'uppercase' }}>ON DUTY</span>
+                                                        )}
+                                                        {driver.dutyCompletedToday && (
+                                                            <span style={{ fontSize: '9px', background: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(59, 130, 246, 0.3)', fontWeight: '900', textTransform: 'uppercase' }}>COMPLETED</span>
                                                         )}
                                                     </div>
-                                                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '500' }}>@{driver.username || 'no-username'}</div>
+                                                    {!(onlyOnDuty || showCompletedOnly) && (
+                                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>@{driver.username || 'no-username'}</div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>{driver.mobile}</div>
-                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Mobile Number</div>
-                                        </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'white', fontSize: '13px', fontFamily: 'monospace', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px', display: 'inline-block' }}>{driver.licenseNumber || 'NOT PROVIDED'}</div>
-                                        </td>
+                                        {!(onlyOnDuty || showCompletedOnly) && (
+                                            <>
+                                                <td style={{ padding: '20px 25px' }}>
+                                                    <div style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>{driver.mobile}</div>
+                                                    <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Mobile Number</div>
+                                                </td>
+                                                <td style={{ padding: '20px 25px' }}>
+                                                    <div style={{ color: 'white', fontSize: '13px', fontFamily: 'monospace', background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: '4px', display: 'inline-block' }}>{driver.licenseNumber || 'NOT PROVIDED'}</div>
+                                                </td>
+                                            </>
+                                        )}
                                         <td style={{ padding: '20px 25px' }}>
                                             <span style={{
                                                 display: 'inline-flex',
@@ -597,7 +687,20 @@ const Drivers = () => {
                                                 {driver.name.charAt(0).toUpperCase()}
                                             </div>
                                             <div>
-                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>{driver.name}</div>
+                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                    {driver.name}
+                                                    {driver.assignedVehicle && (
+                                                        <span style={{ fontSize: '9px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.8)', padding: '1px 6px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)', fontWeight: '700' }}>
+                                                            {driver.assignedVehicle.carNumber}
+                                                        </span>
+                                                    )}
+                                                    {driver.activeAttendance && (
+                                                        <span style={{ fontSize: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '1px 5px', borderRadius: '3px', fontWeight: '900' }}>DUTY</span>
+                                                    )}
+                                                    {driver.dutyCompletedToday && (
+                                                        <span style={{ fontSize: '8px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 5px', borderRadius: '3px', fontWeight: '900' }}>DONE</span>
+                                                    )}
+                                                </div>
                                                 <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>@{driver.username || 'no-username'}</div>
                                             </div>
                                         </div>
@@ -618,16 +721,18 @@ const Drivers = () => {
                                         </span>
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
-                                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
-                                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '4px' }}>MOBILE</div>
-                                            <div style={{ color: 'white', fontWeight: '600', fontSize: '13px' }}>{driver.mobile}</div>
+                                    {!(onlyOnDuty || showCompletedOnly) && (
+                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
+                                            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
+                                                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '4px' }}>MOBILE</div>
+                                                <div style={{ color: 'white', fontWeight: '600', fontSize: '13px' }}>{driver.mobile}</div>
+                                            </div>
+                                            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
+                                                <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '4px' }}>LICENSE</div>
+                                                <div style={{ color: 'white', fontWeight: '600', fontSize: '13px', fontFamily: 'monospace' }}>{driver.licenseNumber || 'N/A'}</div>
+                                            </div>
                                         </div>
-                                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
-                                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginBottom: '4px' }}>LICENSE</div>
-                                            <div style={{ color: 'white', fontWeight: '600', fontSize: '13px', fontFamily: 'monospace' }}>{driver.licenseNumber || 'N/A'}</div>
-                                        </div>
-                                    </div>
+                                    )}
 
                                     <div style={{ display: 'flex', gap: '10px' }}>
                                         <button
@@ -963,82 +1068,89 @@ const Drivers = () => {
                     </div>
                 )}
             </AnimatePresence>
-            {/* Admin Punch In Modal */}
             <AnimatePresence>
                 {showPunchInModal && (
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}>
-                        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} style={{ background: '#111', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '28px', width: '100%', maxWidth: '500px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
-                            <div style={{ padding: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Plus color="#10b981" size={20} />
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(15px)' }}>
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ background: '#0a0a0c', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '32px', width: '100%', maxWidth: '500px', overflow: 'hidden', boxShadow: '0 30px 60px -12px rgba(0,0,0,0.8)' }}>
+                            <div style={{ padding: '30px', background: 'linear-gradient(to bottom right, rgba(16, 185, 129, 0.1), transparent)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                                        <Plus color="#10b981" size={24} />
                                     </div>
                                     <div>
-                                        <h2 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '800' }}>Admin Punch In</h2>
-                                        <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0, fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Shift Start Record</p>
+                                        <h2 style={{ color: 'white', margin: 0, fontSize: '20px', fontWeight: '900', letterSpacing: '-0.5px' }}>Initialize Shift</h2>
+                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Recording Start for {selectedDriverForManual?.name}</div>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowPunchInModal(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                                <button onClick={() => setShowPunchInModal(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                             </div>
-                            <form onSubmit={handleAdminPunchIn} style={{ padding: '25px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-                                    <div style={{ gridColumn: 'span 2' }}>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Select Assign Vehicle</label>
+
+                            <form onSubmit={handleAdminPunchIn} style={{ padding: '30px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                    <div>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Assign Vehicle</label>
                                         <select
                                             required
                                             value={punchInForm.vehicleId}
-                                            onChange={(e) => setPunchInForm({ ...punchInForm, vehicleId: e.target.value })}
-                                            style={{ width: '100%', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '14px', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '600' }}
+                                            onChange={(e) => {
+                                                const vId = e.target.value;
+                                                const selectedV = vehicles.find(v => v._id === vId);
+                                                setPunchInForm({ ...punchInForm, vehicleId: vId, km: selectedV?.lastOdometer || '' });
+                                            }}
+                                            style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600', transition: 'all 0.3s' }}
                                         >
-                                            <option value="" style={{ background: '#1a1a1a' }}>Choose Vehicle</option>
-                                            {vehicles.filter(v => !v.currentDriver).map(v => (
-                                                <option key={v._id} value={v._id} style={{ background: '#1a1a1a' }}>{v.carNumber} - {v.model}</option>
+                                            <option value="" style={{ background: '#0a0a0c' }}>Choose Vehicle</option>
+                                            {vehicles.filter(v => punchInForm.date?.split('T')[0] !== getToday() || !v.currentDriver).map(v => (
+                                                <option key={v._id} value={v._id} style={{ background: '#0a0a0c' }}>{v.carNumber} - {v.model}</option>
                                             ))}
                                         </select>
                                     </div>
-                                    <div style={{ gridColumn: 'span 2' }}>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Starting KM</label>
-                                        <input
-                                            type="number"
-                                            required
-                                            value={punchInForm.km}
-                                            onChange={(e) => setPunchInForm({ ...punchInForm, km: e.target.value })}
-                                            style={{ width: '100%', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '14px', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '600' }}
-                                            placeholder="Current Odometer"
-                                        />
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <div>
+                                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Starting KM</label>
+                                            <input
+                                                type="number"
+                                                required
+                                                value={punchInForm.km}
+                                                onChange={(e) => setPunchInForm({ ...punchInForm, km: e.target.value })}
+                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600' }}
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Pickup Location</label>
+                                            <input
+                                                type="text"
+                                                value={punchInForm.pickUpLocation}
+                                                onChange={(e) => setPunchInForm({ ...punchInForm, pickUpLocation: e.target.value })}
+                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600' }}
+                                                placeholder="e.g. Office"
+                                            />
+                                        </div>
                                     </div>
-                                    <div style={{ gridColumn: 'span 2' }}>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Duty Start Date & Time</label>
+
+                                    <div>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Punch-In Time</label>
                                         <div style={{ position: 'relative' }}>
-                                            <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }}>
-                                                <Clock size={16} />
-                                            </div>
+                                            <Clock size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                                             <input
                                                 type="datetime-local"
                                                 required
                                                 value={punchInForm.date}
                                                 onChange={(e) => setPunchInForm({ ...punchInForm, date: e.target.value })}
-                                                style={{ width: '100%', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '14px 14px 14px 40px', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '600' }}
+                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px 0 50px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600' }}
                                             />
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ marginBottom: '25px' }}>
-                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Pickup Location</label>
-                                    <input
-                                        type="text"
-                                        value={punchInForm.pickUpLocation}
-                                        onChange={(e) => setPunchInForm({ ...punchInForm, pickUpLocation: e.target.value })}
-                                        style={{ width: '100%', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '14px', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '600' }}
-                                        placeholder="Location details"
-                                    />
-                                </div>
+
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    style={{ width: '100%', background: '#10b981', color: 'white', border: 'none', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '14px', cursor: submitting ? 'not-allowed' : 'pointer', transition: 'all 0.3s ease', boxShadow: '0 10px 20px -10px rgba(16, 185, 129, 0.4)' }}
+                                    style={{ width: '100%', background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white', border: 'none', borderRadius: '18px', height: '58px', marginTop: '30px', fontWeight: '900', fontSize: '15px', cursor: submitting ? 'not-allowed' : 'pointer', letterSpacing: '0.5px', boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4)' }}
                                 >
-                                    {submitting ? 'PROCESSING...' : 'INITIALIZE SHIFT'}
+                                    {submitting ? 'PROCESSING...' : 'CONFIRM PUNCH IN'}
                                 </button>
                             </form>
                         </motion.div>
@@ -1046,109 +1158,103 @@ const Drivers = () => {
                 )}
             </AnimatePresence>
 
-            {/* Admin Punch Out Modal */}
             <AnimatePresence>
                 {showPunchOutModal && (
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(12px)' }}>
-                        <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 20, opacity: 0 }} style={{ background: '#111', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '28px', width: '100%', maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)' }}>
-                            <div style={{ padding: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, background: '#111', zIndex: 10 }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(244, 63, 94, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Minus color="#f43f5e" size={20} />
+                    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(15px)' }}>
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} style={{ background: '#0a0a0c', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '32px', width: '100%', maxWidth: '550px', maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 30px 60px -12px rgba(0,0,0,0.8)' }}>
+                            <div style={{ padding: '30px', background: 'linear-gradient(to bottom right, rgba(244, 63, 94, 0.1), #0a0a0c)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 11 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(244, 63, 94, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
+                                        <Minus color="#f43f5e" size={24} />
                                     </div>
                                     <div>
-                                        <h2 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '800' }}>Admin Punch Out</h2>
-                                        <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0, fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Shift End & Expenses</p>
+                                        <h2 style={{ color: 'white', margin: 0, fontSize: '20px', fontWeight: '900', letterSpacing: '-0.5px' }}>Finalize Duty</h2>
+                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>Recording End for {selectedDriverForManual?.name}</div>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowPunchOutModal(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', width: '32px', height: '32px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+                                <button onClick={() => setShowPunchOutModal(false)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
                             </div>
-                            <form onSubmit={handleAdminPunchOut} style={{ padding: '25px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-                                    <div>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Closing KM</label>
-                                        <input
-                                            type="number"
-                                            required
-                                            value={punchOutForm.km}
-                                            onChange={(e) => setPunchOutForm({ ...punchOutForm, km: e.target.value })}
-                                            style={{ width: '100%', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '14px', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '600' }}
-                                            placeholder="Odometer at end"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Toll / Parking</label>
-                                        <input
-                                            type="number"
-                                            value={punchOutForm.parkingAmount}
-                                            onChange={(e) => setPunchOutForm({ ...punchOutForm, parkingAmount: e.target.value })}
-                                            style={{ width: '100%', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '14px', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '600' }}
-                                            placeholder="₹ Total amount"
-                                        />
-                                    </div>
-                                </div>
-                                <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Fuel Filled (Optional)</label>
-                                    <input
-                                        type="number"
-                                        value={punchOutForm.fuelAmount}
-                                        onChange={(e) => setPunchOutForm({ ...punchOutForm, fuelAmount: e.target.value })}
-                                        style={{ width: '100%', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '14px', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '600' }}
-                                        placeholder="₹ Fuel amount"
-                                    />
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px', marginBottom: '15px' }}>
-                                    <div>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Drop Location</label>
-                                        <input
-                                            type="text"
-                                            value={punchOutForm.dropLocation}
-                                            onChange={(e) => setPunchOutForm({ ...punchOutForm, dropLocation: e.target.value })}
-                                            style={{ width: '100%', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '14px', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '600' }}
-                                        />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Parking Paid By</label>
-                                        <select
-                                            value={punchOutForm.parkingPaidBy}
-                                            onChange={(e) => setPunchOutForm({ ...punchOutForm, parkingPaidBy: e.target.value })}
-                                            style={{ width: '100%', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '14px', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '600' }}
-                                        >
-                                            <option value="Self" style={{ background: '#1a1a1a' }}>Driver (Payable)</option>
-                                            <option value="Office" style={{ background: '#1a1a1a' }}>Yatree Fastag/Cash</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div style={{ marginBottom: '15px' }}>
-                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Work Review / Remarks</label>
-                                    <textarea
-                                        value={punchOutForm.review}
-                                        onChange={(e) => setPunchOutForm({ ...punchOutForm, review: e.target.value })}
-                                        style={{ width: '100%', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '14px', color: 'white', outline: 'none', height: '80px', resize: 'none', fontSize: '13px', fontWeight: '600' }}
-                                        placeholder="Note any issues or specific duty details..."
-                                    />
-                                </div>
-                                <div style={{ marginBottom: '30px' }}>
-                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '900', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Shift End Date & Time</label>
-                                    <div style={{ position: 'relative' }}>
-                                        <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }}>
-                                            <Clock size={16} />
+
+                            <form onSubmit={handleAdminPunchOut} style={{ padding: '30px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <div>
+                                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Closing KM</label>
+                                            <input
+                                                type="number"
+                                                required
+                                                value={punchOutForm.km}
+                                                onChange={(e) => setPunchOutForm({ ...punchOutForm, km: e.target.value })}
+                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600' }}
+                                                placeholder="End Odo"
+                                            />
                                         </div>
-                                        <input
-                                            type="datetime-local"
-                                            required
-                                            value={punchOutForm.date}
-                                            onChange={(e) => setPunchOutForm({ ...punchOutForm, date: e.target.value })}
-                                            style={{ width: '100%', background: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '14px 14px 14px 40px', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '600' }}
+                                        <div>
+                                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Drop Location</label>
+                                            <input
+                                                type="text"
+                                                value={punchOutForm.dropLocation}
+                                                onChange={(e) => setPunchOutForm({ ...punchOutForm, dropLocation: e.target.value })}
+                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600' }}
+                                                placeholder="e.g. Office"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <div>
+                                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Toll / Parking (₹)</label>
+                                            <input
+                                                type="number"
+                                                value={punchOutForm.parkingAmount}
+                                                onChange={(e) => setPunchOutForm({ ...punchOutForm, parkingAmount: e.target.value })}
+                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600' }}
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Fuel Expense (₹)</label>
+                                            <input
+                                                type="number"
+                                                value={punchOutForm.fuelAmount}
+                                                onChange={(e) => setPunchOutForm({ ...punchOutForm, fuelAmount: e.target.value })}
+                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600' }}
+                                                placeholder="0.00"
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Work Review / Remarks</label>
+                                        <textarea
+                                            value={punchOutForm.review}
+                                            onChange={(e) => setPunchOutForm({ ...punchOutForm, review: e.target.value })}
+                                            placeholder="Enter any duty notes here..."
+                                            style={{ width: '100%', height: '100px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '15px 20px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600', resize: 'none' }}
                                         />
                                     </div>
+
+                                    <div>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Punch-Out Time</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <Clock size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                                            <input
+                                                type="datetime-local"
+                                                required
+                                                value={punchOutForm.date}
+                                                onChange={(e) => setPunchOutForm({ ...punchOutForm, date: e.target.value })}
+                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px 0 50px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600' }}
+                                            />
+                                        </div>
+                                    </div>
                                 </div>
+
                                 <button
                                     type="submit"
                                     disabled={submitting}
-                                    style={{ width: '100%', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '16px', padding: '16px', fontWeight: '800', fontSize: '14px', cursor: submitting ? 'not-allowed' : 'pointer', transition: 'all 0.3s ease', boxShadow: '0 10px 20px -10px rgba(244, 63, 94, 0.4)' }}
+                                    style={{ width: '100%', background: 'linear-gradient(135deg, #f43f5e, #e11d48)', color: 'white', border: 'none', borderRadius: '18px', height: '58px', marginTop: '30px', fontWeight: '900', fontSize: '15px', cursor: submitting ? 'not-allowed' : 'pointer', letterSpacing: '0.5px', boxShadow: '0 10px 25px -5px rgba(244, 63, 94, 0.4)' }}
                                 >
-                                    {submitting ? 'TERMINATING...' : 'FINALIZE DUTY'}
+                                    {submitting ? 'PROCESSING...' : 'FINALIZE DUTY'}
                                 </button>
                             </form>
                         </motion.div>

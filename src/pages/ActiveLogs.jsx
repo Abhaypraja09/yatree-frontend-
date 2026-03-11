@@ -19,6 +19,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+import { todayIST, formatDateIST, nowIST } from '../utils/istUtils';
 
 const ActiveLogs = () => {
     const { selectedCompany } = useCompany();
@@ -32,10 +33,7 @@ const ActiveLogs = () => {
     const [filterVehicle, setFilterVehicle] = useState('All');
     const [viewPhoto, setViewPhoto] = useState(null);
 
-    const getLocalYYYYMMDD = () => {
-        const d = new Date();
-        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    };
+    const getLocalYYYYMMDD = () => todayIST();
 
     // Form State
     const [formData, setFormData] = useState({
@@ -51,8 +49,8 @@ const ActiveLogs = () => {
     const [submitting, setSubmitting] = useState(false);
 
     // Simple Month/Year filter
-    const [filterMonth, setFilterMonth] = useState(new Date().getMonth()); // 0-indexed
-    const [filterYear, setFilterYear] = useState(new Date().getFullYear());
+    const [filterMonth, setFilterMonth] = useState(nowIST().getUTCMonth()); // 0-indexed
+    const [filterYear, setFilterYear] = useState(nowIST().getUTCFullYear());
 
     useEffect(() => {
         if (selectedCompany) {
@@ -160,8 +158,8 @@ const ActiveLogs = () => {
         );
         const matchesStatus = filterStatus === 'All' || log.status === filterStatus;
         const matchesVehicle = filterVehicle === 'All' || log.vehicle?._id === filterVehicle;
-        const logDate = new Date(log.date);
-        const matchesDate = logDate.getMonth() === filterMonth && logDate.getFullYear() === filterYear;
+        const logDate = nowIST(log.date);
+        const matchesDate = logDate.getUTCMonth() === filterMonth && logDate.getUTCFullYear() === filterYear;
         return matchesSearch && matchesStatus && matchesVehicle && matchesDate;
     });
 
@@ -316,7 +314,7 @@ const ActiveLogs = () => {
                         className="input-field"
                         style={{ height: '48px', borderRadius: '14px', padding: '0 20px', fontWeight: '700', fontSize: '14px', width: '110px' }}
                     >
-                        {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
+                        {Array.from({ length: 5 }, (_, i) => nowIST().getUTCFullYear() - i).map(y => (
                             <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
                         ))}
                     </select>
@@ -412,7 +410,7 @@ const ActiveLogs = () => {
                                             style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}
                                         >
                                             <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
-                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{new Date(log.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{formatDateIST(log.date)}</div>
                                                 <div style={{ color: 'rgba(251, 191, 36, 0.7)', fontSize: '11px', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '5px', fontWeight: '700' }}>
                                                     <MapPin size={12} /> {log.location || 'Not Specified'}
                                                 </div>
@@ -517,7 +515,7 @@ const ActiveLogs = () => {
                                         </div>
                                         <div style={{ textAlign: 'right' }}>
                                             <div style={{ color: '#f43f5e', fontWeight: '900', fontSize: '18px' }}>₹{Number(log.amount || 0).toLocaleString()}</div>
-                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '700' }}>{new Date(log.date).toLocaleDateString()}</div>
+                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '700' }}>{formatDateIST(log.date)}</div>
                                         </div>
                                     </div>
 

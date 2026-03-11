@@ -4,6 +4,7 @@ import { Plus, Search, Trash2, Car, X, Save, ChevronLeft, ChevronRight, Calendar
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST } from '../utils/istUtils';
 
 const OutsideCars = () => {
     const { selectedCompany } = useCompany();
@@ -13,22 +14,14 @@ const OutsideCars = () => {
     const [ownerFilter, setOwnerFilter] = useState('All');
     const [propertyFilter, setPropertyFilter] = useState('All');
 
-    // Date Filtering - Default to 1st of current month to Today
-    const getToday = () => new Date().toISOString().split('T')[0];
-    const getOneEightyDaysAgo = () => {
-        const d = new Date();
-        d.setDate(d.getDate() - 180);
-        return d.toISOString().split('T')[0];
-    };
-
     const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0]);
-    const [toDate, setToDate] = useState(getToday());
+    const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
+    const [toDate, setToDate] = useState(todayIST());
 
     /* navigate dates */
     const shiftDays = (n) => {
-        const f = new Date(fromDate);
-        f.setDate(f.getDate() + n);
+        const f = nowIST(fromDate);
+        f.setUTCDate(f.getUTCDate() + n);
         const fStr = f.toISOString().split('T')[0];
         setFromDate(fStr);
         if (!isRange) setToDate(fStr);
@@ -46,7 +39,7 @@ const OutsideCars = () => {
         ownerName: '',
         dutyAmount: '',
         dropLocation: '',
-        date: getToday()
+        date: todayIST()
     });
 
     useEffect(() => {
@@ -84,7 +77,7 @@ const OutsideCars = () => {
             ownerName: ownerFilter !== 'All' ? ownerFilter : '',
             dutyAmount: '',
             dropLocation: '',
-            date: getToday(),
+            date: todayIST(),
             isDuplicateToday: false
         });
         setShowModal(true);
@@ -191,7 +184,7 @@ const OutsideCars = () => {
             ownerName: vehicle.ownerName,
             dutyAmount: vehicle.dutyAmount,
             dropLocation: vehicle.dropLocation,
-            date: vehicle.carNumber?.split('#')[1] || new Date(vehicle.createdAt).toISOString().split('T')[0]
+            date: vehicle.carNumber?.split('#')[1] || toISTDateString(vehicle.createdAt)
         });
         setSelectedId(vehicle._id);
         setEditMode(true);
@@ -249,7 +242,7 @@ const OutsideCars = () => {
     const dropLocationSuggestions = [...new Set(vehicles.map(v => v.dropLocation).filter(Boolean))];
 
     const formatDateDisplay = (dateStr) => {
-        return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+        return formatDateIST(dateStr);
     };
 
     return (
@@ -359,7 +352,7 @@ const OutsideCars = () => {
                                 }}>
                                     <span style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
                                     <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                        {new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                        {formatDateIST(fromDate)}
                                     </span>
                                     <input
                                         type="date"
@@ -388,7 +381,7 @@ const OutsideCars = () => {
                                     <Calendar size={14} color="#818cf8" />
                                 )}
                                 <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                    {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: isRange ? undefined : 'numeric' }).toUpperCase()}
+                                    {formatDateIST(toDate)}
                                 </span>
                                 <input
                                     type="date"
@@ -446,8 +439,7 @@ const OutsideCars = () => {
                                 'Date': (() => {
                                     const rawDate = v.carNumber?.split('#')[1] || v.createdAt;
                                     if (!rawDate) return '';
-                                    const d = new Date(rawDate);
-                                    return d.toLocaleDateString('en-GB'); // dd/mm/yyyy
+                                    return formatDateIST(rawDate);
                                 })(),
                                 'Vehicle Details': `${v.model || ''} - ${v.carNumber?.split('#')[0] || ''}`,
                                 'Drop Location': v.dropLocation?.replace(/ \| /g, ' ➜ ') || '',
@@ -572,7 +564,7 @@ const OutsideCars = () => {
                                                 const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                                                 return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
                                             }
-                                            return new Date(v.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                                            return formatDateIST(v.createdAt);
                                         })()}
                                     </div>
                                 </td>
@@ -701,11 +693,11 @@ const OutsideCars = () => {
                                                     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                                                     return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
                                                 }
-                                                return new Date(v.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+                                                return formatDateIST(v.createdAt);
                                             })()}
                                         </div>
                                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-                                            Entry Time: {new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            Entry Time: {new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', gap: '8px' }}>

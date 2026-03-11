@@ -4,14 +4,21 @@ import { Search, X, Car, ParkingSquare, TrendingDown, Wallet, Plus, Calendar, Us
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+import { 
+    todayIST, 
+    toISTDateString, 
+    formatDateIST, 
+    formatTimeIST, 
+    formatDateTimeIST 
+} from '../utils/istUtils';
 
 const DriverSalaries = () => {
     const { selectedCompany } = useCompany();
     const [salaries, setSalaries] = useState([]);
     const [loading, setLoading] = useState(true);
 
-    const [month, setMonth] = useState(new Date().getMonth() + 1);
-    const [year, setYear] = useState(new Date().getFullYear());
+    const [month, setMonth] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCMonth() + 1);
+    const [year, setYear] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCFullYear());
     const [searchTerm, setSearchTerm] = useState('');
 
     const [showDetailModal, setShowDetailModal] = useState(false);
@@ -25,7 +32,7 @@ const DriverSalaries = () => {
     const [advanceFormData, setAdvanceFormData] = useState({
         driverId: '',
         amount: '',
-        date: new Date().toISOString().split('T')[0],
+        date: todayIST(),
         remark: ''
     });
     const [submittingAdvance, setSubmittingAdvance] = useState(false);
@@ -99,7 +106,7 @@ const DriverSalaries = () => {
                 setAdvanceFormData({
                     driverId: '',
                     amount: '',
-                    date: new Date().toISOString().split('T')[0],
+                    date: todayIST(),
                     remark: ''
                 });
                 setAdvanceMessage({ type: '', text: '' });
@@ -118,7 +125,7 @@ const DriverSalaries = () => {
         setAdvanceFormData({
             driverId: advance.driver?._id || '',
             amount: advance.amount || '',
-            date: advance.date ? new Date(advance.date).toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
+            date: advance.date ? toISTDateString(advance.date) : todayIST(),
             remark: advance.remark || ''
         });
         setShowAdvanceModal(true);
@@ -369,7 +376,7 @@ const DriverSalaries = () => {
                                     </td>
                                     <td style={{ padding: '20px 25px' }}>
                                         <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>
-                                            {new Date(advance.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                            {formatDateIST(advance.date)}
                                         </div>
                                     </td>
                                     <td style={{ padding: '20px 25px' }}>
@@ -428,7 +435,7 @@ const DriverSalaries = () => {
                                     </div>
                                     <div>
                                         <div style={{ fontWeight: '800', color: 'white' }}>{advance.driver?.name}</div>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{new Date(advance.date).toLocaleDateString()}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{formatDateIST(advance.date)}</div>
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
@@ -600,7 +607,7 @@ const DriverSalaries = () => {
                                                     {det?.breakdown?.map((day, idx) => (
                                                         <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                                             <td style={{ padding: '12px', color: 'white' }}>
-                                                                {new Date(day.date).toLocaleDateString()}
+                                                                {formatDateIST(day.date)}
                                                                 <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{day.type || 'Duty'}</div>
                                                                 {day.remarks && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{day.remarks}</div>}
                                                             </td>
@@ -614,12 +621,12 @@ const DriverSalaries = () => {
                                                     ))}
                                                     {/* Standalone Parking Entries */}
                                                     {det?.parkingEntries?.filter(p => {
-                                                        const pDateStr = new Date(p.date).toLocaleString('en-CA', { timeZone: 'Asia/Kolkata' }).split(',')[0];
+                                                        const pDateStr = toISTDateString(p.date);
                                                         return !det?.breakdown?.some(d => d.date === pDateStr);
                                                     }).map((p, idx) => (
                                                         <tr key={`p-${idx}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: 'rgba(245,158,11,0.02)' }}>
                                                             <td style={{ padding: '12px', color: 'white' }}>
-                                                                {new Date(p.date).toLocaleDateString()}
+                                                                {formatDateIST(p.date)}
                                                                 <div style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '800' }}>STANDALONE PARKING</div>
                                                                 {p.remark && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{p.remark}</div>}
                                                             </td>
@@ -661,7 +668,7 @@ const DriverSalaries = () => {
                                                 <tbody>
                                                     {det?.advances?.map((adv, idx) => (
                                                         <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                                            <td style={{ padding: '12px', color: 'white' }}>{new Date(adv.date).toLocaleDateString()}</td>
+                                                            <td style={{ padding: '12px', color: 'white' }}>{formatDateIST(adv.date)}</td>
                                                             <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{adv.remark}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#f43f5e', fontWeight: '700' }}>₹{adv.amount}</td>
                                                         </tr>

@@ -8,6 +8,13 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 import * as XLSX from 'xlsx-js-style';
+import { 
+    todayIST, 
+    toISTDateString, 
+    firstDayOfMonthIST, 
+    formatDateIST, 
+    nowIST 
+} from '../utils/istUtils';
 
 const EventManagement = () => {
     const { selectedCompany } = useCompany();
@@ -20,16 +27,16 @@ const EventManagement = () => {
     const [eventFilter, setEventFilter] = useState('All');
     const [sourceFilter, setSourceFilter] = useState('All'); // 'All' | 'Fleet' | 'External'
 
-    const getToday = () => new Date().toISOString().split('T')[0];
+    const getToday = () => todayIST();
     const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString().split('T')[0]);
-    const [toDate, setToDate] = useState(getToday());
+    const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
+    const [toDate, setToDate] = useState(todayIST());
 
     useEffect(() => {
         if (!isRange) {
-            const d = new Date(toDate);
-            const lastDay = new Date(d.getFullYear(), d.getMonth() + 1, 0).toISOString().split('T')[0];
-            const firstDay = new Date(d.getFullYear(), d.getMonth(), 1).toISOString().split('T')[0];
+            const d = nowIST(toDate);
+            const firstDay = toISTDateString(new Date(d.getUTCFullYear(), d.getUTCMonth(), 1));
+            const lastDay = toISTDateString(new Date(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
             if (fromDate !== firstDay) setFromDate(firstDay);
             if (toDate !== lastDay) setToDate(lastDay);
         }
@@ -94,8 +101,8 @@ const EventManagement = () => {
     };
 
     const shiftDays = (n) => {
-        const f = new Date(fromDate);
-        f.setDate(f.getDate() + n);
+        const f = nowIST(fromDate);
+        f.setUTCDate(f.getUTCDate() + n);
         const fStr = f.toISOString().split('T')[0];
         setFromDate(fStr);
         if (!isRange) setToDate(fStr);
@@ -233,9 +240,9 @@ const EventManagement = () => {
     const extCount = filtered.filter(v => (v.vehicleSource || 'External') === 'External').length;
     const uniqueClients = [...new Set(events.map(e => e.client).filter(Boolean))].sort();
 
-    const now = new Date();
-    const curMonth = (now.getMonth() + 1).toString().padStart(2, '0');
-    const curYear = now.getFullYear().toString();
+    const now = nowIST();
+    const curMonth = (now.getUTCMonth() + 1).toString().padStart(2, '0');
+    const curYear = now.getUTCFullYear().toString();
     const currentMonthDuties = vehicles.filter(v => {
         const d = v.carNumber?.split('#')[1];
         return d && d.startsWith(`${curYear}-${curMonth}`);
@@ -264,7 +271,7 @@ const EventManagement = () => {
         XLSX.writeFile(wb, `Event_Duties_${fromDate}_to_${toDate}.xlsx`);
     };
 
-    const formatDateDisplay = (dateStr) => new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
+    const formatDateDisplay = (dateStr) => formatDateIST(dateStr);
 
     return (
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
@@ -273,106 +280,200 @@ const EventManagement = () => {
             <header style={{ padding: 'clamp(20px, 4vw, 40px) 0' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '30px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div className="premium-icon-bg">
+                        <div style={{
+                            width: 'clamp(40px,10vw,50px)',
+                            height: 'clamp(40px,10vw,50px)',
+                            background: 'linear-gradient(135deg, white, #f8fafc)',
+                            borderRadius: '16px',
+                            padding: '8px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                        }}>
                             <Briefcase size={32} color="#fbbf24" />
                         </div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div className="pulse-dot"></div>
-                                <span className="label-text">Fleet Operations</span>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Operations</span>
                             </div>
-                            <h1 className="main-title">Event <span className="text-gradient-yellow">Command</span></h1>
-                            <p className="subtitle-text">Logbook: <b style={{ color: 'white' }}>{formatDateDisplay(fromDate)}</b> — <b style={{ color: 'white' }}>{formatDateDisplay(toDate)}</b></p>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
+                                Event <span style={{ background: 'linear-gradient(to right, #fbbf24, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Command</span>
+                            </h1>
+                            <p style={{ marginTop: '4px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
+                                {isRange ? (
+                                    <>Range: <b style={{ color: 'white' }}>{formatDateDisplay(fromDate)}</b> — <b style={{ color: 'white' }}>{formatDateDisplay(toDate)}</b></>
+                                ) : (
+                                    <>Cycle: <b style={{ color: 'white' }}>{formatDateIST(toDate, { month: 'long', year: 'numeric' }).toUpperCase()}</b></>
+                                )}
+                            </p>
                         </div>
                     </div>
 
                     <div className="flex-resp" style={{ gap: '12px' }}>
-                        {/* Monthly Progress */}
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card stat-card" style={{ background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
-                            <div style={{ position: 'absolute', bottom: 0, left: 0, height: '3px', background: '#fbbf24', width: `${targetPercentage}%` }}></div>
-                            <span className="stat-label" style={{ color: '#fbbf24' }}><Target size={10} style={{ display: 'inline', marginRight: '4px' }} /> Monthly Progress</span>
-                            <div style={{ display: 'flex', alignItems: 'baseline', gap: '5px' }}>
-                                <span className="stat-value">{currentMonthDuties}</span>
-                                <span className="stat-unit">/ {monthlyTarget}</span>
-                            </div>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px', position: 'relative', overflow: 'hidden' }}>
+                            <div style={{ position: 'absolute', bottom: 0, left: 0, height: '2px', background: '#fbbf24', width: `${targetPercentage}%`, transition: 'width 1s ease-out' }}></div>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Target size={10} /> Progress</span>
+                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{currentMonthDuties} <span style={{ fontSize: '12px', opacity: 0.4 }}>/ {monthlyTarget}</span></span>
                         </motion.div>
-                        {/* Revenue */}
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card stat-card" style={{ background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
-                            <span className="stat-label" style={{ color: '#34d399' }}>Total Revenue</span>
-                            <span className="stat-value">₹{totalAmount.toLocaleString()}</span>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Revenue</span>
+                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{totalAmount.toLocaleString()}</span>
                         </motion.div>
-                        {/* Fleet vs External */}
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card stat-card" style={{ background: 'rgba(99,102,241,0.05)', border: '1px solid rgba(99,102,241,0.1)', gap: '8px' }}>
-                            <span className="stat-label" style={{ color: '#818cf8' }}>Vehicle Breakdown</span>
-                            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981' }}></div>
-                                    <span style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>{fleetCount}</span>
-                                    <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', fontWeight: '700' }}>Fleet</span>
-                                </div>
-                                <div style={{ height: '20px', width: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#f59e0b' }}></div>
-                                    <span style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>{extCount}</span>
-                                    <span style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', fontWeight: '700' }}>External</span>
-                                </div>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#818cf8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Fleet vs Ext</span>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                <span style={{ color: 'white', fontSize: '16px', fontWeight: '900' }}>{fleetCount}</span>
+                                <span style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></span>
+                                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '16px', fontWeight: '900' }}>{extCount}</span>
                             </div>
                         </motion.div>
                     </div>
                 </div>
 
                 {/* Filters */}
-                <div className="glass-card filter-container">
-                    <div style={{ position: 'relative', flex: '1 1 220px' }}>
-                        <Search size={18} className="search-icon" />
-                        <input type="text" placeholder="Search vehicle, driver, event..." className="search-input" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+                <div className="glass-card filter-container" style={{ padding: '20px', marginBottom: '30px', display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                        <input
+                            type="text"
+                            placeholder="Search vehicle, driver, event..."
+                            className="input-field"
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            style={{ width: '100%', height: '50px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', paddingLeft: '45px', margin: 0 }}
+                        />
                     </div>
 
-                    {/* Source Filter */}
-                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', gap: '4px' }}>
+                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.25)', padding: '4px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)', gap: '4px' }}>
                         {['All', 'Fleet', 'External'].map(s => (
                             <button key={s} onClick={() => setSourceFilter(s)} style={{
-                                padding: '6px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '800',
-                                background: sourceFilter === s ? (s === 'Fleet' ? 'rgba(16,185,129,0.2)' : s === 'External' ? 'rgba(245,158,11,0.2)' : 'rgba(99,102,241,0.2)') : 'transparent',
-                                color: sourceFilter === s ? (s === 'Fleet' ? '#10b981' : s === 'External' ? '#f59e0b' : '#818cf8') : 'rgba(255,255,255,0.35)',
-                                transition: 'all 0.2s'
+                                padding: '8px 16px', borderRadius: '11px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '900',
+                                background: sourceFilter === s ? (s === 'Fleet' ? 'rgba(16,185,129,0.2)' : s === 'External' ? 'rgba(245,158,11,0.2)' : 'rgba(14, 165, 233, 0.1)') : 'transparent',
+                                color: sourceFilter === s ? (s === 'Fleet' ? '#10b981' : s === 'External' ? '#f59e0b' : '#38bdf8') : 'rgba(255,255,255,0.3)',
+                                transition: 'all 0.3s ease',
+                                textTransform: 'uppercase', letterSpacing: '0.5px'
                             }}>{s}</button>
                         ))}
                     </div>
 
-                    <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} className="select-field">
-                        <option value="All">All Clients</option>
-                        {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
-                    <select value={eventFilter} onChange={e => setEventFilter(e.target.value)} className="select-field">
-                        <option value="All">All Events</option>
-                        {events.map(e => <option key={e._id} value={e._id}>{e.name}</option>)}
+                    <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} className="input-field" style={{ flex: '1 1 160px', height: '50px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', margin: 0 }}>
+                        <option value="All" style={{ background: '#1e293b' }}>All Clients</option>
+                        {uniqueClients.map(c => <option key={c} value={c} style={{ background: '#1e293b' }}>{c}</option>)}
                     </select>
 
-                    <div className="calendar-controls">
-                        <button onClick={() => shiftDays(-1)} className="shift-btn"><ChevronLeft size={18} /></button>
-                        <div className="date-inputs">
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        background: 'rgba(0,0,0,0.25)',
+                        padding: '4px',
+                        borderRadius: '16px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                    }}>
+                        <button
+                            onClick={() => shiftDays(-1)}
+                            style={{
+                                width: '36px', height: '36px', borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.03)', border: 'none',
+                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+
+                        <div style={{ display: 'flex', gap: '5px' }}>
                             {isRange && (
-                                <div className="date-chip from">
-                                    <span>FROM:</span>
-                                    <b>{new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}</b>
-                                    <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} />
+                                <div style={{
+                                    padding: '0 15px', height: '36px', display: 'flex',
+                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                    background: 'rgba(14, 165, 233, 0.1)', borderRadius: '10px',
+                                    border: '1px solid rgba(14, 165, 233, 0.15)',
+                                    position: 'relative', overflow: 'hidden'
+                                }}>
+                                    <span style={{ color: '#0ea5e9', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
+                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
+                                        {formatDateIST(fromDate)}
+                                    </span>
+                                    <input
+                                        type="date"
+                                        value={fromDate}
+                                        onChange={(e) => setFromDate(e.target.value)}
+                                        style={{
+                                            position: 'absolute', opacity: 0, inset: 0,
+                                            width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
+                                        }}
+                                    />
                                 </div>
                             )}
-                            <div className="date-chip to">
-                                {isRange ? <span>TO:</span> : <Calendar size={14} color="#818cf8" />}
-                                <b>{isRange ? new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase() : new Date(toDate).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }).toUpperCase()}</b>
-                                <input type="date" value={toDate} onChange={e => { setToDate(e.target.value); if (!isRange) setFromDate(e.target.value); }} />
+
+                            <div style={{
+                                padding: '0 15px', height: '36px', display: 'flex',
+                                alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(14, 165, 233, 0.1)',
+                                borderRadius: '10px',
+                                border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(14, 165, 233, 0.2)'}`,
+                                position: 'relative', overflow: 'hidden'
+                            }}>
+                                {isRange ? (
+                                    <span style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>TO:</span>
+                                ) : (
+                                    <Calendar size={14} color="#0ea5e9" />
+                                )}
+                                <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
+                                    {isRange ? formatDateIST(toDate) : formatDateIST(toDate, { month: 'long', year: 'numeric' }).toUpperCase()}
+                                </span>
+                                <input
+                                    type="date"
+                                    value={toDate}
+                                    onChange={(e) => {
+                                        setToDate(e.target.value);
+                                        if (!isRange) setFromDate(e.target.value);
+                                    }}
+                                    style={{
+                                        position: 'absolute', opacity: 0, inset: 0,
+                                        width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
+                                    }}
+                                />
                             </div>
                         </div>
-                        <button onClick={() => shiftDays(1)} className="shift-btn"><ChevronRight size={18} /></button>
+
+                        <button
+                            onClick={() => shiftDays(1)}
+                            style={{
+                                width: '36px', height: '36px', borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.03)', border: 'none',
+                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}
+                        >
+                            <ChevronRight size={18} />
+                        </button>
                     </div>
-                    <button onClick={() => setIsRange(!isRange)} className={`toggle-btn-plus ${isRange ? 'active' : ''}`} title={isRange ? "Monthly View" : "Custom Range"}>
-                        <Plus size={16} style={{ transform: isRange ? 'rotate(45deg)' : 'none', transition: '0.3s' }} />
+
+                    <button
+                        onClick={() => {
+                            const next = !isRange;
+                            setIsRange(next);
+                        }}
+                        style={{
+                            marginLeft: '5px', padding: '0 12px', height: '38px',
+                            borderRadius: '12px', border: 'none', cursor: 'pointer',
+                            background: isRange ? '#fbbf24' : 'rgba(255,255,255,0.05)',
+                            color: isRange ? 'black' : 'rgba(255,255,255,0.4)',
+                            fontSize: '10px', fontWeight: '900', textTransform: 'uppercase',
+                            letterSpacing: '0.5px'
+                        }}
+                    >
+                        {isRange ? <X size={14} style={{ marginRight: '5px', display: 'inline', verticalAlign: 'middle' }} /> : <Plus size={14} style={{ marginRight: '5px', display: 'inline', verticalAlign: 'middle' }} />}
+                        {isRange ? 'Custom Range' : 'Monthly Cycle'}
                     </button>
                 </div>
 
-                <div className="action-buttons-row">
+                <div className="event-action-btns" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px', marginTop: '15px', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button onClick={exportExcel} className="secondary-btn"><FileSpreadsheet size={18} /> Excel</button>
                         <button onClick={() => { setIsEditingEvent(false); setEventFormData({ name: '', client: '', date: getToday(), location: '', description: '' }); setShowEventModal(true); }} className="secondary-btn"><Plus size={18} /> New Event</button>
@@ -413,13 +514,14 @@ const EventManagement = () => {
                         ) : filtered.map((v, idx) => {
                             const event = events.find(e => e._id === v.eventId);
                             const dutyDate = v.carNumber?.split('#')[1];
+                            const dObj = nowIST(dutyDate);
                             const src = v.vehicleSource || 'External';
                             const isFleet = src === 'Fleet';
                             return (
                                 <motion.tr key={v._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.03 }} className="table-row">
                                     <td className="date-cell">
-                                        <div className="day-name">{new Date(dutyDate).toLocaleDateString('en-IN', { weekday: 'short' }).toUpperCase()}</div>
-                                        <div className="date-val">{formatDateDisplay(dutyDate)}</div>
+                                        <div className="day-name">{formatDateIST(dutyDate, { weekday: 'short' }).toUpperCase()}</div>
+                                        <div className="date-val">{formatDateIST(dutyDate, { day: '2-digit', month: 'short' })}</div>
                                     </td>
                                     <td className="vehicle-cell">
                                         <div className="plate-num">{v.carNumber?.split('#')[0]}</div>
@@ -469,61 +571,63 @@ const EventManagement = () => {
                         })}
                     </tbody>
                 </table>
-            </div>
+            </div >
 
             {/* Mobile View */}
-            <div className="show-mobile">
-                {filtered.map((v, idx) => {
-                    const event = events.find(e => e._id === v.eventId);
-                    const dutyDate = v.carNumber?.split('#')[1];
-                    const src = v.vehicleSource || 'External';
-                    const isFleet = src === 'Fleet';
-                    return (
-                        <motion.div key={v._id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="mobile-duty-card">
-                            <div className="card-header">
-                                <div className="header-left">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                        <span className="car-num">{v.carNumber?.split('#')[0]}</span>
-                                        <span style={{
-                                            padding: '2px 7px', borderRadius: '20px', fontSize: '8px', fontWeight: '900',
-                                            background: isFleet ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
-                                            color: isFleet ? '#10b981' : '#f59e0b'
-                                        }}>{src.toUpperCase()}</span>
+            < div className="show-mobile" >
+                {
+                    filtered.map((v, idx) => {
+                        const event = events.find(e => e._id === v.eventId);
+                        const dutyDate = v.carNumber?.split('#')[1];
+                        const src = v.vehicleSource || 'External';
+                        const isFleet = src === 'Fleet';
+                        return (
+                            <motion.div key={v._id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="mobile-duty-card">
+                                <div className="card-header">
+                                    <div className="header-left">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                            <span className="car-num">{v.carNumber?.split('#')[0]}</span>
+                                            <span style={{
+                                                padding: '2px 7px', borderRadius: '20px', fontSize: '8px', fontWeight: '900',
+                                                background: isFleet ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)',
+                                                color: isFleet ? '#10b981' : '#f59e0b'
+                                            }}>{src.toUpperCase()}</span>
+                                        </div>
+                                        <span className="date-label">{formatDateDisplay(dutyDate)}</span>
                                     </div>
-                                    <span className="date-label">{formatDateDisplay(dutyDate)}</span>
+                                    <div className="amount-tag">₹{Number(v.dutyAmount || 0).toLocaleString()}</div>
                                 </div>
-                                <div className="amount-tag">₹{Number(v.dutyAmount || 0).toLocaleString()}</div>
-                            </div>
-                            <div className="card-body">
-                                {v.driverName && (
+                                <div className="card-body">
+                                    {v.driverName && (
+                                        <div className="detail-item">
+                                            <label>Driver</label>
+                                            <div className="val">{v.driverName}</div>
+                                        </div>
+                                    )}
                                     <div className="detail-item">
-                                        <label>Driver</label>
-                                        <div className="val">{v.driverName}</div>
+                                        <label>Event / Client</label>
+                                        <div className="val">{event?.name || 'N/A'} · {event?.client || 'N/A'}</div>
                                     </div>
-                                )}
-                                <div className="detail-item">
-                                    <label>Event / Client</label>
-                                    <div className="val">{event?.name || 'N/A'} · {event?.client || 'N/A'}</div>
+                                    <div className="detail-item">
+                                        <label>Duty Detail</label>
+                                        <div className="val">{v.dropLocation || '—'}</div>
+                                    </div>
                                 </div>
-                                <div className="detail-item">
-                                    <label>Duty Detail</label>
-                                    <div className="val">{v.dropLocation || '—'}</div>
+                                <div className="card-footer">
+                                    <div className="model-info">{v.model}</div>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button onClick={() => handleEditDuty(v)} className="icon-btn"><Edit size={14} /></button>
+                                        <button onClick={() => handleDeleteDuty(v._id)} className="icon-btn del"><Trash2 size={14} /></button>
+                                    </div>
                                 </div>
-                            </div>
-                            <div className="card-footer">
-                                <div className="model-info">{v.model}</div>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    <button onClick={() => handleEditDuty(v)} className="icon-btn"><Edit size={14} /></button>
-                                    <button onClick={() => handleDeleteDuty(v._id)} className="icon-btn del"><Trash2 size={14} /></button>
-                                </div>
-                            </div>
-                        </motion.div>
-                    );
-                })}
-            </div>
+                            </motion.div>
+                        );
+                    })
+                }
+            </div >
 
             {/* Duty Modal */}
-            <AnimatePresence>
+            < AnimatePresence >
                 {showDutyModal && (
                     <div className="modal-overlay">
                         <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-container">
@@ -600,10 +704,10 @@ const EventManagement = () => {
                         </motion.div>
                     </div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence >
 
             {/* Event Modal */}
-            <AnimatePresence>
+            < AnimatePresence >
                 {showEventModal && (
                     <div className="modal-overlay">
                         <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-container small">
@@ -632,7 +736,7 @@ const EventManagement = () => {
                         </motion.div>
                     </div>
                 )}
-            </AnimatePresence>
+            </AnimatePresence >
 
             <style>{`
                 .premium-icon-bg { width: clamp(40px,10vw,50px); height: clamp(40px,10vw,50px); background: linear-gradient(135deg, white, #f8fafc); border-radius: 16px; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); padding: 8px; }
@@ -730,7 +834,7 @@ const EventManagement = () => {
                 @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
                 @media (max-width: 768px) { .grid-row { grid-template-columns: 1fr; } .header-left { flex-direction: row; align-items: baseline; gap: 10px; } }
             `}</style>
-        </div>
+        </div >
     );
 };
 

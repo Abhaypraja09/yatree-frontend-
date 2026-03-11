@@ -4,6 +4,7 @@ import { ShieldAlert, Upload, CheckCircle, AlertCircle, Calendar as CalendarIcon
 import { motion } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
+import { todayIST } from '../utils/istUtils';
 
 const BorderTax = () => {
     const { selectedCompany } = useCompany();
@@ -14,7 +15,7 @@ const BorderTax = () => {
         vehicleId: '',
         borderName: '',
         amount: '',
-        date: new Date().toISOString().split('T')[0],
+        date: todayIST(),
         remarks: '',
         driverId: ''
     });
@@ -37,13 +38,15 @@ const BorderTax = () => {
     const fetchData = async () => {
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            const vehRes = await axios.get(`/api/admin/vehicles/${selectedCompany._id}`, {
+            const vehRes = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=all`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            const dvrRes = await axios.get(`/api/admin/drivers/${selectedCompany._id}`, {
+            const dvrRes = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            setVehicles(vehRes.data.vehicles || []);
+            // Filter out temporary duty cars (which have '#' in their carNumber)
+            const cleanVehicles = (vehRes.data.vehicles || []).filter(v => typeof v.carNumber === 'string' && !v.carNumber.includes('#'));
+            setVehicles(cleanVehicles);
             setDrivers(dvrRes.data.drivers || []);
         } catch (err) {
             console.error('Error fetching data', err);
@@ -97,7 +100,7 @@ const BorderTax = () => {
                 vehicleId: selectedVehicle?._id || '',
                 borderName: '',
                 amount: '',
-                date: new Date().toISOString().split('T')[0],
+                date: todayIST(),
                 remarks: '',
                 driverId: ''
             });
@@ -139,7 +142,11 @@ const BorderTax = () => {
 
     const selectVehicle = (v) => {
         setSelectedVehicle(v);
-        setFormData(prev => ({ ...prev, vehicleId: v._id }));
+        setFormData(prev => ({ 
+            ...prev, 
+            vehicleId: v._id,
+            driverId: v.currentDriver?._id || ''
+        }));
         setSearchTerm('');
     };
 
@@ -316,9 +323,16 @@ const BorderTax = () => {
                                 style={{ appearance: 'auto' }}
                             >
                                 <option value="">Select Driver</option>
-                                {drivers.map(d => (
-                                    <option key={d._id} value={d._id}>{d.name}</option>
-                                ))}
+                                <optgroup label="My Company Drivers" style={{ background: '#0f172a', color: '#10b981' }}>
+                                    {drivers.filter(d => !d.isFreelancer).map(d => (
+                                        <option key={d._id} value={d._id}>{d.name}</option>
+                                    ))}
+                                </optgroup>
+                                <optgroup label="Freelancer Drivers" style={{ background: '#0f172a', color: '#fbbf24' }}>
+                                    {drivers.filter(d => d.isFreelancer).map(d => (
+                                        <option key={d._id} value={d._id}>{d.name}</option>
+                                    ))}
+                                </optgroup>
                             </select>
                         </div>
 

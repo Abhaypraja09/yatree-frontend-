@@ -23,6 +23,13 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
+import { 
+    todayIST, 
+    toISTDateString, 
+    formatDateIST, 
+    formatTimeIST, 
+    formatDateTimeIST 
+} from '../utils/istUtils';
 
 const StaffPortal = () => {
     const { user, logout } = useAuth();
@@ -444,19 +451,19 @@ const StaffPortal = () => {
                                             lineHeight: 0.9,
                                             textShadow: '0 0 40px rgba(14, 165, 233, 0.3)'
                                         }}>
-                                            {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false })}
+                                            {currentTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: false, timeZone: 'Asia/Kolkata' })}
                                             <motion.span
                                                 animate={{ opacity: [1, 0.3, 1] }}
                                                 transition={{ duration: 1.5, repeat: Infinity }}
                                                 style={{ fontSize: 'clamp(24px, 5vw, 40px)', color: 'rgba(14, 165, 233, 0.5)', fontWeight: '600', letterSpacing: '0' }}
                                             >
-                                                :{currentTime.toLocaleTimeString('en-IN', { second: '2-digit' })}
+                                                :{currentTime.toLocaleTimeString('en-IN', { second: '2-digit', timeZone: 'Asia/Kolkata' })}
                                             </motion.span>
                                         </div>
                                         <div style={{ display: 'flex', justifyContent: 'center', gap: '12px', marginTop: '15px' }}>
                                             <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 16px', borderRadius: '100px', border: '1px solid rgba(255,255,255,0.1)' }}>
                                                 <span style={{ fontSize: '11px', color: 'white', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '2px' }}>
-                                                    {currentTime.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric' }).toUpperCase()}
+                                                    {currentTime.toLocaleDateString('en-IN', { day: '2-digit', month: 'long', year: 'numeric', timeZone: 'Asia/Kolkata' }).toUpperCase()}
                                                 </span>
                                             </div>
                                         </div>
@@ -652,10 +659,10 @@ const StaffPortal = () => {
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <div>
                                                 <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '4px' }}>
-                                                    {new Date(item.date).toLocaleDateString('en-IN', { weekday: 'long' })}
+                                                    {new Date(item.date).toLocaleDateString('en-IN', { weekday: 'long', timeZone: 'Asia/Kolkata' })}
                                                 </div>
                                                 <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', letterSpacing: '-0.5px' }}>
-                                                    {new Date(item.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                                    {formatDateIST(item.date)}
                                                 </div>
                                             </div>
                                             <div style={{ textAlign: 'right' }}>
@@ -678,7 +685,7 @@ const StaffPortal = () => {
                                                         />
                                                     ) : <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)' }} />}
                                                     <div>
-                                                        <div style={{ fontSize: '15px', fontWeight: '950', color: 'white' }}>{item.punchIn?.time ? new Date(item.punchIn.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</div>
+                                                        <div style={{ fontSize: '15px', fontWeight: '950', color: 'white' }}>{item.punchIn?.time ? formatTimeIST(item.punchIn.time) : '--:--'}</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -694,7 +701,7 @@ const StaffPortal = () => {
                                                         />
                                                     ) : <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)' }} />}
                                                     <div>
-                                                        <div style={{ fontSize: '15px', fontWeight: '950', color: 'white' }}>{item.punchOut?.time ? new Date(item.punchOut.time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--:--'}</div>
+                                                        <div style={{ fontSize: '15px', fontWeight: '950', color: 'white' }}>{item.punchOut?.time ? formatTimeIST(item.punchOut.time) : '--:--'}</div>
                                                     </div>
                                                 </div>
                                             </div>
@@ -820,7 +827,7 @@ const StaffPortal = () => {
                                                 <Info size={18} color="#fbbf24" />
                                             </div>
                                             <div>
-                                                <p style={{ margin: 0, fontSize: '14px', fontWeight: '950', color: 'white' }}>{new Date(leave.startDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })} — {new Date(leave.endDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</p>
+                                                <p style={{ margin: 0, fontSize: '14px', fontWeight: '950', color: 'white' }}>{formatDateIST(leave.startDate).split(' ').slice(0,2).join(' ')} — {formatDateIST(leave.endDate).split(' ').slice(0,2).join(' ')}</p>
                                                 <p style={{ margin: '4px 0 0 0', fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>{leave.type} CLASSIFICATION</p>
                                             </div>
                                         </div>

@@ -31,10 +31,10 @@ const BorderTaxModal = ({ isOpen, onClose, selectedCompany }) => {
     const fetchData = async () => {
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            const vehRes = await axios.get(`/api/admin/vehicles/${selectedCompany._id}`, {
+            const vehRes = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=all`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
-            const dvrRes = await axios.get(`/api/admin/drivers/${selectedCompany._id}`, {
+            const dvrRes = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             setVehicles(vehRes.data.vehicles || []);
