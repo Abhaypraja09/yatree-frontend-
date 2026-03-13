@@ -15,7 +15,9 @@ import {
     CheckCircle2,
     Clock,
     User,
-    PlusCircle
+    PlusCircle,
+    Upload,
+    ImageIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -50,6 +52,9 @@ const DriverServices = () => {
         paymentMode: 'Cash',
         status: 'Completed'
     });
+    const [billPhoto, setBillPhoto] = useState(null);
+    const [billPhotoPreview, setBillPhotoPreview] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null); // For viewing
     const [submitting, setSubmitting] = useState(false);
     const [editingId, setEditingId] = useState(null);
 
@@ -129,19 +134,27 @@ const DriverServices = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            const payload = {
-                ...formData,
-                companyId: selectedCompany._id
-            };
+            const fd = new FormData();
+            Object.keys(formData).forEach(key => {
+                fd.append(key, formData[key]);
+            });
+            fd.append('companyId', selectedCompany._id);
+            if (billPhoto) fd.append('billPhoto', billPhoto);
 
             if (editingId) {
-                await axios.put(`/api/admin/maintenance/${editingId}`, payload, {
-                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                await axios.put(`/api/admin/maintenance/${editingId}`, fd, {
+                    headers: { 
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${userInfo.token}` 
+                    }
                 });
                 alert('Service record updated');
             } else {
-                await axios.post('/api/admin/maintenance', payload, {
-                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                await axios.post('/api/admin/maintenance', fd, {
+                    headers: { 
+                        'Content-Type': 'multipart/form-data',
+                        Authorization: `Bearer ${userInfo.token}` 
+                    }
                 });
                 alert('Service record added');
             }
@@ -178,6 +191,8 @@ const DriverServices = () => {
             paymentMode: 'Cash',
             status: 'Completed'
         });
+        setBillPhoto(null);
+        setBillPhotoPreview(null);
         setEditingId(null);
     };
 
@@ -388,7 +403,16 @@ const DriverServices = () => {
                                     <td style={{ padding: '15px 20px', color: 'rgba(255,255,255,0.6)', fontSize: '13px' }}>{r.garageName || 'Local'}</td>
                                     <td style={{ padding: '15px 20px', color: 'white', fontWeight: '800' }}>₹{r.amount}</td>
                                     <td style={{ padding: '15px 20px', textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                                            {r.billPhoto && (
+                                                <button 
+                                                    onClick={() => setSelectedImage(r.billPhoto)}
+                                                    style={{ background: 'rgba(14, 165, 233, 0.1)', border: 'none', color: '#0ea5e9', padding: '6px', borderRadius: '8px', cursor: 'pointer' }}
+                                                    title="View Receipt"
+                                                >
+                                                    <ImageIcon size={16} />
+                                                </button>
+                                            )}
                                             <button onClick={() => { setEditingId(r._id); setFormData({ ...r, vehicleId: r.vehicle?._id, driverId: r.driver?._id }); setShowModal(true); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer' }}><Wrench size={16} /></button>
                                             <button onClick={() => handleDelete(r._id)} style={{ background: 'none', border: 'none', color: '#f43f5e', opacity: 0.5, cursor: 'pointer' }}><Trash2 size={16} /></button>
                                         </div>
@@ -451,8 +475,36 @@ const DriverServices = () => {
                                 </div>
 
                                 <div>
-                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', marginBottom: '6px' }}>DESCRIPTION (OPTIONAL)</label>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', marginBottom: '6px' }}>DESCRIPTION / NOTES</label>
                                     <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="input-field" rows="2" style={{ resize: 'none' }} placeholder="Notes about the service..."></textarea>
+                                </div>
+
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', marginBottom: '10px' }}>UPLOAD RECEIPT / BILL PHOTO (OPTIONAL)</label>
+                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                        <label style={{ flex: 1, height: '80px', border: '2px dashed rgba(255,255,255,0.1)', borderRadius: '14px', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', background: 'rgba(255,255,255,0.02)', transition: 'all 0.2s' }} className="hover-light">
+                                            <Upload size={20} color="rgba(255,255,255,0.3)" />
+                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', marginTop: '6px' }}>CLICK TO UPLOAD</span>
+                                            <input 
+                                                type="file" 
+                                                accept="image/*" 
+                                                onChange={(e) => {
+                                                    const file = e.target.files[0];
+                                                    if (file) {
+                                                        setBillPhoto(file);
+                                                        setBillPhotoPreview(URL.createObjectURL(file));
+                                                    }
+                                                }} 
+                                                style={{ display: 'none' }} 
+                                            />
+                                        </label>
+                                        {(billPhotoPreview || formData.billPhoto) && (
+                                            <div style={{ width: '80px', height: '80px', borderRadius: '14px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', position: 'relative' }}>
+                                                <img src={billPhotoPreview || `/${formData.billPhoto}`} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                                <button type="button" onClick={() => { setBillPhoto(null); setBillPhotoPreview(null); }} style={{ position: 'absolute', top: '4px', right: '4px', background: 'rgba(0,0,0,0.5)', border: 'none', color: 'white', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}><X size={12} /></button>
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
@@ -462,6 +514,18 @@ const DriverServices = () => {
                                     </button>
                                 </div>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Lightbox for viewing receipts */}
+            <AnimatePresence>
+                {selectedImage && (
+                    <div className="modal-overlay" onClick={() => setSelectedImage(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px' }}>
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}>
+                            <img src={`/${selectedImage}`} alt="Receipt" style={{ maxWidth: '100%', maxHeight: '90vh', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }} />
+                            <button onClick={() => setSelectedImage(null)} style={{ position: 'absolute', top: '-40px', right: '-40px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', padding: '10px', borderRadius: '50%', cursor: 'pointer' }}><X size={24} /></button>
                         </motion.div>
                     </div>
                 )}
