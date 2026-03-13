@@ -8,12 +8,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 import * as XLSX from 'xlsx-js-style';
-import { 
-    todayIST, 
-    toISTDateString, 
-    firstDayOfMonthIST, 
-    formatDateIST, 
-    nowIST 
+import {
+    todayIST,
+    toISTDateString,
+    firstDayOfMonthIST,
+    formatDateIST,
+    nowIST
 } from '../utils/istUtils';
 
 const EventManagement = () => {
@@ -32,15 +32,7 @@ const EventManagement = () => {
     const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
     const [toDate, setToDate] = useState(todayIST());
 
-    useEffect(() => {
-        if (!isRange) {
-            const d = nowIST(toDate);
-            const firstDay = toISTDateString(new Date(d.getUTCFullYear(), d.getUTCMonth(), 1));
-            const lastDay = toISTDateString(new Date(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
-            if (fromDate !== firstDay) setFromDate(firstDay);
-            if (toDate !== lastDay) setToDate(lastDay);
-        }
-    }, [isRange, toDate]);
+    // Removed auto-sync to allow initial month range in Single UI mode
 
     const [monthlyTarget, setMonthlyTarget] = useState(0);
     const [showEventModal, setShowEventModal] = useState(false);
@@ -52,7 +44,7 @@ const EventManagement = () => {
     const [eventFormData, setEventFormData] = useState({ name: '', client: '', date: getToday(), location: '', description: '' });
     const [dutyFormData, setDutyFormData] = useState({
         carNumber: '', model: '', dropLocation: '', date: getToday(),
-        eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'External' // 'Fleet' | 'External'
+        eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet' // 'Fleet' | 'External'
     });
 
     useEffect(() => {
@@ -101,21 +93,43 @@ const EventManagement = () => {
     };
 
     const shiftDays = (n) => {
-        const f = nowIST(fromDate);
-        f.setUTCDate(f.getUTCDate() + n);
-        const fStr = f.toISOString().split('T')[0];
-        setFromDate(fStr);
-        if (!isRange) setToDate(fStr);
+        const t = nowIST(toDate);
+        t.setUTCDate(t.getUTCDate() + n);
+        const tStr = toISTDateString(t);
+
+        if (isRange) {
+            const f = nowIST(fromDate);
+            f.setUTCDate(f.getUTCDate() + n);
+            setFromDate(toISTDateString(f));
+            setToDate(tStr);
+        } else {
+            // If in Month view (fromDate != toDate), shift by month
+            if (fromDate !== toDate) {
+                const current = nowIST(toDate);
+                const nextMonth = new Date(Date.UTC(current.getUTCFullYear(), current.getUTCMonth() + n, 1));
+                const firstDay = toISTDateString(nextMonth);
+                const lastDay = toISTDateString(new Date(Date.UTC(nextMonth.getUTCFullYear(), nextMonth.getUTCMonth() + 1, 0)));
+                setFromDate(firstDay);
+                setToDate(lastDay);
+            } else {
+                // If in Day view, shift by day
+                setFromDate(tStr);
+                setToDate(tStr);
+            }
+        }
     };
 
     const handleCarNumberChange = (val) => {
         const upVal = val.toUpperCase();
-        const existingFleet = allVehiclesMaster.find(v => v.carNumber === upVal);
+        const normVal = upVal.replace(/[^A-Z0-9]/g, '');
+
+        const existingFleet = allVehiclesMaster.find(v => (v.carNumber || '').toUpperCase().replace(/[^A-Z0-9]/g, '') === normVal);
         if (existingFleet) {
             setDutyFormData(prev => ({ ...prev, carNumber: upVal, model: existingFleet.model || prev.model, vehicleSource: 'Fleet' }));
             return;
         }
-        const existingDuty = vehicles.find(v => v.carNumber?.split('#')[0] === upVal);
+
+        const existingDuty = vehicles.find(v => (v.carNumber || '').split('#')[0].toUpperCase().replace(/[^A-Z0-9]/g, '') === normVal);
         if (existingDuty) {
             setDutyFormData(prev => ({ ...prev, carNumber: upVal, model: existingDuty.model || prev.model, vehicleSource: existingDuty.vehicleSource || 'External' }));
         } else {
@@ -164,21 +178,30 @@ const EventManagement = () => {
                 isOutsideCar: true,
                 createdAt: dutyFormData.date,
                 driverName: dutyFormData.driverName?.trim() || '',
-                vehicleSource: dutyFormData.vehicleSource || 'External'
+                vehicleSource: dutyFormData.vehicleSource
             };
+
+            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+
             if (isEditingDuty && selectedId) {
-                await axios.put(`/api/admin/vehicles/${selectedId}`, payload, { headers: { Authorization: `Bearer ${userInfo.token}` } });
+                // For updates, we usually don't need FormData unless changing files
+                // Using plain JSON for better reliability with PUT
+                await axios.put(`/api/admin/vehicles/${selectedId}`, payload, config);
             } else {
                 const data = new FormData();
                 Object.keys(payload).forEach(key => data.append(key, payload[key]));
+                // Add defaults for new duty entries
                 data.append('permitType', 'Contract');
                 data.append('carType', 'Other');
-                await axios.post('/api/admin/vehicles', data, { headers: { Authorization: `Bearer ${userInfo.token}` } });
+                await axios.post('/api/admin/vehicles', data, config);
             }
             setShowDutyModal(false);
             fetchVehicles();
-            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'External' });
-        } catch (err) { alert('Error saving duty entry'); }
+            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet' });
+        } catch (err) {
+            console.error('Save Error:', err.response?.data || err.message);
+            alert('Error saving duty entry: ' + (err.response?.data?.message || 'Check connection'));
+        }
     };
 
     const handleDeleteDuty = async (id) => {
@@ -305,28 +328,27 @@ const EventManagement = () => {
                                 {isRange ? (
                                     <>Range: <b style={{ color: 'white' }}>{formatDateDisplay(fromDate)}</b> — <b style={{ color: 'white' }}>{formatDateDisplay(toDate)}</b></>
                                 ) : (
-                                    <>Cycle: <b style={{ color: 'white' }}>{formatDateIST(toDate, { month: 'long', year: 'numeric' }).toUpperCase()}</b></>
+                                    <>Date: <b style={{ color: 'white' }}>{formatDateIST(toDate, { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}</b></>
                                 )}
                             </p>
                         </div>
                     </div>
 
                     <div className="flex-resp" style={{ gap: '12px' }}>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px', position: 'relative', overflow: 'hidden' }}>
-                            <div style={{ position: 'absolute', bottom: 0, left: 0, height: '2px', background: '#fbbf24', width: `${targetPercentage}%`, transition: 'width 1s ease-out' }}></div>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px', display: 'flex', alignItems: 'center', gap: '4px' }}><Target size={10} /> Progress</span>
-                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{currentMonthDuties} <span style={{ fontSize: '12px', opacity: 0.4 }}>/ {monthlyTarget}</span></span>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '12px 24px', background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Duties Count</span>
+                            <span style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>{totalDuties}</span>
                         </motion.div>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '12px 24px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
                             <span style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Revenue</span>
-                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{totalAmount.toLocaleString()}</span>
+                            <span style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>₹{totalAmount.toLocaleString()}</span>
                         </motion.div>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px' }}>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#818cf8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Fleet vs Ext</span>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: '12px 24px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '150px' }}>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#818cf8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Source: Fleet | Ext</span>
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                <span style={{ color: 'white', fontSize: '16px', fontWeight: '900' }}>{fleetCount}</span>
+                                <span style={{ color: '#10b981', fontSize: '18px', fontWeight: '900' }}>{fleetCount}</span>
                                 <span style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></span>
-                                <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '16px', fontWeight: '900' }}>{extCount}</span>
+                                <span style={{ color: '#f59e0b', fontSize: '18px', fontWeight: '900' }}>{extCount}</span>
                             </div>
                         </motion.div>
                     </div>
@@ -363,126 +385,175 @@ const EventManagement = () => {
                         {uniqueClients.map(c => <option key={c} value={c} style={{ background: '#1e293b' }}>{c}</option>)}
                     </select>
 
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        background: 'rgba(0,0,0,0.25)',
-                        padding: '4px',
-                        borderRadius: '16px',
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-                    }}>
-                        <button
-                            onClick={() => shiftDays(-1)}
-                            style={{
-                                width: '36px', height: '36px', borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.03)', border: 'none',
-                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            background: 'rgba(0,0,0,0.4)',
+                            padding: '6px',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
+                        }}>
+                            <button
+                                onClick={() => shiftDays(-1)}
+                                style={{
+                                    width: '36px', height: '36px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.03)', border: 'none',
+                                    color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <ChevronLeft size={18} />
+                            </button>
 
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                            {isRange && (
-                                <div style={{
-                                    padding: '0 15px', height: '36px', display: 'flex',
-                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                    background: 'rgba(14, 165, 233, 0.1)', borderRadius: '10px',
-                                    border: '1px solid rgba(14, 165, 233, 0.15)',
-                                    position: 'relative', overflow: 'hidden'
-                                }}>
-                                    <span style={{ color: '#0ea5e9', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
-                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                        {formatDateIST(fromDate)}
-                                    </span>
-                                    <input
-                                        type="date"
-                                        value={fromDate}
-                                        onChange={(e) => setFromDate(e.target.value)}
-                                        style={{
-                                            position: 'absolute', opacity: 0, inset: 0,
-                                            width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
-                                        }}
-                                    />
-                                </div>
-                            )}
-
-                            <div style={{
-                                padding: '0 15px', height: '36px', display: 'flex',
-                                alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(14, 165, 233, 0.1)',
-                                borderRadius: '10px',
-                                border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(14, 165, 233, 0.2)'}`,
-                                position: 'relative', overflow: 'hidden'
-                            }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                                 {isRange ? (
-                                    <span style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>TO:</span>
+                                    <>
+                                        <div
+                                            onClick={(e) => {
+                                                const input = e.currentTarget.querySelector('input');
+                                                if (input.showPicker) input.showPicker();
+                                                else input.click();
+                                            }}
+                                            style={{
+                                                padding: '0 18px', height: '38px', display: 'flex',
+                                                alignItems: 'center', gap: '10px', cursor: 'pointer',
+                                                background: 'rgba(14, 165, 233, 0.08)', borderRadius: '12px',
+                                                border: '1px solid rgba(14, 165, 233, 0.25)',
+                                                position: 'relative', overflow: 'hidden'
+                                            }}
+                                        >
+                                            <span style={{ color: '#0ea5e9', fontSize: '9px', fontWeight: '900', letterSpacing: '0.8px' }}>FROM:</span>
+                                            <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>
+                                                {formatDateIST(fromDate)}
+                                            </span>
+                                            <input
+                                                type="date"
+                                                value={fromDate}
+                                                onChange={(e) => {
+                                                    setFromDate(e.target.value);
+                                                    if (e.target.value === toDate) setIsRange(false);
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: -1 }}
+                                            />
+                                        </div>
+                                        <div
+                                            onClick={(e) => {
+                                                const input = e.currentTarget.querySelector('input');
+                                                if (input.showPicker) input.showPicker();
+                                                else input.click();
+                                            }}
+                                            style={{
+                                                padding: '0 18px', height: '38px', display: 'flex',
+                                                alignItems: 'center', gap: '10px', cursor: 'pointer',
+                                                background: 'rgba(251, 191, 36, 0.08)', borderRadius: '12px',
+                                                border: '1px solid rgba(251, 191, 36, 0.25)',
+                                                position: 'relative', overflow: 'hidden'
+                                            }}
+                                        >
+                                            <span style={{ color: '#fbbf24', fontSize: '9px', fontWeight: '900', letterSpacing: '0.8px' }}>TO:</span>
+                                            <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>
+                                                {formatDateIST(toDate)}
+                                            </span>
+                                            <input
+                                                type="date"
+                                                value={toDate}
+                                                onChange={(e) => {
+                                                    setToDate(e.target.value);
+                                                    if (e.target.value === fromDate) setIsRange(false);
+                                                }}
+                                                onClick={(e) => e.stopPropagation()}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: -1 }}
+                                            />
+                                        </div>
+                                        <button
+                                            onClick={() => setIsRange(false)}
+                                            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', padding: '0 5px' }}
+                                            title="Switch to Single Day"
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </>
                                 ) : (
-                                    <Calendar size={14} color="#0ea5e9" />
+                                    <div
+                                        onClick={(e) => {
+                                            const input = e.currentTarget.querySelector('input');
+                                            if (input.showPicker) input.showPicker();
+                                            else input.click();
+                                        }}
+                                        style={{
+                                            padding: '0 20px', height: '38px', display: 'flex',
+                                            alignItems: 'center', gap: '12px', cursor: 'pointer',
+                                            background: 'rgba(14, 165, 233, 0.1)', borderRadius: '12px',
+                                            border: '1px solid rgba(14, 165, 233, 0.2)',
+                                            position: 'relative', overflow: 'hidden'
+                                        }}
+                                    >
+                                        <Calendar size={16} color="#0ea5e9" />
+                                        <span style={{ color: 'white', fontSize: '14px', fontWeight: '950', letterSpacing: '0.5px' }}>
+                                            {(!isRange && fromDate !== toDate)
+                                                ? formatDateIST(toDate, { month: 'long', year: 'numeric' }).toUpperCase()
+                                                : formatDateIST(toDate).toUpperCase()
+                                            }
+                                        </span>
+                                        <input
+                                            type="date"
+                                            value={toDate}
+                                            onChange={(e) => {
+                                                const d = e.target.value;
+                                                setToDate(d);
+                                                setFromDate(d);
+                                                setIsRange(false);
+                                            }}
+                                            onClick={(e) => e.stopPropagation()}
+                                            style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: -1 }}
+                                        />
+                                    </div>
                                 )}
-                                <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                    {isRange ? formatDateIST(toDate) : formatDateIST(toDate, { month: 'long', year: 'numeric' }).toUpperCase()}
-                                </span>
-                                <input
-                                    type="date"
-                                    value={toDate}
-                                    onChange={(e) => {
-                                        setToDate(e.target.value);
-                                        if (!isRange) setFromDate(e.target.value);
-                                    }}
-                                    style={{
-                                        position: 'absolute', opacity: 0, inset: 0,
-                                        width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
-                                    }}
-                                />
                             </div>
+
+                            <button
+                                onClick={() => shiftDays(1)}
+                                style={{
+                                    width: '36px', height: '36px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.03)', border: 'none',
+                                    color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    transition: 'all 0.2s'
+                                }}
+                            >
+                                <ChevronRight size={18} />
+                            </button>
                         </div>
 
-                        <button
-                            onClick={() => shiftDays(1)}
-                            style={{
-                                width: '36px', height: '36px', borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.03)', border: 'none',
-                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}
-                        >
-                            <ChevronRight size={18} />
-                        </button>
+                        {!isRange && (
+                            <button
+                                onClick={() => setIsRange(true)}
+                                className="secondary-btn"
+                                style={{
+                                    padding: '0 20px', height: '42px', borderRadius: '14px',
+                                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                                    color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: '900',
+                                    textTransform: 'uppercase', letterSpacing: '1px', display: 'flex',
+                                    alignItems: 'center', gap: '10px'
+                                }}
+                            >
+                                <Plus size={16} /> ADD RANGE
+                            </button>
+                        )}
                     </div>
-
-                    <button
-                        onClick={() => {
-                            const next = !isRange;
-                            setIsRange(next);
-                        }}
-                        style={{
-                            marginLeft: '5px', padding: '0 12px', height: '38px',
-                            borderRadius: '12px', border: 'none', cursor: 'pointer',
-                            background: isRange ? '#fbbf24' : 'rgba(255,255,255,0.05)',
-                            color: isRange ? 'black' : 'rgba(255,255,255,0.4)',
-                            fontSize: '10px', fontWeight: '900', textTransform: 'uppercase',
-                            letterSpacing: '0.5px'
-                        }}
-                    >
-                        {isRange ? <X size={14} style={{ marginRight: '5px', display: 'inline', verticalAlign: 'middle' }} /> : <Plus size={14} style={{ marginRight: '5px', display: 'inline', verticalAlign: 'middle' }} />}
-                        {isRange ? 'Custom Range' : 'Monthly Cycle'}
-                    </button>
                 </div>
 
                 <div className="event-action-btns" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px', marginTop: '15px', flexWrap: 'wrap' }}>
                     <div style={{ display: 'flex', gap: '10px' }}>
                         <button onClick={exportExcel} className="secondary-btn"><FileSpreadsheet size={18} /> Excel</button>
                         <button onClick={() => { setIsEditingEvent(false); setEventFormData({ name: '', client: '', date: getToday(), location: '', description: '' }); setShowEventModal(true); }} className="secondary-btn"><Plus size={18} /> New Event</button>
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginRight: '10px' }}>TARGET:</span>
-                            <input type="number" value={monthlyTarget} onChange={e => handleTargetChange(e.target.value)} className="target-input-inline" />
-                        </div>
                     </div>
-                    <button onClick={() => { setIsEditingDuty(false); setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'External' }); setShowDutyModal(true); }} className="primary-btn">
+                    <button onClick={() => { setIsEditingDuty(false); setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet' }); setShowDutyModal(true); }} className="primary-btn">
                         <Plus size={20} /> Add Duty Entry
                     </button>
                 </div>
@@ -675,10 +746,20 @@ const EventManagement = () => {
                                 <div className="grid-row">
                                     <div className="form-group">
                                         <label>Vehicle Number *</label>
-                                        <input type="text" list="masterCars" required value={dutyFormData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} className="modal-input" placeholder="e.g. RJ27TA6113" />
-                                        <datalist id="masterCars">
-                                            {allVehiclesMaster.map(v => <option key={v._id} value={v.carNumber} />)}
-                                        </datalist>
+                                        <input
+                                            type="text"
+                                            list={dutyFormData.vehicleSource === 'Fleet' ? "masterCars" : undefined}
+                                            required
+                                            value={dutyFormData.carNumber}
+                                            onChange={e => handleCarNumberChange(e.target.value)}
+                                            className="modal-input"
+                                            placeholder="e.g. RJ27TA6113"
+                                        />
+                                        {dutyFormData.vehicleSource === 'Fleet' && (
+                                            <datalist id="masterCars">
+                                                {allVehiclesMaster.map(v => <option key={v._id} value={v.carNumber} />)}
+                                            </datalist>
+                                        )}
                                     </div>
                                     <div className="form-group">
                                         <label>Model</label>
