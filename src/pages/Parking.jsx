@@ -108,32 +108,8 @@ const ParkingPage = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDriver, setFilterDriver] = useState('All');
     const [isRange, setIsRange] = useState(false);
-    const [selectedMonth, setSelectedMonth] = useState(nowIST().getUTCMonth() + 1);
-    const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear());
-    const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
+    const [fromDate, setFromDate] = useState(firstDayOfMonthIST()); // Start from 1st of month
     const [toDate, setToDate] = useState(todayIST());
-
-    // Unified date filter logic: When Monthly dropdown is used, it updates the range.
-    useEffect(() => {
-        const firstDay = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
-        const lastDay = new Date(selectedYear, selectedMonth, 0).getDate();
-        const lastDayStr = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
-
-        if (!isRange) {
-            // In single mode, we still show the month's data but UI only shows current selected day
-            setFromDate(firstDay);
-            // If it's the current month, default to today, else last day of that month
-            const today = new Date();
-            if (today.getFullYear() === selectedYear && (today.getMonth() + 1) === selectedMonth) {
-                setToDate(todayIST());
-            } else {
-                setToDate(lastDayStr);
-            }
-        } else {
-            setFromDate(firstDay);
-            setToDate(lastDayStr);
-        }
-    }, [selectedMonth, selectedYear, isRange]);
 
     /* navigate dates */
     const shiftDays = (n) => {
@@ -538,32 +514,7 @@ const ParkingPage = () => {
                             />
                         </div>
 
-                        <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', height: '48px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 150px', background: 'rgba(0,0,0,0.2)' }}>
-                            <Calendar size={18} style={{ marginRight: '10px', color: '#fbbf24' }} />
-                            <select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                                style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%' }}
-                            >
-                                {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                                    <option key={m} value={m} style={{ background: '#1e293b' }}>
-                                        {formatDateIST(new Date(2000, m - 1, 1), { month: 'long' })}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
 
-                        <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', height: '48px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flex: '0 1 100px', background: 'rgba(0,0,0,0.2)' }}>
-                            <select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%' }}
-                            >
-                                    {Array.from({ length: 4 }, (_, i) => nowIST().getUTCFullYear() + i).map(y => (
-                                        <option key={y} value={y} style={{ background: '#1e293b' }}>{y}</option>
-                                    ))}
-                            </select>
-                        </div>
 
                         {/* Premium Modern Calendar UI */}
                         <div style={{
@@ -652,27 +603,13 @@ const ParkingPage = () => {
                                     width: '36px', height: '36px', borderRadius: '12px',
                                     background: 'rgba(255,255,255,0.03)', border: 'none',
                                     color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    marginRight: '10px'
                                 }}
                             >
                                 <ChevronRight size={18} />
                             </button>
-                        </div>
 
-                        <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', height: '48px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 200px', background: 'rgba(0,0,0,0.2)' }}>
-                            <User size={18} style={{ marginRight: '10px', color: 'var(--primary)' }} />
-                            <select
-                                value={filterDriver}
-                                onChange={(e) => setFilterDriver(e.target.value)}
-                                style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%' }}
-                            >
-                                <option value="All" style={{ background: '#1e293b' }}>All Drivers</option>
-                                {drivers.map(d => (
-                                    <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name}</option>
-                                ))}
-                            </select>
-                        </div>
-                        <div style={{ display: 'flex', gap: '5px' }}>
                             <button
                                 onClick={() => {
                                     const next = !isRange;
@@ -692,6 +629,21 @@ const ParkingPage = () => {
                                 {isRange ? 'Range' : 'Single'}
                             </button>
                         </div>
+
+                        <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', height: '48px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 200px', background: 'rgba(0,0,0,0.2)' }}>
+                            <User size={18} style={{ marginRight: '10px', color: 'var(--primary)' }} />
+                            <select
+                                value={filterDriver}
+                                onChange={(e) => setFilterDriver(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%' }}
+                            >
+                                <option value="All" style={{ background: '#1e293b' }}>All Drivers</option>
+                                {drivers.map(d => (
+                                    <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
                     </div>
                 </div>
             </header>

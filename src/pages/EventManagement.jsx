@@ -13,7 +13,9 @@ import {
     toISTDateString,
     firstDayOfMonthIST,
     formatDateIST,
-    nowIST
+    nowIST,
+    formatTimeIST,
+    currentTimeIST
 } from '../utils/istUtils';
 
 const EventManagement = () => {
@@ -25,7 +27,7 @@ const EventManagement = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [clientFilter, setClientFilter] = useState('All');
     const [eventFilter, setEventFilter] = useState('All');
-    const [sourceFilter, setSourceFilter] = useState('All'); // 'All' | 'Fleet' | 'External'
+    const [sourceFilter, setSourceFilter] = useState('All');
 
     const getToday = () => todayIST();
     const [isRange, setIsRange] = useState(false);
@@ -44,7 +46,8 @@ const EventManagement = () => {
     const [eventFormData, setEventFormData] = useState({ name: '', client: '', date: getToday(), location: '', description: '' });
     const [dutyFormData, setDutyFormData] = useState({
         carNumber: '', model: '', dropLocation: '', date: getToday(),
-        eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet' // 'Fleet' | 'External'
+        eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', // 'Fleet' | 'External'
+        dutyType: '', dutyTime: ''
     });
 
     useEffect(() => {
@@ -178,7 +181,9 @@ const EventManagement = () => {
                 isOutsideCar: true,
                 createdAt: dutyFormData.date,
                 driverName: dutyFormData.driverName?.trim() || '',
-                vehicleSource: dutyFormData.vehicleSource
+                vehicleSource: dutyFormData.vehicleSource,
+                dutyType: dutyFormData.dutyType,
+                dutyTime: dutyFormData.dutyTime
             };
 
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
@@ -197,7 +202,7 @@ const EventManagement = () => {
             }
             setShowDutyModal(false);
             fetchVehicles();
-            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet' });
+            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '' });
         } catch (err) {
             console.error('Save Error:', err.response?.data || err.message);
             alert('Error saving duty entry: ' + (err.response?.data?.message || 'Check connection'));
@@ -221,7 +226,9 @@ const EventManagement = () => {
             eventId: v.eventId || '',
             dutyAmount: v.dutyAmount || '',
             driverName: v.driverName || '',
-            vehicleSource: v.vehicleSource || 'External'
+            vehicleSource: v.vehicleSource || 'External',
+            dutyType: v.dutyType || '',
+            dutyTime: v.dutyTime || ''
         });
         setSelectedId(v._id);
         setIsEditingDuty(true);
@@ -234,34 +241,45 @@ const EventManagement = () => {
         if (selectedCompany?._id) localStorage.setItem(`eventTarget_${selectedCompany._id}`, num.toString());
     };
 
-    const filtered = vehicles.filter(v => {
-        const plate = v.carNumber?.split('#')[0] || '';
-        const event = events.find(e => e._id === v.eventId);
-        const eventName = event?.name || '';
-        const clientName = event?.client || '';
-        const matchesSearch = plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            v.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            eventName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            (v.driverName || '').toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesClient = clientFilter === 'All' || clientName === clientFilter;
-        const matchesEvent = eventFilter === 'All' || v.eventId === eventFilter;
-        const dutyDate = v.carNumber?.split('#')[1];
-        const matchesDate = dutyDate >= fromDate && dutyDate <= toDate;
-        const src = v.vehicleSource || 'External';
-        const matchesSource = sourceFilter === 'All' || src === sourceFilter;
-        return matchesSearch && matchesClient && matchesEvent && matchesDate && matchesSource;
-    }).sort((a, b) => {
-        const dA = a.carNumber?.split('#')[1] || '';
-        const dB = b.carNumber?.split('#')[1] || '';
-        return dB.localeCompare(dA);
-    });
+    // OPTIMIZATION: Memoize filtered results to prevent "hanging" during re-renders (Search/Typing)
+    const filtered = React.useMemo(() => {
+        return vehicles.filter(v => {
+            const plate = v.carNumber?.split('#')[0] || '';
+            const event = events.find(e => e._id === v.eventId);
+            const eventName = event?.name || '';
+            const clientName = event?.client || '';
+            const matchesSearch = plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                v.model?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                eventName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (v.driverName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (v.dropLocation || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (v.dutyType || '').toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesClient = clientFilter === 'All' || clientName === clientFilter;
+            const matchesEvent = eventFilter === 'All' || v.eventId === eventFilter;
+            const dutyDate = v.carNumber?.split('#')[1];
+            const matchesDate = dutyDate >= fromDate && dutyDate <= toDate;
+            const src = v.vehicleSource || 'External';
+            const matchesSource = sourceFilter === 'All' || src === sourceFilter;
+            return matchesSearch && matchesClient && matchesEvent && matchesDate && matchesSource;
+        }).sort((a, b) => {
+            const dA = a.carNumber?.split('#')[1] || '';
+            const dB = b.carNumber?.split('#')[1] || '';
+            return dB.localeCompare(dA);
+        });
+    }, [vehicles, events, searchTerm, clientFilter, eventFilter, fromDate, toDate, sourceFilter]);
 
-    const totalDuties = filtered.length;
-    const totalAmount = filtered.reduce((sum, v) => sum + (Number(v.dutyAmount) || 0), 0);
-    const fleetCount = filtered.filter(v => (v.vehicleSource || 'External') === 'Fleet').length;
-    const extCount = filtered.filter(v => (v.vehicleSource || 'External') === 'External').length;
-    const uniqueClients = [...new Set(events.map(e => e.client).filter(Boolean))].sort();
+    // OPTIMIZATION: Memoize statistics
+    const stats = React.useMemo(() => {
+        const totalDuties = filtered.length;
+        const totalAmount = filtered.reduce((sum, v) => sum + (Number(v.dutyAmount) || 0), 0);
+        const fleetCount = filtered.filter(v => (v.vehicleSource || 'External') === 'Fleet').length;
+        const extCount = filtered.filter(v => (v.vehicleSource || 'External') === 'External').length;
+        const uniqueClients = [...new Set(events.map(e => e.client).filter(Boolean))].sort();
+        return { totalDuties, totalAmount, fleetCount, extCount, uniqueClients };
+    }, [filtered, events]);
+
+    const { totalDuties, totalAmount, fleetCount, extCount, uniqueClients } = stats;
 
     const now = nowIST();
     const curMonth = (now.getUTCMonth() + 1).toString().padStart(2, '0');
@@ -284,7 +302,9 @@ const EventManagement = () => {
                 'Source': v.vehicleSource || 'External',
                 'Event': event?.name || 'N/A',
                 'Client': event?.client || 'N/A',
-                'Duty Type / Loc': v.dropLocation || '',
+                'Duty Type': v.dutyType || '',
+                'Drop Loc': v.dropLocation || '',
+                'Duty Time': v.dutyTime || '',
                 'Amount': v.dutyAmount || 0
             };
         });
@@ -300,275 +320,169 @@ const EventManagement = () => {
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Event Command Center" description="Unified tracking for company and external vehicles assigned to events." />
 
-            <header style={{ padding: 'clamp(20px, 4vw, 40px) 0' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', marginBottom: '30px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{
-                            width: 'clamp(40px,10vw,50px)',
-                            height: 'clamp(40px,10vw,50px)',
-                            background: 'linear-gradient(135deg, white, #f8fafc)',
-                            borderRadius: '16px',
-                            padding: '8px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
-                        }}>
-                            <Briefcase size={32} color="#fbbf24" />
+            {/* ═══ HERO HEADER ═══ */}
+            <div style={{ position: 'relative', padding: 'clamp(24px,4vw,40px) 0 24px', marginBottom: '24px' }}>
+                {/* Ambient glow */}
+                <div style={{ position: 'absolute', top: 0, left: '10%', width: '40%', height: '120px', background: 'radial-gradient(ellipse, rgba(251,191,36,0.08) 0%, transparent 70%)', pointerEvents: 'none' }} />
+                
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px' }}>
+                    {/* Title Block */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
+                        <div style={{ width: '56px', height: '56px', background: 'linear-gradient(135deg, #fbbf24, #d97706)', borderRadius: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 24px rgba(251,191,36,0.3), 0 0 0 1px rgba(251,191,36,0.2)' }}>
+                            <Briefcase size={28} color="black" />
                         </div>
                         <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
-                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Operations</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22d3ee', boxShadow: '0 0 10px #22d3ee', animation: 'pulse 2s infinite' }} />
+                                <span style={{ fontSize: '10px', fontWeight: '800', color: '#22d3ee', letterSpacing: '2px', textTransform: 'uppercase' }}>Fleet Operations</span>
                             </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
-                                Event <span style={{ background: 'linear-gradient(to right, #fbbf24, #f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Command</span>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(26px,4vw,36px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
+                                Event<span style={{ background: 'linear-gradient(90deg,#fbbf24,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}> Command</span>
                             </h1>
-                            <p style={{ marginTop: '4px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                                {isRange ? (
-                                    <>Range: <b style={{ color: 'white' }}>{formatDateDisplay(fromDate)}</b> — <b style={{ color: 'white' }}>{formatDateDisplay(toDate)}</b></>
-                                ) : (
-                                    <>Date: <b style={{ color: 'white' }}>{formatDateIST(toDate, { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}</b></>
-                                )}
+                            <p style={{ margin: '6px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.35)', letterSpacing: '0.3px' }}>
+                                {isRange
+                                    ? <><span style={{ color: '#38bdf8' }}>{new Date(fromDate+'T12:00:00Z').toLocaleDateString('en-IN',{day:'2-digit',month:'short',timeZone:'Asia/Kolkata'})}</span> → <span style={{ color: '#fbbf24' }}>{new Date(toDate+'T12:00:00Z').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric',timeZone:'Asia/Kolkata'})}</span></>
+                                    : <><span style={{ color: 'rgba(255,255,255,0.5)' }}>Viewing</span> <span style={{ color: 'white', fontWeight: '700' }}>{new Date(toDate+'T12:00:00Z').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long',year:'numeric',timeZone:'Asia/Kolkata'})}</span></>
+                                }
                             </p>
                         </div>
                     </div>
 
-                    <div className="flex-resp" style={{ gap: '12px' }}>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '12px 24px', background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Duties Count</span>
-                            <span style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>{totalDuties}</span>
-                        </motion.div>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '12px 24px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Revenue</span>
-                            <span style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>₹{totalAmount.toLocaleString()}</span>
-                        </motion.div>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: '12px 24px', background: 'rgba(99, 102, 241, 0.05)', border: '1px solid rgba(99, 102, 241, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '150px' }}>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#818cf8', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Source: Fleet | Ext</span>
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                <span style={{ color: '#10b981', fontSize: '18px', fontWeight: '900' }}>{fleetCount}</span>
-                                <span style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }}></span>
-                                <span style={{ color: '#f59e0b', fontSize: '18px', fontWeight: '900' }}>{extCount}</span>
-                            </div>
-                        </motion.div>
+                    {/* Stats Row */}
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                        {[
+                            { label: 'Total Duties', value: totalDuties, color: '#fbbf24', bg: 'rgba(251,191,36,0.07)', icon: '📋' },
+                            { label: 'Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', bg: 'rgba(16,185,129,0.07)', icon: '💰' },
+                            { label: 'Fleet', value: fleetCount, color: '#22d3ee', bg: 'rgba(34,211,238,0.07)', icon: '🚗' },
+                            { label: 'External', value: extCount, color: '#f59e0b', bg: 'rgba(245,158,11,0.07)', icon: '🔗' },
+                        ].map((s, i) => (
+                            <motion.div key={s.label} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.07 }} style={{
+                                padding: '14px 20px', borderRadius: '16px',
+                                background: s.bg, border: `1px solid ${s.color}22`,
+                                display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '110px',
+                                boxShadow: `0 4px 20px ${s.color}0d`
+                            }}>
+                                <span style={{ fontSize: '9px', fontWeight: '800', color: s.color, textTransform: 'uppercase', letterSpacing: '1.5px' }}>{s.label}</span>
+                                <span style={{ color: 'white', fontSize: '22px', fontWeight: '900', lineHeight: 1 }}>{s.value}</span>
+                            </motion.div>
+                        ))}
                     </div>
                 </div>
+            </div>
 
-                {/* Filters */}
-                <div className="glass-card filter-container" style={{ padding: '20px', marginBottom: '30px', display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center' }}>
-                    <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
-                        <input
-                            type="text"
-                            placeholder="Search vehicle, driver, event..."
-                            className="input-field"
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            style={{ width: '100%', height: '50px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', paddingLeft: '45px', margin: 0 }}
-                        />
+            {/* ═══ CONTROL BAR ═══ */}
+            <div style={{ background: 'rgba(8,14,26,0.8)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '20px', padding: '16px 20px', marginBottom: '16px', backdropFilter: 'blur(16px)', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {/* Row 1: Search + Source Toggle + Selects */}
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {/* Search */}
+                    <div style={{ position: 'relative', flex: '1', minWidth: '220px' }}>
+                        <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                        <input type="text" placeholder="Search vehicle, driver, event, location..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                            style={{ width: '100%', height: '44px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', paddingLeft: '42px', outline: 'none', fontSize: '13px' }} />
                     </div>
 
-                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.25)', padding: '4px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)', gap: '4px' }}>
-                        {['All', 'Fleet', 'External'].map(s => (
+                    {/* Source pills */}
+                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)', gap: '3px' }}>
+                        {[['All','#38bdf8'],['Fleet','#10b981'],['External','#f59e0b']].map(([s,c]) => (
                             <button key={s} onClick={() => setSourceFilter(s)} style={{
-                                padding: '8px 16px', borderRadius: '11px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '900',
-                                background: sourceFilter === s ? (s === 'Fleet' ? 'rgba(16,185,129,0.2)' : s === 'External' ? 'rgba(245,158,11,0.2)' : 'rgba(14, 165, 233, 0.1)') : 'transparent',
-                                color: sourceFilter === s ? (s === 'Fleet' ? '#10b981' : s === 'External' ? '#f59e0b' : '#38bdf8') : 'rgba(255,255,255,0.3)',
-                                transition: 'all 0.3s ease',
-                                textTransform: 'uppercase', letterSpacing: '0.5px'
+                                padding: '7px 14px', borderRadius: '9px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '800',
+                                background: sourceFilter === s ? `${c}20` : 'transparent',
+                                color: sourceFilter === s ? c : 'rgba(255,255,255,0.3)',
+                                transition: 'all 0.2s', textTransform: 'uppercase', letterSpacing: '0.5px',
+                                boxShadow: sourceFilter === s ? `0 0 0 1px ${c}40` : 'none'
                             }}>{s}</button>
                         ))}
                     </div>
 
-                    <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} className="input-field" style={{ flex: '1 1 160px', height: '50px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', margin: 0 }}>
-                        <option value="All" style={{ background: '#1e293b' }}>All Clients</option>
-                        {uniqueClients.map(c => <option key={c} value={c} style={{ background: '#1e293b' }}>{c}</option>)}
+                    {/* Client filter */}
+                    <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} style={{ height: '44px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 14px', outline: 'none', minWidth: '150px', fontSize: '12px' }}>
+                        <option value="All" style={{ background: '#0f172a' }}>All Clients</option>
+                        {uniqueClients.map(c => <option key={c} value={c} style={{ background: '#0f172a' }}>{c}</option>)}
                     </select>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            background: 'rgba(0,0,0,0.4)',
-                            padding: '6px',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            boxShadow: '0 8px 32px rgba(0,0,0,0.2)'
-                        }}>
-                            <button
-                                onClick={() => shiftDays(-1)}
-                                style={{
-                                    width: '36px', height: '36px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)', border: 'none',
-                                    color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    transition: 'all 0.2s'
-                                }}
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
+                    {/* Event filter */}
+                    <select value={eventFilter} onChange={e => setEventFilter(e.target.value)} style={{ height: '44px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 14px', outline: 'none', minWidth: '160px', fontSize: '12px' }}>
+                        <option value="All" style={{ background: '#0f172a' }}>All Events</option>
+                        {events.map(e => <option key={e._id} value={e._id} style={{ background: '#0f172a' }}>{e.name}</option>)}
+                    </select>
+                </div>
 
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                {isRange ? (
-                                    <>
-                                        <div
-                                            onClick={(e) => {
-                                                const input = e.currentTarget.querySelector('input');
-                                                if (input.showPicker) input.showPicker();
-                                                else input.click();
-                                            }}
-                                            style={{
-                                                padding: '0 18px', height: '38px', display: 'flex',
-                                                alignItems: 'center', gap: '10px', cursor: 'pointer',
-                                                background: 'rgba(14, 165, 233, 0.08)', borderRadius: '12px',
-                                                border: '1px solid rgba(14, 165, 233, 0.25)',
-                                                position: 'relative', overflow: 'hidden'
-                                            }}
-                                        >
-                                            <span style={{ color: '#0ea5e9', fontSize: '9px', fontWeight: '900', letterSpacing: '0.8px' }}>FROM:</span>
-                                            <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>
-                                                {formatDateIST(fromDate)}
-                                            </span>
-                                            <input
-                                                type="date"
-                                                value={fromDate}
-                                                onChange={(e) => {
-                                                    setFromDate(e.target.value);
-                                                    if (e.target.value === toDate) setIsRange(false);
-                                                }}
-                                                onClick={(e) => e.stopPropagation()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: -1 }}
-                                            />
-                                        </div>
-                                        <div
-                                            onClick={(e) => {
-                                                const input = e.currentTarget.querySelector('input');
-                                                if (input.showPicker) input.showPicker();
-                                                else input.click();
-                                            }}
-                                            style={{
-                                                padding: '0 18px', height: '38px', display: 'flex',
-                                                alignItems: 'center', gap: '10px', cursor: 'pointer',
-                                                background: 'rgba(251, 191, 36, 0.08)', borderRadius: '12px',
-                                                border: '1px solid rgba(251, 191, 36, 0.25)',
-                                                position: 'relative', overflow: 'hidden'
-                                            }}
-                                        >
-                                            <span style={{ color: '#fbbf24', fontSize: '9px', fontWeight: '900', letterSpacing: '0.8px' }}>TO:</span>
-                                            <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>
-                                                {formatDateIST(toDate)}
-                                            </span>
-                                            <input
-                                                type="date"
-                                                value={toDate}
-                                                onChange={(e) => {
-                                                    setToDate(e.target.value);
-                                                    if (e.target.value === fromDate) setIsRange(false);
-                                                }}
-                                                onClick={(e) => e.stopPropagation()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: -1 }}
-                                            />
-                                        </div>
-                                        <button
-                                            onClick={() => setIsRange(false)}
-                                            style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', padding: '0 5px' }}
-                                            title="Switch to Single Day"
-                                        >
-                                            <X size={16} />
-                                        </button>
-                                    </>
-                                ) : (
-                                    <div
-                                        onClick={(e) => {
-                                            const input = e.currentTarget.querySelector('input');
-                                            if (input.showPicker) input.showPicker();
-                                            else input.click();
-                                        }}
-                                        style={{
-                                            padding: '0 20px', height: '38px', display: 'flex',
-                                            alignItems: 'center', gap: '12px', cursor: 'pointer',
-                                            background: 'rgba(14, 165, 233, 0.1)', borderRadius: '12px',
-                                            border: '1px solid rgba(14, 165, 233, 0.2)',
-                                            position: 'relative', overflow: 'hidden'
-                                        }}
-                                    >
-                                        <Calendar size={16} color="#0ea5e9" />
-                                        <span style={{ color: 'white', fontSize: '14px', fontWeight: '950', letterSpacing: '0.5px' }}>
-                                            {(!isRange && fromDate !== toDate)
-                                                ? formatDateIST(toDate, { month: 'long', year: 'numeric' }).toUpperCase()
-                                                : formatDateIST(toDate).toUpperCase()
-                                            }
-                                        </span>
-                                        <input
-                                            type="date"
-                                            value={toDate}
-                                            onChange={(e) => {
-                                                const d = e.target.value;
-                                                setToDate(d);
-                                                setFromDate(d);
-                                                setIsRange(false);
-                                            }}
-                                            onClick={(e) => e.stopPropagation()}
-                                            style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: -1 }}
-                                        />
-                                    </div>
-                                )}
+                {/* Row 2: Date Navigator + Action Buttons */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+                    {/* Date Navigator */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <button onClick={() => shiftDays(-1)} style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}>
+                            <ChevronLeft size={16} />
+                        </button>
+
+                        {isRange ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                <div onClick={(e) => { const i=e.currentTarget.querySelector('input'); if(i.showPicker)i.showPicker(); else i.click(); }} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 14px', height: '34px', background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.25)', borderRadius: '10px', cursor: 'pointer', overflow: 'hidden' }}>
+                                    <span style={{ fontSize: '8px', color: '#38bdf8', fontWeight: '900', letterSpacing: '1px' }}>FROM</span>
+                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>{formatDateIST(fromDate)}</span>
+                                    <input type="date" value={fromDate} onChange={(e) => { setFromDate(e.target.value); if(e.target.value===toDate)setIsRange(false); }} onClick={e=>e.stopPropagation()} style={{ position:'absolute',opacity:0,inset:0,cursor:'pointer',zIndex:-1 }} />
+                                </div>
+                                <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '18px' }}>→</span>
+                                <div onClick={(e) => { const i=e.currentTarget.querySelector('input'); if(i.showPicker)i.showPicker(); else i.click(); }} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px', padding: '0 14px', height: '34px', background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '10px', cursor: 'pointer', overflow: 'hidden' }}>
+                                    <span style={{ fontSize: '8px', color: '#fbbf24', fontWeight: '900', letterSpacing: '1px' }}>TO</span>
+                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>{formatDateIST(toDate)}</span>
+                                    <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); if(e.target.value===fromDate)setIsRange(false); }} onClick={e=>e.stopPropagation()} style={{ position:'absolute',opacity:0,inset:0,cursor:'pointer',zIndex:-1 }} />
+                                </div>
+                                <button onClick={() => setIsRange(false)} style={{ width: '28px', height: '28px', borderRadius: '8px', background: 'none', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <X size={13} />
+                                </button>
                             </div>
-
-                            <button
-                                onClick={() => shiftDays(1)}
-                                style={{
-                                    width: '36px', height: '36px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)', border: 'none',
-                                    color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    transition: 'all 0.2s'
-                                }}
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-                        </div>
-
-                        {!isRange && (
-                            <button
-                                onClick={() => setIsRange(true)}
-                                className="secondary-btn"
-                                style={{
-                                    padding: '0 20px', height: '42px', borderRadius: '14px',
-                                    background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
-                                    color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: '900',
-                                    textTransform: 'uppercase', letterSpacing: '1px', display: 'flex',
-                                    alignItems: 'center', gap: '10px'
-                                }}
-                            >
-                                <Plus size={16} /> ADD RANGE
-                            </button>
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div onClick={(e) => { const i=e.currentTarget.querySelector('input'); if(i.showPicker)i.showPicker(); else i.click(); }} style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '10px', padding: '0 18px', height: '34px', background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.2)', borderRadius: '10px', cursor: 'pointer', overflow: 'hidden' }}>
+                                    <Calendar size={14} color="#0ea5e9" />
+                                    <span style={{ color: 'white', fontSize: '13px', fontWeight: '800', letterSpacing: '0.3px' }}>
+                                        {new Date(toDate+'T12:00:00Z').toLocaleDateString('en-IN',{weekday:'short',day:'2-digit',month:'short',year:'numeric',timeZone:'Asia/Kolkata'}).toUpperCase()}
+                                    </span>
+                                    <input type="date" value={toDate} onChange={(e) => { const d=e.target.value; setToDate(d); setFromDate(d); setIsRange(false); }} onClick={e=>e.stopPropagation()} style={{ position:'absolute',opacity:0,inset:0,cursor:'pointer',zIndex:-1 }} />
+                                </div>
+                                <button onClick={() => setIsRange(true)} style={{ display:'flex',alignItems:'center',gap:'6px',padding:'0 12px',height:'34px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'10px',color:'rgba(255,255,255,0.5)',fontSize:'10px',fontWeight:'800',letterSpacing:'1px',cursor:'pointer',textTransform:'uppercase' }}>
+                                    <Plus size={13} />Range
+                                </button>
+                            </div>
                         )}
-                    </div>
-                </div>
 
-                <div className="event-action-btns" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '15px', marginTop: '15px', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <button onClick={exportExcel} className="secondary-btn"><FileSpreadsheet size={18} /> Excel</button>
-                        <button onClick={() => { setIsEditingEvent(false); setEventFormData({ name: '', client: '', date: getToday(), location: '', description: '' }); setShowEventModal(true); }} className="secondary-btn"><Plus size={18} /> New Event</button>
+                        <button onClick={() => shiftDays(1)} style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}>
+                            <ChevronRight size={16} />
+                        </button>
                     </div>
-                    <button onClick={() => { setIsEditingDuty(false); setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet' }); setShowDutyModal(true); }} className="primary-btn">
-                        <Plus size={20} /> Add Duty Entry
-                    </button>
+
+                    {/* Action Buttons */}
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <button onClick={exportExcel} style={{ display:'flex',alignItems:'center',gap:'7px',height:'40px',padding:'0 16px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'11px',color:'rgba(255,255,255,0.7)',fontSize:'12px',fontWeight:'700',cursor:'pointer',transition:'0.2s' }}>
+                            <FileSpreadsheet size={15} /> Excel
+                        </button>
+                        <button onClick={() => { setIsEditingEvent(false); setEventFormData({ name:'',client:'',date:getToday(),location:'',description:'' }); setShowEventModal(true); }} style={{ display:'flex',alignItems:'center',gap:'7px',height:'40px',padding:'0 16px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'11px',color:'rgba(255,255,255,0.7)',fontSize:'12px',fontWeight:'700',cursor:'pointer',transition:'0.2s' }}>
+                            <Plus size={15} /> New Event
+                        </button>
+                        <button onClick={() => {
+                            setIsEditingDuty(false);
+                            setDutyFormData({ carNumber:'',model:'',dropLocation:'',date:getToday(),eventId:'',dutyAmount:'',driverName:'',vehicleSource:'Fleet',dutyType:'',dutyTime:currentTimeIST() });
+                            setShowDutyModal(true);
+                        }} style={{ display:'flex',alignItems:'center',gap:'8px',height:'42px',padding:'0 20px',background:'linear-gradient(135deg,#fbbf24,#d97706)',border:'none',borderRadius:'12px',color:'black',fontSize:'13px',fontWeight:'800',cursor:'pointer',boxShadow:'0 4px 16px rgba(251,191,36,0.3)',transition:'0.2s', letterSpacing: '0.3px' }}>
+                            <Plus size={17} /> Add Duty Entry
+                        </button>
+                    </div>
                 </div>
-            </header>
+            </div>
+
 
             {/* Desktop Table */}
             <div className="glass-card main-table-container hide-mobile">
                 <table>
                     <thead>
                         <tr>
-                            <th>Timeline</th>
-                            <th>Vehicle</th>
-                            <th>Driver / Source</th>
-                            <th>Service Detail</th>
-                            <th>Client / Venue</th>
+                            <th>Date</th>
+                            <th>Vehicle & Source</th>
+                            <th>Event / Client</th>
+                            <th style={{ color: '#fbbf24' }}>Duty Type</th>
+                            <th style={{ color: '#0ea5e9' }}>Duty Time</th>
+                            <th style={{ color: '#818cf8' }}>Drop Location</th>
                             <th>Settlement</th>
                             <th style={{ textAlign: 'right' }}>Actions</th>
                         </tr>
@@ -589,52 +503,68 @@ const EventManagement = () => {
                             const src = v.vehicleSource || 'External';
                             const isFleet = src === 'Fleet';
                             return (
-                                <motion.tr key={v._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.03 }} className="table-row">
-                                    <td className="date-cell">
-                                        <div className="day-name">{formatDateIST(dutyDate, { weekday: 'short' }).toUpperCase()}</div>
-                                        <div className="date-val">{formatDateIST(dutyDate, { day: '2-digit', month: 'short' })}</div>
+                                <motion.tr key={v._id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.02 }} className="table-row">
+                                    <td className="date-cell" style={{ whiteSpace: 'nowrap' }}>
+                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+                                            <span className="date-val" style={{ fontSize: '17px', color: 'white', fontWeight: '900', letterSpacing: '-0.5px' }}>{
+                                                dutyDate ? new Date(dutyDate + 'T12:00:00Z').toLocaleDateString('en-IN', { day: '2-digit', month: 'short', timeZone: 'Asia/Kolkata' }) : '--'
+                                            }</span>
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
+                                            <span className="day-name" style={{ fontSize: '10px', fontWeight: '800', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '1px' }}>{
+                                                dutyDate ? new Date(dutyDate + 'T12:00:00Z').toLocaleDateString('en-IN', { weekday: 'short', timeZone: 'Asia/Kolkata' }) : '--'
+                                            }</span>
+                                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>{
+                                                dutyDate ? new Date(dutyDate + 'T12:00:00Z').toLocaleDateString('en-IN', { year: 'numeric', timeZone: 'Asia/Kolkata' }) : ''
+                                            }</span>
+                                        </div>
                                     </td>
                                     <td className="vehicle-cell">
-                                        <div className="plate-num">{v.carNumber?.split('#')[0]}</div>
-                                        <div className="model-name">{v.model || '—'}</div>
-                                    </td>
-                                    <td>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                                            <div style={{
-                                                display: 'inline-flex', alignItems: 'center', gap: '4px',
-                                                padding: '3px 8px', borderRadius: '20px', fontSize: '9px', fontWeight: '900', letterSpacing: '0.5px',
-                                                background: isFleet ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)',
-                                                color: isFleet ? '#10b981' : '#f59e0b',
-                                                border: `1px solid ${isFleet ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`
-                                            }}>
-                                                {isFleet ? <Building2 size={9} /> : <TruckIcon size={9} />}
-                                                {src.toUpperCase()}
-                                            </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '5px' }}>
+                                            <span className={isFleet ? 'badge-fleet' : 'badge-ext'}>{src}</span>
+                                            <span className="plate-num">{v.carNumber?.split('#')[0]}</span>
                                         </div>
-                                        {v.driverName ? (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                <User size={11} color="rgba(255,255,255,0.35)" />
-                                                <span style={{ color: 'rgba(255,255,255,0.7)', fontSize: '12px', fontWeight: '700' }}>{v.driverName}</span>
-                                            </div>
-                                        ) : (
-                                            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px' }}>No driver info</span>
-                                        )}
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                            <span className="model-name">{v.model || '—'}</span>
+                                            {v.driverName && <><span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span><span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>{v.driverName}</span></>}
+                                        </div>
                                     </td>
                                     <td className="duty-cell">
                                         <div className="event-name">{event?.name || 'N/A'}</div>
-                                        <div className="loc-text"><MapPin size={10} style={{ marginRight: '4px' }} />{v.dropLocation || '—'}</div>
+                                        <div className="venue-text">{event?.client || 'N/A'}</div>
                                     </td>
-                                    <td className="entity-cell">
-                                        <div className="client-name">{event?.client || 'N/A'}</div>
-                                        <div className="venue-text">{event?.location || '—'}</div>
+                                    <td>
+                                        <span className="badge-duty">{v.dutyType || 'General'}</span>
+                                    </td>
+                                    <td>
+                                        {v.dutyTime ? (
+                                            <span className="badge-time">
+                                                {(() => {
+                                                    const [h, m] = v.dutyTime.split(':').map(Number);
+                                                    if (isNaN(h) || isNaN(m)) return v.dutyTime;
+                                                    const ampm = h >= 12 ? 'PM' : 'AM';
+                                                    const hour12 = h % 12 || 12;
+                                                    return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
+                                                })()}
+                                            </span>
+                                        ) : (
+                                            <span className="badge-no-data">—</span>
+                                        )}
+                                    </td>
+                                    <td>
+                                        {v.dropLocation ? (
+                                            <span className="badge-loc"><MapPin size={11} color="#818cf8" />{v.dropLocation}</span>
+                                        ) : (
+                                            <span className="badge-no-data">—</span>
+                                        )}
                                     </td>
                                     <td className="amount-cell">
                                         <div className="amount-badge">₹{Number(v.dutyAmount || 0).toLocaleString()}</div>
                                     </td>
                                     <td className="action-cell">
                                         <div className="action-group">
-                                            <button onClick={() => handleEditDuty(v)} className="edit-btn"><Edit size={16} /></button>
-                                            <button onClick={() => handleDeleteDuty(v._id)} className="delete-btn"><Trash2 size={16} /></button>
+                                            <button onClick={() => handleEditDuty(v)} className="edit-btn"><Edit size={15} /></button>
+                                            <button onClick={() => handleDeleteDuty(v._id)} className="delete-btn"><Trash2 size={15} /></button>
                                         </div>
                                     </td>
                                 </motion.tr>
@@ -676,11 +606,21 @@ const EventManagement = () => {
                                         </div>
                                     )}
                                     <div className="detail-item">
-                                        <label>Event / Client</label>
+                                        <label>Event · Client</label>
                                         <div className="val">{event?.name || 'N/A'} · {event?.client || 'N/A'}</div>
                                     </div>
+                                    <div className="detail-item" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                        <div>
+                                            <label>Duty Type</label>
+                                            <div className="val">{v.dutyType || 'General'}</div>
+                                        </div>
+                                        <div>
+                                            <label>Duty Time</label>
+                                            <div className="val">{v.dutyTime || '—'}</div>
+                                        </div>
+                                    </div>
                                     <div className="detail-item">
-                                        <label>Duty Detail</label>
+                                        <label>Drop Location</label>
                                         <div className="val">{v.dropLocation || '—'}</div>
                                     </div>
                                 </div>
@@ -701,86 +641,215 @@ const EventManagement = () => {
             < AnimatePresence >
                 {showDutyModal && (
                     <div className="modal-overlay">
-                        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} className="modal-container">
-                            <div className="modal-header">
-                                <div>
-                                    <h3>{isEditingDuty ? 'Edit Duty Log' : 'Add Event Duty'}</h3>
-                                    <p>Assign fleet or external vehicle to an event</p>
+                        <motion.div
+                            initial={{ y: 50, opacity: 0 }}
+                            animate={{ y: 0, opacity: 1 }}
+                            className="modal-container"
+                            style={{
+                                maxHeight: '90vh',
+                                overflowY: 'auto',
+                                width: 'min(95%, 600px)',
+                                borderRadius: '24px',
+                                background: '#0f172a',
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                position: 'relative'
+                            }}
+                        >
+                            <div className="modal-header" style={{
+                                background: 'linear-gradient(to right, rgba(251, 191, 36, 0.08), transparent)',
+                                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                padding: '25px 30px',
+                                position: 'sticky',
+                                top: 0,
+                                zIndex: 10,
+                                backdropFilter: 'blur(10px)'
+                            }}>
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 12px rgba(251, 191, 36, 0.4)' }}></div>
+                                        <h3 style={{ margin: 0, fontSize: '22px', fontWeight: '950', color: 'white', letterSpacing: '-0.5px' }}>
+                                            {isEditingDuty ? 'Edit Duty Log' : 'New Duty Entry'}
+                                        </h3>
+                                    </div>
+                                    <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Enter assignment and logistics detail below</p>
                                 </div>
-                                <button onClick={() => setShowDutyModal(false)} className="close-btn"><X size={20} /></button>
+                                <button onClick={() => setShowDutyModal(false)} className="close-btn" style={{
+                                    background: 'rgba(255,255,255,0.05)',
+                                    borderRadius: '12px',
+                                    width: '40px',
+                                    height: '40px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    color: 'white',
+                                    cursor: 'pointer'
+                                }}><X size={20} /></button>
                             </div>
-                            <form onSubmit={handleSubmitDuty} className="modal-form">
+                            <form onSubmit={handleSubmitDuty} className="modal-form" style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '25px' }}>
 
-                                {/* Vehicle Source Toggle */}
-                                <div className="form-group">
-                                    <label>Vehicle Source *</label>
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        {['Fleet', 'External'].map(src => (
-                                            <button key={src} type="button" onClick={() => setDutyFormData(prev => ({ ...prev, vehicleSource: src }))}
-                                                style={{
-                                                    flex: 1, padding: '12px', borderRadius: '12px', border: `1px solid ${dutyFormData.vehicleSource === src ? (src === 'Fleet' ? 'rgba(16,185,129,0.5)' : 'rgba(245,158,11,0.5)') : 'rgba(255,255,255,0.08)'}`,
-                                                    background: dutyFormData.vehicleSource === src ? (src === 'Fleet' ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)') : 'rgba(0,0,0,0.2)',
-                                                    color: dutyFormData.vehicleSource === src ? (src === 'Fleet' ? '#10b981' : '#f59e0b') : 'rgba(255,255,255,0.4)',
-                                                    fontWeight: '900', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', transition: 'all 0.2s'
-                                                }}>
-                                                {src === 'Fleet' ? <Building2 size={14} /> : <TruckIcon size={14} />}
-                                                {src === 'Fleet' ? 'Company Fleet' : 'OutSide Cars'}
-                                            </button>
-                                        ))}
+                                {/* Step 1: Assignment & Date */}
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', marginTop: '5px' }}>
+                                    <label style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px', display: 'block' }}>Assignment Context</label>
+
+                                    <div className="form-group" style={{ marginBottom: '15px' }}>
+                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                            {['Fleet', 'External'].map(src => (
+                                                <button key={src} type="button" onClick={() => setDutyFormData(prev => ({ ...prev, vehicleSource: src }))}
+                                                    style={{
+                                                        flex: 1, padding: '14px', borderRadius: '14px', border: `1px solid ${dutyFormData.vehicleSource === src ? (src === 'Fleet' ? 'rgba(16,185,129,0.5)' : 'rgba(245,158,11,0.5)') : 'rgba(255,255,255,0.08)'}`,
+                                                        background: dutyFormData.vehicleSource === src ? (src === 'Fleet' ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)') : 'rgba(0,0,0,0.3)',
+                                                        color: dutyFormData.vehicleSource === src ? (src === 'Fleet' ? '#10b981' : '#f59e0b') : 'rgba(255,255,255,0.4)',
+                                                        fontWeight: '900', fontSize: '11px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                        boxShadow: dutyFormData.vehicleSource === src ? `0 4px 15px ${src === 'Fleet' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'}` : 'none'
+                                                    }}>
+                                                    {src === 'Fleet' ? <Building2 size={16} /> : <TruckIcon size={16} />}
+                                                    {src === 'Fleet' ? 'COMPANY FLEET' : 'EXTERNAL CAR'}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                    <div className="grid-row" style={{ gap: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: 0 }}>
+                                        <div className="form-group" style={{ margin: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                <Briefcase size={14} color="rgba(255,255,255,0.3)" />
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Target Event *</label>
+                                            </div>
+                                            <select required value={dutyFormData.eventId} onChange={e => setDutyFormData({ ...dutyFormData, eventId: e.target.value })} className="modal-input" style={{ width: '100%', height: '52px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px' }}>
+                                                <option value="">Select Event</option>
+                                                {events.map(e => <option key={e._id} value={e._id}>{e.name} ({e.client})</option>)}
+                                            </select>
+                                        </div>
+                                        <div className="form-group" style={{ margin: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                <Calendar size={14} color="rgba(255,255,255,0.3)" />
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Duty Date *</label>
+                                            </div>
+                                            <input type="date" required value={dutyFormData.date} onChange={e => setDutyFormData({ ...dutyFormData, date: e.target.value })} className="modal-input" style={{ width: '100%', height: '52px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px' }} />
+                                        </div>
                                     </div>
                                 </div>
 
-                                <div className="grid-row">
-                                    <div className="form-group">
-                                        <label>Event *</label>
-                                        <select required value={dutyFormData.eventId} onChange={e => setDutyFormData({ ...dutyFormData, eventId: e.target.value })} className="modal-input">
-                                            <option value="">Select Event</option>
-                                            {events.map(e => <option key={e._id} value={e._id}>{e.name} ({e.client})</option>)}
-                                        </select>
+                                {/* Step 2: Vehicle & Driver */}
+                                <div style={{ background: 'rgba(255,255,255,0.015)', padding: '25px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                                        <div style={{ width: '4px', height: '14px', borderRadius: '2px', background: '#10b981' }}></div>
+                                        <label style={{ fontSize: '12px', fontWeight: '900', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle & Personnel</label>
                                     </div>
-                                    <div className="form-group">
-                                        <label>Duty Date *</label>
-                                        <input type="date" required value={dutyFormData.date} onChange={e => setDutyFormData({ ...dutyFormData, date: e.target.value })} className="modal-input" />
+
+                                    <div className="grid-row" style={{ gap: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: '20px' }}>
+                                        <div className="form-group" style={{ margin: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                <Car size={14} color="rgba(255,255,255,0.3)" />
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Plate Number *</label>
+                                            </div>
+                                            <input
+                                                type="text"
+                                                list={dutyFormData.vehicleSource === 'Fleet' ? "masterCars" : undefined}
+                                                required
+                                                value={dutyFormData.carNumber}
+                                                onChange={e => handleCarNumberChange(e.target.value)}
+                                                className="modal-input"
+                                                placeholder="Search Car"
+                                                style={{ width: '100%', height: '52px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', textTransform: 'uppercase', fontWeight: 'bold' }}
+                                            />
+                                            {dutyFormData.vehicleSource === 'Fleet' && (
+                                                <datalist id="masterCars">
+                                                    {allVehiclesMaster.map(v => <option key={v._id} value={v.carNumber} />)}
+                                                </datalist>
+                                            )}
+                                        </div>
+                                        <div className="form-group" style={{ margin: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                <Target size={14} color="rgba(255,255,255,0.3)" />
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Vehicle Model</label>
+                                            </div>
+                                            <input type="text" value={dutyFormData.model} onChange={e => setDutyFormData({ ...dutyFormData, model: e.target.value })} className="modal-input" placeholder="e.g. Innova Crysta" style={{ width: '100%', height: '52px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px' }} />
+                                        </div>
+                                    </div>
+
+                                    <div className="grid-row" style={{ gap: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: 0 }}>
+                                        <div className="form-group" style={{ margin: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                <User size={14} color="rgba(255,255,255,0.3)" />
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Driver / POC Name</label>
+                                            </div>
+                                            <input type="text" value={dutyFormData.driverName} onChange={e => setDutyFormData({ ...dutyFormData, driverName: e.target.value })} className="modal-input" placeholder="Enter name..." style={{ width: '100%', height: '52px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px' }} />
+                                        </div>
+                                        <div className="form-group" style={{ margin: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                <span style={{ fontSize: '14px', fontWeight: '900', color: '#10b981' }}>₹</span>
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Duty Settlement (₹)</label>
+                                            </div>
+                                            <input type="number" value={dutyFormData.dutyAmount} onChange={e => setDutyFormData({ ...dutyFormData, dutyAmount: e.target.value })} className="modal-input" placeholder="0.00" style={{ width: '100%', height: '52px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', color: '#10b981', padding: '0 15px', fontWeight: '900', fontSize: '16px' }} />
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="grid-row">
-                                    <div className="form-group">
-                                        <label>Vehicle Number *</label>
-                                        <input
-                                            type="text"
-                                            list={dutyFormData.vehicleSource === 'Fleet' ? "masterCars" : undefined}
-                                            required
-                                            value={dutyFormData.carNumber}
-                                            onChange={e => handleCarNumberChange(e.target.value)}
-                                            className="modal-input"
-                                            placeholder="e.g. RJ27TA6113"
-                                        />
-                                        {dutyFormData.vehicleSource === 'Fleet' && (
-                                            <datalist id="masterCars">
-                                                {allVehiclesMaster.map(v => <option key={v._id} value={v.carNumber} />)}
+
+                                {/* Step 3: Operational Logistics */}
+                                <div style={{ background: 'rgba(255,255,255,0.015)', padding: '25px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                                        <div style={{ width: '4px', height: '14px', borderRadius: '2px', background: '#0ea5e9' }}></div>
+                                        <label style={{ fontSize: '12px', fontWeight: '900', color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '1px' }}>Operational Logistics</label>
+                                    </div>
+
+                                    <div className="grid-row" style={{ gap: '20px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', marginBottom: '20px' }}>
+                                        <div className="form-group" style={{ margin: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                <Users size={14} color="rgba(255,255,255,0.3)" />
+                                                <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Duty Type</label>
+                                            </div>
+                                            <input type="text" list="dutyTypes" value={dutyFormData.dutyType} onChange={e => setDutyFormData({ ...dutyFormData, dutyType: e.target.value })} className="modal-input" placeholder="e.g. Pickup, Drop" style={{ width: '100%', height: '52px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px' }} />
+                                            <datalist id="dutyTypes">
+                                                <option value="Airport Pickup" />
+                                                <option value="Airport Drop" />
+                                                <option value="Full Day Local" />
+                                                <option value="Outstation" />
+                                                <option value="Hotel Transfer" />
+                                                <option value="Dinner Drop" />
                                             </datalist>
-                                        )}
+                                        </div>
+                                        <div className="form-group" style={{ margin: 0 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px', justifyContent: 'space-between' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <Calendar size={14} color="rgba(255,255,255,0.3)" />
+                                                    <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Duty Time</label>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => setDutyFormData(prev => ({ ...prev, dutyTime: currentTimeIST() }))}
+                                                    style={{ background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9', fontSize: '10px', fontWeight: '900', padding: '2px 8px', borderRadius: '6px', cursor: 'pointer' }}
+                                                >
+                                                    SET NOW
+                                                </button>
+                                            </div>
+                                            <input
+                                                type="time"
+                                                value={dutyFormData.dutyTime}
+                                                onChange={e => setDutyFormData({ ...dutyFormData, dutyTime: e.target.value })}
+                                                className="modal-input"
+                                                style={{ width: '100%', height: '52px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', colorScheme: 'dark' }}
+                                            />
+                                        </div>
                                     </div>
-                                    <div className="form-group">
-                                        <label>Model</label>
-                                        <input type="text" value={dutyFormData.model} onChange={e => setDutyFormData({ ...dutyFormData, model: e.target.value })} className="modal-input" placeholder="e.g. Innova Crysta" />
+                                    <div className="form-group" style={{ margin: 0 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                            <MapPin size={14} color="rgba(255,255,255,0.3)" />
+                                            <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Destination / Venue</label>
+                                        </div>
+                                        <input type="text" value={dutyFormData.dropLocation} onChange={e => setDutyFormData({ ...dutyFormData, dropLocation: e.target.value })} className="modal-input" placeholder="e.g. Terminal 3, Hotel Radisson..." style={{ width: '100%', height: '52px', background: 'rgba(0,0,0,0.4)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px' }} />
                                     </div>
                                 </div>
-                                <div className="grid-row">
-                                    <div className="form-group">
-                                        <label>Driver Name</label>
-                                        <input type="text" value={dutyFormData.driverName} onChange={e => setDutyFormData({ ...dutyFormData, driverName: e.target.value })} className="modal-input" placeholder="Driver / Owner name" />
-                                    </div>
-                                    <div className="form-group">
-                                        <label>Rate / Amount (₹)</label>
-                                        <input type="number" value={dutyFormData.dutyAmount} onChange={e => setDutyFormData({ ...dutyFormData, dutyAmount: e.target.value })} className="modal-input" placeholder="0.00" />
-                                    </div>
-                                </div>
-                                <div className="form-group">
-                                    <label>Duty Detail / Terminal / Route</label>
-                                    <input type="text" value={dutyFormData.dropLocation} onChange={e => setDutyFormData({ ...dutyFormData, dropLocation: e.target.value })} className="modal-input" placeholder="e.g. T3 PickUp, Airport Drop" />
-                                </div>
-                                <button type="submit" className="submit-btn">{isEditingDuty ? 'Update Entry' : 'Log Entry'}</button>
+
+
+                                <button type="submit" className="submit-btn" style={{
+                                    height: '56px', fontSize: '16px', fontWeight: '900', letterSpacing: '1px',
+                                    background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+                                    color: 'black', borderRadius: '16px', border: 'none', cursor: 'pointer',
+                                    marginTop: '10px', boxShadow: '0 10px 20px rgba(245, 158, 11, 0.2)'
+                                }}>
+                                    {isEditingDuty ? 'UPDATE DUTY LOG' : 'CONFIRM & LOG DUTY'}
+                                </button>
                             </form>
                         </motion.div>
                     </div>
@@ -860,48 +929,81 @@ const EventManagement = () => {
                 .secondary-btn:hover { background: rgba(255,255,255,0.08); }
                 .target-input-inline { width: 60px; background: transparent; border: none; border-bottom: 2px solid rgba(251,191,36,0.5); color: #fbbf24; font-weight: 900; font-size: 16px; outline: none; text-align: center; }
 
-                .main-table-container { padding: 0; border: 1px solid rgba(255,255,255,0.05); background: rgba(15, 23, 42, 0.4) !important; overflow: hidden; }
+                /* ===== TABLE ===== */
+                .main-table-container { padding: 0; border: 1px solid rgba(255,255,255,0.06); background: rgba(10, 16, 30, 0.6) !important; overflow: hidden; border-radius: 20px; }
                 table { width: 100%; border-collapse: separate; border-spacing: 0; }
-                th { padding: 18px 20px; text-align: left; background: rgba(255,255,255,0.02); color: rgba(255,255,255,0.4); font-size: 10px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; border-bottom: 1px solid rgba(255,255,255,0.05); }
-                .table-row { transition: 0.2s; }
-                .table-row:hover { background: rgba(255,255,255,0.02); }
-                .table-row td { padding: 18px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
+                th { padding: 16px 20px; text-align: left; background: rgba(255,255,255,0.025); color: rgba(255,255,255,0.35); font-size: 9px; font-weight: 900; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid rgba(255,255,255,0.05); white-space: nowrap; }
+                .table-row { transition: background 0.2s; }
+                .table-row:hover { background: rgba(251,191,36,0.03); }
+                .table-row td { padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.03); vertical-align: middle; }
+                .table-row:last-child td { border-bottom: none; }
+
+                /* ===== DATE CELL ===== */
+                .date-cell { min-width: 80px; }
+                .date-cell .day-name { font-size: 8px; font-weight: 950; color: #fbbf24; letter-spacing: 1.5px; margin-bottom: 3px; text-transform: uppercase; }
+                .date-cell .date-val { color: white; font-weight: 800; font-size: 15px; line-height: 1.2; }
+                .date-cell .year-val { font-size: 10px; color: rgba(255,255,255,0.25); font-weight: 600; margin-top: 2px; }
+
+                /* ===== VEHICLE CELL ===== */
+                .vehicle-cell .plate-num { font-weight: 900; color: white; font-size: 14px; letter-spacing: 0.8px; font-variant-numeric: tabular-nums; }
+                .vehicle-cell .model-name { font-size: 11px; color: rgba(255,255,255,0.35); font-weight: 600; margin-top: 3px; }
                 
-                .date-cell .day-name { font-size: 9px; font-weight: 950; color: #fbbf24; margin-bottom: 4px; }
-                .date-cell .date-val { color: white; font-weight: 800; font-size: 14px; }
-                .vehicle-cell .plate-num { font-weight: 900; color: white; font-size: 16px; letter-spacing: 0.5px; }
-                .vehicle-cell .model-name { font-size: 12px; color: rgba(255,255,255,0.4); font-weight: 600; }
-                .duty-cell .event-name { color: white; font-weight: 800; font-size: 15px; margin-bottom: 4px; }
-                .duty-cell .loc-text { font-size: 12px; color: rgba(255,255,255,0.4); display: flex; align-items: center; }
+                /* ===== DUTY CELL ===== */
+                .duty-cell .event-name { color: white; font-weight: 800; font-size: 14px; margin-bottom: 3px; }
+                .duty-cell .venue-text { font-size: 11px; color: rgba(255,255,255,0.35); }
+                .duty-cell .loc-text { font-size: 11px; color: rgba(255,255,255,0.4); display: flex; align-items: center; gap: 4px; }
+
+                /* ===== ENTITY CELL ===== */
                 .entity-cell .client-name { color: white; font-weight: 700; font-size: 14px; margin-bottom: 4px; }
                 .entity-cell .venue-text { font-size: 11px; color: rgba(255,255,255,0.3); }
-                .amount-badge { display: inline-block; padding: 6px 12px; background: rgba(16, 185, 129, 0.05); color: #10b981; font-weight: 900; border-radius: 8px; border: 1px solid rgba(16, 185, 129, 0.1); }
+
+                /* ===== BADGES ===== */
+                .badge-fleet { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
+                .badge-ext { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
+                .badge-duty { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); white-space: nowrap; }
+                .badge-time { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.25); white-space: nowrap; }
+                .badge-loc { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.65); font-size: 12px; font-weight: 600; }
+                .badge-no-data { font-size: 11px; color: rgba(255,255,255,0.18); font-style: italic; }
                 
+                /* ===== AMOUNT ===== */
+                .amount-cell { text-align: right; }
+                .amount-badge { display: inline-block; padding: 6px 14px; background: rgba(16,185,129,0.1); color: #10b981; font-weight: 900; font-size: 14px; border-radius: 10px; border: 1px solid rgba(16,185,129,0.2); }
+
+                /* ===== ACTIONS ===== */
+                .action-cell { text-align: right; }
                 .action-group { display: flex; gap: 8px; justify-content: flex-end; }
-                .action-group button { width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: white; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; }
-                .edit-btn:hover { background: #fbbf24; color: black; border-color: #fbbf24; }
-                .delete-btn:hover { background: #f43f5e; color: white; border-color: #f43f5e; }
+                .action-group button { width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+                .edit-btn:hover { background: rgba(251,191,36,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3); }
+                .delete-btn:hover { background: rgba(244,63,94,0.15); color: #f43f5e; border-color: rgba(244,63,94,0.3); }
                 
                 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.8); backdrop-filter: blur(10px); z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 20px; }
-                .modal-container { width: 100%; max-width: 680px; background: #0f172a; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; max-height: 90vh; overflow-y: auto; }
+                .action-group button { width: 34px; height: 34px; border-radius: 9px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.5); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
+                .edit-btn:hover { background: rgba(251,191,36,0.12); color: #fbbf24; border-color: rgba(251,191,36,0.25); }
+                .delete-btn:hover { background: rgba(244,63,94,0.12); color: #f43f5e; border-color: rgba(244,63,94,0.25); }
+
+                /* ===== MODAL ===== */
+                .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.85); backdrop-filter: blur(14px); z-index: 2000; display: flex; justify-content: center; align-items: center; padding: 20px; }
+                .modal-container { width: 100%; max-width: 680px; background: #080d18; border-radius: 24px; border: 1px solid rgba(255,255,255,0.1); overflow: hidden; max-height: 90vh; overflow-y: auto; }
                 .modal-container.small { max-width: 450px; }
-                .modal-header { padding: 25px 30px; background: linear-gradient(to right, #1e293b, #0f172a); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 2; }
+                .modal-header { padding: 25px 30px; background: linear-gradient(to right, rgba(251,191,36,0.07), transparent); border-bottom: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 2; backdrop-filter: blur(10px); }
                 .modal-header h3 { color: white; margin: 0; font-size: 20px; font-weight: 800; }
                 .modal-header p { color: rgba(255,255,255,0.4); margin: 4px 0 0; font-size: 12px; }
-                .close-btn { background: rgba(255,255,255,0.05); border: none; color: white; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; flex-shrink: 0; }
+                .close-btn { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); color: rgba(255,255,255,0.6); border-radius: 10px; width: 36px; height: 36px; cursor: pointer; flex-shrink: 0; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
+                .close-btn:hover { background: rgba(244,63,94,0.15); color: #f43f5e; border-color: rgba(244,63,94,0.3); }
                 .modal-form { padding: 30px; display: flex; flex-direction: column; gap: 20px; }
                 .grid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
                 .form-group { display: flex; flex-direction: column; gap: 8px; }
                 .form-group label { font-size: 10px; font-weight: 800; color: rgba(255,255,255,0.4); text-transform: uppercase; }
-                .modal-input { height: 52px; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 0 15px; color: white; outline: none; transition: 0.3s; width: 100%; }
-                .modal-input:focus { border-color: #fbbf24; background: rgba(0,0,0,0.4); }
+                .modal-input { height: 52px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 0 15px; color: white; outline: none; transition: 0.3s; width: 100%; }
+                .modal-input:focus { border-color: #fbbf24; background: rgba(251,191,36,0.04); box-shadow: 0 0 0 3px rgba(251,191,36,0.07); }
                 .submit-btn { height: 56px; background: linear-gradient(135deg, #fbbf24, #d97706); border: none; border-radius: 16px; color: black; font-weight: 900; font-size: 16px; margin-top: 10px; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 20px -5px rgba(251,191,36,0.3); }
-                .submit-btn:hover { transform: translateY(-2px); }
+                .submit-btn:hover { transform: translateY(-2px); box-shadow: 0 14px 28px -5px rgba(251,191,36,0.4); }
 
-                .mobile-duty-card { background: rgba(30, 41, 59, 0.4); padding: 15px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 15px; }
-                .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
-                .header-left { display: flex; flex-direction: column; }
-                .car-num { color: white; font-weight: 900; font-size: 16px; }
+                /* ===== MOBILE CARDS ===== */
+                .mobile-duty-card { background: linear-gradient(140deg, rgba(20,30,50,0.8), rgba(10,15,30,0.95)); padding: 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.07); margin-bottom: 14px; }
+                .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; }
+                .header-left { display: flex; flex-direction: column; gap: 4px; }
+                .car-num { color: white; font-weight: 900; font-size: 17px; letter-spacing: 0.5px; }
                 .date-label { color: #fbbf24; font-size: 11px; font-weight: 700; }
                 .amount-tag { color: #10b981; font-weight: 900; font-size: 16px; }
                 .detail-item { margin-bottom: 10px; }
