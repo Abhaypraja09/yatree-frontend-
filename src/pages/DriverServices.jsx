@@ -17,7 +17,8 @@ import {
     User,
     PlusCircle,
     Upload,
-    ImageIcon
+    ImageIcon,
+    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
