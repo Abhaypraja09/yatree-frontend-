@@ -11,7 +11,7 @@ import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 import AttendanceModal from '../components/reports/AttendanceModal';
 import EditAttendanceModal from '../components/reports/EditAttendanceModal';
-import { todayIST, toISTDateString, firstDayOfMonthIST, formatTimeIST } from '../utils/istUtils';
+import { todayIST, toISTDateString, firstDayOfMonthIST, formatTimeIST, nowIST } from '../utils/istUtils';
 
 /* ─── tiny helpers ─── */
 const fmt = (d) => { if (!d) return '--'; const [y, m, dd] = (typeof d === 'string' ? d.split('T')[0] : toISTDateString(new Date(d))).split('-'); return `${dd}/${m}/${y}`; };
@@ -248,7 +248,12 @@ const Reports = () => {
         const fStr = f.toISOString().split('T')[0];
 
         if (isRange) {
+            // Also shift toDate by same amount to maintain the range window
+            const t = nowIST(toDate);
+            t.setUTCDate(t.getUTCDate() + n);
+            const tStr = t.toISOString().split('T')[0];
             setFromDate(fStr);
+            setToDate(tStr);
         } else {
             setFromDate(fStr);
             setToDate(fStr);

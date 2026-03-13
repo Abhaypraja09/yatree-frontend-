@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -181,12 +181,16 @@ const Freelancers = () => {
     const [documentForm, setDocumentForm] = useState({ documentType: 'Driving License', expiryDate: '' });
     const [documentFile, setDocumentFile] = useState(null);
     const location = useLocation();
-    const [activeTab, setActiveTab] = useState(location.state?.tab || 'personnel');
+    const navigate = useNavigate();
+    const [activeTab, setActiveTab] = useState(() => {
+        if (location.state?.tab) return location.state.tab;
+        return 'personnel';
+    });
     const [expandedLedger, setExpandedLedger] = useState(null);
 
     // Form States
-    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '' });
-    const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '' });
+    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '', nightStayBonus: '500', sameDayReturnBonus: '100' });
+    const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '', nightStayBonus: '500', sameDayReturnBonus: '100' });
     const [punchInData, setPunchInData] = useState({
         vehicleId: '',
         km: '',
@@ -215,6 +219,12 @@ const Freelancers = () => {
         dailyWage: '',
         review: ''
     });
+
+    const [month, setMonth] = useState(new Date().getMonth() + 1);
+    const [year, setYear] = useState(new Date().getFullYear());
+    const [viewMode, setViewMode] = useState('monthly'); // 'monthly' or 'range'
+    const [monthlySummaries, setMonthlySummaries] = useState([]);
+    const [summaryLoading, setSummaryLoading] = useState(false);
 
     const [punchInPhotos, setPunchInPhotos] = useState({ kmPhoto: null });
     const [punchOutPhotos, setPunchOutPhotos] = useState({ kmPhoto: null });
@@ -266,17 +276,47 @@ const Freelancers = () => {
 
     const getToday = () => todayIST();
 
-    const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
-    const [toDate, setToDate] = useState(todayIST());
+    const [isRange, setIsRange] = useState(() => {
+        if (location.state?.from) return location.state.from !== location.state.to;
+        return false;
+    });
+    const [fromDate, setFromDate] = useState(() => {
+        if (location.state?.from) return location.state.from;
+        return todayIST();
+    });
+    const [toDate, setToDate] = useState(() => {
+        if (location.state?.to) return location.state.to;
+        return todayIST();
+    });
+
+    // Reset dates when navigating to this page via Sidebar (location state will be null)
+    useEffect(() => {
+        if (!location.state?.from) {
+            setFromDate(todayIST());
+            setToDate(todayIST());
+            setIsRange(false);
+        }
+    }, [location.state]);
 
     /* navigate dates */
     const shiftDays = (n) => {
-        const f = nowIST(fromDate);
+        // Use toDate for single mode, fromDate for range mode as reference
+        const referenceDate = isRange ? fromDate : toDate;
+        const f = nowIST(referenceDate);
         f.setUTCDate(f.getUTCDate() + n);
         const fStr = f.toISOString().split('T')[0];
-        setFromDate(fStr);
-        if (!isRange) setToDate(fStr);
+        
+        if (isRange) {
+            setFromDate(fStr);
+            // In range mode, optional: move both or just from?
+            // Usually common to move both for "Next/Prev Period"
+            const t = nowIST(toDate);
+            t.setUTCDate(t.getUTCDate() + n);
+            setToDate(t.toISOString().split('T')[0]);
+        } else {
+            setFromDate(fStr);
+            setToDate(fStr);
+        }
     };
 
     const [submitting, setSubmitting] = useState(false);
@@ -309,6 +349,28 @@ const Freelancers = () => {
             setAdvances(data || []);
         } catch (err) { console.error('fetchAdvances error:', err?.response?.status, err?.response?.config?.url || err.message); }
     }, [selectedCompany, fromDate, toDate]);
+
+    const fetchMonthlySummaries = useCallback(async () => {
+        if (!selectedCompany?._id || activeTab !== 'accounts') return;
+        setSummaryLoading(true);
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const { data } = await axios.get(`/api/admin/salary-summary/${selectedCompany._id}?month=${month}&year=${year}&isFreelancer=true`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setMonthlySummaries(data || []);
+        } catch (err) {
+            console.error('fetchMonthlySummaries error:', err);
+        } finally {
+            setSummaryLoading(false);
+        }
+    }, [selectedCompany, month, year, activeTab]);
+
+    useEffect(() => {
+        if (activeTab === 'accounts' && viewMode === 'monthly') {
+            fetchMonthlySummaries();
+        }
+    }, [fetchMonthlySummaries, activeTab, viewMode]);
 
     const handleDeleteDuty = async (id) => {
         if (!window.confirm('Are you sure you want to delete this duty record?')) return;
@@ -455,7 +517,7 @@ const Freelancers = () => {
             setMessage({ type: 'success', text: 'Freelancer added successfully!' });
             setTimeout(() => {
                 setShowAddModal(false);
-                setFormData({ name: '', mobile: '', licenseNumber: '', dailyWage: '' });
+                setFormData({ name: '', mobile: '', licenseNumber: '', dailyWage: '', nightStayBonus: '500', sameDayReturnBonus: '100' });
                 setMessage({ type: '', text: '' });
                 fetchFreelancers();
             }, 1000);
@@ -622,19 +684,39 @@ const Freelancers = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
 
-            if (editingDuty.isOutsideCar) {
-                // Update Outside Car (Vehicle record)
+            // Vouchers are records from the Vehicle collection (mapped in reports)
+            const isVoucher = editingDuty.entryType === 'voucher';
+
+            console.log('[DEBUG] Updating Duty Record:', {
+                id: editingDuty._id,
+                type: editingDuty.entryType,
+                payload: editDutyForm
+            });
+
+            if (isVoucher) {
+                // Update Outside Car Voucher (Vehicle record)
                 await axios.put(`/api/admin/vehicles/${editingDuty._id}`, {
-                    dutyAmount: editDutyForm.dailyWage,
-                    dutyType: editDutyForm.pickUpLocation, // Synced with Pick-up Location field
+                    dutyAmount: Number(editDutyForm.dailyWage) || 0,
+                    dutyType: editDutyForm.pickUpLocation,
                     dropLocation: editDutyForm.dropLocation,
-                    driverName: drivers.find(d => d._id === editDutyForm.driverId)?.name || editingDuty.driver?.name
+                    driverName: drivers.find(d => d._id === editDutyForm.driverId)?.name || editingDuty.driverName || editingDuty.driver?.name,
+                    // If we ever support parking for vouchers, it would go here
+                    tollParkingAmount: Number(editDutyForm.parkingAmount) || 0
                 }, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
             } else {
                 // Update Regular Attendance
-                await axios.put(`/api/admin/attendance/${editingDuty._id}`, editDutyForm, {
+                await axios.put(`/api/admin/attendance/${editingDuty._id}`, {
+                    ...editDutyForm,
+                    // Ensure numbers are numbers
+                    startKm: Number(editDutyForm.startKm),
+                    endKm: Number(editDutyForm.endKm),
+                    parkingAmount: Number(editDutyForm.parkingAmount),
+                    dailyWage: Number(editDutyForm.dailyWage),
+                    bonusAmount: Number(editDutyForm.bonusAmount),
+                    fuelAmount: Number(editDutyForm.fuelAmount)
+                }, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
             }
@@ -644,29 +726,39 @@ const Freelancers = () => {
             fetchAttendance();
             setTimeout(() => setMessage({ type: '', text: '' }), 2000);
         } catch (err) {
+            console.error('[UPDATE_ERROR]', err);
             alert(err.response?.data?.message || 'Update failed');
         } finally { setSubmitting(false); }
     };
 
     const openEditDutyModal = (duty) => {
         setEditingDuty(duty);
-        const fallbackWage = duty.isOutsideCar ? (duty.dutyAmount || 0) : (duty.driver?.dailyWage || 500);
+        const fallbackWage = duty.isOutsideCar ? (Number(duty.dutyAmount) || 0) : (Number(duty.driver?.dailyWage) || 500);
+        
+        // Debug log to trace what data we are loading into the modal
+        console.log('[DEBUG] Opening Edit Modal for Duty:', {
+            id: duty._id,
+            wage: duty.dailyWage,
+            parking: duty.punchOut?.tollParkingAmount,
+            paidBy: duty.punchOut?.parkingPaidBy
+        });
+
         setEditDutyForm({
             date: duty.date,
             driverId: duty.driver?._id || duty.driver || '',
             vehicleId: duty.vehicle?._id || duty.vehicle || '',
-            startKm: duty.punchIn?.km ?? '',
-            endKm: duty.punchOut?.km ?? '',
+            startKm: duty.punchIn?.km ?? 0,
+            endKm: duty.punchOut?.km ?? 0,
             punchInTime: duty.punchIn?.time ? toISTDateTimeString(duty.punchIn.time) : '',
             punchOutTime: duty.punchOut?.time ? toISTDateTimeString(duty.punchOut.time) : '',
             pickUpLocation: duty.pickUpLocation || '',
             dropLocation: duty.dropLocation || '',
-            fuelAmount: duty.fuel?.amount ?? '0',
-            parkingAmount: duty.punchOut?.tollParkingAmount ?? '0',
+            fuelAmount: duty.fuel?.amount ?? 0,
+            parkingAmount: duty.punchOut?.tollParkingAmount ?? 0,
             parkingPaidBy: duty.punchOut?.parkingPaidBy || 'Self',
             allowanceTA: duty.punchOut?.allowanceTA ?? 0,
             nightStayAmount: duty.punchOut?.nightStayAmount ?? 0,
-            bonusAmount: duty.outsideTrip?.bonusAmount ?? '0',
+            bonusAmount: duty.outsideTrip?.bonusAmount ?? 0,
             dailyWage: duty.dailyWage || fallbackWage,
             remarks: duty.punchOut?.remarks || duty.punchOut?.otherRemarks || '',
             dutyType: duty.pickUpLocation || ''
@@ -700,7 +792,9 @@ const Freelancers = () => {
             name: driver.name,
             mobile: driver.mobile,
             licenseNumber: driver.licenseNumber || '',
-            dailyWage: driver.dailyWage || ''
+            dailyWage: driver.dailyWage || '',
+            nightStayBonus: driver.nightStayBonus !== undefined && driver.nightStayBonus !== null ? String(driver.nightStayBonus) : '500',
+            sameDayReturnBonus: driver.sameDayReturnBonus !== undefined && driver.sameDayReturnBonus !== null ? String(driver.sameDayReturnBonus) : '100'
         });
         setShowEditModal(true);
     };
@@ -830,54 +924,56 @@ const Freelancers = () => {
                         </div>
                     </div>
 
-                    <div className="header-actions" style={{
-                        display: 'flex',
-                        gap: '15px',
-                        alignItems: 'center',
-                        flexWrap: 'wrap',
-                        justifyContent: 'flex-end',
-                        flex: 1
-                    }}>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '4px 12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <Filter size={14} color="#fbbf24" strokeWidth={2.5} />
-                            <select
-                                value={driverFilter}
-                                onChange={(e) => setDriverFilter(e.target.value)}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    color: 'white',
-                                    height: '38px',
-                                    fontSize: '13px',
-                                    fontWeight: '800',
-                                    outline: 'none',
-                                    minWidth: '130px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <option value="All" style={{ background: '#1e293b' }}>ALL FREELANCERS</option>
-                                {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name.split(' (F)')[0].toUpperCase()}</option>)}
-                            </select>
-                        </div>
+                    {activeTab !== 'accounts' && (
+                        <div className="header-actions" style={{
+                            display: 'flex',
+                            gap: '15px',
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            justifyContent: 'flex-end',
+                            flex: 1
+                        }}>
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '4px 12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <Filter size={14} color="#fbbf24" strokeWidth={2.5} />
+                                <select
+                                    value={driverFilter}
+                                    onChange={(e) => setDriverFilter(e.target.value)}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: 'white',
+                                        height: '38px',
+                                        fontSize: '13px',
+                                        fontWeight: '800',
+                                        outline: 'none',
+                                        minWidth: '130px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <option value="All" style={{ background: '#1e293b' }}>ALL FREELANCERS</option>
+                                    {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name.split(' (F)')[0].toUpperCase()}</option>)}
+                                </select>
+                            </div>
 
-                        <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                            <button
-                                className="glass-card-hover-effect"
-                                onClick={() => setShowManualModal(true)}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s' }}
-                                title="Manual Entry"
-                            >
-                                <Edit2 size={16} />
-                            </button>
-                            <button
-                                onClick={() => setShowAddModal(true)}
-                                style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', border: 'none', color: 'black', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)', cursor: 'pointer', transition: 'all 0.3s' }}
-                                title="Add Freelancer"
-                            >
-                                <Plus size={18} />
-                            </button>
+                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                                <button
+                                    className="glass-card-hover-effect"
+                                    onClick={() => setShowManualModal(true)}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s' }}
+                                    title="Manual Entry"
+                                >
+                                    <Edit2 size={16} />
+                                </button>
+                                <button
+                                    onClick={() => setShowAddModal(true)}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', border: 'none', color: 'black', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)', cursor: 'pointer', transition: 'all 0.3s' }}
+                                    title="Add Freelancer"
+                                >
+                                    <Plus size={18} />
+                                </button>
+                            </div>
                         </div>
-                    </div>
+                    )}
                 </div>
             </header>
 
@@ -932,140 +1028,167 @@ const Freelancers = () => {
                         ))}
                     </div>
 
-                    {/* Filter Controls */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1, width: '100%', justifyContent: 'flex-end' }}>
-
-                        {/* Premium Modern Calendar UI */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '5px',
-                            background: 'rgba(0,0,0,0.25)',
-                            padding: '4px',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-                        }}>
-                            <button
-                                onClick={() => shiftDays(-1)}
-                                style={{
-                                    width: '36px', height: '36px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)', border: 'none',
-                                    color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-
-                            <div style={{ display: 'flex', gap: '5px' }}>
-                                {isRange && (
-                                    <div style={{
-                                        padding: '0 15px', height: '36px', display: 'flex',
-                                        alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                        background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px',
-                                        border: '1px solid rgba(99, 102, 241, 0.15)',
-                                        position: 'relative', overflow: 'hidden'
-                                    }}>
-                                        <span style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
-                                        <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                            {new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
-                                        </span>
-                                        <input
-                                            type="date"
-                                            value={fromDate}
-                                            onChange={(e) => setFromDate(e.target.value)}
-                                            onClick={(e) => e.target.showPicker?.()}
-                                            style={{
-                                                position: 'absolute', opacity: 0, inset: 0,
-                                                width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
-                                            }}
-                                        />
+                        {/* Filter Controls */}
+                        {activeTab !== 'personnel' && (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1, width: '100%', justifyContent: 'flex-end' }}>
+                                {activeTab === 'accounts' && (
+                                    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '14px', padding: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                        <button onClick={() => setViewMode('monthly')}
+                                            style={{ padding: '8px 16px', borderRadius: '10px', border: 'none', background: viewMode === 'monthly' ? '#818cf8' : 'transparent', color: viewMode === 'monthly' ? 'black' : 'white', fontSize: '11px', fontWeight: '900', cursor: 'pointer', transition: 'all 0.3s' }}>MONTHLY</button>
+                                        <button onClick={() => setViewMode('range')}
+                                            style={{ padding: '8px 16px', borderRadius: '10px', border: 'none', background: viewMode === 'range' ? '#818cf8' : 'transparent', color: viewMode === 'range' ? 'black' : 'white', fontSize: '11px', fontWeight: '900', cursor: 'pointer', transition: 'all 0.3s' }}>RANGE</button>
                                     </div>
                                 )}
 
-                                <div style={{
-                                    padding: '0 15px', height: '36px', display: 'flex',
-                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                    background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                                    borderRadius: '10px',
-                                    border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(99, 102, 241, 0.2)'}`,
-                                    position: 'relative', overflow: 'hidden'
-                                }}>
-                                    {isRange ? (
-                                        <span style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>TO:</span>
-                                    ) : (
-                                        <Calendar size={14} color="#818cf8" />
-                                    )}
-                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                        {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: isRange ? undefined : 'numeric' }).toUpperCase()}
-                                    </span>
-                                    <input
-                                        type="date"
-                                        value={toDate}
-                                        onChange={(e) => {
-                                            setToDate(e.target.value);
-                                            if (!isRange) setFromDate(e.target.value);
-                                        }}
-                                        onClick={(e) => e.target.showPicker?.()}
-                                        style={{
-                                            position: 'absolute', opacity: 0, inset: 0,
-                                            width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
-                                        }}
-                                    />
-                                </div>
+                                {(activeTab !== 'accounts' || viewMode === 'range') ? (
+                                    <>
+                                        {/* Premium Modern Calendar UI */}
+                                        <div style={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '5px',
+                                            background: 'rgba(0,0,0,0.25)',
+                                            padding: '4px',
+                                            borderRadius: '16px',
+                                            border: '1px solid rgba(255,255,255,0.05)',
+                                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                                        }}>
+                                            <button
+                                                onClick={() => shiftDays(-1)}
+                                                style={{
+                                                    width: '36px', height: '36px', borderRadius: '12px',
+                                                    background: 'rgba(255,255,255,0.03)', border: 'none',
+                                                    color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}
+                                            >
+                                                <ChevronLeft size={18} />
+                                            </button>
+
+                                            <div style={{ display: 'flex', gap: '5px' }}>
+                                                {isRange && (
+                                                    <div style={{
+                                                        padding: '0 15px', height: '36px', display: 'flex',
+                                                        alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                                        background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px',
+                                                        border: '1px solid rgba(99, 102, 241, 0.15)',
+                                                        position: 'relative', overflow: 'hidden'
+                                                    }}>
+                                                        <span style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
+                                                        <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
+                                                            {new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}
+                                                        </span>
+                                                        <input
+                                                            type="date"
+                                                            value={fromDate}
+                                                            onChange={(e) => setFromDate(e.target.value)}
+                                                            onClick={(e) => e.target.showPicker?.()}
+                                                            style={{
+                                                                position: 'absolute', opacity: 0, inset: 0,
+                                                                width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
+                                                            }}
+                                                        />
+                                                    </div>
+                                                )}
+
+                                                <div style={{
+                                                    padding: '0 15px', height: '36px', display: 'flex',
+                                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
+                                                    background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                                                    borderRadius: '10px',
+                                                    border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(99, 102, 241, 0.2)'}`,
+                                                    position: 'relative', overflow: 'hidden'
+                                                }}>
+                                                    {isRange ? (
+                                                        <span style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>TO:</span>
+                                                    ) : (
+                                                        <Calendar size={14} color="#818cf8" />
+                                                    )}
+                                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
+                                                        {new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: isRange ? undefined : 'numeric' }).toUpperCase()}
+                                                    </span>
+                                                    <input
+                                                        type="date"
+                                                        value={toDate}
+                                                        onChange={(e) => {
+                                                            setToDate(e.target.value);
+                                                            if (!isRange) setFromDate(e.target.value);
+                                                        }}
+                                                        onClick={(e) => e.target.showPicker?.()}
+                                                        style={{
+                                                            position: 'absolute', opacity: 0, inset: 0,
+                                                            width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                onClick={() => shiftDays(1)}
+                                                style={{
+                                                    width: '36px', height: '36px', borderRadius: '12px',
+                                                    background: 'rgba(255,255,255,0.03)', border: 'none',
+                                                    color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                }}
+                                            >
+                                                <ChevronRight size={18} />
+                                            </button>
+                                        </div>
+                                        <button
+                                            onClick={() => {
+                                                const next = !isRange;
+                                                setIsRange(next);
+                                                if (!next) setFromDate(toDate);
+                                            }}
+                                            style={{
+                                                marginLeft: '5px', padding: '0 10px', height: '36px',
+                                                borderRadius: '10px', border: 'none', cursor: 'pointer',
+                                                background: isRange ? '#6366f1' : 'rgba(255,255,255,0.05)',
+                                                color: isRange ? 'white' : 'rgba(255,255,255,0.4)',
+                                                fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
+                                            }}
+                                        >
+                                            {isRange ? 'Range' : 'Single'}
+                                        </button>
+                                    </>
+                                ) : (
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                        <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="glass-card"
+                                            style={{ padding: '0 12px', height: '40px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', fontSize: '13px', fontWeight: '800', cursor: 'pointer' }}>
+                                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                                                <option key={m} value={m} style={{ background: '#0f172a' }}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' }).toUpperCase()}</option>
+                                            ))}
+                                        </select>
+                                        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="glass-card"
+                                            style={{ padding: '0 12px', height: '40px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', fontSize: '13px', fontWeight: '800', cursor: 'pointer' }}>
+                                            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>)}
+                                        </select>
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={handleDownloadExcel}
+                                    style={{
+                                        background: 'rgba(16, 185, 129, 0.1)',
+                                        border: '1px solid rgba(16, 185, 129, 0.2)',
+                                        color: '#10b981',
+                                        padding: '0 15px',
+                                        height: '44px',
+                                        borderRadius: '13px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        fontSize: '11px',
+                                        fontWeight: '900',
+                                        cursor: 'pointer',
+                                    }}
+                                    title="Export Reports"
+                                >
+                                    <Download size={16} /> <span className="hide-mobile">Excel</span>
+                                </button>
                             </div>
-
-                            <button
-                                onClick={() => shiftDays(1)}
-                                style={{
-                                    width: '36px', height: '36px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)', border: 'none',
-                                    color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-                        </div>
-                        <button
-                            onClick={() => {
-                                const next = !isRange;
-                                setIsRange(next);
-                                if (!next) setFromDate(toDate);
-                            }}
-                            style={{
-                                marginLeft: '5px', padding: '0 10px', height: '36px',
-                                borderRadius: '10px', border: 'none', cursor: 'pointer',
-                                background: isRange ? '#6366f1' : 'rgba(255,255,255,0.05)',
-                                color: isRange ? 'white' : 'rgba(255,255,255,0.4)',
-                                fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
-                            }}
-                        >
-                            {isRange ? 'Range' : 'Single'}
-                        </button>
-                    </div>
-
-                    <button
-                        onClick={handleDownloadExcel}
-                        style={{
-                            background: 'rgba(16, 185, 129, 0.1)',
-                            border: '1px solid rgba(16, 185, 129, 0.2)',
-                            color: '#10b981',
-                            padding: '0 15px',
-                            height: '44px',
-                            borderRadius: '13px',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            fontSize: '11px',
-                            fontWeight: '900',
-                            cursor: 'pointer',
-                        }}
-                        title="Export Reports"
-                    >
-                        <Download size={16} /> <span className="hide-mobile">Excel</span>
-                    </button>
+                        )}
                 </div>
             </div>
 
@@ -1234,335 +1357,149 @@ const Freelancers = () => {
                     activeTab === 'accounts' && (
                         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
                             <div style={{ marginBottom: '32px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                                    <div style={{ width: '4px', height: '24px', background: 'linear-gradient(to bottom, #6366f1, #a855f7)', borderRadius: '4px' }}></div>
-                                    <h4 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '900', letterSpacing: '-0.5px' }}>Financial Settlement <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: '500', fontSize: '14px', marginLeft: '10px' }}>• Master Ledger</span></h4>
-                                </div>
-                                <div style={{
-                                    display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                                    gap: '20px',
-                                    marginBottom: '32px'
-                                }}>
-                                    <div className="glass-card" style={{
-                                        padding: '24px',
-                                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.02) 100%)',
-                                        border: '1px solid rgba(16, 185, 129, 0.2)',
-                                        borderRadius: '24px'
-                                    }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <TrendingUp size={20} color="#10b981" />
-                                            </div>
-                                            <span style={{ color: '#10b981', fontSize: '10px', fontWeight: '900', letterSpacing: '1px' }}>TOTAL REVENUE</span>
-                                        </div>
-                                        <div style={{ color: 'white', fontSize: '32px', fontWeight: '1000', marginTop: '15px' }}>₹{totalSettlement.toLocaleString()}</div>
-                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', marginTop: '5px', fontWeight: '800' }}>TOTAL EARNED BY DRIVERS</div>
-                                    </div>
-
-                                    <div className="glass-card" style={{
-                                        padding: '24px',
-                                        background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, rgba(244, 63, 94, 0.02) 100%)',
-                                        border: '1px solid rgba(244, 63, 94, 0.2)',
-                                        borderRadius: '24px'
-                                    }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(244, 63, 94, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <History size={20} color="#f43f5e" />
-                                            </div>
-                                            <span style={{ color: '#f43f5e', fontSize: '10px', fontWeight: '900', letterSpacing: '1px' }}>TOTAL DISBURSED</span>
-                                        </div>
-                                        <div style={{ color: 'white', fontSize: '32px', fontWeight: '1000', marginTop: '15px' }}>₹{totalAdvances.toLocaleString()}</div>
-                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', marginTop: '5px', fontWeight: '800' }}>TOTAL PAID TO DRIVERS</div>
-                                    </div>
-
-                                    <div className="glass-card" style={{
-                                        padding: '24px',
-                                        background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.02) 100%)',
-                                        border: '1px solid rgba(251, 191, 36, 0.2)',
-                                        borderRadius: '24px'
-                                    }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <IndianRupee size={20} color="#fbbf24" />
-                                            </div>
-                                            <span style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', letterSpacing: '1px' }}>BALANCE PAYABLE</span>
-                                        </div>
-                                        <div style={{ color: '#fbbf24', fontSize: '32px', fontWeight: '1000', marginTop: '15px' }}>₹{netPayable.toLocaleString()}</div>
-                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '5px', fontWeight: '800' }}>TOTAL OUTSTANDING AMOUNT</div>
+                                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '15px', marginBottom: '24px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ width: '4px', height: '24px', background: 'linear-gradient(to bottom, #6366f1, #a855f7)', borderRadius: '4px' }}></div>
+                                        <h4 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '900', letterSpacing: '-0.5px' }}>{viewMode === 'monthly' ? 'Monthly Settlement Summary' : 'Date Range Settlement'}</h4>
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                    {baseDrivers.map(driver => {
-                                        const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
-
-                                        const dEarnedByDate = dAttendance.reduce((acc, a) => {
-                                            if (a.status !== 'completed' && !a.punchOut?.time) return acc;
-                                            const date = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : 'Unknown');
-                                            if (!acc[date]) acc[date] = { wage: 0, extra: 0 };
-
-                                            if (acc[date].wage === 0) acc[date].wage = Number(a.dailyWage) || 0;
-
-                                            const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
-                                            const bonus = (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0);
-                                            acc[date].extra += (parking + bonus);
-                                            return acc;
-                                        }, {});
-
-                                        const dEarned = Object.values(dEarnedByDate).reduce((sum, d) => sum + d.wage + d.extra, 0);
-
-                                        const dKM = dAttendance.reduce((s, a) => s + (a.totalKM || (a.punchOut?.km - a.punchIn?.km) || 0), 0);
-                                        const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
-                                        const dAdvanced = dAdvances.reduce((s, adv) => s + adv.amount, 0);
-                                        const dBalance = dEarned - dAdvanced;
-
-                                        const isExpanded = expandedLedger === driver._id;
-
-                                        if (dEarned === 0 && dAdvanced === 0) return null;
-
-                                        return (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                    {summaryLoading ? (
+                                        <div style={{ padding: '40px', textAlign: 'center' }}><div className="spinner"></div></div>
+                                    ) : viewMode === 'monthly' ? (
+                                        monthlySummaries.map(summary => (
                                             <motion.div
-                                                key={driver._id}
-                                                layout
-                                                className="glass-card premium-row"
+                                                key={summary.driverId}
+                                                whileHover={{ scale: 1.01, translateY: -2 }}
                                                 style={{
                                                     background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.4) 100%)',
-                                                    border: '1px solid rgba(255,255,255,0.06)',
-                                                    borderRadius: '28px',
-                                                    padding: '24px',
-                                                    position: 'relative',
-                                                    overflow: 'hidden',
+                                                    border: '1px solid rgba(255,255,255,0.07)',
+                                                    borderRadius: '22px',
+                                                    padding: '20px 24px',
                                                     display: 'flex',
-                                                    flexDirection: 'column',
-                                                    gap: '12px',
-                                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                    cursor: 'pointer'
-                                                }}
-                                                onClick={() => setExpandedLedger(isExpanded ? null : driver._id)}
-                                            >
-                                                {/* Background Accent */}
-                                                <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: dBalance >= 0 ? 'radial-gradient(circle, rgba(16, 185, 129, 0.08) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(244, 63, 94, 0.08) 0%, transparent 70%)', filter: 'blur(30px)', pointerEvents: 'none' }}></div>
-
-                                                <div className="settlement-row-header" style={{
-                                                    display: 'grid',
-                                                    gridTemplateColumns: 'minmax(200px, 1fr) 2fr minmax(200px, 1fr)',
                                                     alignItems: 'center',
-                                                    gap: '24px'
-                                                }}>
-                                                    {/* Left: Driver Identity */}
-                                                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                                        <div style={{
-                                                            width: '52px', height: '52px', borderRadius: '16px',
-                                                            background: 'linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.01))',
-                                                            display: 'flex', justifyContent: 'center', alignItems: 'center',
-                                                            border: '1px solid rgba(255,255,255,0.1)',
-                                                            flexShrink: 0
-                                                        }}>
-                                                            <UserIcon size={22} color="#818cf8" />
-                                                        </div>
-                                                        <div>
-                                                            <h3 style={{ margin: 0, color: 'white', fontSize: '17px', fontWeight: '900', letterSpacing: '-0.3px' }}>{driver.name.split(' (F)')[0]}</h3>
-                                                            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', fontWeight: '700', marginTop: '2px' }}>{driver.mobile}</div>
-                                                        </div>
+                                                    justifyContent: 'space-between',
+                                                    gap: '16px',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.25s',
+                                                    position: 'relative',
+                                                    overflow: 'hidden'
+                                                }}
+                                                onClick={() => navigate(`/admin/freelancers/${summary.driverId}?month=${month}&year=${year}`)}
+                                            >
+                                                <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '120px', height: '120px', background: summary.netPayable >= 0 ? 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(244,63,94,0.06) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
+                                                <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                                                    <div style={{ width: '46px', height: '46px', borderRadius: '14px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+                                                        <UserIcon size={20} color="#818cf8" />
                                                     </div>
-
-                                                    {/* Middle: Monthly Groups (Horizontal Timeline Style) */}
-                                                    <div style={{ display: 'flex', gap: '12px', overflowX: 'auto', padding: '5px 0' }} className="premium-scroll hide-mobile">
-                                                        {(() => {
-                                                            const monthlyData = [...dAttendance.map(a => ({ ...a, type: 'attendance' })),
-                                                            ...dAdvances.map(a => ({ ...a, type: 'advance' }))]
-                                                                .reduce((acc, item) => {
-                                                                    const dateObj = new Date(item.date || item.punchIn?.time);
-                                                                    const key = dateObj.toLocaleString('EN-GB', { month: 'short', year: 'numeric' }).toUpperCase();
-                                                                    const dateKey = item.date || (item.punchIn?.time ? new Date(item.punchIn.time).toISOString().split('T')[0] : 'Unknown');
-
-                                                                    if (!acc[key]) acc[key] = { earned: 0, paid: 0, dailyEarnings: {} };
-
-                                                                    if (item.type === 'advance') {
-                                                                        acc[key].paid += item.amount;
-                                                                    } else if (item.status === 'completed' || item.punchOut?.time) {
-                                                                        if (!acc[key].dailyEarnings[dateKey]) {
-                                                                            acc[key].dailyEarnings[dateKey] = { wage: 0, extra: 0 };
-                                                                        }
-                                                                        acc[key].dailyEarnings[dateKey].wage = Math.max(acc[key].dailyEarnings[dateKey].wage, Number(item.dailyWage) || 0);
-                                                                        const bonus = (Number(item.punchOut?.allowanceTA) || 0) + (Number(item.punchOut?.nightStayAmount) || 0) + (Number(item.outsideTrip?.bonusAmount) || 0);
-                                                                        const parking = item.punchOut?.parkingPaidBy !== 'Office' ? (Number(item.punchOut?.tollParkingAmount) || 0) : 0;
-                                                                        acc[key].dailyEarnings[dateKey].extra += (bonus + parking);
-                                                                    }
-                                                                    return acc;
-                                                                }, {});
-
-                                                            return Object.entries(monthlyData).map(([monthKey, month]) => {
-                                                                const earned = Object.values(month.dailyEarnings || {}).reduce((sum, d) => sum + d.wage + d.extra, 0);
-                                                                return [monthKey, { ...month, earned }];
-                                                            }).sort((a, b) => new Date(b[0]) - new Date(a[0]));
-                                                        })().map(([month, stats]) => (
-                                                            <div key={month} style={{
-                                                                background: 'rgba(0,0,0,0.2)',
-                                                                padding: '12px 18px',
-                                                                borderRadius: '16px',
-                                                                border: '1px solid rgba(255,255,255,0.03)',
-                                                                flexShrink: 0,
-                                                                minWidth: '130px',
-                                                                display: 'flex',
-                                                                flexDirection: 'column',
-                                                                gap: '10px'
-                                                            }}>
-                                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                    <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '950', letterSpacing: '1px' }}>{month}</div>
-                                                                    <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: (stats.earned - stats.paid) > 0 ? '#fbbf24' : '#10b981' }}></div>
-                                                                </div>
-                                                                <div style={{ display: 'flex', justifyContent: 'space-between', gap: '15px' }}>
-                                                                    <div>
-                                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '8px', fontWeight: '900', textTransform: 'uppercase' }}>Earned</div>
-                                                                        <div style={{ color: 'white', fontSize: '11px', fontWeight: '900' }}>₹{stats.earned.toLocaleString()}</div>
-                                                                    </div>
-                                                                    <div style={{ textAlign: 'right' }}>
-                                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '8px', fontWeight: '900', textTransform: 'uppercase' }}>Paid</div>
-                                                                        <div style={{ color: 'white', fontSize: '11px', fontWeight: '900' }}>₹{stats.paid.toLocaleString()}</div>
-                                                                    </div>
-                                                                </div>
-                                                                <div style={{
-                                                                    background: (stats.earned - stats.paid) >= 0 ? 'rgba(251, 191, 36, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                                                                    color: (stats.earned - stats.paid) >= 0 ? '#fbbf24' : '#10b981',
-                                                                    fontSize: '11px', fontWeight: '1000', textAlign: 'center', padding: '5px', borderRadius: '8px', border: `1px solid ${(stats.earned - stats.paid) >= 0 ? 'rgba(251, 191, 36, 0.1)' : 'rgba(16, 185, 129, 0.1)'}`
-                                                                }}>
-                                                                    ₹{(stats.earned - stats.paid).toLocaleString()}
-                                                                </div>
-                                                            </div>
-                                                        ))}
-                                                    </div>
-
-                                                    {/* Right: Net & Actions */}
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', justifyContent: 'flex-end' }}>
-                                                        <div style={{ textAlign: 'right' }}>
-                                                            <span style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '1.5px' }}>NET PAYABLE</span>
-                                                            <div style={{
-                                                                color: dBalance >= 0 ? '#fbbf24' : '#10b981',
-                                                                fontSize: '26px', fontWeight: '1000', letterSpacing: '-1px',
-                                                                marginTop: '2px'
-                                                            }}>
-                                                                ₹{dBalance.toLocaleString()}
-                                                            </div>
-                                                        </div>
-                                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                                            <button
-                                                                onClick={(e) => { e.stopPropagation(); setSelectedDriver(driver); setShowAdvanceModal(true); }}
-                                                                style={{
-                                                                    background: 'white',
-                                                                    color: 'black', border: 'none', width: '38px', height: '38px', borderRadius: '12px',
-                                                                    cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                                    transition: 'all 0.3s', boxShadow: '0 8px 16px rgba(255,255,255,0.1)'
-                                                                }}
-                                                            >
-                                                                <Plus size={20} />
-                                                            </button>
-                                                            <div style={{
-                                                                width: '38px', height: '38px', borderRadius: '12px',
-                                                                background: 'rgba(255,255,255,0.05)', display: 'flex',
-                                                                alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.3)',
-                                                                transform: isExpanded ? 'rotate(180deg)' : 'none', transition: 'transform 0.3s'
-                                                            }}>
-                                                                <ChevronDown size={18} />
-                                                            </div>
-                                                        </div>
+                                                    <div>
+                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>{summary.name}</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', marginTop: '2px' }}>{summary.mobile} &bull; {summary.workingDays} working days</div>
                                                     </div>
                                                 </div>
+                                                <div style={{ display: 'flex', gap: '28px', alignItems: 'center' }} className="hide-mobile">
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Gross Earned</div>
+                                                        <div style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹{summary.totalEarned.toLocaleString()}</div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Advances</div>
+                                                        <div style={{ color: '#f43f5e', fontWeight: '900', fontSize: '15px' }}>₹{summary.totalAdvances.toLocaleString()}</div>
+                                                    </div>
+                                                </div>
+                                                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Net Payable</div>
+                                                    <div style={{ color: summary.netPayable >= 0 ? '#fbbf24' : '#10b981', fontWeight: '900', fontSize: '20px', letterSpacing: '-0.5px' }}>₹{Math.abs(summary.netPayable).toLocaleString()}</div>
+                                                </div>
+                                                <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.25)', flexShrink: 0 }}>
+                                                    <ChevronRight size={16} />
+                                                </div>
+                                            </motion.div>
+                                        ))
+                                    ) : (
+                                        baseDrivers.map(driver => {
+                                            const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
+                                            const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
 
-                                                {/* Expanded Section */}
-                                                <AnimatePresence>
-                                                    {isExpanded && (
-                                                        <motion.div
-                                                            initial={{ height: 0, opacity: 0 }}
-                                                            animate={{ height: 'auto', opacity: 1 }}
-                                                            exit={{ height: 0, opacity: 0 }}
-                                                            style={{ overflow: 'hidden', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '12px' }}
-                                                            onClick={(e) => e.stopPropagation()}
-                                                        >
-                                                            <div style={{ padding: '24px 0 10px 0', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '30px' }}>
-                                                                {/* Earning History */}
-                                                                <div>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                                                        <Car size={14} color="#818cf8" />
-                                                                        <h5 style={{ margin: 0, color: 'white', fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Duty Earnings Log</h5>
-                                                                    </div>
-                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', paddingRight: '8px' }} className="premium-scroll">
-                                                                        {dAttendance.length === 0 ? (
-                                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', padding: '15px', background: 'rgba(0,0,0,0.1)', borderRadius: '12px', textAlign: 'center' }}>No duty records found</div>
-                                                                        ) : dAttendance.sort((a, b) => new Date(b.date || b.punchIn?.time) - new Date(a.date || a.punchIn?.time)).map((a, idx) => {
-                                                                            const wage = Number(a.dailyWage) || 0;
-                                                                            const bonus = (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0);
-                                                                            const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
-                                                                            const total = wage + bonus + parking;
-                                                                            return (
-                                                                                <div key={idx} style={{ background: 'rgba(255,255,255,0.02)', padding: '12px 16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.04)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                                    <div>
-                                                                                        <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{new Date(a.date || a.punchIn?.time).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
-                                                                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '600', marginTop: '2px' }}>{a.vehicle?.carNumber?.split('#')[0]} • {a.totalKM || 0} KM</div>
-                                                                                    </div>
-                                                                                    <div style={{ textAlign: 'right' }}>
-                                                                                        <div style={{ color: '#818cf8', fontSize: '14px', fontWeight: '900' }}>₹{total.toLocaleString()}</div>
-                                                                                        <div style={{ color: 'rgba(129, 140, 248, 0.4)', fontSize: '9px', fontWeight: '800' }}>W:₹{wage} {bonus > 0 && `• B:₹${bonus}`}</div>
-                                                                                    </div>
-                                                                                </div>
-                                                                            );
-                                                                        })}
-                                                                    </div>
-                                                                </div>
+                                            const dEarnedByDate = dAttendance.reduce((acc, a) => {
+                                                if (a.status !== 'completed' && !a.punchOut?.time) return acc;
+                                                const date = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : 'Unknown');
+                                                if (!acc[date]) acc[date] = { wage: 0, extra: 0, bonus: 0 };
+                                                if (acc[date].wage === 0) acc[date].wage = Number(a.dailyWage) || 0;
+                                                const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
+                                                const bonuses = (Number(a.punchOut?.allowanceTA) || 0) + 
+                                                              (Number(a.punchOut?.nightStayAmount) || 0) + 
+                                                              (Number(a.outsideTrip?.bonusAmount) || 0);
+                                                acc[date].extra += parking;
+                                                acc[date].bonus += bonuses;
+                                                return acc;
+                                            }, {});
+                                            const dEarned = Object.values(dEarnedByDate).reduce((sum, d) => sum + d.wage + d.extra + d.bonus, 0);
+                                            const dAdvanced = dAdvances.reduce((s, adv) => s + adv.amount, 0);
+                                            const dBalance = dEarned - dAdvanced;
 
-                                                                {/* Payment History */}
-                                                                <div>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                                                        <History size={14} color="#f43f5e" />
-                                                                        <h5 style={{ margin: 0, color: 'white', fontSize: '13px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Payment & Advance History</h5>
-                                                                    </div>
-                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '300px', overflowY: 'auto', paddingRight: '8px' }} className="premium-scroll">
-                                                                        {dAdvances.length === 0 ? (
-                                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', padding: '15px', background: 'rgba(0,0,0,0.1)', borderRadius: '12px', textAlign: 'center' }}>No payment records found</div>
-                                                                        ) : dAdvances.sort((a, b) => new Date(b.date) - new Date(a.date)).map((adv, idx) => (
-                                                                            <div key={idx} style={{ background: 'rgba(244, 63, 94, 0.03)', padding: '12px 16px', borderRadius: '16px', border: '1px solid rgba(244, 63, 94, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                                                <div>
-                                                                                    <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{new Date(adv.date).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
-                                                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '600', marginTop: '2px', textTransform: 'uppercase' }}>{adv.remark || 'N/A'} • {adv.advanceType}</div>
-                                                                                </div>
-                                                                                <div style={{ textAlign: 'right' }}>
-                                                                                    <div style={{ color: '#f43f5e', fontSize: '14px', fontWeight: '900' }}>₹{adv.amount.toLocaleString()}</div>
-                                                                                    <div style={{ color: 'rgba(244, 63, 94, 0.4)', fontSize: '9px', fontWeight: '800' }}>PAID OUT</div>
-                                                                                </div>
-                                                                            </div>
-                                                                        ))}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
+                                            if (dEarned === 0 && dAdvanced === 0) return null;
 
-                                                {!isExpanded && (
-                                                    <div style={{
-                                                        background: 'rgba(0,0,0,0.25)',
-                                                        borderRadius: '16px',
-                                                        padding: '12px 20px',
+                                            return (
+                                                <motion.div
+                                                    key={driver._id}
+                                                    whileHover={{ scale: 1.01, translateY: -2 }}
+                                                    style={{
+                                                        background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.4) 100%)',
+                                                        border: '1px solid rgba(255,255,255,0.07)',
+                                                        borderRadius: '22px',
+                                                        padding: '20px 24px',
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         justifyContent: 'space-between',
-                                                        border: '1px solid rgba(255,255,255,0.03)'
-                                                    }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Quick Log</div>
-                                                            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.2px' }}>
-                                                                {dAdvances.length > 0 ? `Latest: ${new Date(dAdvances.sort((a, b) => new Date(b.date) - new Date(a.date))[0].date).toLocaleDateString()} (₹${dAdvances[0].amount})` : 'No previous transactions found'}
-                                                            </div>
+                                                        gap: '16px',
+                                                        cursor: 'pointer',
+                                                        transition: 'all 0.25s',
+                                                        position: 'relative',
+                                                        overflow: 'hidden'
+                                                    }}
+                                                    onClick={() => navigate(`/admin/freelancers/${driver._id}?from=${fromDate}&to=${toDate}`)}
+                                                >
+                                                    <div style={{ position: 'absolute', top: '-40px', right: '-40px', width: '120px', height: '120px', background: dBalance >= 0 ? 'radial-gradient(circle, rgba(99,102,241,0.08) 0%, transparent 70%)' : 'radial-gradient(circle, rgba(244,63,94,0.06) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
+                                                    <div style={{ display: 'flex', gap: '14px', alignItems: 'center', flex: 1, minWidth: 0 }}>
+                                                        <div style={{ width: '46px', height: '46px', borderRadius: '14px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+                                                            <UserIcon size={20} color="#818cf8" />
                                                         </div>
-                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>
-                                                            CLICK TO VIEW FULL LEDGER
+                                                        <div>
+                                                            <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>{driver.name.split(' (F)')[0]}</div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '12px', marginTop: '2px' }}>{driver.mobile} &bull; {dAttendance.length} duties</div>
                                                         </div>
                                                     </div>
-                                                )}
-                                            </motion.div>
-                                        );
-                                    }).filter(Boolean)}
+                                                    <div style={{ display: 'flex', gap: '28px', alignItems: 'center' }} className="hide-mobile">
+                                                        <div style={{ textAlign: 'right' }}>
+                                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Earned</div>
+                                                            <div style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹{dEarned.toLocaleString()}</div>
+                                                        </div>
+                                                        <div style={{ textAlign: 'right' }}>
+                                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Paid</div>
+                                                            <div style={{ color: '#f43f5e', fontWeight: '900', fontSize: '15px' }}>₹{dAdvanced.toLocaleString()}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.8px' }}>Balance</div>
+                                                        <div style={{ color: dBalance >= 0 ? '#fbbf24' : '#10b981', fontWeight: '900', fontSize: '20px', letterSpacing: '-0.5px' }}>₹{Math.abs(dBalance).toLocaleString()}</div>
+                                                    </div>
+                                                    <div style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.25)', flexShrink: 0 }}>
+                                                        <ChevronRight size={16} />
+                                                    </div>
+                                                </motion.div>
+                                            );
+                                        }).filter(Boolean)
+                                    )}
+
+                                    {((viewMode === 'monthly' && monthlySummaries.length === 0) || (viewMode === 'range' && baseDrivers.filter(d => {
+                                        const dAtt = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id);
+                                        const dAdv = advances.filter(a => a.driver?._id === d._id || a.driver === d._id);
+                                        return dAtt.length > 0 || dAdv.length > 0;
+                                    }).length === 0)) && !summaryLoading && (
+                                        <div style={{ textAlign: 'center', padding: '50px', color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>No settlement data found for selected filters.</div>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>
@@ -1708,7 +1645,11 @@ const Freelancers = () => {
                                     <Field label="Mobile Number *" value={formData.mobile} onChange={v => setFormData({ ...formData, mobile: v })} required />
                                     <Field label="License Number" value={formData.licenseNumber} onChange={v => setFormData({ ...formData, licenseNumber: v })} />
                                 </div>
-                                <Field label="Daily Wage (₹)" type="number" value={formData.dailyWage} onChange={v => setFormData({ ...formData, dailyWage: v })} />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <Field label="Daily Wage (₹)" type="number" value={formData.dailyWage} onChange={v => setFormData({ ...formData, dailyWage: v })} />
+                                    <Field label="Night Stay (₹)" type="number" value={formData.nightStayBonus} onChange={v => setFormData({ ...formData, nightStayBonus: v })} />
+                                </div>
+                                <Field label="Same Day Return (₹)" type="number" value={formData.sameDayReturnBonus} onChange={v => setFormData({ ...formData, sameDayReturnBonus: v })} />
                                 <SubmitButton disabled={submitting} text="Register Freelancer" message={message} />
                             </form>
                         </Modal>
@@ -1725,7 +1666,11 @@ const Freelancers = () => {
                                     <Field label="Mobile Number *" value={editForm.mobile} onChange={v => setEditForm({ ...editForm, mobile: v })} required />
                                     <Field label="License Number" value={editForm.licenseNumber} onChange={v => setEditForm({ ...editForm, licenseNumber: v })} />
                                 </div>
-                                <Field label="Daily Wage (₹)" type="number" value={editForm.dailyWage} onChange={v => setEditForm({ ...editForm, dailyWage: v })} />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <Field label="Daily Wage (₹)" type="number" value={editForm.dailyWage} onChange={v => setEditForm({ ...editForm, dailyWage: v })} />
+                                    <Field label="Night Stay (₹)" type="number" value={editForm.nightStayBonus} onChange={v => setEditForm({ ...editForm, nightStayBonus: v })} />
+                                </div>
+                                <Field label="Same Day Return (₹)" type="number" value={editForm.sameDayReturnBonus} onChange={v => setEditForm({ ...editForm, sameDayReturnBonus: v })} />
                                 <SubmitButton disabled={submitting} text="Update Freelancer" message={message} />
                             </form>
                         </Modal>
@@ -2197,23 +2142,20 @@ const Freelancers = () => {
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                {/* Fuel field removed */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '15px' }}>
-                                    <Field label="Parking/Toll (₹)" type="number" value={editDutyForm.parkingAmount} onChange={v => setEditDutyForm({ ...editDutyForm, parkingAmount: v })} />
-                                    <div>
-                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Paid By</label>
-                                        <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Self' })}
-                                                style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Self' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
-                                            >Self</button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Office' })}
-                                                style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Office' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
-                                            >Office</button>
-                                        </div>
+                                <Field label="Parking/Toll (₹)" type="number" value={editDutyForm.parkingAmount} onChange={v => setEditDutyForm({ ...editDutyForm, parkingAmount: v })} />
+                                <div>
+                                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Paid By</label>
+                                    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.05)', height: '52px' }}>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Self' })}
+                                            style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Self' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
+                                        >Self</button>
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Office' })}
+                                            style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Office' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
+                                        >Office</button>
                                     </div>
                                 </div>
                             </div>

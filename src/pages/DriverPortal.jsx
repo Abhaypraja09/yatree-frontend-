@@ -654,7 +654,7 @@ const DriverPortal = () => {
                                     </button>
                                     <button
                                         onClick={() => {
-                                            setExpenseEntries([{ type: 'other', amount: '', quantity: '', km: '', fuelType: '', slip: null, preview: null }]);
+                                            setExpenseEntries([]);
                                             setExpenseModalType('other');
                                             setShowExpenseModal(true);
                                         }}
@@ -774,6 +774,81 @@ const DriverPortal = () => {
                         </button>
                     </div>
 
+                    {/* Status Tracker Global - Moved per user request */}
+                    <div className="glass-card" style={{
+                        padding: 'clamp(20px, 4vw, 24px)',
+                        background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                        marginBottom: '24px'
+                    }}>
+                        <div className="modal-grid-2" style={{ gap: 'clamp(12px, 3vw, 20px)' }}>
+                            <div style={{
+                                background: isPunchedIn ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)' : 'rgba(255,255,255,0.02)',
+                                padding: 'clamp(14px, 3vw, 18px)',
+                                borderRadius: '16px',
+                                border: isPunchedIn ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(255,255,255,0.05)',
+                                position: 'relative',
+                                overflow: 'hidden'
+                            }}>
+                                {isPunchedIn && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '8px',
+                                        right: '8px',
+                                        width: '8px',
+                                        height: '8px',
+                                        borderRadius: '50%',
+                                        background: '#10b981',
+                                        boxShadow: '0 0 12px #10b981',
+                                        animation: 'pulse 2s infinite'
+                                    }}></div>
+                                )}
+                                <p className="section-subtitle" style={{ fontSize: 'clamp(9px, 2vw, 10px)', fontWeight: '800', letterSpacing: '0.5px', marginBottom: '6px' }}>{t('punchIn')}</p>
+                                <p style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: '900', color: isPunchedIn ? '#10b981' : 'rgba(255,255,255,0.2)', letterSpacing: '-1px' }}>
+                                    {isPunchedIn ? formatTimeIST(todayAttendance.punchIn.time) : '--:--'}
+                                </p>
+                            </div>
+                            <div
+                                onClick={() => {
+                                    if (showPunchOut && !showPunchOutForm) {
+                                        setActiveTab('home');
+                                        setShowPunchOutForm(true);
+                                    }
+                                }}
+                                style={{
+                                    background: isPunchedOut ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, rgba(244, 63, 94, 0.05) 100%)' : 'rgba(255,255,255,0.02)',
+                                    padding: 'clamp(14px, 3vw, 18px)',
+                                    borderRadius: '16px',
+                                    border: isPunchedOut ? '1px solid rgba(244, 63, 94, 0.2)' : '1px solid rgba(255,255,255,0.05)',
+                                    position: 'relative',
+                                    overflow: 'hidden',
+                                    cursor: (showPunchOut && !showPunchOutForm) ? 'pointer' : 'default'
+                                }}
+                            >
+                                {isPunchedOut && (
+                                    <div style={{
+                                        position: 'absolute',
+                                        top: '8px',
+                                        right: '8px',
+                                        width: '8px',
+                                        height: '8px',
+                                        borderRadius: '50%',
+                                        background: '#f43f5e',
+                                        boxShadow: '0 0 12px #f43f5e'
+                                    }}></div>
+                                )}
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                                    <p className="section-subtitle" style={{ fontSize: 'clamp(9px, 2vw, 10px)', fontWeight: '800', letterSpacing: '0.5px', margin: 0 }}>{t('punchOut')}</p>
+                                    {showPunchOut && !showPunchOutForm && <ArrowRight size={14} color="#f43f5e" />}
+                                </div>
+                                <p style={{ fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: '900', color: isPunchedOut ? '#f43f5e' : 'rgba(255,255,255,0.2)', letterSpacing: '-1px' }}>
+                                    {isPunchedOut ? formatTimeIST(todayAttendance.punchOut.time) : '--:--'}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
                     {activeTab === 'home' && (
                         <>
                             {(!dashboardData?.vehicle && !showPunchIn && tripStatus !== 'completed' && tripStatus !== 'pending_approval') ? (
@@ -811,76 +886,7 @@ const DriverPortal = () => {
                                         </div>
                                     )}
 
-                                    {/* Status Tracker */}
-                                    <div className="glass-card" style={{
-                                        padding: 'clamp(20px, 5vw, 28px)',
-                                        background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
-                                        border: '1px solid rgba(255,255,255,0.08)',
-                                        boxShadow: '0 8px 24px rgba(0,0,0,0.15)'
-                                    }}>
-                                        <div className="modal-grid-2" style={{ gap: 'clamp(16px, 4vw, 24px)' }}>
-                                            <div style={{
-                                                background: isPunchedIn ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)' : 'rgba(255,255,255,0.02)',
-                                                padding: 'clamp(16px, 4vw, 20px)',
-                                                borderRadius: '16px',
-                                                border: isPunchedIn ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid rgba(255,255,255,0.05)',
-                                                position: 'relative',
-                                                overflow: 'hidden'
-                                            }}>
-                                                {isPunchedIn && (
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: '8px',
-                                                        right: '8px',
-                                                        width: '8px',
-                                                        height: '8px',
-                                                        borderRadius: '50%',
-                                                        background: '#10b981',
-                                                        boxShadow: '0 0 12px #10b981',
-                                                        animation: 'pulse 2s infinite'
-                                                    }}></div>
-                                                )}
-                                                <p className="section-subtitle" style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', fontWeight: '800', letterSpacing: '0.5px', marginBottom: '8px' }}>{t('punchIn')}</p>
-                                                <p style={{ fontSize: 'clamp(24px, 6vw, 32px)', fontWeight: '900', color: isPunchedIn ? '#10b981' : 'rgba(255,255,255,0.2)', letterSpacing: '-1px' }}>
-                                                    {isPunchedIn ? formatTimeIST(todayAttendance.punchIn.time) : '--:--'}
-                                                </p>
-                                            </div>
-                                            <div
-                                                onClick={() => {
-                                                    if (showPunchOut && !showPunchOutForm) setShowPunchOutForm(true);
-                                                }}
-                                                style={{
-                                                    background: isPunchedOut ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, rgba(244, 63, 94, 0.05) 100%)' : 'rgba(255,255,255,0.02)',
-                                                    padding: 'clamp(16px, 4vw, 20px)',
-                                                    borderRadius: '16px',
-                                                    border: isPunchedOut ? '1px solid rgba(244, 63, 94, 0.2)' : '1px solid rgba(255,255,255,0.05)',
-                                                    position: 'relative',
-                                                    overflow: 'hidden',
-                                                    cursor: (showPunchOut && !showPunchOutForm) ? 'pointer' : 'default'
-                                                }}
-                                            >
-                                                {isPunchedOut && (
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: '8px',
-                                                        right: '8px',
-                                                        width: '8px',
-                                                        height: '8px',
-                                                        borderRadius: '50%',
-                                                        background: '#f43f5e',
-                                                        boxShadow: '0 0 12px #f43f5e'
-                                                    }}></div>
-                                                )}
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                                                    <p className="section-subtitle" style={{ fontSize: 'clamp(10px, 2.5vw, 11px)', fontWeight: '800', letterSpacing: '0.5px', margin: 0 }}>{t('punchOut')}</p>
-                                                    {showPunchOut && !showPunchOutForm && <ArrowRight size={14} color="#f43f5e" />}
-                                                </div>
-                                                <p style={{ fontSize: 'clamp(24px, 6vw, 32px)', fontWeight: '900', color: isPunchedOut ? '#f43f5e' : 'rgba(255,255,255,0.2)', letterSpacing: '-1px' }}>
-                                                    {isPunchedOut ? formatTimeIST(todayAttendance.punchOut.time) : '--:--'}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
+
 
                                     {/* Working Closed Screen */}
                                     {tripStatus === 'completed' && (
@@ -1182,7 +1188,7 @@ const DriverPortal = () => {
                                                                             else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Same Day'));
                                                                         }}
                                                                     />
-                                                                    <label className="checkbox-label">{t('sameDay')}</label>
+                                                                    <label className="checkbox-label">{t('sameDay')} (+₹{dashboardData?.driver?.sameDayReturnBonus || 100})</label>
                                                                 </div>
 
                                                                 <div className="checkbox-item">
@@ -1195,7 +1201,7 @@ const DriverPortal = () => {
                                                                             else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Night Stay'));
                                                                         }}
                                                                     />
-                                                                    <label className="checkbox-label">{t('nightStay')}</label>
+                                                                    <label className="checkbox-label">{t('nightStay')} (+₹{dashboardData?.driver?.nightStayBonus || 500})</label>
                                                                 </div>
                                                             </div>
                                                         )}
@@ -1305,13 +1311,43 @@ const DriverPortal = () => {
                                                             </button>
                                                         )}
                                                         {expenseModalType === 'other' && (
-                                                            <button
-                                                                onClick={() => setExpenseEntries([{ type: 'other', amount: '', quantity: '', km: '', fuelType: 'Other', slip: null, preview: null }])}
-                                                                className="btn-primary"
-                                                                style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '12px', background: '#f43f5e', display: 'flex', alignItems: 'center', gap: '8px' }}
-                                                            >
-                                                                <Wrench size={20} /> {t('driverSeva')}
-                                                            </button>
+                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', width: '100%' }}>
+                                                                <button
+                                                                    onClick={() => setExpenseEntries([{ type: 'wash', amount: '', quantity: '', km: '', fuelType: 'Wash', slip: null, preview: null }])}
+                                                                    className="btn-primary"
+                                                                    style={{ padding: '12px 10px', fontSize: '13px', borderRadius: '12px', background: '#3b82f6', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
+                                                                >
+                                                                    <Droplets size={16} /> {t('carWash')}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setExpenseEntries([{ type: 'puncture', amount: '', quantity: '', km: '', fuelType: 'Puncture', slip: null, preview: null }])}
+                                                                    className="btn-primary"
+                                                                    style={{ padding: '12px 10px', fontSize: '13px', borderRadius: '12px', background: '#f59e0b', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
+                                                                >
+                                                                    <AlertTriangle size={16} /> {t('puncture')}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setExpenseEntries([{ type: 'tissue', amount: '', quantity: '', km: '', fuelType: 'Tissue', slip: null, preview: null }])}
+                                                                    className="btn-primary"
+                                                                    style={{ padding: '12px 10px', fontSize: '13px', borderRadius: '12px', background: '#10b981', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
+                                                                >
+                                                                    <ClipboardList size={16} /> {t('tissue')}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setExpenseEntries([{ type: 'water', amount: '', quantity: '', km: '', fuelType: 'Water', slip: null, preview: null }])}
+                                                                    className="btn-primary"
+                                                                    style={{ padding: '12px 10px', fontSize: '13px', borderRadius: '12px', background: '#0ea5e9', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
+                                                                >
+                                                                    <Droplets size={16} /> {t('waterBottle')}
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => setExpenseEntries([{ type: 'other', amount: '', quantity: '', km: '', fuelType: 'Other', slip: null, preview: null }])}
+                                                                    className="btn-primary"
+                                                                    style={{ gridColumn: 'span 2', padding: '12px 24px', fontSize: '14px', borderRadius: '12px', background: '#f43f5e', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'center' }}
+                                                                >
+                                                                    <Wrench size={20} /> {t('other')}
+                                                                </button>
+                                                            </div>
                                                         )}
                                                     </div>
                                                 </div>
@@ -1325,7 +1361,7 @@ const DriverPortal = () => {
                                                                         {entry.type === 'fuel' ? <Droplets size={16} color="#0ea5e9" /> : (entry.type === 'parking' ? <Car size={16} color="#f59e0b" /> : <Wrench size={16} color="#f43f5e" />)}
                                                                     </div>
                                                                     <span style={{ fontWeight: '800', fontSize: '12px', color: 'white', textTransform: 'uppercase' }}>
-                                                                        {entry.type === 'fuel' ? t('logFuel') : (entry.type === 'parking' ? t('logParking') : t('driverSeva'))}
+                                                                        {entry.type === 'fuel' ? t('logFuel') : (entry.type === 'parking' ? t('logParking') : (t(entry.type) || t('driverSeva')))}
                                                                     </span>
                                                                 </div>
                                                                 <button onClick={() => setExpenseEntries(expenseEntries.filter((_, i) => i !== index))} style={{ color: '#f43f5e', background: 'rgba(244, 63, 94, 0.1)', padding: '6px', borderRadius: '6px' }}>
@@ -1480,7 +1516,7 @@ const DriverPortal = () => {
                                                                 <div className="input-wrapper-full" style={{ marginTop: '4px', marginBottom: '16px' }}>
                                                                     <label className="input-label" style={{ fontSize: '10px', marginBottom: '6px' }}>Service Type</label>
                                                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                                                                        {['Puncture', 'Car Wash', 'Other'].map((type) => {
+                                                                        {['Puncture', 'Car Wash', 'Tissue', 'Water', 'Other'].map((type) => {
                                                                             const isSelected = (entry.fuelType || '').split(',').includes(type);
                                                                             return (
                                                                                 <button

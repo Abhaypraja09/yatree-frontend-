@@ -35,6 +35,7 @@ const Advances = () => {
     });
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [editingId, setEditingId] = useState(null);
 
     useEffect(() => {
         if (selectedCompany) {
@@ -64,20 +65,30 @@ const Advances = () => {
         }
     };
 
-    const handleAddAdvance = async (e) => {
+    const handleSaveAdvance = async (e) => {
         e.preventDefault();
         setSubmitting(true);
         setMessage({ type: '', text: '' });
 
         try {
-            await axios.post('/api/admin/advances', {
-                ...formData,
-                companyId: selectedCompany._id
-            });
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            if (editingId) {
+                await axios.put(`/api/admin/advances/${editingId}`, {
+                    ...formData,
+                    companyId: selectedCompany._id
+                }, { headers: { Authorization: `Bearer ${userInfo.token}` } });
+                setMessage({ type: 'success', text: 'Advance updated successfully!' });
+            } else {
+                await axios.post('/api/admin/advances', {
+                    ...formData,
+                    companyId: selectedCompany._id
+                }, { headers: { Authorization: `Bearer ${userInfo.token}` } });
+                setMessage({ type: 'success', text: 'Advance recorded successfully!' });
+            }
 
-            setMessage({ type: 'success', text: 'Advance recorded successfully!' });
             setTimeout(() => {
                 setShowModal(false);
+                setEditingId(null);
                 setFormData({
                     driverId: '',
                     amount: '',
@@ -88,10 +99,21 @@ const Advances = () => {
                 fetchData();
             }, 1500);
         } catch (err) {
-            setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to record advance' });
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to save advance' });
         } finally {
             setSubmitting(false);
         }
+    };
+
+    const handleEdit = (adv) => {
+        setEditingId(adv._id);
+        setFormData({
+            driverId: adv.driver?._id || '',
+            amount: adv.amount || '',
+            date: toISTDateString(adv.date),
+            remark: adv.remark || ''
+        });
+        setShowModal(true);
     };
 
     const handleDelete = async (id) => {
@@ -356,21 +378,34 @@ const Advances = () => {
                                     </div>
                                 </td>
                                 <td style={{ padding: '20px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
-                                    <button
-                                        onClick={() => handleDelete(advance._id)}
-                                        style={{
-                                            background: 'rgba(244, 63, 94, 0.1)',
-                                            color: '#f43f5e',
-                                            border: 'none',
-                                            padding: '8px',
-                                            borderRadius: '8px',
-                                            cursor: 'pointer',
-                                            transition: 'all 0.2s'
-                                        }}
-                                        className="hover:bg-red-500/20"
-                                    >
-                                        <X size={16} />
-                                    </button>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <button
+                                            onClick={() => handleEdit(advance)}
+                                            style={{
+                                                background: 'rgba(56, 189, 248, 0.1)',
+                                                color: '#38bdf8',
+                                                border: 'none',
+                                                padding: '8px',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            <Search size={16} /> {/* Using Search as edit icon for now or I can import Edit2 */}
+                                        </button>
+                                        <button
+                                            onClick={() => handleDelete(advance._id)}
+                                            style={{
+                                                background: 'rgba(244, 63, 94, 0.1)',
+                                                color: '#f43f5e',
+                                                border: 'none',
+                                                padding: '8px',
+                                                borderRadius: '8px',
+                                                cursor: 'pointer'
+                                            }}
+                                        >
+                                            <X size={16} />
+                                        </button>
+                                    </div>
                                 </td>
                             </motion.tr>
                         ))}
@@ -425,7 +460,22 @@ const Advances = () => {
                                     </div>
                                 )}
 
-                                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                    <button
+                                        onClick={() => handleEdit(advance)}
+                                        style={{
+                                            background: 'rgba(56, 189, 248, 0.1)',
+                                            color: '#38bdf8',
+                                            border: 'none',
+                                            padding: '8px 16px',
+                                            borderRadius: '8px',
+                                            cursor: 'pointer',
+                                            fontSize: '12px',
+                                            fontWeight: '800'
+                                        }}
+                                    >
+                                        EDIT
+                                    </button>
                                     <button
                                         onClick={() => handleDelete(advance._id)}
                                         style={{
@@ -472,18 +522,18 @@ const Advances = () => {
                         >
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '35px' }}>
                                 <div>
-                                    <h2 style={{ color: 'white', fontSize: '24px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>Record Advance</h2>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '6px' }}>Issue a new payment advance to a driver.</p>
+                                    <h2 style={{ color: 'white', fontSize: '24px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{editingId ? 'Edit Advance' : 'Record Advance'}</h2>
+                                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '6px' }}>{editingId ? 'Update this payment advance record.' : 'Issue a new payment advance to a driver.'}</p>
                                 </div>
                                 <button
-                                    onClick={() => setShowModal(false)}
+                                    onClick={() => { setShowModal(false); setEditingId(null); setFormData({ driverId: '', amount: '', date: todayIST(), remark: '' }); }}
                                     className="glass-card-hover-effect"
                                     style={{ color: 'white', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', height: '36px', width: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 ><X size={20} /></button>
                             </div>
 
 
-                            <form onSubmit={handleAddAdvance} style={{ display: 'grid', gap: '25px' }}>
+                            <form onSubmit={handleSaveAdvance} style={{ display: 'grid', gap: '25px' }}>
                                 <div className="input-field-group">
                                     <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><User size={14} /> Select Driver</label>
                                     <select
@@ -560,7 +610,7 @@ const Advances = () => {
                                     className="btn-primary"
                                     style={{ height: '56px', fontSize: '16px', fontWeight: '900', letterSpacing: '1px', textTransform: 'uppercase' }}
                                 >
-                                    {submitting ? 'RECORDING...' : 'CONFIRM ADVANCE'}
+                                    {submitting ? 'RECORDING...' : (editingId ? 'UPDATE ADVANCE' : 'CONFIRM ADVANCE')}
                                 </button>
                             </form>
                         </motion.div>

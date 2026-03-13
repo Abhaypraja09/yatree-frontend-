@@ -10,6 +10,7 @@ const Drivers = lazy(() => import('./pages/Drivers'));
 const Vehicles = lazy(() => import('./pages/Vehicles'));
 const Reports = lazy(() => import('./pages/Reports'));
 const Freelancers = lazy(() => import('./pages/Freelancers'));
+const FreelancerSalaryDetail = lazy(() => import('./pages/FreelancerSalaryDetail'));
 const OutsideCars = lazy(() => import('./pages/OutsideCars'));
 const Fastag = lazy(() => import('./pages/Fastag'));
 const BorderTax = lazy(() => import('./pages/BorderTax'));
@@ -26,6 +27,7 @@ const DriverSalaries = lazy(() => import('./pages/DriverSalaries'));
 const VehicleMonthlyDetails = lazy(() => import('./pages/VehicleMonthlyDetails'));
 const LiveFeed = lazy(() => import('./pages/LiveFeed'));
 const EventManagement = lazy(() => import('./pages/EventManagement'));
+const DriverServices = lazy(() => import('./pages/DriverServices'));
 import Sidebar from './components/Sidebar';
 import { CompanyProvider } from './context/CompanyContext';
 
@@ -165,10 +167,12 @@ const AdminRoutes = () => {
       <Route path="maintenance" element={<Maintenance />} />
       <Route path="parking" element={<Parking />} />
       <Route path="freelancers" element={<Freelancers />} />
+      <Route path="freelancers/:driverId" element={<FreelancerSalaryDetail />} />
       <Route path="reports" element={<Reports />} />
       <Route path="vehicle-month-details" element={<VehicleMonthlyDetails />} />
 
       <Route path="fuel" element={<Fuel />} />
+      <Route path="driver-services" element={<DriverServices />} />
       <Route path="accident-logs" element={<ActiveLogs />} />
       <Route path="warranties" element={<Warranties />} />
 

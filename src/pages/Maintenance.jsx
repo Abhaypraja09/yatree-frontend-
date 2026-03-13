@@ -37,10 +37,6 @@ const Maintenance = () => {
     const [selectedMonth, setSelectedMonth] = useState('All');
     const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear());
     const [filterGarage, setFilterGarage] = useState('All');
-    const [activeTab, setActiveTab] = useState('all'); // 'all', 'service'
-    const [filterMode, setFilterMode] = useState('month'); // 'month' or 'range'
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
     const [selectedBillPhoto, setSelectedBillPhoto] = useState(null);
 
     // Form State
@@ -67,7 +63,6 @@ const Maintenance = () => {
 
     const maintenanceTypes = [
         'Regular Service',
-        'Car Service',
         'Engine & Mechanical',
         'Tyres & Wheels',
         'Brake System',
@@ -79,9 +74,8 @@ const Maintenance = () => {
 
     const subCategories = {
         'Regular Service': ['Engine oil change', 'Oil filter', 'Air filter', 'Fuel filter', 'General servicing'],
-        'Car Service': ['Car Wash', 'Puncture repair', 'Wheel Alignment', 'Interior Cleaning'],
         'Engine & Mechanical': ['Clutch plate', 'Gearbox repair', 'Engine overhaul', 'Timing belt', 'Mountings'],
-        'Tyres & Wheels': ['New tyre purchase', 'Tyre rotation', 'Alignment & Balancing', 'Puncture repair'],
+        'Tyres & Wheels': ['New tyre purchase', 'Tyre rotation', 'Alignment & Balancing'],
         'Brake System': ['Brake pads', 'Brake shoe', 'Disc/Drum', 'Brake oil'],
         'Electrical & Battery': ['Battery replacement', 'Alternator', 'Starter motor', 'Wiring', 'Lights'],
         'AC & Cooling': ['AC gas refill', 'Compressor repair', 'Radiator service', 'Coolant top-up'],
@@ -94,7 +88,7 @@ const Maintenance = () => {
             fetchVehicles();
             fetchDrivers();
         }
-    }, [selectedCompany, selectedMonth, selectedYear, startDate, endDate, filterMode]);
+    }, [selectedCompany, selectedMonth, selectedYear]);
 
     const fetchRecords = async () => {
         if (!selectedCompany?._id) return;
@@ -104,12 +98,7 @@ const Maintenance = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            let url = `/api/admin/maintenance/${selectedCompany._id}?`;
-            if (filterMode === 'range' && startDate && endDate) {
-                url += `startDate=${startDate}&endDate=${endDate}`;
-            } else {
-                url += `month=${selectedMonth}&year=${selectedYear}`;
-            }
+            let url = `/api/admin/maintenance/${selectedCompany._id}?month=${selectedMonth}&year=${selectedYear}`;
 
             const { data } = await axios.get(url, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
@@ -312,50 +301,22 @@ const Maintenance = () => {
         const matchesGarage = filterGarage === 'All' || (r.garageName || r.vendorName) === filterGarage;
         const matchesVehicle = filterVehicle === 'All' || r.vehicle?.carNumber === filterVehicle;
 
-        // Service Hub specific logic: Show anything related to wash or puncture
-        let matchesTab = true;
-        if (activeTab === 'service') {
-            const isWash = r.category?.toLowerCase()?.includes('wash') ||
-                r.description?.toLowerCase()?.includes('wash') ||
-                r.maintenanceType?.toLowerCase()?.includes('wash') ||
-                r.maintenanceType?.toLowerCase()?.includes('car service');
-            const isPuncture = r.category?.toLowerCase()?.includes('puncture') ||
-                r.category?.toLowerCase()?.includes('puncher') ||
-                r.description?.toLowerCase()?.includes('puncture') ||
-                r.description?.toLowerCase()?.includes('puncher') ||
-                r.maintenanceType?.toLowerCase()?.includes('puncture') ||
-                r.maintenanceType?.toLowerCase()?.includes('puncher');
+        // Exclude Wash and Puncture as they are now in Driver Services
+        const isWash = r.category?.toLowerCase()?.includes('wash') ||
+            r.description?.toLowerCase()?.includes('wash') ||
+            r.maintenanceType?.toLowerCase()?.includes('wash');
+        const isPuncture = r.category?.toLowerCase()?.includes('puncture') ||
+            r.category?.toLowerCase()?.includes('puncher') ||
+            r.description?.toLowerCase()?.includes('puncture') ||
+            r.description?.toLowerCase()?.includes('puncher') ||
+            r.maintenanceType?.toLowerCase()?.includes('puncture') ||
+            r.maintenanceType?.toLowerCase()?.includes('puncher');
 
-            matchesTab = isWash || isPuncture;
-        }
-
-        return matchesSearch && matchesType && matchesGarage && matchesVehicle && matchesTab;
+        return matchesSearch && matchesType && matchesGarage && matchesVehicle && !isWash && !isPuncture;
     });
 
     const totalMaintenanceCost = filteredRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
-    // Base records for counting based on currently selected tab
-    const filteredForCounts = filteredRecords;
-
-    const totalPunctures = filteredForCounts.filter(r =>
-        r.maintenanceType?.toLowerCase()?.includes('puncture') ||
-        r.maintenanceType?.toLowerCase()?.includes('puncher') ||
-        r.category?.toLowerCase()?.includes('puncture') ||
-        r.category?.toLowerCase()?.includes('puncher') ||
-        r.description?.toLowerCase()?.includes('puncture') ||
-        r.description?.toLowerCase()?.includes('puncher')
-    ).length;
-
-    const totalWash = filteredForCounts.filter(r =>
-        (r.maintenanceType?.toLowerCase()?.includes('car service') ||
-            r.category?.toLowerCase()?.includes('wash') ||
-            r.maintenanceType?.toLowerCase()?.includes('wash') ||
-            r.description?.toLowerCase()?.includes('wash')) &&
-        !r.category?.toLowerCase()?.includes('puncture') &&
-        !r.category?.toLowerCase()?.includes('puncher') &&
-        !r.description?.toLowerCase()?.includes('puncture') &&
-        !r.description?.toLowerCase()?.includes('puncher')
-    ).length;
 
     return (
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
@@ -396,74 +357,34 @@ const Maintenance = () => {
                 </div>
 
                 <div className="mobile-stack" style={{ display: 'flex', gap: '12px', flex: '1', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
-                    {/* Filter Mode Toggle */}
-                    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.05)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.08)' }}>
-                        <button
-                            onClick={() => setFilterMode('month')}
-                            style={{ padding: '8px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: '800', border: 'none', cursor: 'pointer', background: filterMode === 'month' ? '#fbbf24' : 'transparent', color: filterMode === 'month' ? 'black' : 'rgba(255,255,255,0.5)', transition: 'all 0.2s' }}
-                        >MONTH</button>
-                        <button
-                            onClick={() => setFilterMode('range')}
-                            style={{ padding: '8px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: '800', border: 'none', cursor: 'pointer', background: filterMode === 'range' ? '#fbbf24' : 'transparent', color: filterMode === 'range' ? 'black' : 'rgba(255,255,255,0.5)', transition: 'all 0.2s' }}
-                        >RANGE</button>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px', width: '100%', maxWidth: '100%' }}>
+                    <div style={{ display: 'flex', gap: '8px' }}>
                         <select
-                            value={activeTab}
-                            onChange={(e) => setActiveTab(e.target.value)}
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
                             className="input-field"
-                            style={{ height: '48px', flex: 1.5, borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', color: '#fbbf24', padding: '0 12px', fontSize: '12px', fontWeight: '700' }}
+                            style={{ height: '48px', width: '120px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
                         >
-                            <option value="all">Full History</option>
-                            <option value="service">Service Hub</option>
+                            <option value="All" style={{ background: '#0f172a' }}>All Months</option>
+                            {[
+                                { n: 1, m: 'January' }, { n: 2, m: 'February' }, { n: 3, m: 'March' },
+                                { n: 4, m: 'April' }, { n: 5, m: 'May' }, { n: 6, m: 'June' },
+                                { n: 7, m: 'July' }, { n: 8, m: 'August' }, { n: 9, m: 'September' },
+                                { n: 10, m: 'October' }, { n: 11, m: 'November' }, { n: 12, m: 'December' }
+                            ].map(item => (
+                                <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
+                            ))}
                         </select>
 
-                        {filterMode === 'month' ? (
-                            <>
-                                <select
-                                    value={selectedMonth}
-                                    onChange={(e) => setSelectedMonth(e.target.value)}
-                                    className="input-field"
-                                    style={{ height: '48px', flex: 1, borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 12px', fontSize: '13px' }}
-                                >
-                                    <option value="All" style={{ background: '#0f172a' }}>All Months</option>
-                                    {Array.from({ length: 12 }, (_, i) => (
-                                        <option key={i + 1} value={i + 1} style={{ background: '#0f172a' }}>
-                                            {formatDateIST(new Date(2000, i, 1), { month: 'short' })}
-                                        </option>
-                                    ))}
-                                </select>
-
-                                <select
-                                    value={selectedYear}
-                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                    className="input-field"
-                                    style={{ height: '48px', width: '90px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 12px', fontSize: '13px' }}
-                                >
-                                    <option value="All" style={{ background: '#0f172a' }}>Any Year</option>
-                                    {Array.from({ length: 5 }, (_, i) => {
-                                        const year = nowIST().getUTCFullYear() - 2 + i;
-                                        return <option key={year} value={year} style={{ background: '#0f172a' }}>{year}</option>;
-                                    })}
-                                </select>
-                            </>
-                        ) : (
-                            <div style={{ display: 'flex', gap: '8px', flex: 2 }}>
-                                <input
-                                    type="date"
-                                    value={startDate}
-                                    onChange={(e) => setStartDate(e.target.value)}
-                                    style={{ height: '48px', flex: 1, borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 12px', fontSize: '12px', colorScheme: 'dark' }}
-                                />
-                                <input
-                                    type="date"
-                                    value={endDate}
-                                    onChange={(e) => setEndDate(e.target.value)}
-                                    style={{ height: '48px', flex: 1, borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 12px', fontSize: '12px', colorScheme: 'dark' }}
-                                />
-                            </div>
-                        )}
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                            className="input-field"
+                            style={{ height: '48px', width: '100px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
+                        >
+                            {[2024, 2025, 2026].map(y => (
+                                <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                            ))}
+                        </select>
                     </div>
 
                     <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
@@ -511,17 +432,7 @@ const Maintenance = () => {
                     </div>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(251, 113, 133, 0.1)', border: '1px solid rgba(251, 113, 133, 0.2)' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(251, 113, 133, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#f43f5e' }}>
-                        <AlertCircle size={20} />
-                    </div>
-                    <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Punctures Found</p>
-                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>
-                            {totalPunctures} <span style={{ fontSize: '12px', color: '#f43f5e' }}>History</span>
-                        </h2>
-                    </div>
-                </motion.div>
+
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
@@ -545,20 +456,8 @@ const Maintenance = () => {
                     </div>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#0ea5e9' }}>
-                        <Clock size={20} />
-                    </div>
-                    <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Car Washes Found</p>
-                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>
-                            {totalWash} <span style={{ fontSize: '12px', color: '#0ea5e9' }}>History</span>
-                        </h2>
-                    </div>
-                </motion.div>
 
-                {activeTab !== 'service' && (
-                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#8b5cf6' }}>
                             <MapPin size={20} />
                         </div>
@@ -574,7 +473,6 @@ const Maintenance = () => {
                             </select>
                         </div>
                     </motion.div>
-                )}
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fbbf24' }}>
@@ -595,8 +493,7 @@ const Maintenance = () => {
             </div>
 
             {/* Desktop Table Content */}
-            {(activeTab === 'all' || activeTab === 'service') && (
-                <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+            <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
                     {loading ? (
                         <div style={{ padding: '100px', textAlign: 'center' }}>
                             <div className="spinner" style={{ margin: '0 auto' }}></div>
@@ -677,14 +574,6 @@ const Maintenance = () => {
                                                     }}>DRIVER APP</span>
                                                 )}
                                             </div>
-                                            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
-                                                {(record.category?.toLowerCase()?.includes('puncture') || record.description?.toLowerCase()?.includes('puncture') || record.category?.toLowerCase()?.includes('puncher') || record.description?.toLowerCase()?.includes('puncher') || record.maintenanceType?.toLowerCase()?.includes('puncture') || record.maintenanceType?.toLowerCase()?.includes('puncher')) && (
-                                                    <span style={{ fontSize: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '2px 8px', borderRadius: '4px', fontWeight: '800' }}>PUNCTURE</span>
-                                                )}
-                                                {(record.category?.toLowerCase()?.includes('wash') || record.description?.toLowerCase()?.includes('wash') || record.maintenanceType?.toLowerCase()?.includes('wash') || record.maintenanceType?.toLowerCase()?.includes('car service')) && !(record.category?.toLowerCase()?.includes('puncture') || record.description?.toLowerCase()?.includes('puncture') || record.category?.toLowerCase()?.includes('puncher') || record.description?.toLowerCase()?.includes('puncher')) && (
-                                                    <span style={{ fontSize: '10px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', padding: '2px 8px', borderRadius: '4px', fontWeight: '800' }}>CAR WASH</span>
-                                                )}
-                                            </div>
                                             <div style={{ color: 'white', fontSize: '13px', marginTop: '4px', fontWeight: '500' }}>
                                                 {record.category || 'General Service'}
                                             </div>
@@ -763,7 +652,7 @@ const Maintenance = () => {
                         </table>
                     )}
                 </div>
-            )}
+
 
 
             {/* Mobile Card View */}

@@ -13,6 +13,7 @@ import {
     ShieldAlert,
     Wrench,
     Fuel,
+    Droplets,
     IndianRupee,
     MapPin,
     AlertTriangle,
@@ -39,6 +40,7 @@ const Sidebar = ({ isOpen, onClose }) => {
         { path: '/admin/border-tax', icon: ShieldAlert, label: 'Border Tax' },
         { path: '/admin/fastag', icon: ClipboardList, label: 'Fastag' },
         { path: '/admin/maintenance', icon: Wrench, label: 'Maintenance' },
+        { path: '/admin/driver-services', icon: Droplets, label: 'Driver Services' },
         { path: '/admin/warranties', icon: ShieldCheck, label: 'Parts Warranty' },
         { path: '/admin/fuel', icon: Fuel, label: 'Fuel' },
         { path: '/admin/parking', icon: MapPin, label: 'Parking' },
@@ -124,6 +126,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     <NavLink
                         key={item.path}
                         to={item.path}
+                        state={{}}
                         end={item.path === '/admin'}
                         onClick={() => { if (window.innerWidth < 1025) onClose(); }}
                         style={({ isActive }) => ({

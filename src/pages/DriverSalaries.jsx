@@ -175,7 +175,8 @@ const DriverSalaries = () => {
         a.remark?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const totalPayout = filteredSalaries.reduce((sum, s) => sum + (s.netPayable || 0), 0);
+    const totalGrossEarnings = filteredSalaries.reduce((sum, s) => sum + (s.totalEarned || 0), 0);
+    const totalNetPayout = filteredSalaries.reduce((sum, s) => sum + (s.netPayable || 0), 0);
 
     // Summary from details
     const det = selectedDriverDetails;
@@ -236,11 +237,19 @@ const DriverSalaries = () => {
             </header>
 
             <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
-                <div className="glass-card" style={{ flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                    <p style={{ fontSize: '11px', fontWeight: '800', color: '#10b981', marginBottom: '4px', textTransform: 'uppercase' }}>
-                        Total ({new Date(0, month - 1).toLocaleString('default', { month: 'short' })} {year})
-                    </p>
-                    <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {totalPayout.toLocaleString()}</h3>
+                <div className="glass-card" style={{ flex: '1.5', minWidth: '280px', padding: '20px', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                        <div>
+                            <p style={{ fontSize: '11px', fontWeight: '800', color: '#10b981', marginBottom: '4px', textTransform: 'uppercase' }}>
+                                Total Gross Earnings ({new Date(0, month - 1).toLocaleString('default', { month: 'short' })} {year})
+                            </p>
+                            <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white', margin: 0 }}>₹ {totalGrossEarnings.toLocaleString()}</h3>
+                        </div>
+                        <div style={{ textAlign: 'right' }}>
+                            <p style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', marginBottom: '2px', textTransform: 'uppercase' }}>Net Payout</p>
+                            <p style={{ fontSize: '16px', fontWeight: '800', color: '#fbbf24', margin: 0 }}>₹ {totalNetPayout.toLocaleString()}</p>
+                        </div>
+                    </div>
                 </div>
                 <div className="glass-card" style={{ flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(244,63,94,0.1) 0%, rgba(244,63,94,0.05) 100%)', border: '1px solid rgba(244,63,94,0.2)' }}>
                     <p style={{ fontSize: '11px', fontWeight: '800', color: '#f43f5e', marginBottom: '4px', textTransform: 'uppercase' }}>
@@ -663,18 +672,25 @@ const DriverSalaries = () => {
                                                         <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Date</th>
                                                         <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Reason</th>
                                                         <th style={{ padding: '12px', textAlign: 'right', color: 'white' }}>Amount</th>
+                                                        <th style={{ padding: '12px', textAlign: 'center', color: 'white' }}>Actions</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
                                                     {det?.advances?.map((adv, idx) => (
-                                                        <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                        <tr key={adv._id || idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                                             <td style={{ padding: '12px', color: 'white' }}>{formatDateIST(adv.date)}</td>
                                                             <td style={{ padding: '12px', color: 'var(--text-muted)' }}>{adv.remark}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#f43f5e', fontWeight: '700' }}>₹{adv.amount}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'center' }}>
+                                                                <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
+                                                                    <button onClick={() => { setShowDetailModal(false); handleEditClick(adv); }} style={{ background: 'transparent', border: 'none', color: '#38bdf8', padding: '4px', cursor: 'pointer' }} title="Edit"><Edit2 size={13} /></button>
+                                                                    <button onClick={() => handleDeleteAdvance(adv._id)} style={{ background: 'transparent', border: 'none', color: '#f43f5e', padding: '4px', cursor: 'pointer' }} title="Delete"><X size={14} /></button>
+                                                                </div>
+                                                            </td>
                                                         </tr>
                                                     ))}
                                                     {det?.advances?.length === 0 && (
-                                                        <tr><td colSpan="3" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No advances taken this month.</td></tr>
+                                                        <tr><td colSpan="4" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No advances taken this month.</td></tr>
                                                     )}
                                                 </tbody>
                                             </table>

@@ -198,68 +198,110 @@ const Vehicles = () => {
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
             <SEO title="Manage Vehicles" description="Track and manage all vehicles in your fleet, including document status and assignments." />
 
-            {/* Fleet Health Dashboard */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '35px' }}>
-                <div className="glass-card" style={{ padding: '20px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                        <Shield size={20} color="#10b981" />
-                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#10b981' }}>TOTAL UNITS</span>
-                    </div>
-                    <div style={{ fontSize: '24px', fontWeight: '1000', color: 'white' }}>{vehicles.length}</div>
-                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>Active Fleet Assets</div>
-                </div>
-                <div className="glass-card" style={{ padding: '20px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, transparent 100%)', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                        <AlertCircle size={20} color="#fbbf24" />
-                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24' }}>ALERTS</span>
-                    </div>
-                    <div style={{ fontSize: '24px', fontWeight: '1000', color: 'white' }}>{alerts.length}</div>
-                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>Critical Document Expiries</div>
-                </div>
-                <div className="glass-card" style={{ padding: '20px', background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, transparent 100%)', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                        <Car size={20} color="#0ea5e9" />
-                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#0ea5e9' }}>ON DUTY</span>
-                    </div>
-                    <div style={{ fontSize: '24px', fontWeight: '1000', color: 'white' }}>{vehicles.filter(v => v.currentDriver).length}</div>
-                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>Vehicles on Active Trips</div>
-                </div>
-            </div>
+
 
             {alerts.length > 0 && (
-                <div style={{ marginBottom: '35px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#f43f5e', marginBottom: '15px' }}>
-                        <div style={{ width: '4px', height: '16px', background: '#f43f5e', borderRadius: '4px' }}></div>
-                        <h2 style={{ fontSize: '12px', fontWeight: '900', margin: 0, textTransform: 'uppercase', letterSpacing: '1.5px' }}>Attention Required</h2>
+                <div style={{ marginBottom: '40px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
+                        <div style={{ width: '4px', height: '20px', background: '#f43f5e', borderRadius: '4px' }}></div>
+                        <h2 style={{ fontSize: '14px', fontWeight: '1000', margin: 0, textTransform: 'uppercase', letterSpacing: '2px', color: 'white' }}>
+                            Compliance & <span style={{ color: '#f43f5e' }}>Health Watch</span>
+                        </h2>
                     </div>
-                    <div className="scroll-x" style={{ display: 'flex', gap: '15px', paddingBottom: '10px' }}>
-                        {alerts.map((alert, idx) => (
-                            <motion.div
-                                key={idx}
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className="glass-card"
-                                style={{
-                                    minWidth: '240px',
-                                    padding: '16px',
-                                    background: 'rgba(244, 63, 94, 0.03)',
-                                    border: '1px solid rgba(244, 63, 94, 0.1)',
-                                    borderTop: `4px solid ${alert.daysLeft < 0 ? '#f43f5e' : '#fbbf24'}`
-                                }}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                                    <span style={{ fontSize: '11px', color: 'white', fontWeight: '900' }}>{alert.identifier}</span>
-                                    <div style={{ background: alert.daysLeft < 0 ? '#f43f5e' : '#fbbf24', color: 'white', padding: '2px 8px', borderRadius: '4px', fontSize: '9px', fontWeight: '900' }}>
-                                        {alert.daysLeft < 0 ? 'EXPIRED' : 'DUE SOON'}
+                    <div className="scroll-x" style={{ display: 'flex', gap: '20px', paddingBottom: '20px' }}>
+                        {alerts.map((alert, idx) => {
+                            const isKmAlert = !alert.expiryDate;
+                            const isOverdue = alert.daysLeft <= 0;
+                            const unit = isKmAlert ? 'KM' : 'days';
+                            const Icon = alert.type === 'Service' ? Wrench : Shield;
+                            
+                            return (
+                                <motion.div
+                                    key={idx}
+                                    initial={{ opacity: 0, scale: 0.95 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    className="glass-card"
+                                    style={{
+                                        minWidth: '320px',
+                                        padding: '24px',
+                                        background: isOverdue ? 'rgba(244, 63, 94, 0.08)' : 'rgba(251, 191, 36, 0.08)',
+                                        border: `1.5px solid ${isOverdue ? 'rgba(244, 63, 94, 0.4)' : 'rgba(251, 191, 36, 0.4)'}`,
+                                        borderRadius: '24px',
+                                        position: 'relative'
+                                    }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ 
+                                                width: '36px', height: '36px', borderRadius: '12px', 
+                                                background: isOverdue ? 'rgba(244, 63, 94, 0.2)' : 'rgba(251, 191, 36, 0.2)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                            }}>
+                                                <Icon size={18} color={isOverdue ? '#f43f5e' : '#fbbf24'} />
+                                            </div>
+                                            <span style={{ fontSize: '13px', color: 'white', fontWeight: '900', letterSpacing: '0.5px' }}>{alert.identifier}</span>
+                                        </div>
+                                        <div style={{ 
+                                            background: isOverdue ? '#f43f5e' : '#fbbf24', 
+                                            color: 'white', 
+                                            padding: '4px 10px', 
+                                            borderRadius: '8px', 
+                                            fontSize: '10px', 
+                                            fontWeight: '900',
+                                            textTransform: 'uppercase'
+                                        }}>
+                                            {isOverdue ? 'Critical' : 'Warning'}
+                                        </div>
                                     </div>
-                                </div>
-                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{alert.documentType}</div>
-                                <div style={{ fontSize: '14px', color: 'white', fontWeight: '1000', marginTop: '5px' }}>
-                                    {alert.daysLeft < 0 ? `${Math.abs(alert.daysLeft)} days ago` : `${alert.daysLeft} days remaining`}
-                                </div>
-                            </motion.div>
-                        ))}
+
+                                    <div style={{ marginBottom: '14px' }}>
+                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>{alert.type} Requirement</div>
+                                        <div style={{ fontSize: '14px', color: 'white', fontWeight: '700', lineHeight: 1.4 }}>{alert.documentType}</div>
+                                    </div>
+
+                                    <div style={{ 
+                                        padding: '12px 16px', 
+                                        background: 'rgba(255,255,255,0.03)', 
+                                        borderRadius: '16px',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '4px'
+                                    }}>
+                                        {isKmAlert ? (
+                                            <>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>SCHEDULED AT</span>
+                                                    <span style={{ fontSize: '10px', color: 'white', fontWeight: '900' }}>{Number(alert.targetKm).toLocaleString()} KM</span>
+                                                </div>
+                                                <div style={{ fontSize: '18px', color: isOverdue ? '#f43f5e' : '#fbbf24', fontWeight: '1000' }}>
+                                                    {isOverdue ? (
+                                                        <span>{Math.abs(alert.daysLeft).toLocaleString()} KM Overdue</span>
+                                                    ) : (
+                                                        <span>{alert.daysLeft.toLocaleString()} KM to go</span>
+                                                    )}
+                                                </div>
+                                            </>
+                                        ) : (
+                                            <>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>EXPIRATION DATE</span>
+                                                    <span style={{ fontSize: '10px', color: 'white', fontWeight: '900' }}>{formatDateIST(alert.expiryDate)}</span>
+                                                </div>
+                                                <div style={{ fontSize: '18px', color: isOverdue ? '#f43f5e' : '#fbbf24', fontWeight: '1000' }}>
+                                                    {isOverdue ? (
+                                                        <span>{Math.abs(alert.daysLeft)} days Overdue</span>
+                                                    ) : (
+                                                        <span>{alert.daysLeft} days left</span>
+                                                    )}
+                                                </div>
+                                            </>
+                                        )}
+                                    </div>
+                                </motion.div>
+                            );
+                        })}
                     </div>
                 </div>
             )}
@@ -270,13 +312,14 @@ const Vehicles = () => {
                         <div style={{
                             width: 'clamp(40px,10vw,50px)',
                             height: 'clamp(40px,10vw,50px)',
-                            background: 'linear-gradient(135deg, white, #f8fafc)',
+                            background: '#ffffff',
                             borderRadius: '16px',
                             padding: '8px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                            boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                            border: '1px solid rgba(255,255,255,0.1)'
                         }}>
                             <Car size={28} color="#fbbf24" />
                         </div>
@@ -286,7 +329,7 @@ const Vehicles = () => {
                                 <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Asset Management</span>
                             </div>
                             <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', cursor: 'pointer' }}>
-                                Vehicle <span className="text-gradient-yellow">Fleet</span>
+                                Vehicle <span style={{ color: 'white' }}>Fleet</span>
                             </h1>
                         </div>
                     </div>
@@ -323,10 +366,10 @@ const Vehicles = () => {
                             style={{ padding: '24px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}
                         >
                             {/* Accent Background */}
-                            <div style={{ position: 'absolute', top: '-10%', right: '-5%', width: '120px', height: '120px', background: 'var(--primary)', filter: 'blur(80px)', opacity: 0.1, zIndex: 0 }}></div>
+
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
-                                <div style={{ background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', padding: '12px', borderRadius: '14px', color: 'var(--primary)', boxShadow: '0 4px 12px rgba(14, 165, 233, 0.1)' }}>
+                                <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '14px', color: 'rgba(255,255,255,0.7)' }}>
                                     <Car size={24} />
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -404,7 +447,7 @@ const Vehicles = () => {
                                     <button
                                         onClick={() => setShowDocsModal(v)}
                                         style={{
-                                            background: 'linear-gradient(135deg, var(--primary), #0284c7)',
+                                            background: '#0ea5e9',
                                             color: 'white',
                                             border: 'none',
                                             padding: '8px 18px',
@@ -455,7 +498,7 @@ const Vehicles = () => {
                             padding: 'clamp(24px, 5vw, 40px)',
                             width: '100%',
                             maxWidth: '800px',
-                            background: 'linear-gradient(145deg, #0f172a, #1e293b)',
+                            background: '#111827',
                             border: '1px solid rgba(255,255,255,0.1)',
                             overflowY: 'auto',
                             maxHeight: '90vh',
@@ -466,7 +509,7 @@ const Vehicles = () => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px', position: 'relative' }}>
                             <div>
                                 <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
-                                    {editingId ? 'Edit Vehicle' : 'Add New'} <span style={{ background: 'linear-gradient(to right, #6366f1, #a855f7)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Fleet Asset</span>
+                                    {editingId ? 'Edit Vehicle' : 'Add New'} <span style={{ color: '#6366f1' }}>Fleet Asset</span>
                                 </h2>
                                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', margin: '6px 0 0', letterSpacing: '1.5px' }}>Vehicle Information Management</p>
                             </div>
@@ -728,7 +771,7 @@ const Vehicles = () => {
                             maxWidth: '950px',
                             maxHeight: '90vh',
                             overflowY: 'auto',
-                            background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+                            background: '#0f172a',
                             borderRadius: '32px',
                             border: '1px solid rgba(255,255,255,0.1)',
                             boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)'

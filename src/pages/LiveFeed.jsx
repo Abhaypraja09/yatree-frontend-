@@ -204,7 +204,13 @@ const LiveFeed = () => {
                             <div style={{ height: '40px', padding: '0 20px', borderRadius: '14px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', alignItems: 'center', gap: '10px', color: 'white', fontWeight: '800', fontSize: '14px', border: '1px solid rgba(14, 165, 233, 0.2)', position: 'relative' }}>
                                 <Calendar size={16} color="#0ea5e9" />
                                 {formatDate(selectedDate)}
-                                <input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
+                                <input 
+                                    type="date" 
+                                    value={selectedDate} 
+                                    onChange={(e) => setSelectedDate(e.target.value)} 
+                                    onClick={(e) => e.target.showPicker?.()}
+                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer', colorScheme: 'dark', zIndex: 10 }} 
+                                />
                             </div>
                             <button
                                 onClick={() => {

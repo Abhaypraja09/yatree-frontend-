@@ -29,11 +29,13 @@ const Drivers = () => {
     const [password, setPassword] = useState('');
     const [licenseNumber, setLicenseNumber] = useState('');
     const [dailyWage, setDailyWage] = useState('');
+    const [nightStayBonus, setNightStayBonus] = useState('500');
+    const [sameDayReturnBonus, setSameDayReturnBonus] = useState('100');
     const [isFreelancer, setIsFreelancer] = useState(false);
 
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingDriver, setEditingDriver] = useState(null);
-    const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '' });
+    const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '', nightStayBonus: '', sameDayReturnBonus: '' });
     const [driverTypeFilter, setDriverTypeFilter] = useState('All');
     const [onlyOnDuty, setOnlyOnDuty] = useState(false);
     const [showCompletedOnly, setShowCompletedOnly] = useState(false);
@@ -205,7 +207,7 @@ const Drivers = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             if (!userInfo) return;
-            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false`, {
+            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&isFreelancer=false`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setDrivers(data.drivers || []);
@@ -219,14 +221,14 @@ const Drivers = () => {
         e.preventDefault();
         try {
             await axios.post('/api/admin/drivers', {
-                name, mobile, username, password, licenseNumber, companyId: selectedCompany._id, isFreelancer, dailyWage
+                name, mobile, username, password, licenseNumber, companyId: selectedCompany._id, isFreelancer, dailyWage, salary: dailyWage, nightStayBonus, sameDayReturnBonus
             }, {
                 headers: {
                     Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}`
                 }
             });
             setShowModal(false);
-            setName(''); setMobile(''); setUsername(''); setPassword(''); setLicenseNumber(''); setIsFreelancer(false); setDailyWage('');
+            setName(''); setMobile(''); setUsername(''); setPassword(''); setLicenseNumber(''); setIsFreelancer(false); setDailyWage(''); setNightStayBonus('500'); setSameDayReturnBonus('100');
             fetchDrivers();
         } catch (err) {
             alert(err.response?.data?.message || 'Error creating driver');
@@ -264,6 +266,9 @@ const Drivers = () => {
                 username: editForm.username,
                 licenseNumber: editForm.licenseNumber,
                 dailyWage: editForm.dailyWage,
+                salary: editForm.dailyWage, // Keep in sync
+                nightStayBonus: editForm.nightStayBonus,
+                sameDayReturnBonus: editForm.sameDayReturnBonus,
                 isFreelancer: editForm.isFreelancer
             };
             if (editForm.password) {
@@ -275,7 +280,7 @@ const Drivers = () => {
             });
             setShowEditModal(false);
             setEditingDriver(null);
-            setEditForm({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '', isFreelancer: false });
+            setEditForm({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '', nightStayBonus: '', sameDayReturnBonus: '', isFreelancer: false });
             fetchDrivers();
             alert('Driver updated successfully');
         } catch (err) {
@@ -291,6 +296,8 @@ const Drivers = () => {
             username: driver.username || '',
             licenseNumber: driver.licenseNumber || '',
             dailyWage: driver.dailyWage || '',
+            nightStayBonus: driver.nightStayBonus !== undefined && driver.nightStayBonus !== null ? String(driver.nightStayBonus) : '500',
+            sameDayReturnBonus: driver.sameDayReturnBonus !== undefined && driver.sameDayReturnBonus !== null ? String(driver.sameDayReturnBonus) : '100',
             isFreelancer: driver.isFreelancer || false,
             password: ''
         });
@@ -319,7 +326,6 @@ const Drivers = () => {
     const blockedDrivers = backendStats.blocked || staffDriversList.filter(d => d.status === 'blocked').length;
     const punchedInDrivers = backendStats.onDuty || staffDriversList.filter(d => d.activeAttendance).length;
     const completedTodayCount = backendStats.completedToday || staffDriversList.filter(d => d.dutyCompletedToday).length;
-    const freelancersCount = drivers.filter(d => d.isFreelancer).length;
 
     return (
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
@@ -548,9 +554,9 @@ const Drivers = () => {
                                                 <div>
                                                     <div style={{ color: 'white', fontWeight: '800', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         {driver.name}
-                                                        {driver.assignedVehicle && (
+                                                        {(driver.activeAttendance?.vehicle || driver.assignedVehicle) && (
                                                             <span style={{ fontSize: '12px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: '800' }}>
-                                                                {driver.assignedVehicle.carNumber}
+                                                                {driver.activeAttendance?.vehicle?.carNumber || driver.assignedVehicle?.carNumber}
                                                             </span>
                                                         )}
                                                         {driver.activeAttendance && (
@@ -689,9 +695,9 @@ const Drivers = () => {
                                             <div>
                                                 <div style={{ color: 'white', fontWeight: '800', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                     {driver.name}
-                                                    {driver.assignedVehicle && (
+                                                    {(driver.activeAttendance?.vehicle || driver.assignedVehicle) && (
                                                         <span style={{ fontSize: '9px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.8)', padding: '1px 6px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)', fontWeight: '700' }}>
-                                                            {driver.assignedVehicle.carNumber}
+                                                            {driver.activeAttendance?.vehicle?.carNumber || driver.assignedVehicle?.carNumber}
                                                         </span>
                                                     )}
                                                     {driver.activeAttendance && (
@@ -835,6 +841,23 @@ const Drivers = () => {
                                         </div>
                                     </div>
 
+                                    <div className="form-grid-2" style={{ marginBottom: '15px' }}>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Night Stay Bonus</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>₹</span>
+                                                <input type="number" className="input-field" value={nightStayBonus} onChange={(e) => setNightStayBonus(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Same Day Return</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>₹</span>
+                                                <input type="number" className="input-field" value={sameDayReturnBonus} onChange={(e) => setSameDayReturnBonus(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div>
                                         <label className="input-label" style={{ marginBottom: '6px' }}>Driving License</label>
                                         <input className="input-field" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="DL No. (Optional)" style={{ background: 'rgba(0,0,0,0.2)' }} />
@@ -932,6 +955,23 @@ const Drivers = () => {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '100%', paddingTop: '25px' }}>
                                             <input type="checkbox" id="editFreelancerCheck" checked={editForm.isFreelancer} onChange={(e) => setEditForm({ ...editForm, isFreelancer: e.target.checked })} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
                                             <label htmlFor="editFreelancerCheck" style={{ color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Freelancer Profile</label>
+                                        </div>
+                                    </div>
+
+                                    <div className="form-grid-2" style={{ marginBottom: '15px' }}>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Night Stay Bonus</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>₹</span>
+                                                <input type="number" className="input-field" value={editForm.nightStayBonus} onChange={(e) => setEditForm({ ...editForm, nightStayBonus: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
+                                            </div>
+                                        </div>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Same Day Return</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>₹</span>
+                                                <input type="number" className="input-field" value={editForm.sameDayReturnBonus} onChange={(e) => setEditForm({ ...editForm, sameDayReturnBonus: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
+                                            </div>
                                         </div>
                                     </div>
 

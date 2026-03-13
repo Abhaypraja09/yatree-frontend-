@@ -109,10 +109,8 @@ const AdminDashboard = () => {
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
-    const toDateRef = useRef(null);
-    const fromDateRef = useRef(null);
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
     const getTodayLocal = () => todayIST();
 
@@ -125,9 +123,8 @@ const AdminDashboard = () => {
         setLoading(true);
         try {
             const userInfo = JSON.parse(userInfoRaw);
-            const params = isRange
-                ? `from=${fromDate}&to=${selectedDate}`
-                : `date=${selectedDate}`;
+            const params = `month=${selectedMonth}&year=${selectedYear}`;
+
             const { data } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}?${params}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
@@ -143,7 +140,7 @@ const AdminDashboard = () => {
         fetchStats();
         const interval = setInterval(fetchStats, 60000);
         return () => clearInterval(interval);
-    }, [selectedCompany, selectedDate, fromDate, isRange]);
+    }, [selectedCompany, selectedMonth, selectedYear]);
 
     return (
         <div className="admin-dashboard-container" style={{
@@ -217,149 +214,39 @@ const AdminDashboard = () => {
                             boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
                             flexWrap: 'wrap'
                         }}>
-                            {/* Mode Toggle */}
-                            <button
-                                onClick={() => {
-                                    const next = !isRange;
-                                    setIsRange(next);
-                                    if (!next) {
-                                        setFromDate(firstDayOfMonthIST(selectedDate));
-                                    }
-                                }}
-                                style={{
-                                    padding: '0 12px', height: '36px', borderRadius: '10px',
-                                    background: isRange ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.05)',
-                                    color: isRange ? '#818cf8' : 'rgba(255,255,255,0.4)',
-                                    fontWeight: '900', fontSize: '10px', textTransform: 'uppercase',
-                                    letterSpacing: '0.8px',
-                                    border: `1px solid ${isRange ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.08)'}`,
-                                    cursor: 'pointer', transition: 'all 0.3s', whiteSpace: 'nowrap'
-                                }}
-                            >
-                                {isRange ? '⇔ Range' : '• Single'}
-                            </button>
-
-                            {/* LEFT arrow — single mode */}
-                            {!isRange && (
-                                <button
-                                    onClick={() => {
-                                        const d = nowIST(selectedDate);
-                                        d.setUTCDate(d.getUTCDate() - 1);
-                                        setSelectedDate(d.toISOString().split('T')[0]);
-                                    }}
-                                    style={{
-                                        width: '36px', height: '36px', borderRadius: '12px',
-                                        background: 'rgba(255,255,255,0.03)',
-                                        color: 'rgba(255,255,255,0.6)',
-                                        border: '1px solid rgba(255,255,255,0.05)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0
+                            {/* MONTHLY Mode Selects (Now the only mode) */}
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '0 5px' }}>
+                                <select 
+                                    value={selectedMonth} 
+                                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                    style={{ 
+                                        background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)', 
+                                        color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px', 
+                                        height: '40px', borderRadius: '14px', outline: 'none', cursor: 'pointer',
+                                        transition: 'all 0.2s'
                                     }}
                                 >
-                                    <ChevronLeft size={18} strokeWidth={2.5} />
-                                </button>
-                            )}
-
-                            {/* FROM date pill — range mode only */}
-                            {isRange && (
-                                <div
-                                    onClick={() => fromDateRef.current?.showPicker()}
-                                    style={{
-                                        padding: '0 14px', height: '36px', display: 'flex',
-                                        alignItems: 'center', gap: '7px', cursor: 'pointer',
-                                        background: 'rgba(99,102,241,0.1)', borderRadius: '10px',
-                                        border: '1px solid rgba(99,102,241,0.2)',
-                                        position: 'relative', userSelect: 'none'
+                                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                                        <option key={m} value={m} style={{ background: '#0f172a' }}>
+                                            {new Date(0, m - 1).toLocaleString('default', { month: 'long' })}
+                                        </option>
+                                    ))}
+                                </select>
+                                <select 
+                                    value={selectedYear} 
+                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                    style={{ 
+                                        background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)', 
+                                        color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px', 
+                                        height: '40px', borderRadius: '14px', outline: 'none', cursor: 'pointer',
+                                        transition: 'all 0.2s'
                                     }}
                                 >
-                                    <span style={{ color: '#818cf8', fontSize: '9px', fontWeight: '900', letterSpacing: '0.5px', pointerEvents: 'none' }}>FROM</span>
-                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '900', pointerEvents: 'none' }}>
-                                        {formatDateIST(fromDate).toUpperCase()}
-                                    </span>
-                                    <input
-                                        ref={fromDateRef}
-                                        type="date"
-                                        value={fromDate}
-                                        onChange={(e) => e.target.value && setFromDate(e.target.value)}
-                                        style={{
-                                            position: 'absolute', opacity: 0, inset: 0,
-                                            width: '100%', height: '100%', cursor: 'pointer',
-                                            zIndex: -1, pointerEvents: 'none'
-                                        }}
-                                    />
-                                </div>
-                            )}
-
-                            {/* Main date pill — always shown (single date OR "TO" date in range) */}
-                            <div
-                                onClick={() => toDateRef.current?.showPicker()}
-                                style={{
-                                    padding: '0 15px', height: '36px', display: 'flex',
-                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                    background: 'rgba(251,191,36,0.1)', borderRadius: '10px',
-                                    border: '1px solid rgba(251,191,36,0.15)',
-                                    transition: 'all 0.2s', position: 'relative', userSelect: 'none'
-                                }}
-                            >
-                                {isRange
-                                    ? <span style={{ color: '#fbbf24', fontSize: '9px', fontWeight: '900', letterSpacing: '0.5px', pointerEvents: 'none' }}>TO</span>
-                                    : <Calendar size={15} color="#fbbf24" strokeWidth={2.5} style={{ pointerEvents: 'none' }} />
-                                }
-                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '900', letterSpacing: '0.5px', pointerEvents: 'none' }}>
-                                    {formatDateIST(selectedDate).toUpperCase()}
-                                </span>
-                                <input
-                                    ref={toDateRef}
-                                    type="date"
-                                    value={selectedDate}
-                                    onChange={(e) => e.target.value && setSelectedDate(e.target.value)}
-                                    style={{
-                                        position: 'absolute', opacity: 0, inset: 0,
-                                        width: '1px', height: '1px',
-                                        pointerEvents: 'none', zIndex: -1
-                                    }}
-                                />
+                                    {[2024, 2025, 2026, 2027].map(y => (
+                                        <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                                    ))}
+                                </select>
                             </div>
-
-                            {/* RIGHT arrow — single mode */}
-                            {!isRange && (
-                                <button
-                                    onClick={() => {
-                                        const d = nowIST(selectedDate);
-                                        d.setUTCDate(d.getUTCDate() + 1);
-                                        setSelectedDate(d.toISOString().split('T')[0]);
-                                    }}
-                                    style={{
-                                        width: '36px', height: '36px', borderRadius: '12px',
-                                        background: 'rgba(255,255,255,0.03)',
-                                        color: 'rgba(255,255,255,0.6)',
-                                        border: '1px solid rgba(255,255,255,0.05)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0
-                                    }}
-                                >
-                                    <ChevronRight size={18} strokeWidth={2.5} />
-                                </button>
-                            )}
-
-                            {/* Today button */}
-                            <button
-                                onClick={() => {
-                                    setSelectedDate(getTodayLocal());
-                                    if (isRange) {
-                                        setFromDate(firstDayOfMonthIST());
-                                    }
-                                }}
-                                style={{
-                                    marginLeft: '2px', padding: '0 12px', height: '36px', borderRadius: '10px',
-                                    background: !isRange && selectedDate === getTodayLocal() ? '#fbbf24' : 'rgba(255,255,255,0.05)',
-                                    color: !isRange && selectedDate === getTodayLocal() ? 'black' : 'rgba(255,255,255,0.4)',
-                                    fontWeight: '900', fontSize: '11px', textTransform: 'uppercase',
-                                    border: 'none', cursor: 'pointer', transition: 'all 0.3s', whiteSpace: 'nowrap'
-                                }}
-                            >
-                                Today
-                            </button>
                         </div>
                     </div>
                 </header>
@@ -403,7 +290,7 @@ const AdminDashboard = () => {
                             <StatCard icon={TrendingUp} label="OUTSIDE CARS (MONTHLY)" value={`₹${(stats.monthlyOutsideCarsTotal || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/outside-cars')} />
                             <StatCard icon={AlertTriangle} label="ACCIDENT COST (MONTHLY)" value={`₹${(stats.monthlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
                             <StatCard icon={IndianRupee} label="TODAY'S FASTAG FEED" value={`₹${stats.dailyFastagTotal?.toLocaleString() || 0}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/fastag')} trend="TODAY" />
-                            <StatCard icon={CreditCard} label="TODAY'S DRIVER ADVANCE" value={`₹${(stats.dailyAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/driver-salaries')} trend="TODAY" />
+                            <StatCard icon={CreditCard} label="TOTAL DRIVER ADVANCE" value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
                             <StatCard icon={Users} label="FREELANCERS (MONTHLY)" value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />
 
                             <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
