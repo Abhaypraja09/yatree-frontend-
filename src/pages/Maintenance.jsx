@@ -301,18 +301,13 @@ const Maintenance = () => {
         const matchesGarage = filterGarage === 'All' || (r.garageName || r.vendorName) === filterGarage;
         const matchesVehicle = filterVehicle === 'All' || r.vehicle?.carNumber === filterVehicle;
 
-        // Exclude Wash and Puncture as they are now in Driver Services
-        const isWash = r.category?.toLowerCase()?.includes('wash') ||
-            r.description?.toLowerCase()?.includes('wash') ||
-            r.maintenanceType?.toLowerCase()?.includes('wash');
-        const isPuncture = r.category?.toLowerCase()?.includes('puncture') ||
-            r.category?.toLowerCase()?.includes('puncher') ||
-            r.description?.toLowerCase()?.includes('puncture') ||
-            r.description?.toLowerCase()?.includes('puncher') ||
-            r.maintenanceType?.toLowerCase()?.includes('puncture') ||
-            r.maintenanceType?.toLowerCase()?.includes('puncher');
+        // Exclude Wash, Puncture, Tissues, Water, and Cleaning as they are now in Driver Services
+        const serviceRegex = /wash|puncture|puncher|tissue|water|cleaning/i;
+        const isService = serviceRegex.test(r.category || '') || 
+                          serviceRegex.test(r.description || '') || 
+                          serviceRegex.test(r.maintenanceType || '');
 
-        return matchesSearch && matchesType && matchesGarage && matchesVehicle && !isWash && !isPuncture;
+        return matchesSearch && matchesType && matchesGarage && matchesVehicle && !isService;
     });
 
     const totalMaintenanceCost = filteredRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);

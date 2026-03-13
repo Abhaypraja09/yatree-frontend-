@@ -89,21 +89,12 @@ const DriverServices = () => {
             });
             
             // Filter only service hub related data (wash, puncture, cleaning, etc.)
+            const serviceRegex = /wash|puncture|puncher|tissue|water|cleaning/i;
             const serviceData = (data || []).filter(r => {
-                const category = (r.category || '').toLowerCase();
-                const description = (r.description || '').toLowerCase();
-                const type = (r.maintenanceType || '').toLowerCase();
-                const remark = (r.remark || '').toLowerCase();
-
-                const isWash = category.includes('wash') || description.includes('wash') || type.includes('wash') || type === 'car service';
-                const isPuncture = category.includes('puncture') || category.includes('puncher') || 
-                                 description.includes('puncture') || description.includes('puncher') || 
-                                 type.includes('puncture') || type.includes('puncher');
-                const isCleaning = category.includes('clean') || description.includes('clean');
-                const isConsumable = category.includes('tissue') || category.includes('water') || description.includes('tissue') || description.includes('water');
-                const isServiceHub = category.includes('service') || type.includes('service');
-                
-                return isWash || isPuncture || isCleaning || isServiceHub || isConsumable;
+                return serviceRegex.test(r.category || '') || 
+                       serviceRegex.test(r.description || '') || 
+                       serviceRegex.test(r.maintenanceType || '') ||
+                       serviceRegex.test(r.remark || '');
             });
 
             setRecords(serviceData);
@@ -205,18 +196,14 @@ const DriverServices = () => {
                              r.driver?.name?.toLowerCase()?.includes(query));
         
         let matchesType = true;
-        const category = (r.category || '').toLowerCase();
-        const description = (r.description || '').toLowerCase();
-        const type = (r.maintenanceType || '').toLowerCase();
+        const textToSearch = `${r.category} ${r.description} ${r.maintenanceType}`.toLowerCase();
 
         if (selectedType === 'Wash') {
-            matchesType = category.includes('wash') || description.includes('wash') || type.includes('wash') || type === 'car service';
+            matchesType = textToSearch.includes('wash');
         } else if (selectedType === 'Puncture') {
-            matchesType = category.includes('puncture') || category.includes('puncher') || 
-                         description.includes('puncture') || description.includes('puncher') || 
-                         type.includes('puncture') || type.includes('puncher');
+            matchesType = textToSearch.includes('puncture') || textToSearch.includes('puncher');
         } else if (selectedType === 'Interior/Other') {
-            matchesType = category.includes('clean') || category.includes('tissue') || category.includes('water') || category.includes('other');
+            matchesType = textToSearch.includes('clean') || textToSearch.includes('tissue') || textToSearch.includes('water');
         }
 
         return matchesSearch && matchesType;
