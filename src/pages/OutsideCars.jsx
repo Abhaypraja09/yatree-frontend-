@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, Car, X, Save, ChevronLeft, ChevronRight, Calendar, Edit, MapPin, Briefcase } from 'lucide-react';
+import { Plus, Search, Trash2, Car, X, Save, ChevronLeft, ChevronRight, Calendar, Edit, MapPin, Briefcase, Layers, ShoppingCart, TrendingUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
@@ -13,6 +13,7 @@ const OutsideCars = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [ownerFilter, setOwnerFilter] = useState('All');
     const [propertyFilter, setPropertyFilter] = useState('All');
+    const [transactionFilter, setTransactionFilter] = useState('All');
 
     const [isRange, setIsRange] = useState(false);
     const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
@@ -39,6 +40,7 @@ const OutsideCars = () => {
         ownerName: '',
         dutyAmount: '',
         dropLocation: '',
+        transactionType: 'Duty',
         date: todayIST()
     });
 
@@ -77,6 +79,7 @@ const OutsideCars = () => {
             ownerName: ownerFilter !== 'All' ? ownerFilter : '',
             dutyAmount: '',
             dropLocation: '',
+            transactionType: 'Duty',
             date: todayIST(),
             isDuplicateToday: false
         });
@@ -145,6 +148,7 @@ const OutsideCars = () => {
                 companyId: selectedCompany._id,
                 isOutsideCar: true,
                 status: 'active',
+                transactionType: formData.transactionType || 'Duty',
                 createdAt: formData.date
             };
 
@@ -184,6 +188,7 @@ const OutsideCars = () => {
             ownerName: vehicle.ownerName,
             dutyAmount: vehicle.dutyAmount,
             dropLocation: vehicle.dropLocation,
+            transactionType: vehicle.transactionType || 'Duty',
             date: vehicle.carNumber?.split('#')[1] || toISTDateString(vehicle.createdAt)
         });
         setSelectedId(vehicle._id);
@@ -208,8 +213,10 @@ const OutsideCars = () => {
         if (!dutyTagDateStr) return false;
 
         const matchesDate = dutyTagDateStr >= fromDate && dutyTagDateStr <= toDate;
-
-        return matchesSearch && matchesOwner && matchesProperty && matchesDate;
+        const matchesTransaction = transactionFilter === 'All' || 
+            (v.transactionType || 'Duty') === transactionFilter;
+        
+        return matchesSearch && matchesOwner && matchesProperty && matchesDate && matchesTransaction;
     }).sort((a, b) => {
         const dateA = a.carNumber?.split('#')[1] || '';
         const dateB = b.carNumber?.split('#')[1] || '';
@@ -248,6 +255,50 @@ const OutsideCars = () => {
     return (
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Outside Fleet Command" description="Manage external vehicles and freelancer drivers for specific duties." />
+            
+            <style>{`
+                .bg-buy { 
+                    background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(20, 83, 45, 0.2) 100%) !important; 
+                    color: #4ade80 !important; 
+                    border: 1px solid rgba(34, 197, 94, 0.25) !important;
+                    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.15);
+                }
+                .bg-sell { 
+                    background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(127, 29, 29, 0.2) 100%) !important; 
+                    color: #f87171 !important; 
+                    border: 1px solid rgba(239, 68, 68, 0.25) !important;
+                    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15);
+                }
+                .badge-ext { 
+                    padding: 3px 10px; 
+                    border-radius: 8px; 
+                    font-size: 9px; 
+                    font-weight: 950; 
+                    letter-spacing: 1px;
+                    text-transform: uppercase;
+                }
+                .stat-circle-svg {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    transform: rotate(-90deg);
+                }
+                .stat-circle-bg {
+                    fill: none;
+                    stroke: rgba(255, 255, 255, 0.03);
+                    stroke-width: 4;
+                }
+                .stat-circle-progress {
+                    fill: none;
+                    stroke-width: 4;
+                    stroke-linecap: round;
+                    transition: stroke-dashoffset 1s ease-out;
+                }
+                .payout-glow { filter: drop-shadow(0 0 4px #fbbf24); }
+                .logs-glow { filter: drop-shadow(0 0 4px #10b981); }
+            `}</style>
 
             {/* ═══ PREMIUM DYNAMIC HEADER ═══ */}
             <header style={{ 
@@ -258,11 +309,12 @@ const OutsideCars = () => {
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'center',
+                    alignItems: 'flex-start',
                     flexWrap: 'wrap',
-                    gap: '32px',
+                    gap: '24px',
                     position: 'relative',
-                    zIndex: 2
+                    zIndex: 2,
+                    marginBottom: '40px'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <div style={{
@@ -291,40 +343,172 @@ const OutsideCars = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '16px' }}>
-                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-card" style={{ 
-                            padding: '16px 24px', 
-                            background: 'rgba(15, 23, 42, 0.6)', 
-                            border: '1px solid rgba(251, 191, 36, 0.15)', 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            minWidth: '160px',
-                            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-                            borderRadius: '20px'
-                        }}>
-                            <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px', opacity: 0.7 }}>Total Payout</span>
-                            <span style={{ color: 'white', fontSize: '24px', fontWeight: '950', letterSpacing: '-0.5px' }}>₹{totalPayable.toLocaleString()}</span>
-                            <div style={{ width: '100%', height: '2px', background: 'rgba(251, 191, 36, 0.1)', marginTop: '8px', borderRadius: '1px' }}>
-                                <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 1 }} style={{ height: '100%', background: '#fbbf24', borderRadius: '1px' }}></motion.div>
-                            </div>
-                        </motion.div>
-                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} className="glass-card" style={{ 
-                            padding: '16px 24px', 
-                            background: 'rgba(15, 23, 42, 0.6)', 
-                            border: '1px solid rgba(16, 185, 129, 0.15)', 
-                            display: 'flex', 
-                            flexDirection: 'column', 
-                            minWidth: '160px',
-                            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-                            borderRadius: '20px'
-                        }}>
-                            <span style={{ fontSize: '10px', fontWeight: '900', color: '#34d399', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px', opacity: 0.7 }}>Active Logs</span>
-                            <span style={{ color: 'white', fontSize: '24px', fontWeight: '950', letterSpacing: '-0.5px' }}>{totalDutiesCount}</span>
-                            <div style={{ width: '100%', height: '2px', background: 'rgba(16, 185, 129, 0.1)', marginTop: '8px', borderRadius: '1px' }}>
-                                <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 1, delay: 0.2 }} style={{ height: '100%', background: '#10b981', borderRadius: '1px' }}></motion.div>
-                            </div>
-                        </motion.div>
-                    </div>
+                    <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
+                        {/* CIRCULAR STATS */}
+                        <div style={{ display: 'flex', gap: '24px' }}>
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ 
+                                width: '120px', height: '120px', borderRadius: '50%',
+                                background: 'rgba(15, 23, 42, 0.6)', 
+                                border: '1px solid rgba(251, 191, 36, 0.1)', 
+                                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                                boxShadow: '0 20px 40px rgba(0,0,0,0.4), inset 0 0 20px rgba(251, 191, 36, 0.05)', 
+                                position: 'relative'
+                            }}>
+                                <svg className="stat-circle-svg" viewBox="0 0 100 100">
+                                    <circle className="stat-circle-bg" cx="50" cy="50" r="45" />
+                                    <motion.circle 
+                                        className="stat-circle-progress payout-glow" 
+                                        cx="50" cy="50" r="45" 
+                                        stroke="#fbbf24"
+                                        initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }}
+                                        animate={{ strokeDashoffset: 0 }}
+                                        transition={{ duration: 1.5, ease: "easeOut" }}
+                                    />
+                                </svg>
+                                <span style={{ fontSize: '9px', fontWeight: '950', color: '#fbbf24', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px', position: 'relative', zIndex: 1 }}>Payout</span>
+                                <span style={{ color: 'white', fontSize: '16px', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalPayable > 99999 ? (totalPayable/1000).toFixed(1) + 'k' : '₹' + totalPayable.toLocaleString()}</span>
+                            </motion.div>
+
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} style={{ 
+                                width: '120px', height: '120px', borderRadius: '50%',
+                                background: 'rgba(15, 23, 42, 0.6)', 
+                                border: '1px solid rgba(16, 185, 129, 0.1)', 
+                                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                                boxShadow: '0 20px 40px rgba(0,0,0,0.4), inset 0 0 20px rgba(16, 185, 129, 0.05)', 
+                                position: 'relative'
+                            }}>
+                                <svg className="stat-circle-svg" viewBox="0 0 100 100">
+                                    <circle className="stat-circle-bg" cx="50" cy="50" r="45" />
+                                    <motion.circle 
+                                        className="stat-circle-progress logs-glow" 
+                                        cx="50" cy="50" r="45" 
+                                        stroke="#10b981"
+                                        initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }}
+                                        animate={{ strokeDashoffset: -200 }} // Static visual progress
+                                        transition={{ duration: 1.8, ease: "easeOut" }}
+                                    />
+                                </svg>
+                                <span style={{ fontSize: '9px', fontWeight: '950', color: '#10b981', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px', position: 'relative', zIndex: 1 }}>Logs</span>
+                                <span style={{ color: 'white', fontSize: '20px', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalDutiesCount}</span>
+                            </motion.div>
+                        </div>
+
+                        {/* TOP RIGHT BUTTONS */}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                            <button
+                                onClick={handleOpenLogDuty}
+                                style={{ 
+                                    display: 'flex', 
+                                    alignItems: 'center', 
+                                    justifyContent: 'center',
+                                    gap: '12px', 
+                                    height: '54px', 
+                                    padding: '0 30px', 
+                                    borderRadius: '16px', 
+                                    fontWeight: '900', 
+                                    background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', 
+                                    color: 'black', 
+                                    border: 'none', 
+                                    whiteSpace: 'nowrap',
+                                    boxShadow: '0 10px 25px rgba(251, 191, 36, 0.3)',
+                                    fontSize: '14px',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s'
+                                }}
+                                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
+                            >
+                                <Plus size={20} strokeWidth={3} /> Add Duty Entry
+                            </button>
+                            <button
+                                onClick={async () => {
+                                    const XLSX = await import('xlsx-js-style');
+                                    const reportData = filtered.map(v => ({
+                                        'Property': v.property || '',
+                                        'Owner': v.ownerName || '',
+                                        'Date': (() => {
+                                            const rawDate = v.carNumber?.split('#')[1] || v.createdAt;
+                                            if (!rawDate) return '';
+                                            return formatDateIST(rawDate);
+                                        })(),
+                                        'Vehicle Details': `${v.model || ''} - ${v.carNumber?.split('#')[0] || ''}`,
+                                        'Drop Location': v.dropLocation?.replace(/ \| /g, ' ➜ ') || '',
+                                        'Service Type': v.dutyType || '',
+                                        'Amount': Number(v.dutyAmount) || 0
+                                    }));
+
+                                    // Add Total Row
+                                    const totalAmount = reportData.reduce((sum, row) => sum + row.Amount, 0);
+                                    reportData.push({
+                                        'Property': '',
+                                        'Owner': '',
+                                        'Date': '',
+                                        'Vehicle Details': '',
+                                        'Drop Location': '',
+                                        'Service Type': 'TOTAL PAYABLE',
+                                        'Amount': totalAmount
+                                    });
+
+                                    const ws = XLSX.utils.json_to_sheet(reportData);
+
+                                    // Styling
+                                    const range = XLSX.utils.decode_range(ws['!ref']);
+                                    for (let C = range.s.c; C <= range.e.c; ++C) {
+                                        let maxWidth = 10;
+                                        for (let R = range.s.r; R <= range.e.r; ++R) {
+                                            const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+                                            if (!cell) continue;
+
+                                            cell.s = { alignment: { horizontal: 'center', vertical: 'center' }, font: { name: 'Arial', sz: 10 } };
+
+                                            // Header Styling
+                                            if (R === 0) {
+                                                cell.s.font.bold = true;
+                                                cell.s.fill = { fgColor: { rgb: "4F46E5" } }; // Indigo-600
+                                                cell.s.font.color = { rgb: "FFFFFF" };
+                                            }
+
+                                            // Data Alignment
+                                            if (C === 6) cell.s.alignment.horizontal = 'right'; // Amount column
+
+                                            // Total Row Styling
+                                            if (R === range.e.r) {
+                                                cell.s.font.bold = true;
+                                                cell.s.fill = { fgColor: { rgb: "E0E7FF" } }; // Indigo-100
+                                            }
+
+                                            if (cell.v) maxWidth = Math.max(maxWidth, cell.v.toString().length + 5);
+                                        }
+                                        if (!ws['!cols']) ws['!cols'] = [];
+                                        ws['!cols'][C] = { wch: maxWidth };
+                                    }
+
+                                    const wb = XLSX.utils.book_new();
+                                    XLSX.utils.book_append_sheet(wb, ws, "Outside Fleet Log");
+                                    XLSX.writeFile(wb, `Outside_Fleet_Report_${fromDate}_to_${toDate}.xlsx`);
+                                }}
+                                style={{
+                                    height: '38px',
+                                    padding: '0 18px',
+                                    background: 'rgba(16, 185, 129, 0.08)',
+                                    border: '1px solid rgba(16, 185, 129, 0.2)',
+                                    color: '#34d399',
+                                    fontWeight: '800',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    gap: '8px',
+                                    borderRadius: '12px',
+                                    fontSize: '11px',
+                                    cursor: 'pointer',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
+                                }}
+                            >
+                                <Save size={14} /> Export to Excel
+                            </button>
+                        </div>
+                </div>
                 </div>
 
                 {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
@@ -370,6 +554,49 @@ const OutsideCars = () => {
                         </div>
                     </div>
 
+                    {/* REDESIGNED TRANSACTION FILTERS */}
+                    <div style={{
+                        display: 'flex',
+                        background: 'rgba(15, 23, 42, 0.6)',
+                        padding: '6px',
+                        borderRadius: '18px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        gap: '6px',
+                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)'
+                    }}>
+                        {[
+                            { id: 'All', label: 'All Fleet', icon: Layers, color: '#94a3b8' },
+                            { id: 'Duty', label: 'Duties', icon: Briefcase, color: '#fbbf24' },
+                            { id: 'Buy', label: 'Purchases', icon: ShoppingCart, color: '#22c55e' },
+                            { id: 'Sell', label: 'Sales', icon: TrendingUp, color: '#ef4444' }
+                        ].map(type => (
+                            <button
+                                key={type.id}
+                                onClick={() => setTransactionFilter(type.id)}
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '14px',
+                                    border: '1px solid ' + (transactionFilter === type.id ? type.color + '40' : 'transparent'),
+                                    fontSize: '11px',
+                                    fontWeight: '950',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    background: transactionFilter === type.id ? type.color + '15' : 'transparent',
+                                    color: transactionFilter === type.id ? type.color : 'rgba(255,255,255,0.3)',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '1px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    boxShadow: transactionFilter === type.id ? '0 4px 12px ' + type.color + '10' : 'none'
+                                }}
+                            >
+                                <type.icon size={14} style={{ opacity: transactionFilter === type.id ? 1 : 0.4 }} />
+                                {type.label}
+                            </button>
+                        ))}
+                    </div>
+
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
@@ -411,97 +638,7 @@ const OutsideCars = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
-                    <button
-                        onClick={async () => {
-                            const XLSX = await import('xlsx-js-style');
-                            const reportData = filtered.map(v => ({
-                                'Property': v.property || '',
-                                'Owner': v.ownerName || '',
-                                'Date': (() => {
-                                    const rawDate = v.carNumber?.split('#')[1] || v.createdAt;
-                                    if (!rawDate) return '';
-                                    return formatDateIST(rawDate);
-                                })(),
-                                'Vehicle Details': `${v.model || ''} - ${v.carNumber?.split('#')[0] || ''}`,
-                                'Drop Location': v.dropLocation?.replace(/ \| /g, ' ➜ ') || '',
-                                'Service Type': v.dutyType || '',
-                                'Amount': Number(v.dutyAmount) || 0
-                            }));
 
-                            // Add Total Row
-                            const totalAmount = reportData.reduce((sum, row) => sum + row.Amount, 0);
-                            reportData.push({
-                                'Property': '',
-                                'Owner': '',
-                                'Date': '',
-                                'Vehicle Details': '',
-                                'Drop Location': '',
-                                'Service Type': 'TOTAL PAYABLE',
-                                'Amount': totalAmount
-                            });
-
-                            const ws = XLSX.utils.json_to_sheet(reportData);
-
-                            // Styling
-                            const range = XLSX.utils.decode_range(ws['!ref']);
-                            for (let C = range.s.c; C <= range.e.c; ++C) {
-                                let maxWidth = 10;
-                                for (let R = range.s.r; R <= range.e.r; ++R) {
-                                    const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
-                                    if (!cell) continue;
-
-                                    cell.s = { alignment: { horizontal: 'center', vertical: 'center' }, font: { name: 'Arial', sz: 10 } };
-
-                                    // Header Styling
-                                    if (R === 0) {
-                                        cell.s.font.bold = true;
-                                        cell.s.fill = { fgColor: { rgb: "4F46E5" } }; // Indigo-600
-                                        cell.s.font.color = { rgb: "FFFFFF" };
-                                    }
-
-                                    // Data Alignment
-                                    if (C === 6) cell.s.alignment.horizontal = 'right'; // Amount column
-
-                                    // Total Row Styling
-                                    if (R === range.e.r) {
-                                        cell.s.font.bold = true;
-                                        cell.s.fill = { fgColor: { rgb: "E0E7FF" } }; // Indigo-100
-                                    }
-
-                                    if (cell.v) maxWidth = Math.max(maxWidth, cell.v.toString().length + 5);
-                                }
-                                if (!ws['!cols']) ws['!cols'] = [];
-                                ws['!cols'][C] = { wch: maxWidth };
-                            }
-
-                            const wb = XLSX.utils.book_new();
-                            XLSX.utils.book_append_sheet(wb, ws, "Outside Fleet Log");
-                            XLSX.writeFile(wb, `Outside_Fleet_Report_${fromDate}_to_${toDate}.xlsx`);
-                        }}
-                        className="glass-card-hover-effect"
-                        style={{
-                            height: '52px',
-                            padding: '0 20px',
-                            background: 'rgba(16, 185, 129, 0.1)',
-                            border: '1px solid rgba(16, 185, 129, 0.2)',
-                            color: '#10b981',
-                            fontWeight: '800',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '8px',
-                            borderRadius: '12px'
-                        }}
-                    >
-                        <Save size={20} /> Excel
-                    </button>
-                    <button
-                        onClick={handleOpenLogDuty}
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black', border: 'none', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)' }}
-                    >
-                        <Plus size={20} /> <span className="hide-mobile">Add Duty Entry</span><span className="show-mobile">Add</span>
-                    </button>
-                </div>
             </header>
 
             {/* ═══ CLEAN PREMIUM DESKTOP TABLE ═══ */}
@@ -580,7 +717,9 @@ const OutsideCars = () => {
                                         <div>
                                             <div style={{ fontWeight: '900', fontSize: '16px', color: 'white', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 {v.carNumber?.split('#')[0]}
-                                                <span className="badge-ext">EXTERNAL</span>
+                                                <span className={`badge-ext ${v.transactionType === 'Buy' ? 'bg-buy' : v.transactionType === 'Sell' ? 'bg-sell' : ''}`}>
+                                                    {v.transactionType || 'EXTERNAL'}
+                                                </span>
                                             </div>
                                             <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', marginTop: '2px', textTransform: 'uppercase' }}>{v.model}</div>
                                         </div>
@@ -650,7 +789,12 @@ const OutsideCars = () => {
                                             <Car size={20} color="#38bdf8" />
                                         </div>
                                         <div>
-                                            <div style={{ fontSize: '17px', fontWeight: '950', color: 'white', letterSpacing: '0.5px' }}>{v.carNumber?.split('#')[0]}</div>
+                                            <div style={{ fontSize: '17px', fontWeight: '950', color: 'white', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                {v.carNumber?.split('#')[0]}
+                                                <span className={`badge-ext ${v.transactionType === 'Buy' ? 'bg-buy' : v.transactionType === 'Sell' ? 'bg-sell' : ''}`} style={{ fontSize: '8px' }}>
+                                                    {v.transactionType || 'EXT'}
+                                                </span>
+                                            </div>
                                             <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase' }}>{v.model}</div>
                                         </div>
                                     </div>
@@ -778,10 +922,10 @@ const OutsideCars = () => {
                                     </div>
                                     <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', marginBottom: '20px' }}>
                                         <div className="premium-input-group">
-                                            <label className="premium-label">Vehicle Plate *</label>
+                                            <label className="premium-label">Full Vehicle Plate *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Car size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                                                <input type="text" list="carCodes" className="premium-compact-input" required disabled={editMode} value={formData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} placeholder="RJ-27-..." style={{ paddingLeft: '48px', textTransform: 'uppercase' }} />
+                                                <input type="text" list="carCodes" className="premium-compact-input" required disabled={editMode} value={formData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} placeholder="RJ-27-PA-1000" style={{ paddingLeft: '48px', textTransform: 'uppercase' }} />
                                                 <datalist id="carCodes">
                                                     {carNumberSuggestions.map(s => <option key={s} value={s} />)}
                                                 </datalist>
@@ -792,9 +936,51 @@ const OutsideCars = () => {
                                             <input type="text" className="premium-compact-input" required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="e.g. Crysta" />
                                         </div>
                                     </div>
-                                    <div className="premium-input-group">
-                                        <label className="premium-label">Vendor (Proprietor) *</label>
-                                        <input type="text" className="premium-compact-input" required value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} placeholder="Provider Name" />
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                        <div className="premium-input-group">
+                                            <label className="premium-label">Vendor (Proprietor) *</label>
+                                            <input type="text" className="premium-compact-input" required value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} placeholder="Provider Name" />
+                                        </div>
+                                        <div className="premium-input-group">
+                                            <label className="premium-label">Transaction Type *</label>
+                                            <div style={{
+                                                display: 'flex',
+                                                background: 'rgba(0,0,0,0.3)',
+                                                padding: '6px',
+                                                borderRadius: '20px',
+                                                border: '1px solid rgba(255,255,255,0.06)',
+                                                gap: '8px'
+                                            }}>
+                                                {[
+                                                    { id: 'Duty', label: 'Duty Entry', icon: Briefcase, color: '#fbbf24' },
+                                                    { id: 'Buy', label: 'Purchase (Buy)', icon: ShoppingCart, color: '#22c55e' },
+                                                    { id: 'Sell', label: 'Sale (Sell)', icon: TrendingUp, color: '#ef4444' }
+                                                ].map(t => (
+                                                    <button
+                                                        key={t.id}
+                                                        type="button"
+                                                        onClick={() => setFormData({...formData, transactionType: t.id})}
+                                                        style={{
+                                                            flex: 1,
+                                                            padding: '12px',
+                                                            borderRadius: '14px',
+                                                            border: '1px solid ' + (formData.transactionType === t.id ? t.color + '50' : 'transparent'),
+                                                            background: formData.transactionType === t.id ? t.color + '15' : 'rgba(255,255,255,0.03)',
+                                                            color: formData.transactionType === t.id ? t.color : 'rgba(255,255,255,0.3)',
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            alignItems: 'center',
+                                                            gap: '6px',
+                                                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                        }}
+                                                    >
+                                                        <t.icon size={18} />
+                                                        <span style={{ fontSize: '10px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t.label}</span>
+                                                    </button>
+                                                ))}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
 

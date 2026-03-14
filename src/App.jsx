@@ -157,6 +157,7 @@ const AdminLayout = ({ children }) => {
 const AdminRoutes = () => {
   const { user } = useAuth();
   const isAdmin = user?.role === 'Admin';
+  const p = user?.permissions || {};
 
   return (
     <Routes>
@@ -176,25 +177,38 @@ const AdminRoutes = () => {
       <Route path="accident-logs" element={<ActiveLogs />} />
       <Route path="warranties" element={<Warranties />} />
 
-      {isAdmin && (
+      {/* Module Dependent Routes */}
+      {(isAdmin || p.driversService) && (
         <>
           <Route path="drivers" element={<Drivers />} />
           <Route path="advances" element={<Advances />} />
-          <Route path="vehicles" element={<Vehicles />} />
-          <Route path="fastag" element={<Fastag />} />
-          <Route path="border-tax" element={<BorderTax />} />
-          <Route path="admins" element={<Admins />} />
           <Route path="driver-salaries" element={<DriverSalaries />} />
         </>
       )}
 
+      {(isAdmin || p.vehiclesManagement) && (
+        <>
+          <Route path="vehicles" element={<Vehicles />} />
+          <Route path="fastag" element={<Fastag />} />
+          <Route path="border-tax" element={<BorderTax />} />
+        </>
+      )}
+
+      {/* Admin Only */}
+      {isAdmin && <Route path="admins" element={<Admins />} /> }
+
       <Route path="staff" element={<Staff />} />
 
-      {/* Redirect unauthorized access */}
-      {!isAdmin && (
+      {/* Catch-all redirects for unauthorized module access */}
+      {!(isAdmin || p.driversService) && (
         <>
           <Route path="drivers" element={<Navigate to="/admin" />} />
           <Route path="advances" element={<Navigate to="/admin" />} />
+          <Route path="driver-salaries" element={<Navigate to="/admin" />} />
+        </>
+      )}
+      {!(isAdmin || p.vehiclesManagement) && (
+        <>
           <Route path="vehicles" element={<Navigate to="/admin" />} />
           <Route path="fastag" element={<Navigate to="/admin" />} />
           <Route path="border-tax" element={<Navigate to="/admin" />} />

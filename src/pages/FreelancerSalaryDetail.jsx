@@ -189,7 +189,7 @@ const FreelancerSalaryDetail = () => {
                         {[
                             { icon: Car, color: '#38bdf8', borderColor: 'rgba(14,165,233,0.2)', bg: 'rgba(14,165,233,0.08)', label: 'WAGES', value: `₹${totalWages.toLocaleString()}`, sub: `${summary.workingDays || 0} duty days` },
                             { icon: ParkingSquare, color: '#f59e0b', borderColor: 'rgba(245,158,11,0.2)', bg: 'rgba(245,158,11,0.08)', label: 'PARKING', value: `₹${parkingTotal.toLocaleString()}`, sub: `${det?.parkingEntries?.length || 0} entries` },
-                            { icon: Award, color: '#a855f7', borderColor: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.08)', label: 'BONUSES', value: `₹${(grandTotal - totalWages - parkingTotal).toLocaleString()}`, sub: 'Nighstay + Extra' },
+                            { icon: Award, color: '#a855f7', borderColor: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.08)', label: 'BONUSES', value: `₹${(grandTotal - totalWages - parkingTotal).toLocaleString()}`, sub: 'Extra & Manual Bonuses' },
                             { icon: Wallet, color: '#10b981', borderColor: 'rgba(16,185,129,0.2)', bg: 'rgba(16,185,129,0.08)', label: 'GROSS EARNED', value: `₹${grandTotal.toLocaleString()}`, sub: 'Wages + Parking + Bonus' },
                             { icon: TrendingDown, color: '#f43f5e', borderColor: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.08)', label: 'PAID / ADVANCE', value: `₹${totalAdvances.toLocaleString()}`, sub: `${det?.advances?.length || 0} payments` },
                         ].map(({ icon: Icon, color, borderColor, bg, label, value, sub }) => (
@@ -248,7 +248,7 @@ const FreelancerSalaryDetail = () => {
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.wage || 0}</td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{day.parking || 0}</td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: '#a855f7', fontWeight: '800' }}>₹{(day.sameDayReturn + day.nightStay + day.otherBonuses) || 0}</td>
-                                        <td style={{ padding: '14px 18px', textAlign: 'right', color: '#10b981', fontWeight: '800' }}>₹{(day.total + (day.sameDayReturn + day.nightStay + day.otherBonuses) || 0).toLocaleString()}</td>
+                                        <td style={{ padding: '14px 18px', textAlign: 'right', color: '#10b981', fontWeight: '800' }}>₹{(day.total || 0).toLocaleString()}</td>
                                     </tr>
                                 ))}
                                 {/* Standalone Parking (no attendance) */}

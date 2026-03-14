@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { ShieldAlert, Upload, CheckCircle, AlertCircle, Calendar as CalendarIcon, Search } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { ShieldAlert, Upload, CheckCircle, AlertCircle, Calendar as CalendarIcon, Search, ChevronDown, ChevronRight, Car, Plus, Trash2, Wallet } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
-import { todayIST } from '../utils/istUtils';
+import { todayIST, nowIST, formatDateIST } from '../utils/istUtils';
 
 const BorderTax = () => {
     const { selectedCompany } = useCompany();
@@ -26,7 +26,19 @@ const BorderTax = () => {
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
     const [searchTerm, setSearchTerm] = useState('');
-    const [vehicleSearch, setVehicleSearch] = useState('');
+    
+    const [expandedVehicle, setExpandedVehicle] = useState(null); // Current vehicle being viewed in detail
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [viewingReceipt, setViewingReceipt] = useState(null); // For image modal
+
+    const months = [
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December"
+    ];
+
+    const currentYear = new Date().getFullYear();
+    const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
     useEffect(() => {
         if (selectedCompany) {
@@ -97,12 +109,12 @@ const BorderTax = () => {
 
             setMessage({ type: 'success', text: 'Border Tax recorded successfully!' });
             setFormData({
-                vehicleId: selectedVehicle?._id || '',
+                vehicleId: formData.vehicleId, // Keep current vehicleId
                 borderName: '',
                 amount: '',
                 date: todayIST(),
                 remarks: '',
-                driverId: ''
+                driverId: formData.driverId // Keep current driverId
             });
             setReceiptPhoto(null);
             setPreview(null);
@@ -128,394 +140,527 @@ const BorderTax = () => {
         }
     };
 
+    const totalMonthPaid = entries.filter(e => {
+        const d = nowIST(e.date);
+        return d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
+    }).reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
     const filteredVehicles = vehicles.filter(v =>
-        v.carNumber.toLowerCase().includes(vehicleSearch.toLowerCase()) ||
-        v.model?.toLowerCase().includes(vehicleSearch.toLowerCase())
+        v.carNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.model?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const filteredEntries = entries.filter(e => {
-        const matchesSearch = e.borderName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            e.vehicle?.carNumber.toLowerCase().includes(searchTerm.toLowerCase());
-        const matchesVehicle = selectedVehicle ? e.vehicle?._id === selectedVehicle._id : true;
-        return matchesSearch && matchesVehicle;
-    });
-
-    const selectVehicle = (v) => {
-        setSelectedVehicle(v);
-        setFormData(prev => ({ 
-            ...prev, 
-            vehicleId: v._id,
-            driverId: v.currentDriver?._id || ''
-        }));
-        setSearchTerm('');
-    };
-
-    if (!selectedVehicle) {
-        return (
-            <div className="container-fluid" style={{ paddingBottom: '40px' }}>
-                <SEO title="Select Vehicle - Border Tax" description="Choose a vehicle to manage border tax records." />
-                <header style={{ padding: '40px 0', textAlign: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', justifyContent: 'center' }}>
-                        <div style={{
-                            width: 'clamp(40px,10vw,50px)',
-                            height: 'clamp(40px,10vw,50px)',
-                            background: 'linear-gradient(135deg, white, #f8fafc)',
-                            borderRadius: '16px',
-                            padding: '8px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
-                        }}>
-                            <ShieldAlert size={28} color="#fbbf24" />
-                        </div>
-                        <div style={{ textAlign: 'left' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
-                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>State Permits</span>
-                            </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
-                                Border Tax <span className="text-gradient-yellow">Hub</span>
-                            </h1>
-                        </div>
-                    </div>
-                    <p style={{ color: 'var(--text-muted)', marginTop: '10px', fontSize: '16px' }}>Select a vehicle to manage its crossing records</p>
-
-                    <div style={{ position: 'relative', maxWidth: '500px', margin: '40px auto 0' }}>
-                        <Search size={20} style={{ position: 'absolute', left: '20px', top: '16px', color: 'var(--text-muted)' }} />
-                        <input
-                            type="text"
-                            placeholder="Find vehicle by number or model..."
-                            className="input-field"
-                            value={vehicleSearch}
-                            onChange={(e) => setVehicleSearch(e.target.value)}
-                            style={{ paddingLeft: '55px', height: '54px', borderRadius: '16px', fontSize: '15px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)' }}
-                        />
-                    </div>
-                </header>
-
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px', marginTop: '20px' }}>
-                    {filteredVehicles.map((v, idx) => (
-                        <motion.div
-                            key={v._id}
-                            initial={{ opacity: 0, scale: 0.9 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            transition={{ delay: idx * 0.03 }}
-                            whileHover={{ y: -5, borderColor: 'var(--primary)', boxShadow: '0 10px 30px rgba(14, 165, 233, 0.2)' }}
-                            onClick={() => selectVehicle(v)}
-                            className="glass-card"
-                            style={{
-                                padding: '24px',
-                                cursor: 'pointer',
-                                border: '1px solid rgba(255,255,255,0.05)',
-                                background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8))',
-                                position: 'relative',
-                                overflow: 'hidden'
-                            }}
-                        >
-                            <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '80px', height: '80px', background: 'var(--primary)', filter: 'blur(40px)', opacity: 0.1 }}></div>
-
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', position: 'relative', zIndex: 1 }}>
-                                <div style={{ width: '50px', height: '50px', background: 'rgba(255,255,255,0.03)', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <AlertCircle size={24} color="var(--primary)" />
-                                </div>
-                                <div>
-                                    <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '800', letterSpacing: '-0.5px' }}>{v.carNumber}</h3>
-                                    <p style={{ color: 'var(--text-muted)', margin: '2px 0 0', fontSize: '13px' }}>{v.model || 'Standard Model'}</p>
-                                </div>
-                            </div>
-
-                            <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
-                                    {entries.filter(e => e.vehicle?._id === v._id).length} RECORDS
-                                </div>
-                                <div style={{ color: 'var(--primary)', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                    MANAGE <Search size={12} />
-                                </div>
-                            </div>
-                        </motion.div>
-                    ))}
-                    {filteredVehicles.length === 0 && (
-                        <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px', color: 'var(--text-muted)' }}>
-                            <p>No vehicles found matching your search.</p>
-                        </div>
-                    )}
-                </div>
-            </div >
-        );
-    }
-
     return (
-        <div className="container-fluid" style={{ paddingBottom: '40px' }}>
-            <SEO title={`${selectedVehicle.carNumber} - Border Tax`} description="Record and manage border tax entries for specific vehicles." />
+        <div className="container-fluid" style={{ paddingBottom: '80px' }}>
+            <SEO title="Border Tax Manager" description="Manage fleet state permits and border taxes." />
 
-            <header style={{
-                padding: '30px 0',
-                gap: '20px'
-            }} className="flex-resp">
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1 }}>
-                    <button
-                        onClick={() => setSelectedVehicle(null)}
-                        className="glass-card-hover-effect"
-                        style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}
-                    >
-                        <AlertCircle size={20} style={{ transform: 'rotate(180deg)' }} color="#fbbf24" />
-                    </button>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
-                            <span style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', textTransform: 'uppercase' }}>Management Detail</span>
+            {/* Premium Header */}
+            <header style={{ padding: '40px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px', flexWrap: 'wrap' }}>
+                <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <ShieldAlert color="#fbbf24" size={20} />
                         </div>
-                        <h1 className="resp-title" style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0, cursor: 'pointer' }}>
-                            {selectedVehicle.carNumber} <span className="text-gradient-yellow">Permits</span>
-                        </h1>
+                        <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(251, 191, 36, 0.8)', letterSpacing: '2px', textTransform: 'uppercase' }}>Permits & Taxes</span>
                     </div>
+                    <h1 style={{ color: 'white', fontSize: '38px', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
+                        Border <span style={{ color: '#fbbf24' }}>Tax Hub</span>
+                    </h1>
                 </div>
 
-                <div className="flex-resp" style={{ gap: '15px' }}>
-                    <div className="glass-card" style={{ padding: '12px 20px', borderRadius: '14px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px', flex: 1 }}>
-                        <span style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', letterSpacing: '1px' }}>TOTAL PAID</span>
-                        <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{filteredEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0).toLocaleString()}</span>
-                    </div>
-                    <div className="glass-card" style={{ padding: '12px 20px', borderRadius: '14px', background: 'rgba(14, 165, 233, 0.05)', border: '1px solid rgba(14, 165, 233, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px', flex: 1 }}>
-                        <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--primary)', letterSpacing: '1px' }}>RECORDS</span>
-                        <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{filteredEntries.length} entries</span>
+                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                    <div style={{
+                        padding: '15px 25px',
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '24px',
+                        display: 'flex',
+                        flexDirection: 'column'
+                    }}>
+                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>{months[selectedMonth]} Total</span>
+                        <span style={{ fontSize: '24px', fontWeight: '900', color: '#fbbf24' }}>₹ {totalMonthPaid.toLocaleString()}</span>
                     </div>
                 </div>
             </header>
 
-            <div className="responsive-split-layout" style={{ display: 'grid', gap: '30px', alignItems: 'start' }}>
-                <style>{`
-                    .responsive-split-layout { grid-template-columns: 1fr; }
-                    @media (min-width: 1024px) { .responsive-split-layout { grid-template-columns: minmax(350px, 400px) 1fr; } }
-                `}</style>
-                {/* Left Side: Form */}
-                <motion.div
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="glass-card"
-                    style={{ padding: '25px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(30, 41, 59, 0.4)' }}
-                >
-                    <h2 style={{ color: 'white', fontSize: '16px', fontWeight: '800', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                        <ShieldAlert size={18} color="var(--primary)" />
-                        Add New entry
-                    </h2>
-
-                    <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '15px' }}>
-                        <div>
-                            <label className="input-label">Border Name *</label>
-                            <input
-                                type="text"
-                                className="input-field"
-                                placeholder="Ex: Delhi-Agra Toll"
-                                required
-                                value={formData.borderName}
-                                onChange={(e) => setFormData({ ...formData, borderName: e.target.value })}
-                            />
-                        </div>
-
-                        <div>
-                            <label className="input-label">Responsible Driver</label>
-                            <select
-                                className="input-field"
-                                value={formData.driverId}
-                                onChange={(e) => setFormData({ ...formData, driverId: e.target.value })}
-                                style={{ appearance: 'auto' }}
-                            >
-                                <option value="">Select Driver</option>
-                                <optgroup label="My Company Drivers" style={{ background: '#0f172a', color: '#10b981' }}>
-                                    {drivers.filter(d => !d.isFreelancer).map(d => (
-                                        <option key={d._id} value={d._id}>{d.name}</option>
-                                    ))}
-                                </optgroup>
-                                <optgroup label="Freelancer Drivers" style={{ background: '#0f172a', color: '#fbbf24' }}>
-                                    {drivers.filter(d => d.isFreelancer).map(d => (
-                                        <option key={d._id} value={d._id}>{d.name}</option>
-                                    ))}
-                                </optgroup>
-                            </select>
-                        </div>
-
-                        <style>{`
-                            .bt-form-grid { display: grid; grid-template-columns: 1fr; gap: 15px; }
-                            @media (min-width: 640px) { .bt-form-grid { grid-template-columns: 1fr 1fr; } }
-                        `}</style>
-
-                        <div className="bt-form-grid">
-                            <div>
-                                <label className="input-label">Amount (₹) *</label>
-                                <input
-                                    type="number"
-                                    className="input-field"
-                                    placeholder="0.00"
-                                    required
-                                    value={formData.amount}
-                                    onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
-                                />
-                            </div>
-                            <div>
-                                <label className="input-label">Entry Date</label>
-                                <input
-                                    type="date"
-                                    className="input-field"
-                                    required
-                                    value={formData.date}
-                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                />
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="input-label">Notes / Remarks</label>
-                            <textarea
-                                className="input-field"
-                                style={{ height: '60px', paddingTop: '10px', resize: 'none' }}
-                                placeholder="Additional details..."
-                                value={formData.remarks}
-                                onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                            />
-                        </div>
-
-                        <div style={{ marginTop: '5px' }}>
-                            <label className="input-label">Upload Receipt Copy</label>
-                            <label style={{ display: 'block', cursor: 'pointer' }}>
-                                <input
-                                    type="file"
-                                    accept="image/*"
-                                    onChange={handleFileChange}
-                                    style={{ display: 'none' }}
-                                />
-                                <div style={{
-                                    border: '2px dashed rgba(255,255,255,0.08)', borderRadius: '12px', padding: '15px',
-                                    textAlign: 'center', background: 'rgba(255,255,255,0.01)', transition: 'all 0.2s',
-                                    display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px'
-                                }}>
-                                    {preview ? (
-                                        <img src={preview} style={{ height: '80px', borderRadius: '8px' }} />
-                                    ) : (
-                                        <>
-                                            <Upload size={20} color="var(--primary)" />
-                                            <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>Choose Receipt Image</span>
-                                        </>
-                                    )}
-                                </div>
-                            </label>
-                        </div>
-
-                        {message.text && (
-                            <div style={{
-                                padding: '10px 15px', borderRadius: '10px', fontSize: '13px', fontWeight: '700',
-                                background: message.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-                                color: message.type === 'success' ? '#10b981' : '#f43f5e',
-                                display: 'flex', alignItems: 'center', gap: '8px'
-                            }}>
-                                {message.type === 'success' ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
-                                {message.text}
-                            </div>
-                        )}
-
-                        <button
-                            type="submit"
-                            disabled={submitting}
-                            className="btn-primary"
-                            style={{ width: '100%', height: '50px', fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}
-                        >
-                            {submitting ? 'PROCESSING...' : 'SAVE RECORD'}
-                        </button>
-                    </form>
-                </motion.div>
-
-                {/* Right Side: List */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}
-                >
-                    <div className="glass-card flex-resp" style={{ padding: '15px 20px', border: '1px solid rgba(255,255,255,0.05)', justifyContent: 'space-between', gap: '15px' }}>
-                        <div>
-                            <h2 style={{ color: 'white', fontSize: '17px', fontWeight: '800', margin: 0 }}>Recent Logs</h2>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: 0 }}>History for {selectedVehicle.carNumber}</p>
-                        </div>
-                        <div style={{ position: 'relative', maxWidth: '280px', flex: 1, width: '100%' }}>
-                            <Search size={16} style={{ position: 'absolute', left: '12px', top: '13px', color: 'var(--text-muted)' }} />
-                            <input
-                                type="text"
-                                placeholder="Search history..."
-                                className="input-field"
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ paddingLeft: '38px', height: '42px', fontSize: '13px', marginBottom: 0, borderRadius: '10px' }}
-                            />
-                        </div>
+            {/* Search & Filter Bar - Only in list view */}
+            {!expandedVehicle && (
+                <div style={{
+                    marginBottom: '30px',
+                    display: 'flex',
+                    gap: '15px',
+                    background: 'rgba(255,255,255,0.05)',
+                    padding: '10px',
+                    borderRadius: '22px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    flexWrap: 'wrap'
+                }}>
+                    <div style={{ position: 'relative', flex: 1.5, minWidth: '300px' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                        <input
+                            type="text"
+                            placeholder="Search by vehicle number or model..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            style={{
+                                width: '100%',
+                                height: '56px',
+                                background: 'transparent',
+                                border: 'none',
+                                paddingLeft: '55px',
+                                color: 'white',
+                                fontSize: '15px',
+                                fontWeight: '600',
+                                outline: 'none'
+                            }}
+                        />
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '20px' }}>
-                        {loading ? (
-                            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '60px' }}>
-                                <div className="spinner" style={{ margin: '0 auto' }}></div>
-                            </div>
-                        ) : filteredEntries.length === 0 ? (
-                            <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 0', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '2px dashed rgba(255,255,255,0.05)' }}>
-                                <ShieldAlert size={48} style={{ opacity: 0.1, margin: '0 auto 15px', color: 'var(--primary)' }} />
-                                <h3 style={{ color: 'white', fontSize: '16px', fontWeight: '700' }}>No History Available</h3>
-                                <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Start recording border taxes for this vehicle.</p>
-                            </div>
-                        ) : filteredEntries.map(entry => (
-                            <motion.div
-                                layout
-                                key={entry._id}
-                                whileHover={{ scale: 1.02 }}
-                                className="glass-card"
+                    <div style={{ display: 'flex', gap: '10px', flex: 1, minWidth: '250px' }}>
+                        <div style={{ position: 'relative', flex: 1 }}>
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                                 style={{
-                                    padding: '20px',
-                                    background: 'rgba(30, 41, 59, 0.3)',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    display: 'flex',
-                                    flexDirection: 'column',
-                                    gap: '15px'
+                                    width: '100%',
+                                    height: '56px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                    borderRadius: '16px',
+                                    padding: '0 20px',
+                                    color: 'white',
+                                    fontSize: '15px',
+                                    fontWeight: '700',
+                                    outline: 'none',
+                                    appearance: 'none',
+                                    textAlign: 'center'
                                 }}
                             >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <div>
-                                        <h3 style={{ color: 'white', fontWeight: '800', fontSize: '15px', margin: 0 }}>{entry.borderName}</h3>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                                            <CalendarIcon size={12} color="var(--primary)" />
-                                            <span style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '700' }}>
-                                                {new Date(entry.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}
+                                {months.map((m, idx) => <option key={m} value={idx} style={{ background: '#111', color: 'white' }}>{m}</option>)}
+                            </select>
+                            <ChevronDown size={16} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
+                        </div>
+
+                        <div style={{ position: 'relative', flex: 0.8 }}>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                style={{
+                                    width: '100%',
+                                    height: '56px',
+                                    background: 'rgba(255,255,255,0.03)',
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                    borderRadius: '16px',
+                                    padding: '0 20px',
+                                    color: 'white',
+                                    fontSize: '15px',
+                                    fontWeight: '700',
+                                    outline: 'none',
+                                    appearance: 'none',
+                                    textAlign: 'center'
+                                }}
+                            >
+                                {years.map(y => <option key={y} value={y} style={{ background: '#111', color: 'white' }}>{y}</option>)}
+                            </select>
+                            <ChevronDown size={16} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Main Content Area */}
+            <AnimatePresence mode="wait">
+                {!expandedVehicle ? (
+                    <motion.div
+                        key="list"
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -20 }}
+                        style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}
+                    >
+                        {loading ? (
+                            <div style={{ textAlign: 'center', padding: '100px', color: 'rgba(255,255,255,0.2)' }}>
+                                <div className="spinner"></div>
+                                <p style={{ marginTop: '20px', fontWeight: '700' }}>Fetching tax data...</p>
+                            </div>
+                        ) : filteredVehicles.length === 0 ? (
+                            <div style={{ textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.05)', borderRadius: '30px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                <Car size={40} color="rgba(255,255,255,0.1)" />
+                                <p style={{ color: 'rgba(255,255,255,0.3)', marginTop: '15px', fontWeight: '600' }}>No vehicles found matching your search.</p>
+                            </div>
+                        ) : (
+                            filteredVehicles.map(v => {
+                                const vehicleMonthEntries = entries.filter(e => {
+                                    const d = nowIST(e.date);
+                                    return e.vehicle?._id === v._id && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
+                                });
+                                const vehicleMonthTotal = vehicleMonthEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
+
+                                return (
+                                    <motion.div
+                                        key={v._id}
+                                        layout
+                                        onClick={() => {
+                                            setExpandedVehicle(v._id);
+                                            setFormData(prev => ({ 
+                                                ...prev, 
+                                                vehicleId: v._id,
+                                                driverId: v.currentDriver?._id || ''
+                                            }));
+                                            setMessage({ type: '', text: '' });
+                                        }}
+                                        style={{
+                                            background: 'rgba(255,255,255,0.04)',
+                                            border: '1px solid rgba(255,255,255,0.08)',
+                                            borderRadius: '24px',
+                                            padding: '20px 30px',
+                                            cursor: 'pointer',
+                                            display: 'grid',
+                                            gridTemplateColumns: 'minmax(150px, 1fr) minmax(150px, 1fr) minmax(120px, 1fr) auto',
+                                            alignItems: 'center',
+                                            gap: '20px',
+                                            transition: 'all 0.3s ease'
+                                        }}
+                                        whileHover={{ background: 'rgba(255,255,255,0.08)', transform: 'translateY(-2px)' }}
+                                    >
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                            <div style={{
+                                                width: '45px',
+                                                height: '45px',
+                                                borderRadius: '14px',
+                                                background: 'rgba(255,255,255,0.05)',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                justifyContent: 'center'
+                                            }}>
+                                                <Car size={22} color="rgba(255,255,255,0.4)" />
+                                            </div>
+                                            <div>
+                                                <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '900' }}>{v.carNumber}</h3>
+                                                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{v.model || 'Standard Model'}</p>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                                <Wallet size={12} color="rgba(255,255,255,0.3)" />
+                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase' }}>{months[selectedMonth]} Paid</span>
+                                            </div>
+                                            <span style={{ fontSize: '22px', fontWeight: '900', color: vehicleMonthTotal > 0 ? '#10b981' : 'rgba(255,255,255,0.2)' }}>
+                                                ₹ {vehicleMonthTotal.toLocaleString()}
                                             </span>
                                         </div>
+
+                                        <div>
+                                            <span style={{
+                                                fontSize: '10px',
+                                                fontWeight: '800',
+                                                padding: '6px 14px',
+                                                borderRadius: '10px',
+                                                background: 'rgba(255,255,255,0.05)',
+                                                color: 'rgba(255,255,255,0.4)',
+                                                letterSpacing: '0.5px'
+                                            }}>
+                                                {vehicleMonthEntries.length} RECORDS
+                                            </span>
+                                        </div>
+
+                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.2)' }}>
+                                                <ChevronRight size={24} />
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                );
+                            })
+                        )}
+                    </motion.div>
+                ) : (
+                    /* Detailed View (The "New Page") */
+                    <motion.div
+                        key="detail"
+                        initial={{ opacity: 0, x: 50 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -50 }}
+                    >
+                        {/* Detail Header / Breadcrumb */}
+                        <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <button 
+                                onClick={() => setExpandedVehicle(null)}
+                                style={{
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    borderRadius: '12px',
+                                    padding: '10px 20px',
+                                    color: 'white',
+                                    fontWeight: '800',
+                                    fontSize: '12px',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px'
+                                }}
+                            >
+                                <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} /> BACK TO FLEET
+                            </button>
+
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', textAlign: 'right' }}>
+                                <div>
+                                    <h2 style={{ color: 'white', margin: 0, fontSize: '22px', fontWeight: '900' }}>
+                                        {vehicles.find(v => v._id === expandedVehicle)?.carNumber}
+                                    </h2>
+                                    <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
+                                        {vehicles.find(v => v._id === expandedVehicle)?.model}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                            {/* Entry Form Card */}
+                            <div className="glass-card" style={{ 
+                                padding: '30px', 
+                                background: 'rgba(251, 191, 36, 0.03)', 
+                                border: '1px solid rgba(251, 191, 36, 0.1)',
+                                borderRadius: '30px',
+                                boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
+                            }}>
+                                <h4 style={{ color: 'white', fontSize: '15px', fontWeight: '900', marginBottom: '25px', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Plus size={18} color="black" />
                                     </div>
-                                    {entry.receiptPhoto && (
-                                        <a href={entry.receiptPhoto} target="_blank" rel="noreferrer">
-                                            <img src={entry.receiptPhoto} style={{ width: '45px', height: '45px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
-                                        </a>
+                                    Create New Tax Record
+                                </h4>
+                                <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '25px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>BORDER / TOLL NAME</label>
+                                        <input 
+                                            type="text" 
+                                            required
+                                            placeholder="Enter location name..."
+                                            value={formData.borderName}
+                                            onChange={e => setFormData({...formData, borderName: e.target.value})}
+                                            style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', height: '52px', padding: '0 18px', color: 'white', outline: 'none', fontSize: '15px' }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>ASSIGNED DRIVER</label>
+                                        <select 
+                                            value={formData.driverId}
+                                            onChange={e => setFormData({...formData, driverId: e.target.value})}
+                                            style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', height: '52px', padding: '0 18px', color: 'white', outline: 'none', fontSize: '15px', appearance: 'none' }}
+                                        >
+                                            <option value="">Choose Driver</option>
+                                            {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#111' }}>{d.name}</option>)}
+                                        </select>
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>AMOUNT PAID (₹)</label>
+                                        <input 
+                                            type="number" 
+                                            required
+                                            placeholder="0"
+                                            value={formData.amount}
+                                            onChange={e => setFormData({...formData, amount: e.target.value})}
+                                            style={{ background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.2)', borderRadius: '14px', height: '52px', padding: '0 18px', color: '#fbbf24', fontWeight: '900', outline: 'none', fontSize: '18px' }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TRANSACTION DATE</label>
+                                        <input 
+                                            type="date" 
+                                            required
+                                            value={formData.date}
+                                            onChange={e => setFormData({...formData, date: e.target.value})}
+                                            style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', height: '52px', padding: '0 18px', color: 'white', outline: 'none', colorScheme: 'dark', fontSize: '15px' }}
+                                        />
+                                    </div>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                        <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>UPLOAD RECEIPT</label>
+                                        <div style={{ position: 'relative', height: '52px' }}>
+                                            <input 
+                                                type="file" 
+                                                accept="image/*"
+                                                onChange={handleFileChange}
+                                                style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', cursor: 'pointer', zIndex: 2 }}
+                                            />
+                                            <div style={{ height: '100%', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>
+                                                <Upload size={16} /> {receiptPhoto ? 'File Selected' : 'Choose Photo'}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'flex-end' }}>
+                                        <button 
+                                            type="submit"
+                                            disabled={submitting}
+                                            style={{ 
+                                                width: '100%', 
+                                                height: '52px', 
+                                                background: '#fbbf24', 
+                                                color: 'black', 
+                                                border: 'none', 
+                                                borderRadius: '14px', 
+                                                fontWeight: '950', 
+                                                cursor: 'pointer',
+                                                fontSize: '14px',
+                                                boxShadow: '0 10px 20px -5px rgba(251, 191, 36, 0.3)',
+                                                transition: 'all 0.3s ease'
+                                            }}
+                                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
+                                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                                        >
+                                            {submitting ? 'PROCESSING...' : 'CONFIRM & SAVE'}
+                                        </button>
+                                    </div>
+                                </form>
+                                {message.text && (
+                                    <div style={{ marginTop: '20px', padding: '15px', borderRadius: '12px', background: message.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)', color: message.type === 'success' ? '#10b981' : '#f43f5e', fontSize: '13px', fontWeight: '700', textAlign: 'center' }}>
+                                        {message.text}
+                                    </div>
+                                )}
+                            </div>
+
+                            {/* History List Section */}
+                            <div>
+                                <h4 style={{ color: 'white', margin: '0 0 25px 0', fontSize: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <CalendarIcon size={18} color="#fbbf24" style={{ filter: 'drop-shadow(0 0 5px rgba(251, 191, 36, 0.5))' }} /> 
+                                    Transaction History <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', marginLeft: '5px' }}>({months[selectedMonth]} {selectedYear})</span>
+                                </h4>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                    {entries.filter(e => {
+                                        const d = nowIST(e.date);
+                                        return e.vehicle?._id === expandedVehicle && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
+                                    }).length === 0 ? (
+                                        <div style={{ padding: '60px 30px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '24px' }}>
+                                            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px', fontWeight: '600', margin: 0 }}>No transaction records found for this period.</p>
+                                        </div>
+                                    ) : (
+                                        entries.filter(e => {
+                                            const d = nowIST(e.date);
+                                            return e.vehicle?._id === expandedVehicle && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
+                                        }).map((entry, idx) => (
+                                            <div key={idx} style={{
+                                                display: 'grid',
+                                                gridTemplateColumns: 'minmax(140px, 1fr) 120px 2fr 120px 50px',
+                                                padding: '20px 30px',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                border: '1px solid rgba(255,255,255,0.05)',
+                                                borderRadius: '18px',
+                                                alignItems: 'center',
+                                                gap: '25px',
+                                                transition: 'all 0.2s ease'
+                                            }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', fontWeight: '800' }}>
+                                                    {formatDateIST(entry.date)}
+                                                </div>
+                                                <div style={{ color: '#fbbf24', fontSize: '18px', fontWeight: '950' }}>
+                                                    ₹ {entry.amount}
+                                                </div>
+                                                <div style={{ color: 'white', fontSize: '15px', fontWeight: '700' }}>
+                                                    {entry.borderName}
+                                                    {entry.remarks && <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', fontWeight: '500' }}>{entry.remarks}</p>}
+                                                </div>
+                                                <div style={{ textAlign: 'right' }}>
+                                                    {entry.receiptPhoto && (
+                                                        <button 
+                                                            onClick={() => setViewingReceipt(entry.receiptPhoto)}
+                                                            style={{ 
+                                                                background: 'rgba(56, 189, 248, 0.1)', 
+                                                                color: '#38bdf8', 
+                                                                border: '1px solid rgba(56, 189, 248, 0.2)', 
+                                                                borderRadius: '8px', 
+                                                                padding: '6px 12px', 
+                                                                fontSize: '10px', 
+                                                                fontWeight: '900', 
+                                                                cursor: 'pointer',
+                                                                textTransform: 'uppercase',
+                                                                letterSpacing: '1px'
+                                                            }}
+                                                        >
+                                                            VIEW RECEIPT
+                                                        </button>
+                                                    )}
+                                                </div>
+                                                <div style={{ textAlign: 'right' }}>
+                                                    <button onClick={() => handleDelete(entry._id)} style={{ background: 'none', border: 'none', color: 'rgba(244, 63, 94, 0.4)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#f43f5e'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(244, 63, 94, 0.4)'}><Trash2 size={18}/></button>
+                                                </div>
+                                            </div>
+                                        ))
                                     )}
                                 </div>
+                            </div>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '12px' }}>
-                                    <div style={{ color: 'var(--primary)', fontWeight: '900', fontSize: '18px' }}>
-                                        <span style={{ fontSize: '12px', marginRight: '2px' }}>₹</span>
-                                        {entry.amount?.toLocaleString('en-IN')}
-                                    </div>
-                                    <button
-                                        onClick={() => handleDelete(entry._id)}
-                                        style={{ background: 'none', color: '#f43f5e', fontSize: '11px', fontWeight: '800', cursor: 'pointer', opacity: 0.6 }}
-                                        onMouseEnter={(e) => e.target.style.opacity = 1}
-                                        onMouseLeave={(e) => e.target.style.opacity = 0.6}
-                                    >
-                                        DELETE
-                                    </button>
-                                </div>
-                                {entry.remarks && (
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '12px', margin: 0, fontStyle: 'italic', borderLeft: '2px solid rgba(255,255,255,0.1)', paddingLeft: '8px' }}>
-                                        "{entry.remarks}"
-                                    </p>
-                                )}
-                            </motion.div>
-                        ))}
-                    </div>
-                </motion.div>
-            </div>
+            {/* Receipt Modal (In-App) */}
+            <AnimatePresence>
+                {viewingReceipt && (
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setViewingReceipt(null)}
+                        style={{
+                            position: 'fixed',
+                            inset: 0,
+                            zIndex: 1000,
+                            background: 'rgba(0,0,0,0.9)',
+                            backdropFilter: 'blur(10px)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            padding: '40px'
+                        }}
+                    >
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            onClick={e => e.stopPropagation()}
+                            style={{
+                                position: 'relative',
+                                maxWidth: '100%',
+                                maxHeight: '100%',
+                                boxShadow: '0 50px 100px -20px rgba(0,0,0,0.8)'
+                            }}
+                        >
+                            <img 
+                                src={viewingReceipt} 
+                                alt="Receipt" 
+                                style={{
+                                    maxWidth: '100%',
+                                    maxHeight: '90vh',
+                                    borderRadius: '20px',
+                                    border: '4px solid rgba(255,255,255,0.1)'
+                                }} 
+                            />
+                            <button 
+                                onClick={() => setViewingReceipt(null)}
+                                style={{
+                                    position: 'absolute',
+                                    top: '-20px',
+                                    right: '-20px',
+                                    width: '40px',
+                                    height: '40px',
+                                    borderRadius: '50%',
+                                    background: '#f43f5e',
+                                    border: 'none',
+                                    color: 'white',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    boxShadow: '0 10px 20px rgba(0,0,0,0.5)'
+                                }}
+                            >
+                                <Plus style={{ transform: 'rotate(45deg)' }} size={24} />
+                            </button>
+                        </motion.div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };

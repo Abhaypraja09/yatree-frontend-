@@ -1486,12 +1486,17 @@ const Freelancers = () => {
                                                                 <div style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900', marginTop: '4px' }}>{totalKM} KM Run</div>
                                                             </td>
                                                             <td style={{ padding: '15px 25px', textAlign: 'right' }}>
-                                                                <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900' }}>₹{a.dailyWage || a.driver?.dailyWage || 0}</div>
-                                                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end', marginTop: '4px' }}>
-                                                                    {/* Fuel indicator removed */}
+                                                                <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900', marginBottom: '4px' }}>
+                                                                    ₹{((Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) + (Number(a.punchOut?.tollParkingAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)).toLocaleString()}
+                                                                </div>
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
+                                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: '700' }}>
+                                                                        W: ₹{a.dailyWage || a.driver?.dailyWage || 0}
+                                                                        {((Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)) > 0 && ` + B: ₹${(Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)}`}
+                                                                    </div>
                                                                     {a.punchOut?.tollParkingAmount > 0 && (
                                                                         <span style={{
-                                                                            color: a.punchOut?.parkingPaidBy === 'Office' ? 'rgba(255,255,255,0.4)' : '#8b5cf6',
+                                                                            color: a.punchOut?.parkingPaidBy === 'Office' ? 'rgba(255,255,255,0.3)' : '#8b5cf6',
                                                                             fontSize: '9px', fontWeight: '900',
                                                                             textDecoration: a.punchOut?.parkingPaidBy === 'Office' ? 'line-through' : 'none'
                                                                         }}>
@@ -1744,44 +1749,10 @@ const Freelancers = () => {
                                         <Field label="Extra Bonus (₹)" type="number" value={manualData.otherBonus} onChange={v => setManualData({ ...manualData, otherBonus: v })} />
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
-                                        <div
-                                            style={{
-                                                padding: '12px',
-                                                background: 'rgba(255,255,255,0.02)',
-                                                borderRadius: '12px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '10px',
-                                                cursor: 'pointer',
-                                                border: manualData.allowanceTA ? '1px solid #fbbf24' : '1px solid rgba(255,255,255,0.05)'
-                                            }}
-                                            onClick={() => setManualData({ ...manualData, allowanceTA: !manualData.allowanceTA })}
-                                        >
-                                            <input type="checkbox" checked={manualData.allowanceTA} readOnly />
-                                            <div style={{ fontSize: '12px' }}>
-                                                <div style={{ color: 'white', fontWeight: '700' }}>Day Bonus</div>
-                                                <div style={{ color: '#fbbf24', fontWeight: '800' }}>+ ₹100</div>
-                                            </div>
-                                        </div>
-                                        <div
-                                            style={{
-                                                padding: '12px',
-                                                background: 'rgba(255,255,255,0.02)',
-                                                borderRadius: '12px',
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '10px',
-                                                cursor: 'pointer',
-                                                border: manualData.nightStayAmount ? '1px solid #fbbf24' : '1px solid rgba(255,255,255,0.05)'
-                                            }}
-                                            onClick={() => setManualData({ ...manualData, nightStayAmount: !manualData.nightStayAmount })}
-                                        >
-                                            <input type="checkbox" checked={manualData.nightStayAmount} readOnly />
-                                            <div style={{ fontSize: '12px' }}>
-                                                <div style={{ color: 'white', fontWeight: '700' }}>Night Bonus</div>
-                                                <div style={{ color: '#fbbf24', fontWeight: '800' }}>+ ₹200</div>
-                                            </div>
+                                    {/* Bonus fields removed as per request */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', textAlign: 'center', fontStyle: 'italic' }}>
+                                            Day/Night bonus options simplified. Use 'Extra Bonus' field for any additional adjustments.
                                         </div>
                                     </div>
 
@@ -2098,15 +2069,8 @@ const Freelancers = () => {
                                 <Field label="Bonus Amount (₹)" type="number" value={editDutyForm.bonusAmount} onChange={v => setEditDutyForm({ ...editDutyForm, bonusAmount: v })} />
                             </div>
 
-                            <div style={{ display: 'flex', gap: '15px' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <input type="checkbox" checked={editDutyForm.allowanceTA > 0} onChange={e => setEditDutyForm({ ...editDutyForm, allowanceTA: e.target.checked ? 100 : 0 })} />
-                                    <span style={{ fontSize: '12px', color: 'white' }}>Day Bonus</span>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <input type="checkbox" checked={editDutyForm.nightStayAmount > 0} onChange={e => setEditDutyForm({ ...editDutyForm, nightStayAmount: e.target.checked ? 200 : 0 })} />
-                                    <span style={{ fontSize: '12px', color: 'white' }}>Night Bonus</span>
-                                </div>
+                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px', textAlign: 'center', marginTop: '-10px', marginBottom: '10px' }}>
+                                Day/Night bonus checkboxes removed. Please use the Bonus Amount field for any extras.
                             </div>
 
                             <Field label="Remarks" value={editDutyForm.remarks} onChange={v => setEditDutyForm({ ...editDutyForm, remarks: v })} />

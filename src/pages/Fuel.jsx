@@ -319,9 +319,11 @@ const FuelPage = () => {
             });
             console.log('Camera capture uploaded, URL:', res.data.url);
             setFormData(prev => ({ ...prev, slipPhoto: res.data.url }));
+            setActiveCamera(false);
         } catch (err) {
             console.error('Upload failed:', err);
             alert('Image upload failed. Please try again.');
+            setActiveCamera(false);
         }
     };
 
@@ -1220,7 +1222,7 @@ const FuelPage = () => {
                                 <div className="form-grid-2">
                                     <div>
                                         <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Amount (₹)</label>
-                                        <input type="number" className="input-field" value={formData.amount} readOnly style={{ opacity: 0.7 }} />
+                                        <input type="number" className="input-field" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} style={{ background: 'rgba(255,255,255,0.05)' }} />
                                     </div>
                                     <div>
                                         <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Quantity (L)</label>
@@ -1242,19 +1244,28 @@ const FuelPage = () => {
                                     <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '12px' }}>Slip Image Verification</p>
                                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                         {formData.slipPhoto ? (
-                                            <div style={{ position: 'relative' }}>
-                                                <img src={getImageUrl(formData.slipPhoto)} alt="Slip" onClick={() => { setSelectedImage(formData.slipPhoto); setShowImageModal(true); }} style={{ width: '80px', height: '80px', borderRadius: '12px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} title="Click to view slip" />
-                                                <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10 }}><X size={14} /></button>
+                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                                <div style={{ position: 'relative' }}>
+                                                    <img src={getImageUrl(formData.slipPhoto)} alt="Slip" onClick={() => { setSelectedImage(formData.slipPhoto); setShowImageModal(true); }} style={{ width: '100px', height: '100px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(16, 185, 129, 0.3)', cursor: 'pointer' }} title="Click to view slip" />
+                                                    <button type="button" onClick={() => setFormData({ ...formData, slipPhoto: '' })} style={{ position: 'absolute', top: '-8px', right: '-8px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '24px', height: '24px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10, boxShadow: '0 4px 8px rgba(0,0,0,0.3)' }}><X size={14} /></button>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <button type="button" onClick={() => setActiveCamera(true)} style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><ImageIcon size={14} /> Retake</button>
+                                                    <label style={{ padding: '8px 12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <Plus size={14} /> Replace
+                                                        <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
+                                                    </label>
+                                                </div>
                                             </div>
                                         ) : (
                                             <div style={{ display: 'flex', gap: '8px' }}>
-                                                <div onClick={() => setActiveCamera(true)} style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                                    <ImageIcon size={20} color="var(--text-muted)" />
-                                                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Camera</span>
+                                                <div onClick={() => setActiveCamera(true)} style={{ width: '100px', height: '100px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                                    <ImageIcon size={24} color="#f59e0b" />
+                                                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '6px', fontWeight: '700' }}>Camera</span>
                                                 </div>
-                                                <label style={{ width: '80px', height: '80px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                                    <Plus size={20} color="var(--text-muted)" />
-                                                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '4px' }}>Upload</span>
+                                                <label style={{ width: '100px', height: '100px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                                    <Plus size={24} color="#0ea5e9" />
+                                                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '6px', fontWeight: '700' }}>Upload</span>
                                                     <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                                                 </label>
                                             </div>
@@ -1268,7 +1279,7 @@ const FuelPage = () => {
 
                                 <div style={{ display: 'flex', gap: '15px', marginTop: '25px' }}>
                                     <button
-                                        onClick={() => handleApproveReject(selectedPending.attendanceId, selectedPending._id, 'approved', { quantity: formData.quantity, rate: formData.rate, odometer: formData.odometer, slipPhoto: formData.slipPhoto })}
+                                        onClick={() => handleApproveReject(selectedPending.attendanceId, selectedPending._id, 'approved', { amount: formData.amount, quantity: formData.quantity, rate: formData.rate, odometer: formData.odometer, slipPhoto: formData.slipPhoto })}
                                         style={{ flex: 2, height: '50px', borderRadius: '12px', fontSize: '15px', fontWeight: '800', background: '#10b981', color: 'white', border: 'none', cursor: 'pointer' }}
                                     >
                                         Confirm Approval

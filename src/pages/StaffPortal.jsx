@@ -251,7 +251,7 @@ const StaffPortal = () => {
             fontFamily: "'Outfit', sans-serif",
             position: 'relative',
             overflowX: 'hidden',
-            paddingBottom: '120px'
+            paddingBottom: '140px'
         }}>
             <SEO
                 title="WORKFORCE COMMAND | BIOMETRIC PORTAL"
@@ -291,32 +291,30 @@ const StaffPortal = () => {
 
             {/* Header / Navigation Overlay */}
             <div style={{
-                padding: '24px 20px',
+                padding: 'clamp(12px, 3vh, 24px) 20px',
                 display: 'flex',
                 justifyContent: 'space-between',
                 alignItems: 'center',
                 position: 'sticky',
                 top: 0,
                 zIndex: 100,
-                background: 'rgba(11, 17, 33, 0.8)',
-                backdropFilter: 'blur(10px)',
+                background: 'rgba(11, 17, 33, 0.9)',
+                backdropFilter: 'blur(20px)',
                 borderBottom: '1px solid rgba(255,255,255,0.05)'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        <div style={{ position: 'relative' }}>
-                            <div style={{ width: '48px', height: '48px', borderRadius: '15px', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', border: '2px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                                {user?.profilePhoto ? <img src={user.profilePhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : user?.name?.charAt(0)}
-                            </div>
-                            <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '12px', height: '12px', background: '#10b981', borderRadius: '50%', border: '2px solid #0B1121' }}></div>
+                    <div style={{ position: 'relative' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '15px', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontWeight: '900', border: '2px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                            {user?.profilePhoto ? <img src={user.profilePhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : user?.name?.charAt(0)}
                         </div>
-                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                            <h2 style={{ fontSize: '18px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' }}>{user?.name}</h2>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>{user?.designation || 'Staff'}</span>
-                                <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></div>
-                                <span style={{ fontSize: '10px', color: '#0ea5e9', fontWeight: '900' }}>#{user?._id.slice(-4).toUpperCase()}</span>
-                            </div>
+                        <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '12px', height: '12px', background: '#10b981', borderRadius: '50%', border: '2px solid #0B1121' }}></div>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                        <h2 style={{ fontSize: '18px', fontWeight: '800', margin: 0, letterSpacing: '-0.5px' }}>{user?.name}</h2>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>{user?.designation || 'Staff'}</span>
+                            <div style={{ width: '3px', height: '3px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></div>
+                            <span style={{ fontSize: '10px', color: '#0ea5e9', fontWeight: '900' }}>#{user?._id.slice(-4).toUpperCase()}</span>
                         </div>
                     </div>
                 </div>
@@ -354,8 +352,11 @@ const StaffPortal = () => {
                     position: 'sticky',
                     top: '90px',
                     zIndex: 90,
-                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)'
-                }}>
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                    maxWidth: '100%',
+                    width: 'fit-content',
+                    margin: '0 auto 30px'
+                }} className="desktop-tabs">
                     {[
                         { id: 'dashboard', label: 'HUB', icon: TrendingUp, color: '#0ea5e9' },
                         { id: 'attendance', label: 'LOGS', icon: Clock, color: '#6366f1' },
@@ -401,13 +402,13 @@ const StaffPortal = () => {
                             exit={{ opacity: 0, y: -20 }}
                             transition={{ duration: 0.3 }}
                         >
-                            <div className="resp-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px' }}>
+                            <div className="resp-grid" style={{ gap: '24px' }}>
 
                                 {/* Status Header - Spans full width */}
                                 <div style={{ gridColumn: '1 / -1', marginBottom: '10px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 10px #0ea5e9' }}></div>
-                                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '2px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 15px #0ea5e9', animation: 'pulse 2s infinite' }}></div>
+                                        <span style={{ fontSize: '11px', fontWeight: '900', color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '2px' }}>
                                             {currentTime.getHours() < 12 ? 'Morning Protocol' : (currentTime.getHours() < 17 ? 'Afternoon Shift' : 'Evening Rotation')}
                                         </span>
                                     </div>
@@ -432,7 +433,7 @@ const StaffPortal = () => {
                                         display: 'flex',
                                         flexDirection: 'column',
                                         justifyContent: 'center',
-                                        minHeight: '420px'
+                                        minHeight: 'clamp(380px, 60vh, 480px)'
                                     }}>
                                     <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', background: 'radial-gradient(circle at center, rgba(14, 165, 233, 0.12) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
                                     <div style={{ position: 'absolute', top: '20px', left: '20px', fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', letterSpacing: '2px', mixBlendMode: 'overlay' }}>BIOMETRIC_PORTAL_V2.0</div>
@@ -555,7 +556,7 @@ const StaffPortal = () => {
                                 </motion.div>
 
                                 {/* Stats Column */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                <div className="stats-container" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                     <motion.div
                                         whileHover={{ transform: 'translateY(-5px)' }}
                                         style={{
@@ -956,11 +957,57 @@ const StaffPortal = () => {
                             </div>
                         </motion.div>
                     )}
-                </AnimatePresence >
-            </main >
+                </AnimatePresence>
+
+                {/* Mobile Floating Bottom Nav */}
+                <div className="mobile-bottom-nav" style={{
+                    position: 'fixed',
+                    bottom: '25px',
+                    left: '20px',
+                    right: '20px',
+                    background: 'rgba(15, 23, 42, 0.8)',
+                    backdropFilter: 'blur(30px)',
+                    borderRadius: '28px',
+                    padding: '8px',
+                    display: 'none',
+                    gap: '5px',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                    boxShadow: '0 20px 40px rgba(0,0,0,0.5)',
+                    zIndex: 1000
+                }}>
+                    {[
+                        { id: 'dashboard', label: 'Hub', icon: TrendingUp, color: '#0ea5e9' },
+                        { id: 'attendance', label: 'Logs', icon: Clock, color: '#6366f1' },
+                        { id: 'leaves', label: 'Leaves', icon: Calendar, color: '#fbbf24' },
+                        { id: 'salary', label: 'Pay', icon: IndianRupee, color: '#10b981' }
+                    ].map(tab => (
+                        <button
+                            key={tab.id}
+                            onClick={() => setActiveTab(tab.id)}
+                            style={{
+                                flex: 1,
+                                height: '54px',
+                                border: 'none',
+                                background: activeTab === tab.id ? `${tab.color}20` : 'transparent',
+                                borderRadius: '20px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '4px',
+                                color: activeTab === tab.id ? tab.color : 'rgba(255,255,255,0.4)',
+                                transition: '0.3s'
+                            }}
+                        >
+                            <tab.icon size={18} strokeWidth={activeTab === tab.id ? 2.5 : 2} />
+                            <span style={{ fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{tab.label}</span>
+                        </button>
+                    ))}
+                </div>
+            </main>
 
             {/* Holographic Camera Integration */}
-            < AnimatePresence >
+            <AnimatePresence>
                 {cameraActive && (
                     <motion.div
                         initial={{ opacity: 0, backdropFilter: 'blur(0px)' }}
@@ -1084,7 +1131,7 @@ const StaffPortal = () => {
                         </div>
                     </motion.div>
                 )}
-            </AnimatePresence >
+            </AnimatePresence>
 
             <style>{`
                 .spinner {
@@ -1097,6 +1144,63 @@ const StaffPortal = () => {
                     0% { transform: rotate(0deg); }
                     100% { transform: rotate(360deg); }
                 }
+
+                .resp-grid {
+                    display: grid;
+                    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+                }
+
+                @media (max-width: 768px) {
+                    .resp-grid {
+                        grid-template-columns: 1fr;
+                    }
+                    .stats-container {
+                        grid-column: 1 / -1 !important;
+                    }
+                    .desktop-tabs {
+                        display: none !important;
+                    }
+                    .mobile-bottom-nav {
+                        display: flex !important;
+                    }
+                    main {
+                        padding-bottom: 40px !important;
+                    }
+                }
+
+                .premium-input-group {
+                    display: flex;
+                    flex-direction: column;
+                    gap: 8px;
+                }
+
+                .premium-label {
+                    font-size: 11px;
+                    font-weight: 900;
+                    color: rgba(255,255,255,0.4);
+                    text-transform: uppercase;
+                    letter-spacing: 1.5px;
+                    padding-left: 5px;
+                }
+
+                .premium-compact-input {
+                    background: rgba(255,255,255,0.03);
+                    border: 1px solid rgba(255,255,255,0.08);
+                    border-radius: 18px;
+                    padding: 16px 20px;
+                    color: white;
+                    font-size: 14px;
+                    font-weight: 700;
+                    outline: none;
+                    transition: 0.3s;
+                }
+
+                .premium-compact-input:focus {
+                    background: rgba(255,255,255,0.06);
+                    border-color: rgba(14, 165, 233, 0.5);
+                    box-shadow: 0 0 20px rgba(14, 165, 233, 0.1);
+                }
+
                 .input-field {
                     width: 100%;
                     padding: 0 16px;
@@ -1112,8 +1216,20 @@ const StaffPortal = () => {
                     outline: none;
                 }
                 ::-webkit-scrollbar { display: none; }
+                
+                select.premium-compact-input {
+                    appearance: none;
+                    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='%23ffffff66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+                    background-repeat: no-repeat;
+                    background-position: right 15px center;
+                }
+                
+                input[type="date"]::-webkit-calendar-picker-indicator {
+                    filter: invert(1);
+                    opacity: 0.5;
+                }
             `}</style>
-        </div >
+        </div>
     );
 };
 

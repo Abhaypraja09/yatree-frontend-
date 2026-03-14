@@ -22,8 +22,7 @@ const Login = () => {
         setIsLoading(true);
         try {
             const user = await login(mobile, password);
-            if (user.role === 'Admin') navigate('/admin');
-            else if (user.role === 'Executive') navigate('/admin/freelancers');
+            if (user.role === 'Admin' || user.role === 'Executive') navigate('/admin');
             else if (user.role === 'Staff') navigate('/staff');
             else navigate('/driver');
         } catch (err) {

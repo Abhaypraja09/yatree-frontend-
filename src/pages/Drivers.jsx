@@ -39,7 +39,7 @@ const Drivers = () => {
     const [driverTypeFilter, setDriverTypeFilter] = useState('All');
     const [onlyOnDuty, setOnlyOnDuty] = useState(false);
     const [showCompletedOnly, setShowCompletedOnly] = useState(false);
-    const [backendStats, setBackendStats] = useState({ total: 0, active: 0, blocked: 0, onDuty: 0, completedToday: 0 });
+    const [backendStats, setBackendStats] = useState({ total: 0, active: 0, blocked: 0 });
 
     // Manual Duty State
     const [showManualModal, setShowManualModal] = useState(false);
@@ -324,8 +324,6 @@ const Drivers = () => {
     const totalDrivers = backendStats.total || staffDriversList.length;
     const activeDrivers = backendStats.active || staffDriversList.filter(d => d.status === 'active').length;
     const blockedDrivers = backendStats.blocked || staffDriversList.filter(d => d.status === 'blocked').length;
-    const punchedInDrivers = backendStats.onDuty || staffDriversList.filter(d => d.activeAttendance).length;
-    const completedTodayCount = backendStats.completedToday || staffDriversList.filter(d => d.dutyCompletedToday).length;
 
     return (
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
@@ -365,24 +363,6 @@ const Drivers = () => {
                 </div>
                 <div className="mobile-search-row" style={{ display: 'flex', gap: '10px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
 
-                    <div style={{ position: 'relative', flex: '1', minWidth: '150px', maxWidth: '180px' }}>
-                        <div
-                            className="input-field"
-                            style={{
-                                height: '52px',
-                                paddingLeft: '20px',
-                                marginBottom: 0,
-                                fontSize: '13px',
-                                background: 'rgba(255,255,255,0.03)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                color: 'rgba(255,255,255,0.6)',
-                                fontWeight: '700'
-                            }}
-                        >
-                            Company Drivers
-                        </div>
-                    </div>
                     <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '100%', maxWidth: '380px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 auto' }}>
                         <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
                         <input
@@ -453,55 +433,6 @@ const Drivers = () => {
                         <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{blockedDrivers}</h3>
                     </div>
                 </motion.div>
-                <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.4 }}
-                    onClick={() => { setOnlyOnDuty(!onlyOnDuty); setShowCompletedOnly(false); }}
-                    className="glass-card-hover-effect"
-                    style={{
-                        padding: 'clamp(15px, 2.5vw, 20px)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '15px',
-                        background: 'rgba(255,255,255,0.03)',
-                        cursor: 'pointer',
-                        border: onlyOnDuty ? '1px solid #22c55e' : '1px solid transparent',
-                        borderRadius: '16px',
-                        boxShadow: onlyOnDuty ? '0 0 15px rgba(34, 197, 94, 0.2)' : 'none'
-                    }}
-                >
-                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(34, 197, 94, 0.1)', color: '#22c55e', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><div style={{ width: '10px', height: '10px', background: '#22c55e', borderRadius: '50%', boxShadow: '0 0 8px #22c55e' }}></div></div>
-                    <div style={{ flex: 1 }}>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>On Duty</p>
-                        <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{punchedInDrivers}</h3>
-                    </div>
-                </motion.div>
-
-                <motion.div
-                    initial={{ y: 20, opacity: 0 }}
-                    animate={{ y: 0, opacity: 1 }}
-                    transition={{ delay: 0.5 }}
-                    onClick={() => { setShowCompletedOnly(!showCompletedOnly); setOnlyOnDuty(false); }}
-                    className="glass-card-hover-effect"
-                    style={{
-                        padding: 'clamp(15px, 2.5vw, 20px)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '15px',
-                        background: 'rgba(255,255,255,0.03)',
-                        cursor: 'pointer',
-                        border: showCompletedOnly ? '1px solid #3b82f6' : '1px solid transparent',
-                        borderRadius: '16px',
-                        boxShadow: showCompletedOnly ? '0 0 15px rgba(59, 130, 246, 0.2)' : 'none'
-                    }}
-                >
-                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Clock size={22} /></div>
-                    <div style={{ flex: 1 }}>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Completed</p>
-                        <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{completedTodayCount}</h3>
-                    </div>
-                </motion.div>
             </div>
 
             {/* Desktop Table */}
@@ -554,17 +485,6 @@ const Drivers = () => {
                                                 <div>
                                                     <div style={{ color: 'white', fontWeight: '800', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                         {driver.name}
-                                                        {(driver.activeAttendance?.vehicle || driver.assignedVehicle) && (
-                                                            <span style={{ fontSize: '12px', background: 'rgba(56, 189, 248, 0.15)', color: '#38bdf8', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.3)', fontWeight: '800' }}>
-                                                                {driver.activeAttendance?.vehicle?.carNumber || driver.assignedVehicle?.carNumber}
-                                                            </span>
-                                                        )}
-                                                        {driver.activeAttendance && (
-                                                            <span style={{ fontSize: '9px', background: 'rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(16, 185, 129, 0.3)', fontWeight: '900', textTransform: 'uppercase' }}>ON DUTY</span>
-                                                        )}
-                                                        {driver.dutyCompletedToday && (
-                                                            <span style={{ fontSize: '9px', background: 'rgba(59, 130, 246, 0.2)', color: '#3b82f6', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(59, 130, 246, 0.3)', fontWeight: '900', textTransform: 'uppercase' }}>COMPLETED</span>
-                                                        )}
                                                     </div>
                                                     {!(onlyOnDuty || showCompletedOnly) && (
                                                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>@{driver.username || 'no-username'}</div>
@@ -695,17 +615,6 @@ const Drivers = () => {
                                             <div>
                                                 <div style={{ color: 'white', fontWeight: '800', fontSize: '15px', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                                                     {driver.name}
-                                                    {(driver.activeAttendance?.vehicle || driver.assignedVehicle) && (
-                                                        <span style={{ fontSize: '9px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.8)', padding: '1px 6px', borderRadius: '3px', border: '1px solid rgba(255,255,255,0.1)', fontWeight: '700' }}>
-                                                            {driver.activeAttendance?.vehicle?.carNumber || driver.assignedVehicle?.carNumber}
-                                                        </span>
-                                                    )}
-                                                    {driver.activeAttendance && (
-                                                        <span style={{ fontSize: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '1px 5px', borderRadius: '3px', fontWeight: '900' }}>DUTY</span>
-                                                    )}
-                                                    {driver.dutyCompletedToday && (
-                                                        <span style={{ fontSize: '8px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', padding: '1px 5px', borderRadius: '3px', fontWeight: '900' }}>DONE</span>
-                                                    )}
                                                 </div>
                                                 <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>@{driver.username || 'no-username'}</div>
                                             </div>
@@ -835,7 +744,7 @@ const Drivers = () => {
                                                 <input type="number" className="input-field" value={dailyWage} onChange={(e) => setDailyWage(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
                                             </div>
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '100%', paddingTop: '25px' }}>
+                                        <div style={{ display: 'none' }}>
                                             <input type="checkbox" id="freelancerCheck" checked={isFreelancer} onChange={(e) => setIsFreelancer(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
                                             <label htmlFor="freelancerCheck" style={{ color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Set as Freelancer</label>
                                         </div>
@@ -952,7 +861,7 @@ const Drivers = () => {
                                                 <input type="number" className="input-field" value={editForm.dailyWage} onChange={(e) => setEditForm({ ...editForm, dailyWage: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
                                             </div>
                                         </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '100%', paddingTop: '25px' }}>
+                                        <div style={{ display: 'none' }}>
                                             <input type="checkbox" id="editFreelancerCheck" checked={editForm.isFreelancer} onChange={(e) => setEditForm({ ...editForm, isFreelancer: e.target.checked })} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
                                             <label htmlFor="editFreelancerCheck" style={{ color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Freelancer Profile</label>
                                         </div>

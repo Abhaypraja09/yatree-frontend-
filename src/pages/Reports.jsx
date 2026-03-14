@@ -7,6 +7,7 @@ import {
     ChevronLeft, ChevronRight, TrendingUp, X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 import AttendanceModal from '../components/reports/AttendanceModal';
@@ -126,6 +127,7 @@ const LoadingRow = ({ cols }) => (
 
 /* ═══════════════════════════════════════════════════════ MAIN COMPONENT */
 const Reports = () => {
+    const { user } = useAuth();
     const { selectedCompany } = useCompany();
 
     const getToday = () => todayIST();
@@ -148,12 +150,34 @@ const Reports = () => {
     const [selectedItem, setSelectedItem] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
-    const [activeTabs, setActiveTabs] = useState(['drivers']);
 
-    const tabList = Object.entries(TAB_CONFIG).map(([id, v]) => ({ id, ...v }));
+    const tabList = useMemo(() => {
+        return Object.entries(TAB_CONFIG)
+            .filter(([id]) => {
+                if (user?.role === 'Admin') return true;
+                const p = user?.permissions || {};
+                
+                // Group tabs by permission
+                const driversTabs = ['drivers', 'freelancers', 'advances'];
+                const buySellTabs = ['outsideCars', 'events'];
+                const vehicleTabs = ['fuel', 'maintenance', 'borderTax', 'parking', 'fastag', 'accidentLogs', 'partsWarranty'];
+
+                if (driversTabs.includes(id)) return p.driversService;
+                if (buySellTabs.includes(id)) return p.buySell;
+                if (vehicleTabs.includes(id)) return p.vehiclesManagement;
+                
+                return true; // Default
+            })
+            .map(([id, v]) => ({ id, ...v }));
+    }, [user?.role, user?.permissions]);
+
+    const [activeTabs, setActiveTabs] = useState(() => {
+        if (tabList.length > 0) return [tabList[0].id];
+        return ['drivers'];
+    });
 
     const toggleTab = (id) => setActiveTabs(prev => prev.includes(id) ? (prev.length > 1 ? prev.filter(t => t !== id) : prev) : [...prev, id]);
-    const selectAllTabs = () => setActiveTabs(prev => prev.length === tabList.length ? ['drivers'] : tabList.map(t => t.id));
+    const selectAllTabs = () => setActiveTabs(prev => prev.length === tabList.length ? (tabList.length > 0 ? [tabList[0].id] : []) : tabList.map(t => t.id));
 
     // Auto-toggle range based on tab selection
     useEffect(() => {

@@ -3,7 +3,7 @@ import axios from '../api/axios';
 import {
     Users, Clock, Fuel, X, Camera, LogIn, IndianRupee, Activity,
     Calendar, ChevronLeft, ChevronRight, Car, Search, Filter,
-    CheckCircle2, AlertCircle, History, MapPin, Phone, Trash2, PieChart
+    CheckCircle2, AlertCircle, History, MapPin, Phone, Trash2, PieChart, Briefcase
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -106,7 +106,7 @@ const LiveFeed = () => {
         if (!selectedCompany) return;
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/events/${selectedCompany._id}`, {
+            const { data } = await axios.get(`/api/admin/events/${selectedCompany._id}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setEvents(data || []);
