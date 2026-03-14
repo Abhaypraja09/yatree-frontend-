@@ -51,6 +51,8 @@ const LiveFeed = () => {
     const [currentTimeIST, setCurrentTimeIST] = useState(formatTimeIST(nowIST(), true));
     const [selectedDriver, setSelectedDriver] = useState(null);
     const [showDriverModal, setShowDriverModal] = useState(false);
+    const [events, setEvents] = useState([]);
+    const [assigningEventId, setAssigningEventId] = useState(null);
     const dateInputRef = useRef(null);
 
     useEffect(() => {
@@ -100,8 +102,20 @@ const LiveFeed = () => {
         }
     };
 
+    const fetchEvents = async () => {
+        if (!selectedCompany) return;
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const { data } = await axios.get(`/api/events/${selectedCompany._id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setEvents(data || []);
+        } catch (err) { console.error('Error fetching events', err); }
+    };
+
     useEffect(() => {
         fetchFeed();
+        fetchEvents();
         const interval = setInterval(fetchFeed, 60000); // Auto refresh every minute
         return () => clearInterval(interval);
     }, [selectedCompany, selectedDate]);
@@ -124,6 +138,30 @@ const LiveFeed = () => {
             log.driver?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
             log.vehicle?.carNumber?.toLowerCase().includes(searchQuery.toLowerCase())
         );
+
+    const handleAssignEvent = async (attendanceId, eventId) => {
+        try {
+            setAssigningEventId(attendanceId);
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.put(`/api/admin/attendance/${attendanceId}`, {
+                eventId: eventId || 'undefined'
+            }, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            fetchFeed(); // Refresh to show assignment
+            if (selectedDriver) {
+                // Update local selectedDriver state to reflect change immediately if needed
+                const updatedAttendances = selectedDriver.attendances.map(a => 
+                    a._id === attendanceId ? { ...a, eventId: eventId } : a
+                );
+                setSelectedDriver({ ...selectedDriver, attendances: updatedAttendances });
+            }
+        } catch (err) {
+            alert('Error assigning event: ' + (err.response?.data?.message || err.message));
+        } finally {
+            setAssigningEventId(null);
+        }
+    };
 
     const TabButton = ({ id, label, icon: Icon, count }) => (
         <button
@@ -796,6 +834,47 @@ const LiveFeed = () => {
                                                             </button>
                                                         )}
                                                     </div>
+                                                </div>
+
+                                                {/* Event Assignment Selector */}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <Briefcase size={14} color="rgba(255,255,255,0.4)" />
+                                                    <div style={{ position: 'relative', flex: 1 }}>
+                                                        <select
+                                                            value={att.eventId?._id || att.eventId || ''}
+                                                            onChange={(e) => handleAssignEvent(att._id, e.target.value)}
+                                                            disabled={assigningEventId === att._id}
+                                                            style={{
+                                                                width: '100%',
+                                                                background: 'rgba(255,255,255,0.05)',
+                                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                                padding: '6px 12px',
+                                                                borderRadius: '10px',
+                                                                color: 'white',
+                                                                fontSize: '12px',
+                                                                fontWeight: '700',
+                                                                appearance: 'none',
+                                                                cursor: 'pointer',
+                                                                opacity: assigningEventId === att._id ? 0.5 : 1
+                                                            }}
+                                                        >
+                                                            <option value="" style={{ background: '#1e293b' }}>Assign to Event...</option>
+                                                            {events.map(ev => (
+                                                                <option key={ev._id} value={ev._id} style={{ background: '#1e293b' }}>
+                                                                    {ev.name} ({ev.client})
+                                                                </option>
+                                                            ))}
+                                                        </select>
+                                                        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>▼</div>
+                                                    </div>
+                                                    {att.eventId && (
+                                                        <button 
+                                                            onClick={() => handleAssignEvent(att._id, '')}
+                                                            style={{ background: 'transparent', border: 'none', color: '#f43f5e', fontSize: '10px', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase' }}
+                                                        >
+                                                            Clear
+                                                        </button>
+                                                    )}
                                                 </div>
 
                                                 {/* Expenses & Fuel Badges in Modal */}

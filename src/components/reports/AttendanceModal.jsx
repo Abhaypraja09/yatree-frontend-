@@ -118,11 +118,12 @@ const AttendanceModal = ({ item, onClose }) => {
                 <SH color={isCompleted ? '#f43f5e' : '#f59e0b'} icon={ArrowDownLeft} title={isCompleted ? 'Punch-Out Proof' : 'On Duty'} time={fmtTime(item.punchOut?.time)} />
                 {isCompleted ? (
                     <>
-                        {(item.punchOut?.selfie || item.punchOut?.kmPhoto || item.punchOut?.carSelfie) && (
+                        {(item.punchOut?.selfie || item.punchOut?.kmPhoto || item.punchOut?.carSelfie || item.punchOut?.parkingReceipt) && (
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
                                 <PhotoCard url={item.punchOut?.selfie} label="Driver Selfie" />
                                 <PhotoCard url={item.punchOut?.kmPhoto} label="Close KM" />
-                                {item.punchOut?.carSelfie && <div style={{ gridColumn: '1/-1' }}><PhotoCard url={item.punchOut.carSelfie} label="Vehicle" /></div>}
+                                <PhotoCard url={item.punchOut?.carSelfie} label="Vehicle" />
+                                <PhotoCard url={item.punchOut?.parkingReceipt} label="Parking Slip" />
                             </div>
                         )}
                         <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '14px' }}>
@@ -196,6 +197,7 @@ const AttendanceModal = ({ item, onClose }) => {
                         {(item.parking || []).map((p, i) => (
                             p.slipPhoto && <div key={i} style={{ marginTop: '8px' }}><PhotoCard url={p.slipPhoto} label={`Parking Slip #${i + 1}`} /></div>
                         ))}
+                        {item.punchOut?.parkingReceipt && <div style={{ marginTop: '8px' }}><PhotoCard url={item.punchOut.parkingReceipt} label="Parking Slip" /></div>}
                     </div>
                 )}
 

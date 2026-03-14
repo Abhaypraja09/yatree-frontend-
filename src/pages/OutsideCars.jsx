@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, Car, X, Save, ChevronLeft, ChevronRight, Calendar, Edit } from 'lucide-react';
+import { Plus, Search, Trash2, Car, X, Save, ChevronLeft, ChevronRight, Calendar, Edit, MapPin, Briefcase } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
@@ -56,7 +56,7 @@ const OutsideCars = () => {
             const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=outside`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
-            setVehicles(data.vehicles?.filter(v => v.isOutsideCar) || []);
+            setVehicles(data.vehicles?.filter(v => v.isOutsideCar && !v.eventId) || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     };
@@ -249,184 +249,166 @@ const OutsideCars = () => {
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Outside Fleet Command" description="Manage external vehicles and freelancer drivers for specific duties." />
 
-            <header style={{ padding: 'clamp(20px, 4vw, 40px) 0' }}>
+            {/* ═══ PREMIUM DYNAMIC HEADER ═══ */}
+            <header style={{ 
+                padding: 'clamp(24px, 5vw, 48px) 0',
+                position: 'relative',
+                overflow: 'hidden'
+            }}>
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     flexWrap: 'wrap',
-                    gap: '20px',
-                    marginBottom: '30px'
+                    gap: '32px',
+                    position: 'relative',
+                    zIndex: 2
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <div style={{
-                            width: 'clamp(40px,10vw,50px)',
-                            height: 'clamp(40px,10vw,50px)',
-                            background: 'linear-gradient(135deg, white, #f8fafc)',
-                            borderRadius: '16px',
-                            padding: '8px',
+                            width: '64px',
+                            height: '64px',
+                            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                            borderRadius: '20px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                            boxShadow: '0 20px 40px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1)',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            position: 'relative'
                         }}>
-                            <Car size={32} color="#fbbf24" />
+                            <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'radial-gradient(circle at 30% 30%, rgba(251, 191, 36, 0.2), transparent 70%)' }}></div>
+                            <Car size={32} color="#fbbf24" style={{ filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.4))' }} />
                         </div>
                         <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
-                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Vendor Management</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2, repeat: Infinity }} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 10px #fbbf24' }}></motion.div>
+                                <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>Vendor Command Center</span>
                             </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
                                 Outside <span className="text-gradient-yellow">Fleet</span>
                             </h1>
-                            <p style={{ marginTop: '4px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                                External assets: <b style={{ color: 'white' }}>{formatDateDisplay(fromDate)}</b> — <b style={{ color: 'white' }}>{formatDateDisplay(toDate)}</b>
-                            </p>
                         </div>
                     </div>
 
-                    <div className="flex-resp" style={{ gap: '12px' }}>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Total Payable</span>
-                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{totalPayable.toLocaleString()}</span>
+                    <div style={{ display: 'flex', gap: '16px' }}>
+                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className="glass-card" style={{ 
+                            padding: '16px 24px', 
+                            background: 'rgba(15, 23, 42, 0.6)', 
+                            border: '1px solid rgba(251, 191, 36, 0.15)', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            minWidth: '160px',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                            borderRadius: '20px'
+                        }}>
+                            <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px', opacity: 0.7 }}>Total Payout</span>
+                            <span style={{ color: 'white', fontSize: '24px', fontWeight: '950', letterSpacing: '-0.5px' }}>₹{totalPayable.toLocaleString()}</span>
+                            <div style={{ width: '100%', height: '2px', background: 'rgba(251, 191, 36, 0.1)', marginTop: '8px', borderRadius: '1px' }}>
+                                <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 1 }} style={{ height: '100%', background: '#fbbf24', borderRadius: '1px' }}></motion.div>
+                            </div>
                         </motion.div>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#34d399', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Records Found</span>
-                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{totalDutiesCount}</span>
+                        <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} className="glass-card" style={{ 
+                            padding: '16px 24px', 
+                            background: 'rgba(15, 23, 42, 0.6)', 
+                            border: '1px solid rgba(16, 185, 129, 0.15)', 
+                            display: 'flex', 
+                            flexDirection: 'column', 
+                            minWidth: '160px',
+                            boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                            borderRadius: '20px'
+                        }}>
+                            <span style={{ fontSize: '10px', fontWeight: '900', color: '#34d399', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '8px', opacity: 0.7 }}>Active Logs</span>
+                            <span style={{ color: 'white', fontSize: '24px', fontWeight: '950', letterSpacing: '-0.5px' }}>{totalDutiesCount}</span>
+                            <div style={{ width: '100%', height: '2px', background: 'rgba(16, 185, 129, 0.1)', marginTop: '8px', borderRadius: '1px' }}>
+                                <motion.div initial={{ width: 0 }} animate={{ width: '100%' }} transition={{ duration: 1, delay: 0.2 }} style={{ height: '100%', background: '#10b981', borderRadius: '1px' }}></motion.div>
+                            </div>
                         </motion.div>
                     </div>
                 </div>
 
-                <div className="glass-card" style={{ padding: '20px', marginBottom: '30px', display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center' }}>
-                    <div style={{ position: 'relative', flex: '1', minWidth: '200px' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
+                <div className="glass-card" style={{ 
+                    padding: '12px', 
+                    marginBottom: '32px', 
+                    display: 'flex', 
+                    flexWrap: 'wrap', 
+                    gap: '12px', 
+                    alignItems: 'center', 
+                    background: 'rgba(15, 23, 42, 0.4)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255,255,255,0.04)',
+                    borderRadius: '24px',
+                    boxShadow: '0 15px 35px rgba(0,0,0,0.2)'
+                }}>
+                    <div style={{ position: 'relative', flex: '1.5', minWidth: '240px' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(251, 191, 36, 0.4)' }} />
                         <input
                             type="text"
-                            placeholder="Search number, owner..."
-                            className="input-field"
+                            placeholder="Universal Search (Plate, Owner, Property...)"
+                            className="premium-compact-input"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            style={{ width: '100%', height: '50px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', paddingLeft: '45px', margin: 0 }}
+                            style={{ paddingLeft: '48px', height: '52px', border: '1px solid rgba(255,255,255,0.06)' }}
                         />
                     </div>
-                    <select value={ownerFilter} onChange={e => handleOwnerChange(e.target.value)} className="input-field" style={{ flex: '1 1 160px', height: '50px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', margin: 0 }}>
-                        <option value="All" style={{ background: '#1e293b' }}>All Owners</option>
-                        {uniqueOwners.map(o => <option key={o} value={o} style={{ background: '#1e293b' }}>{o}</option>)}
-                    </select>
-                    <select value={propertyFilter} onChange={e => setPropertyFilter(e.target.value)} className="input-field" style={{ flex: '1 1 160px', height: '50px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', margin: 0 }}>
-                        <option value="All" style={{ background: '#1e293b' }}>All Properties</option>
-                        {uniqueProperties.map(p => <option key={p} value={p} style={{ background: '#1e293b' }}>{p}</option>)}
-                    </select>
-                    {/* Premium Modern Calendar UI */}
+
+                    <div style={{ display: 'flex', gap: '8px', flex: '1', minWidth: '300px' }}>
+                        <div style={{ flex: 1, position: 'relative' }}>
+                            <select value={ownerFilter} onChange={e => handleOwnerChange(e.target.value)} className="premium-compact-input" style={{ height: '52px', paddingLeft: '16px', appearance: 'none', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                <option value="All">All Vendors</option>
+                                {uniqueOwners.map(o => <option key={o} value={o}>{o}</option>)}
+                            </select>
+                            <ChevronRight size={14} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
+                        </div>
+                        <div style={{ flex: 1, position: 'relative' }}>
+                            <select value={propertyFilter} onChange={e => setPropertyFilter(e.target.value)} className="premium-compact-input" style={{ height: '52px', paddingLeft: '16px', appearance: 'none', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                <option value="All">All Properties</option>
+                                {uniqueProperties.map(p => <option key={p} value={p}>{p}</option>)}
+                            </select>
+                            <ChevronRight size={14} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
+                        </div>
+                    </div>
+
                     <div style={{
                         display: 'flex',
                         alignItems: 'center',
-                        gap: '5px',
-                        background: 'rgba(0,0,0,0.25)',
-                        padding: '4px',
+                        gap: '8px',
+                        background: 'rgba(0,0,0,0.3)',
+                        padding: '6px',
                         borderRadius: '16px',
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                        border: '1px solid rgba(255,255,255,0.05)'
                     }}>
-                        <button
-                            onClick={() => shiftDays(-1)}
-                            style={{
-                                width: '36px', height: '36px', borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.03)', border: 'none',
-                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
+                        <button onClick={() => shiftDays(-1)} className="action-btn-hover" style={{
+                            width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}> <ChevronLeft size={18} /> </button>
 
-                        <div style={{ display: 'flex', gap: '5px' }}>
+                        <div style={{ display: 'flex', gap: '6px' }}>
                             {isRange && (
-                                <div style={{
-                                    padding: '0 15px', height: '36px', display: 'flex',
-                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                    background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px',
-                                    border: '1px solid rgba(99, 102, 241, 0.15)',
-                                    position: 'relative', overflow: 'hidden'
-                                }}>
-                                    <span style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
-                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                        {formatDateIST(fromDate)}
-                                    </span>
-                                    <input
-                                        type="date"
-                                        value={fromDate}
-                                        onChange={(e) => setFromDate(e.target.value)}
-                                        onClick={(e) => e.target.showPicker?.()}
-                                        style={{
-                                            position: 'absolute', opacity: 0, inset: 0,
-                                            width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
-                                        }}
-                                    />
+                                <div style={{ position: 'relative', overflow: 'hidden', height: '40px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '12px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ fontSize: '9px', fontWeight: '900', color: '#38bdf8' }}>FROM</span>
+                                    <span style={{ fontSize: '12px', fontWeight: '800', color: 'white' }}>{formatDateIST(fromDate)}</span>
+                                    <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
                                 </div>
                             )}
-
-                            <div style={{
-                                padding: '0 15px', height: '36px', display: 'flex',
-                                alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                                borderRadius: '10px',
-                                border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(99, 102, 241, 0.2)'}`,
-                                position: 'relative', overflow: 'hidden'
-                            }}>
-                                {isRange ? (
-                                    <span style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>TO:</span>
-                                ) : (
-                                    <Calendar size={14} color="#818cf8" />
-                                )}
-                                <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                    {formatDateIST(toDate)}
-                                </span>
-                                <input
-                                    type="date"
-                                    value={toDate}
-                                    onChange={(e) => {
-                                        setToDate(e.target.value);
-                                        if (!isRange) setFromDate(e.target.value);
-                                    }}
-                                    onClick={(e) => e.target.showPicker?.()}
-                                    style={{
-                                        position: 'absolute', opacity: 0, inset: 0,
-                                        width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
-                                    }}
-                                />
+                            <div style={{ position: 'relative', overflow: 'hidden', height: '40px', background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(56, 189, 248, 0.1)', border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(56, 189, 248, 0.2)'}`, borderRadius: '12px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <span style={{ fontSize: '9px', fontWeight: '900', color: isRange ? '#fbbf24' : '#38bdf8' }}>{isRange ? 'TO' : 'DATE'}</span>
+                                <span style={{ fontSize: '12px', fontWeight: '800', color: 'white' }}>{formatDateIST(toDate)}</span>
+                                <input type="date" value={toDate} onChange={e => { setToDate(e.target.value); if(!isRange) setFromDate(e.target.value); }} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
                             </div>
                         </div>
 
-                        <button
-                            onClick={() => shiftDays(1)}
-                            style={{
-                                width: '36px', height: '36px', borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.03)', border: 'none',
-                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}
-                        >
-                            <ChevronRight size={18} />
-                        </button>
+                        <button onClick={() => shiftDays(1)} className="action-btn-hover" style={{
+                            width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                        }}> <ChevronRight size={18} /> </button>
+                        
+                        <div style={{ height: '24px', width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }}></div>
+
+                        <button onClick={() => { setIsRange(!isRange); if(isRange) setFromDate(toDate); }} style={{
+                            height: '40px', padding: '0 12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: isRange ? 'rgba(251, 191, 36, 0.15)' : 'rgba(255,255,255,0.03)',
+                            color: isRange ? '#fbbf24' : 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px'
+                        }}> {isRange ? 'Range Mode' : 'Single'} </button>
                     </div>
-                    <button
-                        onClick={() => {
-                            const next = !isRange;
-                            setIsRange(next);
-                            if (!next) setFromDate(toDate);
-                        }}
-                        style={{
-                            marginLeft: '5px', padding: '0 10px', height: '36px',
-                            borderRadius: '10px', border: 'none', cursor: 'pointer',
-                            background: isRange ? '#fbbf24' : 'rgba(255,255,255,0.05)',
-                            color: isRange ? 'black' : 'rgba(255,255,255,0.4)',
-                            fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
-                        }}
-                    >
-                        {isRange ? 'Range' : 'Single'}
-                    </button>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '15px', flexWrap: 'wrap' }}>
@@ -522,170 +504,62 @@ const OutsideCars = () => {
                 </div>
             </header>
 
-            <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
-                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', padding: '0 10px', minWidth: '900px' }}>
-                    <thead>
-                        <tr style={{ textAlign: 'left' }}>
-                            <th style={{ padding: '10px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Timeline</th>
-                            <th style={{ padding: '10px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle Identification</th>
-                            <th style={{ padding: '10px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Service Detail</th>
-                            <th style={{ padding: '10px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Entities</th>
-                            <th style={{ padding: '10px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Settlement</th>
-                            <th style={{ padding: '10px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+            {/* ═══ CLEAN PREMIUM DESKTOP TABLE ═══ */}
+            <div className="glass-card hide-mobile" style={{ 
+                padding: 0, 
+                overflow: 'hidden', 
+                border: '1px solid rgba(255,255,255,0.08)', 
+                background: 'rgba(8, 14, 26, 0.4)',
+                backdropFilter: 'blur(20px)',
+                borderRadius: '24px',
+                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+            }}>
+                <div style={{ overflowX: 'auto' }}>
+                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                        <thead>
+                            <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                <th style={{ width: '120px', padding: '18px 24px', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Timeline</th>
+                                <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Resource Identification</th>
+                                <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Service Detail</th>
+                                <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Entities</th>
+                                <th style={{ padding: '18px 24px', textAlign: 'right', width: '160px', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Duty Settlement</th>
+                                <th style={{ padding: '18px 24px', textAlign: 'right', width: '120px', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
                         {loading ? (
                             <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px 0' }}>
-                                <div className="spinner" style={{ margin: '0 auto 20px' }}></div>
-                                <p style={{ color: 'var(--text-muted)', fontWeight: '700' }}>FETCHING LOGS...</p>
+                                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '40px', height: '40px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: '#fbbf24', borderRadius: '50%', margin: '0 auto 16px' }}></motion.div>
+                                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>SYNCHRONIZING FLEET DATA...</p>
                             </td></tr>
                         ) : filtered.length === 0 ? (
                             <tr><td colSpan="6" style={{ textAlign: 'center', padding: '120px 0' }}>
-                                <Car size={60} style={{ opacity: 0.1, color: 'var(--secondary)', marginBottom: '20px' }} />
-                                <h3 style={{ color: 'white', fontWeight: '800' }}>No Duties Logged</h3>
-                                <p style={{ color: 'var(--text-muted)' }}>The fleet is currently idle for the selected filters.</p>
+                                <Car size={48} style={{ opacity: 0.1, color: '#fbbf24', marginBottom: '24px' }} />
+                                <h3 style={{ color: 'white', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Registry Empty</h3>
+                                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>No external duties match the current filter selection.</p>
                             </td></tr>
                         ) : filtered.map((v, idx) => (
                             <motion.tr
                                 key={v._id}
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: idx * 0.03 }}
-                                className="glass-card-hover-effect"
-                                style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '16px' }}
-                            >
-                                <td style={{ padding: '20px 25px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
-                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '16px', letterSpacing: '-0.5px' }}>
-                                        {(() => {
-                                            const parts = v.carNumber?.split('#');
-                                            if (parts && parts[1]) {
-                                                const [y, m, d] = parts[1].split('-');
-                                                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                                return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
-                                            }
-                                            return formatDateIST(v.createdAt);
-                                        })()}
-                                    </div>
-                                </td>
-                                <td style={{ padding: '20px 25px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <div style={{ fontWeight: '900', fontSize: '18px', color: 'white', letterSpacing: '0.5px' }}>{v.carNumber?.split('#')[0]}</div>
-
-                                    </div>
-                                    <div style={{ fontSize: '12px', color: 'var(--text-muted)', fontWeight: '600' }}>{v.model}</div>
-                                </td>
-                                <td style={{ padding: '20px 25px' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        {v.dutyType?.split(' + ').map((type, i) => (
-                                            <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--secondary)' }}></div>
-                                                <span style={{ fontSize: '12px', color: 'white', fontWeight: '700' }}>{type}</span>
-                                                {v.dropLocation?.split(' | ')[i] && (
-                                                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>➜ {v.dropLocation.split(' | ')[i]}</span>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </td>
-                                <td style={{ padding: '20px 25px' }}>
-                                    <div style={{ fontSize: '13px', fontWeight: '800', color: 'white' }}>{v.property || 'N/A'}</div>
-                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>Owner: {v.ownerName}</div>
-                                </td>
-                                <td style={{ padding: '20px 25px' }}>
-                                    <div style={{ display: 'inline-flex', padding: '10px 18px', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
-                                        <span style={{ color: '#10b981', fontWeight: '900', fontSize: '18px' }}>₹{v.dutyAmount?.toLocaleString()}</span>
-                                    </div>
-                                </td>
-                                <td style={{ padding: '20px 25px', textAlign: 'right', borderTopRightRadius: '16px', borderBottomRightRadius: '16px' }}>
-                                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                                        <button onClick={() => handleEdit(v)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '10px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }}><Search size={16} /></button>
-                                        <button onClick={() => handleDelete(v._id)} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '10px', borderRadius: '12px', border: '1px solid rgba(244, 63, 94, 0.1)' }}><Trash2 size={16} /></button>
-                                    </div>
-                                </td>
-                            </motion.tr>
-                        ))}
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Mobile Card View */}
-            <div className="show-mobile">
-                {loading ? (
-                    <div style={{ display: 'flex', justifyContent: 'center', padding: '100px 0' }}>
-                        <div className="spinner"></div>
-                    </div>
-                ) : filtered.length === 0 ? (
-                    <div className="glass-card" style={{ textAlign: 'center', padding: '120px 20px', border: '2px dashed rgba(255,255,255,0.05)', background: 'transparent' }}>
-                        <Car size={60} style={{ opacity: 0.1, color: 'var(--secondary)', marginBottom: '20px', margin: '0 auto' }} />
-                        <h3 style={{ color: 'white', fontWeight: '800' }}>No Duties Logged</h3>
-                        <p style={{ color: 'var(--text-muted)' }}>The fleet is currently idle for the selected filters.</p>
-                    </div>
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {filtered.map((v, idx) => (
-                            <motion.div
-                                key={v._id}
-                                initial={{ opacity: 0, y: 15 }}
+                                initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.05 }}
-                                className="glass-card"
-                                style={{
-                                    padding: '20px',
-                                    background: 'rgba(30, 41, 59, 0.4)',
-                                    borderRadius: '18px',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    position: 'relative',
-                                    overflow: 'hidden'
-                                }}
+                                transition={{ delay: idx * 0.02 }}
+                                className="table-row-hover"
+                                style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
                             >
-                                <div style={{ position: 'absolute', top: 0, right: 0, width: '80px', height: '80px', background: 'var(--secondary)', filter: 'blur(60px)', opacity: 0.05 }}></div>
-
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                            <span style={{ fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '0.5px' }}>{v.carNumber?.split('#')[0]}</span>
-
-                                        </div>
-                                        <div style={{ fontSize: '13px', color: 'var(--text-muted)', fontWeight: '600' }}>{v.model}</div>
-                                    </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <div style={{ color: '#10b981', fontWeight: '900', fontSize: '20px' }}>₹{v.dutyAmount?.toLocaleString()}</div>
-                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase' }}>Payout</div>
-                                    </div>
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
-                                    <div>
-                                        <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', marginBottom: '2px' }}>Client Property</div>
-                                        <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{v.property || 'N/A'}</div>
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: '9px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', marginBottom: '2px' }}>Owner</div>
-                                        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: '600' }}>{v.ownerName}</div>
-                                    </div>
-                                </div>
-
-                                <div style={{ marginBottom: '15px' }}>
-                                    <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', marginBottom: '6px' }}>Duty Timeline</div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                        {v.dutyType?.split(' + ').map((type, i) => (
-                                            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
-                                                <div style={{ marginTop: '4px', width: '6px', height: '6px', borderRadius: '50%', background: 'var(--secondary)' }}></div>
-                                                <div>
-                                                    <div style={{ fontSize: '13px', color: 'white', fontWeight: '700' }}>{type}</div>
-                                                    {v.dropLocation?.split(' | ')[i] && (
-                                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>➜ {v.dropLocation.split(' | ')[i]}</div>
-                                                    )}
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <div style={{ padding: '4px 8px', background: 'rgba(255,255,255,0.05)', borderRadius: '6px', fontSize: '11px', color: 'white', fontWeight: '700' }}>
+                                <td style={{ padding: '20px 24px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                            {(() => {
+                                                const parts = v.carNumber?.split('#');
+                                                if (parts && parts[1]) {
+                                                    const date = new Date(parts[1]);
+                                                    return date.toLocaleDateString('en-US', { weekday: 'short' });
+                                                }
+                                                return 'DUTY';
+                                            })()}
+                                        </span>
+                                        <span style={{ fontSize: '15px', fontWeight: '800', color: 'white' }}>
                                             {(() => {
                                                 const parts = v.carNumber?.split('#');
                                                 if (parts && parts[1]) {
@@ -693,16 +567,138 @@ const OutsideCars = () => {
                                                     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                                                     return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
                                                 }
-                                                return formatDateIST(v.createdAt);
+                                                return 'Manual';
                                             })()}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td style={{ padding: '20px 24px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(129, 140, 248, 0.1)', border: '1px solid rgba(129, 140, 248, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Car size={20} color="#818cf8" />
                                         </div>
-                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>
-                                            Entry Time: {new Date(v.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', timeZone: 'Asia/Kolkata' })}
+                                        <div>
+                                            <div style={{ fontWeight: '900', fontSize: '16px', color: 'white', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                {v.carNumber?.split('#')[0]}
+                                                <span className="badge-ext">EXTERNAL</span>
+                                            </div>
+                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', marginTop: '2px', textTransform: 'uppercase' }}>{v.model}</div>
                                         </div>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button onClick={() => handleEdit(v)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)' }}><Search size={16} /></button>
-                                        <button onClick={() => handleDelete(v._id)} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '10px', borderRadius: '10px', border: '1px solid rgba(244, 63, 94, 0.1)' }}><Trash2 size={16} /></button>
+                                </td>
+                                <td style={{ padding: '20px 24px' }}>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                                        <span className="badge-duty">{v.dutyType || 'Standard Duty'}</span>
+                                        {v.dropLocation && (
+                                            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                <ChevronRight size={14} style={{ opacity: 0.3 }} />
+                                                {v.dropLocation}
+                                            </span>
+                                        )}
+                                    </div>
+                                </td>
+                                <td style={{ padding: '20px 24px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                        <span style={{ fontSize: '14px', fontWeight: '800', color: 'white' }}>{v.property || 'Direct Order'}</span>
+                                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontWeight: '600' }}>Vendor: {v.ownerName}</span>
+                                    </div>
+                                </td>
+                                <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                                    <div style={{ display: 'inline-block', padding: '10px 18px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '14px', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
+                                        <span style={{ color: '#10b981', fontWeight: '950', fontSize: '17px', letterSpacing: '-0.5px' }}>₹{v.dutyAmount?.toLocaleString()}</span>
+                                    </div>
+                                </td>
+                                <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                        <button onClick={() => handleEdit(v)} className="action-btn-hover" style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Edit Log"><Edit size={16} /></button>
+                                        <button onClick={() => handleDelete(v._id)} className="action-btn-hover-del" style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete Log"><Trash2 size={16} /></button>
+                                    </div>
+                                </td>
+                            </motion.tr>
+                        ))}
+                    </tbody>
+                </table>
+                </div>
+            </div>
+
+            {/* ═══ PREMIUM MOBILE DUTY CARDS ═══ */}
+            <div className="show-mobile">
+                {loading ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '100px 0', gap: '16px' }}>
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '40px', height: '40px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: '#fbbf24', borderRadius: '50%' }}></motion.div>
+                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', letterSpacing: '2px' }}>LOADING FLEET...</span>
+                    </div>
+                ) : filtered.length === 0 ? (
+                    <div className="glass-card" style={{ textAlign: 'center', padding: '80px 20px', border: '1px dashed rgba(255,255,255,0.1)', background: 'transparent' }}>
+                        <Car size={40} style={{ opacity: 0.2, color: '#fbbf24', marginBottom: '16px' }} />
+                        <h3 style={{ color: 'white', fontWeight: '800', fontSize: '16px' }}>No Data Available</h3>
+                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>Try adjusting your filters or date range.</p>
+                    </div>
+                ) : (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                        {filtered.map((v, idx) => (
+                            <motion.div
+                                key={v._id}
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: idx * 0.04 }}
+                                className="mobile-duty-card"
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
+                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                        <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Car size={20} color="#38bdf8" />
+                                        </div>
+                                        <div>
+                                            <div style={{ fontSize: '17px', fontWeight: '950', color: 'white', letterSpacing: '0.5px' }}>{v.carNumber?.split('#')[0]}</div>
+                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase' }}>{v.model}</div>
+                                        </div>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ fontSize: '18px', fontWeight: '950', color: '#10b981' }}>₹{v.dutyAmount?.toLocaleString()}</div>
+                                        <div style={{ fontSize: '9px', color: 'rgba(16, 185, 129, 0.5)', fontWeight: '900', textTransform: 'uppercase' }}>Payout</div>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '12px', marginBottom: '16px', padding: '14px', background: 'rgba(0,0,0,0.25)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '4px' }}>Timeline</label>
+                                        <span style={{ fontSize: '13px', fontWeight: '800', color: '#fbbf24' }}>
+                                            {(() => {
+                                                const parts = v.carNumber?.split('#');
+                                                if (parts && parts[1]) {
+                                                    const [y, m, d] = parts[1].split('-');
+                                                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                    return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
+                                                }
+                                                return 'N/A';
+                                            })()}
+                                        </span>
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '4px' }}>Property / Client</label>
+                                        <span style={{ fontSize: '13px', fontWeight: '800', color: 'white' }}>{v.property || 'Direct'}</span>
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#38bdf8' }}></div>
+                                    <span style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>{v.dutyType || 'General Duty'}</span>
+                                    {v.dropLocation && (
+                                        <>
+                                            <ChevronRight size={12} style={{ opacity: 0.3 }} />
+                                            <span style={{ fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.4)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{v.dropLocation}</span>
+                                        </>
+                                    )}
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>
+                                        Vendor: <span style={{ color: 'rgba(255,255,255,0.6)' }}>{v.ownerName}</span>
+                                    </div>
+                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                        <button onClick={() => handleEdit(v)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit size={16} /></button>
+                                        <button onClick={() => handleDelete(v._id)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={16} /></button>
                                     </div>
                                 </div>
                             </motion.div>
@@ -711,94 +707,142 @@ const OutsideCars = () => {
                 )}
             </div>
 
-            {/* Modal Refactored */}
+            {/* ═══ PREMIUM OUTSIDE FLEET LOG MODAL ═══ */}
             <AnimatePresence>
                 {showModal && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', zIndex: 1100, display: 'flex', justifyContent: 'center', alignItems: 'flex-start', padding: '15px', overflowY: 'auto' }}>
+                    <div className="modal-overlay">
                         <motion.div
-                            initial={{ y: 50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 50, opacity: 0 }}
-                            className="premium-glass"
-                            style={{ width: '100%', maxWidth: '600px', padding: '0', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a', overflow: 'visible', margin: 'auto', borderRadius: '24px' }}
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="modal-container"
+                            style={{ 
+                                background: '#080d18',
+                                border: '1px solid rgba(255,255,255,0.12)',
+                                boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
+                                borderRadius: '28px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                maxHeight: '90vh',
+                                width: '100%',
+                                maxWidth: '640px',
+                                overflow: 'hidden'
+                            }}
                         >
-                            <div style={{ padding: '24px 30px', background: 'linear-gradient(to right, #1e293b, #0f172a)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, zIndex: 10, borderTopLeftRadius: 'inherit', borderTopRightRadius: 'inherit' }}>
-                                <div>
-                                    <h2 style={{ color: 'white', fontSize: '20px', margin: 0, fontWeight: '800' }}>{editMode ? 'Update Voucher' : 'New Duty Entry'}</h2>
-                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase', margin: '4px 0 0' }}>Log Past Duty</p>
+                            {/* Modal Header */}
+                            <div className="modal-header" style={{ padding: '24px 32px', background: 'linear-gradient(to right, rgba(251, 191, 36, 0.08), transparent)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Edit size={24} color="#fbbf24" />
+                                    </div>
+                                    <div>
+                                        <h3 style={{ fontSize: '20px', fontWeight: '900', color: 'white', margin: 0 }}>{editMode ? 'Update Duty Log' : 'External Duty Log'}</h3>
+                                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', margin: '4px 0 0' }}>Registry Entry System</p>
+                                    </div>
                                 </div>
-                                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '50%', padding: '10px', border: 'none', cursor: 'pointer' }}><X size={18} /></button>
+                                <button onClick={() => setShowModal(false)} className="close-btn" style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', width: '40px', height: '40px' }}><X size={20} /></button>
                             </div>
 
-                            <form onSubmit={handleSubmit} style={{ padding: '25px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                    <div className="input-field-group">
-                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Vehicle Number *</label>
-                                        <input type="text" list="carCodes" className="input-field" required disabled={editMode} value={formData.carNumber} onChange={(e) => handleCarNumberChange(e.target.value)} placeholder="DL-01..." style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
-                                        <datalist id="carCodes">{carNumberSuggestions.map((opt, i) => <option key={i} value={opt} />)}</datalist>
+                            {/* Modal Content */}
+                            <div style={{ padding: '32px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                                
+                                {/* Section: Logistics */}
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                        <Calendar size={14} color="#fbbf24" />
+                                        <span style={{ fontSize: '10px', fontWeight: '950', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>Operational Context</span>
                                     </div>
-                                    <div className="input-field-group">
-                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Model *</label>
-                                        <input type="text" className="input-field" required value={formData.model} onChange={(e) => setFormData({ ...formData, model: e.target.value })} placeholder="e.g. Innova" style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
-                                    </div>
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                    <div className="input-field-group">
-                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Proprietor (Owner) *</label>
-                                        <input type="text" className="input-field" required value={formData.ownerName} onChange={(e) => setFormData({ ...formData, ownerName: e.target.value })} placeholder="Company Name" style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
-                                    </div>
-                                    <div className="input-field-group">
-                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Property (Client) *</label>
-                                        <input type="text" className="input-field" required value={formData.property} onChange={(e) => setFormData({ ...formData, property: e.target.value })} placeholder="e.g. Hotel Taj" style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
-                                    </div>
-                                </div>
-
-                                <div className="input-field-group">
-                                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Duty Date *</label>
-                                    <input type="date" className="input-field" required value={formData.date} onChange={(e) => setFormData({ ...formData, date: e.target.value })} style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
-                                </div>
-
-                                <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)', display: 'grid', gap: '20px' }}>
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                        <div className="input-field-group">
-                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Service Type</label>
-                                            <input type="text" list="serviceTypes" className="input-field" value={formData.dutyType} onChange={(e) => setFormData({ ...formData, dutyType: e.target.value })} placeholder="e.g. Airport Drop" style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
-                                            <datalist id="serviceTypes">{dutyTypeSuggestions.map((opt, i) => <option key={i} value={opt} />)}</datalist>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                        <div className="premium-input-group">
+                                            <label className="premium-label">Duty Timeline *</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <Calendar size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
+                                                <input type="date" className="premium-compact-input" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} style={{ paddingLeft: '48px' }} />
+                                            </div>
                                         </div>
-                                        <div className="input-field-group">
-                                            <label style={{ color: '#fbbf24', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Settlement Amount (₹) *</label>
-                                            <input type="number" className="input-field" required value={formData.dutyAmount} onChange={(e) => setFormData({ ...formData, dutyAmount: e.target.value })} style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: '#fbbf24', padding: '0 15px', fontWeight: '800', fontSize: '18px' }} placeholder="0.00" />
+                                        <div className="premium-input-group">
+                                            <label className="premium-label">Client Property *</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <Plus size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
+                                                <input type="text" className="premium-compact-input" required value={formData.property} onChange={e => setFormData({...formData, property: e.target.value})} placeholder="e.g. Radisson" style={{ paddingLeft: '48px' }} />
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="input-field-group">
-                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Drop Location / Terminal</label>
-                                        <input type="text" list="points" className="input-field" value={formData.dropLocation} onChange={(e) => setFormData({ ...formData, dropLocation: e.target.value })} placeholder="Specific location detail..." style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }} />
-                                        <datalist id="points">{dropLocationSuggestions.map((opt, i) => <option key={i} value={opt} />)}</datalist>
+                                </div>
+
+                                {/* Section: Resource */}
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                        <Car size={14} color="#38bdf8" />
+                                        <span style={{ fontSize: '10px', fontWeight: '950', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>Resource Identification</span>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                                        <div className="premium-input-group">
+                                            <label className="premium-label">Vehicle Plate *</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <Car size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
+                                                <input type="text" list="carCodes" className="premium-compact-input" required disabled={editMode} value={formData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} placeholder="RJ-27-..." style={{ paddingLeft: '48px', textTransform: 'uppercase' }} />
+                                                <datalist id="carCodes">
+                                                    {carNumberSuggestions.map(s => <option key={s} value={s} />)}
+                                                </datalist>
+                                            </div>
+                                        </div>
+                                        <div className="premium-input-group">
+                                            <label className="premium-label">Asset Model *</label>
+                                            <input type="text" className="premium-compact-input" required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="e.g. Crysta" />
+                                        </div>
+                                    </div>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Vendor (Proprietor) *</label>
+                                        <input type="text" className="premium-compact-input" required value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} placeholder="Provider Name" />
                                     </div>
                                 </div>
 
-                                <button
-                                    type="submit"
-                                    style={{
-                                        height: '56px',
-                                        background: 'linear-gradient(135deg, #fbbf24, #d97706)',
-                                        borderRadius: '16px',
-                                        fontWeight: '900',
-                                        fontSize: '16px',
-                                        color: 'black',
-                                        border: 'none',
-                                        boxShadow: '0 12px 24px -8px rgba(251, 191, 36, 0.5)',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s ease',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '1px',
-                                        marginTop: '10px'
-                                    }}
-                                >
-                                    {editMode ? 'Update Record' : 'Confirm Entry'}
+                                {/* Section: Service & Settlement */}
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
+                                        <Save size={14} color="#10b981" />
+                                        <span style={{ fontSize: '10px', fontWeight: '950', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>Service Settlement</span>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                                        <div className="premium-input-group">
+                                            <label className="premium-label">Service Category</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <Briefcase size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', opacity: 0.6 }} />
+                                                <input type="text" list="serviceTypes" className="premium-compact-input" value={formData.dutyType} onChange={e => setFormData({...formData, dutyType: e.target.value})} placeholder="e.g. Airport Drop" style={{ paddingLeft: '48px' }} />
+                                                <datalist id="serviceTypes">
+                                                    {dutyTypeSuggestions.map(s => <option key={s} value={s} />)}
+                                                </datalist>
+                                            </div>
+                                        </div>
+                                        <div className="premium-input-group">
+                                            <label className="premium-label" style={{ color: '#10b981' }}>Payout Amount (₹) *</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹</span>
+                                                <input type="number" className="premium-compact-input" required value={formData.dutyAmount} onChange={e => setFormData({...formData, dutyAmount: e.target.value})} placeholder="0.00" style={{ paddingLeft: '40px', color: '#10b981' }} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                        <div className="premium-input-group">
+                                            <label className="premium-label">Operational Destination</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <MapPin size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#38bdf8', opacity: 0.6 }} />
+                                                <input type="text" list="points" className="premium-compact-input" value={formData.dropLocation} onChange={e => setFormData({...formData, dropLocation: e.target.value})} placeholder="Destination Details" style={{ paddingLeft: '48px' }} />
+                                                <datalist id="points">
+                                                    {dropLocationSuggestions.map(item => <option key={item} value={item} />)}
+                                                </datalist>
+                                            </div>
+                                        </div>
+                                </div>
+                            </div>
+
+                            {/* Modal Footer */}
+                            <div style={{ padding: '20px 32px', background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                                <button onClick={() => setShowModal(false)} style={{ height: '52px', padding: '0 24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.6)', fontWeight: '800', fontSize: '13px', cursor: 'pointer' }}>Cancel Operation</button>
+                                <button onClick={handleSubmit} style={{ height: '52px', padding: '0 32px', borderRadius: '16px', border: 'none', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black', fontWeight: '950', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', boxShadow: '0 10px 20px rgba(251, 191, 36, 0.2)', cursor: 'pointer' }}>
+                                    {editMode ? 'Commit Changes' : 'Execute Log'}
                                 </button>
-                            </form>
+                            </div>
                         </motion.div>
                     </div>
                 )}
