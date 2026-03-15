@@ -80,7 +80,7 @@ const DriverServices = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            let url = `/api/admin/maintenance/${selectedCompany._id}?`;
+            let url = `/api/admin/maintenance/${selectedCompany._id}?type=driver_services&`;
             if (filterMode === 'range' && startDate && endDate) {
                 url += `startDate=${startDate}&endDate=${endDate}`;
             } else {

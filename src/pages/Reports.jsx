@@ -54,7 +54,7 @@ const SectionBanner = ({ tabId, count, chips, fromDate, toDate }) => {
                 </div>
                 <div>
                     <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>{cfg.label}</div>
-                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700' }}>{count} records · {fmt(fromDate)} – {fmt(toDate)}</div>
+                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700' }}>{count} records · {fromDate === toDate ? fmt(fromDate) : `${fmt(fromDate)} – ${fmt(toDate)}`}</div>
                 </div>
             </div>
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>{chips}</div>
@@ -176,10 +176,11 @@ const Reports = () => {
         return ['drivers'];
     });
 
-    const toggleTab = (id) => setActiveTabs(prev => prev.includes(id) ? (prev.length > 1 ? prev.filter(t => t !== id) : prev) : [...prev, id]);
-    const selectAllTabs = () => setActiveTabs(prev => prev.length === tabList.length ? (tabList.length > 0 ? [tabList[0].id] : []) : tabList.map(t => t.id));
+    const toggleTab = (id) => setActiveTabs([id]);
+    // const selectAllTabs = () => setActiveTabs(prev => prev.length === tabList.length ? (tabList.length > 0 ? [tabList[0].id] : []) : tabList.map(t => t.id));
 
-    // Auto-toggle range based on tab selection
+    // Auto-toggle range based on tab selection (REMOVED as per user request to keep calendar single)
+    /*
     useEffect(() => {
         const rangeNeeded = ['fuel', 'parking', 'freelancers', 'outsideCars', 'events', 'maintenance', 'advances', 'fastag'];
         const hasRangeTab = activeTabs.some(t => rangeNeeded.includes(t));
@@ -194,12 +195,13 @@ const Reports = () => {
             setToDate(getToday());
         }
     }, [activeTabs]);
+    */
 
     useEffect(() => { if (selectedCompany) fetchReports(); }, [selectedCompany, fromDate, toDate]);
 
     const fetchReports = async () => {
-        if (!selectedCompany?._id) return;
-        setLoading(true);
+        if (!selectedCompany) return;
+        if (reports.length === 0) setLoading(true); // Flicker-free background updates
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const { data } = await axios.get(`/api/admin/reports/${selectedCompany._id}?from=${fromDate}&to=${toDate}`, { headers: { Authorization: `Bearer ${userInfo.token}` } });
@@ -285,18 +287,8 @@ const Reports = () => {
     };
     const handleFromDate = (val) => { setFromDate(val); if (!isRange) setToDate(val); };
     const handleToggleRange = () => {
-        setIsRange(p => {
-            if (!p) {
-                // Switching to Range: set to full current month
-                const first = firstDayOfMonthIST();
-                setFromDate(first);
-                setToDate(getToday());
-            } else {
-                // Switching to Single: set to today or current 'fromDate'
-                setToDate(fromDate);
-            }
-            return !p;
-        });
+        // Range mode disabled as per user request: "single hi chahey first me"
+        setIsRange(false);
     };
 
     /* ── Attendance row renderer (shared for Staff + Freelancers + Outside) ── */
@@ -399,6 +391,9 @@ const Reports = () => {
                     <TableSection tabId="drivers" fromDate={fromDate} toDate={toDate}
                         chips={[
                             <Chip key="c" label="Total Duties" value={data.length} color="#10b981" />,
+                            <Chip key="km" label="Total KM" value={`${totalKMs.toLocaleString()}`} color="#38bdf8" />,
+                            <Chip key="f" label="Fuel Amt" value={`₹${totalFuel.toLocaleString()}`} color="#f59e0b" />,
+                            <Chip key="w" label="Total Salary" value={`₹${totalWage.toLocaleString()}`} color="#10b981" />,
                         ]}
                         headers={ATT_HEADERS}
                         rows={data.map((r, i) => <AttRow key={r._id} r={r} idx={i} />)}
@@ -418,7 +413,10 @@ const Reports = () => {
                     <TableSection tabId="freelancers" fromDate={fromDate} toDate={toDate}
                         chips={[
                             <Chip key="c" label="Total Duties" value={data.length} color="#8b5cf6" />,
+                            <Chip key="km" label="Total KM" value={`${totalKMs.toLocaleString()}`} color="#38bdf8" />,
+                            <Chip key="f" label="Fuel Amt" value={`₹${totalFuel.toLocaleString()}`} color="#f59e0b" />,
                             <Chip key="p" label="Total Parking" value={`₹${totalParking.toLocaleString()}`} color="#818cf8" />,
+                            <Chip key="w" label="Total Salary" value={`₹${totalWage.toLocaleString()}`} color="#8b5cf6" />,
                         ]}
                         headers={ATT_HEADERS}
                         rows={data.map((r, i) => <AttRow key={r._id} r={r} idx={i} showFreelancerCols />)}
@@ -718,19 +716,13 @@ const Reports = () => {
                     <button onClick={() => shiftDays(1)} style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <ChevronRight size={16} />
                     </button>
-                    <button onClick={handleToggleRange} style={{ padding: '7px 14px', borderRadius: '10px', background: isRange ? 'rgba(99,102,241,0.15)' : 'rgba(255,255,255,0.04)', border: isRange ? '1px solid rgba(99,102,241,0.3)' : '1px solid rgba(255,255,255,0.06)', color: isRange ? '#818cf8' : 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', cursor: 'pointer', whiteSpace: 'nowrap' }}>
-                        {isRange ? '📅 Range' : '📆 Single'}
-                    </button>
                 </div>
             </header>
 
             {/* ── Tab Bar (multi-select) ── */}
             <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.04)', padding: '8px', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px' }}>
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase' }}>Select Reports · {activeTabs.length} active</span>
-                    <button onClick={selectAllTabs} style={{ fontSize: '10px', fontWeight: '800', color: '#818cf8', background: 'rgba(99,102,241,0.1)', border: 'none', padding: '4px 10px', borderRadius: '6px', cursor: 'pointer' }}>
-                        {activeTabs.length === tabList.length ? 'Clear All' : 'Select All'}
-                    </button>
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase' }}>Select Report Category</span>
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {tabList.map(tab => {

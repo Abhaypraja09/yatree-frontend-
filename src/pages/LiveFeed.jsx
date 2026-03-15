@@ -86,11 +86,11 @@ const LiveFeed = () => {
 
     const fetchFeed = async () => {
         if (!selectedCompany) return;
-        setLoading(true);
+        if (!stats) setLoading(true); // Don't flip to loading on background refreshes
         try {
             const userInfoRaw = localStorage.getItem('userInfo');
             const userInfo = JSON.parse(userInfoRaw);
-            const { data } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}?date=${selectedDate}`, {
+            const { data } = await axios.get(`/api/admin/live-feed/${selectedCompany._id}?date=${selectedDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setStats(data);

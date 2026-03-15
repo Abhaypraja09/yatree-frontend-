@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Search, CreditCard, Plus, X, CheckCircle, AlertCircle, Download, History, Zap, Car, Filter, ArrowUpRight, ArrowDownLeft, ChevronDown, Calendar as CalendarIcon, ChevronRight, Wallet } from 'lucide-react';
+import { Search, CreditCard, Plus, X, CheckCircle, AlertCircle, Download, History, Zap, Car, Filter, ArrowUpRight, ArrowDownLeft, ChevronDown, Calendar as CalendarIcon, ChevronRight, Wallet, Edit2, Trash2 } from 'lucide-react';
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -35,6 +35,8 @@ const Fastag = () => {
     });
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingEntryId, setEditingEntryId] = useState(null);
 
     useEffect(() => {
         if (selectedCompany) {
@@ -73,21 +75,62 @@ const Fastag = () => {
 
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            await axios.post(`/api/admin/vehicles/${selectedVehicle._id}/fastag-recharge`, rechargeData, {
-                headers: { Authorization: `Bearer ${userInfo.token}` }
-            });
+            if (isEditing) {
+                await axios.put(`/api/admin/vehicles/${selectedVehicle._id}/fastag-recharge/${editingEntryId}`, rechargeData, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+                setMessage({ type: 'success', text: 'Update Successful!' });
+            } else {
+                await axios.post(`/api/admin/vehicles/${selectedVehicle._id}/fastag-recharge`, rechargeData, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+                setMessage({ type: 'success', text: 'Recharge Successful!' });
+            }
 
-            setMessage({ type: 'success', text: 'Recharge Successful!' });
             setTimeout(() => {
-                setShowModal(false);
-                setRechargeData({ amount: '', method: 'UPI', remarks: '', date: todayIST() });
-                setMessage({ type: '', text: '' });
+                closeModal();
                 fetchVehicles();
             }, 1000);
         } catch (err) {
-            setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to recharge' });
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to process request' });
         } finally {
             setSubmitting(false);
+        }
+    };
+
+    const closeModal = () => {
+        setShowModal(false);
+        setIsEditing(false);
+        setEditingEntryId(null);
+        setRechargeData({ amount: '', method: 'UPI', remarks: '', date: todayIST() });
+        setMessage({ type: '', text: '' });
+    };
+
+    const openEditModal = (vehicle, history) => {
+        setSelectedVehicle(vehicle);
+        setEditingEntryId(history._id);
+        const histDate = history.date ? (typeof history.date === 'string' ? history.date.split('T')[0] : new Date(history.date).toISOString().split('T')[0]) : todayIST();
+        setRechargeData({
+            amount: history.amount,
+            method: history.method || 'Manual',
+            remarks: history.remarks || '',
+            date: histDate
+        });
+        setIsEditing(true);
+        setShowModal(true);
+    };
+
+    const handleDelete = async (vehicleId, historyId) => {
+        if (!window.confirm('Are you sure you want to delete this entry? This will also adjust the vehicle balance.')) return;
+        
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.delete(`/api/admin/vehicles/${vehicleId}/fastag-recharge/${historyId}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            fetchVehicles();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to delete');
         }
     };
 
@@ -143,7 +186,11 @@ const Fastag = () => {
                     })()}
 
                     <button
-                        onClick={() => { setSelectedVehicle(null); setShowModal(true); }}
+                        onClick={closeModal} // Safe reset
+                        style={{ display: 'none' }}
+                    ></button>
+                    <button
+                        onClick={() => { setSelectedVehicle(null); setIsEditing(false); setShowModal(true); }}
                         style={{
                             padding: '18px 32px',
                             background: '#fbbf24',
@@ -410,10 +457,22 @@ const Fastag = () => {
                                                             <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '600' }}>
                                                                 {h.remarks || 'Wallet Recharge'}
                                                             </div>
-                                                            <div style={{ textAlign: 'right' }}>
+                                                            <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
                                                                 <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>
                                                                     {h.method}
                                                                 </span>
+                                                                <button 
+                                                                    onClick={() => openEditModal(v, h)}
+                                                                    style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'rgba(255,255,255,0.3)', width: '28px', height: '28px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                >
+                                                                    <Edit2 size={12} />
+                                                                </button>
+                                                                <button 
+                                                                    onClick={() => handleDelete(v._id, h._id)}
+                                                                    style={{ background: 'rgba(244, 63, 94, 0.05)', border: 'none', color: '#f43f5e', width: '28px', height: '28px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                >
+                                                                    <Trash2 size={12} />
+                                                                </button>
                                                             </div>
                                                         </div>
                                                     ));
@@ -462,17 +521,17 @@ const Fastag = () => {
                                             border: '1px solid rgba(251, 191, 36, 0.15)',
                                             boxShadow: '0 0 30px rgba(251, 191, 36, 0.1)'
                                         }}>
-                                            <Zap color="#fbbf24" size={28} style={{ filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.5))' }} />
+                                            {isEditing ? <Edit2 color="#fbbf24" size={24} /> : <Zap color="#fbbf24" size={28} style={{ filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.5))' }} />}
                                         </div>
                                         <div>
-                                            <h2 style={{ color: 'white', margin: 0, fontSize: '24px', fontWeight: '900', letterSpacing: '-1px' }}>Initialize Recharge</h2>
+                                            <h2 style={{ color: 'white', margin: 0, fontSize: '24px', fontWeight: '900', letterSpacing: '-1px' }}>{isEditing ? 'Correct Entry' : 'Initialize Recharge'}</h2>
                                             <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.3)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                                 {selectedVehicle ? `Vehicle: ${selectedVehicle.displayCarNumber}` : 'New Fleet Transaction'}
                                             </p>
                                         </div>
                                     </div>
                                     <button 
-                                        onClick={() => setShowModal(false)}
+                                        onClick={closeModal}
                                         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', width: '36px', height: '36px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }}
                                         onMouseEnter={e => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'; e.currentTarget.style.color = '#f43f5e'; }}
                                         onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}
@@ -590,7 +649,7 @@ const Fastag = () => {
                                     onMouseEnter={e => { if(!submitting) e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)'; }}
                                     onMouseLeave={e => { if(!submitting) e.currentTarget.style.transform = 'translateY(0) scale(1)'; }}
                                 >
-                                    {submitting ? 'VALIDATING...' : 'AUTHORIZE RECHARGE'}
+                                    {submitting ? 'VALIDATING...' : (isEditing ? 'COMMIT UPDATES' : 'AUTHORIZE RECHARGE')}
                                 </button>
                             </form>
                         </motion.div>
