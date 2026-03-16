@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin } from 'lucide-react';
+import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -1361,10 +1361,8 @@ const Freelancers = () => {
                                                         alignItems: 'center',
                                                         gap: '14px',
                                                         cursor: 'pointer',
-                                                        transition: 'all 0.2s',
-                                                        flexWrap: 'wrap'
+                                                        transition: 'border-color 0.2s'
                                                     }}
-                                                    className="premium-row"
                                                     onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'}
                                                     onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
                                                 >
@@ -1480,7 +1478,7 @@ const Freelancers = () => {
                 {
                     activeTab === 'logistics' && (
                         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
-                            {/* Duty Table View - Desktop */}
+                            {/* Duty Table View */}
                             {filteredAttendance.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '20px' }}>
                                     <Car size={40} style={{ color: 'rgba(255,255,255,0.15)', marginBottom: '16px' }} />
@@ -1488,182 +1486,120 @@ const Freelancers = () => {
                                     <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', marginTop: '6px' }}>Try changing the date range, driver filter, or search term</p>
                                 </div>
                             ) : (
-                                <>
-                                    <div className="hide-mobile" style={{ borderRadius: '24px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <div className="scroll-x">
-                                            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px' }}>
-                                                <thead>
-                                                    <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                        <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
-                                                        <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
-                                                        <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
-                                                        <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Route Details</th>
-                                                        <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Timing & KM</th>
-                                                        <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Financials (+ Parking)</th>
-                                                        <th style={{ padding: '18px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {filteredAttendance.map((a) => {
-                                                        const punchInDate = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : null);
-                                                        const punchInTime = a.punchIn?.time ? new Date(a.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
-                                                        const punchOutTime = a.punchOut?.time ? new Date(a.punchOut.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
-                                                        const totalKM = a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0);
-                                                        const isCompleted = a.status === 'completed' || !!a.punchOut?.time;
+                                <div style={{ borderRadius: '24px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div className="scroll-x">
+                                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px' }}>
+                                            <thead>
+                                                <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
+                                                    <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
+                                                    <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
+                                                    <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Route Details</th>
+                                                    <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Timing & KM</th>
+                                                    <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Financials (+ Parking)</th>
+                                                    <th style={{ padding: '18px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {filteredAttendance.map((a) => {
+                                                    const punchInDate = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : null);
+                                                    const punchInTime = a.punchIn?.time ? new Date(a.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
+                                                    const punchOutTime = a.punchOut?.time ? new Date(a.punchOut.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
+                                                    const totalKM = a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0);
+                                                    const isCompleted = a.status === 'completed' || !!a.punchOut?.time;
 
-                                                        return (
-                                                            <tr key={a._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }} className="ledger-row">
-                                                                <td style={{ padding: '15px 25px' }}>
-                                                                    <div style={{ color: 'white', fontWeight: '800', fontSize: '13px' }}>{punchInDate ? new Date(punchInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '---'}</div>
-                                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', marginTop: '2px' }}>{punchInDate ? new Date(punchInDate).getFullYear() : ''}</div>
-                                                                </td>
-                                                                <td style={{ padding: '15px 25px' }}>
-                                                                    <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{a.driver?.name || '---'}</div>
-                                                                    <span style={{
-                                                                        fontSize: '8px', padding: '2px 8px', borderRadius: '100px', fontWeight: '900', marginTop: '4px', display: 'inline-block',
-                                                                        background: isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-                                                                        color: isCompleted ? '#10b981' : '#f59e0b',
-                                                                        border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'}`
-                                                                    }}>
-                                                                        {isCompleted ? 'COMPLETED' : 'ON DUTY'}
-                                                                    </span>
-                                                                </td>
-                                                                <td style={{ padding: '15px 25px' }}>
-                                                                    <div style={{ background: 'rgba(14,165,233,0.1)', padding: '5px 12px', borderRadius: '8px', display: 'inline-block' }}>
-                                                                        <span style={{ color: '#0ea5e9', fontSize: '12px', fontWeight: '900' }}>{a.vehicle?.carNumber?.split('#')[0] || 'N/A'}</span>
+                                                    return (
+                                                        <tr key={a._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }} className="ledger-row">
+                                                            <td style={{ padding: '15px 25px' }}>
+                                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '13px' }}>{punchInDate ? new Date(punchInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '---'}</div>
+                                                                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', marginTop: '2px' }}>{punchInDate ? new Date(punchInDate).getFullYear() : ''}</div>
+                                                            </td>
+                                                            <td style={{ padding: '15px 25px' }}>
+                                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{a.driver?.name || '---'}</div>
+                                                                <span style={{
+                                                                    fontSize: '8px', padding: '2px 8px', borderRadius: '100px', fontWeight: '900', marginTop: '4px', display: 'inline-block',
+                                                                    background: isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
+                                                                    color: isCompleted ? '#10b981' : '#f59e0b',
+                                                                    border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'}`
+                                                                }}>
+                                                                    {isCompleted ? 'COMPLETED' : 'ON DUTY'}
+                                                                </span>
+                                                            </td>
+                                                            <td style={{ padding: '15px 25px' }}>
+                                                                <div style={{ background: 'rgba(14,165,233,0.1)', padding: '5px 12px', borderRadius: '8px', display: 'inline-block' }}>
+                                                                    <span style={{ color: '#0ea5e9', fontSize: '12px', fontWeight: '900' }}>{a.vehicle?.carNumber?.split('#')[0] || 'N/A'}</span>
+                                                                </div>
+                                                                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', marginTop: '4px' }}>{a.vehicle?.model?.split(' ').slice(0, 2).join(' ') || ''}</div>
+                                                            </td>
+                                                            <td style={{ padding: '15px 25px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                                                                        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981' }} />
+                                                                        <div style={{ width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)' }} />
+                                                                        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f43f5e' }} />
                                                                     </div>
-                                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', marginTop: '4px' }}>{a.vehicle?.model?.split(' ').slice(0, 2).join(' ') || ''}</div>
-                                                                </td>
-                                                                <td style={{ padding: '15px 25px' }}>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-                                                                            <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981' }} />
-                                                                            <div style={{ width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)' }} />
-                                                                            <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f43f5e' }} />
-                                                                        </div>
-                                                                        <div>
-                                                                            <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', fontWeight: '600' }}>{a.pickUpLocation || 'Start'}</div>
-                                                                            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '600', marginTop: '4px' }}>{a.dropLocation || 'Pending'}</div>
-                                                                        </div>
+                                                                    <div>
+                                                                        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', fontWeight: '600' }}>{a.pickUpLocation || 'Start'}</div>
+                                                                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '600', marginTop: '4px' }}>{a.dropLocation || 'Pending'}</div>
                                                                     </div>
-                                                                </td>
-                                                                <td style={{ padding: '15px 25px' }}>
-                                                                    <div style={{ color: 'white', fontSize: '12px', fontWeight: '700' }}>{punchInTime} - {punchOutTime || 'Active'}</div>
-                                                                    <div style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900', marginTop: '4px' }}>{totalKM} KM Run</div>
-                                                                </td>
-                                                                <td style={{ padding: '15px 25px', textAlign: 'right' }}>
-                                                                    <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900', marginBottom: '4px' }}>
-                                                                        ₹{((Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) + (Number(a.punchOut?.tollParkingAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)).toLocaleString()}
+                                                                </div>
+                                                            </td>
+                                                            <td style={{ padding: '15px 25px' }}>
+                                                                <div style={{ color: 'white', fontSize: '12px', fontWeight: '700' }}>{punchInTime} - {punchOutTime || 'Active'}</div>
+                                                                <div style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900', marginTop: '4px' }}>{totalKM} KM Run</div>
+                                                            </td>
+                                                            <td style={{ padding: '15px 25px', textAlign: 'right' }}>
+                                                                <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900', marginBottom: '4px' }}>
+                                                                    ₹{((Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) + (Number(a.punchOut?.tollParkingAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)).toLocaleString()}
+                                                                </div>
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
+                                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: '700' }}>
+                                                                        W: ₹{a.dailyWage || a.driver?.dailyWage || 0}
+                                                                        {((Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)) > 0 && ` + B: ₹${(Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)}`}
                                                                     </div>
-                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
-                                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: '700' }}>
-                                                                            W: ₹{a.dailyWage || a.driver?.dailyWage || 0}
-                                                                            {((Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)) > 0 && ` + B: ₹${(Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)}`}
-                                                                        </div>
-                                                                        {a.punchOut?.tollParkingAmount > 0 && (
-                                                                            <span style={{
-                                                                                color: a.punchOut?.parkingPaidBy === 'Office' ? 'rgba(255,255,255,0.3)' : '#8b5cf6',
-                                                                                fontSize: '9px', fontWeight: '900',
-                                                                                textDecoration: a.punchOut?.parkingPaidBy === 'Office' ? 'line-through' : 'none'
-                                                                            }}>
-                                                                                P: ₹{a.punchOut.tollParkingAmount}{a.punchOut?.parkingPaidBy === 'Office' ? ' (O)' : ' (S)'}
-                                                                            </span>
-                                                                        )}
-                                                                    </div>
-                                                                </td>
-                                                                <td style={{ padding: '15px 25px', textAlign: 'center' }}>
-                                                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                                                        <button
-                                                                            onClick={() => setSelectedItem({ ...a, entryType: 'attendance' })}
-                                                                            style={{ background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                            title="View Proof"
-                                                                        >
-                                                                            <Eye size={14} />
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => openEditDutyModal(a)}
-                                                                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                            title="Edit"
-                                                                        >
-                                                                            <Edit2 size={14} />
-                                                                        </button>
-                                                                        <button
-                                                                            onClick={() => handleDeleteDuty(a._id)}
-                                                                            style={{ background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                            title="Delete"
-                                                                        >
-                                                                            <Trash2 size={14} />
-                                                                        </button>
-                                                                    </div>
-                                                                </td>
-                                                            </tr>
-                                                        );
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                                                    {a.punchOut?.tollParkingAmount > 0 && (
+                                                                        <span style={{
+                                                                            color: a.punchOut?.parkingPaidBy === 'Office' ? 'rgba(255,255,255,0.3)' : '#8b5cf6',
+                                                                            fontSize: '9px', fontWeight: '900',
+                                                                            textDecoration: a.punchOut?.parkingPaidBy === 'Office' ? 'line-through' : 'none'
+                                                                        }}>
+                                                                            P: ₹{a.punchOut.tollParkingAmount}{a.punchOut?.parkingPaidBy === 'Office' ? ' (O)' : ' (S)'}
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            </td>
+                                                            <td style={{ padding: '15px 25px', textAlign: 'center' }}>
+                                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                                                    <button
+                                                                        onClick={() => setSelectedItem({ ...a, entryType: 'attendance' })}
+                                                                        style={{ background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        title="View Proof"
+                                                                    >
+                                                                        <Eye size={14} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => openEditDutyModal(a)}
+                                                                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        title="Edit"
+                                                                    >
+                                                                        <Edit2 size={14} />
+                                                                    </button>
+                                                                    <button
+                                                                        onClick={() => handleDeleteDuty(a._id)}
+                                                                        style={{ background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        title="Delete"
+                                                                    >
+                                                                        <Trash2 size={14} />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                        </table>
                                     </div>
-
-                                    {/* Duty Mobile View */}
-                                    <div className="show-mobile" style={{ display: 'grid', gap: '15px' }}>
-                                        {filteredAttendance.map((a) => {
-                                            const punchInDate = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : null);
-                                            const punchInTime = a.punchIn?.time ? new Date(a.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
-                                            const punchOutTime = a.punchOut?.time ? new Date(a.punchOut.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
-                                            const totalKM = a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0);
-                                            const isCompleted = a.status === 'completed' || !!a.punchOut?.time;
-                                            const totalFinancials = (Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) + (Number(a.punchOut?.tollParkingAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0);
-
-                                            return (
-                                                <div key={a._id} className="glass-card" style={{ padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(30,41,59,0.5)' }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-                                                        <div>
-                                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '16px' }}>{a.driver?.name?.split(' (F)')[0] || '---'}</div>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                                                                <div style={{ padding: '3px 8px', borderRadius: '6px', background: 'rgba(14,165,233,0.1)', color: '#0ea5e9', fontSize: '10px', fontWeight: '900' }}>{a.vehicle?.carNumber?.split('#')[0] || 'N/A'}</div>
-                                                                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '700' }}>{punchInDate ? new Date(punchInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '---'}</span>
-                                                            </div>
-                                                        </div>
-                                                        <div style={{ textAlign: 'right' }}>
-                                                            <div style={{ color: '#10b981', fontWeight: '900', fontSize: '18px' }}>₹{totalFinancials.toLocaleString()}</div>
-                                                            <span style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '100px', fontWeight: '900', marginTop: '4px', display: 'inline-block', background: isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: isCompleted ? '#10b981' : '#f59e0b' }}>
-                                                                {isCompleted ? 'COMPLETED' : 'ON DUTY'}
-                                                            </span>
-                                                        </div>
-                                                    </div>
-
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '14px', marginBottom: '15px' }}>
-                                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
-                                                            <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }} />
-                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f43f5e' }} />
-                                                        </div>
-                                                        <div style={{ flex: 1 }}>
-                                                            <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: '600' }}>{a.pickUpLocation || 'Start Location'}</div>
-                                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '600', marginTop: '6px' }}>{a.dropLocation || 'Pending...'}</div>
-                                                        </div>
-                                                        <div style={{ textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '12px' }}>
-                                                            <div style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>{totalKM} KM</div>
-                                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700' }}>{punchInTime}</div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                                        <button onClick={() => setSelectedItem({ ...a, entryType: 'attendance' })} style={{ flex: 1, height: '40px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                                                            <Eye size={14} /> Proof
-                                                        </button>
-                                                        <button onClick={() => openEditDutyModal(a)} style={{ flex: 1, height: '40px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                                                            <Edit2 size={14} /> Edit
-                                                        </button>
-                                                        <button onClick={() => handleDeleteDuty(a._id)} style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                            <Trash2 size={14} />
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                            );
-                                        })}
-                                    </div>
-                                </>
+                                </div>
                             )}
                         </motion.div>
                     )
@@ -1982,7 +1918,7 @@ const Freelancers = () => {
                                     </div>
 
                                     {/* Row 3: Parking + Parking Slip */}
-                                    <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                                         <Field label="Parking / Toll (₹)" type="text" inputMode="decimal" value={punchOutData.parkingAmount} onChange={v => {
                                             const cleaned = v.replace(/[^0-9.]/g, '');
                                             setPunchOutData({ ...punchOutData, parkingAmount: cleaned });
