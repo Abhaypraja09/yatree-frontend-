@@ -10,11 +10,11 @@ import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
-import { 
-    todayIST, 
-    formatDateIST, 
-    formatTimeIST, 
-    nowIST 
+import {
+    todayIST,
+    formatDateIST,
+    formatTimeIST,
+    nowIST
 } from '../utils/istUtils';
 
 const styles = `
@@ -202,7 +202,7 @@ const LiveFeed = () => {
             fetchFeed(); // Refresh to show assignment
             if (selectedDriver) {
                 // Update local selectedDriver state to reflect change immediately if needed
-                const updatedAttendances = selectedDriver.attendances.map(a => 
+                const updatedAttendances = selectedDriver.attendances.map(a =>
                     a._id === attendanceId ? { ...a, eventId: eventId } : a
                 );
                 setSelectedDriver({ ...selectedDriver, attendances: updatedAttendances });
@@ -294,12 +294,12 @@ const LiveFeed = () => {
                             <div style={{ height: '40px', padding: '0 20px', borderRadius: '14px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', alignItems: 'center', gap: '10px', color: 'white', fontWeight: '800', fontSize: '14px', border: '1px solid rgba(14, 165, 233, 0.2)', position: 'relative' }}>
                                 <Calendar size={16} color="#0ea5e9" />
                                 {formatDate(selectedDate)}
-                                <input 
-                                    type="date" 
-                                    value={selectedDate} 
-                                    onChange={(e) => setSelectedDate(e.target.value)} 
+                                <input
+                                    type="date"
+                                    value={selectedDate}
+                                    onChange={(e) => setSelectedDate(e.target.value)}
                                     onClick={(e) => e.target.showPicker?.()}
-                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer', colorScheme: 'dark', zIndex: 10 }} 
+                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer', colorScheme: 'dark', zIndex: 10 }}
                                 />
                             </div>
                             <button
@@ -922,7 +922,7 @@ const LiveFeed = () => {
                                                         <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>▼</div>
                                                     </div>
                                                     {att.eventId && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleAssignEvent(att._id, '')}
                                                             style={{ background: 'transparent', border: 'none', color: '#f43f5e', fontSize: '10px', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase' }}
                                                         >

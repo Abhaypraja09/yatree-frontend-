@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin, FileText } from 'lucide-react';
+import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -993,18 +993,17 @@ const Freelancers = () => {
             </header>
 
             {/* Premium Filter Hub */}
-            <div style={{
-                padding: '24px',
-                borderRadius: '32px',
-                border: '1px solid rgba(255, 255, 255, 0.05)',
+            <div className="glass-card" style={{
+                padding: '12px',
+                borderRadius: '24px',
+                border: '1px solid rgba(255,255,255,0.05)',
                 marginBottom: '20px',
                 background: 'rgba(15, 23, 42, 0.4)'
-            }} className="filter-hub">
-                <div className="filter-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center', justifyContent: 'space-between' }}>
-
+            }}>
+                <div className="flex-resp" style={{ gap: '15px', alignItems: 'center', justifyContent: 'space-between' }}>
 
                     {/* Tabs */}
-                    <div className="tab-container" style={{
+                    <div className="premium-scroll" style={{
                         display: 'flex',
                         background: 'rgba(0,0,0,0.2)',
                         padding: '4px',
@@ -1023,7 +1022,6 @@ const Freelancers = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
-                                className="tab-btn"
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1116,140 +1114,155 @@ const Freelancers = () => {
                 {/* PERSONNEL TAB */}
                 {
                     activeTab === 'personnel' && (
-                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="content-tabs">
-                            <div className="glass-card mobile-hide scroll-x" style={{ borderRadius: '24px', padding: '10px', background: 'rgba(30,30,40,0.4)', minWidth: '1000px' }}>
-                                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
-                                    <thead>
-                                        <tr>
-                                            {['Freelancer Name', 'Mobile Number', 'Daily Wage', 'Night/Same Return', 'Status', 'Actions'].map(h => (
-                                                <th key={h} style={{ padding: '15px 20px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
-                                            ))}
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {(driverFilter === 'All' ? drivers : drivers.filter(d => d._id === driverFilter)).map((driver) => {
-                                            const activeEntry = attendance.find(a => a.driver?._id === driver._id && a.status === 'incomplete');
-                                            return (
-                                                <tr key={driver._id} className="premium-row" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
-                                                    <td style={{ padding: '15px 20px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', fontWeight: '900', fontSize: '16px' }}>
-                                                                {driver.name.charAt(0)}
-                                                            </div>
-                                                            <div>
-                                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{driver.name.split(' (F)')[0]}</div>
-                                                                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700' }}>UID: {driver._id.slice(-6).toUpperCase()}</div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td style={{ padding: '15px 20px', color: 'rgba(255,255,255,0.7)', fontWeight: '700', fontSize: '13px' }}>{driver.mobile}</td>
-                                                    <td style={{ padding: '15px 25px' }}>
-                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{driver.dailyWage || 0}</div>
-                                                        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '900', marginTop: '2px' }}>BASE RATE</div>
-                                                    </td>
-                                                    <td style={{ padding: '15px 20px' }}>
-                                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                                            <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800' }}>Night: ₹{driver.nightStayBonus || 0}</span>
-                                                            <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800' }}>Drop: ₹{driver.sameDayReturnBonus || 0}</span>
-                                                        </div>
-                                                    </td>
-                                                    <td style={{ padding: '15px 20px' }}>
-                                                        {activeEntry ? (
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                <span className="pulse" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24' }}></span>
-                                                                <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>On Duty</span>
-                                                            </div>
-                                                        ) : (
-                                                            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>Ready</span>
-                                                        )}
-                                                    </td>
-                                                    <td style={{ padding: '15px 20px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px' }}>
-                                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                                            {activeEntry ? (
-                                                                <button onClick={() => { setSelectedDriver(driver); setShowPunchOutModal(true); }} style={{ height: '36px', padding: '0 15px', borderRadius: '10px', background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)', border: 'none', color: 'white', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><LogOut size={14} /> Punch Out</button>
-                                                            ) : (
-                                                                <button onClick={() => { setSelectedDriver(driver); setShowPunchInModal(true); setPunchInData({ ...punchInData, date: getToday(), time: new Date().toISOString().slice(0, 16) }); }} style={{ height: '36px', padding: '0 15px', borderRadius: '10px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: 'white', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={14} /> Add Duty</button>
-                                                            )}
-                                                            <button onClick={() => { setSelectedDriver(driver); setShowAdvanceModal(true); setAdvanceData({ ...advanceData, date: getToday(), amount: '' }); }} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Add Advance"><IndianRupee size={16} /></button>
-                                                            <button onClick={() => { setSelectedDriver(driver); setShowDocumentModal(true); }} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Documents"><FileText size={16} /></button>
-                                                            <button onClick={() => { setEditingDriver(driver); setEditForm({ name: driver.name.split(' (F)')[0], mobile: driver.mobile, dailyWage: driver.dailyWage, licenseNumber: driver.licenseNumber, nightStayBonus: driver.nightStayBonus, sameDayReturnBonus: driver.sameDayReturnBonus }); setShowEditModal(true); }} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Edit Details"><Edit2 size={16} /></button>
-                                                            <button onClick={() => handleDeleteDriver(driver._id)} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Delete Driver"><Trash2 size={16} /></button>
-                                                        </div>
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
+                            {/* Driver Table View */}
+                            <div style={{ borderRadius: '24px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div className="staff-attendance-table-wrapper" style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1000px' }}>
+                                        <thead>
+                                            <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Freelancer</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Current Status</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Daily Wage</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Duties</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {loading ? (
+                                                <tr><td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Loading drivers...</td></tr>
+                                            ) : availableDrivers.length === 0 && onDutyDrivers.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="5" style={{ padding: '80px 40px', textAlign: 'center' }}>
+                                                        <UserIcon size={40} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
+                                                        <h3 style={{ color: 'white', fontWeight: '800' }}>No Freelancers Found</h3>
+                                                        <p style={{ color: 'rgba(255,255,255,0.3)', marginBottom: '30px' }}>Add drivers to your network to see them here.</p>
                                                     </td>
                                                 </tr>
-                                            );
-                                        })}
-                                    </tbody>
-                                </table>
-                            </div>
-
-                            {/* Mobile Personnel View */}
-                            <div className="desktop-hide" style={{ display: 'grid', gap: '15px' }}>
-                                {(driverFilter === 'All' ? drivers : drivers.filter(d => d._id === driverFilter)).map((driver) => {
-                                    const activeEntry = attendance.find(a => a.driver?._id === driver._id && a.status === 'incomplete');
-                                    return (
-                                        <div key={driver._id} className="personnel-card" style={{ padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(30,41,59,0.5)' }}>
-                                            <div className="personnel-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', fontWeight: '900', fontSize: '18px' }}>
-                                                        {driver.name.charAt(0)}
-                                                    </div>
-                                                    <div>
-                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>{driver.name.split(' (F)')[0]}</div>
-                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '700' }}>{driver.mobile}</div>
-                                                    </div>
-                                                </div>
-                                                <div style={{ textAlign: 'right' }}>
-                                                    <div style={{ color: '#10b981', fontWeight: '900', fontSize: '16px' }}>₹{driver.dailyWage || 0}</div>
-                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase' }}>Daily Wage</div>
-                                                </div>
-                                            </div>
-
-                                            <div style={{ display: 'flex', gap: '8px', marginBottom: '15px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '12px' }}>
-                                                <div style={{ flex: 1 }}>
-                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>Night Bonus</div>
-                                                    <div style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>₹{driver.nightStayBonus || 0}</div>
-                                                </div>
-                                                <div style={{ width: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
-                                                <div style={{ flex: 1 }}>
-                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>Same Day Ret</div>
-                                                    <div style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>₹{driver.sameDayReturnBonus || 0}</div>
-                                                </div>
-                                            </div>
-
-                                            {activeEntry && (
-                                                <div style={{ background: 'rgba(251, 191, 36, 0.05)', padding: '12px', borderRadius: '12px', border: '1px dashed rgba(251, 191, 36, 0.2)', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <div className="pulse" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24' }}></div>
-                                                    <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>Currently On Duty</span>
-                                                </div>
-                                            )}
-
-                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                                {activeEntry ? (
-                                                    <button onClick={() => { setSelectedDriver(driver); setShowPunchOutModal(true); }} style={{ height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', gridColumn: 'span 2' }}>
-                                                        <LogOut size={16} /> Finish Duty
-                                                    </button>
-                                                ) : (
-                                                    <button onClick={() => { setSelectedDriver(driver); setShowPunchInModal(true); setPunchInData({ ...punchInData, date: getToday(), time: new Date().toISOString().slice(0, 16) }); }} style={{ height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', gridColumn: 'span 2' }}>
-                                                        <Plus size={16} /> Start Duty
-                                                    </button>
-                                                )}
-                                                <button onClick={() => { setSelectedDriver(driver); setShowAdvanceModal(true); setAdvanceData({ ...advanceData, date: getToday(), amount: '' }); }} style={{ height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '12px', fontWeight: '800' }}>
-                                                    <IndianRupee size={14} /> Advance
-                                                </button>
-                                                <button onClick={() => { setSelectedDriver(driver); setShowDocumentModal(true); }} style={{ height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '12px', fontWeight: '800' }}>
-                                                    <FileText size={14} /> Docs
-                                                </button>
-                                                <button onClick={() => { setEditingDriver(driver); setEditForm({ name: driver.name.split(' (F)')[0], mobile: driver.mobile, dailyWage: driver.dailyWage, licenseNumber: driver.licenseNumber, nightStayBonus: driver.nightStayBonus, sameDayReturnBonus: driver.sameDayReturnBonus }); setShowEditModal(true); }} style={{ height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '12px', fontWeight: '800' }}>
-                                                    <Edit2 size={14} /> Edit
-                                                </button>
-                                                <button onClick={() => handleDeleteDriver(driver._id)} style={{ height: '40px', borderRadius: '12px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800' }}>
-                                                    <Trash2 size={14} /> Delete
-                                                </button>
-                                            </div>
-                                        </div>
-                                    );
-                                })}
+                                            ) : [...onDutyDrivers.sort((a, b) => a.name.localeCompare(b.name)), ...availableDrivers.sort((a, b) => a.name.localeCompare(b.name))].map(d => {
+                                                const dayAttendance = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id);
+                                                const isOnDuty = d.tripStatus === 'active' || dayAttendance.some(a => a.status === 'incomplete');
+                                                const dutyCount = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id).length;
+                                                return (
+                                                    <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }} className="ledger-row">
+                                                        <td style={{ padding: '15px 25px' }}>
+                                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                                                <div style={{
+                                                                    width: '40px', height: '40px', borderRadius: '12px',
+                                                                    background: isOnDuty ? 'rgba(244, 63, 94, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                                                                    display: 'flex', justifyContent: 'center', alignItems: 'center'
+                                                                }}>
+                                                                    <UserIcon size={18} style={{ color: isOnDuty ? '#f43f5e' : '#818cf8' }} />
+                                                                </div>
+                                                                <div>
+                                                                    <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{d.name.split(' (F)')[0]}</div>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px' }}>
+                                                                        <a href={`tel:${d.mobile}`} style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                            <Phone size={10} /> {d.mobile}
+                                                                        </a>
+                                                                        {d.licenseNumber && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px' }}>• {d.licenseNumber}</span>}
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: '15px 25px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOnDuty ? '#f43f5e' : '#10b981' }}></div>
+                                                                <span style={{ fontSize: '11px', color: isOnDuty ? '#f43f5e' : '#10b981', fontWeight: '900', textTransform: 'uppercase' }}>
+                                                                    {isOnDuty ? 'ON DUTY' : 'AVAILABLE'}
+                                                                </span>
+                                                            </div>
+                                                            {isOnDuty && d.assignedVehicle && (
+                                                                <div style={{ color: 'rgba(14,165,233,0.7)', fontSize: '10px', fontWeight: '800', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                                    <Car size={10} /> {d.assignedVehicle?.carNumber?.split('#')[0]}
+                                                                </div>
+                                                            )}
+                                                        </td>
+                                                        <td style={{ padding: '15px 25px' }}>
+                                                            <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{d.dailyWage || 0}</div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '900', marginTop: '2px' }}>BASE RATE</div>
+                                                        </td>
+                                                        <td style={{ padding: '15px 25px', textAlign: 'center' }}>
+                                                            <div style={{ display: 'inline-block', background: 'rgba(99, 102, 241, 0.1)', padding: '4px 12px', borderRadius: '100px', border: '1px solid rgba(99,102,241,0.1)' }}>
+                                                                <span style={{ color: '#818cf8', fontWeight: '900', fontSize: '13px' }}>{dutyCount}</span>
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: '15px 25px', textAlign: 'right' }}>
+                                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                                {isOnDuty ? (
+                                                                    <div style={{ display: 'flex', gap: '5px' }}>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setSelectedDriver(d);
+                                                                                const viewTime = nowISTDateTimeString();
+                                                                                setPunchOutData({
+                                                                                    ...punchOutData,
+                                                                                    km: '',
+                                                                                    time: viewTime,
+                                                                                    dailyWage: d.dailyWage || ''
+                                                                                });
+                                                                                setShowPunchOutModal(true);
+                                                                            }}
+                                                                            style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '8px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
+                                                                        >FINISH</button>
+                                                                        <button
+                                                                            onClick={() => {
+                                                                                setSelectedDriver(d);
+                                                                                const yesterday = new Date();
+                                                                                yesterday.setDate(yesterday.getDate() - 1);
+                                                                                const viewDate = getLocalYYYYMMDD(yesterday);
+                                                                                const viewTime = viewDate + 'T09:00';
+                                                                                setPunchInData({
+                                                                                    ...punchInData,
+                                                                                    time: viewTime,
+                                                                                    date: viewDate
+                                                                                });
+                                                                                setShowPunchInModal(true);
+                                                                            }}
+                                                                            title="Add Past Duty"
+                                                                            style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.05)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                                                        >
+                                                                            <History size={14} />
+                                                                        </button>
+                                                                    </div>
+                                                                ) : (
+                                                                    <button
+                                                                        onClick={() => {
+                                                                            setSelectedDriver(d);
+                                                                            const viewDate = toDate || getToday();
+                                                                            const viewTime = viewDate + 'T' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+                                                                            setPunchInData({
+                                                                                ...punchInData,
+                                                                                time: viewTime,
+                                                                                date: viewDate
+                                                                            });
+                                                                            setShowPunchInModal(true);
+                                                                        }}
+                                                                        style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)', padding: '8px 15px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
+                                                                    >START</button>
+                                                                )}
+                                                                {/* Fuel option removed as per request */}
+                                                                <button
+                                                                    onClick={() => { setSelectedDriver(d); setQuickExpenseType('parking'); setShowQuickExpenseModal(true); }}
+                                                                    title="Add Parking"
+                                                                    style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                                                >
+                                                                    <MapPin size={13} />
+                                                                </button>
+                                                                <button onClick={() => openEditModal(d)} title="Edit" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
+                                                                    <Edit2 size={13} />
+                                                                </button>
+                                                                <button onClick={() => handleDelete(d._id)} title="Delete" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(244,63,94,0.05)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
+                                                                    <Trash2 size={13} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         </motion.div>
                     )
@@ -1267,7 +1280,7 @@ const Freelancers = () => {
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                                     {!summaryLoading && (
-                                        <div className="stat-card-row" style={{
+                                        <div style={{
                                             display: 'grid',
                                             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
                                             gap: '15px',
@@ -1476,179 +1489,180 @@ const Freelancers = () => {
                                 </div>
                             ) : (
                                 <>
-                                <div className="hide-mobile" style={{ borderRadius: '24px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                    <div className="scroll-x">
-                                        <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px' }}>
-                                            <thead>
-                                                <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                    <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
-                                                    <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
-                                                    <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
-                                                    <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Route Details</th>
-                                                    <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Timing & KM</th>
-                                                    <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Financials (+ Parking)</th>
-                                                    <th style={{ padding: '18px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {filteredAttendance.map((a) => {
-                                                    const punchInDate = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : null);
-                                                    const punchInTime = a.punchIn?.time ? new Date(a.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
-                                                    const punchOutTime = a.punchOut?.time ? new Date(a.punchOut.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
-                                                    const totalKM = a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0);
-                                                    const isCompleted = a.status === 'completed' || !!a.punchOut?.time;
-                                                    return (
-                                                        <tr key={a._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }} className="ledger-row">
-                                                            <td style={{ padding: '15px 25px' }}>
-                                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '13px' }}>{punchInDate ? new Date(punchInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '---'}</div>
-                                                                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', marginTop: '2px' }}>{punchInDate ? new Date(punchInDate).getFullYear() : ''}</div>
-                                                            </td>
-                                                            <td style={{ padding: '15px 25px' }}>
-                                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{a.driver?.name || '---'}</div>
-                                                                <span style={{
-                                                                    fontSize: '8px', padding: '2px 8px', borderRadius: '100px', fontWeight: '900', marginTop: '4px', display: 'inline-block',
-                                                                    background: isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-                                                                    color: isCompleted ? '#10b981' : '#f59e0b',
-                                                                    border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'}`
-                                                                }}>
-                                                                    {isCompleted ? 'COMPLETED' : 'ON DUTY'}
-                                                                </span>
-                                                            </td>
-                                                            <td style={{ padding: '15px 25px' }}>
-                                                                <div style={{ background: 'rgba(14,165,233,0.1)', padding: '5px 12px', borderRadius: '8px', display: 'inline-block' }}>
-                                                                    <span style={{ color: '#0ea5e9', fontSize: '12px', fontWeight: '900' }}>{a.vehicle?.carNumber?.split('#')[0] || 'N/A'}</span>
-                                                                </div>
-                                                                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', marginTop: '4px' }}>{a.vehicle?.model?.split(' ').slice(0, 2).join(' ') || ''}</div>
-                                                            </td>
-                                                            <td style={{ padding: '15px 25px' }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
-                                                                        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981' }} />
-                                                                        <div style={{ width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)' }} />
-                                                                        <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f43f5e' }} />
+                                    <div className="hide-mobile" style={{ borderRadius: '24px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div className="scroll-x">
+                                            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px' }}>
+                                                <thead>
+                                                    <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                        <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
+                                                        <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
+                                                        <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
+                                                        <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Route Details</th>
+                                                        <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Timing & KM</th>
+                                                        <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Financials (+ Parking)</th>
+                                                        <th style={{ padding: '18px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {filteredAttendance.map((a) => {
+                                                        const punchInDate = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : null);
+                                                        const punchInTime = a.punchIn?.time ? new Date(a.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
+                                                        const punchOutTime = a.punchOut?.time ? new Date(a.punchOut.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
+                                                        const totalKM = a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0);
+                                                        const isCompleted = a.status === 'completed' || !!a.punchOut?.time;
+
+                                                        return (
+                                                            <tr key={a._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }} className="ledger-row">
+                                                                <td style={{ padding: '15px 25px' }}>
+                                                                    <div style={{ color: 'white', fontWeight: '800', fontSize: '13px' }}>{punchInDate ? new Date(punchInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '---'}</div>
+                                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', marginTop: '2px' }}>{punchInDate ? new Date(punchInDate).getFullYear() : ''}</div>
+                                                                </td>
+                                                                <td style={{ padding: '15px 25px' }}>
+                                                                    <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{a.driver?.name || '---'}</div>
+                                                                    <span style={{
+                                                                        fontSize: '8px', padding: '2px 8px', borderRadius: '100px', fontWeight: '900', marginTop: '4px', display: 'inline-block',
+                                                                        background: isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
+                                                                        color: isCompleted ? '#10b981' : '#f59e0b',
+                                                                        border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'}`
+                                                                    }}>
+                                                                        {isCompleted ? 'COMPLETED' : 'ON DUTY'}
+                                                                    </span>
+                                                                </td>
+                                                                <td style={{ padding: '15px 25px' }}>
+                                                                    <div style={{ background: 'rgba(14,165,233,0.1)', padding: '5px 12px', borderRadius: '8px', display: 'inline-block' }}>
+                                                                        <span style={{ color: '#0ea5e9', fontSize: '12px', fontWeight: '900' }}>{a.vehicle?.carNumber?.split('#')[0] || 'N/A'}</span>
                                                                     </div>
-                                                                    <div>
-                                                                        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', fontWeight: '600' }}>{a.pickUpLocation || 'Start'}</div>
-                                                                        <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '600', marginTop: '4px' }}>{a.dropLocation || 'Pending'}</div>
+                                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', marginTop: '4px' }}>{a.vehicle?.model?.split(' ').slice(0, 2).join(' ') || ''}</div>
+                                                                </td>
+                                                                <td style={{ padding: '15px 25px' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '3px' }}>
+                                                                            <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981' }} />
+                                                                            <div style={{ width: '1px', height: '10px', background: 'rgba(255,255,255,0.1)' }} />
+                                                                            <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#f43f5e' }} />
+                                                                        </div>
+                                                                        <div>
+                                                                            <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', fontWeight: '600' }}>{a.pickUpLocation || 'Start'}</div>
+                                                                            <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '600', marginTop: '4px' }}>{a.dropLocation || 'Pending'}</div>
+                                                                        </div>
                                                                     </div>
-                                                                </div>
-                                                            </td>
-                                                            <td style={{ padding: '15px 25px' }}>
-                                                                <div style={{ color: 'white', fontSize: '12px', fontWeight: '700' }}>{punchInTime} - {punchOutTime || 'Active'}</div>
-                                                                <div style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900', marginTop: '4px' }}>{totalKM} KM Run</div>
-                                                            </td>
-                                                            <td style={{ padding: '15px 25px', textAlign: 'right' }}>
-                                                                <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900', marginBottom: '4px' }}>
-                                                                    ₹{((Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) + (Number(a.punchOut?.tollParkingAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)).toLocaleString()}
-                                                                </div>
-                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
-                                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: '700' }}>
-                                                                        W: ₹{a.dailyWage || a.driver?.dailyWage || 0}
-                                                                        {((Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)) > 0 && ` + B: ₹${(Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)}`}
+                                                                </td>
+                                                                <td style={{ padding: '15px 25px' }}>
+                                                                    <div style={{ color: 'white', fontSize: '12px', fontWeight: '700' }}>{punchInTime} - {punchOutTime || 'Active'}</div>
+                                                                    <div style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900', marginTop: '4px' }}>{totalKM} KM Run</div>
+                                                                </td>
+                                                                <td style={{ padding: '15px 25px', textAlign: 'right' }}>
+                                                                    <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900', marginBottom: '4px' }}>
+                                                                        ₹{((Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) + (Number(a.punchOut?.tollParkingAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)).toLocaleString()}
                                                                     </div>
-                                                                    {a.punchOut?.tollParkingAmount > 0 && (
-                                                                        <span style={{
-                                                                            color: a.punchOut?.parkingPaidBy === 'Office' ? 'rgba(255,255,255,0.3)' : '#8b5cf6',
-                                                                            fontSize: '9px', fontWeight: '900',
-                                                                            textDecoration: a.punchOut?.parkingPaidBy === 'Office' ? 'line-through' : 'none'
-                                                                        }}>
-                                                                            P: ₹{a.punchOut.tollParkingAmount}{a.punchOut?.parkingPaidBy === 'Office' ? ' (O)' : ' (S)'}
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </td>
-                                                            <td style={{ padding: '15px 25px', textAlign: 'center' }}>
-                                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
-                                                                    <button
-                                                                        onClick={() => setSelectedItem({ ...a, entryType: 'attendance' })}
-                                                                        style={{ background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                        title="View Proof"
-                                                                    >
-                                                                        <Eye size={14} />
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => openEditDutyModal(a)}
-                                                                        style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                        title="Edit"
-                                                                    >
-                                                                        <Edit2 size={14} />
-                                                                    </button>
-                                                                    <button
-                                                                        onClick={() => handleDeleteDuty(a._id)}
-                                                                        style={{ background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                                                        title="Delete"
-                                                                    >
-                                                                        <Trash2 size={14} />
-                                                                    </button>
-                                                                </div>
-                                                            </td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </tbody>
-                                        </table>
+                                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
+                                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: '700' }}>
+                                                                            W: ₹{a.dailyWage || a.driver?.dailyWage || 0}
+                                                                            {((Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)) > 0 && ` + B: ₹${(Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)}`}
+                                                                        </div>
+                                                                        {a.punchOut?.tollParkingAmount > 0 && (
+                                                                            <span style={{
+                                                                                color: a.punchOut?.parkingPaidBy === 'Office' ? 'rgba(255,255,255,0.3)' : '#8b5cf6',
+                                                                                fontSize: '9px', fontWeight: '900',
+                                                                                textDecoration: a.punchOut?.parkingPaidBy === 'Office' ? 'line-through' : 'none'
+                                                                            }}>
+                                                                                P: ₹{a.punchOut.tollParkingAmount}{a.punchOut?.parkingPaidBy === 'Office' ? ' (O)' : ' (S)'}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                </td>
+                                                                <td style={{ padding: '15px 25px', textAlign: 'center' }}>
+                                                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
+                                                                        <button
+                                                                            onClick={() => setSelectedItem({ ...a, entryType: 'attendance' })}
+                                                                            style={{ background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                            title="View Proof"
+                                                                        >
+                                                                            <Eye size={14} />
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => openEditDutyModal(a)}
+                                                                            style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                            title="Edit"
+                                                                        >
+                                                                            <Edit2 size={14} />
+                                                                        </button>
+                                                                        <button
+                                                                            onClick={() => handleDeleteDuty(a._id)}
+                                                                            style={{ background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                            title="Delete"
+                                                                        >
+                                                                            <Trash2 size={14} />
+                                                                        </button>
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </div>
-                                </div>
 
-                                {/* Duty Mobile View */}
-                                <div className="show-mobile" style={{ display: 'grid', gap: '15px' }}>
-                                    {filteredAttendance.map((a) => {
-                                        const punchInDate = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : null);
-                                        const punchInTime = a.punchIn?.time ? new Date(a.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
-                                        const punchOutTime = a.punchOut?.time ? new Date(a.punchOut.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
-                                        const totalKM = a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0);
-                                        const isCompleted = a.status === 'completed' || !!a.punchOut?.time;
-                                        const totalFinancials = (Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) + (Number(a.punchOut?.tollParkingAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0);
+                                    {/* Duty Mobile View */}
+                                    <div className="show-mobile" style={{ display: 'grid', gap: '15px' }}>
+                                        {filteredAttendance.map((a) => {
+                                            const punchInDate = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : null);
+                                            const punchInTime = a.punchIn?.time ? new Date(a.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
+                                            const punchOutTime = a.punchOut?.time ? new Date(a.punchOut.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
+                                            const totalKM = a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0);
+                                            const isCompleted = a.status === 'completed' || !!a.punchOut?.time;
+                                            const totalFinancials = (Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) + (Number(a.punchOut?.tollParkingAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0);
 
-                                        return (
-                                            <div key={a._id} className="glass-card" style={{ padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(30,41,59,0.5)' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
-                                                    <div>
-                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '16px' }}>{a.driver?.name?.split(' (F)')[0] || '---'}</div>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                                                            <div style={{ padding: '3px 8px', borderRadius: '6px', background: 'rgba(14,165,233,0.1)', color: '#0ea5e9', fontSize: '10px', fontWeight: '900' }}>{a.vehicle?.carNumber?.split('#')[0] || 'N/A'}</div>
-                                                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '700' }}>{punchInDate ? new Date(punchInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '---'}</span>
+                                            return (
+                                                <div key={a._id} className="glass-card" style={{ padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(30,41,59,0.5)' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                                                        <div>
+                                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '16px' }}>{a.driver?.name?.split(' (F)')[0] || '---'}</div>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                                                <div style={{ padding: '3px 8px', borderRadius: '6px', background: 'rgba(14,165,233,0.1)', color: '#0ea5e9', fontSize: '10px', fontWeight: '900' }}>{a.vehicle?.carNumber?.split('#')[0] || 'N/A'}</div>
+                                                                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '700' }}>{punchInDate ? new Date(punchInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '---'}</span>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ textAlign: 'right' }}>
+                                                            <div style={{ color: '#10b981', fontWeight: '900', fontSize: '18px' }}>₹{totalFinancials.toLocaleString()}</div>
+                                                            <span style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '100px', fontWeight: '900', marginTop: '4px', display: 'inline-block', background: isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: isCompleted ? '#10b981' : '#f59e0b' }}>
+                                                                {isCompleted ? 'COMPLETED' : 'ON DUTY'}
+                                                            </span>
                                                         </div>
                                                     </div>
-                                                    <div style={{ textAlign: 'right' }}>
-                                                        <div style={{ color: '#10b981', fontWeight: '900', fontSize: '18px' }}>₹{totalFinancials.toLocaleString()}</div>
-                                                        <span style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '100px', fontWeight: '900', marginTop: '4px', display: 'inline-block', background: isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: isCompleted ? '#10b981' : '#f59e0b' }}>
-                                                            {isCompleted ? 'COMPLETED' : 'ON DUTY'}
-                                                        </span>
-                                                    </div>
-                                                </div>
 
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '14px', marginBottom: '15px' }}>
-                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
-                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
-                                                        <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }} />
-                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f43f5e' }} />
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '14px', marginBottom: '15px' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
+                                                            <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }} />
+                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f43f5e' }} />
+                                                        </div>
+                                                        <div style={{ flex: 1 }}>
+                                                            <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: '600' }}>{a.pickUpLocation || 'Start Location'}</div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '600', marginTop: '6px' }}>{a.dropLocation || 'Pending...'}</div>
+                                                        </div>
+                                                        <div style={{ textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '12px' }}>
+                                                            <div style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>{totalKM} KM</div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700' }}>{punchInTime}</div>
+                                                        </div>
                                                     </div>
-                                                    <div style={{ flex: 1 }}>
-                                                        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: '600' }}>{a.pickUpLocation || 'Start Location'}</div>
-                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '600', marginTop: '6px' }}>{a.dropLocation || 'Pending...'}</div>
-                                                    </div>
-                                                    <div style={{ textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '12px' }}>
-                                                        <div style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>{totalKM} KM</div>
-                                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700' }}>{punchInTime}</div>
-                                                    </div>
-                                                </div>
 
-                                                <div style={{ display: 'flex', gap: '8px' }}>
-                                                    <button onClick={() => setSelectedItem({ ...a, entryType: 'attendance' })} style={{ flex: 1, height: '40px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                                                        <Eye size={14} /> Proof
-                                                    </button>
-                                                    <button onClick={() => openEditDutyModal(a)} style={{ flex: 1, height: '40px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                                                        <Edit2 size={14} /> Edit
-                                                    </button>
-                                                    <button onClick={() => handleDeleteDuty(a._id)} style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                        <Trash2 size={14} />
-                                                    </button>
+                                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                                        <button onClick={() => setSelectedItem({ ...a, entryType: 'attendance' })} style={{ flex: 1, height: '40px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                            <Eye size={14} /> Proof
+                                                        </button>
+                                                        <button onClick={() => openEditDutyModal(a)} style={{ flex: 1, height: '40px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                            <Edit2 size={14} /> Edit
+                                                        </button>
+                                                        <button onClick={() => handleDeleteDuty(a._id)} style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })}
-                                </div>
+                                            );
+                                        })}
+                                    </div>
                                 </>
                             )}
                         </motion.div>
@@ -2388,7 +2402,141 @@ const Freelancers = () => {
                     )}
                 </AnimatePresence>
             </div>
+            {activeTab === 'personnel' && (
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+                    <div className="glass-card hide-mobile scroll-x" style={{ borderRadius: '24px', padding: '10px', background: 'rgba(30,30,40,0.4)', minWidth: '1000px' }}>
+                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
+                            <thead>
+                                <tr>
+                                    {['Freelancer Name', 'Mobile Number', 'Daily Wage', 'Night/Same Return', 'Status', 'Actions'].map(h => (
+                                        <th key={h} style={{ padding: '15px 20px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
+                                    ))}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {(driverFilter === 'All' ? drivers : drivers.filter(d => d._id === driverFilter)).map((driver) => {
+                                    const activeEntry = attendance.find(a => a.driver?._id === driver._id && a.status === 'incomplete');
+                                    return (
+                                        <tr key={driver._id} className="premium-row" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
+                                            <td style={{ padding: '15px 20px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', fontWeight: '900', fontSize: '16px' }}>
+                                                        {driver.name.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{driver.name.split(' (F)')[0]}</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700' }}>UID: {driver._id.slice(-6).toUpperCase()}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '15px 20px', color: 'rgba(255,255,255,0.7)', fontWeight: '700', fontSize: '13px' }}>{driver.mobile}</td>
+                                            <td style={{ padding: '15px 20px', color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{driver.dailyWage || 0}</td>
+                                            <td style={{ padding: '15px 20px' }}>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800' }}>Night: ₹{driver.nightStayBonus || 0}</span>
+                                                    <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800' }}>Drop: ₹{driver.sameDayReturnBonus || 0}</span>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '15px 20px' }}>
+                                                {activeEntry ? (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span className="pulse" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24' }}></span>
+                                                        <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>On Duty</span>
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>Ready</span>
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '15px 20px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px' }}>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    {activeEntry ? (
+                                                        <button onClick={() => { setSelectedDriver(driver); setShowPunchOutModal(true); }} style={{ height: '36px', padding: '0 15px', borderRadius: '10px', background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)', border: 'none', color: 'white', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><LogOut size={14} /> Punch Out</button>
+                                                    ) : (
+                                                        <button onClick={() => { setSelectedDriver(driver); setShowPunchInModal(true); setPunchInData({ ...punchInData, date: getToday(), time: new Date().toISOString().slice(0, 16) }); }} style={{ height: '36px', padding: '0 15px', borderRadius: '10px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: 'white', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={14} /> Add Duty</button>
+                                                    )}
+                                                    <button onClick={() => { setSelectedDriver(driver); setShowAdvanceModal(true); setAdvanceData({ ...advanceData, date: getToday(), amount: '' }); }} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Add Advance"><IndianRupee size={16} /></button>
+                                                    <button onClick={() => { setSelectedDriver(driver); setShowDocumentModal(true); }} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Documents"><FileText size={16} /></button>
+                                                    <button onClick={() => { setEditingDriver(driver); setEditForm({ name: driver.name.split(' (F)')[0], mobile: driver.mobile, dailyWage: driver.dailyWage, licenseNumber: driver.licenseNumber, nightStayBonus: driver.nightStayBonus, sameDayReturnBonus: driver.sameDayReturnBonus }); setShowEditModal(true); }} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Edit Details"><Edit2 size={16} /></button>
+                                                    <button onClick={() => handleDeleteDriver(driver._id)} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Delete Driver"><Trash2 size={16} /></button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+                    </div>
 
+                    {/* Mobile Personnel View */}
+                    <div className="show-mobile" style={{ display: 'grid', gap: '15px' }}>
+                        {(driverFilter === 'All' ? drivers : drivers.filter(d => d._id === driverFilter)).map((driver) => {
+                            const activeEntry = attendance.find(a => a.driver?._id === driver._id && a.status === 'incomplete');
+                            return (
+                                <div key={driver._id} className="glass-card" style={{ padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(30,41,59,0.5)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', fontWeight: '900', fontSize: '18px' }}>
+                                                {driver.name.charAt(0)}
+                                            </div>
+                                            <div>
+                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>{driver.name.split(' (F)')[0]}</div>
+                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '700' }}>{driver.mobile}</div>
+                                            </div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ color: '#10b981', fontWeight: '900', fontSize: '16px' }}>₹{driver.dailyWage || 0}</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase' }}>Daily Wage</div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '8px', marginBottom: '15px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '12px' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>Night Bonus</div>
+                                            <div style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>₹{driver.nightStayBonus || 0}</div>
+                                        </div>
+                                        <div style={{ width: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>Same Day Ret</div>
+                                            <div style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>₹{driver.sameDayReturnBonus || 0}</div>
+                                        </div>
+                                    </div>
+
+                                    {activeEntry && (
+                                        <div style={{ background: 'rgba(251, 191, 36, 0.05)', padding: '12px', borderRadius: '12px', border: '1px dashed rgba(251, 191, 36, 0.2)', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div className="pulse" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24' }}></div>
+                                            <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>Currently On Duty</span>
+                                        </div>
+                                    )}
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                        {activeEntry ? (
+                                            <button onClick={() => { setSelectedDriver(driver); setShowPunchOutModal(true); }} style={{ height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', gridColumn: 'span 2' }}>
+                                                <LogOut size={16} /> Finish Duty
+                                            </button>
+                                        ) : (
+                                            <button onClick={() => { setSelectedDriver(driver); setShowPunchInModal(true); setPunchInData({ ...punchInData, date: getToday(), time: new Date().toISOString().slice(0, 16) }); }} style={{ height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', gridColumn: 'span 2' }}>
+                                                <Plus size={16} /> Start Duty
+                                            </button>
+                                        )}
+                                        <button onClick={() => { setSelectedDriver(driver); setShowAdvanceModal(true); setAdvanceData({ ...advanceData, date: getToday(), amount: '' }); }} style={{ height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '12px', fontWeight: '800' }}>
+                                            <IndianRupee size={14} /> Advance
+                                        </button>
+                                        <button onClick={() => { setSelectedDriver(driver); setShowDocumentModal(true); }} style={{ height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '12px', fontWeight: '800' }}>
+                                            <FileText size={14} /> Docs
+                                        </button>
+                                        <button onClick={() => { setEditingDriver(driver); setEditForm({ name: driver.name.split(' (F)')[0], mobile: driver.mobile, dailyWage: driver.dailyWage, licenseNumber: driver.licenseNumber, nightStayBonus: driver.nightStayBonus, sameDayReturnBonus: driver.sameDayReturnBonus }); setShowEditModal(true); }} style={{ height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '12px', fontWeight: '800' }}>
+                                            <Edit2 size={14} /> Edit
+                                        </button>
+                                        <button onClick={() => handleDeleteDriver(driver._id)} style={{ height: '40px', borderRadius: '12px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800' }}>
+                                            <Trash2 size={14} /> Delete
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </motion.div>
+            )}
             <style>{`
                 @media (max-width: 768px) {
                     .hide-mobile {
@@ -2399,66 +2547,33 @@ const Freelancers = () => {
                     }
                     .settlement-row-header {
                         flex-direction: column !important;
-                @media (max-width: 768px) {
-                    .freelancer-header {
+                        align-items: flex-start !important;
+                        text-align: left !important;
+                    }
+                    .settlement-stats-grid {
+                        width: 100% !important;
+                        justify-content: space-between !important;
+                        gap: 15px !important;
+                        margin: 10px 0 !important;
+                        padding: 15px 0 !important;
+                        border-top: 1px solid rgba(255,255,255,0.05) !important;
+                        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
+                    }
+                    .settlement-stats-grid > div {
+                        flex: 1 !important;
+                        text-align: left !important;
+                    }
+                    .header-actions {
+                        width: 100% !important;
+                        justify-content: space-between !important;
+                        margin-top: 15px !important;
+                    }
+                    .header-actions > div {
+                        flex: 1 !important;
+                    }
+                    .mobile-stack {
                         flex-direction: column !important;
                         align-items: flex-start !important;
-                        gap: 20px !important;
-                    }
-                    .stat-card-row {
-                        grid-template-columns: 1fr !important;
-                        gap: 12px !important;
-                    }
-                    .filter-hub {
-                        padding: 15px !important;
-                    }
-                    .filter-row {
-                        flex-direction: column !important;
-                        gap: 15px !important;
-                    }
-                    .search-container {
-                        max-width: 100% !important;
-                    }
-                    .tab-container {
-                        overflow-x: auto !important;
-                        justify-content: flex-start !important;
-                        padding-bottom: 5px !important;
-                        gap: 10px !important;
-                        display: flex !important;
-                    }
-                    .tab-container::-webkit-scrollbar {
-                        display: none;
-                    }
-                    .tab-btn {
-                        padding: 10px 18px !important;
-                        white-space: nowrap !important;
-                        flex-shrink: 0 !important;
-                    }
-                    .content-tabs {
-                        padding: 15px !important;
-                    }
-                    .personnel-card {
-                        padding: 15px !important;
-                        margin-bottom: 12px !important;
-                    }
-                    .personnel-card-header {
-                        flex-direction: row !important;
-                        justify-content: space-between !important;
-                    }
-                    .field-grid {
-                        grid-template-columns: 1fr !important;
-                        gap: 15px !important;
-                    }
-                    .modal-premium {
-                        padding: 20px !important;
-                        border-radius: 20px !important;
-                        width: 95% !important;
-                    }
-                    .mobile-hide {
-                        display: none !important;
-                    }
-                    .mobile-full {
-                        width: 100% !important;
                     }
                 }
                 .premium-row:hover {
@@ -2471,7 +2586,6 @@ const Freelancers = () => {
                     transition: all 0.3s ease !important;
                 }
             `}</style>
-
         </div >
     );
 };
