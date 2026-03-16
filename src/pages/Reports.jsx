@@ -261,7 +261,7 @@ const Reports = () => {
     const handleDelete = async (item) => {
         if (!window.confirm('Delete this record? This cannot be undone.')) return;
         const endpoints = {
-            attendance: item.isOutsideCar ? `/api/admin/vehicles/${item._id}` : `/api/admin/attendance/${item._id}`,
+            attendance: `/api/admin/attendance/${item._id}`,
             fuel: `/api/admin/fuel/${item._id}`,
             parking: `/api/admin/parking/${item._id}`,
             advance: `/api/admin/advances/${item._id}`,
