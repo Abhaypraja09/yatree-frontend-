@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from '../api/axios';
+import * as XLSX from 'xlsx';
 import {
     CalendarIcon as CalendarIcon, Search, Download, Eye, ArrowUpRight, ArrowDownLeft,
     MapPin, User as UserIcon, Users, Car, Shield, Wallet, CheckCircle2,
     Fuel, Wrench, IndianRupee, Trash2, AlertTriangle, FileText, Edit2,
-    ChevronLeft, ChevronRight, TrendingUp, X
+    ChevronLeft, ChevronRight, TrendingUp, X, Layers
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -171,12 +172,31 @@ const Reports = () => {
             .map(([id, v]) => ({ id, ...v }));
     }, [user?.role, user?.permissions]);
 
-    const [activeTabs, setActiveTabs] = useState(() => {
-        if (tabList.length > 0) return [tabList[0].id];
-        return ['drivers'];
-    });
+    const [activeTabs, setActiveTabs] = useState([]);
 
-    const toggleTab = (id) => setActiveTabs([id]);
+    // Initialize with the first tab on load
+    useEffect(() => {
+        if (tabList.length > 0 && activeTabs.length === 0) {
+            setActiveTabs([tabList[0].id]);
+        }
+    }, [tabList]);
+
+    const toggleTab = (id) => {
+        setActiveTabs(prev => {
+            const next = prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id];
+            return next.length === 0 ? [tabList[0].id] : next;
+        });
+    };
+
+    const handleSelectAll = () => {
+        const allIds = tabList.map(t => t.id);
+        const isAllActive = activeTabs.length === allIds.length;
+        if (isAllActive) {
+            setActiveTabs([allIds[0]]); // Keep just one active instead of none for better UX
+        } else {
+            setActiveTabs(allIds);
+        }
+    };
     // const selectAllTabs = () => setActiveTabs(prev => prev.length === tabList.length ? (tabList.length > 0 ? [tabList[0].id] : []) : tabList.map(t => t.id));
 
     // Auto-toggle range based on tab selection (REMOVED as per user request to keep calendar single)
@@ -197,7 +217,7 @@ const Reports = () => {
     }, [activeTabs]);
     */
 
-    useEffect(() => { if (selectedCompany) fetchReports(); }, [selectedCompany, fromDate, toDate]);
+    useEffect(() => { if (selectedCompany) fetchReports(); }, [selectedCompany, fromDate, toDate, activeTabs]);
 
     const fetchReports = async () => {
         if (!selectedCompany) return;
@@ -210,7 +230,10 @@ const Reports = () => {
             setFastagRecharges(data.fastagRecharges || []);
             setBorderTaxRecords(data.borderTax || []);
             setFuelRecords(data.fuel || []);
-            setMaintenanceRecords(data.maintenance || []);
+            setMaintenanceRecords((data.maintenance || []).filter(r => {
+                const type = (r.maintenanceType || '').toLowerCase();
+                return !type.includes('car wash') && !type.includes('puncture');
+            }));
             setAdvanceRecords(data.advances || []);
             setParkingRecords(data.parking || []);
             setAccidentLogs(data.accidentLogs || []);
@@ -255,6 +278,69 @@ const Reports = () => {
             fetchReports();
         } catch (error) { alert('Failed: ' + (error.response?.data?.message || error.message)); }
     };
+    
+    /* ── Smart Excel Export ── */
+    const handleDownloadExcel = () => {
+        if (activeTabs.length === 0) return alert('No report categories selected.');
+        
+        const wb = XLSX.utils.book_new();
+        let sheetsAdded = 0;
+
+        const getSheetData = (tabId) => {
+            const cfg = TAB_CONFIG[tabId] || {};
+            let data = [];
+            switch (tabId) {
+                case 'drivers':
+                case 'freelancers':
+                case 'outsideCars': {
+                    const raw = tabId === 'drivers' ? staffDrivers : (tabId === 'freelancers' ? freelancerDrivers : outsideCars);
+                    data = applySearch(raw).map(r => ({
+                        'Date': fmt(r.date),
+                        'Driver': r.driver?.name || r.driverName || '---',
+                        'Mobile': r.driver?.mobile || '---',
+                        'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---',
+                        'In Time': fmtTime(r.punchIn?.time),
+                        'Out Time': fmtTime(r.punchOut?.time),
+                        'Open KM': r.punchIn?.km || 0,
+                        'Close KM': r.punchOut?.km || 0,
+                        'Total KM': (r.punchOut?.km && r.punchIn?.km) ? (r.punchOut.km - r.punchIn.km) : (r.totalKM || 0),
+                        'Fuel (₹)': r.fuel?.amount || 0,
+                        'Parking (₹)': r.punchOut?.tollParkingAmount || 0,
+                        'Salary (₹)': (Number(r.dailyWage) || 0) + Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0),
+                        'Pick-up': r.pickUpLocation || '',
+                        'Drop': r.dropLocation || ''
+                    }));
+                    break;
+                }
+                case 'fuel': data = applySearch(fuelRecords).map(r => ({ 'Date': fmt(r.date), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Driver': r.driver?.name || '---', 'Type': r.fuelType || 'Diesel', 'Qty': r.quantity || 0, 'Amt (₹)': r.amount || 0, 'Payment': r.paymentMethod || r.paymentSource || '---' })); break;
+                case 'maintenance': data = maintenanceRecords.map(r => ({ 'Date': fmt(r.billDate || r.date), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Type': r.maintenanceType || '--', 'Cost (₹)': r.cost || 0, 'Vendor': r.vendor || '--' })); break;
+                case 'advances': data = applySearch(advanceRecords).map(r => ({ 'Date': fmt(r.date), 'Driver': r.driver?.name || '---', 'Amount (₹)': r.amount || 0, 'Status': r.status || 'Pending' })); break;
+                case 'borderTax': data = borderTaxRecords.map(r => ({ 'Date': fmt(r.date), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Border': r.borderName || '--', 'Amount (₹)': r.amount || 0 })); break;
+                case 'parking': data = parkingRecords.map(r => ({ 'Date': fmt(r.date), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Amt (₹)': r.amount || 0, 'Location': r.location || '--' })); break;
+                case 'fastag': data = fastagRecharges.map(r => ({ 'Date': fmt(r.date), 'Vehicle': r.carNumber || r.vehicle?.carNumber || '--', 'Amount (₹)': r.amount || 0 })); break;
+                case 'accidentLogs': data = accidentLogs.map(r => ({ 'Date': fmt(r.date), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Driver': r.driver?.name || '---', 'Status': r.status || 'Pending' })); break;
+                case 'partsWarranty': data = partsWarrantyRecords.map(r => ({ 'Buy Date': fmt(r.purchaseDate), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Part': r.partName || '--', 'Cost (₹)': r.cost || 0, 'End Date': fmt(r.warrantyEndDate) })); break;
+                case 'events': data = applySearch(eventRecords).map(e => ({ 'Date': fmt(e.date), 'Name': e.name || '--', 'Client': e.client || 'N/A', 'Amount (₹)': e.totalAmount || 0 })); break;
+                default: break;
+            }
+            return { data, name: cfg.label || tabId };
+        };
+
+        activeTabs.forEach(id => {
+            const { data, name } = getSheetData(id);
+            if (data && data.length > 0) {
+                const sheetName = name.substring(0, 31).replace(/[\[\]\*\?\/\\]/g, ''); 
+                const ws = XLSX.utils.json_to_sheet(data);
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                sheetsAdded++;
+            }
+        });
+
+        if (sheetsAdded === 0) return alert('No data found for the selected categories.');
+
+        const dateSuffix = isRange ? `${fromDate}_to_${toDate}` : fromDate;
+        XLSX.writeFile(wb, `Reports_${dateSuffix}.xlsx`);
+    };
 
     /* ── filtered attendance partitions ── */
     const staffDrivers = useMemo(() => reports.filter(r => !r.vehicle?.isOutsideCar && !r.isOutsideCar && !r.isFreelancer && !r.driver?.isFreelancer).map(r => ({ ...r, entryType: 'attendance' })), [reports]);
@@ -287,8 +373,15 @@ const Reports = () => {
     };
     const handleFromDate = (val) => { setFromDate(val); if (!isRange) setToDate(val); };
     const handleToggleRange = () => {
-        // Range mode disabled as per user request: "single hi chahey first me"
-        setIsRange(false);
+        setIsRange(!isRange);
+        if (!isRange) {
+            // Switching to range: set fromDate to 1st of month to make it meaningful
+            setFromDate(firstDayOfMonthIST());
+            setToDate(todayIST());
+        } else {
+            // Switching back to single: set both to today or current fromDate
+            setToDate(fromDate);
+        }
     };
 
     /* ── Attendance row renderer (shared for Staff + Freelancers + Outside) ── */
@@ -300,7 +393,7 @@ const Reports = () => {
         const closeKM = r.punchOut?.km ?? '--';
         const totalKM = r.totalKM ?? (typeof openKM === 'number' && typeof closeKM === 'number' ? closeKM - openKM : '--');
         const wage = Number(r.dailyWage) || 0;
-        const bonus = (Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0) + (Number(r.outsideTrip?.bonusAmount) || 0);
+        const bonus = Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
         const parkAmt = Number(r.punchOut?.tollParkingAmount) || 0;
         const parkBy = r.punchOut?.parkingPaidBy || 'Self';
         const fuelAmt = Number(r.fuel?.amount) || 0;
@@ -694,27 +787,44 @@ const Reports = () => {
                 </div>
 
                 {/* Date Navigator */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
-                    <button onClick={() => shiftDays(-1)} style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <ChevronLeft size={16} />
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
+                    <button onClick={() => shiftDays(-1)} style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ChevronLeft size={18} />
                     </button>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    
+                    <button 
+                        onClick={handleToggleRange}
+                        style={{ background: isRange ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isRange ? '#10b981' : 'rgba(255,255,255,0.1)'}30`, color: isRange ? '#10b981' : 'rgba(255,255,255,0.5)', padding: '0 12px', height: '36px', borderRadius: '12px', fontSize: '10px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    >
+                        <CalendarIcon size={14} /> {isRange ? 'SINGLE DATE' : 'RANGE'}
+                    </button>
+
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                         <div style={{ position: 'relative' }}>
                             <label style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', display: 'block', paddingLeft: '4px', marginBottom: '2px' }}>{isRange ? 'FROM' : 'DATE'}</label>
                             <input type="date" value={fromDate} onChange={e => handleFromDate(e.target.value)} onClick={e => e.target.showPicker?.()}
-                                style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: 'white', padding: '5px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', outline: 'none', cursor: 'pointer', colorScheme: 'dark' }} />
+                                style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: 'white', padding: '6px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', outline: 'none', cursor: 'pointer', colorScheme: 'dark' }} />
                         </div>
                         {isRange && <>
                             <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px', marginTop: '14px' }}>→</div>
                             <div style={{ position: 'relative' }}>
                                 <label style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', display: 'block', paddingLeft: '4px', marginBottom: '2px' }}>TO</label>
                                 <input type="date" value={toDate} min={fromDate} onChange={e => setToDate(e.target.value)} onClick={e => e.target.showPicker?.()}
-                                    style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: 'white', padding: '5px 10px', borderRadius: '8px', fontSize: '12px', fontWeight: '700', outline: 'none', cursor: 'pointer', colorScheme: 'dark' }} />
+                                    style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: 'white', padding: '6px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', outline: 'none', cursor: 'pointer', colorScheme: 'dark' }} />
                             </div>
                         </>}
                     </div>
-                    <button onClick={() => shiftDays(1)} style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <ChevronRight size={16} />
+
+                    <button onClick={() => shiftDays(1)} style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ChevronRight size={18} />
+                    </button>
+
+                    <button 
+                        onClick={handleDownloadExcel}
+                        style={{ marginLeft: '10px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 20px', height: '38px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
+                        title="Download selected categories to Excel"
+                    >
+                        <Download size={14} /> EXCEL
                     </button>
                 </div>
             </header>
@@ -722,7 +832,25 @@ const Reports = () => {
             {/* ── Tab Bar (multi-select) ── */}
             <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.04)', padding: '8px', marginBottom: '20px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px' }}>
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase' }}>Select Report Category</span>
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase' }}>Select Report Categories</span>
+                    <button 
+                        onClick={handleSelectAll} 
+                        style={{ 
+                            background: activeTabs.length === tabList.length ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)', 
+                            border: activeTabs.length === tabList.length ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)', 
+                            color: activeTabs.length === tabList.length ? '#10b981' : 'rgba(255,255,255,0.4)', 
+                            fontSize: '10px', 
+                            padding: '6px 14px',
+                            borderRadius: '10px',
+                            fontWeight: '900', 
+                            cursor: 'pointer', 
+                            textTransform: 'uppercase',
+                            transition: 'all 0.2s',
+                            letterSpacing: '0.5px'
+                        }}
+                    >
+                        {activeTabs.length === tabList.length ? '✓ ALL SELECTED' : 'SELECT ALL'}
+                    </button>
                 </div>
                 <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                     {tabList.map(tab => {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin } from 'lucide-react';
+import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin, FileText } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -255,7 +255,7 @@ const Freelancers = () => {
     });
 
     // Date utility helpers removed in favor of istUtils.js
-    
+
 
     // Unified date defaults handled in initial state.
     useEffect(() => {
@@ -307,7 +307,7 @@ const Freelancers = () => {
         const f = nowIST(referenceDate);
         f.setUTCDate(f.getUTCDate() + n);
         const fStr = f.toISOString().split('T')[0];
-        
+
         if (isRange) {
             setFromDate(fStr);
             // In range mode, optional: move both or just from?
@@ -750,7 +750,7 @@ const Freelancers = () => {
     const openEditDutyModal = (duty) => {
         setEditingDuty(duty);
         const fallbackWage = duty.isOutsideCar ? (Number(duty.dutyAmount) || 0) : (Number(duty.driver?.dailyWage) || 500);
-        
+
         // Debug log to trace what data we are loading into the modal
         console.log('[DEBUG] Opening Edit Modal for Duty:', {
             id: duty._id,
@@ -775,7 +775,7 @@ const Freelancers = () => {
             allowanceTA: duty.punchOut?.allowanceTA ?? 0,
             nightStayAmount: duty.punchOut?.nightStayAmount ?? 0,
             bonusAmount: duty.outsideTrip?.bonusAmount ?? 0,
-            dailyWage: duty.dailyWage || fallbackWage,
+            dailyWage: (duty.dailyWage !== undefined && duty.dailyWage !== null) ? duty.dailyWage : fallbackWage,
             remarks: duty.punchOut?.remarks || duty.punchOut?.otherRemarks || '',
             dutyType: duty.pickUpLocation || ''
         });
@@ -906,50 +906,48 @@ const Freelancers = () => {
             <SEO title="Freelancer Fleet Network" description="Onboard and manage freelance drivers for temporary duties and peak demand management." />
 
             {/* Header with Search and Stats */}
-            <header className="glass-card freelancer-page-header dashboard-header" style={{
-                padding: 'clamp(20px, 3vw, 30px)',
+            <header className="glass-card dashboard-header" style={{
+                padding: 'clamp(20px, 4vw, 30px)',
                 borderRadius: '24px',
                 border: '1px solid rgba(255,255,255,0.08)',
-                marginBottom: '25px',
+                marginBottom: '20px',
                 background: 'rgba(30, 41, 59, 0.4)'
             }}>
-                <div className="mobile-stack" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', gap: '20px', alignItems: 'center' }}>
+                <div className="flex-resp" style={{ justifyContent: 'space-between', width: '100%', gap: '20px', alignItems: 'center' }}>
                     <div className="header-logo-section">
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            <div className="header-logo-container" style={{
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 3vw, 15px)' }}>
+                            <div style={{
                                 background: 'linear-gradient(135deg, white, #f8fafc)',
                                 borderRadius: '16px',
-                                padding: '8px',
+                                padding: 'clamp(6px, 1.5vw, 8px)',
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
                                 boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
                                 flexShrink: 0
                             }}>
-                                <Users size={28} color="#fbbf24" />
+                                <Users size={24} color="#fbbf24" />
                             </div>
                             <div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
-                                    <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>External Workforce</span>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                    <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                    <span style={{ fontSize: '9px', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>External Workforce</span>
                                 </div>
-                                <h1 className="header-title" style={{ color: 'white', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', fontSize: 'clamp(20px, 5vw, 32px)' }}>
+                                <h1 style={{ color: 'white', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', fontSize: 'clamp(20px, 5vw, 32px)' }}>
                                     Freelancers <span className="text-gradient-yellow">Hub</span>
                                 </h1>
                             </div>
                         </div>
                     </div>
 
-                    <div className="header-actions" style={{
-                        display: 'flex',
-                        gap: '15px',
+                    <div className="flex-resp" style={{
+                        gap: '12px',
                         alignItems: 'center',
-                        flexWrap: 'wrap',
                         justifyContent: 'flex-end',
                         flex: 1
                     }}>
                         {/* Filter dropdown — switches based on active tab */}
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '4px 12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '4px 12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', flex: 1, minWidth: '160px' }}>
                             <Filter size={14} color="#fbbf24" strokeWidth={2.5} />
                             <select
                                 value={activeTab === 'accounts' ? settlementDriverFilter : driverFilter}
@@ -959,11 +957,12 @@ const Freelancers = () => {
                                     border: 'none',
                                     color: 'white',
                                     height: '38px',
-                                    fontSize: '13px',
+                                    fontSize: '12px',
                                     fontWeight: '800',
                                     outline: 'none',
-                                    minWidth: '130px',
-                                    cursor: 'pointer'
+                                    flex: 1,
+                                    cursor: 'pointer',
+                                    textTransform: 'uppercase'
                                 }}
                             >
                                 <option value="All" style={{ background: '#1e293b' }}>ALL FREELANCERS</option>
@@ -972,21 +971,20 @@ const Freelancers = () => {
                         </div>
 
                         {activeTab !== 'accounts' && (
-                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+                            <div style={{ display: 'flex', gap: '8px' }}>
                                 <button
                                     className="glass-card-hover-effect"
                                     onClick={() => setShowManualModal(true)}
-                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: 'all 0.3s' }}
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: '0.3s' }}
                                     title="Manual Entry"
                                 >
                                     <Edit2 size={16} />
                                 </button>
                                 <button
                                     onClick={() => setShowAddModal(true)}
-                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '44px', height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', border: 'none', color: 'black', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)', cursor: 'pointer', transition: 'all 0.3s' }}
-                                    title="Add Freelancer"
+                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', border: 'none', color: 'black', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)', cursor: 'pointer', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase' }}
                                 >
-                                    <Plus size={18} />
+                                    <Plus size={16} style={{ marginRight: '6px' }} /> <span className="hide-mobile">Add</span>
                                 </button>
                             </div>
                         )}
@@ -995,21 +993,22 @@ const Freelancers = () => {
             </header>
 
             {/* Premium Filter Hub */}
-            <div className="glass-card" style={{
-                padding: '20px',
-                borderRadius: '24px',
-                border: '1px solid rgba(255,255,255,0.05)',
-                marginBottom: '30px',
+            <div style={{
+                padding: '24px',
+                borderRadius: '32px',
+                border: '1px solid rgba(255, 255, 255, 0.05)',
+                marginBottom: '20px',
                 background: 'rgba(15, 23, 42, 0.4)'
-            }}>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '20px', alignItems: 'center', justifyContent: 'space-between' }}>
+            }} className="filter-hub">
+                <div className="filter-row" style={{ display: 'flex', flexWrap: 'wrap', gap: '15px', alignItems: 'center', justifyContent: 'space-between' }}>
+
 
                     {/* Tabs */}
-                    <div className="livefeed-tabs premium-scroll" style={{
+                    <div className="tab-container" style={{
                         display: 'flex',
                         background: 'rgba(0,0,0,0.2)',
                         padding: '4px',
-                        borderRadius: '14px',
+                        borderRadius: '16px',
                         border: '1px solid rgba(255,255,255,0.03)',
                         overflowX: 'auto',
                         whiteSpace: 'nowrap',
@@ -1024,6 +1023,7 @@ const Freelancers = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
+                                className="tab-btn"
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1031,82 +1031,83 @@ const Freelancers = () => {
                                     padding: '10px 16px',
                                     borderRadius: '12px',
                                     border: 'none',
-                                    background: activeTab === tab.id ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-                                    color: activeTab === tab.id ? '#818cf8' : 'rgba(255,255,255,0.4)',
+                                    background: activeTab === tab.id ? 'rgba(251, 191, 36, 0.15)' : 'transparent',
+                                    color: activeTab === tab.id ? '#fbbf24' : 'rgba(255,255,255,0.4)',
                                     cursor: 'pointer',
-                                    fontSize: '12px',
-                                    fontWeight: '800',
-                                    transition: 'all 0.3s',
-                                    flexShrink: 0
+                                    fontSize: '11px',
+                                    fontWeight: '900',
+                                    transition: '0.3s',
+                                    flexShrink: 0,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
                                 }}
                             >
-                                {tab.icon} <span style={{ letterSpacing: '0.5px' }}>{tab.label}</span>
+                                {tab.icon} <span>{tab.label}</span>
                             </button>
                         ))}
                     </div>
 
-                        {/* Filter Controls */}
-                        {activeTab !== 'personnel' && (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap', flex: 1, width: '100%', justifyContent: 'flex-end' }}>
+                    {/* Filter Controls */}
+                    {activeTab !== 'personnel' && (
+                        <div className="flex-resp" style={{ alignItems: 'center', gap: '12px', flex: 1, justifyContent: 'flex-end' }}>
 
-                                {activeTab === 'accounts' ? (
-                                    /* Settlement: always show Month + Year pickers */
-                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                                        <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="glass-card"
-                                            style={{ padding: '0 12px', height: '40px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', fontSize: '13px', fontWeight: '800', cursor: 'pointer' }}>
-                                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                                                <option key={m} value={m} style={{ background: '#0f172a' }}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' }).toUpperCase()}</option>
-                                            ))}
-                                        </select>
-                                        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="glass-card"
-                                            style={{ padding: '0 12px', height: '40px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', fontSize: '13px', fontWeight: '800', cursor: 'pointer' }}>
-                                            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>)}
-                                        </select>
-                                    </div>
-                                ) : (
-                                    /* Duties: date navigator */
-                                    <>
-                                        <div style={{
-                                            display: 'flex', alignItems: 'center', gap: '5px',
-                                            background: 'rgba(0,0,0,0.25)', padding: '4px',
-                                            borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)',
-                                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-                                        }}>
-                                            <button onClick={() => shiftDays(-1)} style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <ChevronLeft size={18} />
-                                            </button>
-                                            <div style={{ display: 'flex', gap: '5px' }}>
-                                                {isRange && (
-                                                    <div style={{ padding: '0 15px', height: '36px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px', border: '1px solid rgba(99, 102, 241, 0.15)', position: 'relative', overflow: 'hidden' }}>
-                                                        <span style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
-                                                        <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>{new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}</span>
-                                                        <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} onClick={(e) => e.target.showPicker?.()} style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: 2 }} />
-                                                    </div>
-                                                )}
-                                                <div style={{ padding: '0 15px', height: '36px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(99, 102, 241, 0.1)', borderRadius: '10px', border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(99, 102, 241, 0.2)'}`, position: 'relative', overflow: 'hidden' }}>
-                                                    {isRange ? <span style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>TO:</span> : <Calendar size={14} color="#818cf8" />}
-                                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>{new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: isRange ? undefined : 'numeric' }).toUpperCase()}</span>
-                                                    <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); if (!isRange) setFromDate(e.target.value); }} onClick={(e) => e.target.showPicker?.()} style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: 2 }} />
-                                                </div>
-                                            </div>
-                                            <button onClick={() => shiftDays(1)} style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <ChevronRight size={18} />
-                                            </button>
-                                        </div>
-                                        <button onClick={() => { const next = !isRange; setIsRange(next); if (!next) setFromDate(toDate); }}
-                                            style={{ marginLeft: '5px', padding: '0 10px', height: '36px', borderRadius: '10px', border: 'none', cursor: 'pointer', background: isRange ? '#6366f1' : 'rgba(255,255,255,0.05)', color: isRange ? 'white' : 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>
-                                            {isRange ? 'Range' : 'Single'}
+                            {activeTab === 'accounts' ? (
+                                /* Settlement: always show Month + Year pickers */
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
+                                    <select value={month} onChange={(e) => setMonth(Number(e.target.value))}
+                                        style={{ padding: '0 12px', height: '40px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', fontSize: '11px', fontWeight: '900', cursor: 'pointer', textTransform: 'uppercase' }}>
+                                        {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                                            <option key={m} value={m} style={{ background: '#0f172a' }}>{new Date(0, m - 1).toLocaleString('default', { month: 'short' }).toUpperCase()}</option>
+                                        ))}
+                                    </select>
+                                    <select value={year} onChange={(e) => setYear(Number(e.target.value))}
+                                        style={{ padding: '0 12px', height: '40px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}>
+                                        {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>)}
+                                    </select>
+                                </div>
+                            ) : (
+                                /* Duties: date navigator */
+                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'flex-end', flex: 1 }}>
+                                    <div style={{
+                                        display: 'flex', alignItems: 'center', gap: '4px',
+                                        background: 'rgba(0,0,0,0.25)', padding: '4px',
+                                        borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)'
+                                    }}>
+                                        <button onClick={() => shiftDays(-1)} style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <ChevronLeft size={16} />
                                         </button>
-                                    </>
-                                )}
+                                        <div style={{ display: 'flex', gap: '4px' }}>
+                                            {isRange && (
+                                                <div style={{ padding: '0 12px', height: '32px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '10px', position: 'relative', overflow: 'hidden' }}>
+                                                    <span style={{ color: '#fbbf24', fontSize: '9px', fontWeight: '900' }}>FROM</span>
+                                                    <span style={{ color: 'white', fontSize: '11px', fontWeight: '950' }}>{new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}</span>
+                                                    <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} onClick={(e) => e.target.showPicker?.()} style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: 2 }} />
+                                                </div>
+                                            )}
+                                            <div style={{ padding: '0 12px', height: '32px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(255,255,255,0.05)', borderRadius: '10px', position: 'relative', overflow: 'hidden' }}>
+                                                {isRange ? <span style={{ color: '#fbbf24', fontSize: '9px', fontWeight: '900' }}>TO</span> : <Calendar size={12} color="#fbbf24" />}
+                                                <span style={{ color: 'white', fontSize: '11px', fontWeight: '950' }}>{new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}</span>
+                                                <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); if (!isRange) setFromDate(e.target.value); }} onClick={(e) => e.target.showPicker?.()} style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: 2 }} />
+                                            </div>
+                                        </div>
+                                        <button onClick={() => shiftDays(1)} style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <ChevronRight size={16} />
+                                        </button>
+                                    </div>
+                                    <button onClick={() => { const next = !isRange; setIsRange(next); if (!next) setFromDate(toDate); }}
+                                        style={{ padding: '0 12px', height: '40px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(255,255,255,0.03)', color: isRange ? '#fbbf24' : 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>
+                                        {isRange ? 'Range' : 'Single'}
+                                    </button>
+                                </div>
+                            )}
 
-                                <button onClick={handleDownloadExcel}
-                                    style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 15px', height: '44px', borderRadius: '13px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
-                                    title="Export Reports">
-                                    <Download size={16} /> <span className="hide-mobile">Excel</span>
-                                </button>
-                            </div>
-                        )}
+                            <button onClick={handleDownloadExcel}
+                                style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                title="Export Excel">
+                                <Download size={18} />
+                            </button>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -1115,155 +1116,140 @@ const Freelancers = () => {
                 {/* PERSONNEL TAB */}
                 {
                     activeTab === 'personnel' && (
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
-                            {/* Driver Table View */}
-                            <div style={{ borderRadius: '24px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div className="staff-attendance-table-wrapper" style={{ overflowX: 'auto' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1000px' }}>
-                                        <thead>
-                                            <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Freelancer</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Current Status</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Daily Wage</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Duties</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {loading ? (
-                                                <tr><td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Loading drivers...</td></tr>
-                                            ) : availableDrivers.length === 0 && onDutyDrivers.length === 0 ? (
-                                                <tr>
-                                                    <td colSpan="5" style={{ padding: '80px 40px', textAlign: 'center' }}>
-                                                        <UserIcon size={40} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
-                                                        <h3 style={{ color: 'white', fontWeight: '800' }}>No Freelancers Found</h3>
-                                                        <p style={{ color: 'rgba(255,255,255,0.3)', marginBottom: '30px' }}>Add drivers to your network to see them here.</p>
+                        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="content-tabs">
+                            <div className="glass-card mobile-hide scroll-x" style={{ borderRadius: '24px', padding: '10px', background: 'rgba(30,30,40,0.4)', minWidth: '1000px' }}>
+                                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
+                                    <thead>
+                                        <tr>
+                                            {['Freelancer Name', 'Mobile Number', 'Daily Wage', 'Night/Same Return', 'Status', 'Actions'].map(h => (
+                                                <th key={h} style={{ padding: '15px 20px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {(driverFilter === 'All' ? drivers : drivers.filter(d => d._id === driverFilter)).map((driver) => {
+                                            const activeEntry = attendance.find(a => a.driver?._id === driver._id && a.status === 'incomplete');
+                                            return (
+                                                <tr key={driver._id} className="premium-row" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
+                                                    <td style={{ padding: '15px 20px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', fontWeight: '900', fontSize: '16px' }}>
+                                                                {driver.name.charAt(0)}
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{driver.name.split(' (F)')[0]}</div>
+                                                                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700' }}>UID: {driver._id.slice(-6).toUpperCase()}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '15px 20px', color: 'rgba(255,255,255,0.7)', fontWeight: '700', fontSize: '13px' }}>{driver.mobile}</td>
+                                                    <td style={{ padding: '15px 25px' }}>
+                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{driver.dailyWage || 0}</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '900', marginTop: '2px' }}>BASE RATE</div>
+                                                    </td>
+                                                    <td style={{ padding: '15px 20px' }}>
+                                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                                            <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800' }}>Night: ₹{driver.nightStayBonus || 0}</span>
+                                                            <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800' }}>Drop: ₹{driver.sameDayReturnBonus || 0}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '15px 20px' }}>
+                                                        {activeEntry ? (
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                <span className="pulse" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24' }}></span>
+                                                                <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>On Duty</span>
+                                                            </div>
+                                                        ) : (
+                                                            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>Ready</span>
+                                                        )}
+                                                    </td>
+                                                    <td style={{ padding: '15px 20px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px' }}>
+                                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                                            {activeEntry ? (
+                                                                <button onClick={() => { setSelectedDriver(driver); setShowPunchOutModal(true); }} style={{ height: '36px', padding: '0 15px', borderRadius: '10px', background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)', border: 'none', color: 'white', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><LogOut size={14} /> Punch Out</button>
+                                                            ) : (
+                                                                <button onClick={() => { setSelectedDriver(driver); setShowPunchInModal(true); setPunchInData({ ...punchInData, date: getToday(), time: new Date().toISOString().slice(0, 16) }); }} style={{ height: '36px', padding: '0 15px', borderRadius: '10px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: 'white', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}><Plus size={14} /> Add Duty</button>
+                                                            )}
+                                                            <button onClick={() => { setSelectedDriver(driver); setShowAdvanceModal(true); setAdvanceData({ ...advanceData, date: getToday(), amount: '' }); }} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Add Advance"><IndianRupee size={16} /></button>
+                                                            <button onClick={() => { setSelectedDriver(driver); setShowDocumentModal(true); }} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Documents"><FileText size={16} /></button>
+                                                            <button onClick={() => { setEditingDriver(driver); setEditForm({ name: driver.name.split(' (F)')[0], mobile: driver.mobile, dailyWage: driver.dailyWage, licenseNumber: driver.licenseNumber, nightStayBonus: driver.nightStayBonus, sameDayReturnBonus: driver.sameDayReturnBonus }); setShowEditModal(true); }} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Edit Details"><Edit2 size={16} /></button>
+                                                            <button onClick={() => handleDeleteDriver(driver._id)} className="glass-card-hover-effect" style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} title="Delete Driver"><Trash2 size={16} /></button>
+                                                        </div>
                                                     </td>
                                                 </tr>
-                                            ) : [...onDutyDrivers.sort((a, b) => a.name.localeCompare(b.name)), ...availableDrivers.sort((a, b) => a.name.localeCompare(b.name))].map(d => {
-                                                const dayAttendance = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id);
-                                                const isOnDuty = d.tripStatus === 'active' || dayAttendance.some(a => a.status === 'incomplete');
-                                                const dutyCount = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id).length;
-                                                return (
-                                                    <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }} className="ledger-row">
-                                                        <td style={{ padding: '15px 25px' }}>
-                                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                                                <div style={{
-                                                                    width: '40px', height: '40px', borderRadius: '12px',
-                                                                    background: isOnDuty ? 'rgba(244, 63, 94, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                                                                    display: 'flex', justifyContent: 'center', alignItems: 'center'
-                                                                }}>
-                                                                    <UserIcon size={18} style={{ color: isOnDuty ? '#f43f5e' : '#818cf8' }} />
-                                                                </div>
-                                                                <div>
-                                                                    <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{d.name.split(' (F)')[0]}</div>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px' }}>
-                                                                        <a href={`tel:${d.mobile}`} style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                            <Phone size={10} /> {d.mobile}
-                                                                        </a>
-                                                                        {d.licenseNumber && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px' }}>• {d.licenseNumber}</span>}
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </td>
-                                                        <td style={{ padding: '15px 25px' }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOnDuty ? '#f43f5e' : '#10b981' }}></div>
-                                                                <span style={{ fontSize: '11px', color: isOnDuty ? '#f43f5e' : '#10b981', fontWeight: '900', textTransform: 'uppercase' }}>
-                                                                    {isOnDuty ? 'ON DUTY' : 'AVAILABLE'}
-                                                                </span>
-                                                            </div>
-                                                            {isOnDuty && d.assignedVehicle && (
-                                                                <div style={{ color: 'rgba(14,165,233,0.7)', fontSize: '10px', fontWeight: '800', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                                    <Car size={10} /> {d.assignedVehicle?.carNumber?.split('#')[0]}
-                                                                </div>
-                                                            )}
-                                                        </td>
-                                                        <td style={{ padding: '15px 25px' }}>
-                                                            <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{d.dailyWage || 0}</div>
-                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '900', marginTop: '2px' }}>BASE RATE</div>
-                                                        </td>
-                                                        <td style={{ padding: '15px 25px', textAlign: 'center' }}>
-                                                            <div style={{ display: 'inline-block', background: 'rgba(99, 102, 241, 0.1)', padding: '4px 12px', borderRadius: '100px', border: '1px solid rgba(99,102,241,0.1)' }}>
-                                                                <span style={{ color: '#818cf8', fontWeight: '900', fontSize: '13px' }}>{dutyCount}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td style={{ padding: '15px 25px', textAlign: 'right' }}>
-                                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                                                {isOnDuty ? (
-                                                                    <div style={{ display: 'flex', gap: '5px' }}>
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                setSelectedDriver(d);
-                                                                                const viewTime = nowISTDateTimeString();
-                                                                                setPunchOutData({
-                                                                                    ...punchOutData,
-                                                                                    km: '',
-                                                                                    time: viewTime,
-                                                                                    dailyWage: d.dailyWage || ''
-                                                                                });
-                                                                                setShowPunchOutModal(true);
-                                                                            }}
-                                                                            style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '8px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
-                                                                        >FINISH</button>
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                setSelectedDriver(d);
-                                                                                const yesterday = new Date();
-                                                                                yesterday.setDate(yesterday.getDate() - 1);
-                                                                                const viewDate = getLocalYYYYMMDD(yesterday);
-                                                                                const viewTime = viewDate + 'T09:00';
-                                                                                setPunchInData({
-                                                                                    ...punchInData,
-                                                                                    time: viewTime,
-                                                                                    date: viewDate
-                                                                                });
-                                                                                setShowPunchInModal(true);
-                                                                            }}
-                                                                            title="Add Past Duty"
-                                                                            style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.05)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
-                                                                        >
-                                                                            <History size={14} />
-                                                                        </button>
-                                                                    </div>
-                                                                ) : (
-                                                                    <button
-                                                                        onClick={() => {
-                                                                            setSelectedDriver(d);
-                                                                            const viewDate = toDate || getToday();
-                                                                            const viewTime = viewDate + 'T' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-                                                                            setPunchInData({
-                                                                                ...punchInData,
-                                                                                time: viewTime,
-                                                                                date: viewDate
-                                                                            });
-                                                                            setShowPunchInModal(true);
-                                                                        }}
-                                                                        style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)', padding: '8px 15px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
-                                                                    >START</button>
-                                                                )}
-                                                                {/* Fuel option removed as per request */}
-                                                                <button
-                                                                    onClick={() => { setSelectedDriver(d); setQuickExpenseType('parking'); setShowQuickExpenseModal(true); }}
-                                                                    title="Add Parking"
-                                                                    style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
-                                                                >
-                                                                    <MapPin size={13} />
-                                                                </button>
-                                                                <button onClick={() => openEditModal(d)} title="Edit" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
-                                                                    <Edit2 size={13} />
-                                                                </button>
-                                                                <button onClick={() => handleDelete(d._id)} title="Delete" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(244,63,94,0.05)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
-                                                                    <Trash2 size={13} />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
-                                        </tbody>
-                                    </table>
-                                </div>
+                                            );
+                                        })}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {/* Mobile Personnel View */}
+                            <div className="desktop-hide" style={{ display: 'grid', gap: '15px' }}>
+                                {(driverFilter === 'All' ? drivers : drivers.filter(d => d._id === driverFilter)).map((driver) => {
+                                    const activeEntry = attendance.find(a => a.driver?._id === driver._id && a.status === 'incomplete');
+                                    return (
+                                        <div key={driver._id} className="personnel-card" style={{ padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(30,41,59,0.5)' }}>
+                                            <div className="personnel-card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'black', fontWeight: '900', fontSize: '18px' }}>
+                                                        {driver.name.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>{driver.name.split(' (F)')[0]}</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '700' }}>{driver.mobile}</div>
+                                                    </div>
+                                                </div>
+                                                <div style={{ textAlign: 'right' }}>
+                                                    <div style={{ color: '#10b981', fontWeight: '900', fontSize: '16px' }}>₹{driver.dailyWage || 0}</div>
+                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase' }}>Daily Wage</div>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', gap: '8px', marginBottom: '15px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '12px' }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>Night Bonus</div>
+                                                    <div style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>₹{driver.nightStayBonus || 0}</div>
+                                                </div>
+                                                <div style={{ width: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>Same Day Ret</div>
+                                                    <div style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>₹{driver.sameDayReturnBonus || 0}</div>
+                                                </div>
+                                            </div>
+
+                                            {activeEntry && (
+                                                <div style={{ background: 'rgba(251, 191, 36, 0.05)', padding: '12px', borderRadius: '12px', border: '1px dashed rgba(251, 191, 36, 0.2)', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                    <div className="pulse" style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24' }}></div>
+                                                    <span style={{ color: '#fbbf24', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>Currently On Duty</span>
+                                                </div>
+                                            )}
+
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                                {activeEntry ? (
+                                                    <button onClick={() => { setSelectedDriver(driver); setShowPunchOutModal(true); }} style={{ height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #f43f5e 0%, #e11d48 100%)', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', gridColumn: 'span 2' }}>
+                                                        <LogOut size={16} /> Finish Duty
+                                                    </button>
+                                                ) : (
+                                                    <button onClick={() => { setSelectedDriver(driver); setShowPunchInModal(true); setPunchInData({ ...punchInData, date: getToday(), time: new Date().toISOString().slice(0, 16) }); }} style={{ height: '44px', borderRadius: '12px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', gridColumn: 'span 2' }}>
+                                                        <Plus size={16} /> Start Duty
+                                                    </button>
+                                                )}
+                                                <button onClick={() => { setSelectedDriver(driver); setShowAdvanceModal(true); setAdvanceData({ ...advanceData, date: getToday(), amount: '' }); }} style={{ height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '12px', fontWeight: '800' }}>
+                                                    <IndianRupee size={14} /> Advance
+                                                </button>
+                                                <button onClick={() => { setSelectedDriver(driver); setShowDocumentModal(true); }} style={{ height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '12px', fontWeight: '800' }}>
+                                                    <FileText size={14} /> Docs
+                                                </button>
+                                                <button onClick={() => { setEditingDriver(driver); setEditForm({ name: driver.name.split(' (F)')[0], mobile: driver.mobile, dailyWage: driver.dailyWage, licenseNumber: driver.licenseNumber, nightStayBonus: driver.nightStayBonus, sameDayReturnBonus: driver.sameDayReturnBonus }); setShowEditModal(true); }} style={{ height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#818cf8', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '12px', fontWeight: '800' }}>
+                                                    <Edit2 size={14} /> Edit
+                                                </button>
+                                                <button onClick={() => handleDeleteDriver(driver._id)} style={{ height: '40px', borderRadius: '12px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '12px', fontWeight: '800' }}>
+                                                    <Trash2 size={14} /> Delete
+                                                </button>
+                                            </div>
+                                        </div>
+                                    );
+                                })}
                             </div>
                         </motion.div>
                     )
@@ -1280,83 +1266,79 @@ const Freelancers = () => {
                                 </div>
 
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                                    {!summaryLoading && (
+                                        <div className="stat-card-row" style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                                            gap: '15px',
+                                            marginBottom: '10px'
+                                        }}>
+                                            {(() => {
+                                                const stats = { earned: 0, advance: 0, payable: 0 };
+                                                if (viewMode === 'monthly') {
+                                                    monthlySummaries
+                                                        .filter(s => settlementDriverFilter === 'All' || s.driverId?.toString() === settlementDriverFilter)
+                                                        .forEach(s => {
+                                                            stats.earned += (Number(s.totalEarned) || 0);
+                                                            stats.advance += (Number(s.totalAdvances) || 0);
+                                                            stats.payable += (Number(s.netPayable) || 0);
+                                                        });
+                                                } else {
+                                                    baseDrivers
+                                                        .filter(d => settlementDriverFilter === 'All' || d._id === settlementDriverFilter)
+                                                        .forEach(driver => {
+                                                            const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
+                                                            const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
+
+                                                            const dEarnedByDate = dAttendance.reduce((acc, a) => {
+                                                                if (a.status !== 'completed' && !a.punchOut?.time) return acc;
+                                                                const date = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : 'Unknown');
+                                                                if (!acc[date]) acc[date] = { wage: 0, extra: 0, bonus: 0 };
+                                                                if (acc[date].wage === 0) acc[date].wage = Number(a.dailyWage) || 0;
+                                                                const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
+                                                                const bonuses = (Number(a.punchOut?.allowanceTA) || 0) +
+                                                                    (Number(a.punchOut?.nightStayAmount) || 0) +
+                                                                    (Number(a.outsideTrip?.bonusAmount) || 0);
+                                                                acc[date].extra += parking;
+                                                                acc[date].bonus += bonuses;
+                                                                return acc;
+                                                            }, {});
+                                                            const dEarned = Object.values(dEarnedByDate).reduce((sum, d) => sum + d.wage + d.extra + d.bonus, 0);
+                                                            const dAdvanced = dAdvances.reduce((s, adv) => s + adv.amount, 0);
+                                                            stats.earned += dEarned;
+                                                            stats.advance += dAdvanced;
+                                                            stats.payable += (dEarned - dAdvanced);
+                                                        });
+                                                }
+
+                                                return (
+                                                    <>
+                                                        <div className="premium-glass" style={{ padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(16, 185, 129, 0.05)' }}>
+                                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Total Earned</div>
+                                                            <div style={{ color: '#10b981', fontSize: '24px', fontWeight: '900' }}>₹{stats.earned.toLocaleString()}</div>
+                                                        </div>
+                                                        <div className="premium-glass" style={{ padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(244, 63, 94, 0.05)' }}>
+                                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Total Advance</div>
+                                                            <div style={{ color: '#f43f5e', fontSize: '24px', fontWeight: '900' }}>₹{stats.advance.toLocaleString()}</div>
+                                                        </div>
+                                                        <div className="premium-glass" style={{ padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(251, 191, 36, 0.1)' }}>
+                                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Net Company Owed</div>
+                                                            <div style={{ color: '#fbbf24', fontSize: '24px', fontWeight: '900' }}>₹{stats.payable.toLocaleString()}</div>
+                                                        </div>
+                                                    </>
+                                                );
+                                            })()}
+                                        </div>
+                                    )}
                                     {summaryLoading ? (
                                         <div style={{ padding: '40px', textAlign: 'center' }}><div className="spinner"></div></div>
                                     ) : viewMode === 'monthly' ? (
                                         monthlySummaries
                                             .filter(s => settlementDriverFilter === 'All' || s.driverId?.toString() === settlementDriverFilter)
                                             .map(summary => (
-                                            <div
-                                                key={summary.driverId}
-                                                onClick={() => navigate(`/admin/freelancers/${summary.driverId}?month=${month}&year=${year}`)}
-                                                style={{
-                                                    background: 'rgba(15,23,42,0.6)',
-                                                    border: '1px solid rgba(255,255,255,0.07)',
-                                                    borderRadius: '16px',
-                                                    padding: '14px 18px',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '14px',
-                                                    cursor: 'pointer',
-                                                    transition: 'border-color 0.2s'
-                                                }}
-                                                onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'}
-                                                onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
-                                            >
-                                                <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                    <UserIcon size={16} color="#818cf8" />
-                                                </div>
-                                                <div style={{ flex: 1, minWidth: 0 }}>
-                                                    <div style={{ color: 'white', fontWeight: '800', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{summary.name}</div>
-                                                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', marginTop: '1px' }}>{summary.workingDays} days worked</div>
-                                                </div>
-                                                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexShrink: 0 }}>
-                                                    <div style={{ textAlign: 'right' }}>
-                                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Earned</div>
-                                                        <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{summary.totalEarned.toLocaleString()}</div>
-                                                    </div>
-                                                    <div style={{ textAlign: 'right' }}>
-                                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Advance</div>
-                                                        <div style={{ color: '#f87171', fontWeight: '900', fontSize: '14px' }}>₹{summary.totalAdvances.toLocaleString()}</div>
-                                                    </div>
-                                                    <div style={{ textAlign: 'right', minWidth: '80px' }}>
-                                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Net Payable</div>
-                                                        <div style={{ color: summary.netPayable >= 0 ? '#fbbf24' : '#34d399', fontWeight: '900', fontSize: '16px' }}>₹{Math.abs(summary.netPayable).toLocaleString()}</div>
-                                                    </div>
-                                                </div>
-                                                <ChevronRight size={15} color="rgba(255,255,255,0.2)" style={{ flexShrink: 0 }} />
-                                            </div>
-                                        ))
-                                    ) : (
-                                        baseDrivers
-                                            .filter(d => settlementDriverFilter === 'All' || d._id === settlementDriverFilter)
-                                            .map(driver => {
-                                            const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
-                                            const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
-
-                                            const dEarnedByDate = dAttendance.reduce((acc, a) => {
-                                                if (a.status !== 'completed' && !a.punchOut?.time) return acc;
-                                                const date = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : 'Unknown');
-                                                if (!acc[date]) acc[date] = { wage: 0, extra: 0, bonus: 0 };
-                                                if (acc[date].wage === 0) acc[date].wage = Number(a.dailyWage) || 0;
-                                                const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
-                                                const bonuses = (Number(a.punchOut?.allowanceTA) || 0) + 
-                                                              (Number(a.punchOut?.nightStayAmount) || 0) + 
-                                                              (Number(a.outsideTrip?.bonusAmount) || 0);
-                                                acc[date].extra += parking;
-                                                acc[date].bonus += bonuses;
-                                                return acc;
-                                            }, {});
-                                            const dEarned = Object.values(dEarnedByDate).reduce((sum, d) => sum + d.wage + d.extra + d.bonus, 0);
-                                            const dAdvanced = dAdvances.reduce((s, adv) => s + adv.amount, 0);
-                                            const dBalance = dEarned - dAdvanced;
-
-                                            if (dEarned === 0 && dAdvanced === 0) return null;
-
-                                            return (
                                                 <div
-                                                    key={driver._id}
-                                                    onClick={() => navigate(`/admin/freelancers/${driver._id}?from=${fromDate}&to=${toDate}`)}
+                                                    key={summary.driverId}
+                                                    onClick={() => navigate(`/admin/freelancers/${summary.driverId}?month=${month}&year=${year}`)}
                                                     style={{
                                                         background: 'rgba(15,23,42,0.6)',
                                                         border: '1px solid rgba(255,255,255,0.07)',
@@ -1366,8 +1348,10 @@ const Freelancers = () => {
                                                         alignItems: 'center',
                                                         gap: '14px',
                                                         cursor: 'pointer',
-                                                        transition: 'border-color 0.2s'
+                                                        transition: 'all 0.2s',
+                                                        flexWrap: 'wrap'
                                                     }}
+                                                    className="premium-row"
                                                     onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'}
                                                     onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
                                                 >
@@ -1375,27 +1359,95 @@ const Freelancers = () => {
                                                         <UserIcon size={16} color="#818cf8" />
                                                     </div>
                                                     <div style={{ flex: 1, minWidth: 0 }}>
-                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{driver.name.split(' (F)')[0]}</div>
-                                                        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', marginTop: '1px' }}>{dAttendance.length} duties</div>
+                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{summary.name}</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', marginTop: '1px' }}>{summary.workingDays} days worked</div>
                                                     </div>
                                                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexShrink: 0 }}>
                                                         <div style={{ textAlign: 'right' }}>
                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Earned</div>
-                                                            <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{dEarned.toLocaleString()}</div>
+                                                            <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{summary.totalEarned.toLocaleString()}</div>
                                                         </div>
                                                         <div style={{ textAlign: 'right' }}>
                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Advance</div>
-                                                            <div style={{ color: '#f87171', fontWeight: '900', fontSize: '14px' }}>₹{dAdvanced.toLocaleString()}</div>
+                                                            <div style={{ color: '#f87171', fontWeight: '900', fontSize: '14px' }}>₹{summary.totalAdvances.toLocaleString()}</div>
                                                         </div>
                                                         <div style={{ textAlign: 'right', minWidth: '80px' }}>
                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Net Payable</div>
-                                                            <div style={{ color: dBalance >= 0 ? '#fbbf24' : '#34d399', fontWeight: '900', fontSize: '16px' }}>₹{Math.abs(dBalance).toLocaleString()}</div>
+                                                            <div style={{ color: summary.netPayable >= 0 ? '#fbbf24' : '#34d399', fontWeight: '900', fontSize: '16px' }}>₹{Math.abs(summary.netPayable).toLocaleString()}</div>
                                                         </div>
                                                     </div>
                                                     <ChevronRight size={15} color="rgba(255,255,255,0.2)" style={{ flexShrink: 0 }} />
                                                 </div>
-                                            );
-                                        }).filter(Boolean)
+                                            ))
+                                    ) : (
+                                        baseDrivers
+                                            .filter(d => settlementDriverFilter === 'All' || d._id === settlementDriverFilter)
+                                            .map(driver => {
+                                                const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
+                                                const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
+
+                                                const dEarnedByDate = dAttendance.reduce((acc, a) => {
+                                                    if (a.status !== 'completed' && !a.punchOut?.time) return acc;
+                                                    const date = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : 'Unknown');
+                                                    if (!acc[date]) acc[date] = { wage: 0, extra: 0, bonus: 0 };
+                                                    if (acc[date].wage === 0) acc[date].wage = Number(a.dailyWage) || 0;
+                                                    const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
+                                                    const bonuses = (Number(a.punchOut?.allowanceTA) || 0) +
+                                                        (Number(a.punchOut?.nightStayAmount) || 0) +
+                                                        (Number(a.outsideTrip?.bonusAmount) || 0);
+                                                    acc[date].extra += parking;
+                                                    acc[date].bonus += bonuses;
+                                                    return acc;
+                                                }, {});
+                                                const dEarned = Object.values(dEarnedByDate).reduce((sum, d) => sum + d.wage + d.extra + d.bonus, 0);
+                                                const dAdvanced = dAdvances.reduce((s, adv) => s + adv.amount, 0);
+                                                const dBalance = dEarned - dAdvanced;
+
+                                                if (dEarned === 0 && dAdvanced === 0) return null;
+
+                                                return (
+                                                    <div
+                                                        key={driver._id}
+                                                        onClick={() => navigate(`/admin/freelancers/${driver._id}?from=${fromDate}&to=${toDate}`)}
+                                                        style={{
+                                                            background: 'rgba(15,23,42,0.6)',
+                                                            border: '1px solid rgba(255,255,255,0.07)',
+                                                            borderRadius: '16px',
+                                                            padding: '14px 18px',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '14px',
+                                                            cursor: 'pointer',
+                                                            transition: 'border-color 0.2s'
+                                                        }}
+                                                        onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'}
+                                                        onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
+                                                    >
+                                                        <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                                            <UserIcon size={16} color="#818cf8" />
+                                                        </div>
+                                                        <div style={{ flex: 1, minWidth: 0 }}>
+                                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{driver.name.split(' (F)')[0]}</div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', marginTop: '1px' }}>{dAttendance.length} duties</div>
+                                                        </div>
+                                                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexShrink: 0 }}>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Earned</div>
+                                                                <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{dEarned.toLocaleString()}</div>
+                                                            </div>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Advance</div>
+                                                                <div style={{ color: '#f87171', fontWeight: '900', fontSize: '14px' }}>₹{dAdvanced.toLocaleString()}</div>
+                                                            </div>
+                                                            <div style={{ textAlign: 'right', minWidth: '80px' }}>
+                                                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Net Payable</div>
+                                                                <div style={{ color: dBalance >= 0 ? '#fbbf24' : '#34d399', fontWeight: '900', fontSize: '16px' }}>₹{Math.abs(dBalance).toLocaleString()}</div>
+                                                            </div>
+                                                        </div>
+                                                        <ChevronRight size={15} color="rgba(255,255,255,0.2)" style={{ flexShrink: 0 }} />
+                                                    </div>
+                                                );
+                                            }).filter(Boolean)
                                     )}
 
                                     {((viewMode === 'monthly' && monthlySummaries.length === 0) || (viewMode === 'range' && baseDrivers.filter(d => {
@@ -1403,8 +1455,8 @@ const Freelancers = () => {
                                         const dAdv = advances.filter(a => a.driver?._id === d._id || a.driver === d._id);
                                         return dAtt.length > 0 || dAdv.length > 0;
                                     }).length === 0)) && !summaryLoading && (
-                                        <div style={{ textAlign: 'center', padding: '50px', color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>No settlement data found for selected filters.</div>
-                                    )}
+                                            <div style={{ textAlign: 'center', padding: '50px', color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>No settlement data found for selected filters.</div>
+                                        )}
                                 </div>
                             </div>
                         </motion.div>
@@ -1415,7 +1467,7 @@ const Freelancers = () => {
                 {
                     activeTab === 'logistics' && (
                         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
-                            {/* Duty Table View */}
+                            {/* Duty Table View - Desktop */}
                             {filteredAttendance.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '20px' }}>
                                     <Car size={40} style={{ color: 'rgba(255,255,255,0.15)', marginBottom: '16px' }} />
@@ -1423,7 +1475,8 @@ const Freelancers = () => {
                                     <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', marginTop: '6px' }}>Try changing the date range, driver filter, or search term</p>
                                 </div>
                             ) : (
-                                <div style={{ borderRadius: '24px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <>
+                                <div className="hide-mobile" style={{ borderRadius: '24px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     <div className="scroll-x">
                                         <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1100px' }}>
                                             <thead>
@@ -1444,7 +1497,6 @@ const Freelancers = () => {
                                                     const punchOutTime = a.punchOut?.time ? new Date(a.punchOut.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
                                                     const totalKM = a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0);
                                                     const isCompleted = a.status === 'completed' || !!a.punchOut?.time;
-
                                                     return (
                                                         <tr key={a._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }} className="ledger-row">
                                                             <td style={{ padding: '15px 25px' }}>
@@ -1537,6 +1589,67 @@ const Freelancers = () => {
                                         </table>
                                     </div>
                                 </div>
+
+                                {/* Duty Mobile View */}
+                                <div className="show-mobile" style={{ display: 'grid', gap: '15px' }}>
+                                    {filteredAttendance.map((a) => {
+                                        const punchInDate = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : null);
+                                        const punchInTime = a.punchIn?.time ? new Date(a.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
+                                        const punchOutTime = a.punchOut?.time ? new Date(a.punchOut.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
+                                        const totalKM = a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0);
+                                        const isCompleted = a.status === 'completed' || !!a.punchOut?.time;
+                                        const totalFinancials = (Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) + (Number(a.punchOut?.tollParkingAmount) || 0) + (Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0);
+
+                                        return (
+                                            <div key={a._id} className="glass-card" style={{ padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(30,41,59,0.5)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                                                    <div>
+                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '16px' }}>{a.driver?.name?.split(' (F)')[0] || '---'}</div>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                                            <div style={{ padding: '3px 8px', borderRadius: '6px', background: 'rgba(14,165,233,0.1)', color: '#0ea5e9', fontSize: '10px', fontWeight: '900' }}>{a.vehicle?.carNumber?.split('#')[0] || 'N/A'}</div>
+                                                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '700' }}>{punchInDate ? new Date(punchInDate).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '---'}</span>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <div style={{ color: '#10b981', fontWeight: '900', fontSize: '18px' }}>₹{totalFinancials.toLocaleString()}</div>
+                                                        <span style={{ fontSize: '9px', padding: '2px 8px', borderRadius: '100px', fontWeight: '900', marginTop: '4px', display: 'inline-block', background: isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: isCompleted ? '#10b981' : '#f59e0b' }}>
+                                                            {isCompleted ? 'COMPLETED' : 'ON DUTY'}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '14px', marginBottom: '15px' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
+                                                        <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)' }} />
+                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f43f5e' }} />
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '13px', fontWeight: '600' }}>{a.pickUpLocation || 'Start Location'}</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '600', marginTop: '6px' }}>{a.dropLocation || 'Pending...'}</div>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)', paddingLeft: '12px' }}>
+                                                        <div style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>{totalKM} KM</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700' }}>{punchInTime}</div>
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button onClick={() => setSelectedItem({ ...a, entryType: 'attendance' })} style={{ flex: 1, height: '40px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                        <Eye size={14} /> Proof
+                                                    </button>
+                                                    <button onClick={() => openEditDutyModal(a)} style={{ flex: 1, height: '40px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '12px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                                                        <Edit2 size={14} /> Edit
+                                                    </button>
+                                                    <button onClick={() => handleDeleteDuty(a._id)} style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                        <Trash2 size={14} />
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                                </>
                             )}
                         </motion.div>
                     )
@@ -1740,13 +1853,21 @@ const Freelancers = () => {
                                     </div>
 
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
-                                        {/* Fuel field removed */}
-                                        <Field label="Parking/Toll (₹)" type="number" value={manualData.parkingAmount} onChange={v => setManualData({ ...manualData, parkingAmount: v })} />
+                                        <Field label="Parking/Toll (₹)" type="text" inputMode="decimal" value={manualData.parkingAmount} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setManualData({ ...manualData, parkingAmount: cleaned });
+                                        }} />
                                     </div>
 
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', alignItems: 'end' }}>
-                                        <Field label="Duty Salary (Wage) *" type="number" value={manualData.dailyWage} onChange={v => setManualData({ ...manualData, dailyWage: v })} required />
-                                        <Field label="Extra Bonus (₹)" type="number" value={manualData.otherBonus} onChange={v => setManualData({ ...manualData, otherBonus: v })} />
+                                        <Field label="Duty Salary (Wage) *" type="text" inputMode="decimal" value={manualData.dailyWage} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setManualData({ ...manualData, dailyWage: cleaned });
+                                        }} required />
+                                        <Field label="Extra Bonus (₹)" type="text" inputMode="decimal" value={manualData.otherBonus} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setManualData({ ...manualData, otherBonus: cleaned });
+                                        }} />
                                     </div>
 
                                     {/* Bonus fields removed as per request */}
@@ -1840,12 +1961,18 @@ const Freelancers = () => {
                                     {/* Row 2: Drop Location + Duty Salary */}
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                                         <Field label="Drop Location" value={punchOutData.dropLocation} onChange={v => setPunchOutData({ ...punchOutData, dropLocation: v })} />
-                                        <Field label="Duty Salary (₹) *" type="number" value={punchOutData.dailyWage} onChange={v => setPunchOutData({ ...punchOutData, dailyWage: v })} required />
+                                        <Field label="Duty Salary (₹) *" type="text" inputMode="decimal" value={punchOutData.dailyWage} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setPunchOutData({ ...punchOutData, dailyWage: cleaned });
+                                        }} required />
                                     </div>
 
                                     {/* Row 3: Parking + Parking Slip */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                                        <Field label="Parking / Toll (₹)" type="number" value={punchOutData.parkingAmount} onChange={v => setPunchOutData({ ...punchOutData, parkingAmount: v })} />
+                                    <div className="mobile-stack" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px' }}>
+                                        <Field label="Parking / Toll (₹)" type="text" inputMode="decimal" value={punchOutData.parkingAmount} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setPunchOutData({ ...punchOutData, parkingAmount: cleaned });
+                                        }} />
                                         <PhotoUpload label="Parking Slip" icon={ImageIcon} onFileSelect={f => setPunchOutData({ ...punchOutData, parkingSlipPhoto: f })} previewFile={punchOutData.parkingSlipPhoto} />
                                     </div>
 
@@ -2046,7 +2173,10 @@ const Freelancers = () => {
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                <Field label="Parking/Toll (₹)" type="number" value={editDutyForm.parkingAmount} onChange={v => setEditDutyForm({ ...editDutyForm, parkingAmount: v })} />
+                                <Field label="Parking/Toll (₹)" type="text" inputMode="decimal" value={editDutyForm.parkingAmount} onChange={v => {
+                                    const cleaned = v.replace(/[^0-9.]/g, '');
+                                    setEditDutyForm({ ...editDutyForm, parkingAmount: cleaned });
+                                }} />
                                 <div>
                                     <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Paid By</label>
                                     <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.05)', height: '52px' }}>
@@ -2065,8 +2195,15 @@ const Freelancers = () => {
                             </div>
 
                             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                <Field label="Daily Wage (₹) *" type="number" value={editDutyForm.dailyWage} onChange={v => setEditDutyForm({ ...editDutyForm, dailyWage: v })} required />
-                                <Field label="Bonus Amount (₹)" type="number" value={editDutyForm.bonusAmount} onChange={v => setEditDutyForm({ ...editDutyForm, bonusAmount: v })} />
+                                <Field label="Daily Wage (₹) *" type="text" inputMode="decimal" value={editDutyForm.dailyWage} onChange={v => {
+                                    // Strip non-numeric except decimal point
+                                    const cleaned = v.replace(/[^0-9.]/g, '');
+                                    setEditDutyForm({ ...editDutyForm, dailyWage: cleaned });
+                                }} required />
+                                <Field label="Bonus Amount (₹)" type="text" inputMode="decimal" value={editDutyForm.bonusAmount} onChange={v => {
+                                    const cleaned = v.replace(/[^0-9.]/g, '');
+                                    setEditDutyForm({ ...editDutyForm, bonusAmount: cleaned });
+                                }} />
                             </div>
 
                             <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px', textAlign: 'center', marginTop: '-10px', marginBottom: '10px' }}>
@@ -2251,37 +2388,77 @@ const Freelancers = () => {
                     )}
                 </AnimatePresence>
             </div>
+
             <style>{`
                 @media (max-width: 768px) {
+                    .hide-mobile {
+                        display: none !important;
+                    }
+                    .show-mobile {
+                        display: grid !important; /* or block, flex, etc., depending on desired layout */
+                    }
                     .settlement-row-header {
                         flex-direction: column !important;
-                        align-items: flex-start !important;
-                        text-align: left !important;
-                    }
-                    .settlement-stats-grid {
-                        width: 100% !important;
-                        justify-content: space-between !important;
-                        gap: 15px !important;
-                        margin: 10px 0 !important;
-                        padding: 15px 0 !important;
-                        border-top: 1px solid rgba(255,255,255,0.05) !important;
-                        border-bottom: 1px solid rgba(255,255,255,0.05) !important;
-                    }
-                    .settlement-stats-grid > div {
-                        flex: 1 !important;
-                        text-align: left !important;
-                    }
-                    .header-actions {
-                        width: 100% !important;
-                        justify-content: space-between !important;
-                        margin-top: 15px !important;
-                    }
-                    .header-actions > div {
-                        flex: 1 !important;
-                    }
-                    .mobile-stack {
+                @media (max-width: 768px) {
+                    .freelancer-header {
                         flex-direction: column !important;
                         align-items: flex-start !important;
+                        gap: 20px !important;
+                    }
+                    .stat-card-row {
+                        grid-template-columns: 1fr !important;
+                        gap: 12px !important;
+                    }
+                    .filter-hub {
+                        padding: 15px !important;
+                    }
+                    .filter-row {
+                        flex-direction: column !important;
+                        gap: 15px !important;
+                    }
+                    .search-container {
+                        max-width: 100% !important;
+                    }
+                    .tab-container {
+                        overflow-x: auto !important;
+                        justify-content: flex-start !important;
+                        padding-bottom: 5px !important;
+                        gap: 10px !important;
+                        display: flex !important;
+                    }
+                    .tab-container::-webkit-scrollbar {
+                        display: none;
+                    }
+                    .tab-btn {
+                        padding: 10px 18px !important;
+                        white-space: nowrap !important;
+                        flex-shrink: 0 !important;
+                    }
+                    .content-tabs {
+                        padding: 15px !important;
+                    }
+                    .personnel-card {
+                        padding: 15px !important;
+                        margin-bottom: 12px !important;
+                    }
+                    .personnel-card-header {
+                        flex-direction: row !important;
+                        justify-content: space-between !important;
+                    }
+                    .field-grid {
+                        grid-template-columns: 1fr !important;
+                        gap: 15px !important;
+                    }
+                    .modal-premium {
+                        padding: 20px !important;
+                        border-radius: 20px !important;
+                        width: 95% !important;
+                    }
+                    .mobile-hide {
+                        display: none !important;
+                    }
+                    .mobile-full {
+                        width: 100% !important;
                     }
                 }
                 .premium-row:hover {
@@ -2294,6 +2471,7 @@ const Freelancers = () => {
                     transition: all 0.3s ease !important;
                 }
             `}</style>
+
         </div >
     );
 };

@@ -301,8 +301,8 @@ const Maintenance = () => {
         const matchesGarage = filterGarage === 'All' || (r.garageName || r.vendorName) === filterGarage;
         const matchesVehicle = filterVehicle === 'All' || r.vehicle?.carNumber === filterVehicle;
 
-        // Exclude Wash, Puncture, Tissues, Water, and Cleaning as they are now in Driver Services
-        const serviceRegex = /wash|puncture|puncher|tissue|water|cleaning/i;
+        // Exclude Wash, Puncture, Tissues, Water, Cleaning, Masks, Sanitizers as they are in Driver Services
+        const serviceRegex = /wash|puncture|puncher|tissue|water|cleaning|mask|sanitizer/i;
         const isService = serviceRegex.test(r.category || '') || 
                           serviceRegex.test(r.description || '') || 
                           serviceRegex.test(r.maintenanceType || '');

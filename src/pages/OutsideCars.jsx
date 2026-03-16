@@ -6,6 +6,50 @@ import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST } from '../utils/istUtils';
 
+const styles = `
+  @media (max-width: 768px) {
+    .outside-header-row {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 20px !important;
+    }
+    .outside-stat-circles {
+      width: 100% !important;
+      justify-content: space-between !important;
+      gap: 10px !important;
+    }
+    .outside-control-bar {
+      padding: 15px !important;
+    }
+    .outside-filter-row {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 15px !important;
+    }
+    .outside-search-wrapper {
+        min-width: 100% !important;
+    }
+    .hide-mobile {
+        display: none !important;
+    }
+    .show-mobile {
+        display: flex !important;
+    }
+    .mobile-full-width {
+        width: 100% !important;
+        flex: none !important;
+    }
+  }
+  .premium-scroll::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
+  .premium-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+  }
+`;
+
 const OutsideCars = () => {
     const { selectedCompany } = useCompany();
     const [vehicles, setVehicles] = useState([]);
@@ -21,11 +65,19 @@ const OutsideCars = () => {
 
     /* navigate dates */
     const shiftDays = (n) => {
-        const f = nowIST(fromDate);
-        f.setUTCDate(f.getUTCDate() + n);
-        const fStr = f.toISOString().split('T')[0];
-        setFromDate(fStr);
-        if (!isRange) setToDate(fStr);
+        const t = nowIST(toDate);
+        t.setUTCDate(t.getUTCDate() + n);
+        const tStr = toISTDateString(t);
+
+        if (isRange) {
+            const f = nowIST(fromDate);
+            f.setUTCDate(f.getUTCDate() + n);
+            setFromDate(toISTDateString(f));
+            setToDate(tStr);
+        } else {
+            setFromDate(tStr);
+            setToDate(tStr);
+        }
     };
 
     // Modal & Editing State
@@ -254,6 +306,7 @@ const OutsideCars = () => {
 
     return (
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
+            <style>{styles}</style>
             <SEO title="Outside Fleet Command" description="Manage external vehicles and freelancer drivers for specific duties." />
             
             <style>{`
@@ -302,46 +355,91 @@ const OutsideCars = () => {
 
             {/* ═══ PREMIUM DYNAMIC HEADER ═══ */}
             <header style={{ 
-                padding: 'clamp(24px, 5vw, 48px) 0',
-                position: 'relative',
-                overflow: 'hidden'
+                padding: 'clamp(20px, 4vw, 40px) 0',
+                position: 'relative'
             }}>
-                <div style={{
+                <div className="outside-header-row" style={{
                     display: 'flex',
                     justifyContent: 'space-between',
-                    alignItems: 'flex-start',
-                    flexWrap: 'wrap',
+                    alignItems: 'center',
                     gap: '24px',
-                    position: 'relative',
-                    zIndex: 2,
-                    marginBottom: '40px'
+                    marginBottom: 'clamp(20px, 4vw, 32px)'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 3vw, 20px)' }}>
                         <div style={{
-                            width: '64px',
-                            height: '64px',
+                            width: 'clamp(48px, 10vw, 64px)',
+                            height: 'clamp(48px, 10vw, 64px)',
                             background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-                            borderRadius: '20px',
+                            borderRadius: 'clamp(12px, 3vw, 20px)',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
                             boxShadow: '0 20px 40px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1)',
                             border: '1px solid rgba(255,255,255,0.05)',
-                            position: 'relative'
+                            position: 'relative',
+                            flexShrink: 0
                         }}>
                             <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'radial-gradient(circle at 30% 30%, rgba(251, 191, 36, 0.2), transparent 70%)' }}></div>
-                            <Car size={32} color="#fbbf24" style={{ filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.4))' }} />
+                            <Car size={28} color="#fbbf24" style={{ filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.4))' }} />
                         </div>
                         <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                                <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2, repeat: Infinity }} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 10px #fbbf24' }}></motion.div>
-                                <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>Vendor Command Center</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2, repeat: Infinity }} style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 10px #fbbf24' }}></motion.div>
+                                <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Vendor Command</span>
                             </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(28px, 6vw, 42px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1.1 }}>
                                 Outside <span className="text-gradient-yellow">Fleet</span>
                             </h1>
                         </div>
                     </div>
+
+                    <div className="outside-stat-circles" style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
+                        {/* CIRCULAR STATS */}
+                        <div style={{ display: 'flex', gap: '16px' }}>
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ 
+                                width: 'clamp(80px, 15vw, 110px)', height: 'clamp(80px, 15vw, 110px)', borderRadius: '50%',
+                                background: 'rgba(15, 23, 42, 0.6)', 
+                                border: '1px solid rgba(251, 191, 36, 0.1)', 
+                                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                                position: 'relative'
+                            }}>
+                                <svg className="stat-circle-svg" viewBox="0 0 100 100">
+                                    <circle className="stat-circle-bg" cx="50" cy="50" r="45" />
+                                    <motion.circle 
+                                        className="stat-circle-progress payout-glow" 
+                                        cx="50" cy="50" r="45" 
+                                        stroke="#fbbf24"
+                                        initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }}
+                                        animate={{ strokeDashoffset: 0 }}
+                                        transition={{ duration: 1.5, ease: "easeOut" }}
+                                    />
+                                </svg>
+                                <span style={{ fontSize: '7px', fontWeight: '950', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px', position: 'relative', zIndex: 1 }}>Payout</span>
+                                <span style={{ color: 'white', fontSize: 'clamp(12px, 3vw, 15px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalPayable > 99999 ? (totalPayable/1000).toFixed(1) + 'k' : '₹' + totalPayable.toLocaleString()}</span>
+                            </motion.div>
+
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} style={{ 
+                                width: 'clamp(80px, 15vw, 110px)', height: 'clamp(80px, 15vw, 110px)', borderRadius: '50%',
+                                background: 'rgba(15, 23, 42, 0.6)', 
+                                border: '1px solid rgba(16, 185, 129, 0.1)', 
+                                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
+                                position: 'relative'
+                            }}>
+                                <svg className="stat-circle-svg" viewBox="0 0 100 100">
+                                    <circle className="stat-circle-bg" cx="50" cy="50" r="45" />
+                                    <motion.circle 
+                                        className="stat-circle-progress logs-glow" 
+                                        cx="50" cy="50" r="45" 
+                                        stroke="#10b981"
+                                        initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }}
+                                        animate={{ strokeDashoffset: -200 }} 
+                                        transition={{ duration: 1.8, ease: "easeOut" }}
+                                    />
+                                </svg>
+                                <span style={{ fontSize: '7px', fontWeight: '950', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px', position: 'relative', zIndex: 1 }}>Logs</span>
+                                <span style={{ color: 'white', fontSize: 'clamp(14px, 4vw, 18px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalDutiesCount}</span>
+                            </motion.div>
+                        </div>
 
                     <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
                         {/* CIRCULAR STATS */}
@@ -394,31 +492,28 @@ const OutsideCars = () => {
                         </div>
 
                         {/* TOP RIGHT BUTTONS */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div className="outside-filter-row" style={{ display: 'flex', gap: '12px', width: '100%', justifyContent: 'flex-end' }}>
                             <button
                                 onClick={handleOpenLogDuty}
                                 style={{ 
                                     display: 'flex', 
                                     alignItems: 'center', 
                                     justifyContent: 'center',
-                                    gap: '12px', 
-                                    height: '54px', 
-                                    padding: '0 30px', 
-                                    borderRadius: '16px', 
+                                    gap: '10px', 
+                                    height: '50px', 
+                                    padding: '0 24px', 
+                                    borderRadius: '14px', 
                                     fontWeight: '900', 
                                     background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', 
                                     color: 'black', 
                                     border: 'none', 
-                                    whiteSpace: 'nowrap',
-                                    boxShadow: '0 10px 25px rgba(251, 191, 36, 0.3)',
-                                    fontSize: '14px',
+                                    fontSize: '13px',
                                     cursor: 'pointer',
-                                    transition: 'all 0.3s'
+                                    flex: 1,
+                                    maxWidth: '240px'
                                 }}
-                                onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                                onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                             >
-                                <Plus size={20} strokeWidth={3} /> Add Duty Entry
+                                <Plus size={18} strokeWidth={3} /> Add Duty Entry
                             </button>
                             <button
                                 onClick={async () => {
@@ -436,60 +531,33 @@ const OutsideCars = () => {
                                         'Service Type': v.dutyType || '',
                                         'Amount': Number(v.dutyAmount) || 0
                                     }));
-
-                                    // Add Total Row
                                     const totalAmount = reportData.reduce((sum, row) => sum + row.Amount, 0);
                                     reportData.push({
-                                        'Property': '',
-                                        'Owner': '',
-                                        'Date': '',
-                                        'Vehicle Details': '',
-                                        'Drop Location': '',
-                                        'Service Type': 'TOTAL PAYABLE',
-                                        'Amount': totalAmount
+                                        'Property': '', 'Owner': '', 'Date': '', 'Vehicle Details': '', 'Drop Location': '', 'Service Type': 'TOTAL PAYABLE', 'Amount': totalAmount
                                     });
-
                                     const ws = XLSX.utils.json_to_sheet(reportData);
-
-                                    // Styling
                                     const range = XLSX.utils.decode_range(ws['!ref']);
                                     for (let C = range.s.c; C <= range.e.c; ++C) {
                                         let maxWidth = 10;
                                         for (let R = range.s.r; R <= range.e.r; ++R) {
                                             const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
                                             if (!cell) continue;
-
                                             cell.s = { alignment: { horizontal: 'center', vertical: 'center' }, font: { name: 'Arial', sz: 10 } };
-
-                                            // Header Styling
-                                            if (R === 0) {
-                                                cell.s.font.bold = true;
-                                                cell.s.fill = { fgColor: { rgb: "4F46E5" } }; // Indigo-600
-                                                cell.s.font.color = { rgb: "FFFFFF" };
-                                            }
-
-                                            // Data Alignment
-                                            if (C === 6) cell.s.alignment.horizontal = 'right'; // Amount column
-
-                                            // Total Row Styling
-                                            if (R === range.e.r) {
-                                                cell.s.font.bold = true;
-                                                cell.s.fill = { fgColor: { rgb: "E0E7FF" } }; // Indigo-100
-                                            }
-
+                                            if (R === 0) { cell.s.font.bold = true; cell.s.fill = { fgColor: { rgb: "4F46E5" } }; cell.s.font.color = { rgb: "FFFFFF" }; }
+                                            if (C === 6) cell.s.alignment.horizontal = 'right';
+                                            if (R === range.e.r) { cell.s.font.bold = true; cell.s.fill = { fgColor: { rgb: "E0E7FF" } }; }
                                             if (cell.v) maxWidth = Math.max(maxWidth, cell.v.toString().length + 5);
                                         }
                                         if (!ws['!cols']) ws['!cols'] = [];
                                         ws['!cols'][C] = { wch: maxWidth };
                                     }
-
                                     const wb = XLSX.utils.book_new();
                                     XLSX.utils.book_append_sheet(wb, ws, "Outside Fleet Log");
                                     XLSX.writeFile(wb, `Outside_Fleet_Report_${fromDate}_to_${toDate}.xlsx`);
                                 }}
                                 style={{
-                                    height: '38px',
-                                    padding: '0 18px',
+                                    height: '50px',
+                                    padding: '0 16px',
                                     background: 'rgba(16, 185, 129, 0.08)',
                                     border: '1px solid rgba(16, 185, 129, 0.2)',
                                     color: '#34d399',
@@ -498,77 +566,78 @@ const OutsideCars = () => {
                                     alignItems: 'center',
                                     justifyContent: 'center',
                                     gap: '8px',
-                                    borderRadius: '12px',
+                                    borderRadius: '14px',
                                     fontSize: '11px',
-                                    cursor: 'pointer',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px'
+                                    cursor: 'pointer'
                                 }}
                             >
-                                <Save size={14} /> Export to Excel
+                                <Save size={16} /> <span className="hide-mobile">Export Excel</span>
                             </button>
                         </div>
+                    </div>
                 </div>
                 </div>
 
-                {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
-                <div className="glass-card" style={{ 
-                    padding: '12px', 
-                    marginBottom: '32px', 
-                    display: 'flex', 
-                    flexWrap: 'wrap', 
-                    gap: '12px', 
-                    alignItems: 'center', 
-                    background: 'rgba(15, 23, 42, 0.4)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.04)',
-                    borderRadius: '24px',
-                    boxShadow: '0 15px 35px rgba(0,0,0,0.2)'
-                }}>
-                    <div style={{ position: 'relative', flex: '1.5', minWidth: '240px' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(251, 191, 36, 0.4)' }} />
+            {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
+            <div className="outside-control-bar" style={{ 
+                padding: 'clamp(10px, 2vw, 12px)', 
+                marginBottom: 'clamp(24px, 4vw, 32px)', 
+                display: 'flex', 
+                flexDirection: 'column',
+                gap: '12px', 
+                background: 'rgba(15, 23, 42, 0.4)',
+                backdropFilter: 'blur(10px)',
+                border: '1px solid rgba(255,255,255,0.04)',
+                borderRadius: '24px'
+            }}>
+                <div className="outside-filter-row" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div className="outside-search-wrapper" style={{ position: 'relative', flex: '1.5', minWidth: '0' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(251, 191, 36, 0.4)', zIndex: 1 }} />
                         <input
                             type="text"
-                            placeholder="Universal Search (Plate, Owner, Property...)"
+                            placeholder="Universal Search..."
                             className="premium-compact-input"
                             value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
-                            style={{ paddingLeft: '48px', height: '52px', border: '1px solid rgba(255,255,255,0.06)' }}
+                            style={{ paddingLeft: '48px', height: '52px' }}
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px', flex: '1', minWidth: '300px' }}>
+                    <div className="outside-filter-row" style={{ display: 'flex', gap: '8px', flex: '2', minWidth: '0' }}>
                         <div style={{ flex: 1, position: 'relative' }}>
-                            <select value={ownerFilter} onChange={e => handleOwnerChange(e.target.value)} className="premium-compact-input" style={{ height: '52px', paddingLeft: '16px', appearance: 'none', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <select value={ownerFilter} onChange={e => handleOwnerChange(e.target.value)} className="premium-compact-input" style={{ height: '52px', appearance: 'none' }}>
                                 <option value="All">All Vendors</option>
                                 {uniqueOwners.map(o => <option key={o} value={o}>{o}</option>)}
                             </select>
                             <ChevronRight size={14} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
                         </div>
                         <div style={{ flex: 1, position: 'relative' }}>
-                            <select value={propertyFilter} onChange={e => setPropertyFilter(e.target.value)} className="premium-compact-input" style={{ height: '52px', paddingLeft: '16px', appearance: 'none', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <select value={propertyFilter} onChange={e => setPropertyFilter(e.target.value)} className="premium-compact-input" style={{ height: '52px', appearance: 'none' }}>
                                 <option value="All">All Properties</option>
                                 {uniqueProperties.map(p => <option key={p} value={p}>{p}</option>)}
                             </select>
                             <ChevronRight size={14} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
                         </div>
                     </div>
+                </div>
 
-                    {/* REDESIGNED TRANSACTION FILTERS */}
-                    <div style={{
+                <div className="flex-resp" style={{ gap: '12px', alignItems: 'center' }}>
+                    {/* TRANSACTION FILTERS SCROLLABLE */}
+                    <div className="premium-scroll" style={{
                         display: 'flex',
                         background: 'rgba(15, 23, 42, 0.6)',
                         padding: '6px',
                         borderRadius: '18px',
                         border: '1px solid rgba(255,255,255,0.05)',
                         gap: '6px',
-                        boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)'
+                        overflowX: 'auto',
+                        flex: '1.5'
                     }}>
                         {[
-                            { id: 'All', label: 'All Fleet', icon: Layers, color: '#94a3b8' },
+                            { id: 'All', label: 'All', icon: Layers, color: '#94a3b8' },
                             { id: 'Duty', label: 'Duties', icon: Briefcase, color: '#fbbf24' },
-                            { id: 'Buy', label: 'Purchases', icon: ShoppingCart, color: '#22c55e' },
-                            { id: 'Sell', label: 'Sales', icon: TrendingUp, color: '#ef4444' }
+                            { id: 'Buy', label: 'Buy', icon: ShoppingCart, color: '#22c55e' },
+                            { id: 'Sell', label: 'Sell', icon: TrendingUp, color: '#ef4444' }
                         ].map(type => (
                             <button
                                 key={type.id}
@@ -580,24 +649,23 @@ const OutsideCars = () => {
                                     fontSize: '11px',
                                     fontWeight: '950',
                                     cursor: 'pointer',
-                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                                     background: transactionFilter === type.id ? type.color + '15' : 'transparent',
                                     color: transactionFilter === type.id ? type.color : 'rgba(255,255,255,0.3)',
                                     textTransform: 'uppercase',
-                                    letterSpacing: '1px',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '8px',
-                                    boxShadow: transactionFilter === type.id ? '0 4px 12px ' + type.color + '10' : 'none'
+                                    whiteSpace: 'nowrap'
                                 }}
                             >
-                                <type.icon size={14} style={{ opacity: transactionFilter === type.id ? 1 : 0.4 }} />
+                                <type.icon size={14} />
                                 {type.label}
                             </button>
                         ))}
                     </div>
 
-                    <div style={{
+                    <div className="outside-filter-row" style={{
+                        flex: '1',
                         display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
@@ -606,52 +674,47 @@ const OutsideCars = () => {
                         borderRadius: '16px',
                         border: '1px solid rgba(255,255,255,0.05)'
                     }}>
-                        <button onClick={() => shiftDays(-1)} className="action-btn-hover" style={{
-                            width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}> <ChevronLeft size={18} /> </button>
+                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                            <button onClick={() => shiftDays(-1)} style={{
+                                width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}> <ChevronLeft size={16} /> </button>
 
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                            {isRange && (
-                                <div style={{ position: 'relative', overflow: 'hidden', height: '40px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '12px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '9px', fontWeight: '900', color: '#38bdf8' }}>FROM</span>
-                                    <span style={{ fontSize: '12px', fontWeight: '800', color: 'white' }}>{formatDateIST(fromDate)}</span>
-                                    <input type="date" value={fromDate} onChange={e => setFromDate(e.target.value)} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
-                                </div>
-                            )}
-                            <div style={{ position: 'relative', overflow: 'hidden', height: '40px', background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(56, 189, 248, 0.1)', border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(56, 189, 248, 0.2)'}`, borderRadius: '12px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <span style={{ fontSize: '9px', fontWeight: '900', color: isRange ? '#fbbf24' : '#38bdf8' }}>{isRange ? 'TO' : 'DATE'}</span>
-                                <span style={{ fontSize: '12px', fontWeight: '800', color: 'white' }}>{formatDateIST(toDate)}</span>
-                                <input type="date" value={toDate} onChange={e => { setToDate(e.target.value); if(!isRange) setFromDate(e.target.value); }} style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
+                            <div 
+                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                style={{ height: '36px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '10px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', position: 'relative' }}
+                            >
+                                <span style={{ fontSize: '11px', fontWeight: '800', color: 'white', whiteSpace: 'nowrap' }}>
+                                    {isRange ? `${formatDateIST(fromDate)} - ${formatDateIST(toDate)}` : formatDateIST(toDate)}
+                                </span>
+                                <input type="date" value={toDate} onChange={e => { setToDate(e.target.value); if(!isRange) setFromDate(e.target.value); }} style={{ position: 'absolute', inset: 0, opacity: 0 }} />
                             </div>
+
+                            <button onClick={() => shiftDays(1)} style={{
+                                width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                            }}> <ChevronRight size={16} /> </button>
                         </div>
-
-                        <button onClick={() => shiftDays(1)} className="action-btn-hover" style={{
-                            width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                        }}> <ChevronRight size={18} /> </button>
                         
-                        <div style={{ height: '24px', width: '1px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }}></div>
-
                         <button onClick={() => { setIsRange(!isRange); if(isRange) setFromDate(toDate); }} style={{
-                            height: '40px', padding: '0 12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)', background: isRange ? 'rgba(251, 191, 36, 0.15)' : 'rgba(255,255,255,0.03)',
-                            color: isRange ? '#fbbf24' : 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px'
-                        }}> {isRange ? 'Range Mode' : 'Single'} </button>
+                            height: '36px', padding: '0 10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: isRange ? 'rgba(251, 191, 36, 0.15)' : 'rgba(255,255,255,0.03)',
+                            color: isRange ? '#fbbf24' : 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase'
+                        }}> {isRange ? 'Range' : 'Day'} </button>
                     </div>
                 </div>
+            </div>
 
 
             </header>
 
             {/* ═══ CLEAN PREMIUM DESKTOP TABLE ═══ */}
-            <div className="glass-card hide-mobile" style={{ 
+            <div className="glass-card hide-mobile scroll-x" style={{ 
                 padding: 0, 
-                overflow: 'hidden', 
                 border: '1px solid rgba(255,255,255,0.08)', 
                 background: 'rgba(8, 14, 26, 0.4)',
                 backdropFilter: 'blur(20px)',
                 borderRadius: '24px',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
             }}>
-                <div style={{ overflowX: 'auto' }}>
+                <div style={{ minWidth: '1000px' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                         <thead>
                             <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
@@ -763,51 +826,58 @@ const OutsideCars = () => {
             {/* ═══ PREMIUM MOBILE DUTY CARDS ═══ */}
             <div className="show-mobile">
                 {loading ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '100px 0', gap: '16px' }}>
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '40px', height: '40px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: '#fbbf24', borderRadius: '50%' }}></motion.div>
-                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', letterSpacing: '2px' }}>LOADING FLEET...</span>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', gap: '16px' }}>
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '32px', height: '32px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: '#fbbf24', borderRadius: '50%' }}></motion.div>
+                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', letterSpacing: '2px' }}>LOADING FLEET...</span>
                     </div>
                 ) : filtered.length === 0 ? (
-                    <div className="glass-card" style={{ textAlign: 'center', padding: '80px 20px', border: '1px dashed rgba(255,255,255,0.1)', background: 'transparent' }}>
-                        <Car size={40} style={{ opacity: 0.2, color: '#fbbf24', marginBottom: '16px' }} />
-                        <h3 style={{ color: 'white', fontWeight: '800', fontSize: '16px' }}>No Data Available</h3>
-                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>Try adjusting your filters or date range.</p>
+                    <div className="glass-card" style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed rgba(255,255,255,0.1)', background: 'transparent' }}>
+                        <Car size={32} style={{ opacity: 0.2, color: '#fbbf24', marginBottom: '16px' }} />
+                        <h3 style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>No Data Available</h3>
+                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>Try adjusting your filters.</p>
                     </div>
                 ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                         {filtered.map((v, idx) => (
                             <motion.div
                                 key={v._id}
-                                initial={{ opacity: 0, scale: 0.95 }}
-                                animate={{ opacity: 1, scale: 1 }}
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: idx * 0.04 }}
-                                className="mobile-duty-card"
+                                style={{
+                                    background: 'rgba(15, 23, 42, 0.6)',
+                                    borderRadius: '24px',
+                                    border: '1px solid rgba(255,255,255,0.06)',
+                                    padding: '20px',
+                                    position: 'relative',
+                                    overflow: 'hidden'
+                                }}
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
                                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                        <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <Car size={20} color="#38bdf8" />
+                                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <Car size={18} color="#38bdf8" />
                                         </div>
                                         <div>
-                                            <div style={{ fontSize: '17px', fontWeight: '950', color: 'white', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <div style={{ fontSize: '15px', fontWeight: '950', color: 'white', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                 {v.carNumber?.split('#')[0]}
-                                                <span className={`badge-ext ${v.transactionType === 'Buy' ? 'bg-buy' : v.transactionType === 'Sell' ? 'bg-sell' : ''}`} style={{ fontSize: '8px' }}>
+                                                <span className={`badge-ext ${v.transactionType === 'Buy' ? 'bg-buy' : v.transactionType === 'Sell' ? 'bg-sell' : ''}`} style={{ fontSize: '7px', padding: '2px 6px' }}>
                                                     {v.transactionType || 'EXT'}
                                                 </span>
                                             </div>
-                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase' }}>{v.model}</div>
+                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase' }}>{v.model}</div>
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontSize: '18px', fontWeight: '950', color: '#10b981' }}>₹{v.dutyAmount?.toLocaleString()}</div>
-                                        <div style={{ fontSize: '9px', color: 'rgba(16, 185, 129, 0.5)', fontWeight: '900', textTransform: 'uppercase' }}>Payout</div>
+                                        <div style={{ fontSize: '16px', fontWeight: '950', color: '#10b981' }}>₹{v.dutyAmount?.toLocaleString()}</div>
+                                        <div style={{ fontSize: '8px', color: 'rgba(16, 185, 129, 0.5)', fontWeight: '900', textTransform: 'uppercase' }}>Payout</div>
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.2fr', gap: '12px', marginBottom: '16px', padding: '14px', background: 'rgba(0,0,0,0.25)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '4px' }}>Timeline</label>
-                                        <span style={{ fontSize: '13px', fontWeight: '800', color: '#fbbf24' }}>
+                                        <label style={{ display: 'block', fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '2px' }}>Log Date</label>
+                                        <span style={{ fontSize: '12px', fontWeight: '800', color: '#fbbf24' }}>
                                             {(() => {
                                                 const parts = v.carNumber?.split('#');
                                                 if (parts && parts[1]) {
@@ -815,34 +885,34 @@ const OutsideCars = () => {
                                                     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
                                                     return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
                                                 }
-                                                return 'N/A';
+                                                return 'Manual';
                                             })()}
                                         </span>
                                     </div>
                                     <div>
-                                        <label style={{ display: 'block', fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '4px' }}>Property / Client</label>
-                                        <span style={{ fontSize: '13px', fontWeight: '800', color: 'white' }}>{v.property || 'Direct'}</span>
+                                        <label style={{ display: 'block', fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '2px' }}>Property</label>
+                                        <span style={{ fontSize: '12px', fontWeight: '800', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{v.property || 'Direct'}</span>
                                     </div>
                                 </div>
 
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#38bdf8' }}></div>
-                                    <span style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>{v.dutyType || 'General Duty'}</span>
+                                    <Briefcase size={12} color="#38bdf8" style={{ opacity: 0.6 }} />
+                                    <span style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>{v.dutyType || 'Standard Duty'}</span>
                                     {v.dropLocation && (
                                         <>
-                                            <ChevronRight size={12} style={{ opacity: 0.3 }} />
-                                            <span style={{ fontSize: '12px', fontWeight: '600', color: 'rgba(255,255,255,0.4)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{v.dropLocation}</span>
+                                            <ChevronRight size={10} style={{ opacity: 0.3 }} />
+                                            <span style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(255,255,255,0.4)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{v.dropLocation}</span>
                                         </>
                                     )}
                                 </div>
 
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '14px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>
                                         Vendor: <span style={{ color: 'rgba(255,255,255,0.6)' }}>{v.ownerName}</span>
                                     </div>
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        <button onClick={() => handleEdit(v)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit size={16} /></button>
-                                        <button onClick={() => handleDelete(v._id)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={16} /></button>
+                                    <div style={{ display: 'flex', gap: '8px' }}>
+                                        <button onClick={() => handleEdit(v)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit size={14} /></button>
+                                        <button onClick={() => handleDelete(v._id)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={14} /></button>
                                     </div>
                                 </div>
                             </motion.div>
@@ -874,41 +944,52 @@ const OutsideCars = () => {
                             }}
                         >
                             {/* Modal Header */}
-                            <div className="modal-header" style={{ padding: '24px 32px', background: 'linear-gradient(to right, rgba(251, 191, 36, 0.08), transparent)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ 
+                                padding: 'clamp(20px, 4vw, 24px) clamp(20px, 5vw, 32px)', 
+                                background: 'linear-gradient(to right, rgba(251, 191, 36, 0.08), transparent)', 
+                                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center'
+                            }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Edit size={24} color="#fbbf24" />
+                                    <div style={{ width: 'clamp(40px, 8vw, 48px)', height: 'clamp(40px, 8vw, 48px)', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Edit size={20} color="#fbbf24" />
                                     </div>
                                     <div>
-                                        <h3 style={{ fontSize: '20px', fontWeight: '900', color: 'white', margin: 0 }}>{editMode ? 'Update Duty Log' : 'External Duty Log'}</h3>
-                                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', margin: '4px 0 0' }}>Registry Entry System</p>
+                                        <h3 style={{ fontSize: 'clamp(17px, 4vw, 20px)', fontWeight: '900', color: 'white', margin: 0 }}>{editMode ? 'Update Log' : 'External Log'}</h3>
+                                        <p className="hide-mobile" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', margin: '4px 0 0' }}>Registry Entry System</p>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowModal(false)} className="close-btn" style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', width: '40px', height: '40px' }}><X size={20} /></button>
+                                <button onClick={() => setShowModal(false)} className="close-btn" style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', width: '36px', height: '36px' }}><X size={18} /></button>
                             </div>
 
                             {/* Modal Content */}
-                            <div style={{ padding: '32px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                            <div style={{ padding: 'clamp(20px, 5vw, 32px)', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
                                 
                                 {/* Section: Logistics */}
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                        <Calendar size={14} color="#fbbf24" />
+                                        <Calendar size={14} color="#fbbf24" style={{ opacity: 0.7 }} />
                                         <span style={{ fontSize: '10px', fontWeight: '950', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>Operational Context</span>
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                        <div className="premium-input-group">
-                                            <label className="premium-label">Duty Timeline *</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <Calendar size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                                                <input type="date" className="premium-compact-input" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} style={{ paddingLeft: '48px' }} />
+                                    <div className="form-grid-2">
+                                            <div 
+                                                className="premium-input-group"
+                                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                                style={{ cursor: 'pointer' }}
+                                            >
+                                                <label className="premium-label">Duty Timeline *</label>
+                                                <div style={{ position: 'relative' }}>
+                                                    <Calendar size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
+                                                    <input type="date" className="premium-compact-input" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} onClick={e => { e.stopPropagation(); if (e.target.showPicker) e.target.showPicker(); }} style={{ paddingLeft: '48px', height: '52px' }} />
+                                                </div>
                                             </div>
-                                        </div>
                                         <div className="premium-input-group">
                                             <label className="premium-label">Client Property *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Plus size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                                                <input type="text" className="premium-compact-input" required value={formData.property} onChange={e => setFormData({...formData, property: e.target.value})} placeholder="e.g. Radisson" style={{ paddingLeft: '48px' }} />
+                                                <input type="text" className="premium-compact-input" required value={formData.property} onChange={e => setFormData({...formData, property: e.target.value})} placeholder="e.g. Radisson" style={{ paddingLeft: '48px', height: '52px' }} />
                                             </div>
                                         </div>
                                     </div>
@@ -917,15 +998,15 @@ const OutsideCars = () => {
                                 {/* Section: Resource */}
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                        <Car size={14} color="#38bdf8" />
+                                        <Car size={14} color="#38bdf8" style={{ opacity: 0.7 }} />
                                         <span style={{ fontSize: '10px', fontWeight: '950', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>Resource Identification</span>
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                                    <div className="form-grid-2" style={{ marginBottom: '20px' }}>
                                         <div className="premium-input-group">
                                             <label className="premium-label">Full Vehicle Plate *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Car size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                                                <input type="text" list="carCodes" className="premium-compact-input" required disabled={editMode} value={formData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} placeholder="RJ-27-PA-1000" style={{ paddingLeft: '48px', textTransform: 'uppercase' }} />
+                                                <input type="text" list="carCodes" className="premium-compact-input" required disabled={editMode} value={formData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} placeholder="RJ-27-PA-1000" style={{ paddingLeft: '48px', textTransform: 'uppercase', height: '52px' }} />
                                                 <datalist id="carCodes">
                                                     {carNumberSuggestions.map(s => <option key={s} value={s} />)}
                                                 </datalist>
@@ -933,28 +1014,28 @@ const OutsideCars = () => {
                                         </div>
                                         <div className="premium-input-group">
                                             <label className="premium-label">Asset Model *</label>
-                                            <input type="text" className="premium-compact-input" required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="e.g. Crysta" />
+                                            <input type="text" className="premium-compact-input" required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="e.g. Crysta" style={{ height: '52px' }} />
                                         </div>
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                    <div className="form-grid-2">
                                         <div className="premium-input-group">
                                             <label className="premium-label">Vendor (Proprietor) *</label>
-                                            <input type="text" className="premium-compact-input" required value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} placeholder="Provider Name" />
+                                            <input type="text" className="premium-compact-input" required value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} placeholder="Provider Name" style={{ height: '52px' }} />
                                         </div>
                                         <div className="premium-input-group">
                                             <label className="premium-label">Transaction Type *</label>
                                             <div style={{
                                                 display: 'flex',
                                                 background: 'rgba(0,0,0,0.3)',
-                                                padding: '6px',
-                                                borderRadius: '20px',
+                                                padding: '4px',
+                                                borderRadius: '16px',
                                                 border: '1px solid rgba(255,255,255,0.06)',
-                                                gap: '8px'
+                                                gap: '6px'
                                             }}>
                                                 {[
-                                                    { id: 'Duty', label: 'Duty Entry', icon: Briefcase, color: '#fbbf24' },
-                                                    { id: 'Buy', label: 'Purchase (Buy)', icon: ShoppingCart, color: '#22c55e' },
-                                                    { id: 'Sell', label: 'Sale (Sell)', icon: TrendingUp, color: '#ef4444' }
+                                                    { id: 'Duty', label: 'Duty', icon: Briefcase, color: '#fbbf24' },
+                                                    { id: 'Buy', label: 'Buy', icon: ShoppingCart, color: '#22c55e' },
+                                                    { id: 'Sell', label: 'Sell', icon: TrendingUp, color: '#ef4444' }
                                                 ].map(t => (
                                                     <button
                                                         key={t.id}
@@ -962,21 +1043,21 @@ const OutsideCars = () => {
                                                         onClick={() => setFormData({...formData, transactionType: t.id})}
                                                         style={{
                                                             flex: 1,
-                                                            padding: '12px',
-                                                            borderRadius: '14px',
+                                                            padding: '10px 4px',
+                                                            borderRadius: '12px',
                                                             border: '1px solid ' + (formData.transactionType === t.id ? t.color + '50' : 'transparent'),
-                                                            background: formData.transactionType === t.id ? t.color + '15' : 'rgba(255,255,255,0.03)',
+                                                            background: formData.transactionType === t.id ? t.color + '15' : 'rgba(255,255,255,0.02)',
                                                             color: formData.transactionType === t.id ? t.color : 'rgba(255,255,255,0.3)',
                                                             cursor: 'pointer',
                                                             display: 'flex',
                                                             flexDirection: 'column',
                                                             alignItems: 'center',
-                                                            gap: '6px',
-                                                            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                                                            gap: '4px',
+                                                            transition: '0.2s'
                                                         }}
                                                     >
-                                                        <t.icon size={18} />
-                                                        <span style={{ fontSize: '10px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{t.label}</span>
+                                                        <t.icon size={16} />
+                                                        <span style={{ fontSize: '9px', fontWeight: '950', textTransform: 'uppercase' }}>{t.label}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -985,17 +1066,17 @@ const OutsideCars = () => {
                                 </div>
 
                                 {/* Section: Service & Settlement */}
-                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: 'clamp(15px, 4vw, 24px)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.04)' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                        <Save size={14} color="#10b981" />
+                                        <Save size={14} color="#10b981" style={{ opacity: 0.7 }} />
                                         <span style={{ fontSize: '10px', fontWeight: '950', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>Service Settlement</span>
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
+                                    <div className="form-grid-2" style={{ marginBottom: '20px' }}>
                                         <div className="premium-input-group">
                                             <label className="premium-label">Service Category</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Briefcase size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', opacity: 0.6 }} />
-                                                <input type="text" list="serviceTypes" className="premium-compact-input" value={formData.dutyType} onChange={e => setFormData({...formData, dutyType: e.target.value})} placeholder="e.g. Airport Drop" style={{ paddingLeft: '48px' }} />
+                                                <input type="text" list="serviceTypes" className="premium-compact-input" value={formData.dutyType} onChange={e => setFormData({...formData, dutyType: e.target.value})} placeholder="e.g. Airport Drop" style={{ paddingLeft: '48px', height: '52px' }} />
                                                 <datalist id="serviceTypes">
                                                     {dutyTypeSuggestions.map(s => <option key={s} value={s} />)}
                                                 </datalist>
@@ -1005,7 +1086,7 @@ const OutsideCars = () => {
                                             <label className="premium-label" style={{ color: '#10b981' }}>Payout Amount (₹) *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹</span>
-                                                <input type="number" className="premium-compact-input" required value={formData.dutyAmount} onChange={e => setFormData({...formData, dutyAmount: e.target.value})} placeholder="0.00" style={{ paddingLeft: '40px', color: '#10b981' }} />
+                                                <input type="number" className="premium-compact-input" required value={formData.dutyAmount} onChange={e => setFormData({...formData, dutyAmount: e.target.value})} placeholder="0.00" style={{ paddingLeft: '40px', color: '#10b981', height: '52px' }} />
                                             </div>
                                         </div>
                                     </div>
@@ -1013,7 +1094,7 @@ const OutsideCars = () => {
                                             <label className="premium-label">Operational Destination</label>
                                             <div style={{ position: 'relative' }}>
                                                 <MapPin size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#38bdf8', opacity: 0.6 }} />
-                                                <input type="text" list="points" className="premium-compact-input" value={formData.dropLocation} onChange={e => setFormData({...formData, dropLocation: e.target.value})} placeholder="Destination Details" style={{ paddingLeft: '48px' }} />
+                                                <input type="text" list="points" className="premium-compact-input" value={formData.dropLocation} onChange={e => setFormData({...formData, dropLocation: e.target.value})} placeholder="Destination Details" style={{ paddingLeft: '48px', height: '52px' }} />
                                                 <datalist id="points">
                                                     {dropLocationSuggestions.map(item => <option key={item} value={item} />)}
                                                 </datalist>
@@ -1023,10 +1104,10 @@ const OutsideCars = () => {
                             </div>
 
                             {/* Modal Footer */}
-                            <div style={{ padding: '20px 32px', background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                                <button onClick={() => setShowModal(false)} style={{ height: '52px', padding: '0 24px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.6)', fontWeight: '800', fontSize: '13px', cursor: 'pointer' }}>Cancel Operation</button>
-                                <button onClick={handleSubmit} style={{ height: '52px', padding: '0 32px', borderRadius: '16px', border: 'none', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black', fontWeight: '950', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px', boxShadow: '0 10px 20px rgba(251, 191, 36, 0.2)', cursor: 'pointer' }}>
-                                    {editMode ? 'Commit Changes' : 'Execute Log'}
+                            <div style={{ padding: 'clamp(20px, 4vw, 24px) clamp(20px, 5vw, 32px)', background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: '12px' }}>
+                                <button onClick={() => setShowModal(false)} style={{ flex: 1, height: '52px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.6)', fontWeight: '800', fontSize: '13px' }}>Cancel</button>
+                                <button onClick={handleSubmit} style={{ flex: 2, height: '52px', borderRadius: '16px', border: 'none', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black', fontWeight: '950', fontSize: '14px', textTransform: 'uppercase' }}>
+                                    {editMode ? 'Save' : 'Log'}
                                 </button>
                             </div>
                         </motion.div>

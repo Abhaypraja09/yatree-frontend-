@@ -64,8 +64,11 @@ const AttendanceModal = ({ item, onClose }) => {
     const salary = Number(item.dailyWage) || 0;
     const allowanceTA = Number(item.punchOut?.allowanceTA) || 0;
     const nightStay = Number(item.punchOut?.nightStayAmount) || 0;
-    const outsideBonus = Number(item.outsideTrip?.bonusAmount) || 0;
-    const bonus = allowanceTA + nightStay + outsideBonus;
+    const outsideBonusTotal = Number(item.outsideTrip?.bonusAmount) || 0;
+    
+    // Calculate extra bonus beyond TA and Night Stay
+    const extraBonus = Math.max(0, outsideBonusTotal - allowanceTA - nightStay);
+    const bonus = allowanceTA + nightStay + extraBonus;
 
     const fuelAmt = Number(item.fuel?.amount) || 0;
     const fuelEntries = item.fuel?.entries || [];
@@ -207,7 +210,7 @@ const AttendanceModal = ({ item, onClose }) => {
                         <SH color="#22c55e" icon={Zap} title="Bonuses" />
                         {allowanceTA > 0 && <Stat label="TA Allowance (Same Day Return)" value={`+₹${allowanceTA}`} color="#22c55e" />}
                         {nightStay > 0 && <Stat label="Night Stay Allowance" value={`+₹${nightStay}`} color="#fbbf24" sub="Night shift duty" />}
-                        {outsideBonus > 0 && <Stat label="Outside Trip Bonus" value={`+₹${outsideBonus}`} color="#38bdf8" sub={item.outsideTrip?.tripType} />}
+                        {extraBonus > 0 && <Stat label="Extra Bonus" value={`+₹${extraBonus}`} color="#38bdf8" sub={item.outsideTrip?.tripType} />}
                     </div>
                 )}
 

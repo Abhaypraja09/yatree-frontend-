@@ -1,6 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Search, X, Car, ParkingSquare, TrendingDown, Wallet, Plus, Calendar, User, FileText, IndianRupee, CheckCircle, AlertCircle, Edit2 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { 
+    Search, X, Car, ParkingSquare, TrendingDown, Wallet, Plus, 
+    Calendar, User, FileText, IndianRupee, CheckCircle, 
+    AlertCircle, Edit2, Download 
+} from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
@@ -146,10 +152,207 @@ const DriverSalaries = () => {
         }
     };
 
+    const loadImage = (url) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = url;
+        });
+    };
+
+    const handleExportPDF = async (data = selectedDriverDetails) => {
+        try {
+            if (!data) {
+                alert("No data available to download.");
+                return;
+            }
+
+            const logo = await loadImage('/logos/yatree_logo.png').catch(() => null);
+            const signature = await loadImage('/logos/kavish_sign.png').catch(() => null);
+
+            const monthName = new Date(year, month - 1, 1).toLocaleString('default', { month: 'long' });
+            const periodLabel = `${monthName} ${year}`;
+            const driverInfo = data.driver || {};
+            const summary = data.summary || {};
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+
+            // 1. HEADER (LUXURY STYLE)
+            doc.setFillColor(15, 23, 42); 
+            doc.rect(0, 0, pageWidth, 50, 'F');
+
+            if (logo) doc.addImage(logo, 'PNG', 12, 8, 30, 30);
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text('YATREE DESTINATION', 45, 22);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(200, 200, 200);
+            doc.text('Premium Fleet Management & Travel Solutions', 45, 30);
+            doc.setTextColor(14, 165, 233);
+            doc.text('www.yatreedestination.com', 45, 37);
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('SALARY SLIP', pageWidth - 15, 22, { align: 'right' });
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(150, 150, 150);
+            doc.text(`STATEMENT PERIOD`, pageWidth - 15, 30, { align: 'right' });
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(11);
+            doc.text(periodLabel.toUpperCase(), pageWidth - 15, 36, { align: 'right' });
+
+            // 2. INFORMATION SECTION
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('EMPLOYEE INFORMATION', 15, 65);
+            doc.setDrawColor(14, 165, 233);
+            doc.setLineWidth(0.5);
+            doc.line(15, 68, 50, 68);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139);
+            doc.text('NAME', 15, 76);
+            doc.text('MOBILE', 15, 84);
+            doc.text('DESIGNATION', 15, 92);
+
+            doc.setTextColor(15, 23, 42);
+            doc.setFont('helvetica', 'bold');
+            doc.text((driverInfo.name || 'N/A').toUpperCase(), 45, 76);
+            doc.text(driverInfo.mobile || 'N/A', 45, 84);
+            doc.text('PROFESSIONAL DRIVER', 45, 92);
+
+            // Summary Box
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(pageWidth / 2, 60, pageWidth / 2 - 15, 40, 3, 3, 'F');
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('PAYMENT OVERVIEW', pageWidth / 2 + 5, 68);
+            
+            const totalEarned = summary.grandTotal || ((summary.totalWages || 0) + (summary.parkingTotal || 0));
+            const netPayable = summary.netPayable || (totalEarned - (summary.totalAdvances || 0));
+
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 116, 139);
+            doc.text('Gross Earnings:', pageWidth / 2 + 5, 76);
+            doc.text('Deductions/Advances:', pageWidth / 2 + 5, 82);
+            
+            doc.setTextColor(15, 23, 42);
+            doc.text(`Rs. ${totalEarned}`, pageWidth - 20, 76, { align: 'right' });
+            doc.setTextColor(244, 63, 94);
+            doc.text(`- Rs. ${summary.totalAdvances || 0}`, pageWidth - 20, 82, { align: 'right' });
+            doc.line(pageWidth / 2 + 5, 85, pageWidth - 20, 85);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(16, 185, 129);
+            doc.text('NET PAYABLE:', pageWidth / 2 + 5, 93);
+            doc.text(`Rs. ${netPayable}`, pageWidth - 20, 93, { align: 'right' });
+
+            // 3. DUTY LOGS TABLE
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('DUTY & TRIP DETAILS', 15, 115);
+
+            const dutyRows = (data.breakdown || []).map(day => [
+                formatDateIST(day.date),
+                day.vehicleNumber || 'N/A',
+                `${day.totalKM || '-'}`,
+                `Rs. ${day.wage || 0}`,
+                `Rs. ${day.sameDayReturn || 0}`,
+                `Rs. ${day.nightStay || 0}`,
+                `Rs. ${day.otherBonuses || 0}`,
+                `Rs. ${day.parking || 0}`,
+                `Rs. ${day.total || 0}`
+            ]);
+
+            autoTable(doc, {
+                head: [['DATE', 'VEHICLE', 'KM', 'WAGE', 'SAME DAY', 'NIGHT', 'OTHER', 'PARKING', 'TOTAL']],
+                body: dutyRows,
+                startY: 120,
+                theme: 'grid',
+                headStyles: { fillColor: [15, 23, 42], fontSize: 8, halign: 'center' },
+                bodyStyles: { fontSize: 8, halign: 'center', textColor: [51, 65, 85] },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                margin: { left: 15, right: 15 }
+            });
+
+            // 4. ADVANCES TABLE
+            let nextY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 120) + 15;
+            if (nextY > pageHeight - 80) { doc.addPage(); nextY = 20; }
+            doc.text('ADVANCES', 15, nextY);
+
+            const advRows = (data.advances || []).map(adv => [
+                formatDateIST(adv.date),
+                (adv.remark || '').toUpperCase(),
+                `Rs. ${adv.amount}`,
+                (adv.status || 'PENDING').toUpperCase() === 'PENDING' ? 'PAID' : (adv.status || '').toUpperCase()
+            ]);
+
+            autoTable(doc, {
+                head: [['DATE', 'PARTICULARS', 'AMOUNT (Rs.)', 'STATUS']],
+                body: advRows,
+                startY: nextY + 5,
+                theme: 'striped',
+                headStyles: { fillColor: [244, 63, 94], fontSize: 8, halign: 'center' },
+                bodyStyles: { fontSize: 8, halign: 'center', textColor: [51, 65, 85] },
+                margin: { left: 15, right: 15 }
+            });
+
+            // 5. SIGNATURE & FOOTER
+            let footerY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 35;
+            if (footerY > pageHeight - 60) { doc.addPage(); footerY = 30; }
+
+            doc.setFontSize(8);
+            doc.setTextColor(148, 163, 184);
+            doc.setFont('helvetica', 'italic');
+            doc.text('Note: This is an electronically generated statement. Any discrepancies must be reported to the accounts department within 48 hours for rectification.', 15, footerY, { maxWidth: pageWidth - 100 });
+
+            const sigX = pageWidth - 75;
+            if (signature) doc.addImage(signature, 'PNG', sigX, footerY - 20, 55, 22);
+            doc.setDrawColor(15, 23, 42); doc.setLineWidth(0.6);
+            doc.line(sigX - 5, footerY + 5, pageWidth - 15, footerY + 5);
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); doc.text('KAVISH JAIN', sigX - 2, footerY + 12);
+            doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
+            doc.text('Founder & Director', sigX - 2, footerY + 17);
+            doc.text('Yatree Destination Pvt. Ltd.', sigX - 2, footerY + 21);
+
+            doc.setFontSize(7); doc.setTextColor(203, 213, 225);
+            doc.text(`Generated on: ${formatDateTimeIST(new Date())}`, 15, pageHeight - 10);
+
+            doc.save(`Salary_Slip_${(driverInfo.name || 'Driver').replace(/\s+/g, '_')}_${monthName}.pdf`);
+        } catch (error) {
+            console.error(error);
+            alert("Error generating PDF: " + error.message);
+        }
+    };
+
+    const handleQuickDownload = async (driverId) => {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const { data } = await axios.get(`/api/admin/salary-details/${driverId}?month=${month}&year=${year}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            handleExportPDF(data);
+        } catch (err) {
+            alert('Error downloading slip');
+        }
+    };
+
     const fetchDriverDetails = async (driverId) => {
         setDetailLoading(true);
         setShowDetailModal(true);
-        setSelectedDriverDetails(null);
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const { data } = await axios.get(`/api/admin/salary-details/${driverId}?month=${month}&year=${year}`, {
@@ -157,8 +360,7 @@ const DriverSalaries = () => {
             });
             setSelectedDriverDetails(data);
         } catch (err) {
-            console.error(err);
-            alert('Error: ' + (err.response?.data?.message || err.message));
+            console.error('Error fetching driver details:', err);
             setShowDetailModal(false);
         } finally {
             setDetailLoading(false);
@@ -264,8 +466,8 @@ const DriverSalaries = () => {
                 <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
                     <thead>
                         <tr style={{ textAlign: 'left' }}>
-                            {['Driver', 'Daily Wage', 'Duty Days', 'Nights', 'Earnings', 'Advances', 'Total'].map(h => (
-                                <th key={h} style={{ padding: '15px 20px', color: h === 'Total' ? '#10b981' : 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
+                            {['Driver', 'Daily Wage', 'Duty Days', 'Nights', 'Earnings', 'Advances', 'Total', 'Reports'].map(h => (
+                                <th key={h} style={{ padding: '15px 20px', color: (h === 'Total' || h === 'Reports') ? '#10b981' : 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
                             ))}
                         </tr>
                     </thead>
@@ -296,7 +498,17 @@ const DriverSalaries = () => {
                                         </td>
                                         <td style={{ padding: '20px 20px', color: '#38bdf8', fontWeight: '700' }}>₹ {s.totalEarned}</td>
                                         <td style={{ padding: '20px 20px', color: '#f43f5e', fontWeight: '700' }}>₹ {s.totalAdvances}</td>
-                                        <td style={{ padding: '20px 20px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {s.netPayable}</td>
+                                        <td style={{ padding: '20px 20px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {s.netPayable}</td>
+                                        <td style={{ padding: '20px 20px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                            <button 
+                                                onClick={(e) => { e.stopPropagation(); handleQuickDownload(s.driverId); }}
+                                                className="btn-glass"
+                                                title="Download Salary Slip"
+                                                style={{ padding: '8px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                            >
+                                                <Download size={18} color="#10b981" />
+                                            </button>
+                                        </td>
                                     </motion.tr>
                                 ))
                             )}
@@ -316,7 +528,15 @@ const DriverSalaries = () => {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: '#10b981' }}>TOTAL</p>
-                                <h3 style={{ margin: 0, color: '#10b981', fontSize: '18px' }}>₹ {s.netPayable}</h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
+                                    <h3 style={{ margin: 0, color: '#10b981', fontSize: '18px' }}>₹ {s.netPayable}</h3>
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); handleQuickDownload(s.driverId); }}
+                                        style={{ background: 'rgba(16,185,129,0.1)', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                    >
+                                        <Download size={14} color="#10b981" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px' }}>
@@ -529,11 +749,21 @@ const DriverSalaries = () => {
                             exit={{ scale: 0.95, opacity: 0, y: 20 }} className="glass-card"
                             style={{ padding: '0', width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a' }}>
 
-                            {/* Modal Header */}
-                            <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to right, rgba(255,255,255,0.02), transparent)', position: 'sticky', top: 0, backdropFilter: 'blur(10px)', zIndex: 5 }}>
-                                <div>
-                                    <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Salary Breakdown {selectedDriverDetails?.vID && <span style={{ fontSize: '10px', color: '#fbbf24' }}>({selectedDriverDetails.vID})</span>}</h2>
-                                    {driverName && <p style={{ color: 'var(--primary)', fontSize: '13px', margin: '4px 0 0', fontWeight: '600' }}>{driverName}</p>}
+                                                  <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to right, rgba(255,255,255,0.02), transparent)', position: 'sticky', top: 0, backdropFilter: 'blur(10px)', zIndex: 10 }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                    <div>
+                                        <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Salary Breakdown {selectedDriverDetails?.vID && <span style={{ fontSize: '10px', color: '#fbbf24' }}>({selectedDriverDetails.vID})</span>}</h2>
+                                        {driverName && <p style={{ color: 'var(--primary)', fontSize: '13px', margin: '4px 0 0', fontWeight: '600' }}>{driverName}</p>}
+                                    </div>
+                                    {selectedDriverDetails && !detailLoading && (
+                                        <button 
+                                            onClick={() => handleExportPDF(selectedDriverDetails)}
+                                            className="btn-primary"
+                                            style={{ padding: '8px 16px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}
+                                        >
+                                            <Download size={16} /> DOWNLOAD PDF
+                                        </button>
+                                    )}
                                 </div>
                                 <button onClick={() => setShowDetailModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}>
                                     <X size={20} />

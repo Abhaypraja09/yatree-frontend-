@@ -6,7 +6,8 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
     const [formData, setFormData] = useState({
         allowanceTA: item.punchOut?.allowanceTA || 0,
         nightStayAmount: item.punchOut?.nightStayAmount || 0,
-        bonusAmount: item.outsideTrip?.bonusAmount || 0,
+        // Calculate the 'extra' part of the bonus for the form
+        bonusAmount: Math.max(0, (item.outsideTrip?.bonusAmount || 0) - (item.punchOut?.allowanceTA || 0) - (item.punchOut?.nightStayAmount || 0)),
         remarks: item.punchOut?.remarks || '',
         status: item.status || 'incomplete',
         startKm: item.punchIn?.km || 0,
@@ -15,7 +16,12 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        onUpdate(item._id, formData);
+        // Sum it up so backend receives the TOTAL in bonusAmount
+        const finalData = {
+            ...formData,
+            bonusAmount: Number(formData.allowanceTA) + Number(formData.nightStayAmount) + Number(formData.bonusAmount)
+        };
+        onUpdate(item._id, finalData);
     };
 
     return (

@@ -146,7 +146,12 @@ const Fastag = () => {
             <SEO title="Fastag Wallet" description="Manage fleet Fastag balances and history." />
 
             {/* Premium Header */}
-            <header style={{ padding: '40px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px', flexWrap: 'wrap' }}>
+            <header className="flex-resp" style={{ 
+                padding: '40px 0', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                gap: '24px' 
+            }}>
                 <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -154,12 +159,12 @@ const Fastag = () => {
                         </div>
                         <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(251, 191, 36, 0.8)', letterSpacing: '2px', textTransform: 'uppercase' }}>Fleet Wallet</span>
                     </div>
-                    <h1 style={{ color: 'white', fontSize: '38px', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
+                    <h1 style={{ color: 'white', fontSize: 'clamp(28px, 6vw, 38px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
                         Fastag <span style={{ color: '#fbbf24' }}>Manager</span>
                     </h1>
                 </div>
 
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                <div className="flex-resp" style={{ gap: '15px', alignItems: 'center', justifyContent: 'flex-end' }}>
                     {(() => {
                         const totalCompanyMonth = vehicles.reduce((sum, v) => {
                             const monthTotal = (v.fastagHistory || []).filter(h => {
@@ -170,64 +175,59 @@ const Fastag = () => {
                         }, 0);
                         return (
                             <div style={{
-                                padding: '15px 30px',
+                                padding: '12px 24px',
                                 background: 'rgba(251, 191, 36, 0.05)',
                                 border: '1px solid rgba(251, 191, 36, 0.15)',
-                                borderRadius: '24px',
+                                borderRadius: '20px',
                                 display: 'flex',
                                 flexDirection: 'column',
                                 textAlign: 'right',
-                                backdropFilter: 'blur(10px)'
+                                backdropFilter: 'blur(10px)',
+                                minWidth: '160px'
                             }}>
-                                <span style={{ fontSize: '10px', color: 'rgba(251, 191, 36, 0.5)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>{months[selectedMonth]} Total Spent</span>
-                                <span style={{ fontSize: '26px', fontWeight: '900', color: '#fbbf24', textShadow: '0 0 20px rgba(251, 191, 36, 0.2)' }}>₹ {totalCompanyMonth.toLocaleString()}</span>
+                                <span style={{ fontSize: '9px', color: 'rgba(251, 191, 36, 0.5)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>{months[selectedMonth]} Total Spent</span>
+                                <span style={{ fontSize: '22px', fontWeight: '900', color: '#fbbf24', textShadow: '0 0 20px rgba(251, 191, 36, 0.2)' }}>₹ {totalCompanyMonth.toLocaleString()}</span>
                             </div>
                         );
                     })()}
 
                     <button
-                        onClick={closeModal} // Safe reset
-                        style={{ display: 'none' }}
-                    ></button>
-                    <button
                         onClick={() => { setSelectedVehicle(null); setIsEditing(false); setShowModal(true); }}
                         style={{
-                            padding: '18px 32px',
+                            padding: '16px 28px',
                             background: '#fbbf24',
                             color: '#000',
                             border: 'none',
-                            borderRadius: '20px',
+                            borderRadius: '18px',
                             fontWeight: '900',
                             fontSize: '14px',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '10px',
-                            boxShadow: '0 15px 30px -10px rgba(251, 191, 36, 0.4)'
+                            boxShadow: '0 15px 30px -10px rgba(251, 191, 36, 0.4)',
+                            whiteSpace: 'nowrap'
                         }}
                     >
                         <Plus size={18} />
-                        New Recharge
+                        <span className="hide-mobile">New Recharge</span><span className="show-mobile">Recharge</span>
                     </button>
                 </div>
             </header>
 
             {/* Search & Filter Bar */}
-            <div style={{
+            <div className="flex-resp" style={{
                 marginBottom: '30px',
-                display: 'flex',
-                gap: '15px',
                 background: 'rgba(255,255,255,0.05)',
                 padding: '10px',
                 borderRadius: '22px',
-                border: '1px solid rgba(255,255,255,0.05)',
-                flexWrap: 'wrap'
+                border: '1px solid rgba(255,255,255,0.05)'
             }}>
-                <div style={{ position: 'relative', flex: 1.5, minWidth: '300px' }}>
+                <div style={{ position: 'relative', flex: 1.5, minWidth: '220px' }}>
                     <Search size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                     <input
                         type="text"
-                        placeholder="Search by vehicle number or model..."
+                        placeholder="Search by vehicle number..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{
@@ -244,7 +244,7 @@ const Fastag = () => {
                     />
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px', flex: 1, minWidth: '250px' }}>
+                <div className="flex-resp" style={{ gap: '10px', flex: 1, minWidth: '220px' }}>
                     <div style={{ position: 'relative', flex: 1 }}>
                         <select
                             value={selectedMonth}
@@ -260,8 +260,7 @@ const Fastag = () => {
                                 fontSize: '15px',
                                 fontWeight: '700',
                                 outline: 'none',
-                                appearance: 'none',
-                                textAlign: 'center'
+                                appearance: 'none'
                             }}
                         >
                             {months.map((m, idx) => <option key={m} value={idx} style={{ background: '#111', color: 'white' }}>{m}</option>)}
@@ -284,8 +283,7 @@ const Fastag = () => {
                                 fontSize: '15px',
                                 fontWeight: '700',
                                 outline: 'none',
-                                appearance: 'none',
-                                textAlign: 'center'
+                                appearance: 'none'
                             }}
                         >
                             {years.map(y => <option key={y} value={y} style={{ background: '#111', color: 'white' }}>{y}</option>)}
@@ -319,20 +317,21 @@ const Fastag = () => {
                                 <motion.div
                                     layout
                                     onClick={() => setExpandedVehicle(expandedVehicle === v._id ? null : v._id)}
+                                    className="fastag-row"
                                     style={{
                                         background: expandedVehicle === v._id ? 'rgba(255,255,255,0.08)' : 'rgba(255,255,255,0.04)',
                                         border: '1px solid rgba(255,255,255,0.08)',
                                         borderRadius: expandedVehicle === v._id ? '28px 28px 0 0' : '24px',
-                                        padding: '20px 30px',
+                                        padding: '20px clamp(15px, 4vw, 30px)',
                                         cursor: 'pointer',
-                                        display: 'grid',
-                                        gridTemplateColumns: 'minmax(200px, 1fr) minmax(200px, 1fr) minmax(150px, 1fr) auto',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
                                         alignItems: 'center',
                                         gap: '20px',
                                         transition: 'all 0.3s ease'
                                     }}
                                 >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1 }}>
                                         <div style={{
                                             width: '45px',
                                             height: '45px',
@@ -340,7 +339,8 @@ const Fastag = () => {
                                             background: 'rgba(255,255,255,0.05)',
                                             display: 'flex',
                                             alignItems: 'center',
-                                            justifyContent: 'center'
+                                            justifyContent: 'center',
+                                            flexShrink: 0
                                         }}>
                                             <Car size={22} color="rgba(255,255,255,0.4)" />
                                         </div>
@@ -350,22 +350,17 @@ const Fastag = () => {
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                            <Zap size={12} color="#fbbf24" style={{ filter: 'drop-shadow(0 0 5px rgba(251, 191, 36, 0.5))' }} />
+                                    <div style={{ textAlign: 'right', flex: 1 }} className="hide-mobile">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', justifyContent: 'flex-end' }}>
+                                            <Zap size={12} color="#fbbf24" />
                                             <span style={{ fontSize: '10px', color: 'rgba(251, 191, 36, 0.6)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{months[selectedMonth]} Added</span>
                                         </div>
-                                        <span style={{
-                                            fontSize: '28px',
-                                            fontWeight: '950',
-                                            color: monthUsage > 0 ? 'white' : 'rgba(255,255,255,0.05)',
-                                            letterSpacing: '-1px'
-                                        }}>
+                                        <span style={{ fontSize: '24px', fontWeight: '950', color: monthUsage > 0 ? 'white' : 'rgba(255,255,255,0.05)' }}>
                                             ₹ {monthUsage.toLocaleString()}
                                         </span>
                                     </div>
 
-                                    <div style={{ color: 'rgba(255,255,255,0.2)', textAlign: 'right' }}>
+                                    <div style={{ color: 'rgba(255,255,255,0.2)', marginLeft: '10px' }}>
                                         <ChevronRight size={24} style={{ transform: expandedVehicle === v._id ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform 0.3s' }} />
                                     </div>
                                 </motion.div>
@@ -384,15 +379,15 @@ const Fastag = () => {
                                                 borderTop: 'none'
                                             }}
                                         >
-                                            <div style={{ padding: '25px 30px' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                                    <div style={{ display: 'flex', gap: '30px' }}>
+                                            <div style={{ padding: '25px clamp(15px, 4vw, 30px)' }}>
+                                                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', paddingBottom: '15px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                    <div style={{ display: 'flex', gap: 'clamp(15px, 4vw, 30px)' }}>
                                                         <div>
-                                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Current Wallet Balance</div>
+                                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Balance</div>
                                                             <div style={{ fontSize: '18px', fontWeight: '900', color: (v.fastagBalance || 0) < 500 ? '#f43f5e' : '#10b981' }}>₹ {(v.fastagBalance || 0).toLocaleString()}</div>
                                                         </div>
-                                                        <div>
-                                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Transactions ({months[selectedMonth]})</div>
+                                                        <div className="hide-mobile">
+                                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Transactions</div>
                                                             <div style={{ fontSize: '18px', fontWeight: '900', color: 'white' }}>{(v.fastagHistory || []).filter(h => {
                                                                 const d = nowIST(h.date);
                                                                 return d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
@@ -412,10 +407,13 @@ const Fastag = () => {
                                                             cursor: 'pointer',
                                                             display: 'flex',
                                                             alignItems: 'center',
-                                                            gap: '8px'
+                                                            gap: '8px',
+                                                            width: '100%',
+                                                            maxWidth: '200px',
+                                                            justifyContent: 'center'
                                                         }}
                                                     >
-                                                        <Plus size={14} /> RECHARGE WALLET
+                                                        <Plus size={14} /> RECHARGE
                                                     </button>
                                                 </div>
 
@@ -423,7 +421,8 @@ const Fastag = () => {
                                                     Payment History
                                                 </h4>
 
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                <div className="scroll-x">
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', minWidth: '600px' }}>
                                                 {(() => {
                                                     const filteredHistory = (v.fastagHistory || []).filter(h => {
                                                         const d = nowIST(h.date);
@@ -432,8 +431,8 @@ const Fastag = () => {
 
                                                     if (filteredHistory.length === 0) {
                                                         return (
-                                                            <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '13px', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '15px' }}>
-                                                                No history found for {months[selectedMonth]} {selectedYear}.
+                                                            <div style={{ padding: '30px', textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '13px', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '15px', minWidth: 'auto' }}>
+                                                                No history found for {months[selectedMonth]}.
                                                             </div>
                                                         );
                                                     }
@@ -441,12 +440,12 @@ const Fastag = () => {
                                                     return filteredHistory.map((h, idx) => (
                                                         <div key={idx} style={{
                                                             display: 'grid',
-                                                            gridTemplateColumns: '120px 100px 1fr 100px',
+                                                            gridTemplateColumns: 'minmax(100px, 120px) 100px 1fr 100px',
                                                             padding: '15px 20px',
                                                             background: 'rgba(255,255,255,0.02)',
                                                             borderRadius: '14px',
                                                             alignItems: 'center',
-                                                            gap: '20px'
+                                                            gap: '15px'
                                                         }}>
                                                             <div style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', fontWeight: '700' }}>
                                                                 {formatDateIST(h.date)}
@@ -454,11 +453,11 @@ const Fastag = () => {
                                                             <div style={{ color: '#10b981', fontSize: '14px', fontWeight: '900' }}>
                                                                 +₹ {h.amount}
                                                             </div>
-                                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '600' }}>
+                                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '600', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>
                                                                 {h.remarks || 'Wallet Recharge'}
                                                             </div>
                                                             <div style={{ textAlign: 'right', display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
-                                                                <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.05)', padding: '4px 10px', borderRadius: '6px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>
+                                                                <span style={{ fontSize: '10px', background: 'rgba(255,255,255,0.05)', padding: '4px 8px', borderRadius: '6px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>
                                                                     {h.method}
                                                                 </span>
                                                                 <button 
@@ -477,6 +476,7 @@ const Fastag = () => {
                                                         </div>
                                                     ));
                                                 })()}
+                                                </div>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -503,14 +503,15 @@ const Fastag = () => {
                                 borderRadius: '32px', 
                                 border: '1px solid rgba(255,255,255,0.08)',
                                 boxShadow: '0 50px 100px -25px rgba(0,0,0,1)',
-                                overflow: 'hidden'
+                                overflowY: 'auto',
+                                maxHeight: '90vh'
                             }}
                         >
                             {/* Modal Header */}
-                            <div style={{ position: 'relative', padding: '40px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), transparent)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div style={{ position: 'relative', padding: 'clamp(20px, 5vw, 40px)', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), transparent)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                                        <div style={{ 
+                                        <div className="hide-mobile" style={{ 
                                             width: '60px', 
                                             height: '60px', 
                                             borderRadius: '18px', 
@@ -524,25 +525,23 @@ const Fastag = () => {
                                             {isEditing ? <Edit2 color="#fbbf24" size={24} /> : <Zap color="#fbbf24" size={28} style={{ filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.5))' }} />}
                                         </div>
                                         <div>
-                                            <h2 style={{ color: 'white', margin: 0, fontSize: '24px', fontWeight: '900', letterSpacing: '-1px' }}>{isEditing ? 'Correct Entry' : 'Initialize Recharge'}</h2>
-                                            <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.3)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                                {selectedVehicle ? `Vehicle: ${selectedVehicle.displayCarNumber}` : 'New Fleet Transaction'}
+                                            <h2 style={{ color: 'white', margin: 0, fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: '900', letterSpacing: '-1px' }}>{isEditing ? 'Correct Entry' : 'Manual Recharge'}</h2>
+                                            <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                                {selectedVehicle ? `Car: ${selectedVehicle.displayCarNumber}` : 'New Transaction'}
                                             </p>
                                         </div>
                                     </div>
                                     <button 
                                         onClick={closeModal}
                                         style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', width: '36px', height: '36px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }}
-                                        onMouseEnter={e => { e.currentTarget.style.background = 'rgba(244, 63, 94, 0.1)'; e.currentTarget.style.color = '#f43f5e'; }}
-                                        onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}
                                     >
-                                        <Plus size={20} style={{ transform: 'rotate(45deg)' }} />
+                                        <X size={20} />
                                     </button>
                                 </div>
                             </div>
 
-                            <form onSubmit={handleRecharge} style={{ padding: '40px' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+                            <form onSubmit={handleRecharge} style={{ padding: 'clamp(20px, 5vw, 40px)' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                     
                                     {!selectedVehicle && (
                                         <div>
@@ -551,17 +550,18 @@ const Fastag = () => {
                                                 required
                                                 value={selectedVehicle?._id || ''}
                                                 onChange={(e) => setSelectedVehicle(vehicles.find(v => v._id === e.target.value))}
-                                                style={{ width: '100%', height: '58px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '0 20px', color: 'white', fontSize: '15px', fontWeight: '800', outline: 'none', appearance: 'none' }}
+                                                className="input-field"
+                                                style={{ height: '58px', fontSize: '15px', fontWeight: '800' }}
                                             >
-                                                <option value="" style={{ background: '#0a0a0c' }}>Search or select vehicle...</option>
+                                                <option value="" style={{ background: '#0a0a0c' }}>Select vehicle...</option>
                                                 {vehicles.map(v => (
-                                                    <option key={v._id} value={v._id} style={{ background: '#0a0a0c' }}>{v.displayCarNumber} - {v.model}</option>
+                                                    <option key={v._id} value={v._id} style={{ background: '#0a0a0c' }}>{v.displayCarNumber}</option>
                                                 ))}
                                             </select>
                                         </div>
                                     )}
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '20px' }}>
+                                    <div className="form-grid-2">
                                         <div>
                                             <label style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Top-up Amount</label>
                                             <div style={{ position: 'relative' }}>
@@ -581,7 +581,8 @@ const Fastag = () => {
                                             <select
                                                 value={rechargeData.method}
                                                 onChange={(e) => setRechargeData({ ...rechargeData, method: e.target.value })}
-                                                style={{ width: '100%', height: '58px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '0 20px', color: 'white', fontSize: '15px', fontWeight: '800', outline: 'none', appearance: 'none' }}
+                                                className="input-field"
+                                                style={{ height: '58px', fontSize: '15px', fontWeight: '800' }}
                                             >
                                                 <option value="UPI" style={{ background: '#0a0a0c' }}>Instant UPI</option>
                                                 <option value="Cash" style={{ background: '#0a0a0c' }}>Hand Cash</option>
@@ -609,10 +610,11 @@ const Fastag = () => {
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Remarks (Optional)</label>
                                         <input
                                             type="text"
-                                            placeholder="e.g. Monthly top-up, Trip #402..."
+                                            placeholder="e.g. Monthly top-up..."
                                             value={rechargeData.remarks}
                                             onChange={(e) => setRechargeData({ ...rechargeData, remarks: e.target.value })}
-                                            style={{ width: '100%', height: '58px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '0 20px', color: 'white', fontSize: '15px', fontWeight: '700', outline: 'none' }}
+                                            className="input-field"
+                                            style={{ height: '58px' }}
                                         />
                                     </div>
 
@@ -638,7 +640,7 @@ const Fastag = () => {
                                         border: 'none', 
                                         borderRadius: '20px', 
                                         height: '65px', 
-                                        marginTop: '40px', 
+                                        marginTop: '30px', 
                                         fontWeight: '950', 
                                         fontSize: '16px', 
                                         cursor: submitting ? 'not-allowed' : 'pointer', 
@@ -646,8 +648,6 @@ const Fastag = () => {
                                         boxShadow: '0 15px 35px -10px rgba(251, 191, 36, 0.5)',
                                         transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
                                     }}
-                                    onMouseEnter={e => { if(!submitting) e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)'; }}
-                                    onMouseLeave={e => { if(!submitting) e.currentTarget.style.transform = 'translateY(0) scale(1)'; }}
                                 >
                                     {submitting ? 'VALIDATING...' : (isEditing ? 'COMMIT UPDATES' : 'AUTHORIZE RECHARGE')}
                                 </button>

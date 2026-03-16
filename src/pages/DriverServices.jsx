@@ -92,10 +92,16 @@ const DriverServices = () => {
             });
             
             const filteredData = (data || []).filter(r => {
-                const text = `${r.category} ${r.description} ${r.maintenanceType}`.toLowerCase();
-                const isTarget = text.includes('wash') || text.includes('puncture') || text.includes('puncher');
-                const isExcluded = text.includes('interior');
-                return isTarget && !isExcluded;
+                const cat = String(r.category || '').toLowerCase();
+                const desc = String(r.description || '').toLowerCase();
+                
+                const isWash = cat.includes('wash') || desc.includes('wash');
+                const isPuncture = cat.includes('punc') || desc.includes('punc');
+                const isTissue = cat.includes('tissue') || desc.includes('tissue');
+                const isWater = (cat.includes('water') && !cat.includes('repair') && !cat.includes('pump')) || 
+                               (desc.includes('water') && !desc.includes('repair') && !desc.includes('pump'));
+                
+                return isWash || isPuncture || isTissue || isWater;
             });
             setRecords(filteredData);
         } catch (err) { console.error(err); }
@@ -207,13 +213,14 @@ const DriverServices = () => {
         const matchesVehicle = selectedVehicleFilter === 'All' || rVehicleId === selectedVehicleFilter;
         
         // Category Tab Filter
+        const cat = String(r.category || '').toLowerCase();
+        const desc = String(r.description || '').toLowerCase();
+        
         let matchesType = true;
-        const textToSearch = `${r.category} ${r.description} ${r.maintenanceType}`.toLowerCase();
-
         if (selectedType === 'Wash') {
-            matchesType = textToSearch.includes('wash');
+            matchesType = cat.includes('wash') || desc.includes('wash');
         } else if (selectedType === 'Puncture') {
-            matchesType = textToSearch.includes('puncture') || textToSearch.includes('puncher');
+            matchesType = cat.includes('punc') || desc.includes('punc');
         }
 
         return matchesSearch && matchesVehicle && matchesType;
@@ -223,11 +230,7 @@ const DriverServices = () => {
     const punctureCount = records.filter(r => {
         const cat = (r.category || '').toLowerCase();
         const desc = (r.description || '').toLowerCase();
-        const type = (r.maintenanceType || '').toLowerCase();
-        
-        return cat.includes('puncture') || cat.includes('puncher') || 
-               desc.includes('puncture') || desc.includes('puncher') ||
-               type.includes('puncture') || type.includes('puncher');
+        return cat.includes('punc') || desc.includes('punc');
     }).length;
 
     const washCount = records.filter(r => {
@@ -300,7 +303,7 @@ const DriverServices = () => {
                         <select 
                             value={selectedVehicleFilter} 
                             onChange={(e) => setSelectedVehicleFilter(e.target.value)}
-                            style={{ height: '42px', width: '160px', borderRadius: '12px', background: 'transparent', border: 'none', color: '#10b981', fontWeight: '900', fontSize: '13px', outline: 'none', cursor: 'pointer', padding: '0 10px' }}
+                            style={{ height: '42px', width: 'auto', minWidth: '140px', borderRadius: '12px', background: 'transparent', border: 'none', color: '#10b981', fontWeight: '900', fontSize: '13px', outline: 'none', cursor: 'pointer', padding: '0 10px' }}
                         >
                             <option value="All" style={{ background: '#0a0a0c' }}>All Vehicles</option>
                             {vehicles.map(v => (
@@ -309,56 +312,56 @@ const DriverServices = () => {
                         </select>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', padding: '0 15px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', padding: '0 15px', flex: '1', minWidth: '200px' }}>
                         <Search size={18} style={{ color: 'rgba(255,255,255,0.2)' }} />
                         <input
                             type="text"
                             placeholder="Search records..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ background: 'transparent', border: 'none', color: 'white', height: '54px', width: '180px', outline: 'none', fontSize: '14px', fontWeight: '600', paddingLeft: '12px' }}
+                            style={{ background: 'transparent', border: 'none', color: 'white', height: '54px', width: '100%', outline: 'none', fontSize: '14px', fontWeight: '600', paddingLeft: '12px' }}
                         />
                     </div>
 
                     <button
                         onClick={() => { resetForm(); setShowModal(true); }}
-                        style={{ height: '54px', padding: '0 25px', borderRadius: '18px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: 'white', fontWeight: '900', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', boxShadow: '0 10px 25px rgba(16,185,129,0.3)', transition: 'all 0.3s ease' }}
+                        style={{ height: '54px', padding: '0 25px', borderRadius: '18px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: 'white', fontWeight: '900', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', boxShadow: '0 10px 25px rgba(16,185,129,0.3)', transition: 'all 0.3s ease', whiteSpace: 'nowrap' }}
                         onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
                         onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                     >
-                        <Plus size={20} /> NEW ENTRY
+                        <Plus size={20} /> <span className="hide-mobile">NEW ENTRY</span><span className="show-mobile">ADD</span>
                     </button>
                 </div>
             </header>
 
             {/* Stats Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '30px' }}>
-                <div className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '4px solid #10b981' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#10b981' }}>
-                        <Droplets size={20} />
+            <div className="stats-grid">
+                <div className="glass-card stat-card" style={{ borderLeft: '4px solid #10b981' }}>
+                    <div className="stat-card-header">
+                        <div className="stat-card-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                            <Droplets size={20} />
+                        </div>
+                        <p className="stat-card-label">Total Washes</p>
                     </div>
-                    <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>Total Washes</p>
-                        <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0 }}>{washCount}</h2>
-                    </div>
+                    <h2 className="stat-card-value">{washCount}</h2>
                 </div>
-                <div className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '4px solid #f43f5e' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#f43f5e' }}>
-                        <AlertCircle size={20} />
+                <div className="glass-card stat-card" style={{ borderLeft: '4px solid #f43f5e' }}>
+                    <div className="stat-card-header">
+                        <div className="stat-card-icon" style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e' }}>
+                            <AlertCircle size={20} />
+                        </div>
+                        <p className="stat-card-label">Punctures</p>
                     </div>
-                    <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>Punctures</p>
-                        <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0 }}>{punctureCount}</h2>
-                    </div>
+                    <h2 className="stat-card-value">{punctureCount}</h2>
                 </div>
-                <div className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px', borderLeft: '4px solid #facc15' }}>
-                    <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(250, 204, 21, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#facc15' }}>
-                        <Clock size={20} />
+                <div className="glass-card stat-card" style={{ borderLeft: '4px solid #facc15' }}>
+                    <div className="stat-card-header">
+                        <div className="stat-card-icon" style={{ background: 'rgba(250, 204, 21, 0.1)', color: '#facc15' }}>
+                            <Clock size={20} />
+                        </div>
+                        <p className="stat-card-label">Total Spending</p>
                     </div>
-                    <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>Total Spending</p>
-                        <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0 }}>₹{totalCost.toLocaleString()}</h2>
-                    </div>
+                    <h2 className="stat-card-value">₹{totalCost.toLocaleString()}</h2>
                 </div>
             </div>
 
@@ -375,7 +378,7 @@ const DriverServices = () => {
             </div>
 
             {/* Premium Table Design */}
-            <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', boxShadow: '0 30px 60px -12px rgba(0,0,0,0.5)' }}>
+            <div className="scroll-x" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 30px 60px -12px rgba(0,0,0,0.5)' }}>
                 {loading ? (
                     <div style={{ padding: '100px', textAlign: 'center' }}>
                         <div className="spinner" style={{ margin: '0 auto', width: '40px', height: '40px', border: '4px solid rgba(16, 185, 129, 0.1)', borderTopColor: '#10b981', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
@@ -390,7 +393,7 @@ const DriverServices = () => {
                         <p style={{ color: 'rgba(255,255,255,0.3)', margin: '10px 0 0', fontSize: '14px' }}>Try adjusting your filters or search terms.</p>
                     </div>
                 ) : (
-                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
+                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', minWidth: '800px' }}>
                         <thead>
                             <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
                                 <th style={{ padding: '25px 30px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'left' }}>Date & Vehicle</th>
@@ -462,13 +465,13 @@ const DriverServices = () => {
             {/* Modal for Add/Edit */}
             <AnimatePresence>
                 {showModal && (
-                    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: '30px' }}>
+                    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 1000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '15px', overflowY: 'auto' }}>
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} className="glass-card" style={{ width: '100%', maxWidth: '500px', padding: 'clamp(20px, 5vw, 30px)', margin: 'auto' }}>
                             <h2 style={{ color: 'white', marginBottom: '25px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                                 <Wrench size={24} color="#10b981" /> {editingId ? 'Edit Service' : 'Add Driver Service'}
                             </h2>
                             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div className="form-grid-2">
                                     <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', marginBottom: '6px' }}>SELECT VEHICLE</label>
                                         <select value={formData.vehicleId} onChange={e => setFormData({...formData, vehicleId: e.target.value})} className="input-field" required>
@@ -485,7 +488,7 @@ const DriverServices = () => {
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div className="form-grid-2">
                                     <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', marginBottom: '6px' }}>SERVICE CATEGORY</label>
                                         <select value={formData.category} onChange={e => setFormData({...formData, category: e.target.value})} className="input-field">
@@ -498,7 +501,7 @@ const DriverServices = () => {
                                     </div>
                                 </div>
 
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div className="form-grid-2">
                                     <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', marginBottom: '6px' }}>AMOUNT (₹)</label>
                                         <input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: e.target.value})} className="input-field" placeholder="0.00" required />

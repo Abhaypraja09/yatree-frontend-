@@ -155,7 +155,12 @@ const BorderTax = () => {
             <SEO title="Border Tax Manager" description="Manage fleet state permits and border taxes." />
 
             {/* Premium Header */}
-            <header style={{ padding: '40px 0', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', gap: '20px', flexWrap: 'wrap' }}>
+            <header className="flex-resp" style={{ 
+                padding: '40px 0', 
+                justifyContent: 'space-between', 
+                alignItems: 'center', 
+                gap: '24px' 
+            }}>
                 <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
@@ -163,43 +168,42 @@ const BorderTax = () => {
                         </div>
                         <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(251, 191, 36, 0.8)', letterSpacing: '2px', textTransform: 'uppercase' }}>Permits & Taxes</span>
                     </div>
-                    <h1 style={{ color: 'white', fontSize: '38px', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
+                    <h1 style={{ color: 'white', fontSize: 'clamp(28px, 6vw, 38px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
                         Border <span style={{ color: '#fbbf24' }}>Tax Hub</span>
                     </h1>
                 </div>
 
-                <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
+                <div className="flex-resp" style={{ gap: '15px', alignItems: 'center' }}>
                     <div style={{
-                        padding: '15px 25px',
+                        padding: '12px 24px',
                         background: 'rgba(255,255,255,0.03)',
                         border: '1px solid rgba(255,255,255,0.08)',
-                        borderRadius: '24px',
+                        borderRadius: '20px',
                         display: 'flex',
-                        flexDirection: 'column'
+                        flexDirection: 'column',
+                        textAlign: 'right',
+                        minWidth: '150px'
                     }}>
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>{months[selectedMonth]} Total</span>
-                        <span style={{ fontSize: '24px', fontWeight: '900', color: '#fbbf24' }}>₹ {totalMonthPaid.toLocaleString()}</span>
+                        <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>{months[selectedMonth]} Total</span>
+                        <span style={{ fontSize: '22px', fontWeight: '900', color: '#fbbf24' }}>₹ {totalMonthPaid.toLocaleString()}</span>
                     </div>
                 </div>
             </header>
 
             {/* Search & Filter Bar - Only in list view */}
             {!expandedVehicle && (
-                <div style={{
+                <div className="flex-resp" style={{
                     marginBottom: '30px',
-                    display: 'flex',
-                    gap: '15px',
                     background: 'rgba(255,255,255,0.05)',
                     padding: '10px',
                     borderRadius: '22px',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    flexWrap: 'wrap'
+                    border: '1px solid rgba(255,255,255,0.05)'
                 }}>
-                    <div style={{ position: 'relative', flex: 1.5, minWidth: '300px' }}>
+                    <div style={{ position: 'relative', flex: 1.5, minWidth: '220px' }}>
                         <Search size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                         <input
                             type="text"
-                            placeholder="Search by vehicle number or model..."
+                            placeholder="Search vehicle..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
@@ -216,7 +220,7 @@ const BorderTax = () => {
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px', flex: 1, minWidth: '250px' }}>
+                    <div className="flex-resp" style={{ gap: '10px', flex: 1, minWidth: '220px' }}>
                         <div style={{ position: 'relative', flex: 1 }}>
                             <select
                                 value={selectedMonth}
@@ -232,8 +236,7 @@ const BorderTax = () => {
                                     fontSize: '15px',
                                     fontWeight: '700',
                                     outline: 'none',
-                                    appearance: 'none',
-                                    textAlign: 'center'
+                                    appearance: 'none'
                                 }}
                             >
                                 {months.map((m, idx) => <option key={m} value={idx} style={{ background: '#111', color: 'white' }}>{m}</option>)}
@@ -256,8 +259,7 @@ const BorderTax = () => {
                                     fontSize: '15px',
                                     fontWeight: '700',
                                     outline: 'none',
-                                    appearance: 'none',
-                                    textAlign: 'center'
+                                    appearance: 'none'
                                 }}
                             >
                                 {years.map(y => <option key={y} value={y} style={{ background: '#111', color: 'white' }}>{y}</option>)}
@@ -313,17 +315,17 @@ const BorderTax = () => {
                                             background: 'rgba(255,255,255,0.04)',
                                             border: '1px solid rgba(255,255,255,0.08)',
                                             borderRadius: '24px',
-                                            padding: '20px 30px',
+                                            padding: '20px clamp(15px, 4vw, 30px)',
                                             cursor: 'pointer',
-                                            display: 'grid',
-                                            gridTemplateColumns: 'minmax(150px, 1fr) minmax(150px, 1fr) minmax(120px, 1fr) auto',
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
                                             alignItems: 'center',
                                             gap: '20px',
                                             transition: 'all 0.3s ease'
                                         }}
                                         whileHover={{ background: 'rgba(255,255,255,0.08)', transform: 'translateY(-2px)' }}
                                     >
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1.2 }}>
                                             <div style={{
                                                 width: '45px',
                                                 height: '45px',
@@ -331,7 +333,8 @@ const BorderTax = () => {
                                                 background: 'rgba(255,255,255,0.05)',
                                                 display: 'flex',
                                                 alignItems: 'center',
-                                                justifyContent: 'center'
+                                                justifyContent: 'center',
+                                                flexShrink: 0
                                             }}>
                                                 <Car size={22} color="rgba(255,255,255,0.4)" />
                                             </div>
@@ -341,18 +344,18 @@ const BorderTax = () => {
                                             </div>
                                         </div>
 
-                                        <div>
+                                        <div style={{ flex: 1 }} className="hide-mobile">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                                 <Wallet size={12} color="rgba(255,255,255,0.3)" />
-                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase' }}>{months[selectedMonth]} Paid</span>
+                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase' }}>{months[selectedMonth]} Total</span>
                                             </div>
-                                            <span style={{ fontSize: '22px', fontWeight: '900', color: vehicleMonthTotal > 0 ? '#10b981' : 'rgba(255,255,255,0.2)' }}>
+                                            <span style={{ fontSize: '22px', fontWeight: '900', color: vehicleMonthTotal > 0 ? '#10b981' : 'rgba(255,255,255,0.1)' }}>
                                                 ₹ {vehicleMonthTotal.toLocaleString()}
                                             </span>
                                         </div>
 
-                                        <div>
-                                            <span style={{
+                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                            <span className="hide-mobile" style={{
                                                 fontSize: '10px',
                                                 fontWeight: '800',
                                                 padding: '6px 14px',
@@ -363,9 +366,6 @@ const BorderTax = () => {
                                             }}>
                                                 {vehicleMonthEntries.length} RECORDS
                                             </span>
-                                        </div>
-
-                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                             <div style={{ color: 'rgba(255,255,255,0.2)' }}>
                                                 <ChevronRight size={24} />
                                             </div>
@@ -384,32 +384,33 @@ const BorderTax = () => {
                         exit={{ opacity: 0, x: -50 }}
                     >
                         {/* Detail Header / Breadcrumb */}
-                        <div style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div className="flex-resp" style={{ marginBottom: '30px', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
                             <button 
                                 onClick={() => setExpandedVehicle(null)}
                                 style={{
                                     background: 'rgba(255,255,255,0.05)',
                                     border: '1px solid rgba(255,255,255,0.1)',
                                     borderRadius: '12px',
-                                    padding: '10px 20px',
+                                    padding: '12px 20px',
                                     color: 'white',
                                     fontWeight: '800',
                                     fontSize: '12px',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    gap: '10px'
+                                    gap: '10px',
+                                    width: 'fit-content'
                                 }}
                             >
-                                <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} /> BACK TO FLEET
+                                <ChevronRight size={18} style={{ transform: 'rotate(180deg)' }} /> BACK
                             </button>
 
                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px', textAlign: 'right' }}>
                                 <div>
-                                    <h2 style={{ color: 'white', margin: 0, fontSize: '22px', fontWeight: '900' }}>
+                                    <h2 style={{ color: 'white', margin: 0, fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: '900' }}>
                                         {vehicles.find(v => v._id === expandedVehicle)?.carNumber}
                                     </h2>
-                                    <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
+                                    <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase' }}>
                                         {vehicles.find(v => v._id === expandedVehicle)?.model}
                                     </p>
                                 </div>
@@ -419,54 +420,54 @@ const BorderTax = () => {
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
                             {/* Entry Form Card */}
                             <div className="glass-card" style={{ 
-                                padding: '30px', 
+                                padding: 'clamp(20px, 4vw, 30px)', 
                                 background: 'rgba(251, 191, 36, 0.03)', 
                                 border: '1px solid rgba(251, 191, 36, 0.1)',
                                 borderRadius: '30px',
                                 boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
                             }}>
-                                <h4 style={{ color: 'white', fontSize: '15px', fontWeight: '900', marginBottom: '25px', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <h4 style={{ color: 'white', fontSize: '14px', fontWeight: '900', marginBottom: '25px', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                         <Plus size={18} color="black" />
                                     </div>
-                                    Create New Tax Record
+                                    New Tax Entry
                                 </h4>
-                                <form onSubmit={handleSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '25px' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>BORDER / TOLL NAME</label>
+                                <form onSubmit={handleSubmit} className="form-grid-2" style={{ gap: '20px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>LOCATION / BORDER</label>
                                         <input 
                                             type="text" 
                                             required
-                                            placeholder="Enter location name..."
+                                            placeholder="Location name..."
                                             value={formData.borderName}
                                             onChange={e => setFormData({...formData, borderName: e.target.value})}
                                             style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', height: '52px', padding: '0 18px', color: 'white', outline: 'none', fontSize: '15px' }}
                                         />
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>ASSIGNED DRIVER</label>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>ASSIGNED DRIVER</label>
                                         <select 
                                             value={formData.driverId}
                                             onChange={e => setFormData({...formData, driverId: e.target.value})}
                                             style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', height: '52px', padding: '0 18px', color: 'white', outline: 'none', fontSize: '15px', appearance: 'none' }}
                                         >
-                                            <option value="">Choose Driver</option>
+                                            <option value="">Select Driver</option>
                                             {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#111' }}>{d.name}</option>)}
                                         </select>
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>AMOUNT PAID (₹)</label>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>AMOUNT PAID (₹)</label>
                                         <input 
                                             type="number" 
                                             required
                                             placeholder="0"
                                             value={formData.amount}
                                             onChange={e => setFormData({...formData, amount: e.target.value})}
-                                            style={{ background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.2)', borderRadius: '14px', height: '52px', padding: '0 18px', color: '#fbbf24', fontWeight: '900', outline: 'none', fontSize: '18px' }}
+                                            style={{ background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.2)', borderRadius: '14px', height: '52px', padding: '0 18px', color: '#fbbf24', fontWeight: '900', outline: 'none', fontSize: '20px' }}
                                         />
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TRANSACTION DATE</label>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TAX DATE</label>
                                         <input 
                                             type="date" 
                                             required
@@ -475,8 +476,8 @@ const BorderTax = () => {
                                             style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', height: '52px', padding: '0 18px', color: 'white', outline: 'none', colorScheme: 'dark', fontSize: '15px' }}
                                         />
                                     </div>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <label style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>UPLOAD RECEIPT</label>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                        <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>RECEIPT PHOTO</label>
                                         <div style={{ position: 'relative', height: '52px' }}>
                                             <input 
                                                 type="file" 
@@ -485,7 +486,7 @@ const BorderTax = () => {
                                                 style={{ opacity: 0, position: 'absolute', inset: 0, width: '100%', cursor: 'pointer', zIndex: 2 }}
                                             />
                                             <div style={{ height: '100%', border: '1px dashed rgba(255,255,255,0.2)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', color: 'rgba(255,255,255,0.4)', fontSize: '13px' }}>
-                                                <Upload size={16} /> {receiptPhoto ? 'File Selected' : 'Choose Photo'}
+                                                <Upload size={16} /> {receiptPhoto ? 'File Selected' : 'Tap to Upload'}
                                             </div>
                                         </div>
                                     </div>
@@ -506,10 +507,8 @@ const BorderTax = () => {
                                                 boxShadow: '0 10px 20px -5px rgba(251, 191, 36, 0.3)',
                                                 transition: 'all 0.3s ease'
                                             }}
-                                            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.02)'}
-                                            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
                                         >
-                                            {submitting ? 'PROCESSING...' : 'CONFIRM & SAVE'}
+                                            {submitting ? 'PROCESSING...' : 'SAVE RECORD'}
                                         </button>
                                     </div>
                                 </form>
@@ -526,13 +525,14 @@ const BorderTax = () => {
                                     <CalendarIcon size={18} color="#fbbf24" style={{ filter: 'drop-shadow(0 0 5px rgba(251, 191, 36, 0.5))' }} /> 
                                     Transaction History <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', marginLeft: '5px' }}>({months[selectedMonth]} {selectedYear})</span>
                                 </h4>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                                <div className="scroll-x">
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '700px' }}>
                                     {entries.filter(e => {
                                         const d = nowIST(e.date);
                                         return e.vehicle?._id === expandedVehicle && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
                                     }).length === 0 ? (
-                                        <div style={{ padding: '60px 30px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '24px' }}>
-                                            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px', fontWeight: '600', margin: 0 }}>No transaction records found for this period.</p>
+                                        <div style={{ padding: '60px 30px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '24px', minWidth: 'auto' }}>
+                                            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px', fontWeight: '600', margin: 0 }}>No records found for this period.</p>
                                         </div>
                                     ) : (
                                         entries.filter(e => {
@@ -541,24 +541,23 @@ const BorderTax = () => {
                                         }).map((entry, idx) => (
                                             <div key={idx} style={{
                                                 display: 'grid',
-                                                gridTemplateColumns: 'minmax(140px, 1fr) 120px 2fr 120px 50px',
-                                                padding: '20px 30px',
+                                                gridTemplateColumns: '120px 100px 1fr 120px 50px',
+                                                padding: '20px 25px',
                                                 background: 'rgba(255,255,255,0.03)',
                                                 border: '1px solid rgba(255,255,255,0.05)',
                                                 borderRadius: '18px',
                                                 alignItems: 'center',
-                                                gap: '25px',
-                                                transition: 'all 0.2s ease'
+                                                gap: '20px'
                                             }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}>
-                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '13px', fontWeight: '800' }}>
+                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '800' }}>
                                                     {formatDateIST(entry.date)}
                                                 </div>
                                                 <div style={{ color: '#fbbf24', fontSize: '18px', fontWeight: '950' }}>
                                                     ₹ {entry.amount}
                                                 </div>
-                                                <div style={{ color: 'white', fontSize: '15px', fontWeight: '700' }}>
+                                                <div style={{ color: 'white', fontSize: '14px', fontWeight: '700' }}>
                                                     {entry.borderName}
-                                                    {entry.remarks && <p style={{ margin: '4px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', fontWeight: '500' }}>{entry.remarks}</p>}
+                                                    {entry.remarks && <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', fontWeight: '500' }}>{entry.remarks}</p>}
                                                 </div>
                                                 <div style={{ textAlign: 'right' }}>
                                                     {entry.receiptPhoto && (
@@ -577,16 +576,17 @@ const BorderTax = () => {
                                                                 letterSpacing: '1px'
                                                             }}
                                                         >
-                                                            VIEW RECEIPT
+                                                            RECEIPT
                                                         </button>
                                                     )}
                                                 </div>
                                                 <div style={{ textAlign: 'right' }}>
-                                                    <button onClick={() => handleDelete(entry._id)} style={{ background: 'none', border: 'none', color: 'rgba(244, 63, 94, 0.4)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#f43f5e'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(244, 63, 94, 0.4)'}><Trash2 size={18}/></button>
+                                                    <button onClick={() => handleDelete(entry._id)} style={{ background: 'none', border: 'none', color: 'rgba(244, 63, 94, 0.4)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#f43f5e'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(244, 63, 94, 0.4)'}><Trash2 size={16}/></button>
                                                 </div>
                                             </div>
                                         ))
                                     )}
+                                </div>
                                 </div>
                             </div>
                         </div>

@@ -18,6 +18,54 @@ import {
     currentTimeIST
 } from '../utils/istUtils';
 
+const styles = `
+  @media (max-width: 768px) {
+    .event-header-row {
+      flex-direction: column !important;
+      align-items: flex-start !important;
+      gap: 20px !important;
+    }
+    .event-stats-grid {
+      grid-template-columns: repeat(2, 1fr) !important;
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+    .event-control-bar {
+      padding: 15px !important;
+    }
+    .event-filter-row {
+      flex-direction: column !important;
+      align-items: stretch !important;
+      gap: 15px !important;
+    }
+    .event-search-wrapper {
+        min-width: 100% !important;
+    }
+    .hide-mobile {
+        display: none !important;
+    }
+    .show-mobile {
+        display: flex !important;
+    }
+    .mobile-full-width {
+        width: 100% !important;
+        flex: none !important;
+    }
+    .date-nav-wrapper {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+  }
+  .premium-scroll::-webkit-scrollbar {
+    height: 4px;
+    width: 4px;
+  }
+  .premium-scroll::-webkit-scrollbar-thumb {
+    background: rgba(255,255,255,0.1);
+    border-radius: 10px;
+  }
+`;
+
 const EventManagement = () => {
     const { selectedCompany } = useCompany();
     const [events, setEvents] = useState([]);
@@ -352,82 +400,67 @@ const EventManagement = () => {
 
     return (
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
+            <style>{styles}</style>
             <SEO title="Event Command Center" description="Unified tracking for company and external vehicles assigned to events." />
 
             {/* ═══ PREMIUM HERO HEADER ═══ */}
-            <div style={{ position: 'relative', padding: 'clamp(30px,5vw,50px) 0 30px', marginBottom: '32px' }}>
+            <div style={{ position: 'relative', padding: 'clamp(20px, 5vw, 40px) 0 20px', marginBottom: '24px' }}>
                 {/* Ambient dynamic background elements */}
-                <div style={{ position: 'absolute', top: -40, right: '0%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(251,191,36,0.08) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }} />
-                <div style={{ position: 'absolute', bottom: -20, left: '-5%', width: '250px', height: '250px', background: 'radial-gradient(circle, rgba(34,211,238,0.05) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(30px)' }} />
+                <div style={{ position: 'absolute', top: -40, right: '0%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(251,191,36,0.08) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }} className="hide-mobile" />
                 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', flexWrap: 'wrap', gap: '30px', position: 'relative' }}>
+                <div className="event-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '30px', position: 'relative' }}>
                     {/* Title Block */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '24px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(15px, 3vw, 24px)' }}>
                         <div style={{ 
-                            width: '68px', height: '68px', 
+                            width: 'clamp(50px, 12vw, 68px)', height: 'clamp(50px, 12vw, 68px)', 
                             background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', 
-                            borderRadius: '20px', 
+                            borderRadius: '16px', 
                             display: 'flex', alignItems: 'center', justifyContent: 'center', 
-                            boxShadow: '0 12px 30px rgba(0,0,0,0.4), inset 0 1px 1px rgba(255,255,255,0.1)',
-                            border: '1px solid rgba(251,191,36,0.2)'
+                            boxShadow: '0 12px 30px rgba(0,0,0,0.4)',
+                            border: '1px solid rgba(251,191,36,0.2)',
+                            flexShrink: 0
                         }}>
                             <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 5, repeat: Infinity }}>
-                                <Briefcase size={32} color="#fbbf24" strokeWidth={1.5} />
+                                <Briefcase size={28} color="#fbbf24" strokeWidth={1.5} />
                             </motion.div>
                         </div>
                         <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 15px #fbbf24', animation: 'pulse 2s infinite' }} />
-                                <span style={{ fontSize: '11px', fontWeight: '900', color: '#fbbf24', letterSpacing: '2.5px', textTransform: 'uppercase', opacity: 0.8 }}>Operational Command</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                <div className="pulse-dot" />
+                                <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', letterSpacing: '2px', textTransform: 'uppercase' }}>Command Center</span>
                             </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(28px,5vw,42px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 0.9 }}>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 6vw, 42px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
                                 Event<span style={{ background: 'linear-gradient(90deg,#fbbf24,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}> Logistics</span>
                             </h1>
-                            <div style={{ margin: '14px 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '500', letterSpacing: '0.2px' }}>
-                                {isRange
-                                    ? <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Calendar size={14} color="rgba(255,255,255,0.3)" />
-                                        <span style={{ color: '#fbbf24', fontWeight: '800' }}>{new Date(fromDate+'T12:00:00Z').toLocaleDateString('en-IN',{day:'2-digit',month:'short'})}</span> 
-                                        <ChevronRight size={14} style={{ opacity: 0.3 }} /> 
-                                        <span style={{ color: '#fbbf24', fontWeight: '800' }}>{new Date(toDate+'T12:00:00Z').toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</span>
-                                      </div>
-                                    : <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Calendar size={14} color="rgba(255,255,255,0.3)" />
-                                        <span>Viewing <span style={{ color: 'white', fontWeight: '800' }}>{new Date(toDate+'T12:00:00Z').toLocaleDateString('en-IN',{weekday:'long',day:'numeric',month:'long'})}</span></span>
-                                      </div>
-                                }
-                            </div>
                         </div>
                     </div>
 
                     {/* Stats Grid - High Fidelity */}
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '16px', flex: '1', maxWidth: '700px' }}>
+                    <div className="event-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', flex: '1', maxWidth: '750px', width: '100%', gap: '15px' }}>
                         {[
-                            { label: 'Active Duties', value: totalDuties, color: '#fbbf24', icon: <TruckIcon size={18} />, bg: 'rgba(251,191,36,0.1)' },
-                            { label: 'Est. Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', icon: <Target size={18} />, bg: 'rgba(16,185,129,0.1)' },
-                            { label: 'Fleet Support', value: fleetCount, color: '#38bdf8', icon: <Car size={18} />, bg: 'rgba(56,189,248,0.1)' },
-                            { label: 'External Hire', value: extCount, color: '#a855f7', icon: <Users size={18} />, bg: 'rgba(168,85,247,0.1)' },
+                            { label: 'Active', value: totalDuties, color: '#fbbf24', icon: <TruckIcon size={18} /> },
+                            { label: 'Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', icon: <Target size={18} /> },
+                            { label: 'Fleet', value: fleetCount, color: '#38bdf8', icon: <Car size={18} /> },
+                            { label: 'External', value: extCount, color: '#a855f7', icon: <Users size={18} /> },
                         ].map((s, i) => (
                             <motion.div key={s.label} 
-                                initial={{ opacity: 0, y: 20 }} 
+                                initial={{ opacity: 0, y: 15 }} 
                                 animate={{ opacity: 1, y: 0 }} 
-                                transition={{ delay: i * 0.1, duration: 0.5 }}
+                                transition={{ delay: i * 0.1 }}
                                 style={{
                                     padding: '16px', borderRadius: '20px',
                                     background: 'rgba(15, 23, 42, 0.4)',
                                     border: `1px solid rgba(255,255,255,0.05)`,
                                     borderLeft: `3px solid ${s.color}`,
-                                    display: 'flex', flexDirection: 'column', gap: '10px',
-                                    boxShadow: '0 10px 20px rgba(0,0,0,0.2)',
-                                    transition: 'all 0.3s ease'
+                                    display: 'flex', flexDirection: 'column', gap: '8px',
+                                    boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
                                 }}
-                                className="glass-card-hover-effect"
                             >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                    <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1.2px' }}>{s.label}</span>
-                                    <div style={{ color: s.color, opacity: 0.8 }}>{s.icon}</div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{s.label}</span>
+                                    <div style={{ color: s.color, opacity: 0.6 }}>{s.icon}</div>
                                 </div>
-                                <span style={{ color: 'white', fontSize: '24px', fontWeight: '900', letterSpacing: '-0.5px' }}>{s.value}</span>
+                                <span style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>{s.value}</span>
                             </motion.div>
                         ))}
                     </div>
@@ -435,24 +468,24 @@ const EventManagement = () => {
             </div>
 
             {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
-            <div style={{ 
+            <div className="event-control-bar" style={{ 
                 background: 'rgba(15, 23, 42, 0.65)', 
                 border: '1px solid rgba(255,255,255,0.07)', 
                 borderRadius: '24px', 
-                padding: '24px', 
+                padding: 'clamp(15px, 3vw, 24px)', 
                 marginBottom: '24px', 
                 backdropFilter: 'blur(24px)', 
                 display: 'flex', flexDirection: 'column', gap: '20px',
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
             }}>
                 {/* Search & Main Selects */}
-                <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div className="event-filter-row" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                     {/* Unified Search */}
-                    <div style={{ position: 'relative', flex: '1', minWidth: '300px' }}>
+                    <div className="event-search-wrapper" style={{ position: 'relative', flex: '1', minWidth: 'min(100%, 300px)' }}>
                         <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
                         <input 
                             type="text" 
-                            placeholder="Search by plate, driver, client or event..." 
+                            placeholder="Search duties..." 
                             value={searchTerm} 
                             onChange={e => setSearchTerm(e.target.value)}
                             className="premium-compact-input"
@@ -461,36 +494,35 @@ const EventManagement = () => {
                     </div>
 
                     {/* Data Source Filters */}
-                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', gap: '4px' }}>
+                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', gap: '4px', overflowX: 'auto' }} className="premium-scroll">
                         {[
-                            { id: 'All', label: 'All Sources', color: '#fbbf24' },
-                            { id: 'Fleet', label: 'Our Fleet', color: '#10b981' },
-                            { id: 'External', label: 'External', color: '#a855f7' }
+                            { id: 'All', label: 'All', color: '#fbbf24' },
+                            { id: 'Fleet', label: 'Fleet', color: '#10b981' },
+                            { id: 'External', label: 'Ext', color: '#a855f7' }
                         ].map(s => (
                             <button key={s.id} onClick={() => setSourceFilter(s.id)} style={{
-                                padding: '8px 18px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '800',
+                                padding: '8px 15px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '800',
                                 background: sourceFilter === s.id ? `${s.color}20` : 'transparent',
                                 color: sourceFilter === s.id ? s.color : 'rgba(255,255,255,0.35)',
-                                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)', 
-                                textTransform: 'uppercase', letterSpacing: '0.8px',
-                                boxShadow: sourceFilter === s.id ? `0 4px 12px ${s.color}20` : 'none'
+                                transition: 'all 0.3s ease', 
+                                textTransform: 'uppercase'
                             }}>{s.label}</button>
                         ))}
                     </div>
 
                     {/* Advanced Dropdowns */}
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <div style={{ position: 'relative' }}>
+                    <div className="event-filter-row" style={{ display: 'flex', gap: '10px', flex: '1' }}>
+                        <div style={{ position: 'relative', flex: 1, minWidth: '150px' }}>
                             <Building2 size={14} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
-                            <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} className="premium-compact-input" style={{ width: '180px', height: '52px', paddingLeft: '40px', fontSize: '13px', background: 'rgba(0,0,0,0.2)' }}>
+                            <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} className="premium-compact-input" style={{ width: '100%', height: '52px', paddingLeft: '40px', fontSize: '13px', background: 'rgba(0,0,0,0.2)' }}>
                                 <option value="All" style={{ background: '#0f172a' }}>All Clients</option>
                                 {uniqueClients.map(c => <option key={c} value={c} style={{ background: '#0f172a' }}>{c}</option>)}
                             </select>
                         </div>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <div style={{ position: 'relative' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: 1.2, minWidth: '200px' }}>
+                            <div style={{ position: 'relative', flex: 1 }}>
                                 <Target size={14} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
-                                <select value={eventFilter} onChange={e => setEventFilter(e.target.value)} className="premium-compact-input" style={{ width: '200px', height: '52px', paddingLeft: '40px', fontSize: '13px', background: 'rgba(0,0,0,0.2)' }}>
+                                <select value={eventFilter} onChange={e => setEventFilter(e.target.value)} className="premium-compact-input" style={{ width: '100%', height: '52px', paddingLeft: '40px', fontSize: '13px', background: 'rgba(0,0,0,0.2)' }}>
                                     <option value="All" style={{ background: '#0f172a' }}>All Events</option>
                                     {events.map(e => <option key={e._id} value={e._id} style={{ background: '#0f172a' }}>{e.name}</option>)}
                                 </select>
@@ -505,7 +537,7 @@ const EventManagement = () => {
                                 } else {
                                     alert("Please select or create an event first");
                                 }
-                            }} style={{ height: '52px', padding: '0 16px', borderRadius: '14px', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Edit Event">
+                            }} style={{ height: '52px', padding: '0 16px', borderRadius: '14px', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                 <Edit size={16} />
                             </button>
                         </div>
@@ -513,32 +545,32 @@ const EventManagement = () => {
                 </div>
 
                 {/* Sub Row: Date Navigator & Global Actions */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                <div className="event-filter-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                     {/* Date Navigation System */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="date-nav-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                         <div style={{ display: 'flex', gap: '4px' }}>
-                            <button onClick={() => shiftDays(-1)} className="glass-card-hover-effect" style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <button onClick={() => shiftDays(-1)} style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                                 <ChevronLeft size={18} />
                             </button>
-                            <button onClick={() => shiftDays(1)} className="glass-card-hover-effect" style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <button onClick={() => shiftDays(1)} style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                                 <ChevronRight size={18} />
                             </button>
                         </div>
 
                         {/* Smart Date Range */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.4)', padding: '4px 12px 4px 6px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.4)', padding: '4px 12px 4px 6px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', flex: 1 }}>
                             <div 
                                 onClick={(e) => { const i=e.currentTarget.querySelector('input'); if(i.showPicker)i.showPicker(); else i.click(); }} 
                                 style={{ 
                                     position: 'relative', display: 'flex', alignItems: 'center', gap: '12px', 
                                     padding: '8px 16px', background: isRange ? 'rgba(56,189,248,0.1)' : 'rgba(251,191,36,0.1)', 
-                                    borderRadius: '10px', cursor: 'pointer', transition: '0.3s'
+                                    borderRadius: '10px', cursor: 'pointer', transition: '0.3s', flex: 1
                                 }}
                             >
                                 <Calendar size={14} color={isRange ? '#38bdf8' : '#fbbf24'} />
                                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span style={{ fontSize: '7px', fontWeight: '900', color: isRange ? '#38bdf8' : '#fbbf24', textTransform: 'uppercase', letterSpacing: '1px' }}>{isRange ? 'DATE RANGE' : 'SELECTED DATE'}</span>
-                                    <span style={{ color: 'white', fontSize: '13px', fontWeight: '800' }}>
+                                    <span style={{ fontSize: '7px', fontWeight: '900', color: isRange ? '#38bdf8' : '#fbbf24', textTransform: 'uppercase' }}>{isRange ? 'RANGE' : 'DATE'}</span>
+                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '800', whiteSpace: 'nowrap' }}>
                                         {isRange ? `${formatDateIST(fromDate)} - ${formatDateIST(toDate)}` : formatDateIST(toDate)}
                                     </span>
                                 </div>
@@ -547,32 +579,31 @@ const EventManagement = () => {
                             <button 
                                 onClick={() => setIsRange(!isRange)} 
                                 style={{ 
-                                    padding: '8px 14px', borderRadius: '8px', 
+                                    padding: '8px 12px', borderRadius: '8px', 
                                     background: isRange ? 'rgba(248,113,113,0.1)' : 'rgba(255,255,255,0.05)', 
                                     color: isRange ? '#f87171' : 'rgba(255,255,255,0.6)', 
-                                    fontSize: '10px', fontWeight: '800', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', gap: '6px'
+                                    fontSize: '10px', fontWeight: '800', cursor: 'pointer', border: 'none'
                                 }}
                             >
-                                {isRange ? <X size={12} /> : <Plus size={12} />} {isRange ? 'RESET' : 'RANGE'}
+                                {isRange ? <X size={12} /> : <Plus size={12} />}
                             </button>
                         </div>
                     </div>
 
                     {/* Global Actions */}
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <button onClick={exportExcel} className="glass-card-hover-effect" style={{ display:'flex',alignItems:'center',gap:'8px',height:'48px',padding:'0 20px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'14px',color:'rgba(255,255,255,0.8)',fontSize:'13px',fontWeight:'700',cursor:'pointer' }}>
-                            <FileSpreadsheet size={16} /> Excel
+                    <div className="flex-resp" style={{ gap: '10px', alignItems: 'center' }}>
+                        <button onClick={exportExcel} style={{ display:'flex',alignItems:'center',gap:'8px',height:'48px',padding:'0 15px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'14px',color:'rgba(255,255,255,0.8)',fontSize:'12px',fontWeight:'700',cursor:'pointer' }}>
+                            <FileSpreadsheet size={16} /> <span className="hide-mobile">EXCEL</span>
                         </button>
-                        <button onClick={() => { setIsEditingEvent(false); setEventFormData({ name:'',client:'',date:getToday(),location:'',description:'' }); setShowEventModal(true); }} className="glass-card-hover-effect" style={{ display:'flex',alignItems:'center',gap:'8px',height:'48px',padding:'0 20px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'14px',color:'rgba(255,255,255,0.8)',fontSize:'13px',fontWeight:'700',cursor:'pointer' }}>
-                            <Plus size={16} /> New Event
+                        <button onClick={() => { setIsEditingEvent(false); setEventFormData({ name:'',client:'',date:getToday(),location:'',description:'' }); setShowEventModal(true); }} style={{ display:'flex',alignItems:'center',gap:'8px',height:'48px',padding:'0 15px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'14px',color:'rgba(255,255,255,0.8)',fontSize:'12px',fontWeight:'700',cursor:'pointer' }}>
+                            <Plus size={16} /> <span className="hide-mobile">EVENT</span>
                         </button>
                         <button onClick={() => {
                             setIsEditingDuty(false);
                             setDutyFormData({ carNumber:'',model:'',dropLocation:'',date:getToday(),eventId:'',dutyAmount:'',driverName:'',vehicleSource:'Fleet',dutyType:'',dutyTime:currentTimeIST() });
                             setShowDutyModal(true);
-                        }} className="btn-primary" style={{ display:'flex',alignItems:'center',gap:'10px',height:'52px',padding:'0 24px',borderRadius:'16px',fontSize:'14px' }}>
-                            <Plus size={18} strokeWidth={3} /> Add Duty Entry
+                        }} className="btn-primary" style={{ display:'flex',alignItems:'center',gap:'8px',height:'48px',padding:'0 20px',borderRadius:'14px',fontSize:'13px', fontWeight: '900' }}>
+                            <Plus size={18} strokeWidth={3} /> <span className="show-mobile">ADD</span><span className="hide-mobile">ADD DUTY</span>
                         </button>
                     </div>
                 </div>
@@ -580,7 +611,7 @@ const EventManagement = () => {
 
 
             {/* ═══ CLEAN PREMIUM DESKTOP TABLE ═══ */}
-            <div className="glass-card" style={{ 
+            <div className="glass-card hide-mobile" style={{ 
                 padding: 0, 
                 overflow: 'hidden', 
                 border: '1px solid rgba(255,255,255,0.08)', 
@@ -589,8 +620,8 @@ const EventManagement = () => {
                 borderRadius: '24px',
                 boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
             }}>
-                <div style={{ overflowX: 'auto' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <div className="scroll-x">
+                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
                         <thead>
                             <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
                                 {[
@@ -625,8 +656,8 @@ const EventManagement = () => {
                                 <tr><td colSpan="6" style={{ textAlign: 'center', padding: '120px 0' }}>
                                     <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
                                         <Briefcase size={80} style={{ opacity: 0.05, color: 'white', marginBottom: '24px' }} />
-                                        <h3 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '8px' }}>No Assignments Found</h3>
-                                        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>Refine your search parameters or date range.</p>
+                                        <h3 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '8px' }}>No Assignments</h3>
+                                        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>Refine your filters.</p>
                                     </motion.div>
                                 </td></tr>
                             ) : filtered.map((v, idx) => {
@@ -740,7 +771,13 @@ const EventManagement = () => {
 
             {/* ═══ PREMIUM MOBILE CARDS ═══ */}
             <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {filtered.map((v, idx) => {
+                {loading ? (
+                    <div style={{ padding: '60px 0', textAlign: 'center' }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
+                ) : filtered.length === 0 ? (
+                    <div style={{ padding: '60px 20px', textAlign: 'center', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px', margin: 0 }}>No duties recorded for this period.</p>
+                    </div>
+                ) : filtered.map((v, idx) => {
                     const event = events.find(e => e._id === v.eventId);
                     const dutyDate = v.carNumber?.split('#')[1];
                     const src = v.vehicleSource || 'External';
@@ -768,26 +805,26 @@ const EventManagement = () => {
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '15px', fontWeight: '900', color: 'white' }}>{v.carNumber?.split('#')[0]}</div>
-                                        <div style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{formatDateDisplay(dutyDate)}</div>
+                                        <div style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', textTransform: 'uppercase' }}>{formatDateDisplay(dutyDate)}</div>
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
                                     <div style={{ fontSize: '16px', fontWeight: '950', color: '#10b981' }}>₹{Number(v.dutyAmount || 0).toLocaleString()}</div>
-                                    <span style={{ fontSize: '8px', fontWeight: '950', padding: '2px 8px', borderRadius: '20px', background: isFleet ? '#10b98120' : '#a855f720', color: isFleet ? '#10b981' : '#a855f7', border: `1px solid ${isFleet ? '#10b98130' : '#a855f730'}`, letterSpacing: '1px' }}>{src.toUpperCase()}</span>
+                                    <span style={{ fontSize: '7px', fontWeight: '950', padding: '2px 8px', borderRadius: '20px', background: isFleet ? '#10b98120' : '#a855f720', color: isFleet ? '#10b981' : '#a855f7', border: `1px solid ${isFleet ? '#10b98130' : '#a855f730'}`, letterSpacing: '1px' }}>{src.toUpperCase()}</span>
                                 </div>
                             </div>
                             
                             {/* Card Body */}
                             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                                 <div style={{ display: 'flex', gap: '12px' }}>
-                                    <div style={{ flex: 1 }}>
-                                        <label style={{ fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', marginBottom: '4px' }}>Assignment & Client</label>
+                                    <div style={{ flex: 1.2 }}>
+                                        <label style={{ fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Event & Client</label>
                                         <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>{event?.name || 'N/A'}</div>
                                         <div style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(255,255,255,0.4)' }}>{event?.client || 'N/A'}</div>
                                     </div>
                                     {v.driverName && (
-                                        <div style={{ flex: 1 }}>
-                                            <label style={{ fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px', display: 'block', marginBottom: '4px' }}>Operator</label>
+                                        <div style={{ flex: 0.8 }}>
+                                            <label style={{ fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Driver</label>
                                             <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>{v.driverName}</div>
                                         </div>
                                     )}
@@ -798,16 +835,12 @@ const EventManagement = () => {
                                     {v.dutyTime && <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(56,189,248,0.06)', color: '#38bdf8', fontSize: '10px', fontWeight: '800' }}>{v.dutyTime}</span>}
                                     {v.dropLocation && <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={10} /> {v.dropLocation}</span>}
                                 </div>
-                            </div>
 
-                            {/* Card Footer */}
-                            <div style={{ padding: '12px 20px', background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.3)' }}>{v.model}</div>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <button onClick={() => handleEditDuty(v)} style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(56,189,248,0.08)', border: '1px solid rgba(56,189,248,0.15)', color: '#38bdf8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Edit size={14} />
+                                <div style={{ borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '16px', display: 'flex', gap: '10px' }}>
+                                    <button onClick={() => handleEditDuty(v)} style={{ flex: 1, height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontSize: '11px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
+                                        <Edit size={14} /> EDIT
                                     </button>
-                                    <button onClick={() => handleDeleteDuty(v._id)} style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.15)', color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <button onClick={() => handleDeleteDuty(v._id)} style={{ width: '40px', height: '36px', borderRadius: '10px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.15)', color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                                         <Trash2 size={14} />
                                     </button>
                                 </div>
@@ -843,37 +876,36 @@ const EventManagement = () => {
                             <div style={{
                                 background: 'linear-gradient(to right, rgba(251, 191, 36, 0.05), rgba(14, 165, 233, 0.03))',
                                 borderBottom: '1px solid rgba(255,255,255,0.06)',
-                                padding: '28px 32px',
+                                padding: 'clamp(20px, 4vw, 28px) clamp(20px, 5vw, 32px)',
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center',
                                 backdropFilter: 'blur(20px)'
                             }}>
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <Briefcase size={20} color="#fbbf24" />
-                                        </div>
-                                        <h3 style={{ margin: 0, fontSize: '24px', fontWeight: '950', color: 'white', letterSpacing: '-0.8px' }}>
-                                            {isEditingDuty ? 'Update Duty Log' : 'Log New Assignment'}
-                                        </h3>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ width: 'clamp(32px, 8vw, 40px)', height: 'clamp(32px, 8vw, 40px)', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                        <Briefcase size={20} color="#fbbf24" />
                                     </div>
-                                    <p style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '600', letterSpacing: '0.2px' }}>Operational Command Center Entry Flow</p>
+                                    <div>
+                                        <h3 style={{ margin: 0, fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: '950', color: 'white', letterSpacing: '-0.8px', lineHeight: 1.1 }}>
+                                            {isEditingDuty ? 'Update Duty' : 'Log Assignment'}
+                                        </h3>
+                                        <p className="hide-mobile" style={{ margin: 0, fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '600', letterSpacing: '0.2px', marginTop: '4px' }}>Operational Command Center Entry Flow</p>
+                                    </div>
                                 </div>
                                 <button onClick={() => setShowDutyModal(false)} className="close-btn" style={{
                                     background: 'rgba(255,255,255,0.03)',
                                     borderRadius: '12px',
-                                    padding: '10px',
+                                    padding: '8px',
                                     border: '1px solid rgba(255,255,255,0.06)',
                                     color: 'white',
-                                    cursor: 'pointer',
-                                    transition: '0.2s'
+                                    cursor: 'pointer'
                                 }}><X size={20} /></button>
                             </div>
 
                             {/* Scrollable Body */}
                             <form onSubmit={handleSubmitDuty} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1, minHeight: 0 }}>
-                                <div style={{ padding: '32px 32px 40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '30px', flex: 1 }} className="premium-scroll">
+                                <div style={{ padding: 'clamp(20px, 5vw, 32px)', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px', flex: 1 }} className="premium-scroll">
                                     
                                     {/* Section 1: Logistics Context */}
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
@@ -881,24 +913,24 @@ const EventManagement = () => {
                                             {['Fleet', 'External'].map(src => (
                                                 <button key={src} type="button" onClick={() => setDutyFormData(prev => ({ ...prev, vehicleSource: src }))}
                                                     style={{
-                                                        flex: 1, height: '52px', borderRadius: '14px', border: `1px solid ${dutyFormData.vehicleSource === src ? (src === 'Fleet' ? '#10b98150' : '#f59e0b50') : 'rgba(255,255,255,0.06)'}`,
+                                                        flex: 1, height: '48px', borderRadius: '14px', border: `1px solid ${dutyFormData.vehicleSource === src ? (src === 'Fleet' ? '#10b98150' : '#f59e0b50') : 'rgba(255,255,255,0.06)'}`,
                                                         background: dutyFormData.vehicleSource === src ? (src === 'Fleet' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)') : 'rgba(255,255,255,0.02)',
                                                         color: dutyFormData.vehicleSource === src ? (src === 'Fleet' ? '#10b981' : '#f59e0b') : 'rgba(255,255,255,0.3)',
-                                                        fontWeight: '900', fontSize: '11px', letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', transition: '0.3s'
+                                                        fontWeight: '900', fontSize: '11px', letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
                                                     }}>
                                                     {src === 'Fleet' ? <Building2 size={16} /> : <TruckIcon size={16} />}
-                                                    {src.toUpperCase()} RESOURCE
+                                                    {src.toUpperCase()}
                                                 </button>
                                             ))}
                                         </div>
 
-                                        <div className="grid-row" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.2fr) minmax(0, 0.8fr)', gap: '20px' }}>
+                                        <div className="form-grid-2">
                                             <div className="premium-input-group">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <Target size={12} color="#fbbf24" style={{ opacity: 0.7 }} />
                                                     <label className="premium-label">Operational Event</label>
                                                 </div>
-                                                <select required value={dutyFormData.eventId} onChange={e => setDutyFormData({ ...dutyFormData, eventId: e.target.value })} className="premium-compact-input" style={{ appearance: 'none' }}>
+                                                <select required value={dutyFormData.eventId} onChange={e => setDutyFormData({ ...dutyFormData, eventId: e.target.value })} className="premium-compact-input" style={{ appearance: 'none', height: '50px' }}>
                                                     <option value="" disabled>Select Master Event</option>
                                                     {events.map(e => <option key={e._id} value={e._id}>{e.name} • {e.client}</option>)}
                                                 </select>
@@ -908,20 +940,20 @@ const EventManagement = () => {
                                                     <Calendar size={12} color="#fbbf24" style={{ opacity: 0.7 }} />
                                                     <label className="premium-label">Log Date</label>
                                                 </div>
-                                                <input type="date" required value={dutyFormData.date} onChange={e => setDutyFormData({ ...dutyFormData, date: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark' }} />
+                                                <input type="date" required value={dutyFormData.date} onChange={e => setDutyFormData({ ...dutyFormData, date: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark', height: '50px' }} />
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Section 2: Resource Allocation */}
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                                        <div className="grid-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', padding: 'clamp(15px, 4vw, 24px)', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                        <div className="form-grid-2">
                                             <div className="premium-input-group">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <Car size={12} color="#10b981" />
                                                     <label className="premium-label">Plate Identification</label>
                                                 </div>
-                                                <input type="text" list={dutyFormData.vehicleSource === 'Fleet' ? "masterCars" : undefined} required value={dutyFormData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} className="premium-compact-input" placeholder="Search Vehicle..." style={{ textTransform: 'uppercase' }} />
+                                                <input type="text" list={dutyFormData.vehicleSource === 'Fleet' ? "masterCars" : undefined} required value={dutyFormData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} className="premium-compact-input" placeholder="Search Vehicle..." style={{ textTransform: 'uppercase', height: '50px' }} />
                                                 {dutyFormData.vehicleSource === 'Fleet' && (
                                                     <datalist id="masterCars">
                                                         {allVehiclesMaster.map(v => <option key={v._id} value={v.carNumber} />)}
@@ -933,17 +965,17 @@ const EventManagement = () => {
                                                     <TruckIcon size={12} color="#10b981" />
                                                     <label className="premium-label">Vehicle Specification</label>
                                                 </div>
-                                                <input type="text" value={dutyFormData.model} onChange={e => setDutyFormData({ ...dutyFormData, model: e.target.value })} className="premium-compact-input" placeholder="e.g. Innova Crysta" />
+                                                <input type="text" value={dutyFormData.model} onChange={e => setDutyFormData({ ...dutyFormData, model: e.target.value })} className="premium-compact-input" placeholder="e.g. Innova Crysta" style={{ height: '50px' }} />
                                             </div>
                                         </div>
 
-                                        <div className="grid-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                        <div className="form-grid-2">
                                             <div className="premium-input-group">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <User size={12} color="#10b981" />
                                                     <label className="premium-label">Operator / Driver</label>
                                                 </div>
-                                                <input type="text" value={dutyFormData.driverName} onChange={e => setDutyFormData({ ...dutyFormData, driverName: e.target.value })} className="premium-compact-input" placeholder="Enter full name" />
+                                                <input type="text" value={dutyFormData.driverName} onChange={e => setDutyFormData({ ...dutyFormData, driverName: e.target.value })} className="premium-compact-input" placeholder="Enter full name" style={{ height: '50px' }} />
                                             </div>
                                             <div className="premium-input-group">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -952,20 +984,20 @@ const EventManagement = () => {
                                                 </div>
                                                 <div style={{ position: 'relative' }}>
                                                     <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', fontWeight: '900', color: '#10b981' }}>₹</span>
-                                                    <input type="number" required value={dutyFormData.dutyAmount} onChange={e => setDutyFormData({ ...dutyFormData, dutyAmount: e.target.value })} className="premium-compact-input" placeholder="0" style={{ paddingLeft: '35px', color: '#10b981', fontWeight: '800' }} />
+                                                    <input type="number" required value={dutyFormData.dutyAmount} onChange={e => setDutyFormData({ ...dutyFormData, dutyAmount: e.target.value })} className="premium-compact-input" placeholder="0" style={{ paddingLeft: '35px', color: '#10b981', fontWeight: '800', height: '50px' }} />
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
 
                                     {/* Section 3: Logistic Details */}
-                                    <div className="grid-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                    <div className="form-grid-2">
                                         <div className="premium-input-group">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <Briefcase size={12} color="#0ea5e9" />
                                                 <label className="premium-label">Service Category</label>
                                             </div>
-                                            <input type="text" list="dutyTypes" value={dutyFormData.dutyType} onChange={e => setDutyFormData({ ...dutyFormData, dutyType: e.target.value })} className="premium-compact-input" placeholder="e.g. Airport Transfer" />
+                                            <input type="text" list="dutyTypes" value={dutyFormData.dutyType} onChange={e => setDutyFormData({ ...dutyFormData, dutyType: e.target.value })} className="premium-compact-input" placeholder="e.g. Airport Transfer" style={{ height: '50px' }} />
                                             <datalist id="dutyTypes">
                                                 {['Airport Pickup', 'Airport Drop', 'Full Day Local', 'Outstation', 'Dinner Drop'].map(t => <option key={t} value={t} />)}
                                             </datalist>
@@ -978,38 +1010,36 @@ const EventManagement = () => {
                                                 </div>
                                                 <button type="button" onClick={() => setDutyFormData(prev => ({ ...prev, dutyTime: currentTimeIST() }))} style={{ fontSize: '9px', fontWeight: '900', color: '#0ea5e9', background: 'rgba(14, 165, 233, 0.1)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(14, 165, 233, 0.2)', cursor: 'pointer' }}>SET NOW</button>
                                             </div>
-                                            <input type="time" value={dutyFormData.dutyTime} onChange={e => setDutyFormData({ ...dutyFormData, dutyTime: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark' }} />
+                                            <input type="time" value={dutyFormData.dutyTime} onChange={e => setDutyFormData({ ...dutyFormData, dutyTime: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark', height: '50px' }} />
                                         </div>
                                     </div>
 
-                                    <div className="premium-input-group" style={{ marginBottom: '20px' }}>
+                                    <div className="premium-input-group" style={{ marginBottom: '10px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <Navigation size={12} color="#0ea5e9" />
                                             <label className="premium-label">Operational Destination</label>
                                         </div>
-                                        <input type="text" value={dutyFormData.dropLocation} onChange={e => setDutyFormData({ ...dutyFormData, dropLocation: e.target.value })} className="premium-compact-input" placeholder="Specific drop point or venue..." />
+                                        <input type="text" value={dutyFormData.dropLocation} onChange={e => setDutyFormData({ ...dutyFormData, dropLocation: e.target.value })} className="premium-compact-input" placeholder="Specific drop point or venue..." style={{ height: '50px' }} />
                                     </div>
                                 </div>
 
                                 {/* Fixed Footer */}
                                 <div style={{
-                                    padding: '24px 32px',
+                                    padding: 'clamp(20px, 4vw, 24px) clamp(20px, 5vw, 32px)',
                                     borderTop: '1px solid rgba(255,255,255,0.06)',
-                                    background: 'rgba(15, 23, 42, 0.8)',
-                                    backdropFilter: 'blur(10px)',
+                                    background: 'rgba(15, 23, 42, 0.9)',
                                     display: 'flex',
-                                    gap: '16px'
+                                    gap: '12px'
                                 }}>
                                     <button type="button" onClick={() => setShowDutyModal(false)} style={{
-                                        flex: 1, height: '54px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-                                        color: 'rgba(255,255,255,0.5)', fontWeight: '800', fontSize: '14px', letterSpacing: '0.5px'
+                                        flex: 1, height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                                        color: 'rgba(255,255,255,0.5)', fontWeight: '800', fontSize: '13px'
                                     }}>Cancel</button>
                                     <button type="submit" style={{
-                                        flex: 2, height: '54px', borderRadius: '16px', background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
-                                        color: 'black', fontWeight: '900', fontSize: '15px', letterSpacing: '1px', border: 'none',
-                                        boxShadow: '0 15px 30px rgba(251, 191, 36, 0.2)', cursor: 'pointer'
+                                        flex: 2, height: '50px', borderRadius: '14px', background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+                                        color: 'black', fontWeight: '900', fontSize: '13px', border: 'none'
                                     }}>
-                                        {isEditingDuty ? 'SAVE CHANGES' : 'GENERATE DUTY LOG'}
+                                        {isEditingDuty ? 'SAVE CHANGES' : 'GENERATE LOG'}
                                     </button>
                                 </div>
                             </form>
@@ -1042,14 +1072,19 @@ const EventManagement = () => {
                             <div style={{
                                 background: 'linear-gradient(to bottom right, rgba(251, 191, 36, 0.08), rgba(0,0,0,0))',
                                 borderBottom: '1px solid rgba(255,255,255,0.06)',
-                                padding: '28px 32px',
+                                padding: 'clamp(20px, 4vw, 28px) clamp(20px, 5vw, 32px)',
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 alignItems: 'center'
                             }}>
-                                <div>
-                                    <h3 style={{ margin: 0, fontSize: '20px', fontWeight: '950', color: 'white', letterSpacing: '-0.5px' }}>{isEditingEvent ? 'Update Master Event' : 'Configure Event'}</h3>
-                                    <p style={{ margin: 4, fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Create a high-level operational master</p>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ width: 'clamp(32px, 8vw, 40px)', height: 'clamp(32px, 8vw, 40px)', borderRadius: '10px', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Target size={18} color="#fbbf24" />
+                                    </div>
+                                    <div>
+                                        <h3 style={{ margin: 0, fontSize: 'clamp(18px, 4vw, 20px)', fontWeight: '950', color: 'white', letterSpacing: '-0.5px' }}>{isEditingEvent ? 'Update Event' : 'New Event'}</h3>
+                                        <p className="hide-mobile" style={{ margin: 4, fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Create a high-level operational master</p>
+                                    </div>
                                 </div>
                                 <button onClick={() => setShowEventModal(false)} className="close-btn" style={{
                                     background: 'rgba(255,255,255,0.03)',
@@ -1061,13 +1096,13 @@ const EventManagement = () => {
                             </div>
 
                             {/* Body */}
-                            <form onSubmit={handleCreateEvent} style={{ padding: '32px', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            <form onSubmit={handleCreateEvent} style={{ padding: 'clamp(20px, 5vw, 32px)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 <div className="premium-input-group">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                         <Target size={12} color="#fbbf24" />
                                         <label className="premium-label">Operational Name *</label>
                                     </div>
-                                    <input type="text" required value={eventFormData.name} onChange={e => setEventFormData({ ...eventFormData, name: e.target.value })} className="premium-compact-input" placeholder="e.g. Global Tech Summit 2024" />
+                                    <input type="text" required value={eventFormData.name} onChange={e => setEventFormData({ ...eventFormData, name: e.target.value })} className="premium-compact-input" placeholder="e.g. Global Tech Summit 2024" style={{ height: '52px' }} />
                                 </div>
 
                                 <div className="premium-input-group">
@@ -1075,7 +1110,7 @@ const EventManagement = () => {
                                         <Building2 size={12} color="#fbbf24" />
                                         <label className="premium-label">Direct Client *</label>
                                     </div>
-                                    <input type="text" required value={eventFormData.client} onChange={e => setEventFormData({ ...eventFormData, client: e.target.value })} className="premium-compact-input" placeholder="Client or Organization Name" />
+                                    <input type="text" required value={eventFormData.client} onChange={e => setEventFormData({ ...eventFormData, client: e.target.value })} className="premium-compact-input" placeholder="Client or Organization Name" style={{ height: '52px' }} />
                                 </div>
 
                                 <div className="premium-input-group">
@@ -1083,15 +1118,18 @@ const EventManagement = () => {
                                         <Calendar size={12} color="#fbbf24" />
                                         <label className="premium-label">Operational Focus Date</label>
                                     </div>
-                                    <input type="date" value={eventFormData.date} onChange={e => setEventFormData({ ...eventFormData, date: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark' }} />
+                                    <input type="date" value={eventFormData.date} onChange={e => setEventFormData({ ...eventFormData, date: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark', height: '52px' }} />
                                 </div>
 
-                                <div style={{ marginTop: '10px' }}>
+                                <div style={{ marginTop: '10px', display: 'flex', gap: '12px' }}>
+                                    <button type="button" onClick={() => setShowEventModal(false)} className="hide-mobile" style={{
+                                        flex: 1, height: '56px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                                        color: 'rgba(255,255,255,0.5)', fontWeight: '800', fontSize: '14px'
+                                    }}>Cancel</button>
                                     <button type="submit" style={{
-                                        width: '100%', height: '56px', borderRadius: '16px', background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
-                                        color: 'black', fontWeight: '900', fontSize: '15px', letterSpacing: '1px', border: 'none',
-                                        boxShadow: '0 15px 30px rgba(251, 191, 36, 0.2)', cursor: 'pointer'
-                                    }}>{isEditingEvent ? 'UPDATE EVENT' : 'PROVISION EVENT MASTER'}</button>
+                                        flex: 2, height: '56px', borderRadius: '16px', background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+                                        color: 'black', fontWeight: '900', fontSize: '15px', letterSpacing: '1px', border: 'none'
+                                    }}>{isEditingEvent ? 'UPDATE' : 'PROVISION'}</button>
                                 </div>
                             </form>
                         </motion.div>

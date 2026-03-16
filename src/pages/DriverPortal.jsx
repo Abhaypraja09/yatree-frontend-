@@ -386,13 +386,26 @@ const DriverPortal = () => {
             setIsSubmitting(false);
         }
     };
+    const loadImage = (url) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = url;
+        });
+    };
 
-    const handleExportPDF = () => {
+    const handleExportPDF = async () => {
         try {
             if (!ledgerData) {
                 alert("No ledger data available to download.");
                 return;
             }
+
+            // Load assets
+            const logo = await loadImage('/logos/yatree_logo.png').catch(() => null);
+            const signature = await loadImage('/logos/kavish_sign.png').catch(() => null);
 
             const monthName = new Date(ledgerYear, ledgerMonth - 1, 1).toLocaleString('default', { month: 'long' });
             const periodLabel = `${monthName} ${ledgerYear}`;
@@ -401,145 +414,209 @@ const DriverPortal = () => {
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
 
-            // 1. HEADER
-            doc.setFillColor(15, 23, 42);
-            doc.rect(0, 0, pageWidth, 45, 'F');
+            // 1. HEADER (LUXURY STYLE)
+            doc.setFillColor(15, 23, 42); // Navy Dark
+            doc.rect(0, 0, pageWidth, 50, 'F');
+
+            if (logo) {
+                // Add white circle behind logo for premium look if needed, 
+                // but usually logo on dark is fine if transparent
+                doc.addImage(logo, 'PNG', 12, 8, 30, 30);
+            }
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text('YATREE DESTINATION', 15, 22);
+            doc.text('YATREE DESTINATION', 45, 22);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
-            doc.text('Premium Fleet Management Services', 15, 30);
-            doc.text('yatreedestination.com', 15, 37);
+            doc.setTextColor(200, 200, 200);
+            doc.text('Premium Fleet Management & Travel Solutions', 45, 30);
+            doc.setTextColor(14, 165, 233); // Blue accent
+            doc.text('www.yatreedestination.com', 45, 37);
 
-            doc.setFontSize(14);
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
-            doc.text('SALARY STATEMENT', pageWidth - 15, 22, { align: 'right' });
-            doc.setFontSize(10);
+            doc.text('SALARY SLIP', pageWidth - 15, 22, { align: 'right' });
+            doc.setFontSize(9);
             doc.setFont('helvetica', 'normal');
-            doc.text(`Period: ${periodLabel}`, pageWidth - 15, 30, { align: 'right' });
-            doc.text(`Date: ${formatDateIST(new Date())}`, pageWidth - 15, 37, { align: 'right' });
-
-            // 2. DRIVER & SUMMARY
-            doc.setTextColor(15, 23, 42);
-            doc.setFontSize(13);
-            doc.setFont('helvetica', 'bold');
-            doc.text('DRIVER DETAILS', 15, 60);
-            doc.setDrawColor(226, 232, 240);
-            doc.line(15, 63, pageWidth - 15, 63);
-
+            doc.setTextColor(150, 150, 150);
+            doc.text(`STATEMENT PERIOD`, pageWidth - 15, 30, { align: 'right' });
+            doc.setTextColor(255, 255, 255);
             doc.setFontSize(11);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Name:', 15, 72);
-            doc.setFont('helvetica', 'normal');
-            doc.text(user.name.toUpperCase(), 40, 72);
-            doc.setFont('helvetica', 'bold');
-            doc.text('Phone:', 15, 79);
-            doc.setFont('helvetica', 'normal');
-            doc.text(user.mobile || 'N/A', 40, 79);
+            doc.text(periodLabel.toUpperCase(), pageWidth - 15, 36, { align: 'right' });
 
-            // Summary Box
-            doc.setFillColor(248, 250, 252);
-            doc.roundedRect(pageWidth / 2, 55, pageWidth / 2 - 15, 35, 3, 3, 'F');
-            doc.setFont('helvetica', 'bold');
-            doc.text('PAYMENT SUMMARY', pageWidth / 2 + 5, 62);
-            doc.setFontSize(10);
-            doc.setFont('helvetica', 'normal');
-            doc.text('Gross Earnings:', pageWidth / 2 + 5, 70);
-            doc.text(`Rs. ${ledgerData.summary.totalEarned}`, pageWidth - 20, 70, { align: 'right' });
-            doc.text('Total Advances:', pageWidth / 2 + 5, 76);
-            doc.text(`Rs. ${ledgerData.summary.totalAdvances}`, pageWidth - 20, 76, { align: 'right' });
-            doc.setDrawColor(203, 213, 225);
-            doc.line(pageWidth / 2 + 5, 79, pageWidth - 20, 79);
+            // 2. INFORMATION SECTION
+            doc.setTextColor(15, 23, 42);
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
-            doc.setTextColor(14, 165, 233);
-            doc.text('Net Payable:', pageWidth / 2 + 5, 86);
-            doc.text(`Rs. ${ledgerData.summary.netPayable}`, pageWidth - 20, 86, { align: 'right' });
+            doc.text('EMPLOYEE INFORMATION', 15, 65);
+            doc.setDrawColor(14, 165, 233);
+            doc.setLineWidth(0.5);
+            doc.line(15, 68, 50, 68);
 
-            // 3. DUTY TABLE
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139);
+            doc.text('NAME', 15, 76);
+            doc.text('MOBILE', 15, 84);
+            doc.text('DESIGNATION', 15, 92);
+
             doc.setTextColor(15, 23, 42);
-            doc.setFontSize(13);
             doc.setFont('helvetica', 'bold');
-            doc.text('DUTY & TRIP LOGS', 15, 105);
+            doc.text(user.name.toUpperCase(), 45, 76);
+            doc.text(user.mobile || 'N/A', 45, 84);
+            doc.text('PROFESSIONAL DRIVER', 45, 92);
 
-            const dutyRows = ledgerData.history.map(att => ({
-                date: toISTDateString(att.date),
-                vehicle: att.vehicle || 'N/A',
-                totalKM: `${att.totalKM || 0} KM`,
-                wage: `Rs. ${att.dailyWage || 0}`,
-                bonus: `Rs. ${att.bonuses || 0}`,
-                parking: `Rs. ${att.parking || 0}`,
-                total: `Rs. ${(att.dailyWage || 0) + (att.bonuses || 0) + (att.parking || 0)}`
-            }));
+            // Summary Box (Right Side)
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(pageWidth / 2, 60, pageWidth / 2 - 15, 40, 3, 3, 'F');
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('PAYMENT OVERVIEW', pageWidth / 2 + 5, 68);
+            
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 116, 139);
+            doc.text('Gross Earnings:', pageWidth / 2 + 5, 76);
+            doc.text('Deductions/Advances:', pageWidth / 2 + 5, 82);
+            
+            doc.setTextColor(15, 23, 42);
+            doc.text(`Rs. ${ledgerData.summary.totalEarned}`, pageWidth - 20, 76, { align: 'right' });
+            doc.setTextColor(244, 63, 94); // Red for deductions
+            doc.text(`- Rs. ${ledgerData.summary.totalAdvances}`, pageWidth - 20, 82, { align: 'right' });
+            
+            doc.setDrawColor(226, 232, 240);
+            doc.line(pageWidth / 2 + 5, 85, pageWidth - 20, 85);
+            
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(16, 185, 129); // Green for net payable
+            doc.text('NET PAYABLE:', pageWidth / 2 + 5, 93);
+            doc.text(`Rs. ${ledgerData.summary.netPayable}`, pageWidth - 20, 93, { align: 'right' });
+
+            // 3. DUTY LOGS TABLE
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('DUTY & TRIP DETAILS', 15, 115);
+
+            const dutyRows = ledgerData.history.map(att => [
+                toISTDateString(att.date),
+                att.vehicle || 'N/A',
+                `${att.totalKM || 0} KM`,
+                `Rs. ${att.dailyWage || 0}`,
+                `Rs. ${att.sameDayReturn || 0}`,
+                `Rs. ${att.nightStay || 0}`,
+                `Rs. ${att.otherBonuses || 0}`,
+                `Rs. ${att.parking || 0}`,
+                `Rs. ${(att.dailyWage || 0) + (att.bonuses || 0) + (att.parking || 0)}`
+            ]);
 
             autoTable(doc, {
-                columns: [
-                    { header: 'DATE', dataKey: 'date' },
-                    { header: 'VEHICLE', dataKey: 'vehicle' },
-                    { header: 'KM', dataKey: 'totalKM' },
-                    { header: 'WAGE', dataKey: 'wage' },
-                    { header: 'BONUS', dataKey: 'bonus' },
-                    { header: 'PARKING', dataKey: 'parking' },
-                    { header: 'TOTAL', dataKey: 'total' }
-                ],
+                head: [['DATE', 'VEHICLE', 'KM', 'WAGE', 'SAME DAY', 'NIGHT', 'OTHER', 'PARKING', 'TOTAL']],
                 body: dutyRows,
-                startY: 110,
+                startY: 120,
                 theme: 'grid',
-                headStyles: { fillColor: [15, 23, 42], textColor: [255, 255, 255], fontSize: 9, fontStyle: 'bold', halign: 'center' },
-                bodyStyles: { fontSize: 8, halign: 'center' },
-                alternateRowStyles: { fillColor: [249, 250, 251] },
+                headStyles: { 
+                    fillColor: [15, 23, 42], 
+                    textColor: [255, 255, 255], 
+                    fontSize: 8, 
+                    fontStyle: 'bold', 
+                    halign: 'center',
+                    valign: 'middle'
+                },
+                bodyStyles: { 
+                    fontSize: 8, 
+                    halign: 'center',
+                    textColor: [51, 65, 85]
+                },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
                 margin: { left: 15, right: 15 }
             });
 
-            // 4. ADVANCE TABLE
-            let nextY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 110) + 15;
-            doc.setFontSize(13);
+            // 4. ADVANCES TABLE
+            let nextY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 120) + 15;
+            if (nextY > pageHeight - 80) { doc.addPage(); nextY = 20; }
+            
+            doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(15, 23, 42);
-            doc.text('ADVANCES & SETTLEMENTS', 15, nextY);
+            doc.text('ADVANCES', 15, nextY);
 
-            const advRows = ledgerData.advances.map(adv => ({
-                date: formatDateIST(adv.date),
-                remark: (adv.remark || '').toUpperCase(),
-                amount: `Rs. ${adv.amount}`,
-                recovered: `Rs. ${adv.recovered || 0}`,
-                status: (adv.status || '').toUpperCase()
-            }));
+            const advRows = ledgerData.advances.map(adv => {
+                const status = (adv.status || '').toLowerCase();
+                const displayStatus = status === 'pending' ? 'PAID' : (status === 'recovered' ? 'SETTLED' : (adv.status || '').toUpperCase());
+                return [
+                    formatDateIST(adv.date),
+                    (adv.remark || '').toUpperCase(),
+                    `Rs. ${adv.amount}`,
+                    displayStatus
+                ];
+            });
 
             autoTable(doc, {
-                columns: [
-                    { header: 'DATE', dataKey: 'date' },
-                    { header: 'PARTICULARS', dataKey: 'remark' },
-                    { header: 'GIVEN (Rs.)', dataKey: 'amount' },
-                    { header: 'RECOVERED (Rs.)', dataKey: 'recovered' },
-                    { header: 'STATUS', dataKey: 'status' }
-                ],
+                head: [['DATE', 'PARTICULARS', 'AMOUNT (Rs.)', 'STATUS']],
                 body: advRows,
                 startY: nextY + 5,
                 theme: 'striped',
-                headStyles: { fillColor: [244, 63, 94], textColor: [255, 255, 255], fontSize: 9, fontStyle: 'bold', halign: 'center' },
-                bodyStyles: { fontSize: 8, halign: 'center' },
+                headStyles: { 
+                    fillColor: [244, 63, 94], 
+                    textColor: [255, 255, 255], 
+                    fontSize: 8, 
+                    fontStyle: 'bold', 
+                    halign: 'center' 
+                },
+                bodyStyles: { 
+                    fontSize: 8, 
+                    halign: 'center',
+                    textColor: [51, 65, 85]
+                },
                 margin: { left: 15, right: 15 }
             });
 
-            // 5. FOOTER
-            let footerY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 25;
-            if (footerY > pageHeight - 40) { doc.addPage(); footerY = 30; }
-            doc.setDrawColor(203, 213, 225);
-            doc.line(15, footerY, pageWidth - 15, footerY);
-            doc.setFontSize(9);
-            doc.setTextColor(100, 116, 139);
+            // 5. FOOTER & SIGNATURE SECTION
+            let footerY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 35;
+            if (footerY > pageHeight - 60) { doc.addPage(); footerY = 30; }
+
+            // Disclaimer & Note
+            doc.setFontSize(8);
+            doc.setTextColor(148, 163, 184);
             doc.setFont('helvetica', 'italic');
-            doc.text('This statement reflects logged and approved shifts only. Discrepancies should be reported within 24 hours.', 15, footerY + 8, { maxWidth: pageWidth - 30 });
+            doc.text('Note: This is an electronically generated statement. Any discrepancies must be reported to the accounts department within 48 hours for rectification.', 15, footerY, { maxWidth: pageWidth - 100 });
+
+            // Signature Placement
+            const sigX = pageWidth - 75;
+            if (signature) {
+                // Placing the signature with transparency and proper sizing
+                doc.addImage(signature, 'PNG', sigX, footerY - 20, 55, 22);
+            }
+            
+            // Signature Line
+            doc.setDrawColor(15, 23, 42);
+            doc.setLineWidth(0.6);
+            doc.line(sigX - 5, footerY + 5, pageWidth - 15, footerY + 5);
+            
+            // Signatory Details
+            doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(15, 23, 42);
-            doc.text('_______________________', pageWidth - 15, footerY + 28, { align: 'right' });
-            doc.text('Company Seal & Sign', pageWidth - 15, footerY + 34, { align: 'right' });
+            doc.text('KAVISH JAIN', sigX - 2, footerY + 12);
+            
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 116, 139);
+            doc.text('Founder & Director', sigX - 2, footerY + 17);
+            doc.text('Yatree Destination Pvt. Ltd.', sigX - 2, footerY + 21);
 
-            const fileName = `YD_Salary_${user.name.replace(/\s+/g, '_')}_${monthName}_${ledgerYear}.pdf`;
+
+            // Generated at bottom
+            doc.setFontSize(7);
+            doc.setTextColor(203, 213, 225);
+            doc.text(`Generated on: ${formatDateTimeIST(new Date())}`, 15, pageHeight - 10);
+
+            const fileName = `Salary_Slip_${user.name.replace(/\s+/g, '_')}_${monthName}_${ledgerYear}.pdf`;
             doc.save(fileName);
         } catch (error) {
             console.error("PDF Export Error:", error);
@@ -1763,6 +1840,9 @@ const DriverPortal = () => {
                                                     </div>
                                                     <div style={{ textAlign: 'right' }}>
                                                         <p style={{ color: '#f43f5e', fontWeight: '900', fontSize: '15px' }}>Rs. {item.amount}</p>
+                                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>
+                                                            { (item.status || '').toLowerCase() === 'recovered' ? 'SETTLED' : 'PAID' }
+                                                        </p>
                                                     </div>
                                                 </div>
                                             ))}
