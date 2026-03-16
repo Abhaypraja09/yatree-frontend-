@@ -6,50 +6,6 @@ import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST } from '../utils/istUtils';
 
-const styles = `
-  @media (max-width: 768px) {
-    .outside-header-row {
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 20px !important;
-    }
-    .outside-stat-circles {
-      width: 100% !important;
-      justify-content: space-between !important;
-      gap: 10px !important;
-    }
-    .outside-control-bar {
-      padding: 15px !important;
-    }
-    .outside-filter-row {
-      flex-direction: column !important;
-      align-items: stretch !important;
-      gap: 15px !important;
-    }
-    .outside-search-wrapper {
-        min-width: 100% !important;
-    }
-    .hide-mobile {
-        display: none !important;
-    }
-    .show-mobile {
-        display: flex !important;
-    }
-    .mobile-full-width {
-        width: 100% !important;
-        flex: none !important;
-    }
-  }
-  .premium-scroll::-webkit-scrollbar {
-    height: 4px;
-    width: 4px;
-  }
-  .premium-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-  }
-`;
-
 const OutsideCars = () => {
     const { selectedCompany } = useCompany();
     const [vehicles, setVehicles] = useState([]);
@@ -306,7 +262,6 @@ const OutsideCars = () => {
 
     return (
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
-            <style>{styles}</style>
             <SEO title="Outside Fleet Command" description="Manage external vehicles and freelancer drivers for specific duties." />
             
             <style>{`
@@ -358,8 +313,7 @@ const OutsideCars = () => {
                 padding: 'clamp(20px, 4vw, 40px) 0',
                 position: 'relative'
             }}>
-                <div className="outside-header-row" style={{
-                    display: 'flex',
+                <div className="flex-resp" style={{
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     gap: '24px',
@@ -393,7 +347,7 @@ const OutsideCars = () => {
                         </div>
                     </div>
 
-                    <div className="outside-stat-circles" style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
+                    <div className="flex-resp" style={{ gap: '24px', alignItems: 'center', flex: 1, justifyContent: 'flex-end', width: '100%' }}>
                         {/* CIRCULAR STATS */}
                         <div style={{ display: 'flex', gap: '16px' }}>
                             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ 
@@ -492,7 +446,7 @@ const OutsideCars = () => {
                         </div>
 
                         {/* TOP RIGHT BUTTONS */}
-                        <div className="outside-filter-row" style={{ display: 'flex', gap: '12px', width: '100%', justifyContent: 'flex-end' }}>
+                        <div className="flex-resp" style={{ gap: '12px', width: '100%', justifyContent: 'flex-end' }}>
                             <button
                                 onClick={handleOpenLogDuty}
                                 style={{ 
@@ -579,7 +533,7 @@ const OutsideCars = () => {
                 </div>
 
             {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
-            <div className="outside-control-bar" style={{ 
+            <div className="glass-card" style={{ 
                 padding: 'clamp(10px, 2vw, 12px)', 
                 marginBottom: 'clamp(24px, 4vw, 32px)', 
                 display: 'flex', 
@@ -590,8 +544,8 @@ const OutsideCars = () => {
                 border: '1px solid rgba(255,255,255,0.04)',
                 borderRadius: '24px'
             }}>
-                <div className="outside-filter-row" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <div className="outside-search-wrapper" style={{ position: 'relative', flex: '1.5', minWidth: '0' }}>
+                <div className="flex-resp" style={{ gap: '12px', alignItems: 'center' }}>
+                    <div style={{ position: 'relative', flex: '1.5', minWidth: '0' }}>
                         <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(251, 191, 36, 0.4)', zIndex: 1 }} />
                         <input
                             type="text"
@@ -603,7 +557,7 @@ const OutsideCars = () => {
                         />
                     </div>
 
-                    <div className="outside-filter-row" style={{ display: 'flex', gap: '8px', flex: '2', minWidth: '0' }}>
+                    <div className="flex-resp" style={{ gap: '8px', flex: '2', minWidth: '0' }}>
                         <div style={{ flex: 1, position: 'relative' }}>
                             <select value={ownerFilter} onChange={e => handleOwnerChange(e.target.value)} className="premium-compact-input" style={{ height: '52px', appearance: 'none' }}>
                                 <option value="All">All Vendors</option>
@@ -664,9 +618,8 @@ const OutsideCars = () => {
                         ))}
                     </div>
 
-                    <div className="outside-filter-row" style={{
+                    <div className="flex-resp" style={{
                         flex: '1',
-                        display: 'flex',
                         alignItems: 'center',
                         gap: '8px',
                         background: 'rgba(0,0,0,0.3)',

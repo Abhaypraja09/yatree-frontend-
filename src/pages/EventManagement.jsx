@@ -18,54 +18,6 @@ import {
     currentTimeIST
 } from '../utils/istUtils';
 
-const styles = `
-  @media (max-width: 768px) {
-    .event-header-row {
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 20px !important;
-    }
-    .event-stats-grid {
-      grid-template-columns: repeat(2, 1fr) !important;
-      width: 100% !important;
-      max-width: 100% !important;
-    }
-    .event-control-bar {
-      padding: 15px !important;
-    }
-    .event-filter-row {
-      flex-direction: column !important;
-      align-items: stretch !important;
-      gap: 15px !important;
-    }
-    .event-search-wrapper {
-        min-width: 100% !important;
-    }
-    .hide-mobile {
-        display: none !important;
-    }
-    .show-mobile {
-        display: flex !important;
-    }
-    .mobile-full-width {
-        width: 100% !important;
-        flex: none !important;
-    }
-    .date-nav-wrapper {
-        width: 100% !important;
-        justify-content: space-between !important;
-    }
-  }
-  .premium-scroll::-webkit-scrollbar {
-    height: 4px;
-    width: 4px;
-  }
-  .premium-scroll::-webkit-scrollbar-thumb {
-    background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-  }
-`;
-
 const EventManagement = () => {
     const { selectedCompany } = useCompany();
     const [events, setEvents] = useState([]);
@@ -400,7 +352,6 @@ const EventManagement = () => {
 
     return (
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
-            <style>{styles}</style>
             <SEO title="Event Command Center" description="Unified tracking for company and external vehicles assigned to events." />
 
             {/* ═══ PREMIUM HERO HEADER ═══ */}
@@ -408,7 +359,7 @@ const EventManagement = () => {
                 {/* Ambient dynamic background elements */}
                 <div style={{ position: 'absolute', top: -40, right: '0%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(251,191,36,0.08) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }} className="hide-mobile" />
                 
-                <div className="event-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '30px', position: 'relative' }}>
+                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '30px', position: 'relative' }}>
                     {/* Title Block */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(15px, 3vw, 24px)' }}>
                         <div style={{ 
@@ -436,7 +387,7 @@ const EventManagement = () => {
                     </div>
 
                     {/* Stats Grid - High Fidelity */}
-                    <div className="event-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', flex: '1', maxWidth: '750px', width: '100%', gap: '15px' }}>
+                    <div className="stats-grid" style={{ flex: '1', maxWidth: '750px', width: '100%' }}>
                         {[
                             { label: 'Active', value: totalDuties, color: '#fbbf24', icon: <TruckIcon size={18} /> },
                             { label: 'Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', icon: <Target size={18} /> },
@@ -468,7 +419,7 @@ const EventManagement = () => {
             </div>
 
             {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
-            <div className="event-control-bar" style={{ 
+            <div style={{ 
                 background: 'rgba(15, 23, 42, 0.65)', 
                 border: '1px solid rgba(255,255,255,0.07)', 
                 borderRadius: '24px', 
@@ -479,9 +430,9 @@ const EventManagement = () => {
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
             }}>
                 {/* Search & Main Selects */}
-                <div className="event-filter-row" style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                <div className="flex-resp" style={{ gap: '16px', alignItems: 'center' }}>
                     {/* Unified Search */}
-                    <div className="event-search-wrapper" style={{ position: 'relative', flex: '1', minWidth: 'min(100%, 300px)' }}>
+                    <div style={{ position: 'relative', flex: '1', minWidth: 'min(100%, 300px)' }}>
                         <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
                         <input 
                             type="text" 
@@ -511,7 +462,7 @@ const EventManagement = () => {
                     </div>
 
                     {/* Advanced Dropdowns */}
-                    <div className="event-filter-row" style={{ display: 'flex', gap: '10px', flex: '1' }}>
+                    <div className="flex-resp" style={{ gap: '10px', flex: '1' }}>
                         <div style={{ position: 'relative', flex: 1, minWidth: '150px' }}>
                             <Building2 size={14} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
                             <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} className="premium-compact-input" style={{ width: '100%', height: '52px', paddingLeft: '40px', fontSize: '13px', background: 'rgba(0,0,0,0.2)' }}>
@@ -545,9 +496,9 @@ const EventManagement = () => {
                 </div>
 
                 {/* Sub Row: Date Navigator & Global Actions */}
-                <div className="event-filter-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '20px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '20px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                     {/* Date Navigation System */}
-                    <div className="date-nav-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div className="flex-resp" style={{ alignItems: 'center', gap: '12px' }}>
                         <div style={{ display: 'flex', gap: '4px' }}>
                             <button onClick={() => shiftDays(-1)} style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                                 <ChevronLeft size={18} />

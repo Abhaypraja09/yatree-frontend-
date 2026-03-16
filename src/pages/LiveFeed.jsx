@@ -10,11 +10,11 @@ import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
-import {
-    todayIST,
-    formatDateIST,
-    formatTimeIST,
-    nowIST
+import { 
+    todayIST, 
+    formatDateIST, 
+    formatTimeIST, 
+    nowIST 
 } from '../utils/istUtils';
 
 const styles = `
@@ -33,63 +33,12 @@ const styles = `
   }
   .premium-scroll::-webkit-scrollbar {
     height: 4px;
-    width: 4px;
   }
   .premium-scroll::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.1);
-    border-radius: 10px;
-  }
-  @media (max-width: 768px) {
-    .livefeed-header-row {
-      flex-direction: column !important;
-      align-items: flex-start !important;
-      gap: 20px !important;
-    }
-    .livefeed-stats-grid {
-      grid-template-columns: 1fr !important;
-    }
-    .livefeed-control-bar {
-      flex-direction: column !important;
-      padding: 15px !important;
-    }
-    .livefeed-tabs {
-      width: 100% !important;
-      overflow-x: auto !important;
-      padding-bottom: 5px !important;
-      justify-content: flex-start !important;
-      -webkit-overflow-scrolling: touch;
-      display: flex !important;
-    }
-    .livefeed-tabs::-webkit-scrollbar {
-      display: none;
-    }
-    .livefeed-tab-btn {
-        padding: 10px 18px !important;
-        white-space: nowrap !important;
-        flex-shrink: 0 !important;
-    }
-    .livefeed-search-container {
-        max-width: 100% !important;
-    }
-    .livefeed-root {
-        padding: 15px !important;
-    }
-    .livefeed-modal {
-        padding: 10px !important;
-    }
-    .livefeed-modal-content {
-        max-height: 95vh !important;
-        border-radius: 20px !important;
-    }
-    .livefeed-modal-header {
-        padding: 15px 20px !important;
-    }
-    .livefeed-modal-body {
-        padding: 15px !important;
-    }
+    borderRadius: 10px;
   }
 `;
-
 
 const LiveFeed = () => {
     const { user } = useAuth();
@@ -202,7 +151,7 @@ const LiveFeed = () => {
             fetchFeed(); // Refresh to show assignment
             if (selectedDriver) {
                 // Update local selectedDriver state to reflect change immediately if needed
-                const updatedAttendances = selectedDriver.attendances.map(a =>
+                const updatedAttendances = selectedDriver.attendances.map(a => 
                     a._id === attendanceId ? { ...a, eventId: eventId } : a
                 );
                 setSelectedDriver({ ...selectedDriver, attendances: updatedAttendances });
@@ -217,7 +166,6 @@ const LiveFeed = () => {
     const TabButton = ({ id, label, icon: Icon, count }) => (
         <button
             onClick={() => setActiveTab(id)}
-            className="livefeed-tab-btn"
             style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -294,12 +242,12 @@ const LiveFeed = () => {
                             <div style={{ height: '40px', padding: '0 20px', borderRadius: '14px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', alignItems: 'center', gap: '10px', color: 'white', fontWeight: '800', fontSize: '14px', border: '1px solid rgba(14, 165, 233, 0.2)', position: 'relative' }}>
                                 <Calendar size={16} color="#0ea5e9" />
                                 {formatDate(selectedDate)}
-                                <input
-                                    type="date"
-                                    value={selectedDate}
-                                    onChange={(e) => setSelectedDate(e.target.value)}
+                                <input 
+                                    type="date" 
+                                    value={selectedDate} 
+                                    onChange={(e) => setSelectedDate(e.target.value)} 
                                     onClick={(e) => e.target.showPicker?.()}
-                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer', colorScheme: 'dark', zIndex: 10 }}
+                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer', colorScheme: 'dark', zIndex: 10 }} 
                                 />
                             </div>
                             <button
@@ -418,7 +366,7 @@ const LiveFeed = () => {
                         <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length} />
                     </div>
 
-                    <div className="livefeed-search-container" style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '400px', width: '100%' }}>
+                    <div style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '400px', width: '100%' }}>
                         <Search style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} size={18} />
                         <input
                             type="text"
@@ -749,7 +697,6 @@ const LiveFeed = () => {
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         exit={{ opacity: 0 }}
-                        className="livefeed-modal"
                         style={{
                             position: 'fixed',
                             inset: 0,
@@ -768,7 +715,6 @@ const LiveFeed = () => {
                             animate={{ scale: 1, y: 0, opacity: 1 }}
                             exit={{ scale: 0.9, y: 20, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
-                            className="livefeed-modal-content"
                             style={{
                                 width: '100%',
                                 maxWidth: '700px',
@@ -783,7 +729,7 @@ const LiveFeed = () => {
                             }}
                         >
                             {/* Modal Header */}
-                            <div className="livefeed-modal-header" style={{ padding: '24px 30px', background: 'rgba(14, 165, 233, 0.1)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ padding: '24px 30px', background: 'rgba(14, 165, 233, 0.1)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                     <div style={{
                                         width: '50px',
@@ -815,7 +761,7 @@ const LiveFeed = () => {
                             </div>
 
                             {/* Modal Body */}
-                            <div className="livefeed-modal-body custom-scrollbar" style={{ flex: 1, overflowY: 'auto', padding: '30px' }}>
+                            <div style={{ flex: 1, overflowY: 'auto', padding: '30px' }} className="custom-scrollbar">
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
                                     {selectedDriver.attendances && selectedDriver.attendances.length > 0 ? (
                                         selectedDriver.attendances.map((att, idx) => (
@@ -922,7 +868,7 @@ const LiveFeed = () => {
                                                         <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>▼</div>
                                                     </div>
                                                     {att.eventId && (
-                                                        <button
+                                                        <button 
                                                             onClick={() => handleAssignEvent(att._id, '')}
                                                             style={{ background: 'transparent', border: 'none', color: '#f43f5e', fontSize: '10px', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase' }}
                                                         >
