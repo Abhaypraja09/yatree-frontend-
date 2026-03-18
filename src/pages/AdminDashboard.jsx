@@ -294,9 +294,28 @@ const AdminDashboard = () => {
                                 </>
                             )}
 
-                            {/* Buy/Sell Related */}
+                            {/* Buy/Sell Related (Outside & Events) */}
                             {(user?.role === 'Admin' || user?.permissions?.buySell) && (
-                                <StatCard icon={TrendingUp} label="OUTSIDE CARS (MONTHLY)" value={`₹${(stats.monthlyOutsideCarsTotal || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/outside-cars')} />
+                                <>
+                                    <StatCard 
+                                        icon={TrendingUp} 
+                                        label="OUTSIDE CARS (MONTHLY)" 
+                                        value={`₹${(stats.monthlyOutsideCarsTotal || 0).toLocaleString()}`} 
+                                        color="#8b5cf6" 
+                                        loading={loading} 
+                                        onClick={() => navigate('/admin/outside-cars')} 
+                                        trend="TOTAL"
+                                    />
+                                    <StatCard 
+                                        icon={Calendar} 
+                                        label="EVENT MANAGEMENT (M)" 
+                                        value={`₹${(stats.monthlyEventTotal || 0).toLocaleString()}`} 
+                                        color="#ec4899" 
+                                        loading={loading} 
+                                        onClick={() => navigate('/admin/event-management')} 
+                                        trend="TOTAL" 
+                                    />
+                                </>
                             )}
 
                             {/* Vehicles Management Related */}

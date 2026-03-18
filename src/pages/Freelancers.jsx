@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin, FileText } from 'lucide-react';
+import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin, FileText, RefreshCw } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -183,10 +183,22 @@ const Freelancers = () => {
     const [documentFile, setDocumentFile] = useState(null);
     const location = useLocation();
     const navigate = useNavigate();
-    const [activeTab, setActiveTab] = useState(() => {
-        if (location.state?.tab) return location.state.tab;
-        return 'personnel';
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [activeTab, setActiveTabState] = useState(() => {
+        const urlTab = searchParams.get('tab');
+        if (urlTab) return urlTab;
+        return localStorage.getItem('freelancerActiveTab') || 'personnel';
     });
+
+    const setActiveTab = (tab) => {
+        setActiveTabState(tab);
+        setSearchParams(prev => {
+            const newParams = new URLSearchParams(prev);
+            newParams.set('tab', tab);
+            return newParams;
+        });
+        localStorage.setItem('freelancerActiveTab', tab);
+    };
     const [expandedLedger, setExpandedLedger] = useState(null);
 
     // Form States
@@ -329,7 +341,7 @@ const Freelancers = () => {
         if (!selectedCompany?._id) return;
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/admin/reports/${selectedCompany._id}?from=${fromDate}&to=${toDate}`, {
+            const { data } = await axios.get(`/api/admin/reports/${selectedCompany._id}?from=${fromDate}&to=${toDate}&bypassCache=true&_t=${Date.now()}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             // Filter attendance for freelancers
@@ -345,7 +357,7 @@ const Freelancers = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             // Added from/to to ensure consistency even if called directly
-            const { data } = await axios.get(`/api/admin/advances/${selectedCompany._id}?isFreelancer=true&from=${fromDate}&to=${toDate}`, {
+            const { data } = await axios.get(`/api/admin/advances/${selectedCompany._id}?isFreelancer=true&from=${fromDate}&to=${toDate}&bypassCache=true&_t=${Date.now()}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setAdvances(data || []);
@@ -374,14 +386,42 @@ const Freelancers = () => {
         }
     }, [fetchMonthlySummaries, activeTab, viewMode]);
 
-    const handleDeleteDuty = async (id) => {
+    const handleDeleteDuty = async (duty) => {
         if (!window.confirm('Are you sure you want to delete this duty record?')) return;
+
         try {
-            await axios.delete(`/api/admin/attendance/${id}`);
-            fetchAttendance();
-            alert('Duty record deleted successfully');
+            setSubmitting(true);
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const id = duty._id;
+
+            // Check if it's a regular attendance or an outside car voucher
+            const isVoucher = duty.entryType === 'voucher' || duty.isOutsideCar;
+            const endpoint = isVoucher ? `/api/admin/vehicles/${id}` : `/api/admin/attendance/${id}`;
+
+            console.log(`[DEBUG] Deleting duty: ${id}, isVoucher: ${isVoucher}, endpoint: ${endpoint}`);
+
+            await axios.delete(endpoint, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+
+            // forced delay for DB propagation
+            await new Promise(r => setTimeout(r, 300));
+
+            // Refresh all relevant data
+            await Promise.all([
+                fetchAttendance(),
+                fetchFreelancers(),
+                fetchVehicles(),
+                fetchAdvances()
+            ]);
+
+            setMessage({ type: 'success', text: 'Duty record deleted successfully' });
+            setTimeout(() => setMessage({ type: '', text: '' }), 1500);
         } catch (error) {
-            alert('Error deleting duty record');
+            console.error('[DELETE_ERROR]', error);
+            alert(error.response?.data?.message || 'Error deleting duty record');
+        } finally {
+            setSubmitting(false);
         }
     };
 
@@ -442,7 +482,7 @@ const Freelancers = () => {
             fetchAttendance();
             fetchAdvances();
         }
-    }, [selectedCompany, fromDate, toDate, fetchAttendance, fetchAdvances]);
+    }, [selectedCompany, fromDate, toDate, fetchAttendance, fetchAdvances, activeTab]);
 
 
     const handleQuickExpenseSubmit = async (e) => {
@@ -566,9 +606,11 @@ const Freelancers = () => {
                 time: nowISTDateTimeString(),
                 pickUpLocation: ''
             });
-            fetchFreelancers();
-            fetchVehicles();
-            fetchAttendance();
+            await Promise.all([
+                fetchFreelancers(),
+                fetchVehicles(),
+                fetchAttendance()
+            ]);
         } catch (err) { alert(err.response?.data?.message || 'Error'); }
         finally { setSubmitting(false); }
     };
@@ -595,9 +637,11 @@ const Freelancers = () => {
             setShowPunchOutModal(false);
             setPunchOutPhotos({ kmPhoto: null });
             setPunchOutData({ km: '', time: nowISTDateTimeString(), fuelAmount: '0', parkingAmount: '0', parkingPaidBy: 'Self', review: '', dailyWage: '', dropLocation: '', parkingSlipPhoto: null });
-            fetchFreelancers();
-            fetchVehicles();
-            fetchAttendance();
+            await Promise.all([
+                fetchFreelancers(),
+                fetchVehicles(),
+                fetchAttendance()
+            ]);
         } catch (err) { alert(err.response?.data?.message || 'Error'); }
         finally { setSubmitting(false); }
     };
@@ -838,6 +882,15 @@ const Freelancers = () => {
         return matchesDriver && matchesVehicle;
     });
 
+    const totalLogisticsAmount = filteredAttendance.reduce((sum, a) => {
+        const rowTotal = (Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) +
+            (Number(a.punchOut?.tollParkingAmount) || 0) +
+            (Number(a.outsideTrip?.bonusAmount) || 0) +
+            (Number(a.punchOut?.allowanceTA) || 0) +
+            (Number(a.punchOut?.nightStayAmount) || 0);
+        return sum + rowTotal;
+    }, 0);
+
     const settlementByDriverDate = filteredAttendance.reduce((acc, a) => {
         if (a.status !== 'completed' && !a.punchOut?.time) return acc;
 
@@ -1016,7 +1069,7 @@ const Freelancers = () => {
                     }}>
                         {[
                             { id: 'personnel', label: 'Drivers', icon: <UserIcon size={14} /> },
-                            { id: 'logistics', label: 'Duties', icon: <Car size={14} /> },
+                            { id: 'logistics', label: 'Freelancers', icon: <Car size={14} /> },
                             { id: 'accounts', label: 'Settlement', icon: <IndianRupee size={14} /> }
                         ].map(tab => (
                             <button
@@ -1099,6 +1152,11 @@ const Freelancers = () => {
                                 </div>
                             )}
 
+                            <button onClick={() => { fetchAttendance(); fetchAdvances(); fetchFreelancers(); }}
+                                style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)', color: '#818cf8', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                title="Refresh Data">
+                                <RefreshCw size={18} className={loading || summaryLoading ? 'animate-spin' : ''} />
+                            </button>
                             <button onClick={handleDownloadExcel}
                                 style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                                 title="Export Excel">
@@ -1210,7 +1268,7 @@ const Freelancers = () => {
                                                                                 setSelectedDriver(d);
                                                                                 const yesterday = new Date();
                                                                                 yesterday.setDate(yesterday.getDate() - 1);
-                                                                                const viewDate = getLocalYYYYMMDD(yesterday);
+                                                                                const viewDate = toISTDateString(yesterday);
                                                                                 const viewTime = viewDate + 'T09:00';
                                                                                 setPunchInData({
                                                                                     ...punchInData,
@@ -1478,6 +1536,28 @@ const Freelancers = () => {
                 {
                     activeTab === 'logistics' && (
                         <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
+                            {/* Duties Summary Header */}
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+                                <div className="premium-glass" style={{ padding: '18px 24px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.1)', background: 'rgba(16, 185, 129, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Total Duties</div>
+                                        <div style={{ color: 'white', fontSize: '24px', fontWeight: '950' }}>{filteredAttendance.length}</div>
+                                    </div>
+                                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Car size={20} color="#10b981" />
+                                    </div>
+                                </div>
+                                <div className="premium-glass" style={{ padding: '18px 24px', borderRadius: '20px', border: '1px solid rgba(251, 191, 36, 0.15)', background: 'rgba(251, 191, 36, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Total Payout</div>
+                                        <div style={{ color: '#fbbf24', fontSize: '24px', fontWeight: '950' }}>₹{totalLogisticsAmount.toLocaleString()}</div>
+                                    </div>
+                                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <IndianRupee size={20} color="#fbbf24" />
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Duty Table View */}
                             {filteredAttendance.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '60px 20px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '20px' }}>
@@ -1505,7 +1585,7 @@ const Freelancers = () => {
                                                     const punchInDate = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : null);
                                                     const punchInTime = a.punchIn?.time ? new Date(a.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '--:--';
                                                     const punchOutTime = a.punchOut?.time ? new Date(a.punchOut.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : null;
-                                                    const totalKM = a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0);
+                                                    const totalKM = Math.max(0, a.totalKM || (a.punchOut?.km && a.punchIn?.km ? a.punchOut.km - a.punchIn.km : 0));
                                                     const isCompleted = a.status === 'completed' || !!a.punchOut?.time;
 
                                                     return (
@@ -1585,8 +1665,20 @@ const Freelancers = () => {
                                                                         <Edit2 size={14} />
                                                                     </button>
                                                                     <button
-                                                                        onClick={() => handleDeleteDuty(a._id)}
-                                                                        style={{ background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        onClick={() => handleDeleteDuty(a)}
+                                                                        disabled={submitting}
+                                                                        style={{
+                                                                            background: 'rgba(244, 63, 94, 0.05)',
+                                                                            border: '1px solid rgba(244, 63, 94, 0.1)',
+                                                                            color: '#f43f5e',
+                                                                            borderRadius: '8px',
+                                                                            padding: '6px',
+                                                                            cursor: submitting ? 'not-allowed' : 'pointer',
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            justifyContent: 'center',
+                                                                            opacity: submitting ? 0.5 : 1
+                                                                        }}
                                                                         title="Delete"
                                                                     >
                                                                         <Trash2 size={14} />
@@ -1875,28 +1967,35 @@ const Freelancers = () => {
                                     </button>
                                 </div>
 
-                                {/* KM Stats Bar */}
                                 {(() => {
                                     const activeRecord = attendance.find(a => a.driver?._id === selectedDriver?._id && a.status === 'incomplete');
                                     const startKm = activeRecord?.punchIn?.km || 0;
                                     const tripKm = punchOutData.km ? (Number(punchOutData.km) - startKm) : 0;
+                                    const totalPayable = (Number(punchOutData.dailyWage) || 0) + (Number(punchOutData.parkingAmount) || 0);
+
                                     return (
-                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '16px 28px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.04)', gap: '1px' }}>
-                                            <div style={{ textAlign: 'center', padding: '8px' }}>
-                                                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>Start KM</div>
-                                                <div style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>{startKm.toLocaleString()}</div>
-                                            </div>
-                                            <div style={{ textAlign: 'center', padding: '8px', borderLeft: '1px solid rgba(255,255,255,0.05)', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>Trip KM</div>
-                                                <div style={{ color: tripKm > 0 ? '#fbbf24' : 'rgba(255,255,255,0.3)', fontSize: '20px', fontWeight: '900' }}>{tripKm > 0 ? tripKm.toLocaleString() : '—'}</div>
-                                            </div>
-                                            <div style={{ textAlign: 'center', padding: '8px' }}>
-                                                <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>Punch-In</div>
-                                                <div style={{ color: '#10b981', fontSize: '13px', fontWeight: '800' }}>
-                                                    {activeRecord?.punchIn?.time ? new Date(activeRecord.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}
+                                        <>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', padding: '16px 28px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.04)', gap: '1px' }}>
+                                                <div style={{ textAlign: 'center', padding: '8px' }}>
+                                                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>Start KM</div>
+                                                    <div style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>{startKm.toLocaleString()}</div>
+                                                </div>
+                                                <div style={{ textAlign: 'center', padding: '8px', borderLeft: '1px solid rgba(255,255,255,0.05)', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>Trip KM</div>
+                                                    <div style={{ color: tripKm > 0 ? '#fbbf24' : 'rgba(255,255,255,0.3)', fontSize: '20px', fontWeight: '900' }}>{tripKm > 0 ? tripKm.toLocaleString() : '—'}</div>
+                                                </div>
+                                                <div style={{ textAlign: 'center', padding: '8px' }}>
+                                                    <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '4px' }}>Punch-In</div>
+                                                    <div style={{ color: '#10b981', fontSize: '13px', fontWeight: '800' }}>
+                                                        {activeRecord?.punchIn?.time ? new Date(activeRecord.punchIn.time).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—'}
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
+                                            <div style={{ background: 'rgba(16,185,129,0.08)', padding: '12px 28px', borderBottom: '1px solid rgba(16,185,129,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ color: 'rgba(16,185,129,0.8)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase' }}>Total Payable (Daily + Parking)</span>
+                                                <span style={{ color: '#10b981', fontSize: '20px', fontWeight: '950' }}>₹{totalPayable.toLocaleString()}</span>
+                                            </div>
+                                        </>
                                     );
                                 })()}
 

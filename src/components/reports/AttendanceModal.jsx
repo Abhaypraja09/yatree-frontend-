@@ -59,7 +59,7 @@ const AttendanceModal = ({ item, onClose }) => {
 
     const openKM = item.punchIn?.km;
     const closeKM = item.punchOut?.km;
-    const totalKM = item.totalKM ?? (typeof openKM === 'number' && typeof closeKM === 'number' ? closeKM - openKM : null);
+    const totalKM = item.totalKM ?? (typeof openKM === 'number' && typeof closeKM === 'number' ? Math.max(0, closeKM - openKM) : null);
 
     const salary = Number(item.dailyWage) || 0;
     const allowanceTA = Number(item.punchOut?.allowanceTA) || 0;
@@ -205,7 +205,7 @@ const AttendanceModal = ({ item, onClose }) => {
                 )}
 
                 {/* Bonuses */}
-                {(allowanceTA > 0 || nightStay > 0 || outsideBonus > 0) && (
+                {(allowanceTA > 0 || nightStay > 0 || extraBonus > 0) && (
                     <div style={{ background: 'rgba(34,197,94,0.05)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(34,197,94,0.1)' }}>
                         <SH color="#22c55e" icon={Zap} title="Bonuses" />
                         {allowanceTA > 0 && <Stat label="TA Allowance (Same Day Return)" value={`+₹${allowanceTA}`} color="#22c55e" />}

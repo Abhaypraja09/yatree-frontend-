@@ -609,36 +609,35 @@ const Maintenance = () => {
                                                             REJECT
                                                         </button>
                                                     </div>
-                                                ) : (
-                                                    <>
-                                                        {record.billPhoto && (
-                                                            <button
-                                                                onClick={() => setSelectedBillPhoto(record.billPhoto)}
-                                                                className="glass-card-hover-effect"
-                                                                style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                                title="View Bill"
-                                                            >
-                                                                <FileText size={16} />
-                                                            </button>
-                                                        )}
+                                                ) : null}
+                                                <div style={{ display: 'flex', gap: '8px', marginLeft: '8px' }}>
+                                                    {record.billPhoto && (
                                                         <button
-                                                            onClick={() => handleEdit(record)}
+                                                            onClick={() => setSelectedBillPhoto(record.billPhoto)}
                                                             className="glass-card-hover-effect"
-                                                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                            title="Edit Entry"
+                                                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                            title="View Bill"
                                                         >
-                                                            <Wrench size={16} />
+                                                            <FileText size={16} />
                                                         </button>
-                                                        <button
-                                                            onClick={() => handleDelete(record._id)}
-                                                            className="glass-card-hover-effect"
-                                                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                            title="Delete Entry"
-                                                        >
-                                                            <Trash2 size={16} />
-                                                        </button>
-                                                    </>
-                                                )}
+                                                    )}
+                                                    <button
+                                                        onClick={() => handleEdit(record)}
+                                                        className="glass-card-hover-effect"
+                                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                        title="Edit Entry"
+                                                    >
+                                                        <Wrench size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleDelete(record._id)}
+                                                        className="glass-card-hover-effect"
+                                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                        title="Delete Entry"
+                                                    >
+                                                        <Trash2 size={16} />
+                                                    </button>
+                                                </div>
                                             </div>
                                         </td>
                                     </motion.tr>

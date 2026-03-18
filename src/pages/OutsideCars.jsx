@@ -11,29 +11,42 @@ const OutsideCars = () => {
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedDay, setSelectedDay] = useState('All'); // 'All' or 1-31
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
     const [ownerFilter, setOwnerFilter] = useState('All');
     const [propertyFilter, setPropertyFilter] = useState('All');
-    const [transactionFilter, setTransactionFilter] = useState('All');
+    const [transactionFilter, setTransactionFilter] = useState('Buy');
 
-    const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
-    const [toDate, setToDate] = useState(todayIST());
+    useEffect(() => {
+        if (selectedDay === 'All') {
+            const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
+            const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+            setFromDate(start);
+            setToDate(end);
+        } else {
+            const d = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+            setFromDate(d);
+            setToDate(d);
+        }
+    }, [selectedMonth, selectedYear, selectedDay]);
 
     /* navigate dates */
     const shiftDays = (n) => {
-        const t = nowIST(toDate);
-        t.setUTCDate(t.getUTCDate() + n);
-        const tStr = toISTDateString(t);
-
-        if (isRange) {
-            const f = nowIST(fromDate);
-            f.setUTCDate(f.getUTCDate() + n);
-            setFromDate(toISTDateString(f));
-            setToDate(tStr);
+        let baseDate;
+        if (selectedDay === 'All') {
+            baseDate = new Date(selectedYear, selectedMonth, 1);
         } else {
-            setFromDate(tStr);
-            setToDate(tStr);
+            baseDate = new Date(selectedYear, selectedMonth, parseInt(selectedDay));
         }
+
+        baseDate.setDate(baseDate.getDate() + n);
+
+        setSelectedYear(baseDate.getFullYear());
+        setSelectedMonth(baseDate.getMonth());
+        setSelectedDay(baseDate.getDate().toString());
     };
 
     // Modal & Editing State
@@ -48,7 +61,7 @@ const OutsideCars = () => {
         ownerName: '',
         dutyAmount: '',
         dropLocation: '',
-        transactionType: 'Duty',
+        transactionType: 'Buy',
         date: todayIST()
     });
 
@@ -79,6 +92,17 @@ const OutsideCars = () => {
     const handleOpenLogDuty = () => {
         setEditMode(false);
         setSelectedId(null);
+
+        // Intelligence: Default the form date to the viewed month
+        const now = new Date();
+        let defaultDate = todayIST();
+        if (selectedMonth !== now.getMonth() || selectedYear !== now.getFullYear()) {
+            const dayToUse = selectedDay === 'All' ? 1 : parseInt(selectedDay);
+            defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, dayToUse));
+        } else if (selectedDay !== 'All' && parseInt(selectedDay) !== now.getDate()) {
+            defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+        }
+
         setFormData({
             carNumber: '',
             model: '',
@@ -87,8 +111,8 @@ const OutsideCars = () => {
             ownerName: ownerFilter !== 'All' ? ownerFilter : '',
             dutyAmount: '',
             dropLocation: '',
-            transactionType: 'Duty',
-            date: todayIST(),
+            transactionType: 'Buy',
+            date: defaultDate,
             isDuplicateToday: false
         });
         setShowModal(true);
@@ -156,7 +180,7 @@ const OutsideCars = () => {
                 companyId: selectedCompany._id,
                 isOutsideCar: true,
                 status: 'active',
-                transactionType: formData.transactionType || 'Duty',
+                transactionType: formData.transactionType || 'Buy',
                 createdAt: formData.date
             };
 
@@ -196,7 +220,7 @@ const OutsideCars = () => {
             ownerName: vehicle.ownerName,
             dutyAmount: vehicle.dutyAmount,
             dropLocation: vehicle.dropLocation,
-            transactionType: vehicle.transactionType || 'Duty',
+            transactionType: vehicle.transactionType || 'Buy',
             date: vehicle.carNumber?.split('#')[1] || toISTDateString(vehicle.createdAt)
         });
         setSelectedId(vehicle._id);
@@ -221,9 +245,8 @@ const OutsideCars = () => {
         if (!dutyTagDateStr) return false;
 
         const matchesDate = dutyTagDateStr >= fromDate && dutyTagDateStr <= toDate;
-        const matchesTransaction = transactionFilter === 'All' || 
-            (v.transactionType || 'Duty') === transactionFilter;
-        
+        const matchesTransaction = (v.transactionType || 'Buy') === transactionFilter;
+
         return matchesSearch && matchesOwner && matchesProperty && matchesDate && matchesTransaction;
     }).sort((a, b) => {
         const dateA = a.carNumber?.split('#')[1] || '';
@@ -240,21 +263,54 @@ const OutsideCars = () => {
 
     // Create unique properties list, normalizing to avoid duplicates in dropdown but keeping original casing for display
     const uniqueProperties = Object.values(vehicles
-        .filter(v => ownerFilter === 'All' || v.ownerName?.trim() === ownerFilter?.trim())
+        .filter(v => {
+            const ownerMatch = ownerFilter === 'All' || v.ownerName?.trim() === ownerFilter?.trim();
+            const dutyDate = v.carNumber?.split('#')[1];
+            const dateMatch = dutyDate >= fromDate && dutyDate <= toDate;
+            return ownerMatch && dateMatch;
+        })
         .reduce((acc, v) => {
             const prop = v.property?.trim();
             if (prop) {
-                // Key is normalized (lowercase, single spaces) to dedup
                 const key = prop.toLowerCase().replace(/\s+/g, ' ');
-                // Value is the first occurrence's formatting (or arguably the most common, but first is simpler)
                 if (!acc[key]) acc[key] = prop;
             }
             return acc;
         }, {})).sort();
 
     const carNumberSuggestions = [...new Set(vehicles.map(v => v.carNumber?.split('#')[0]).filter(Boolean))];
-    const dutyTypeSuggestions = [...new Set(vehicles.map(v => v.dutyType).filter(Boolean))];
-    const dropLocationSuggestions = [...new Set(vehicles.map(v => v.dropLocation).filter(Boolean))];
+
+    const getDynamicSuggestions = () => {
+        if (!formData.date) return { types: [], locations: [] };
+
+        const fDate = new Date(formData.date);
+        const day = fDate.getDate();
+        const formDateObj = new Date(formData.date);
+        const targetYearMonth = `${formDateObj.getFullYear()}-${String(formDateObj.getMonth() + 1).padStart(2, '0')}`;
+
+        // If it's the 1st of the month, return empty arrays (no reminders)
+        if (day === 1) return { types: [], locations: [], properties: [] };
+
+        // Filter all vehicles to find entries from the EXACT SAME month and year as the form date
+        const sameMonthData = vehicles.filter(v => {
+            const parts = v.carNumber?.split('#');
+            if (!parts || !parts[1]) return false;
+            // Date is stored as YYYY-MM-DD
+            const vYearMonth = parts[1].substring(0, 7); // Extracts "YYYY-MM"
+            return vYearMonth === targetYearMonth;
+        });
+
+        return {
+            types: [...new Set(sameMonthData.map(v => v.dutyType).filter(Boolean))],
+            locations: [...new Set(sameMonthData.map(v => v.dropLocation).filter(Boolean))],
+            properties: [...new Set(sameMonthData.map(v => v.property).filter(Boolean))]
+        };
+    };
+
+    const dynamicSuggestions = getDynamicSuggestions();
+    const dutyTypeSuggestions = dynamicSuggestions.types;
+    const dropLocationSuggestions = dynamicSuggestions.locations;
+    const propertySuggestions = dynamicSuggestions.properties || [];
 
     const formatDateDisplay = (dateStr) => {
         return formatDateIST(dateStr);
@@ -263,7 +319,7 @@ const OutsideCars = () => {
     return (
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Outside Fleet Command" description="Manage external vehicles and freelancer drivers for specific duties." />
-            
+
             <style>{`
                 .bg-buy { 
                     background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(20, 83, 45, 0.2) 100%) !important; 
@@ -309,7 +365,7 @@ const OutsideCars = () => {
             `}</style>
 
             {/* ═══ PREMIUM DYNAMIC HEADER ═══ */}
-            <header style={{ 
+            <header style={{
                 padding: 'clamp(20px, 4vw, 40px) 0',
                 position: 'relative'
             }}>
@@ -350,18 +406,18 @@ const OutsideCars = () => {
                     <div className="flex-resp" style={{ gap: '24px', alignItems: 'center', flex: 1, justifyContent: 'flex-end', width: '100%' }}>
                         {/* CIRCULAR STATS */}
                         <div style={{ display: 'flex', gap: '16px' }}>
-                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ 
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{
                                 width: 'clamp(80px, 15vw, 110px)', height: 'clamp(80px, 15vw, 110px)', borderRadius: '50%',
-                                background: 'rgba(15, 23, 42, 0.6)', 
-                                border: '1px solid rgba(251, 191, 36, 0.1)', 
+                                background: 'rgba(15, 23, 42, 0.6)',
+                                border: '1px solid rgba(251, 191, 36, 0.1)',
                                 display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                                 position: 'relative'
                             }}>
                                 <svg className="stat-circle-svg" viewBox="0 0 100 100">
                                     <circle className="stat-circle-bg" cx="50" cy="50" r="45" />
-                                    <motion.circle 
-                                        className="stat-circle-progress payout-glow" 
-                                        cx="50" cy="50" r="45" 
+                                    <motion.circle
+                                        className="stat-circle-progress payout-glow"
+                                        cx="50" cy="50" r="45"
                                         stroke="#fbbf24"
                                         initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }}
                                         animate={{ strokeDashoffset: 0 }}
@@ -369,299 +425,312 @@ const OutsideCars = () => {
                                     />
                                 </svg>
                                 <span style={{ fontSize: '7px', fontWeight: '950', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px', position: 'relative', zIndex: 1 }}>Payout</span>
-                                <span style={{ color: 'white', fontSize: 'clamp(12px, 3vw, 15px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalPayable > 99999 ? (totalPayable/1000).toFixed(1) + 'k' : '₹' + totalPayable.toLocaleString()}</span>
+                                <span style={{ color: 'white', fontSize: 'clamp(12px, 3vw, 15px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalPayable > 99999 ? (totalPayable / 1000).toFixed(1) + 'k' : '₹' + totalPayable.toLocaleString()}</span>
                             </motion.div>
 
-                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} style={{ 
+                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} style={{
                                 width: 'clamp(80px, 15vw, 110px)', height: 'clamp(80px, 15vw, 110px)', borderRadius: '50%',
-                                background: 'rgba(15, 23, 42, 0.6)', 
-                                border: '1px solid rgba(16, 185, 129, 0.1)', 
+                                background: 'rgba(15, 23, 42, 0.6)',
+                                border: '1px solid rgba(16, 185, 129, 0.1)',
                                 display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
                                 position: 'relative'
                             }}>
                                 <svg className="stat-circle-svg" viewBox="0 0 100 100">
                                     <circle className="stat-circle-bg" cx="50" cy="50" r="45" />
-                                    <motion.circle 
-                                        className="stat-circle-progress logs-glow" 
-                                        cx="50" cy="50" r="45" 
+                                    <motion.circle
+                                        className="stat-circle-progress logs-glow"
+                                        cx="50" cy="50" r="45"
                                         stroke="#10b981"
                                         initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }}
-                                        animate={{ strokeDashoffset: -200 }} 
+                                        animate={{ strokeDashoffset: -200 }}
                                         transition={{ duration: 1.8, ease: "easeOut" }}
                                     />
                                 </svg>
-                                <span style={{ fontSize: '7px', fontWeight: '950', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px', position: 'relative', zIndex: 1 }}>Logs</span>
+                                <span style={{ fontSize: '7px', fontWeight: '950', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px', position: 'relative', zIndex: 1 }}>Vehicles</span>
                                 <span style={{ color: 'white', fontSize: 'clamp(14px, 4vw, 18px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalDutiesCount}</span>
                             </motion.div>
                         </div>
 
-                    <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
-                        {/* CIRCULAR STATS */}
-                        <div style={{ display: 'flex', gap: '24px' }}>
-                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{ 
-                                width: '120px', height: '120px', borderRadius: '50%',
-                                background: 'rgba(15, 23, 42, 0.6)', 
-                                border: '1px solid rgba(251, 191, 36, 0.1)', 
-                                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                                boxShadow: '0 20px 40px rgba(0,0,0,0.4), inset 0 0 20px rgba(251, 191, 36, 0.05)', 
-                                position: 'relative'
-                            }}>
-                                <svg className="stat-circle-svg" viewBox="0 0 100 100">
-                                    <circle className="stat-circle-bg" cx="50" cy="50" r="45" />
-                                    <motion.circle 
-                                        className="stat-circle-progress payout-glow" 
-                                        cx="50" cy="50" r="45" 
-                                        stroke="#fbbf24"
-                                        initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }}
-                                        animate={{ strokeDashoffset: 0 }}
-                                        transition={{ duration: 1.5, ease: "easeOut" }}
-                                    />
-                                </svg>
-                                <span style={{ fontSize: '9px', fontWeight: '950', color: '#fbbf24', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px', position: 'relative', zIndex: 1 }}>Payout</span>
-                                <span style={{ color: 'white', fontSize: '16px', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalPayable > 99999 ? (totalPayable/1000).toFixed(1) + 'k' : '₹' + totalPayable.toLocaleString()}</span>
-                            </motion.div>
+                        <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
+                            {/* CIRCULAR STATS */}
 
-                            <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} style={{ 
-                                width: '120px', height: '120px', borderRadius: '50%',
-                                background: 'rgba(15, 23, 42, 0.6)', 
-                                border: '1px solid rgba(16, 185, 129, 0.1)', 
-                                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                                boxShadow: '0 20px 40px rgba(0,0,0,0.4), inset 0 0 20px rgba(16, 185, 129, 0.05)', 
-                                position: 'relative'
-                            }}>
-                                <svg className="stat-circle-svg" viewBox="0 0 100 100">
-                                    <circle className="stat-circle-bg" cx="50" cy="50" r="45" />
-                                    <motion.circle 
-                                        className="stat-circle-progress logs-glow" 
-                                        cx="50" cy="50" r="45" 
-                                        stroke="#10b981"
-                                        initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }}
-                                        animate={{ strokeDashoffset: -200 }} // Static visual progress
-                                        transition={{ duration: 1.8, ease: "easeOut" }}
-                                    />
-                                </svg>
-                                <span style={{ fontSize: '9px', fontWeight: '950', color: '#10b981', letterSpacing: '1.5px', textTransform: 'uppercase', marginBottom: '4px', position: 'relative', zIndex: 1 }}>Logs</span>
-                                <span style={{ color: 'white', fontSize: '20px', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalDutiesCount}</span>
-                            </motion.div>
-                        </div>
-
-                        {/* TOP RIGHT BUTTONS */}
-                        <div className="flex-resp" style={{ gap: '12px', width: '100%', justifyContent: 'flex-end' }}>
-                            <button
-                                onClick={handleOpenLogDuty}
-                                style={{ 
-                                    display: 'flex', 
-                                    alignItems: 'center', 
-                                    justifyContent: 'center',
-                                    gap: '10px', 
-                                    height: '50px', 
-                                    padding: '0 24px', 
-                                    borderRadius: '14px', 
-                                    fontWeight: '900', 
-                                    background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', 
-                                    color: 'black', 
-                                    border: 'none', 
-                                    fontSize: '13px',
-                                    cursor: 'pointer',
-                                    flex: 1,
-                                    maxWidth: '240px'
-                                }}
-                            >
-                                <Plus size={18} strokeWidth={3} /> Add Duty Entry
-                            </button>
-                            <button
-                                onClick={async () => {
-                                    const XLSX = await import('xlsx-js-style');
-                                    const reportData = filtered.map(v => ({
-                                        'Property': v.property || '',
-                                        'Owner': v.ownerName || '',
-                                        'Date': (() => {
-                                            const rawDate = v.carNumber?.split('#')[1] || v.createdAt;
-                                            if (!rawDate) return '';
-                                            return formatDateIST(rawDate);
-                                        })(),
-                                        'Vehicle Details': `${v.model || ''} - ${v.carNumber?.split('#')[0] || ''}`,
-                                        'Drop Location': v.dropLocation?.replace(/ \| /g, ' ➜ ') || '',
-                                        'Service Type': v.dutyType || '',
-                                        'Amount': Number(v.dutyAmount) || 0
-                                    }));
-                                    const totalAmount = reportData.reduce((sum, row) => sum + row.Amount, 0);
-                                    reportData.push({
-                                        'Property': '', 'Owner': '', 'Date': '', 'Vehicle Details': '', 'Drop Location': '', 'Service Type': 'TOTAL PAYABLE', 'Amount': totalAmount
-                                    });
-                                    const ws = XLSX.utils.json_to_sheet(reportData);
-                                    const range = XLSX.utils.decode_range(ws['!ref']);
-                                    for (let C = range.s.c; C <= range.e.c; ++C) {
-                                        let maxWidth = 10;
-                                        for (let R = range.s.r; R <= range.e.r; ++R) {
-                                            const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
-                                            if (!cell) continue;
-                                            cell.s = { alignment: { horizontal: 'center', vertical: 'center' }, font: { name: 'Arial', sz: 10 } };
-                                            if (R === 0) { cell.s.font.bold = true; cell.s.fill = { fgColor: { rgb: "4F46E5" } }; cell.s.font.color = { rgb: "FFFFFF" }; }
-                                            if (C === 6) cell.s.alignment.horizontal = 'right';
-                                            if (R === range.e.r) { cell.s.font.bold = true; cell.s.fill = { fgColor: { rgb: "E0E7FF" } }; }
-                                            if (cell.v) maxWidth = Math.max(maxWidth, cell.v.toString().length + 5);
+                            {/* TOP RIGHT BUTTONS */}
+                            <div className="flex-resp" style={{ gap: '12px', width: '100%', justifyContent: 'flex-end' }}>
+                                <button
+                                    onClick={handleOpenLogDuty}
+                                    style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '10px',
+                                        height: '50px',
+                                        padding: '0 24px',
+                                        borderRadius: '14px',
+                                        fontWeight: '900',
+                                        background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                                        color: 'black',
+                                        border: 'none',
+                                        fontSize: '13px',
+                                        cursor: 'pointer',
+                                        flex: 1,
+                                        maxWidth: '240px'
+                                    }}
+                                >
+                                    <Plus size={18} strokeWidth={3} /> Add Duty Entry
+                                </button>
+                                <button
+                                    onClick={async () => {
+                                        const XLSX = await import('xlsx-js-style');
+                                        const reportData = filtered.map(v => ({
+                                            'Property': v.property || '',
+                                            'Owner': v.ownerName || '',
+                                            'Date': (() => {
+                                                const rawDate = v.carNumber?.split('#')[1] || v.createdAt;
+                                                if (!rawDate) return '';
+                                                return formatDateIST(rawDate);
+                                            })(),
+                                            'Vehicle Details': `${v.model || ''} - ${v.carNumber?.split('#')[0] || ''}`,
+                                            'Drop Location': v.dropLocation?.replace(/ \| /g, ' ➜ ') || '',
+                                            'Service Type': v.dutyType || '',
+                                            'Amount': Number(v.dutyAmount) || 0
+                                        }));
+                                        const totalAmount = reportData.reduce((sum, row) => sum + row.Amount, 0);
+                                        reportData.push({
+                                            'Property': '', 'Owner': '', 'Date': '', 'Vehicle Details': '', 'Drop Location': '', 'Service Type': 'TOTAL PAYABLE', 'Amount': totalAmount
+                                        });
+                                        const ws = XLSX.utils.json_to_sheet(reportData);
+                                        const range = XLSX.utils.decode_range(ws['!ref']);
+                                        for (let C = range.s.c; C <= range.e.c; ++C) {
+                                            let maxWidth = 10;
+                                            for (let R = range.s.r; R <= range.e.r; ++R) {
+                                                const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
+                                                if (!cell) continue;
+                                                cell.s = { alignment: { horizontal: 'center', vertical: 'center' }, font: { name: 'Arial', sz: 10 } };
+                                                if (R === 0) { cell.s.font.bold = true; cell.s.fill = { fgColor: { rgb: "4F46E5" } }; cell.s.font.color = { rgb: "FFFFFF" }; }
+                                                if (C === 6) cell.s.alignment.horizontal = 'right';
+                                                if (R === range.e.r) { cell.s.font.bold = true; cell.s.fill = { fgColor: { rgb: "E0E7FF" } }; }
+                                                if (cell.v) maxWidth = Math.max(maxWidth, cell.v.toString().length + 5);
+                                            }
+                                            if (!ws['!cols']) ws['!cols'] = [];
+                                            ws['!cols'][C] = { wch: maxWidth };
                                         }
-                                        if (!ws['!cols']) ws['!cols'] = [];
-                                        ws['!cols'][C] = { wch: maxWidth };
-                                    }
-                                    const wb = XLSX.utils.book_new();
-                                    XLSX.utils.book_append_sheet(wb, ws, "Outside Fleet Log");
-                                    XLSX.writeFile(wb, `Outside_Fleet_Report_${fromDate}_to_${toDate}.xlsx`);
-                                }}
-                                style={{
-                                    height: '50px',
-                                    padding: '0 16px',
-                                    background: 'rgba(16, 185, 129, 0.08)',
-                                    border: '1px solid rgba(16, 185, 129, 0.2)',
-                                    color: '#34d399',
-                                    fontWeight: '800',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '8px',
-                                    borderRadius: '14px',
-                                    fontSize: '11px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <Save size={16} /> <span className="hide-mobile">Export Excel</span>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-                </div>
-
-            {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
-            <div className="glass-card" style={{ 
-                padding: 'clamp(10px, 2vw, 12px)', 
-                marginBottom: 'clamp(24px, 4vw, 32px)', 
-                display: 'flex', 
-                flexDirection: 'column',
-                gap: '12px', 
-                background: 'rgba(15, 23, 42, 0.4)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.04)',
-                borderRadius: '24px'
-            }}>
-                <div className="flex-resp" style={{ gap: '12px', alignItems: 'center' }}>
-                    <div style={{ position: 'relative', flex: '1.5', minWidth: '0' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(251, 191, 36, 0.4)', zIndex: 1 }} />
-                        <input
-                            type="text"
-                            placeholder="Universal Search..."
-                            className="premium-compact-input"
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            style={{ paddingLeft: '48px', height: '52px' }}
-                        />
-                    </div>
-
-                    <div className="flex-resp" style={{ gap: '8px', flex: '2', minWidth: '0' }}>
-                        <div style={{ flex: 1, position: 'relative' }}>
-                            <select value={ownerFilter} onChange={e => handleOwnerChange(e.target.value)} className="premium-compact-input" style={{ height: '52px', appearance: 'none' }}>
-                                <option value="All">All Vendors</option>
-                                {uniqueOwners.map(o => <option key={o} value={o}>{o}</option>)}
-                            </select>
-                            <ChevronRight size={14} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
-                        </div>
-                        <div style={{ flex: 1, position: 'relative' }}>
-                            <select value={propertyFilter} onChange={e => setPropertyFilter(e.target.value)} className="premium-compact-input" style={{ height: '52px', appearance: 'none' }}>
-                                <option value="All">All Properties</option>
-                                {uniqueProperties.map(p => <option key={p} value={p}>{p}</option>)}
-                            </select>
-                            <ChevronRight size={14} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
+                                        const wb = XLSX.utils.book_new();
+                                        XLSX.utils.book_append_sheet(wb, ws, "Outside Fleet Log");
+                                        XLSX.writeFile(wb, `Outside_Fleet_Report_${fromDate}_to_${toDate}.xlsx`);
+                                    }}
+                                    style={{
+                                        height: '50px',
+                                        padding: '0 16px',
+                                        background: 'rgba(16, 185, 129, 0.08)',
+                                        border: '1px solid rgba(16, 185, 129, 0.2)',
+                                        color: '#34d399',
+                                        fontWeight: '800',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px',
+                                        borderRadius: '14px',
+                                        fontSize: '11px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <Save size={16} /> <span className="hide-mobile">Export Excel</span>
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div className="flex-resp" style={{ gap: '12px', alignItems: 'center' }}>
-                    {/* TRANSACTION FILTERS SCROLLABLE */}
-                    <div className="premium-scroll" style={{
-                        display: 'flex',
-                        background: 'rgba(15, 23, 42, 0.6)',
-                        padding: '6px',
-                        borderRadius: '18px',
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        gap: '6px',
-                        overflowX: 'auto',
-                        flex: '1.5'
-                    }}>
-                        {[
-                            { id: 'All', label: 'All', icon: Layers, color: '#94a3b8' },
-                            { id: 'Duty', label: 'Duties', icon: Briefcase, color: '#fbbf24' },
-                            { id: 'Buy', label: 'Buy', icon: ShoppingCart, color: '#22c55e' },
-                            { id: 'Sell', label: 'Sell', icon: TrendingUp, color: '#ef4444' }
-                        ].map(type => (
-                            <button
-                                key={type.id}
-                                onClick={() => setTransactionFilter(type.id)}
-                                style={{
-                                    padding: '8px 16px',
-                                    borderRadius: '14px',
-                                    border: '1px solid ' + (transactionFilter === type.id ? type.color + '40' : 'transparent'),
-                                    fontSize: '11px',
-                                    fontWeight: '950',
-                                    cursor: 'pointer',
-                                    background: transactionFilter === type.id ? type.color + '15' : 'transparent',
-                                    color: transactionFilter === type.id ? type.color : 'rgba(255,255,255,0.3)',
-                                    textTransform: 'uppercase',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    whiteSpace: 'nowrap'
-                                }}
-                            >
-                                <type.icon size={14} />
-                                {type.label}
-                            </button>
-                        ))}
+                {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
+                <div className="glass-card" style={{
+                    padding: 'clamp(10px, 2vw, 12px)',
+                    marginBottom: 'clamp(24px, 4vw, 32px)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                    background: 'rgba(15, 23, 42, 0.4)',
+                    backdropFilter: 'blur(10px)',
+                    border: '1px solid rgba(255,255,255,0.04)',
+                    borderRadius: '24px'
+                }}>
+                    <div className="flex-resp" style={{ gap: '12px', alignItems: 'center' }}>
+                        <div style={{ position: 'relative', flex: '1.5', minWidth: '0' }}>
+                            <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(251, 191, 36, 0.4)', zIndex: 1 }} />
+                            <input
+                                type="text"
+                                placeholder="Universal Search..."
+                                className="premium-compact-input"
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                style={{ paddingLeft: '48px', height: '52px' }}
+                            />
+                        </div>
+
+                        <div className="flex-resp" style={{ gap: '8px', flex: '2', minWidth: '0' }}>
+                            <div style={{ flex: 1, position: 'relative' }}>
+                                <select value={ownerFilter} onChange={e => handleOwnerChange(e.target.value)} className="premium-compact-input" style={{ height: '52px', appearance: 'none' }}>
+                                    <option value="All">All Vendors</option>
+                                    {uniqueOwners.map(o => <option key={o} value={o}>{o}</option>)}
+                                </select>
+                                <ChevronRight size={14} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
+                            </div>
+                            <div style={{ flex: 1, position: 'relative' }}>
+                                <select value={propertyFilter} onChange={e => setPropertyFilter(e.target.value)} className="premium-compact-input" style={{ height: '52px', appearance: 'none' }}>
+                                    <option value="All">All Properties</option>
+                                    {uniqueProperties.map(p => <option key={p} value={p}>{p}</option>)}
+                                </select>
+                                <ChevronRight size={14} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
+                            </div>
+                        </div>
                     </div>
 
-                    <div className="flex-resp" style={{
-                        flex: '1',
-                        alignItems: 'center',
-                        gap: '8px',
-                        background: 'rgba(0,0,0,0.3)',
-                        padding: '6px',
-                        borderRadius: '16px',
-                        border: '1px solid rgba(255,255,255,0.05)'
-                    }}>
-                        <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                            <button onClick={() => shiftDays(-1)} style={{
-                                width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}> <ChevronLeft size={16} /> </button>
+                    <div className="flex-resp" style={{ gap: '12px', alignItems: 'center' }}>
+                        {/* TRANSACTION FILTERS SCROLLABLE */}
+                        <div className="premium-scroll" style={{
+                            display: 'flex',
+                            background: 'rgba(15, 23, 42, 0.6)',
+                            padding: '6px',
+                            borderRadius: '18px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            gap: '6px',
+                            overflowX: 'auto',
+                            flex: '1.5'
+                        }}>
+                            {[
+                                { id: 'Buy', label: 'Buy', icon: ShoppingCart, color: '#22c55e' },
+                                { id: 'Sell', label: 'Sell', icon: TrendingUp, color: '#ef4444' }
+                            ].map(type => (
+                                <button
+                                    key={type.id}
+                                    onClick={() => setTransactionFilter(type.id)}
+                                    style={{
+                                        padding: '8px 24px',
+                                        borderRadius: '14px',
+                                        border: '1px solid ' + (transactionFilter === type.id ? type.color + '40' : 'transparent'),
+                                        fontSize: '11px',
+                                        fontWeight: '950',
+                                        cursor: 'pointer',
+                                        background: transactionFilter === type.id ? type.color + '15' : 'transparent',
+                                        color: transactionFilter === type.id ? type.color : 'rgba(255,255,255,0.3)',
+                                        textTransform: 'uppercase',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px',
+                                        whiteSpace: 'nowrap'
+                                    }}
+                                >
+                                    <type.icon size={16} />
+                                    {type.label}
+                                </button>
+                            ))}
+                        </div>
 
-                            <div 
-                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                style={{ height: '36px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', borderRadius: '10px', padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', position: 'relative' }}
-                            >
-                                <span style={{ fontSize: '11px', fontWeight: '800', color: 'white', whiteSpace: 'nowrap' }}>
-                                    {isRange ? `${formatDateIST(fromDate)} - ${formatDateIST(toDate)}` : formatDateIST(toDate)}
-                                </span>
-                                <input type="date" value={toDate} onChange={e => { setToDate(e.target.value); if(!isRange) setFromDate(e.target.value); }} style={{ position: 'absolute', inset: 0, opacity: 0 }} />
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            {/* PREMIUM DAY NAV PILL (FROM IMAGE) */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                background: 'rgba(0,0,0,0.4)',
+                                padding: '4px',
+                                borderRadius: '20px',
+                                border: '1px solid rgba(255,255,255,0.06)'
+                            }}>
+                                <button onClick={() => shiftDays(-1)} style={{
+                                    width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
+                                }}> <ChevronLeft size={18} /> </button>
+
+                                <div
+                                    onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                    style={{ height: '42px', minWidth: '140px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '16px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
+                                >
+                                    <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                                        {selectedDay === 'All' ?
+                                            ` ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
+                                            formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
+                                    </span>
+                                    <input
+                                        type="date"
+                                        value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                        onChange={e => {
+                                            const d = new Date(e.target.value);
+                                            setSelectedYear(d.getFullYear());
+                                            setSelectedMonth(d.getMonth());
+                                            setSelectedDay(d.getDate().toString());
+                                        }}
+                                        style={{ position: 'absolute', inset: 0, opacity: 0 }}
+                                    />
+                                </div>
+
+                                <button onClick={() => shiftDays(1)} style={{
+                                    width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
+                                }}> <ChevronRight size={18} /> </button>
                             </div>
 
-                            <button onClick={() => shiftDays(1)} style={{
-                                width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}> <ChevronRight size={16} /> </button>
+                            {/* DYNAMIC "SHOW FULL MONTH" TAB */}
+                            {selectedDay !== 'All' && (
+                                <motion.button
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    onClick={() => setSelectedDay('All')}
+                                    style={{
+                                        height: '50px',
+                                        padding: '0 20px',
+                                        borderRadius: '16px',
+                                        background: 'rgba(251, 191, 36, 0.1)',
+                                        border: '1px solid rgba(251, 191, 36, 0.2)',
+                                        color: '#fbbf24',
+                                        fontSize: '11px',
+                                        fontWeight: '950',
+                                        cursor: 'pointer',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.5px'
+                                    }}
+                                >
+                                    <Calendar size={14} /> View Full Month
+                                </motion.button>
+                            )}
+
+                            <select
+                                value={selectedMonth}
+                                onChange={e => {
+                                    setSelectedMonth(Number(e.target.value));
+                                    setSelectedDay('All'); // Show full month on change
+                                }}
+                                className="premium-compact-input"
+                                style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px' }}
+                            >
+                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
+                                    <option key={m} value={idx}>{m}</option>
+                                ))}
+                            </select>
+
+                            <select
+                                value={selectedYear}
+                                onChange={e => {
+                                    setSelectedYear(Number(e.target.value));
+                                    setSelectedDay('All'); // Show full month on change
+                                }}
+                                className="premium-compact-input"
+                                style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '80px' }}
+                            >
+                                {[2024, 2025, 2026, 2027].map(y => (
+                                    <option key={y} value={y}>{y}</option>
+                                ))}
+                            </select>
                         </div>
-                        
-                        <button onClick={() => { setIsRange(!isRange); if(isRange) setFromDate(toDate); }} style={{
-                            height: '36px', padding: '0 10px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', background: isRange ? 'rgba(251, 191, 36, 0.15)' : 'rgba(255,255,255,0.03)',
-                            color: isRange ? '#fbbf24' : 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase'
-                        }}> {isRange ? 'Range' : 'Day'} </button>
                     </div>
                 </div>
-            </div>
 
 
             </header>
 
             {/* ═══ CLEAN PREMIUM DESKTOP TABLE ═══ */}
-            <div className="glass-card hide-mobile scroll-x" style={{ 
-                padding: 0, 
-                border: '1px solid rgba(255,255,255,0.08)', 
+            <div className="glass-card hide-mobile scroll-x" style={{
+                padding: 0,
+                border: '1px solid rgba(255,255,255,0.08)',
                 background: 'rgba(8, 14, 26, 0.4)',
                 backdropFilter: 'blur(20px)',
                 borderRadius: '24px',
@@ -680,99 +749,99 @@ const OutsideCars = () => {
                             </tr>
                         </thead>
                         <tbody>
-                        {loading ? (
-                            <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px 0' }}>
-                                <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '40px', height: '40px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: '#fbbf24', borderRadius: '50%', margin: '0 auto 16px' }}></motion.div>
-                                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>SYNCHRONIZING FLEET DATA...</p>
-                            </td></tr>
-                        ) : filtered.length === 0 ? (
-                            <tr><td colSpan="6" style={{ textAlign: 'center', padding: '120px 0' }}>
-                                <Car size={48} style={{ opacity: 0.1, color: '#fbbf24', marginBottom: '24px' }} />
-                                <h3 style={{ color: 'white', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Registry Empty</h3>
-                                <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>No external duties match the current filter selection.</p>
-                            </td></tr>
-                        ) : filtered.map((v, idx) => (
-                            <motion.tr
-                                key={v._id}
-                                initial={{ opacity: 0, y: 10 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.02 }}
-                                className="table-row-hover"
-                                style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
-                            >
-                                <td style={{ padding: '20px 24px' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>
-                                            {(() => {
-                                                const parts = v.carNumber?.split('#');
-                                                if (parts && parts[1]) {
-                                                    const date = new Date(parts[1]);
-                                                    return date.toLocaleDateString('en-US', { weekday: 'short' });
-                                                }
-                                                return 'DUTY';
-                                            })()}
-                                        </span>
-                                        <span style={{ fontSize: '15px', fontWeight: '800', color: 'white' }}>
-                                            {(() => {
-                                                const parts = v.carNumber?.split('#');
-                                                if (parts && parts[1]) {
-                                                    const [y, m, d] = parts[1].split('-');
-                                                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                                    return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
-                                                }
-                                                return 'Manual';
-                                            })()}
-                                        </span>
-                                    </div>
-                                </td>
-                                <td style={{ padding: '20px 24px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(129, 140, 248, 0.1)', border: '1px solid rgba(129, 140, 248, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <Car size={20} color="#818cf8" />
-                                        </div>
-                                        <div>
-                                            <div style={{ fontWeight: '900', fontSize: '16px', color: 'white', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                {v.carNumber?.split('#')[0]}
-                                                <span className={`badge-ext ${v.transactionType === 'Buy' ? 'bg-buy' : v.transactionType === 'Sell' ? 'bg-sell' : ''}`}>
-                                                    {v.transactionType || 'EXTERNAL'}
-                                                </span>
-                                            </div>
-                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', marginTop: '2px', textTransform: 'uppercase' }}>{v.model}</div>
-                                        </div>
-                                    </div>
-                                </td>
-                                <td style={{ padding: '20px 24px' }}>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-                                        <span className="badge-duty">{v.dutyType || 'Standard Duty'}</span>
-                                        {v.dropLocation && (
-                                            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                <ChevronRight size={14} style={{ opacity: 0.3 }} />
-                                                {v.dropLocation}
+                            {loading ? (
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px 0' }}>
+                                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '40px', height: '40px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: '#fbbf24', borderRadius: '50%', margin: '0 auto 16px' }}></motion.div>
+                                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>SYNCHRONIZING FLEET DATA...</p>
+                                </td></tr>
+                            ) : filtered.length === 0 ? (
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '120px 0' }}>
+                                    <Car size={48} style={{ opacity: 0.1, color: '#fbbf24', marginBottom: '24px' }} />
+                                    <h3 style={{ color: 'white', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Registry Empty</h3>
+                                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>No external duties match the current filter selection.</p>
+                                </td></tr>
+                            ) : filtered.map((v, idx) => (
+                                <motion.tr
+                                    key={v._id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.02 }}
+                                    className="table-row-hover"
+                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
+                                >
+                                    <td style={{ padding: '20px 24px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                            <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                                {(() => {
+                                                    const parts = v.carNumber?.split('#');
+                                                    if (parts && parts[1]) {
+                                                        const date = new Date(parts[1]);
+                                                        return date.toLocaleDateString('en-US', { weekday: 'short' });
+                                                    }
+                                                    return 'DUTY';
+                                                })()}
                                             </span>
-                                        )}
-                                    </div>
-                                </td>
-                                <td style={{ padding: '20px 24px' }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                        <span style={{ fontSize: '14px', fontWeight: '800', color: 'white' }}>{v.property || 'Direct Order'}</span>
-                                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontWeight: '600' }}>Vendor: {v.ownerName}</span>
-                                    </div>
-                                </td>
-                                <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                                    <div style={{ display: 'inline-block', padding: '10px 18px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '14px', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
-                                        <span style={{ color: '#10b981', fontWeight: '950', fontSize: '17px', letterSpacing: '-0.5px' }}>₹{v.dutyAmount?.toLocaleString()}</span>
-                                    </div>
-                                </td>
-                                <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                        <button onClick={() => handleEdit(v)} className="action-btn-hover" style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Edit Log"><Edit size={16} /></button>
-                                        <button onClick={() => handleDelete(v._id)} className="action-btn-hover-del" style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete Log"><Trash2 size={16} /></button>
-                                    </div>
-                                </td>
-                            </motion.tr>
-                        ))}
-                    </tbody>
-                </table>
+                                            <span style={{ fontSize: '15px', fontWeight: '800', color: 'white' }}>
+                                                {(() => {
+                                                    const parts = v.carNumber?.split('#');
+                                                    if (parts && parts[1]) {
+                                                        const [y, m, d] = parts[1].split('-');
+                                                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                                                        return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
+                                                    }
+                                                    return 'Manual';
+                                                })()}
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '20px 24px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(129, 140, 248, 0.1)', border: '1px solid rgba(129, 140, 248, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                <Car size={20} color="#818cf8" />
+                                            </div>
+                                            <div>
+                                                <div style={{ fontWeight: '900', fontSize: '16px', color: 'white', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    {v.carNumber?.split('#')[0]}
+                                                    <span className={`badge-ext ${v.transactionType === 'Buy' ? 'bg-buy' : v.transactionType === 'Sell' ? 'bg-sell' : ''}`}>
+                                                        {v.transactionType || 'EXTERNAL'}
+                                                    </span>
+                                                </div>
+                                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', marginTop: '2px', textTransform: 'uppercase' }}>{v.model}</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '20px 24px' }}>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
+                                            <span className="badge-duty">{v.dutyType || 'Standard Duty'}</span>
+                                            {v.dropLocation && (
+                                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <ChevronRight size={14} style={{ opacity: 0.3 }} />
+                                                    {v.dropLocation}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '20px 24px' }}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                            <span style={{ fontSize: '14px', fontWeight: '800', color: 'white' }}>{v.property || 'Direct Order'}</span>
+                                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontWeight: '600' }}>Vendor: {v.ownerName}</span>
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                                        <div style={{ display: 'inline-block', padding: '10px 18px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '14px', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
+                                            <span style={{ color: '#10b981', fontWeight: '950', fontSize: '17px', letterSpacing: '-0.5px' }}>₹{v.dutyAmount?.toLocaleString()}</span>
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                            <button onClick={() => handleEdit(v)} className="action-btn-hover" style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Edit Log"><Edit size={16} /></button>
+                                            <button onClick={() => handleDelete(v._id)} className="action-btn-hover-del" style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete Log"><Trash2 size={16} /></button>
+                                        </div>
+                                    </td>
+                                </motion.tr>
+                            ))}
+                        </tbody>
+                    </table>
                 </div>
             </div>
 
@@ -883,7 +952,7 @@ const OutsideCars = () => {
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.9, opacity: 0, y: 20 }}
                             className="modal-container"
-                            style={{ 
+                            style={{
                                 background: '#080d18',
                                 border: '1px solid rgba(255,255,255,0.12)',
                                 boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
@@ -897,9 +966,9 @@ const OutsideCars = () => {
                             }}
                         >
                             {/* Modal Header */}
-                            <div style={{ 
-                                padding: 'clamp(20px, 4vw, 24px) clamp(20px, 5vw, 32px)', 
-                                background: 'linear-gradient(to right, rgba(251, 191, 36, 0.08), transparent)', 
+                            <div style={{
+                                padding: 'clamp(20px, 4vw, 24px) clamp(20px, 5vw, 32px)',
+                                background: 'linear-gradient(to right, rgba(251, 191, 36, 0.08), transparent)',
                                 borderBottom: '1px solid rgba(255,255,255,0.06)',
                                 display: 'flex',
                                 justifyContent: 'space-between',
@@ -919,7 +988,7 @@ const OutsideCars = () => {
 
                             {/* Modal Content */}
                             <div style={{ padding: 'clamp(20px, 5vw, 32px)', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                                
+
                                 {/* Section: Logistics */}
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
@@ -927,22 +996,25 @@ const OutsideCars = () => {
                                         <span style={{ fontSize: '10px', fontWeight: '950', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>Operational Context</span>
                                     </div>
                                     <div className="form-grid-2">
-                                            <div 
-                                                className="premium-input-group"
-                                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                                style={{ cursor: 'pointer' }}
-                                            >
-                                                <label className="premium-label">Duty Timeline *</label>
-                                                <div style={{ position: 'relative' }}>
-                                                    <Calendar size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
-                                                    <input type="date" className="premium-compact-input" required value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} onClick={e => { e.stopPropagation(); if (e.target.showPicker) e.target.showPicker(); }} style={{ paddingLeft: '48px', height: '52px' }} />
-                                                </div>
+                                        <div
+                                            className="premium-input-group"
+                                            onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                            style={{ cursor: 'pointer' }}
+                                        >
+                                            <label className="premium-label">Duty Timeline *</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <Calendar size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
+                                                <input type="date" className="premium-compact-input" required value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} onClick={e => { e.stopPropagation(); if (e.target.showPicker) e.target.showPicker(); }} style={{ paddingLeft: '48px', height: '52px' }} />
                                             </div>
+                                        </div>
                                         <div className="premium-input-group">
                                             <label className="premium-label">Client Property *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Plus size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                                                <input type="text" className="premium-compact-input" required value={formData.property} onChange={e => setFormData({...formData, property: e.target.value})} placeholder="e.g. Radisson" style={{ paddingLeft: '48px', height: '52px' }} />
+                                                <input type="text" list="propertyReminders" className="premium-compact-input" required value={formData.property} onChange={e => setFormData({ ...formData, property: e.target.value })} placeholder="e.g. Radisson" style={{ paddingLeft: '48px', height: '52px' }} />
+                                                <datalist id="propertyReminders">
+                                                    {propertySuggestions.map(p => <option key={p} value={p} />)}
+                                                </datalist>
                                             </div>
                                         </div>
                                     </div>
@@ -967,13 +1039,13 @@ const OutsideCars = () => {
                                         </div>
                                         <div className="premium-input-group">
                                             <label className="premium-label">Asset Model *</label>
-                                            <input type="text" className="premium-compact-input" required value={formData.model} onChange={e => setFormData({...formData, model: e.target.value})} placeholder="e.g. Crysta" style={{ height: '52px' }} />
+                                            <input type="text" className="premium-compact-input" required value={formData.model} onChange={e => setFormData({ ...formData, model: e.target.value })} placeholder="e.g. Crysta" style={{ height: '52px' }} />
                                         </div>
                                     </div>
                                     <div className="form-grid-2">
                                         <div className="premium-input-group">
                                             <label className="premium-label">Vendor (Proprietor) *</label>
-                                            <input type="text" className="premium-compact-input" required value={formData.ownerName} onChange={e => setFormData({...formData, ownerName: e.target.value})} placeholder="Provider Name" style={{ height: '52px' }} />
+                                            <input type="text" className="premium-compact-input" required value={formData.ownerName} onChange={e => setFormData({ ...formData, ownerName: e.target.value })} placeholder="Provider Name" style={{ height: '52px' }} />
                                         </div>
                                         <div className="premium-input-group">
                                             <label className="premium-label">Transaction Type *</label>
@@ -986,14 +1058,13 @@ const OutsideCars = () => {
                                                 gap: '6px'
                                             }}>
                                                 {[
-                                                    { id: 'Duty', label: 'Duty', icon: Briefcase, color: '#fbbf24' },
                                                     { id: 'Buy', label: 'Buy', icon: ShoppingCart, color: '#22c55e' },
                                                     { id: 'Sell', label: 'Sell', icon: TrendingUp, color: '#ef4444' }
                                                 ].map(t => (
                                                     <button
                                                         key={t.id}
                                                         type="button"
-                                                        onClick={() => setFormData({...formData, transactionType: t.id})}
+                                                        onClick={() => setFormData({ ...formData, transactionType: t.id })}
                                                         style={{
                                                             flex: 1,
                                                             padding: '10px 4px',
@@ -1029,7 +1100,29 @@ const OutsideCars = () => {
                                             <label className="premium-label">Service Category</label>
                                             <div style={{ position: 'relative' }}>
                                                 <Briefcase size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', opacity: 0.6 }} />
-                                                <input type="text" list="serviceTypes" className="premium-compact-input" value={formData.dutyType} onChange={e => setFormData({...formData, dutyType: e.target.value})} placeholder="e.g. Airport Drop" style={{ paddingLeft: '48px', height: '52px' }} />
+                                                <input type="text" list="serviceTypes" className="premium-compact-input" value={formData.dutyType} onChange={e => setFormData({ ...formData, dutyType: e.target.value })} placeholder="e.g. Airport Drop" style={{ paddingLeft: '48px', height: '52px' }} />
+                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                                                    {['Airport PickUp', 'Airport Drop', 'RSD PickUp', 'RSD Drop', 'Bus Stand PickUp', 'Bus Stand Drop'].map(t => (
+                                                        <button
+                                                            key={t}
+                                                            type="button"
+                                                            onClick={() => setFormData({ ...formData, dutyType: t })}
+                                                            style={{
+                                                                fontSize: '9px',
+                                                                fontWeight: '900',
+                                                                background: formData.dutyType === t ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                                                                color: formData.dutyType === t ? '#fbbf24' : 'rgba(255, 255, 255, 0.4)',
+                                                                padding: '4px 10px',
+                                                                borderRadius: '6px',
+                                                                border: `1px solid ${formData.dutyType === t ? 'rgba(251, 191, 36, 0.3)' : 'rgba(255, 255, 255, 0.1)'}`,
+                                                                cursor: 'pointer',
+                                                                transition: '0.2s'
+                                                            }}
+                                                        >
+                                                            {t}
+                                                        </button>
+                                                    ))}
+                                                </div>
                                                 <datalist id="serviceTypes">
                                                     {dutyTypeSuggestions.map(s => <option key={s} value={s} />)}
                                                 </datalist>
@@ -1039,20 +1132,20 @@ const OutsideCars = () => {
                                             <label className="premium-label" style={{ color: '#10b981' }}>Payout Amount (₹) *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹</span>
-                                                <input type="number" className="premium-compact-input" required value={formData.dutyAmount} onChange={e => setFormData({...formData, dutyAmount: e.target.value})} placeholder="0.00" style={{ paddingLeft: '40px', color: '#10b981', height: '52px' }} />
+                                                <input type="number" className="premium-compact-input" required value={formData.dutyAmount} onChange={e => setFormData({ ...formData, dutyAmount: e.target.value })} placeholder="0.00" style={{ paddingLeft: '40px', color: '#10b981', height: '52px' }} />
                                             </div>
                                         </div>
                                     </div>
-                                        <div className="premium-input-group">
-                                            <label className="premium-label">Operational Destination</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <MapPin size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#38bdf8', opacity: 0.6 }} />
-                                                <input type="text" list="points" className="premium-compact-input" value={formData.dropLocation} onChange={e => setFormData({...formData, dropLocation: e.target.value})} placeholder="Destination Details" style={{ paddingLeft: '48px', height: '52px' }} />
-                                                <datalist id="points">
-                                                    {dropLocationSuggestions.map(item => <option key={item} value={item} />)}
-                                                </datalist>
-                                            </div>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Operational Destination</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <MapPin size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#38bdf8', opacity: 0.6 }} />
+                                            <input type="text" list="points" className="premium-compact-input" value={formData.dropLocation} onChange={e => setFormData({ ...formData, dropLocation: e.target.value })} placeholder="Destination Details" style={{ paddingLeft: '48px', height: '52px' }} />
+                                            <datalist id="points">
+                                                {dropLocationSuggestions.map(item => <option key={item} value={item} />)}
+                                            </datalist>
                                         </div>
+                                    </div>
                                 </div>
                             </div>
 

@@ -26,15 +26,28 @@ const EventManagement = () => {
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [clientFilter, setClientFilter] = useState('All');
-    const [eventFilter, setEventFilter] = useState('All');
     const [sourceFilter, setSourceFilter] = useState('All');
 
-    const getToday = () => todayIST();
-    const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
-    const [toDate, setToDate] = useState(todayIST());
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedDay, setSelectedDay] = useState('All'); // 'All' or 1-31
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
 
-    // Removed auto-sync to allow initial month range in Single UI mode
+    useEffect(() => {
+        if (selectedDay === 'All') {
+            const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
+            const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+            setFromDate(start);
+            setToDate(end);
+        } else {
+            const d = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+            setFromDate(d);
+            setToDate(d);
+        }
+    }, [selectedMonth, selectedYear, selectedDay]);
+
+    const getToday = () => todayIST();
 
     const [monthlyTarget, setMonthlyTarget] = useState(0);
     const [showEventModal, setShowEventModal] = useState(false);
@@ -42,6 +55,40 @@ const EventManagement = () => {
     const [isEditingEvent, setIsEditingEvent] = useState(false);
     const [isEditingDuty, setIsEditingDuty] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
+
+    const handleOpenDuty = () => {
+        setIsEditingDuty(false);
+        let defaultDate = todayIST();
+        if (selectedDay !== 'All') {
+            defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+        } else {
+            const now = new Date();
+            if (now.getMonth() === selectedMonth && now.getFullYear() === selectedYear) {
+                defaultDate = todayIST();
+            } else {
+                defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, 1));
+            }
+        }
+        setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: defaultDate, eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: currentTimeIST() });
+        setShowDutyModal(true);
+    };
+
+    const handleOpenEvent = () => {
+        setIsEditingEvent(false);
+        let defaultDate = todayIST();
+        if (selectedDay !== 'All') {
+            defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+        } else {
+            const now = new Date();
+            if (now.getMonth() === selectedMonth && now.getFullYear() === selectedYear) {
+                defaultDate = todayIST();
+            } else {
+                defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, 1));
+            }
+        }
+        setEventFormData({ name: '', client: '', date: defaultDate, location: '', description: '' });
+        setShowEventModal(true);
+    };
 
     const [eventFormData, setEventFormData] = useState({ name: '', client: '', date: getToday(), location: '', description: '' });
     const [dutyFormData, setDutyFormData] = useState({
@@ -77,19 +124,19 @@ const EventManagement = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const headers = { Authorization: `Bearer ${userInfo.token}` };
-            
+
             // 1. Fetch Outside Duties
             const outsideRes = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=outside&from=${fromDate}&to=${toDate}`, { headers });
             const outsideDuties = (outsideRes.data.vehicles || [])
                 .filter(v => v.eventId)
-                .map(v => ({ 
-                    ...v, 
-                    vehicleSource: v.vehicleSource || 'External' 
+                .map(v => ({
+                    ...v,
+                    vehicleSource: v.vehicleSource || 'External'
                 }));
 
             // 2. Fetch Fleet Attendance for the same range
             const attendanceRes = await axios.get(`/api/admin/reports/${selectedCompany._id}?from=${fromDate}&to=${toDate}`, { headers });
-            
+
             const attendanceDuties = (attendanceRes.data.attendance || [])
                 .filter(a => a.eventId)
                 .map(a => ({
@@ -108,10 +155,10 @@ const EventManagement = () => {
                 }));
 
             setVehicles([...outsideDuties, ...attendanceDuties]);
-        } catch (err) { 
+        } catch (err) {
             console.error('Fetch duties error:', err);
-        } finally { 
-            setLoading(false); 
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -127,19 +174,18 @@ const EventManagement = () => {
     };
 
     const shiftDays = (n) => {
-        const t = nowIST(toDate);
-        t.setUTCDate(t.getUTCDate() + n);
-        const tStr = toISTDateString(t);
-
-        if (isRange) {
-            const f = nowIST(fromDate);
-            f.setUTCDate(f.getUTCDate() + n);
-            setFromDate(toISTDateString(f));
-            setToDate(tStr);
+        let baseDate;
+        if (selectedDay === 'All') {
+            baseDate = new Date(selectedYear, selectedMonth, 1);
         } else {
-            setFromDate(tStr);
-            setToDate(tStr);
+            baseDate = new Date(selectedYear, selectedMonth, parseInt(selectedDay));
         }
+
+        baseDate.setDate(baseDate.getDate() + n);
+
+        setSelectedYear(baseDate.getFullYear());
+        setSelectedMonth(baseDate.getMonth());
+        setSelectedDay(baseDate.getDate().toString());
     };
 
     const handleCarNumberChange = (val) => {
@@ -180,13 +226,13 @@ const EventManagement = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
-            
+
             const selectedDuty = isEditingDuty ? vehicles.find(v => v._id === selectedId) : null;
 
             if (selectedDuty?.isAttendance) {
                 // Update Fleet Attendance Record
                 const attendancePayload = {
-                    eventId: dutyFormData.eventId || 'undefined',
+                    eventId: dutyFormData.eventId || undefined,
                     dropLocation: dutyFormData.dropLocation
                 };
                 await axios.put(`/api/admin/attendance/${selectedId}`, attendancePayload, config);
@@ -283,25 +329,37 @@ const EventManagement = () => {
             const event = events.find(e => e._id === v.eventId);
             const eventName = event?.name || '';
             const clientName = event?.client || '';
-            
-            const matchesSearch = 
+
+            const matchesSearch =
                 plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (v.model || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 (v.driverName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                 eventName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 clientName.toLowerCase().includes(searchTerm.toLowerCase());
 
-            const matchesEvent = eventFilter === 'All' || v.eventId === eventFilter;
             const matchesClient = clientFilter === 'All' || clientName === clientFilter;
             const matchesSource = sourceFilter === 'All' || (v.vehicleSource || 'External') === sourceFilter;
 
-            return matchesSearch && matchesEvent && matchesClient && matchesSource;
+            return matchesSearch && matchesClient && matchesSource;
         }).sort((a, b) => {
             const dA = (a.date || a.carNumber?.split('#')[1] || '');
             const dB = (b.date || b.carNumber?.split('#')[1] || '');
             return dB.localeCompare(dA);
         });
-    }, [vehicles, events, searchTerm, clientFilter, eventFilter, fromDate, toDate, sourceFilter]);
+    }, [vehicles, events, searchTerm, clientFilter, fromDate, toDate, sourceFilter]);
+
+    // SMART DYNAMIC SUGGESTIONS (SAME AS OUTSIDE CARS)
+    const dutyTypeSuggestions = React.useMemo(() => {
+        return ['Airport PickUp', 'Airport Drop', 'RSD PickUp', 'RSD Drop', 'Bus Stand PickUp', 'Bus Stand Drop'].sort();
+    }, []);
+
+    const dropLocationSuggestions = React.useMemo(() => {
+        const d = dutyFormData.date;
+        if (!d || d.endsWith('-01')) return []; // Reset on 1st
+        const [y, m] = d.split('-');
+        const currentMonthData = vehicles.filter(v => (v.date || v.carNumber?.split('#')[1])?.startsWith(`${y}-${m}`));
+        return [...new Set(currentMonthData.map(v => v.dropLocation).filter(Boolean))].sort();
+    }, [vehicles, dutyFormData.date]);
 
     // OPTIMIZATION: Memoize statistics
     const stats = React.useMemo(() => {
@@ -358,15 +416,15 @@ const EventManagement = () => {
             <div style={{ position: 'relative', padding: 'clamp(20px, 5vw, 40px) 0 20px', marginBottom: '24px' }}>
                 {/* Ambient dynamic background elements */}
                 <div style={{ position: 'absolute', top: -40, right: '0%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(251,191,36,0.08) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }} className="hide-mobile" />
-                
+
                 <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '30px', position: 'relative' }}>
                     {/* Title Block */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(15px, 3vw, 24px)' }}>
-                        <div style={{ 
-                            width: 'clamp(50px, 12vw, 68px)', height: 'clamp(50px, 12vw, 68px)', 
-                            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', 
-                            borderRadius: '16px', 
-                            display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                        <div style={{
+                            width: 'clamp(50px, 12vw, 68px)', height: 'clamp(50px, 12vw, 68px)',
+                            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                            borderRadius: '16px',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
                             boxShadow: '0 12px 30px rgba(0,0,0,0.4)',
                             border: '1px solid rgba(251,191,36,0.2)',
                             flexShrink: 0
@@ -389,14 +447,14 @@ const EventManagement = () => {
                     {/* Stats Grid - High Fidelity */}
                     <div className="stats-grid" style={{ flex: '1', maxWidth: '750px', width: '100%' }}>
                         {[
-                            { label: 'Active', value: totalDuties, color: '#fbbf24', icon: <TruckIcon size={18} /> },
-                            { label: 'Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', icon: <Target size={18} /> },
+                            { label: 'Total Duties', value: totalDuties, color: '#fbbf24', icon: <TruckIcon size={18} /> },
+                            { label: 'Total Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', icon: <Target size={18} /> },
                             { label: 'Fleet', value: fleetCount, color: '#38bdf8', icon: <Car size={18} /> },
                             { label: 'External', value: extCount, color: '#a855f7', icon: <Users size={18} /> },
                         ].map((s, i) => (
-                            <motion.div key={s.label} 
-                                initial={{ opacity: 0, y: 15 }} 
-                                animate={{ opacity: 1, y: 0 }} 
+                            <motion.div key={s.label}
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: i * 0.1 }}
                                 style={{
                                     padding: '16px', borderRadius: '20px',
@@ -417,155 +475,113 @@ const EventManagement = () => {
                     </div>
                 </div>
             </div>
-
             {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
-            <div style={{ 
-                background: 'rgba(15, 23, 42, 0.65)', 
-                border: '1px solid rgba(255,255,255,0.07)', 
-                borderRadius: '24px', 
-                padding: 'clamp(15px, 3vw, 24px)', 
-                marginBottom: '24px', 
-                backdropFilter: 'blur(24px)', 
-                display: 'flex', flexDirection: 'column', gap: '20px',
+            <div style={{
+                background: 'rgba(15, 23, 42, 0.65)',
+                border: '1px solid rgba(255,255,255,0.07)',
+                borderRadius: '24px',
+                padding: 'clamp(15px, 3vw, 24px)',
+                marginBottom: '24px',
+                backdropFilter: 'blur(24px)',
+                display: 'flex', flexDirection: 'column', gap: '18px',
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
             }}>
-                {/* Search & Main Selects */}
-                <div className="flex-resp" style={{ gap: '16px', alignItems: 'center' }}>
-                    {/* Unified Search */}
-                    <div style={{ position: 'relative', flex: '1', minWidth: 'min(100%, 300px)' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                        <input 
-                            type="text" 
-                            placeholder="Search duties..." 
-                            value={searchTerm} 
+                {/* Row 1: Search & Entity Context */}
+                <div className="flex-resp" style={{ gap: '16px', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ position: 'relative', flex: '1.5', minWidth: '250px' }}>
+                        <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(251,191,36,0.4)' }} />
+                        <input
+                            type="text"
+                            placeholder="Identify specific duties, drivers, or plate numbers..."
+                            value={searchTerm}
                             onChange={e => setSearchTerm(e.target.value)}
                             className="premium-compact-input"
-                            style={{ paddingLeft: '48px', height: '52px', fontSize: '14px', background: 'rgba(0,0,0,0.2)' }} 
+                            style={{ paddingLeft: '48px', height: '50px', fontSize: '13px', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.04)' }}
                         />
                     </div>
 
-                    {/* Data Source Filters */}
-                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', gap: '4px', overflowX: 'auto' }} className="premium-scroll">
+                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', gap: '2px' }}>
                         {[
-                            { id: 'All', label: 'All', color: '#fbbf24' },
-                            { id: 'Fleet', label: 'Fleet', color: '#10b981' },
-                            { id: 'External', label: 'Ext', color: '#a855f7' }
+                            { id: 'All', label: 'ALL', color: '#fbbf24' },
+                            { id: 'Fleet', label: 'FLEET', color: '#10b981' },
+                            { id: 'External', label: 'EXT', color: '#a855f7' }
                         ].map(s => (
                             <button key={s.id} onClick={() => setSourceFilter(s.id)} style={{
-                                padding: '8px 15px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '11px', fontWeight: '800',
-                                background: sourceFilter === s.id ? `${s.color}20` : 'transparent',
-                                color: sourceFilter === s.id ? s.color : 'rgba(255,255,255,0.35)',
-                                transition: 'all 0.3s ease', 
-                                textTransform: 'uppercase'
+                                padding: '8px 16px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '10px', fontWeight: '950',
+                                background: sourceFilter === s.id ? `${s.color}15` : 'transparent',
+                                color: sourceFilter === s.id ? s.color : 'rgba(255,255,255,0.25)',
+                                transition: 'all 0.2s ease',
+                                letterSpacing: '1px'
                             }}>{s.label}</button>
                         ))}
                     </div>
 
-                    {/* Advanced Dropdowns */}
-                    <div className="flex-resp" style={{ gap: '10px', flex: '1' }}>
-                        <div style={{ position: 'relative', flex: 1, minWidth: '150px' }}>
-                            <Building2 size={14} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
-                            <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} className="premium-compact-input" style={{ width: '100%', height: '52px', paddingLeft: '40px', fontSize: '13px', background: 'rgba(0,0,0,0.2)' }}>
-                                <option value="All" style={{ background: '#0f172a' }}>All Clients</option>
-                                {uniqueClients.map(c => <option key={c} value={c} style={{ background: '#0f172a' }}>{c}</option>)}
+                    <div style={{ display: 'flex', gap: '8px', flex: '1', minWidth: '200px' }}>
+                        <div style={{ position: 'relative', flex: 1 }}>
+                            <Building2 size={13} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
+                            <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} className="premium-compact-input" style={{ width: '100%', height: '50px', paddingLeft: '38px', fontSize: '12px', background: 'rgba(0,0,0,0.2)' }}>
+                                <option value="All">All Clients</option>
+                                {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
                             </select>
-                        </div>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: 1.2, minWidth: '200px' }}>
-                            <div style={{ position: 'relative', flex: 1 }}>
-                                <Target size={14} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
-                                <select value={eventFilter} onChange={e => setEventFilter(e.target.value)} className="premium-compact-input" style={{ width: '100%', height: '52px', paddingLeft: '40px', fontSize: '13px', background: 'rgba(0,0,0,0.2)' }}>
-                                    <option value="All" style={{ background: '#0f172a' }}>All Events</option>
-                                    {events.map(e => <option key={e._id} value={e._id} style={{ background: '#0f172a' }}>{e.name}</option>)}
-                                </select>
-                            </div>
-                            <button onClick={() => {
-                                const ev = events.find(e => e._id === (eventFilter !== 'All' ? eventFilter : events[0]?._id));
-                                if(ev) {
-                                    setIsEditingEvent(true);
-                                    setSelectedId(ev._id);
-                                    setEventFormData({ name: ev.name, client: ev.client, date: typeof ev.date === 'string' ? ev.date.split('T')[0] : getToday(), location: ev.location || '', description: ev.description || '' });
-                                    setShowEventModal(true);
-                                } else {
-                                    alert("Please select or create an event first");
-                                }
-                            }} style={{ height: '52px', padding: '0 16px', borderRadius: '14px', background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Edit size={16} />
-                            </button>
                         </div>
                     </div>
                 </div>
 
-                {/* Sub Row: Date Navigator & Global Actions */}
-                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '20px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                    {/* Date Navigation System */}
-                    <div className="flex-resp" style={{ alignItems: 'center', gap: '12px' }}>
-                        <div style={{ display: 'flex', gap: '4px' }}>
-                            <button onClick={() => shiftDays(-1)} style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                <ChevronLeft size={18} />
+                {/* Row 2: Temporal Filters & Global Actions */}
+                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '20px', paddingTop: '18px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <button onClick={() => shiftDays(-1)} style={{ width: '38px', height: '38px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <ChevronLeft size={16} />
                             </button>
-                            <button onClick={() => shiftDays(1)} style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                <ChevronRight size={18} />
+                            <div onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                style={{ height: '38px', minWidth: '130px', background: 'rgba(56, 189, 248, 0.06)', border: '1px solid rgba(56, 189, 248, 0.1)', borderRadius: '14px', padding: '0 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 4px' }}>
+                                <span style={{ fontSize: '12px', fontWeight: '900', color: 'white', letterSpacing: '0.3px' }}>
+                                    {selectedDay === 'All' ? `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` : formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
+                                </span>
+                                <input type="date" value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))} onChange={e => { const d = new Date(e.target.value); setSelectedYear(d.getFullYear()); setSelectedMonth(d.getMonth()); setSelectedDay(d.getDate().toString()); }} style={{ position: 'absolute', inset: 0, opacity: 0 }} />
+                            </div>
+                            <button onClick={() => shiftDays(1)} style={{ width: '38px', height: '38px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                <ChevronRight size={16} />
                             </button>
                         </div>
 
-                        {/* Smart Date Range */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(0,0,0,0.4)', padding: '4px 12px 4px 6px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', flex: 1 }}>
-                            <div 
-                                onClick={(e) => { const i=e.currentTarget.querySelector('input'); if(i.showPicker)i.showPicker(); else i.click(); }} 
-                                style={{ 
-                                    position: 'relative', display: 'flex', alignItems: 'center', gap: '12px', 
-                                    padding: '8px 16px', background: isRange ? 'rgba(56,189,248,0.1)' : 'rgba(251,191,36,0.1)', 
-                                    borderRadius: '10px', cursor: 'pointer', transition: '0.3s', flex: 1
-                                }}
-                            >
-                                <Calendar size={14} color={isRange ? '#38bdf8' : '#fbbf24'} />
-                                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                    <span style={{ fontSize: '7px', fontWeight: '900', color: isRange ? '#38bdf8' : '#fbbf24', textTransform: 'uppercase' }}>{isRange ? 'RANGE' : 'DATE'}</span>
-                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '800', whiteSpace: 'nowrap' }}>
-                                        {isRange ? `${formatDateIST(fromDate)} - ${formatDateIST(toDate)}` : formatDateIST(toDate)}
-                                    </span>
-                                </div>
-                                <input type="date" value={toDate} onChange={(e) => { const d=e.target.value; setToDate(d); if(!isRange) setFromDate(d); }} onClick={e=>e.stopPropagation()} style={{ position:'absolute',opacity:0,inset:0,cursor:'pointer',zIndex:-1 }} />
-                            </div>
-                            <button 
-                                onClick={() => setIsRange(!isRange)} 
-                                style={{ 
-                                    padding: '8px 12px', borderRadius: '8px', 
-                                    background: isRange ? 'rgba(248,113,113,0.1)' : 'rgba(255,255,255,0.05)', 
-                                    color: isRange ? '#f87171' : 'rgba(255,255,255,0.6)', 
-                                    fontSize: '10px', fontWeight: '800', cursor: 'pointer', border: 'none'
-                                }}
-                            >
-                                {isRange ? <X size={12} /> : <Plus size={12} />}
-                            </button>
+                        {selectedDay !== 'All' && (
+                            <motion.button initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} onClick={() => setSelectedDay('All')}
+                                style={{ height: '46px', padding: '0 16px', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', color: '#fbbf24', fontSize: '10px', fontWeight: '950', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase' }}>
+                                <Calendar size={13} /> Full Month
+                            </motion.button>
+                        )}
+
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                            <select value={selectedMonth} onChange={e => { setSelectedMonth(Number(e.target.value)); setSelectedDay('All'); }} className="premium-compact-input" style={{ height: '46px', width: '85px', borderRadius: '14px', fontSize: '11px', fontWeight: '800' }}>
+                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (<option key={m} value={idx}>{m}</option>))}
+                            </select>
+                            <select value={selectedYear} onChange={e => { setSelectedYear(Number(e.target.value)); setSelectedDay('All'); }} className="premium-compact-input" style={{ height: '46px', width: '85px', borderRadius: '14px', fontSize: '11px', fontWeight: '800' }}>
+                                {[2024, 2025, 2026, 2027].map(y => (<option key={y} value={y}>{y}</option>))}
+                            </select>
                         </div>
                     </div>
 
-                    {/* Global Actions */}
-                    <div className="flex-resp" style={{ gap: '10px', alignItems: 'center' }}>
-                        <button onClick={exportExcel} style={{ display:'flex',alignItems:'center',gap:'8px',height:'48px',padding:'0 15px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'14px',color:'rgba(255,255,255,0.8)',fontSize:'12px',fontWeight:'700',cursor:'pointer' }}>
-                            <FileSpreadsheet size={16} /> <span className="hide-mobile">EXCEL</span>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        <button onClick={exportExcel} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '900', cursor: 'pointer', transition: '0.2s' }}>
+                            <FileSpreadsheet size={16} /> EXCEL
                         </button>
-                        <button onClick={() => { setIsEditingEvent(false); setEventFormData({ name:'',client:'',date:getToday(),location:'',description:'' }); setShowEventModal(true); }} style={{ display:'flex',alignItems:'center',gap:'8px',height:'48px',padding:'0 15px',background:'rgba(255,255,255,0.04)',border:'1px solid rgba(255,255,255,0.08)',borderRadius:'14px',color:'rgba(255,255,255,0.8)',fontSize:'12px',fontWeight:'700',cursor:'pointer' }}>
-                            <Plus size={16} /> <span className="hide-mobile">EVENT</span>
+                        <button onClick={handleOpenEvent} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 18px', background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: '16px', color: '#fbbf24', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}>
+                            <Plus size={16} /> EVENT
                         </button>
-                        <button onClick={() => {
-                            setIsEditingDuty(false);
-                            setDutyFormData({ carNumber:'',model:'',dropLocation:'',date:getToday(),eventId:'',dutyAmount:'',driverName:'',vehicleSource:'Fleet',dutyType:'',dutyTime:currentTimeIST() });
-                            setShowDutyModal(true);
-                        }} className="btn-primary" style={{ display:'flex',alignItems:'center',gap:'8px',height:'48px',padding:'0 20px',borderRadius:'14px',fontSize:'13px', fontWeight: '900' }}>
-                            <Plus size={18} strokeWidth={3} /> <span className="show-mobile">ADD</span><span className="hide-mobile">ADD DUTY</span>
+                        <button onClick={handleOpenDuty} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 24px', borderRadius: '16px', fontSize: '13px', fontWeight: '950', boxShadow: '0 10px 20px rgba(251,191,36,0.2)' }}>
+                            <Plus size={18} strokeWidth={3} /> ADD DUTY
                         </button>
                     </div>
                 </div>
             </div>
 
-
             {/* ═══ CLEAN PREMIUM DESKTOP TABLE ═══ */}
-            <div className="glass-card hide-mobile" style={{ 
-                padding: 0, 
-                overflow: 'hidden', 
-                border: '1px solid rgba(255,255,255,0.08)', 
+            <div className="glass-card hide-mobile" style={{
+                padding: 0,
+                overflow: 'hidden',
+                border: '1px solid rgba(255,255,255,0.08)',
                 background: 'rgba(8, 14, 26, 0.4)',
                 backdropFilter: 'blur(20px)',
                 borderRadius: '24px',
@@ -583,13 +599,13 @@ const EventManagement = () => {
                                     { label: 'Settlement', width: '140px', align: 'right' },
                                     { label: '', width: '100px', align: 'right' }
                                 ].map((h, i) => (
-                                    <th key={i} style={{ 
-                                        padding: '18px 24px', 
-                                        textAlign: h.align || 'left', 
-                                        fontSize: '10px', 
-                                        fontWeight: '900', 
-                                        color: 'rgba(255,255,255,0.3)', 
-                                        textTransform: 'uppercase', 
+                                    <th key={i} style={{
+                                        padding: '18px 24px',
+                                        textAlign: h.align || 'left',
+                                        fontSize: '10px',
+                                        fontWeight: '900',
+                                        color: 'rgba(255,255,255,0.3)',
+                                        textTransform: 'uppercase',
                                         letterSpacing: '1.5px',
                                         borderBottom: '1px solid rgba(255,255,255,0.08)',
                                         borderRight: i < 5 ? '1px solid rgba(255,255,255,0.03)' : 'none',
@@ -616,14 +632,14 @@ const EventManagement = () => {
                                 const dutyDate = v.carNumber?.split('#')[1];
                                 const src = v.vehicleSource || 'External';
                                 const isFleet = src === 'Fleet';
-                                
+
                                 return (
-                                    <motion.tr 
-                                        key={v._id} 
-                                        initial={{ opacity: 0, y: 10 }} 
-                                        animate={{ opacity: 1, y: 0 }} 
+                                    <motion.tr
+                                        key={v._id}
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
                                         transition={{ delay: idx * 0.03 }}
-                                        style={{ 
+                                        style={{
                                             borderBottom: '1px solid rgba(255,255,255,0.05)',
                                             background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)',
                                             transition: 'all 0.2s ease'
@@ -645,8 +661,8 @@ const EventManagement = () => {
                                         {/* Vehicle Cell */}
                                         <td style={{ padding: '20px 24px', borderRight: '1px solid rgba(255,255,255,0.03)' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <div style={{ 
-                                                    width: '38px', height: '38px', borderRadius: '12px', 
+                                                <div style={{
+                                                    width: '38px', height: '38px', borderRadius: '12px',
                                                     background: isFleet ? 'rgba(16,185,129,0.08)' : 'rgba(168,85,247,0.08)',
                                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                                     border: `1px solid ${isFleet ? 'rgba(16,185,129,0.15)' : 'rgba(168,85,247,0.15)'}`
@@ -733,12 +749,12 @@ const EventManagement = () => {
                     const dutyDate = v.carNumber?.split('#')[1];
                     const src = v.vehicleSource || 'External';
                     const isFleet = src === 'Fleet';
-                    
+
                     return (
-                        <motion.div 
-                            key={v._id} 
-                            initial={{ opacity: 0, y: 15 }} 
-                            animate={{ opacity: 1, y: 0 }} 
+                        <motion.div
+                            key={v._id}
+                            initial={{ opacity: 0, y: 15 }}
+                            animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.03 }}
                             style={{
                                 background: 'rgba(15, 23, 42, 0.4)',
@@ -764,7 +780,7 @@ const EventManagement = () => {
                                     <span style={{ fontSize: '7px', fontWeight: '950', padding: '2px 8px', borderRadius: '20px', background: isFleet ? '#10b98120' : '#a855f720', color: isFleet ? '#10b981' : '#a855f7', border: `1px solid ${isFleet ? '#10b98130' : '#a855f730'}`, letterSpacing: '1px' }}>{src.toUpperCase()}</span>
                                 </div>
                             </div>
-                            
+
                             {/* Card Body */}
                             <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
                                 <div style={{ display: 'flex', gap: '12px' }}>
@@ -780,7 +796,7 @@ const EventManagement = () => {
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                     {v.dutyType && <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(251,191,36,0.06)', color: '#fbbf24', fontSize: '10px', fontWeight: '800' }}>{v.dutyType}</span>}
                                     {v.dutyTime && <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(56,189,248,0.06)', color: '#38bdf8', fontSize: '10px', fontWeight: '800' }}>{v.dutyTime}</span>}
@@ -857,7 +873,7 @@ const EventManagement = () => {
                             {/* Scrollable Body */}
                             <form onSubmit={handleSubmitDuty} style={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', flex: 1, minHeight: 0 }}>
                                 <div style={{ padding: 'clamp(20px, 5vw, 32px)', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px', flex: 1 }} className="premium-scroll">
-                                    
+
                                     {/* Section 1: Logistics Context */}
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                         <div style={{ display: 'flex', gap: '10px' }}>
@@ -948,9 +964,31 @@ const EventManagement = () => {
                                                 <Briefcase size={12} color="#0ea5e9" />
                                                 <label className="premium-label">Service Category</label>
                                             </div>
-                                            <input type="text" list="dutyTypes" value={dutyFormData.dutyType} onChange={e => setDutyFormData({ ...dutyFormData, dutyType: e.target.value })} className="premium-compact-input" placeholder="e.g. Airport Transfer" style={{ height: '50px' }} />
-                                            <datalist id="dutyTypes">
-                                                {['Airport Pickup', 'Airport Drop', 'Full Day Local', 'Outstation', 'Dinner Drop'].map(t => <option key={t} value={t} />)}
+                                            <input type="text" list="eventDutyTypes" value={dutyFormData.dutyType} onChange={e => setDutyFormData({ ...dutyFormData, dutyType: e.target.value })} className="premium-compact-input" placeholder="e.g. Airport Transfer" style={{ height: '50px' }} />
+                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
+                                                {['Airport PickUp', 'Airport Drop', 'RSD PickUp', 'RSD Drop', 'Bus Stand PickUp', 'Bus Stand Drop'].map(t => (
+                                                    <button
+                                                        key={t}
+                                                        type="button"
+                                                        onClick={() => setDutyFormData({ ...dutyFormData, dutyType: t })}
+                                                        style={{
+                                                            fontSize: '9px',
+                                                            fontWeight: '900',
+                                                            background: dutyFormData.dutyType === t ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255, 255, 255, 0.05)',
+                                                            color: dutyFormData.dutyType === t ? '#fbbf24' : 'rgba(255, 255, 255, 0.4)',
+                                                            padding: '4px 10px',
+                                                            borderRadius: '6px',
+                                                            border: `1px solid ${dutyFormData.dutyType === t ? 'rgba(251, 191, 36, 0.3)' : 'rgba(255, 255, 255, 0.1)'}`,
+                                                            cursor: 'pointer',
+                                                            transition: '0.2s'
+                                                        }}
+                                                    >
+                                                        {t}
+                                                    </button>
+                                                ))}
+                                            </div>
+                                            <datalist id="eventDutyTypes">
+                                                {dutyTypeSuggestions.map(t => <option key={t} value={t} />)}
                                             </datalist>
                                         </div>
                                         <div className="premium-input-group">
@@ -970,7 +1008,10 @@ const EventManagement = () => {
                                             <Navigation size={12} color="#0ea5e9" />
                                             <label className="premium-label">Operational Destination</label>
                                         </div>
-                                        <input type="text" value={dutyFormData.dropLocation} onChange={e => setDutyFormData({ ...dutyFormData, dropLocation: e.target.value })} className="premium-compact-input" placeholder="Specific drop point or venue..." style={{ height: '50px' }} />
+                                        <input type="text" list="eventDropLocs" value={dutyFormData.dropLocation} onChange={e => setDutyFormData({ ...dutyFormData, dropLocation: e.target.value })} className="premium-compact-input" placeholder="Specific drop point or venue..." style={{ height: '50px' }} />
+                                        <datalist id="eventDropLocs">
+                                            {dropLocationSuggestions.map(loc => <option key={loc} value={loc} />)}
+                                        </datalist>
                                     </div>
                                 </div>
 
@@ -1194,7 +1235,7 @@ const EventManagement = () => {
                 @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
                 @media (max-width: 768px) { .header-left { flex-direction: row; align-items: baseline; gap: 10px; } }
             `}</style>
-        </div >
+        </div>
     );
 };
 

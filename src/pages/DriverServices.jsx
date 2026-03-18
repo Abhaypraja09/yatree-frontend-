@@ -15,16 +15,28 @@ import {
     CheckCircle2,
     Clock,
     User,
+    Users,
     PlusCircle,
     Upload,
     ImageIcon,
     MapPin,
-    X
+    X,
+    IndianRupee,
+    ChevronLeft,
+    ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 import { todayIST, formatDateIST, nowIST } from '../utils/istUtils';
+import ParkingModal from '../components/ParkingModal';
+
+const Chip = ({ label, value, color }) => (
+    <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', padding: '10px 20px', borderRadius: '16px', display: 'flex', flexDirection: 'column', gap: '4px', minWidth: '120px' }}>
+        <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</span>
+        <span style={{ fontSize: '18px', fontWeight: '950', color: color }}>{value}</span>
+    </div>
+);
 
 const DriverServices = () => {
     const { selectedCompany } = useCompany();
@@ -33,36 +45,15 @@ const DriverServices = () => {
     const [drivers, setDrivers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
+    const [showParkingModal, setShowParkingModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedMonth, setSelectedMonth] = useState('All');
     const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear());
     const [filterMode, setFilterMode] = useState('month'); // 'month' or 'range'
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [startDate, setStartDate] = useState(todayIST());
+    const [endDate, setEndDate] = useState(todayIST());
     const [selectedType, setSelectedType] = useState('All'); // 'All', 'Wash', 'Puncture'
     const [selectedVehicleFilter, setSelectedVehicleFilter] = useState('All');
-
-    // Form State for Manual Entry
-    const [formData, setFormData] = useState({
-        vehicleId: '',
-        driverId: '',
-        maintenanceType: 'Car Service',
-        category: 'Car Wash',
-        description: '',
-        garageName: '',
-        billDate: todayIST(),
-        amount: '',
-        paymentMode: 'Cash',
-        status: 'Completed'
-    });
-    const [billPhoto, setBillPhoto] = useState(null);
-    const [billPhotoPreview, setBillPhotoPreview] = useState(null);
-    const [selectedImage, setSelectedImage] = useState(null); // For viewing
-    const [submitting, setSubmitting] = useState(false);
-    const [editingId, setEditingId] = useState(null);
-    const [message, setMessage] = useState({ text: '', type: '' });
-
-    const serviceCategories = ['Car Wash', 'Puncture repair'];
 
     useEffect(() => {
         if (selectedCompany) {
@@ -100,13 +91,38 @@ const DriverServices = () => {
                 const isTissue = cat.includes('tissue') || desc.includes('tissue');
                 const isWater = (cat.includes('water') && !cat.includes('repair') && !cat.includes('pump')) || 
                                (desc.includes('water') && !desc.includes('repair') && !desc.includes('pump'));
+                const isTax = cat.includes('tax') || desc.includes('tax');
+                const isFastag = cat.includes('fastag') || desc.includes('fastag');
+                const isMaint = cat.includes('maint') || desc.includes('maint');
                 
-                return isWash || isPuncture || isTissue || isWater;
+                return isWash || isPuncture || isTissue || isWater || isTax || isFastag || isMaint;
             });
             setRecords(filteredData);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     };
+
+    // Form State for Manual Entry
+    const [formData, setFormData] = useState({
+        vehicleId: '',
+        driverId: '',
+        maintenanceType: 'Car Service',
+        category: 'Car Wash',
+        description: '',
+        garageName: '',
+        billDate: todayIST(),
+        amount: '',
+        paymentMode: 'Cash',
+        status: 'Completed'
+    });
+    const [billPhoto, setBillPhoto] = useState(null);
+    const [billPhotoPreview, setBillPhotoPreview] = useState(null);
+    const [selectedImage, setSelectedImage] = useState(null); // For viewing
+    const [submitting, setSubmitting] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [message, setMessage] = useState({ text: '', type: '' });
+
+    const serviceCategories = ['Car Wash', 'Puncture repair', 'Fuel Logs', 'Parking', 'Vehicles Maintenance', 'Border Tax', 'Fastag', 'Tissue Paper', 'Water Bottle'];
 
     const fetchVehicles = async () => {
         if (!selectedCompany?._id) return;
@@ -171,6 +187,47 @@ const DriverServices = () => {
         }
     };
 
+    const handleExport = () => {
+        let exportData = [];
+        let fileName = 'Export';
+
+        if (activeTab === 'maintenance') {
+            exportData = filteredRecords.map(r => ({
+                Date: formatDateIST(r.billDate),
+                Vehicle: r.vehicle?.carNumber || 'N/A',
+                Category: r.category,
+                Driver: r.driver?.name || 'Manual',
+                Vendor: r.garageName,
+                Amount: r.amount,
+                Payment: r.paymentMode,
+                Notes: r.description
+            }));
+            fileName = 'Driver_Services_Log';
+        } else {
+            const currentData = activeTab === 'duty' ? applySearch(attendance) : applySearch(freelanceAttendance);
+            exportData = currentData.map(r => ({
+                Date: formatDateIST(r.date),
+                Vehicle: r.vehicle?.carNumber?.split('#')[0] || 'N/A',
+                Driver: r.driver?.name || 'N/A',
+                Status: r.isFreelancer ? 'Freelancer' : 'Staff',
+                PunchIn: r.punchIn?.time ? new Date(r.punchIn.time).toLocaleTimeString() : '--',
+                PunchOut: r.punchOut?.time ? new Date(r.punchOut.time).toLocaleTimeString() : '--',
+                StartKM: r.startKm,
+                EndKM: r.endKm,
+                TotalKM: r.totalKM,
+                FuelAmount: r.fuel?.amount || 0,
+                ParkingAmount: r.punchOut?.tollParkingAmount || 0,
+                Salary: r.dailyWage || 0
+            }));
+            fileName = activeTab === 'duty' ? 'Staff_Duty_Reports' : 'Freelancer_Duty_Reports';
+        }
+
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+        XLSX.writeFile(wb, `${fileName}_${startDate}_to_${endDate}.xlsx`);
+    };
+
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this service record?')) return;
         try {
@@ -178,6 +235,19 @@ const DriverServices = () => {
             fetchRecords();
         } catch (err) { console.error(err); }
     };
+
+    const applySearch = (data) => {
+        if (!searchTerm) return data;
+        const s = searchTerm.toLowerCase();
+        return data.filter(r => 
+            (r.driver?.name || '').toLowerCase().includes(s) ||
+            (r.vehicle?.carNumber || '').toLowerCase().includes(s) ||
+            (r.pickUpLocation || '').toLowerCase().includes(s) ||
+            (r.dropLocation || '').toLowerCase().includes(s)
+        );
+    };
+
+    const fmtTime = (iso) => iso ? new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '--';
 
     const resetForm = () => {
         setFormData({
@@ -221,6 +291,12 @@ const DriverServices = () => {
             matchesType = cat.includes('wash') || desc.includes('wash');
         } else if (selectedType === 'Puncture') {
             matchesType = cat.includes('punc') || desc.includes('punc');
+        } else if (selectedType === 'Maintenance') {
+            matchesType = cat.includes('maint') || desc.includes('maint');
+        } else if (selectedType === 'Tax') {
+            matchesType = cat.includes('tax') || desc.includes('tax');
+        } else if (selectedType === 'Fastag') {
+            matchesType = cat.includes('fastag') || desc.includes('fastag');
         }
 
         return matchesSearch && matchesVehicle && matchesType;
@@ -258,209 +334,180 @@ const DriverServices = () => {
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
             <SEO title="Driver Services" description="Manage car wash, puncture repairs, and other driver-related services." />
 
-            <header style={{ display: 'flex', justifyContent: 'space-between', padding: '40px 0', gap: '20px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <div style={{ width: '64px', height: '64px', background: 'linear-gradient(135deg, #10b981, #059669)', borderRadius: '20px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 15px 35px rgba(16,185,129,0.3)', border: '1px solid rgba(255,255,255,0.1)' }}>
-                        <Droplets size={32} color="white" style={{ filter: 'drop-shadow(0 4px 6px rgba(0,0,0,0.2))' }} />
+            {/* Header Screenshot Match */}
+            <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '40px' }}>
+                <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                        <div style={{ background: '#10b981', padding: '6px', borderRadius: '10px', display: 'flex' }}>
+                            <Droplets size={14} color="white" />
+                        </div>
+                        <span style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Fleet Operations</span>
                     </div>
-                    <div>
-                        <h1 style={{ color: 'white', fontSize: '38px', fontWeight: '950', margin: 0, letterSpacing: '-2px', lineHeight: '1' }}>
-                            Driver <span style={{ color: '#10b981' }}>Services</span>
-                        </h1>
-                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '700', margin: '8px 0 0', textTransform: 'uppercase', letterSpacing: '2px' }}>Wash, Puncture & Maintenance Hub</p>
-                    </div>
+                    <h1 style={{ color: 'white', fontWeight: '900', margin: 0, letterSpacing: '-1px', fontSize: '32px' }}>Driver Services</h1>
                 </div>
 
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <div style={{ display: 'flex', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <select 
-                            value={selectedMonth} 
-                            onChange={(e) => setSelectedMonth(e.target.value)}
-                            style={{ height: '42px', width: '130px', borderRadius: '12px', background: 'transparent', border: 'none', color: 'white', fontWeight: '800', fontSize: '13px', outline: 'none', cursor: 'pointer', padding: '0 10px' }}
-                        >
-                            <option value="All" style={{ background: '#0a0a0c' }}>All Months</option>
-                            {[
-                                { n: 1, m: 'January' }, { n: 2, m: 'February' }, { n: 3, m: 'March' },
-                                { n: 4, m: 'April' }, { n: 5, m: 'May' }, { n: 6, m: 'June' },
-                                { n: 7, m: 'July' }, { n: 8, m: 'August' }, { n: 9, m: 'September' },
-                                { n: 10, m: 'October' }, { n: 11, m: 'November' }, { n: 12, m: 'December' }
-                            ].map(item => (
-                                <option key={item.n} value={item.n} style={{ background: '#0a0a0c' }}>{item.m}</option>
-                            ))}
-                        </select>
-                        <select 
-                            value={selectedYear} 
-                            onChange={(e) => setSelectedYear(e.target.value)}
-                            style={{ height: '42px', width: '90px', borderRadius: '12px', background: 'transparent', border: 'none', color: 'white', fontWeight: '800', fontSize: '13px', outline: 'none', cursor: 'pointer', padding: '0 10px' }}
-                        >
-                            {[2024, 2025, 2026].map(y => (
-                                <option key={y} value={y} style={{ background: '#0a0a0c' }}>{y}</option>
-                            ))}
-                        </select>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <button style={{ background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><ChevronLeft size={16} /></button>
+                        <div style={{ padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                             <div style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.5)' }}>RANGE</div>
+                             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none' }} />
+                        </div>
+                        <button style={{ background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><ChevronRight size={16} /></button>
                     </div>
-
-                    <div style={{ display: 'flex', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <select 
-                            value={selectedVehicleFilter} 
-                            onChange={(e) => setSelectedVehicleFilter(e.target.value)}
-                            style={{ height: '42px', width: 'auto', minWidth: '140px', borderRadius: '12px', background: 'transparent', border: 'none', color: '#10b981', fontWeight: '900', fontSize: '13px', outline: 'none', cursor: 'pointer', padding: '0 10px' }}
-                        >
-                            <option value="All" style={{ background: '#0a0a0c' }}>All Vehicles</option>
-                            {vehicles.map(v => (
-                                <option key={v._id} value={v._id} style={{ background: '#0a0a0c' }}>{v.carNumber}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(255,255,255,0.03)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', padding: '0 15px', flex: '1', minWidth: '200px' }}>
-                        <Search size={18} style={{ color: 'rgba(255,255,255,0.2)' }} />
-                        <input
-                            type="text"
-                            placeholder="Search records..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ background: 'transparent', border: 'none', color: 'white', height: '54px', width: '100%', outline: 'none', fontSize: '14px', fontWeight: '600', paddingLeft: '12px' }}
-                        />
-                    </div>
-
-                    <button
-                        onClick={() => { resetForm(); setShowModal(true); }}
-                        style={{ height: '54px', padding: '0 25px', borderRadius: '18px', background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', border: 'none', color: 'white', fontWeight: '900', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', boxShadow: '0 10px 25px rgba(16,185,129,0.3)', transition: 'all 0.3s ease', whiteSpace: 'nowrap' }}
-                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-                    >
-                        <Plus size={20} /> <span className="hide-mobile">NEW ENTRY</span><span className="show-mobile">ADD</span>
+                    <button onClick={handleExport} style={{ height: '42px', padding: '0 20px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', fontWeight: '900', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                        <FileSpreadsheet size={16} /> EXCEL
                     </button>
                 </div>
             </header>
 
-            {/* Stats Row */}
-            <div className="stats-grid">
-                <div className="glass-card stat-card" style={{ borderLeft: '4px solid #10b981' }}>
-                    <div className="stat-card-header">
-                        <div className="stat-card-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
-                            <Droplets size={20} />
-                        </div>
-                        <p className="stat-card-label">Total Washes</p>
-                    </div>
-                    <h2 className="stat-card-value">{washCount}</h2>
+            {/* Search and Action Bar */}
+            <div style={{ display: 'flex', gap: '20px', marginBottom: '30px', alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
+                    <Search size={18} style={{ position: 'absolute', left: '18px', top: '18px', color: 'rgba(255,255,255,0.2)' }} />
+                    <input 
+                        type="text" 
+                        placeholder="Search records..." 
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '18px', padding: '0 20px 0 54px', color: 'white', fontSize: '14px', outline: 'none' }}
+                    />
                 </div>
-                <div className="glass-card stat-card" style={{ borderLeft: '4px solid #f43f5e' }}>
-                    <div className="stat-card-header">
-                        <div className="stat-card-icon" style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e' }}>
-                            <AlertCircle size={20} />
-                        </div>
-                        <p className="stat-card-label">Punctures</p>
-                    </div>
-                    <h2 className="stat-card-value">{punctureCount}</h2>
-                </div>
-                <div className="glass-card stat-card" style={{ borderLeft: '4px solid #facc15' }}>
-                    <div className="stat-card-header">
-                        <div className="stat-card-icon" style={{ background: 'rgba(250, 204, 21, 0.1)', color: '#facc15' }}>
-                            <Clock size={20} />
-                        </div>
-                        <p className="stat-card-label">Total Spending</p>
-                    </div>
-                    <h2 className="stat-card-value">₹{totalCost.toLocaleString()}</h2>
-                </div>
+                <button 
+                    onClick={() => { resetForm(); setShowModal(true); }}
+                    style={{ height: '54px', padding: '0 25px', borderRadius: '18px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', color: 'white', fontWeight: '900', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.3)' }}
+                >
+                    <Plus size={18} /> ADD RECORD
+                </button>
             </div>
 
-            <div style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
-                {['All', 'Wash', 'Puncture'].map(t => (
-                    <button
-                        key={t}
-                        onClick={() => setSelectedType(t)}
-                        style={{ padding: '8px 20px', borderRadius: '10px', background: selectedType === t ? '#10b981' : 'rgba(255,255,255,0.03)', border: '1px solid', borderColor: selectedType === t ? '#10b981' : 'rgba(255,255,255,0.1)', color: selectedType === t ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
-                    >
-                        {t}
-                    </button>
-                ))}
-            </div>
-
-            {/* Premium Table Design */}
-            <div className="scroll-x" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 30px 60px -12px rgba(0,0,0,0.5)' }}>
-                {loading ? (
-                    <div style={{ padding: '100px', textAlign: 'center' }}>
-                        <div className="spinner" style={{ margin: '0 auto', width: '40px', height: '40px', border: '4px solid rgba(16, 185, 129, 0.1)', borderTopColor: '#10b981', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
-                        <p style={{ color: 'rgba(255,255,255,0.2)', marginTop: '20px', fontWeight: '700', letterSpacing: '1px' }}>SYNCING RECORDS...</p>
-                    </div>
-                ) : filteredRecords.length === 0 ? (
-                    <div style={{ padding: '100px 40px', textAlign: 'center' }}>
-                        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                            <Search size={32} color="rgba(255,255,255,0.1)" />
+                {/* Maintenance Stats */}
+                <div className="stats-grid" style={{ marginBottom: '25px' }}>
+                    <div className="glass-card stat-card" style={{ borderLeft: '4px solid #10b981' }}>
+                        <div className="stat-card-header">
+                            <div className="stat-card-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                                <Droplets size={20} />
+                            </div>
+                            <p className="stat-card-label">Total Washes</p>
                         </div>
-                        <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '800' }}>No matches found</h3>
-                        <p style={{ color: 'rgba(255,255,255,0.3)', margin: '10px 0 0', fontSize: '14px' }}>Try adjusting your filters or search terms.</p>
+                        <h2 className="stat-card-value">{washCount}</h2>
                     </div>
-                ) : (
-                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', minWidth: '800px' }}>
-                        <thead>
-                            <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                <th style={{ padding: '25px 30px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'left' }}>Date & Vehicle</th>
-                                <th style={{ padding: '25px 30px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'left' }}>Category</th>
-                                <th style={{ padding: '25px 30px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'left' }}>Driver & Vendor</th>
-                                <th style={{ padding: '25px 30px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'left' }}>Expense</th>
-                                <th style={{ padding: '25px 30px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredRecords.map((r, idx) => (
-                                <tr key={r._id} style={{ transition: 'all 0.2s' }} className="table-row-hover">
-                                    <td style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '800', marginBottom: '6px' }}>{formatDateIST(r.billDate)}</div>
-                                        <div style={{ color: 'white', fontSize: '16px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Car size={14} color="#10b981" /> {r.vehicle?.carNumber}
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                        <div style={{ display: 'inline-flex', padding: '6px 14px', borderRadius: '10px', background: r.category?.toLowerCase()?.includes('wash') ? 'rgba(16,185,129,0.1)' : r.category?.toLowerCase()?.includes('punc') ? 'rgba(244,63,94,0.1)' : 'rgba(99,102,241,0.1)', color: r.category?.toLowerCase()?.includes('wash') ? '#10b981' : r.category?.toLowerCase()?.includes('punc') ? '#f43f5e' : '#6366f1', fontSize: '11px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                            {r.category || 'Maintenance'}
-                                        </div>
-                                        {r.description && <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '600', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.description}</p>}
-                                    </td>
-                                    <td style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                        <div style={{ color: 'white', fontSize: '14px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <User size={14} color="rgba(255,255,255,0.2)" /> {r.driver?.name || 'Manual Admin Entry'}
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                        <div style={{ color: '#10b981', fontSize: '18px', fontWeight: '950' }}>₹{r.amount}</div>
-                                        <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px', fontWeight: '800', marginTop: '4px', textTransform: 'uppercase' }}>{r.paymentMode}</div>
-                                    </td>
-                                    <td style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.03)', textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', alignItems: 'center' }}>
-                                            {r.billPhoto && (
-                                                <button 
-                                                    onClick={() => setSelectedImage(r.billPhoto)}
-                                                    style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}
-                                                >
-                                                    VIEW SLIP
-                                                </button>
-                                            )}
-                                            <button 
-                                                onClick={() => { setEditingId(r._id); setFormData({ ...r, vehicleId: r.vehicle?._id, driverId: r.driver?._id }); setShowModal(true); }}
-                                                style={{ background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.3)', width: '36px', height: '36px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-                                                onMouseEnter={e => e.currentTarget.style.color = 'white'}
-                                                onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
-                                            >
-                                                <Wrench size={16} />
-                                            </button>
-                                            <button 
-                                                onClick={() => handleDelete(r._id)}
-                                                style={{ background: 'rgba(244, 63, 94, 0.05)', border: 'none', color: 'rgba(244, 63, 94, 0.4)', width: '36px', height: '36px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
-                                                onMouseEnter={e => e.currentTarget.style.color = '#f43f5e'}
-                                                onMouseLeave={e => e.currentTarget.style.color = 'rgba(244, 63, 94, 0.4)'}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
+                    <div className="glass-card stat-card" style={{ borderLeft: '4px solid #f43f5e' }}>
+                        <div className="stat-card-header">
+                            <div className="stat-card-icon" style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e' }}>
+                                <AlertCircle size={20} />
+                            </div>
+                            <p className="stat-card-label">Punctures</p>
+                        </div>
+                        <h2 className="stat-card-value">{punctureCount}</h2>
+                    </div>
+                    <div className="glass-card stat-card" style={{ borderLeft: '4px solid #facc15' }}>
+                        <div className="stat-card-header">
+                            <div className="stat-card-icon" style={{ background: 'rgba(250, 204, 21, 0.1)', color: '#facc15' }}>
+                                <Clock size={20} />
+                            </div>
+                            <p className="stat-card-label">Total Spending</p>
+                        </div>
+                        <h2 className="stat-card-value">₹{totalCost.toLocaleString()}</h2>
+                    </div>
+                </div>
+
+                <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
+                    {['All', 'Wash', 'Puncture', 'Maintenance', 'Tax', 'Fastag'].map(t => (
+                        <button
+                            key={t}
+                            onClick={() => setSelectedType(t)}
+                            style={{ padding: '8px 20px', borderRadius: '10px', background: selectedType === t ? '#10b981' : 'rgba(255,255,255,0.03)', border: '1px solid', borderColor: selectedType === t ? '#10b981' : 'rgba(255,255,255,0.1)', color: selectedType === t ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
+                        >
+                            {t}
+                        </button>
+                    ))}
+                </div>
+
+                {/* Premium Table Design */}
+                <div className="scroll-x" style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 30px 60px -12px rgba(0,0,0,0.5)' }}>
+                    {loading ? (
+                        <div style={{ padding: '100px', textAlign: 'center' }}>
+                            <div className="spinner" style={{ margin: '0 auto', width: '40px', height: '40px', border: '4px solid rgba(16, 185, 129, 0.1)', borderTopColor: '#10b981', borderRadius: '50%', animation: 'spin 1s linear infinite' }}></div>
+                            <p style={{ color: 'rgba(255,255,255,0.2)', marginTop: '20px', fontWeight: '700', letterSpacing: '1px' }}>SYNCING RECORDS...</p>
+                        </div>
+                    ) : filteredRecords.length === 0 ? (
+                        <div style={{ padding: '100px 40px', textAlign: 'center' }}>
+                            <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(255,255,255,0.02)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                                <Search size={32} color="rgba(255,255,255,0.1)" />
+                            </div>
+                            <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '800' }}>No matches found</h3>
+                            <p style={{ color: 'rgba(255,255,255,0.3)', margin: '10px 0 0', fontSize: '14px' }}>Try adjusting your filters or search terms.</p>
+                        </div>
+                    ) : (
+                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', minWidth: '800px' }}>
+                            <thead>
+                                <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                    <th style={{ padding: '25px 30px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'left' }}>Date & Vehicle</th>
+                                    <th style={{ padding: '25px 30px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'left' }}>Category</th>
+                                    <th style={{ padding: '25px 30px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'left' }}>Driver & Vendor</th>
+                                    <th style={{ padding: '25px 30px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'left' }}>Expense</th>
+                                    <th style={{ padding: '25px 30px', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>Actions</th>
                                 </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
+                            </thead>
+                            <tbody>
+                                {filteredRecords.map((r, idx) => (
+                                    <tr key={r._id} style={{ transition: 'all 0.2s' }} className="table-row-hover">
+                                        <td style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '800', marginBottom: '6px' }}>{formatDateIST(r.billDate)}</div>
+                                            <div style={{ color: 'white', fontSize: '16px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Car size={14} color="#10b981" /> {r.vehicle?.carNumber}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <div style={{ display: 'inline-flex', padding: '6px 14px', borderRadius: '10px', background: r.category?.toLowerCase()?.includes('wash') ? 'rgba(16,185,129,0.1)' : r.category?.toLowerCase()?.includes('punc') ? 'rgba(244,63,94,0.1)' : 'rgba(99,102,241,0.1)', color: r.category?.toLowerCase()?.includes('wash') ? '#10b981' : r.category?.toLowerCase()?.includes('punc') ? '#f43f5e' : '#6366f1', fontSize: '11px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                                {r.category || 'Maintenance'}
+                                            </div>
+                                            {r.description && <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '600', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.description}</p>}
+                                        </td>
+                                        <td style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <div style={{ color: 'white', fontSize: '14px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <User size={14} color="rgba(255,255,255,0.2)" /> {r.driver?.name || 'Manual Admin Entry'}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <div style={{ color: '#10b981', fontSize: '18px', fontWeight: '950' }}>₹{r.amount}</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px', fontWeight: '800', marginTop: '4px', textTransform: 'uppercase' }}>{r.paymentMode}</div>
+                                        </td>
+                                        <td style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.03)', textAlign: 'right' }}>
+                                            <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                                                {r.billPhoto && (
+                                                    <button 
+                                                        onClick={() => setSelectedImage(r.billPhoto)}
+                                                        style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '8px 15px', borderRadius: '10px', cursor: 'pointer', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}
+                                                    >
+                                                        VIEW SLIP
+                                                    </button>
+                                                )}
+                                                <button 
+                                                    onClick={() => { setEditingId(r._id); setFormData({ ...r, vehicleId: r.vehicle?._id, driverId: r.driver?._id }); setShowModal(true); }}
+                                                    style={{ background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.3)', width: '36px', height: '36px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                                                    onMouseEnter={e => e.currentTarget.style.color = 'white'}
+                                                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(255,255,255,0.3)'}
+                                                >
+                                                    <Wrench size={16} />
+                                                </button>
+                                                <button 
+                                                    onClick={() => handleDelete(r._id)}
+                                                    style={{ background: 'rgba(244, 63, 94, 0.05)', border: 'none', color: 'rgba(244, 63, 94, 0.4)', width: '36px', height: '36px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.2s' }}
+                                                    onMouseEnter={e => e.currentTarget.style.color = '#f43f5e'}
+                                                    onMouseLeave={e => e.currentTarget.style.color = 'rgba(244, 63, 94, 0.4)'}
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    )}
+                </div>
 
             {/* Modal for Add/Edit */}
             <AnimatePresence>
@@ -600,6 +647,13 @@ const DriverServices = () => {
                     </div>
                 )}
             </AnimatePresence>
+
+            {showParkingModal && (
+                <ParkingModal 
+                    isOpen={showParkingModal} 
+                    onClose={() => { setShowParkingModal(false); fetchRecords(); }} 
+               />
+            )}
         </div>
     );
 };

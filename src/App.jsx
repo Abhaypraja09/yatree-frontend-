@@ -8,7 +8,6 @@ const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const DriverPortal = lazy(() => import('./pages/DriverPortal'));
 const Drivers = lazy(() => import('./pages/Drivers'));
 const Vehicles = lazy(() => import('./pages/Vehicles'));
-const Reports = lazy(() => import('./pages/Reports'));
 const Freelancers = lazy(() => import('./pages/Freelancers'));
 const FreelancerSalaryDetail = lazy(() => import('./pages/FreelancerSalaryDetail'));
 const OutsideCars = lazy(() => import('./pages/OutsideCars'));
@@ -27,6 +26,7 @@ const DriverSalaries = lazy(() => import('./pages/DriverSalaries'));
 const VehicleMonthlyDetails = lazy(() => import('./pages/VehicleMonthlyDetails'));
 const LiveFeed = lazy(() => import('./pages/LiveFeed'));
 const EventManagement = lazy(() => import('./pages/EventManagement'));
+const Reports = lazy(() => import('./pages/Reports'));
 const DriverServices = lazy(() => import('./pages/DriverServices'));
 import Sidebar from './components/Sidebar';
 import { CompanyProvider } from './context/CompanyContext';
@@ -162,35 +162,48 @@ const AdminRoutes = () => {
   return (
     <Routes>
       <Route index element={<AdminDashboard />} />
-      <Route path="live-feed" element={<LiveFeed />} />
-      <Route path="outside-cars" element={<OutsideCars />} />
-      <Route path="event-management" element={<EventManagement />} />
-      <Route path="maintenance" element={<Maintenance />} />
-      <Route path="parking" element={<Parking />} />
-      <Route path="freelancers" element={<Freelancers />} />
-      <Route path="freelancers/:driverId" element={<FreelancerSalaryDetail />} />
-      <Route path="reports" element={<Reports />} />
-      <Route path="vehicle-month-details" element={<VehicleMonthlyDetails />} />
 
-      <Route path="fuel" element={<Fuel />} />
-      <Route path="driver-services" element={<DriverServices />} />
-      <Route path="accident-logs" element={<ActiveLogs />} />
-      <Route path="warranties" element={<Warranties />} />
-
-      {/* Module Dependent Routes */}
+      {/* Drivers Service Module */}
       {(isAdmin || p.driversService) && (
         <>
+          <Route path="live-feed" element={<LiveFeed />} />
           <Route path="drivers" element={<Drivers />} />
           <Route path="advances" element={<Advances />} />
           <Route path="driver-salaries" element={<DriverSalaries />} />
+          <Route path="freelancers" element={<Freelancers />} />
+          <Route path="freelancers/:driverId" element={<FreelancerSalaryDetail />} />
+          <Route path="driver-duty" element={<Reports />} />
+          <Route path="freelancer-duty" element={<Reports />} />
         </>
       )}
 
+      {/* Buy/Sell Module */}
+      {(isAdmin || p.buySell) && (
+        <>
+          <Route path="outside-cars" element={<OutsideCars />} />
+          <Route path="event-management" element={<EventManagement />} />
+        </>
+      )}
+
+      {/* Vehicles Maintenance Module */}
       {(isAdmin || p.vehiclesManagement) && (
         <>
+          <Route path="fuel" element={<Fuel />} />
+          <Route path="parking" element={<Parking />} />
+          <Route path="maintenance" element={<Maintenance />} />
+          <Route path="vehicle-month-details" element={<VehicleMonthlyDetails />} />
+        </>
+      )}
+
+      {/* Fleet Operations Module */}
+      {(isAdmin || p.fleetOperations) && (
+        <>
           <Route path="vehicles" element={<Vehicles />} />
-          <Route path="fastag" element={<Fastag />} />
+          <Route path="driver-services" element={<DriverServices />} />
           <Route path="border-tax" element={<BorderTax />} />
+          <Route path="fastag" element={<Fastag />} />
+          <Route path="accident-logs" element={<ActiveLogs />} />
+          <Route path="warranties" element={<Warranties />} />
         </>
       )}
 
@@ -202,16 +215,37 @@ const AdminRoutes = () => {
       {/* Catch-all redirects for unauthorized module access */}
       {!(isAdmin || p.driversService) && (
         <>
+          <Route path="live-feed" element={<Navigate to="/admin" />} />
           <Route path="drivers" element={<Navigate to="/admin" />} />
           <Route path="advances" element={<Navigate to="/admin" />} />
           <Route path="driver-salaries" element={<Navigate to="/admin" />} />
+          <Route path="freelancers" element={<Navigate to="/admin" />} />
+          <Route path="driver-duty" element={<Navigate to="/admin" />} />
+          <Route path="freelancer-duty" element={<Navigate to="/admin" />} />
+        </>
+      )}
+      {!(isAdmin || p.buySell) && (
+        <>
+          <Route path="outside-cars" element={<Navigate to="/admin" />} />
+          <Route path="event-management" element={<Navigate to="/admin" />} />
         </>
       )}
       {!(isAdmin || p.vehiclesManagement) && (
         <>
+          <Route path="fuel" element={<Navigate to="/admin" />} />
+          <Route path="parking" element={<Navigate to="/admin" />} />
+          <Route path="maintenance" element={<Navigate to="/admin" />} />
+          <Route path="vehicle-month-details" element={<Navigate to="/admin" />} />
+        </>
+      )}
+      {!(isAdmin || p.fleetOperations) && (
+        <>
           <Route path="vehicles" element={<Navigate to="/admin" />} />
-          <Route path="fastag" element={<Navigate to="/admin" />} />
+          <Route path="driver-services" element={<Navigate to="/admin" />} />
           <Route path="border-tax" element={<Navigate to="/admin" />} />
+          <Route path="fastag" element={<Navigate to="/admin" />} />
+          <Route path="accident-logs" element={<Navigate to="/admin" />} />
+          <Route path="warranties" element={<Navigate to="/admin" />} />
         </>
       )}
     </Routes>

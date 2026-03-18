@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
-    CalendarIcon as CalendarIcon, Search, Download, Eye, ArrowUpRight, ArrowDownLeft,
-    MapPin, User as UserIcon, Users, Car, Shield, Wallet, CheckCircle2,
-    Fuel, Wrench, IndianRupee, Trash2, AlertTriangle, FileText, Edit2,
-    ChevronLeft, ChevronRight, TrendingUp, X, Layers
+    CalendarIcon, Search, Download, Eye, ArrowUpRight, ArrowDownLeft,
+    User as UserIcon, Users, Car, FileText, ChevronLeft, ChevronRight, X,
+    Edit2, Trash2
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -23,16 +23,6 @@ const fmtTime = (t) => t ? formatTimeIST(t) : '--';
 const TAB_CONFIG = {
     drivers: { label: 'Staff Drivers', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: UserIcon },
     freelancers: { label: 'Freelancers', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', icon: Users },
-    outsideCars: { label: 'Outside Cars', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', icon: Car },
-    fuel: { label: 'Fuel Logs', color: '#22c55e', bg: 'rgba(34,197,94,0.12)', icon: Fuel },
-    maintenance: { label: 'Maintenance', color: '#ef4444', bg: 'rgba(239,68,68,0.12)', icon: Wrench },
-    advances: { label: 'Advances', color: '#6366f1', bg: 'rgba(99,102,241,0.12)', icon: IndianRupee },
-    borderTax: { label: 'Border Tax', color: '#a855f7', bg: 'rgba(168,85,247,0.12)', icon: Shield },
-    parking: { label: 'Parking', color: '#06b6d4', bg: 'rgba(6,182,212,0.12)', icon: MapPin },
-    fastag: { label: 'Fastag Logs', color: '#ec4899', bg: 'rgba(236,72,153,0.12)', icon: Wallet },
-    accidentLogs: { label: 'Accident Logs', color: '#f43f5e', bg: 'rgba(244,63,94,0.12)', icon: AlertTriangle },
-    partsWarranty: { label: 'Parts Warranty', color: '#f59e0b', bg: 'rgba(245,158,11,0.12)', icon: Shield },
-    events: { label: 'Event Management', color: '#6366f1', bg: 'rgba(99,102,241,0.12)', icon: FileText },
 };
 
 /* ─── Chip (summary stat) ─── */
@@ -80,9 +70,9 @@ const StatusBadge = ({ ok, okLabel = '✓ Done', badLabel = '⏳ Active' }) => (
 /* ─── Action Buttons ─── */
 const ActionBtns = ({ onView, onEdit, onDelete }) => (
     <div style={{ display: 'flex', gap: '6px' }}>
-        {onView && <button onClick={onView} title="View Details" style={{ background: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.2)', color: '#38bdf8', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '800' }}><Eye size={12} /> View</button>}
-        {onEdit && <button onClick={onEdit} title="Edit" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '800' }}><Edit2 size={12} /></button>}
-        {onDelete && <button onClick={onDelete} title="Delete" style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)', color: '#f43f5e', borderRadius: '8px', padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', fontSize: '11px', fontWeight: '800' }}><Trash2 size={12} /></button>}
+        {onView && <button onClick={onView} title="View Details" style={{ background: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.2)', color: '#38bdf8', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '800', transition: 'all 0.2s' }} className="btn-hover-scale"><Eye size={14} /> View</button>}
+        {onEdit && <button onClick={onEdit} title="Edit" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '800', transition: 'all 0.2s' }} className="btn-hover-scale"><Edit2 size={14} /></button>}
+        {onDelete && <button onClick={onDelete} title="Delete" style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)', color: '#f43f5e', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }} className="btn-hover-scale"><Trash2 size={14} /></button>}
     </div>
 );
 
@@ -130,6 +120,7 @@ const LoadingRow = ({ cols }) => (
 const Reports = () => {
     const { user } = useAuth();
     const { selectedCompany } = useCompany();
+    const location = useLocation();
 
     const getToday = () => todayIST();
 
@@ -138,15 +129,6 @@ const Reports = () => {
     const [toDate, setToDate] = useState(getToday());
 
     const [reports, setReports] = useState([]);
-    const [fastagRecharges, setFastagRecharges] = useState([]);
-    const [borderTaxRecords, setBorderTaxRecords] = useState([]);
-    const [fuelRecords, setFuelRecords] = useState([]);
-    const [maintenanceRecords, setMaintenanceRecords] = useState([]);
-    const [advanceRecords, setAdvanceRecords] = useState([]);
-    const [parkingRecords, setParkingRecords] = useState([]);
-    const [accidentLogs, setAccidentLogs] = useState([]);
-    const [partsWarrantyRecords, setPartsWarrantyRecords] = useState([]);
-    const [eventRecords, setEventRecords] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
@@ -155,31 +137,35 @@ const Reports = () => {
     const tabList = useMemo(() => {
         return Object.entries(TAB_CONFIG)
             .filter(([id]) => {
+                // Filter by URL path first
+                if (location.pathname.includes('driver-duty')) return id === 'drivers';
+                if (location.pathname.includes('freelancer-duty')) return id === 'freelancers';
+
+                // Administrative overrides/permissions for standard /admin/reports
                 if (user?.role === 'Admin') return true;
                 const p = user?.permissions || {};
-                
-                // Group tabs by permission
-                const driversTabs = ['drivers', 'freelancers', 'advances'];
-                const buySellTabs = ['outsideCars', 'events'];
-                const vehicleTabs = ['fuel', 'maintenance', 'borderTax', 'parking', 'fastag', 'accidentLogs', 'partsWarranty'];
-
+                const driversTabs = ['drivers', 'freelancers'];
                 if (driversTabs.includes(id)) return p.driversService;
-                if (buySellTabs.includes(id)) return p.buySell;
-                if (vehicleTabs.includes(id)) return p.vehiclesManagement;
-                
-                return true; // Default
+
+                return true;
             })
             .map(([id, v]) => ({ id, ...v }));
-    }, [user?.role, user?.permissions]);
+    }, [user?.role, user?.permissions, location.pathname]);
 
     const [activeTabs, setActiveTabs] = useState([]);
 
-    // Initialize with the first tab on load
+    // Initialize based on URL path or first available tab
     useEffect(() => {
-        if (tabList.length > 0 && activeTabs.length === 0) {
-            setActiveTabs([tabList[0].id]);
+        if (tabList.length > 0) {
+            if (location.pathname.includes('driver-duty')) {
+                setActiveTabs(['drivers']);
+            } else if (location.pathname.includes('freelancer-duty')) {
+                setActiveTabs(['freelancers']);
+            } else if (activeTabs.length === 0) {
+                setActiveTabs([tabList[0].id]);
+            }
         }
-    }, [tabList]);
+    }, [tabList, location.pathname]);
 
     const toggleTab = (id) => {
         setActiveTabs(prev => {
@@ -224,29 +210,13 @@ const Reports = () => {
         if (reports.length === 0) setLoading(true); // Flicker-free background updates
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/admin/reports/${selectedCompany._id}?from=${fromDate}&to=${toDate}`, { headers: { Authorization: `Bearer ${userInfo.token}` } });
+            const { data } = await axios.get(`/api/admin/reports/${selectedCompany._id}?from=${fromDate}&to=${toDate}&_t=${Date.now()}`, { headers: { Authorization: `Bearer ${userInfo.token}` } });
 
             setReports(data.attendance || []);
-            setFastagRecharges(data.fastagRecharges || []);
-            setBorderTaxRecords(data.borderTax || []);
-            setFuelRecords(data.fuel || []);
-            setMaintenanceRecords((data.maintenance || []).filter(r => {
-                const type = (r.maintenanceType || '').toLowerCase();
-                return !type.includes('car wash') && !type.includes('puncture');
-            }));
-            setAdvanceRecords(data.advances || []);
-            setParkingRecords(data.parking || []);
-            setAccidentLogs(data.accidentLogs || []);
-            setPartsWarrantyRecords(data.partsWarranty || []);
-
-            // Fetch events explicitly if selected
-            if (activeTabs.includes('events')) {
-                const { data: eventData } = await axios.get(`/api/admin/events/${selectedCompany._id}?from=${fromDate}&to=${toDate}`, { headers: { Authorization: `Bearer ${userInfo.token}` } });
-                setEventRecords(eventData || []);
-            }
         } catch (err) { console.error('fetchReports error:', err?.response?.status, err?.response?.config?.url || err.message); }
         finally { setLoading(false); }
     };
+
 
     const handleUpdateAttendance = async (id, updateData) => {
         try {
@@ -269,6 +239,7 @@ const Reports = () => {
             borderTax: `/api/admin/border-tax/${item._id}`,
             accidentLog: `/api/admin/accident-logs/${item._id}`,
             partsWarranty: `/api/admin/parts-warranty/${item._id}`,
+            voucher: `/api/admin/vehicles/${item._id}`,
         };
         const endpoint = endpoints[item.entryType];
         if (!endpoint) return alert('Delete not supported for this type.');
@@ -278,11 +249,11 @@ const Reports = () => {
             fetchReports();
         } catch (error) { alert('Failed: ' + (error.response?.data?.message || error.message)); }
     };
-    
+
     /* ── Smart Excel Export ── */
     const handleDownloadExcel = () => {
         if (activeTabs.length === 0) return alert('No report categories selected.');
-        
+
         const wb = XLSX.utils.book_new();
         let sheetsAdded = 0;
 
@@ -291,9 +262,8 @@ const Reports = () => {
             let data = [];
             switch (tabId) {
                 case 'drivers':
-                case 'freelancers':
-                case 'outsideCars': {
-                    const raw = tabId === 'drivers' ? staffDrivers : (tabId === 'freelancers' ? freelancerDrivers : outsideCars);
+                case 'freelancers': {
+                    const raw = tabId === 'drivers' ? staffDrivers : freelancerDrivers;
                     data = applySearch(raw).map(r => ({
                         'Date': fmt(r.date),
                         'Driver': r.driver?.name || r.driverName || '---',
@@ -312,15 +282,6 @@ const Reports = () => {
                     }));
                     break;
                 }
-                case 'fuel': data = applySearch(fuelRecords).map(r => ({ 'Date': fmt(r.date), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Driver': r.driver?.name || '---', 'Type': r.fuelType || 'Diesel', 'Qty': r.quantity || 0, 'Amt (₹)': r.amount || 0, 'Payment': r.paymentMethod || r.paymentSource || '---' })); break;
-                case 'maintenance': data = maintenanceRecords.map(r => ({ 'Date': fmt(r.billDate || r.date), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Type': r.maintenanceType || '--', 'Cost (₹)': r.cost || 0, 'Vendor': r.vendor || '--' })); break;
-                case 'advances': data = applySearch(advanceRecords).map(r => ({ 'Date': fmt(r.date), 'Driver': r.driver?.name || '---', 'Amount (₹)': r.amount || 0, 'Status': r.status || 'Pending' })); break;
-                case 'borderTax': data = borderTaxRecords.map(r => ({ 'Date': fmt(r.date), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Border': r.borderName || '--', 'Amount (₹)': r.amount || 0 })); break;
-                case 'parking': data = parkingRecords.map(r => ({ 'Date': fmt(r.date), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Amt (₹)': r.amount || 0, 'Location': r.location || '--' })); break;
-                case 'fastag': data = fastagRecharges.map(r => ({ 'Date': fmt(r.date), 'Vehicle': r.carNumber || r.vehicle?.carNumber || '--', 'Amount (₹)': r.amount || 0 })); break;
-                case 'accidentLogs': data = accidentLogs.map(r => ({ 'Date': fmt(r.date), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Driver': r.driver?.name || '---', 'Status': r.status || 'Pending' })); break;
-                case 'partsWarranty': data = partsWarrantyRecords.map(r => ({ 'Buy Date': fmt(r.purchaseDate), 'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---', 'Part': r.partName || '--', 'Cost (₹)': r.cost || 0, 'End Date': fmt(r.warrantyEndDate) })); break;
-                case 'events': data = applySearch(eventRecords).map(e => ({ 'Date': fmt(e.date), 'Name': e.name || '--', 'Client': e.client || 'N/A', 'Amount (₹)': e.totalAmount || 0 })); break;
                 default: break;
             }
             return { data, name: cfg.label || tabId };
@@ -329,7 +290,7 @@ const Reports = () => {
         activeTabs.forEach(id => {
             const { data, name } = getSheetData(id);
             if (data && data.length > 0) {
-                const sheetName = name.substring(0, 31).replace(/[\[\]\*\?\/\\]/g, ''); 
+                const sheetName = name.substring(0, 31).replace(/[\[\]\*\?\/\\]/g, '');
                 const ws = XLSX.utils.json_to_sheet(data);
                 XLSX.utils.book_append_sheet(wb, ws, sheetName);
                 sheetsAdded++;
@@ -345,7 +306,6 @@ const Reports = () => {
     /* ── filtered attendance partitions ── */
     const staffDrivers = useMemo(() => reports.filter(r => !r.vehicle?.isOutsideCar && !r.isOutsideCar && !r.isFreelancer && !r.driver?.isFreelancer).map(r => ({ ...r, entryType: 'attendance' })), [reports]);
     const freelancerDrivers = useMemo(() => reports.filter(r => r.isFreelancer || r.driver?.isFreelancer).map(r => ({ ...r, entryType: 'attendance' })), [reports]);
-    const outsideCars = useMemo(() => reports.filter(r => r.vehicle?.isOutsideCar || r.isOutsideCar).map(r => ({ ...r, entryType: 'attendance' })), [reports]);
 
     const applySearch = (list) => {
         if (!searchTerm) return list;
@@ -518,243 +478,6 @@ const Reports = () => {
                 );
             }
 
-            /* ── OUTSIDE CARS ── */
-            case 'outsideCars': {
-                const data = applySearch(outsideCars);
-                const totalWage = data.reduce((s, r) => s + (Number(r.dailyWage) || Number(r.vehicle?.dutyAmount) || 0), 0);
-                return (
-                    <TableSection tabId="outsideCars" fromDate={fromDate} toDate={toDate}
-                        chips={[<Chip key="w" label="Total Amount" value={`₹${totalWage.toLocaleString()}`} color="#f59e0b" />]}
-                        headers={ATT_HEADERS}
-                        rows={data.map((r, i) => <AttRow key={r._id} r={r} idx={i} />)}
-                        empty="No outside car records found."
-                    />
-                );
-            }
-
-            /* ── FUEL ── */
-            case 'fuel': {
-                const data = applySearch(fuelRecords).map(r => ({ ...r, entryType: 'fuel' }));
-                const total = data.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-                return (
-                    <TableSection tabId="fuel" fromDate={fromDate} toDate={toDate}
-                        chips={[<Chip key="t" label="Total Fuel Cost" value={`₹${total.toLocaleString()}`} color="#22c55e" />]}
-                        headers={['Date', 'Vehicle', 'Driver', 'Type', 'Quantity', 'Amount', 'Odometer', 'Payment', 'Action']}
-                        rows={data.map((r, i) => (
-                            <TR key={r._id} idx={i}>
-                                <TD noWrap><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700' }}>{fmt(r.date)}</span></TD>
-                                <TD><span style={{ color: 'white', fontWeight: '800' }}>{r.vehicle?.carNumber?.split('#')[0] || '--'}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.7)' }}>{r.driver?.name || '--'}</span></TD>
-                                <TD><span style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e', padding: '3px 9px', borderRadius: '6px', fontSize: '10px', fontWeight: '800' }}>{r.fuelType || 'Diesel'}</span></TD>
-                                <TD><span style={{ color: '#f59e0b', fontWeight: '800' }}>{r.quantity || '--'} L</span></TD>
-                                <TD><span style={{ color: '#22c55e', fontWeight: '900', fontSize: '14px' }}>₹{(r.amount || 0).toLocaleString()}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.5)' }}>{r.odometer || '--'} KM</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{r.paymentMethod || r.paymentSource || '--'}</span></TD>
-                                <TD><ActionBtns onView={() => setSelectedItem({ ...r, entryType: 'fuel' })} onDelete={() => handleDelete({ ...r, entryType: 'fuel' })} /></TD>
-                            </TR>
-                        ))}
-                        empty="No fuel logs found."
-                    />
-                );
-            }
-
-            /* ── MAINTENANCE ── */
-            case 'maintenance': {
-                const data = maintenanceRecords.filter(r => {
-                    if (!searchTerm) return true;
-                    const t = searchTerm.toLowerCase();
-                    return (r.vehicle?.carNumber || '').toLowerCase().includes(t) || (r.maintenanceType || '').toLowerCase().includes(t);
-                });
-                const total = data.reduce((s, r) => s + (Number(r.cost) || 0), 0);
-                return (
-                    <TableSection tabId="maintenance" fromDate={fromDate} toDate={toDate}
-                        chips={[<Chip key="t" label="Total Cost" value={`₹${total.toLocaleString()}`} color="#ef4444" />]}
-                        headers={['Bill Date', 'Vehicle', 'Type', 'Description', 'Amount', 'Vendor', 'Action']}
-                        rows={data.map((r, i) => (
-                            <TR key={r._id} idx={i}>
-                                <TD noWrap><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700' }}>{fmt(r.billDate || r.date)}</span></TD>
-                                <TD><span style={{ color: 'white', fontWeight: '800' }}>{r.vehicle?.carNumber?.split('#')[0] || '--'}</span></TD>
-                                <TD><span style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', padding: '3px 9px', borderRadius: '6px', fontSize: '10px', fontWeight: '800' }}>{r.maintenanceType || '--'}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px' }}>{r.description || '--'}</span></TD>
-                                <TD><span style={{ color: '#ef4444', fontWeight: '900', fontSize: '14px' }}>₹{(r.cost || 0).toLocaleString()}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>{r.vendor || '--'}</span></TD>
-                                <TD><ActionBtns onView={() => setSelectedItem({ ...r, entryType: 'maintenance' })} onDelete={() => handleDelete({ ...r, entryType: 'maintenance' })} /></TD>
-                            </TR>
-                        ))}
-                        empty="No maintenance records found."
-                    />
-                );
-            }
-
-            /* ── ADVANCES ── */
-            case 'advances': {
-                const data = applySearch(advanceRecords.map(r => ({ ...r, entryType: 'advance' })));
-                const total = data.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-                return (
-                    <TableSection tabId="advances" fromDate={fromDate} toDate={toDate}
-                        chips={[<Chip key="t" label="Total Advances" value={`₹${total.toLocaleString()}`} color="#6366f1" />]}
-                        headers={['Date', 'Driver', 'Amount', 'Type', 'Given By', 'Remark', 'Status', 'Action']}
-                        rows={data.map((r, i) => (
-                            <TR key={r._id} idx={i}>
-                                <TD noWrap><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700' }}>{fmt(r.date)}</span></TD>
-                                <TD><span style={{ color: 'white', fontWeight: '800' }}>{r.driver?.name || '--'}</span><div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>{r.driver?.mobile || ''}</div></TD>
-                                <TD><span style={{ color: '#6366f1', fontWeight: '900', fontSize: '14px' }}>₹{(r.amount || 0).toLocaleString()}</span></TD>
-                                <TD><span style={{ background: 'rgba(99,102,241,0.1)', color: '#818cf8', padding: '3px 9px', borderRadius: '6px', fontSize: '10px', fontWeight: '800' }}>{r.advanceType || 'Office'}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{r.givenBy || '--'}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>{r.remark || '--'}</span></TD>
-                                <TD><StatusBadge ok={r.status !== 'Pending'} okLabel="✓ Settled" badLabel="Pending" /></TD>
-                                <TD><ActionBtns onView={() => setSelectedItem({ ...r, entryType: 'advance' })} onDelete={() => handleDelete({ ...r, entryType: 'advance' })} /></TD>
-                            </TR>
-                        ))}
-                        empty="No advance records found."
-                    />
-                );
-            }
-
-            /* ── BORDER TAX ── */
-            case 'borderTax': {
-                const data = borderTaxRecords.filter(r => !searchTerm || (r.vehicle?.carNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) || (r.borderName || '').toLowerCase().includes(searchTerm.toLowerCase()));
-                const total = data.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-                return (
-                    <TableSection tabId="borderTax" fromDate={fromDate} toDate={toDate}
-                        chips={[<Chip key="t" label="Total Tax" value={`₹${total.toLocaleString()}`} color="#a855f7" />]}
-                        headers={['Date', 'Vehicle', 'Driver', 'Border Name', 'Amount', 'Remarks', 'Action']}
-                        rows={data.map((r, i) => (
-                            <TR key={r._id} idx={i}>
-                                <TD noWrap><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700' }}>{fmt(r.date)}</span></TD>
-                                <TD><span style={{ color: 'white', fontWeight: '800' }}>{r.vehicle?.carNumber?.split('#')[0] || '--'}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.6)' }}>{r.driver?.name || '--'}</span></TD>
-                                <TD><span style={{ color: '#a855f7', fontWeight: '800' }}>{r.borderName || '--'}</span></TD>
-                                <TD><span style={{ color: '#a855f7', fontWeight: '900', fontSize: '14px' }}>₹{(r.amount || 0).toLocaleString()}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>{r.remarks || '--'}</span></TD>
-                                <TD><ActionBtns onView={() => setSelectedItem({ ...r, entryType: 'borderTax' })} onDelete={() => handleDelete({ ...r, entryType: 'borderTax' })} /></TD>
-                            </TR>
-                        ))}
-                        empty="No border tax records found."
-                    />
-                );
-            }
-
-            /* ── PARKING ── */
-            case 'parking': {
-                const data = parkingRecords.filter(r => !searchTerm || (r.vehicle?.carNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) || (r.driver || '').toLowerCase().includes(searchTerm.toLowerCase()));
-                const total = data.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-                return (
-                    <TableSection tabId="parking" fromDate={fromDate} toDate={toDate}
-                        chips={[<Chip key="t" label="Total Parking" value={`₹${total.toLocaleString()}`} color="#06b6d4" />]}
-                        headers={['Date', 'Vehicle', 'Driver', 'Amount', 'Location', 'Source', 'Reimbursable', 'Action']}
-                        rows={data.map((r, i) => (
-                            <TR key={r._id} idx={i}>
-                                <TD noWrap><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700' }}>{fmt(r.date)}</span></TD>
-                                <TD><span style={{ color: 'white', fontWeight: '800' }}>{r.vehicle?.carNumber?.split('#')[0] || '--'}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.6)' }}>{r.driver || '--'}</span></TD>
-                                <TD><span style={{ color: '#06b6d4', fontWeight: '900', fontSize: '14px' }}>₹{(r.amount || 0).toLocaleString()}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>{r.location || r.notes || '--'}</span></TD>
-                                <TD><span style={{ background: 'rgba(6,182,212,0.1)', color: '#06b6d4', padding: '3px 9px', borderRadius: '6px', fontSize: '10px', fontWeight: '800' }}>{r.source || 'Admin'}</span></TD>
-                                <TD><StatusBadge ok={r.isReimbursable} okLabel="✓ Reimbursable" badLabel="Office Cost" /></TD>
-                                <TD><ActionBtns onView={() => setSelectedItem({ ...r, entryType: 'parking' })} onDelete={() => handleDelete({ ...r, entryType: 'parking' })} /></TD>
-                            </TR>
-                        ))}
-                        empty="No parking records found."
-                    />
-                );
-            }
-
-            /* ── FASTAG ── */
-            case 'fastag': {
-                const data = fastagRecharges.filter(r => !searchTerm || (r.carNumber || '').toLowerCase().includes(searchTerm.toLowerCase()));
-                const total = data.reduce((s, r) => s + (Number(r.amount) || 0), 0);
-                return (
-                    <TableSection tabId="fastag" fromDate={fromDate} toDate={toDate}
-                        chips={[<Chip key="t" label="Total Recharged" value={`₹${total.toLocaleString()}`} color="#ec4899" />]}
-                        headers={['Date', 'Car Number', 'Amount', 'Method', 'Remarks', 'Action']}
-                        rows={data.map((r, i) => (
-                            <TR key={r._id || i} idx={i}>
-                                <TD noWrap><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700' }}>{fmt(r.date)}</span></TD>
-                                <TD><span style={{ color: 'white', fontWeight: '800' }}>{r.carNumber || r.vehicle?.carNumber || '--'}</span></TD>
-                                <TD><span style={{ color: '#ec4899', fontWeight: '900', fontSize: '14px' }}>₹{(r.amount || 0).toLocaleString()}</span></TD>
-                                <TD><span style={{ background: 'rgba(236,72,153,0.1)', color: '#ec4899', padding: '3px 9px', borderRadius: '6px', fontSize: '10px', fontWeight: '800' }}>{r.method || 'Manual'}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>{r.remarks || '--'}</span></TD>
-                                <TD><ActionBtns onView={() => setSelectedItem({ ...r, entryType: 'fastag' })} /></TD>
-                            </TR>
-                        ))}
-                        empty="No fastag records found."
-                    />
-                );
-            }
-
-            /* ── ACCIDENT LOGS ── */
-            case 'accidentLogs': {
-                const data = accidentLogs.filter(r => !searchTerm || (r.vehicle?.carNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) || (r.driver?.name || '').toLowerCase().includes(searchTerm.toLowerCase()));
-                return (
-                    <TableSection tabId="accidentLogs" fromDate={fromDate} toDate={toDate}
-                        chips={[<Chip key="t" label="Total Incidents" value={data.length} color="#f43f5e" />]}
-                        headers={['Date', 'Vehicle', 'Driver', 'Description', 'Severity', 'Status', 'Action']}
-                        rows={data.map((r, i) => (
-                            <TR key={r._id} idx={i}>
-                                <TD noWrap><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700' }}>{fmt(r.date)}</span></TD>
-                                <TD><span style={{ color: 'white', fontWeight: '800' }}>{r.vehicle?.carNumber?.split('#')[0] || '--'}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.6)' }}>{r.driver?.name || '--'}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{r.description ? r.description.substring(0, 40) + (r.description.length > 40 ? '...' : '') : '--'}</span></TD>
-                                <TD><span style={{ background: 'rgba(244,63,94,0.1)', color: '#f43f5e', padding: '3px 9px', borderRadius: '6px', fontSize: '10px', fontWeight: '800' }}>{r.severity || 'Minor'}</span></TD>
-                                <TD><StatusBadge ok={r.status === 'Recovered' || r.status === 'Resolved'} okLabel="✓ Resolved" badLabel="Open" /></TD>
-                                <TD><ActionBtns onView={() => setSelectedItem({ ...r, entryType: 'accidentLog' })} onDelete={() => handleDelete({ ...r, entryType: 'accidentLog' })} /></TD>
-                            </TR>
-                        ))}
-                        empty="No accident logs found."
-                    />
-                );
-            }
-
-            /* ── PARTS WARRANTY ── */
-            case 'partsWarranty': {
-                const data = partsWarrantyRecords.filter(r => !searchTerm || (r.vehicle?.carNumber || '').toLowerCase().includes(searchTerm.toLowerCase()) || (r.partName || '').toLowerCase().includes(searchTerm.toLowerCase()));
-                const total = data.reduce((s, r) => s + (Number(r.cost) || 0), 0);
-                return (
-                    <TableSection tabId="partsWarranty" fromDate={fromDate} toDate={toDate}
-                        chips={[<Chip key="t" label="Total Cost" value={`₹${total.toLocaleString()}`} color="#f59e0b" />]}
-                        headers={['Purchase Date', 'Vehicle', 'Part Name', 'Brand', 'Cost', 'Warranty End', 'Action']}
-                        rows={data.map((r, i) => (
-                            <TR key={r._id} idx={i}>
-                                <TD noWrap><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700' }}>{fmt(r.purchaseDate)}</span></TD>
-                                <TD><span style={{ color: 'white', fontWeight: '800' }}>{r.vehicle?.carNumber?.split('#')[0] || '--'}</span></TD>
-                                <TD><span style={{ color: '#f59e0b', fontWeight: '800' }}>{r.partName || '--'}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px' }}>{r.brandName || '--'}</span></TD>
-                                <TD><span style={{ color: '#f59e0b', fontWeight: '900', fontSize: '14px' }}>₹{(r.cost || 0).toLocaleString()}</span></TD>
-                                <TD noWrap><span style={{ color: new Date(r.warrantyEndDate) < new Date() ? '#f43f5e' : '#10b981', fontWeight: '700', fontSize: '12px' }}>{fmt(r.warrantyEndDate)}</span></TD>
-                                <TD><ActionBtns onView={() => setSelectedItem({ ...r, entryType: 'partsWarranty' })} onDelete={() => handleDelete({ ...r, entryType: 'partsWarranty' })} /></TD>
-                            </TR>
-                        ))}
-                        empty="No warranty records found."
-                    />
-                );
-            }
-
-            /* ── EVENTS ── */
-            case 'events': {
-                const data = applySearch(eventRecords);
-                const total = data.reduce((s, e) => s + (e.totalAmount || 0), 0);
-                return (
-                    <TableSection tabId="events" fromDate={fromDate} toDate={toDate}
-                        chips={[<Chip key="t" label="Total Budget" value={`₹${total.toLocaleString()}`} color="#6366f1" />]}
-                        headers={['Date', 'Event Name', 'Client', 'Venue', 'Cars', 'Amount', 'Status', 'Action']}
-                        rows={data.map((e, i) => (
-                            <TR key={e._id} idx={i}>
-                                <TD noWrap><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700' }}>{fmt(e.date)}</span></TD>
-                                <TD><span style={{ color: 'white', fontWeight: '800' }}>{e.name}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.6)' }}>{e.client || 'N/A'}</span></TD>
-                                <TD><span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>{e.location || '--'}</span></TD>
-                                <TD><span style={{ color: '#38bdf8', fontWeight: '800' }}>{e.recordCount || 0}</span></TD>
-                                <TD><span style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{(e.totalAmount || 0).toLocaleString()}</span></TD>
-                                <TD><StatusBadge ok={e.status === 'Completed'} okLabel="Completed" badLabel={e.status} /></TD>
-                                <TD><button onClick={() => window.open(`/event-management`, '_blank')} style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: '#818cf8', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', fontSize: '11px', fontWeight: '800' }}>Manage</button></TD>
-                            </TR>
-                        ))}
-                        empty="No events metadata found."
-                    />
-                );
-            }
-
             default: return null;
         }
     };
@@ -771,7 +494,7 @@ const Reports = () => {
     };
 
     return (
-        <div className="container-fluid" style={{ paddingBottom: '60px' }}>
+        <div className="container-fluid" style={{ paddingBottom: '60px', background: 'radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.03), transparent 40%)' }}>
             <SEO title="Daily Reports" description="Premium daily fleet reports with attendance, fuel, maintenance, advances and more." />
 
             {/* ── Header ── */}
@@ -782,7 +505,10 @@ const Reports = () => {
                     </div>
                     <div>
                         <div style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Operational Insights</div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(22px,5vw,30px)', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Daily <span className="text-gradient-yellow">Reports</span></h1>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(22px,5vw,30px)', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>
+                            {location.pathname.includes('driver-duty') ? 'Driver ' : (location.pathname.includes('freelancer-duty') ? 'Freelancer ' : 'Daily ')}
+                            <span className="text-gradient-yellow">Duty</span>
+                        </h1>
                     </div>
                 </div>
 
@@ -791,8 +517,8 @@ const Reports = () => {
                     <button onClick={() => shiftDays(-1)} style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         <ChevronLeft size={18} />
                     </button>
-                    
-                    <button 
+
+                    <button
                         onClick={handleToggleRange}
                         style={{ background: isRange ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isRange ? '#10b981' : 'rgba(255,255,255,0.1)'}30`, color: isRange ? '#10b981' : 'rgba(255,255,255,0.5)', padding: '0 12px', height: '36px', borderRadius: '12px', fontSize: '10px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
                     >
@@ -819,7 +545,7 @@ const Reports = () => {
                         <ChevronRight size={18} />
                     </button>
 
-                    <button 
+                    <button
                         onClick={handleDownloadExcel}
                         style={{ marginLeft: '10px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 20px', height: '38px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
                         title="Download selected categories to Excel"
@@ -830,49 +556,51 @@ const Reports = () => {
             </header>
 
             {/* ── Tab Bar (multi-select) ── */}
-            <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.04)', padding: '8px', marginBottom: '20px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px' }}>
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase' }}>Select Report Categories</span>
-                    <button 
-                        onClick={handleSelectAll} 
-                        style={{ 
-                            background: activeTabs.length === tabList.length ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)', 
-                            border: activeTabs.length === tabList.length ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)', 
-                            color: activeTabs.length === tabList.length ? '#10b981' : 'rgba(255,255,255,0.4)', 
-                            fontSize: '10px', 
-                            padding: '6px 14px',
-                            borderRadius: '10px',
-                            fontWeight: '900', 
-                            cursor: 'pointer', 
-                            textTransform: 'uppercase',
-                            transition: 'all 0.2s',
-                            letterSpacing: '0.5px'
-                        }}
-                    >
-                        {activeTabs.length === tabList.length ? '✓ ALL SELECTED' : 'SELECT ALL'}
-                    </button>
+            {tabList.length > 1 && (
+                <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.04)', padding: '8px', marginBottom: '20px', backdropFilter: 'blur(10px)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px' }}>
+                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Explore Report Categories</span>
+                        <button
+                            onClick={handleSelectAll}
+                            style={{
+                                background: activeTabs.length === tabList.length ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)',
+                                border: activeTabs.length === tabList.length ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
+                                color: activeTabs.length === tabList.length ? '#10b981' : 'rgba(255,255,255,0.4)',
+                                fontSize: '10px',
+                                padding: '6px 14px',
+                                borderRadius: '10px',
+                                fontWeight: '900',
+                                cursor: 'pointer',
+                                textTransform: 'uppercase',
+                                transition: 'all 0.2s',
+                                letterSpacing: '0.8px'
+                            }}
+                        >
+                            {activeTabs.length === tabList.length ? '✓ ALL SELECTED' : 'SELECT ALL'}
+                        </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        {tabList.map(tab => {
+                            const isActive = activeTabs.includes(tab.id);
+                            const Icon = tab.icon;
+                            return (
+                                <button key={tab.id} onClick={() => toggleTab(tab.id)}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', fontSize: '12px', fontWeight: '800',
+                                        background: isActive ? tab.bg : 'rgba(255,255,255,0.02)',
+                                        border: isActive ? `1px solid ${tab.color}70` : '1px solid rgba(255,255,255,0.06)',
+                                        color: isActive ? 'white' : 'rgba(255,255,255,0.3)',
+                                        transform: isActive ? 'translateY(-1px)' : 'none',
+                                        boxShadow: isActive ? `0 4px 12px ${tab.color}25` : 'none'
+                                    }}
+                                >
+                                    <Icon size={14} color={isActive ? tab.color : 'rgba(255,255,255,0.3)'} />{tab.label}
+                                </button>
+                            );
+                        })}
+                    </div>
                 </div>
-                <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                    {tabList.map(tab => {
-                        const isActive = activeTabs.includes(tab.id);
-                        const Icon = tab.icon;
-                        return (
-                            <button key={tab.id} onClick={() => toggleTab(tab.id)}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 14px', borderRadius: '10px', cursor: 'pointer', transition: 'all 0.15s', fontSize: '11px', fontWeight: '800',
-                                    background: isActive ? tab.bg : 'rgba(255,255,255,0.02)',
-                                    border: isActive ? `1px solid ${tab.color}50` : '1px solid rgba(255,255,255,0.04)',
-                                    color: isActive ? tab.color : 'rgba(255,255,255,0.3)',
-                                    boxShadow: isActive ? `0 0 10px ${tab.color}15` : 'none'
-                                }}
-                            >
-                                <Icon size={13} />{tab.label}
-                                {isActive && <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: tab.color, display: 'inline-block', marginLeft: '2px' }} />}
-                            </button>
-                        );
-                    })}
-                </div>
-            </div>
+            )}
 
             {/* ── Search Bar ── */}
             <div style={{ position: 'relative', marginBottom: '22px', maxWidth: '420px' }}>

@@ -133,7 +133,7 @@ const FreelancerSalaryDetail = () => {
             <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', padding: '30px 0 20px', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                     <button
-                        onClick={() => navigate('/admin/freelancers', { state: { tab: 'accounts', from: fromDate, to: toDate } })}
+                        onClick={() => navigate(`/admin/freelancers?tab=accounts`, { state: { from: fromDate, to: toDate } })}
                         style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
                     >
                         <ArrowLeft size={20} />

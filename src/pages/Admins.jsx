@@ -18,6 +18,7 @@ const Admins = () => {
         driversService: false,
         buySell: false,
         vehiclesManagement: false,
+        fleetOperations: false,
         reports: true
     });
 
@@ -51,7 +52,7 @@ const Admins = () => {
             });
             setShowModal(false);
             setName(''); setMobile(''); setUsername(''); setPassword('');
-            setPermissions({ driversService: false, buySell: false, vehiclesManagement: false, reports: true });
+            setPermissions({ driversService: false, buySell: false, vehiclesManagement: false, fleetOperations: false, reports: true });
             fetchExecutives();
             alert('Limited Admin (Executive) created successfully');
         } catch (err) {
@@ -157,8 +158,9 @@ const Admins = () => {
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                                             {admin.permissions?.driversService && <span className="badge-drivers" style={{ fontSize: '10px', padding: '4px 8px' }}>Drivers</span>}
                                             {admin.permissions?.buySell && <span className="badge-blue" style={{ fontSize: '10px', padding: '4px 8px' }}>Buy/Sell</span>}
-                                            {admin.permissions?.vehiclesManagement && <span className="badge-pending" style={{ fontSize: '10px', padding: '4px 8px' }}>Vehicles</span>}
-                                            {!admin.permissions?.driversService && !admin.permissions?.buySell && !admin.permissions?.vehiclesManagement && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px' }}>No modules assigned</span>}
+                                            {admin.permissions?.vehiclesManagement && <span className="badge-pending" style={{ fontSize: '10px', padding: '4px 8px' }}>Maintenance</span>}
+                                            {admin.permissions?.fleetOperations && <span className="badge-completed" style={{ fontSize: '10px', padding: '4px 8px', background: '#ec489915', color: '#ec4899', border: '1px solid #ec489925' }}>Operations</span>}
+                                            {!admin.permissions?.driversService && !admin.permissions?.buySell && !admin.permissions?.vehiclesManagement && !admin.permissions?.fleetOperations && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px' }}>No modules assigned</span>}
                                         </div>
                                     </td>
                                     <td style={{ padding: '20px 25px', textAlign: 'right' }}>
@@ -241,8 +243,19 @@ const Admins = () => {
                                         >
                                             {permissions.vehiclesManagement ? <CheckSquare size={20} color="#f59e0b" /> : <Square size={20} color="rgba(255,255,255,0.2)" />}
                                             <div>
-                                                <div style={{ color: permissions.vehiclesManagement ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: '700', fontSize: '14px' }}>Vehicles Management</div>
-                                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>Vehicles, Fastag, Maintenance, Fuel etc.</div>
+                                                <div style={{ color: permissions.vehiclesManagement ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: '700', fontSize: '14px' }}>Vehicles Maintenance</div>
+                                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>Fuel, Parking, Logs</div>
+                                            </div>
+                                        </div>
+
+                                        <div 
+                                            onClick={() => togglePermission('fleetOperations')}
+                                            style={{ display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', padding: '10px', borderRadius: '10px', background: permissions.fleetOperations ? 'rgba(236, 72, 153, 0.1)' : 'transparent', border: `1px solid ${permissions.fleetOperations ? 'rgba(236, 72, 153, 0.2)' : 'transparent'}`, transition: 'all 0.2s' }}
+                                        >
+                                            {permissions.fleetOperations ? <CheckSquare size={20} color="#ec4899" /> : <Square size={20} color="rgba(255,255,255,0.2)" />}
+                                            <div>
+                                                <div style={{ color: permissions.fleetOperations ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: '700', fontSize: '14px' }}>Fleet Operations</div>
+                                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>Vehicles, Border Tax, Fastag, Warranties</div>
                                             </div>
                                         </div>
                                     </div>

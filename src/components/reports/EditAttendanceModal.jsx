@@ -11,7 +11,9 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
         remarks: item.punchOut?.remarks || '',
         status: item.status || 'incomplete',
         startKm: item.punchIn?.km || 0,
-        endKm: item.punchOut?.km || 0
+        endKm: item.punchOut?.km || 0,
+        date: item.date || '',
+        dailyWage: item.dailyWage || 0
     });
 
     const handleSubmit = (e) => {
@@ -48,6 +50,16 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                 )}
 
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
+                    <div className="form-group">
+                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Duty Date</label>
+                        <input
+                            type="date"
+                            className="input-field"
+                            value={formData.date}
+                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                            style={{ width: '100%', marginBottom: 0, height: '48px', colorScheme: 'dark' }}
+                        />
+                    </div>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                         <div className="form-group">
                             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Start KM</label>
@@ -69,6 +81,16 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                                 style={{ width: '100%', marginBottom: 0, height: '48px' }}
                             />
                         </div>
+                    </div>
+                    <div className="form-group">
+                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Daily Wage (Base Pay)</label>
+                        <input
+                            type="number"
+                            className="input-field"
+                            value={formData.dailyWage}
+                            onChange={(e) => setFormData({ ...formData, dailyWage: e.target.value })}
+                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
+                        />
                     </div>
                     <div className="form-group">
                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Same Day Allowance (TA)</label>
