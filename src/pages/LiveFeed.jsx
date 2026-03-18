@@ -606,82 +606,112 @@ const LiveFeed = () => {
                                 ).map((fuelEntry, i) => (
                                     <motion.div
                                         key={fuelEntry._id || `fuel-${i}`}
-                                        whileHover={{ y: -5, background: 'rgba(255,255,255,0.05)' }}
+                                        whileHover={{ y: -5, scale: 1.01 }}
                                         style={{
-                                            padding: '20px',
-                                            background: 'rgba(255,255,255,0.02)',
-                                            borderRadius: '24px',
-                                            border: '1px solid rgba(255,255,255,0.05)',
+                                            padding: '24px',
+                                            background: 'rgba(30, 41, 59, 0.4)',
+                                            borderRadius: '28px',
+                                            border: '1px solid rgba(255,255,255,0.06)',
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '16px',
-                                            transition: 'all 0.3s ease'
+                                            gap: '20px',
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                            boxShadow: '0 10px 30px -10px rgba(0,0,0,0.3)',
+                                            position: 'relative',
+                                            overflow: 'hidden'
                                         }}
                                     >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: '-20px',
+                                            right: '-20px',
+                                            width: '100px',
+                                            height: '100px',
+                                            background: '#f59e0b',
+                                            filter: 'blur(60px)',
+                                            opacity: 0.05,
+                                            pointerEvents: 'none'
+                                        }} />
+
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                                                 <div style={{
-                                                    width: '50px',
-                                                    height: '50px',
-                                                    borderRadius: '16px',
-                                                    background: 'rgba(245, 158, 11, 0.1)',
+                                                    width: '56px',
+                                                    height: '56px',
+                                                    borderRadius: '18px',
+                                                    background: 'rgba(245, 158, 11, 0.12)',
                                                     display: 'flex',
                                                     justifyContent: 'center',
                                                     alignItems: 'center',
-                                                    border: '1px solid rgba(245, 158, 11, 0.2)'
+                                                    border: '1px solid rgba(245, 158, 11, 0.25)',
+                                                    color: '#f59e0b',
+                                                    boxShadow: '0 8px 20px -5px rgba(245, 158, 11, 0.2)'
                                                 }}>
-                                                    <Fuel size={24} color="#f59e0b" />
+                                                    <Fuel size={26} strokeWidth={2.5} />
                                                 </div>
                                                 <div>
-                                                    <h4 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{fuelEntry.amount}</h4>
-                                                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', marginTop: '2px' }}>
-                                                        {fuelEntry.quantity ? `${fuelEntry.quantity}L ${fuelEntry.fuelType || ''}` : fuelEntry.fuelType || 'Fuel'}
+                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>
+                                                        Fuel Refill
                                                     </div>
+                                                    <h4 style={{ margin: 0, color: 'white', fontSize: '24px', fontWeight: '950', letterSpacing: '-0.5px' }}>
+                                                        ₹{fuelEntry.amount?.toLocaleString()}
+                                                    </h4>
                                                 </div>
                                             </div>
-                                            <div style={{
-                                                fontSize: '10px',
-                                                fontWeight: '900',
-                                                color: '#f59e0b',
-                                                background: 'rgba(245, 158, 11, 0.1)',
-                                                padding: '4px 10px',
-                                                borderRadius: '8px',
-                                                textTransform: 'uppercase',
-                                                letterSpacing: '0.5px'
-                                            }}>
-                                                {fuelEntry.paymentMode || 'N/A'}
+                                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                                                <div style={{ color: '#f59e0b', fontSize: '14px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                    {fuelEntry.quantity ? `${fuelEntry.quantity}L ${fuelEntry.fuelType || ''}` : fuelEntry.fuelType || 'DIESEL'}
+                                                </div>
                                             </div>
                                         </div>
 
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255,255,255,0.7)', fontSize: '12px', fontWeight: '600' }}>
-                                                    <Users size={14} color="#0ea5e9" />
+                                        <div style={{ 
+                                            display: 'grid', 
+                                            gridTemplateColumns: '1fr 1fr', 
+                                            gap: '12px', 
+                                            padding: '16px', 
+                                            background: 'rgba(15, 23, 42, 0.4)', 
+                                            borderRadius: '20px', 
+                                            border: '1px solid rgba(255,255,255,0.03)' 
+                                        }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Driver</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '14px', fontWeight: '700' }}>
+                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0ea5e9' }}></div>
                                                     {fuelEntry.driver || 'Unknown'}
                                                 </div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '700' }}>
-                                                    <Clock size={12} />
-                                                    {formatTime(fuelEntry.date)}
-                                                </div>
                                             </div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255,255,255,0.7)', fontSize: '12px', fontWeight: '600' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Vehicle</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '14px', fontWeight: '700' }}>
                                                     <Car size={14} color="#0ea5e9" />
                                                     {fuelEntry.vehicle?.carNumber?.split('#')[0] || 'N/A'}
                                                 </div>
-                                                {fuelEntry.odometer && (
-                                                    <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '700' }}>
-                                                        {fuelEntry.odometer} KM
-                                                    </div>
-                                                )}
                                             </div>
-                                            {(fuelEntry.stationName || fuelEntry.source) && (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '600', marginTop: '4px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                                    <MapPin size={12} color="rgba(255,255,255,0.4)" />
-                                                    {fuelEntry.stationName || fuelEntry.source}
+                                            {fuelEntry.odometer && (
+                                                <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                    <span style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.5)' }}>Odometer Reading</span>
+                                                    <span style={{ fontSize: '13px', fontWeight: '900', color: '#f59e0b' }}>{fuelEntry.odometer} KM</span>
                                                 </div>
                                             )}
                                         </div>
+
+                                        {(fuelEntry.stationName || fuelEntry.source) && (
+                                            <div style={{ 
+                                                display: 'flex', 
+                                                alignItems: 'center', 
+                                                gap: '10px', 
+                                                color: 'rgba(255,255,255,0.5)', 
+                                                fontSize: '11px', 
+                                                fontWeight: '700',
+                                                padding: '0 4px'
+                                            }}>
+                                                <MapPin size={14} color="#f59e0b" />
+                                                <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                    {fuelEntry.stationName || fuelEntry.source}
+                                                </span>
+                                            </div>
+                                        )}
                                     </motion.div>
                                 ))}
                             </motion.div>

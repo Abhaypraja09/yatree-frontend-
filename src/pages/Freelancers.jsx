@@ -586,8 +586,15 @@ const Freelancers = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const fd = new FormData();
-            Object.keys(punchInData).forEach(key => fd.append(key, punchInData[key]));
+            Object.keys(punchInData).forEach(key => {
+                let val = punchInData[key];
+                if (key === 'time' && val && !val.includes('+')) {
+                    val = `${val}:00+05:30`;
+                }
+                fd.append(key, val);
+            });
             fd.append('driverId', selectedDriver._id);
+            if (selectedCompany?._id) fd.append('companyId', selectedCompany._id);
             if (punchInPhotos.kmPhoto) fd.append('kmPhoto', punchInPhotos.kmPhoto);
 
             await axios.post('/api/admin/freelancers/punch-in', fd, {
@@ -622,7 +629,11 @@ const Freelancers = () => {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const fd = new FormData();
             Object.keys(punchOutData).forEach(key => {
-                if (key !== 'parkingSlipPhoto') fd.append(key, punchOutData[key]);
+                let val = punchOutData[key];
+                if (key === 'time' && val && !val.includes('+')) {
+                    val = `${val}:00+05:30`;
+                }
+                if (key !== 'parkingSlipPhoto') fd.append(key, val);
             });
             fd.append('driverId', selectedDriver._id);
             if (punchOutPhotos.kmPhoto) fd.append('kmPhoto', punchOutPhotos.kmPhoto);
@@ -717,6 +728,8 @@ const Freelancers = () => {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             await axios.post('/api/admin/manual-duty', {
                 ...manualData,
+                punchInTime: manualData.punchInTime ? `${manualData.punchInTime}:00+05:30` : undefined,
+                punchOutTime: manualData.punchOutTime ? `${manualData.punchOutTime}:00+05:30` : undefined,
                 companyId: selectedCompany._id
             }, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
@@ -743,46 +756,39 @@ const Freelancers = () => {
         setSubmitting(true);
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-
-            // Vouchers are records from the Vehicle collection (mapped in reports)
             const isVoucher = editingDuty.entryType === 'voucher';
 
-            console.log('[DEBUG] Updating Duty Record:', {
-                id: editingDuty._id,
-                type: editingDuty.entryType,
-                payload: editDutyForm
-            });
+            // Prepare payload
+            const payload = {
+                ...editDutyForm,
+                punchInTime: editDutyForm.punchInTime ? `${editDutyForm.punchInTime}:00+05:30` : undefined,
+                punchOutTime: editDutyForm.punchOutTime ? `${editDutyForm.punchOutTime}:00+05:30` : undefined,
+                startKm: Number(editDutyForm.startKm) || 0,
+                endKm: Number(editDutyForm.endKm) || 0,
+                parkingAmount: Number(editDutyForm.parkingAmount) || 0,
+                dailyWage: Number(editDutyForm.dailyWage) || 0,
+                bonusAmount: 0, // Explicitly zeroed as field removed
+                fuelAmount: Number(editDutyForm.fuelAmount) || 0
+            };
 
             if (isVoucher) {
-                // Update Outside Car Voucher (Vehicle record)
                 await axios.put(`/api/admin/vehicles/${editingDuty._id}`, {
-                    dutyAmount: Number(editDutyForm.dailyWage) || 0,
-                    dutyType: editDutyForm.pickUpLocation,
-                    dropLocation: editDutyForm.dropLocation,
-                    driverName: drivers.find(d => d._id === editDutyForm.driverId)?.name || editingDuty.driverName || editingDuty.driver?.name,
-                    // If we ever support parking for vouchers, it would go here
-                    tollParkingAmount: Number(editDutyForm.parkingAmount) || 0
+                    dutyAmount: payload.dailyWage,
+                    dutyType: payload.pickUpLocation,
+                    dropLocation: payload.dropLocation,
+                    driverName: drivers.find(d => d._id === payload.driverId)?.name || editingDuty.driverName || editingDuty.driver?.name,
+                    tollParkingAmount: payload.parkingAmount
                 }, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
             } else {
-                // Update Regular Attendance
-                await axios.put(`/api/admin/attendance/${editingDuty._id}`, {
-                    ...editDutyForm,
-                    // Ensure numbers are numbers
-                    startKm: Number(editDutyForm.startKm),
-                    endKm: Number(editDutyForm.endKm),
-                    parkingAmount: Number(editDutyForm.parkingAmount),
-                    dailyWage: Number(editDutyForm.dailyWage),
-                    bonusAmount: Number(editDutyForm.bonusAmount),
-                    fuelAmount: Number(editDutyForm.fuelAmount)
-                }, {
+                await axios.put(`/api/admin/attendance/${editingDuty._id}`, payload, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
             }
 
             setShowEditDutyModal(false);
-            setMessage({ type: 'success', text: 'Duty updated successfully' });
+            setMessage({ type: 'success', text: 'Duty record updated successfully' });
             fetchAttendance();
             setTimeout(() => setMessage({ type: '', text: '' }), 2000);
         } catch (err) {
@@ -997,11 +1003,31 @@ const Freelancers = () => {
                         gap: '12px',
                         alignItems: 'center',
                         justifyContent: 'flex-end',
-                        flex: 1
+                        flex: 1,
+                        maxWidth: '500px'
                     }}>
-                        {/* Filter dropdown — switches based on active tab */}
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '4px 12px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', flex: 1, minWidth: '160px' }}>
-                            <Filter size={14} color="#fbbf24" strokeWidth={2.5} />
+                        {/* Improved Filter Hub */}
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: 'rgba(0,0,0,0.25)',
+                            borderRadius: '16px',
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            padding: '4px 6px',
+                            flex: 1,
+                            minWidth: '220px',
+                            boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)'
+                        }}>
+                            <div style={{
+                                width: '34px', height: '34px', borderRadius: '12px',
+                                background: 'rgba(251, 191, 36, 0.1)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                border: '1px solid rgba(251, 191, 36, 0.15)',
+                                flexShrink: 0
+                            }}>
+                                <Filter size={14} color="#fbbf24" strokeWidth={3} />
+                            </div>
+
                             <select
                                 value={activeTab === 'accounts' ? settlementDriverFilter : driverFilter}
                                 onChange={(e) => activeTab === 'accounts' ? setSettlementDriverFilter(e.target.value) : setDriverFilter(e.target.value)}
@@ -1009,35 +1035,58 @@ const Freelancers = () => {
                                     background: 'transparent',
                                     border: 'none',
                                     color: 'white',
-                                    height: '38px',
+                                    height: '40px',
                                     fontSize: '12px',
-                                    fontWeight: '800',
+                                    fontWeight: '900',
                                     outline: 'none',
                                     flex: 1,
                                     cursor: 'pointer',
-                                    textTransform: 'uppercase'
+                                    textTransform: 'uppercase',
+                                    paddingRight: '10px',
+                                    paddingLeft: '10px',
+                                    letterSpacing: '0.5px'
                                 }}
                             >
-                                <option value="All" style={{ background: '#1e293b' }}>ALL FREELANCERS</option>
-                                {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name.split(' (F)')[0].toUpperCase()}</option>)}
+                                <option value="All" style={{ background: '#0f172a', fontWeight: '900', color: '#fbbf24' }}>● ALL FREELANCERS</option>
+                                <option disabled style={{ background: '#0f172a', opacity: 0.5 }}>────────────────</option>
+                                {drivers.map(d => (
+                                    <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>
+                                        {d.name.split(' (F)')[0].toUpperCase()}
+                                    </option>
+                                ))}
                             </select>
                         </div>
 
                         {activeTab !== 'accounts' && (
-                            <div style={{ display: 'flex', gap: '8px' }}>
+                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                                 <button
                                     className="glass-card-hover-effect"
                                     onClick={() => setShowManualModal(true)}
-                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', transition: '0.3s' }}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        width: '42px', height: '42px', borderRadius: '14px',
+                                        background: 'rgba(255,255,255,0.04)', color: 'white',
+                                        border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer',
+                                        transition: '0.3s'
+                                    }}
                                     title="Manual Entry"
                                 >
                                     <Edit2 size={16} />
                                 </button>
                                 <button
                                     onClick={() => setShowAddModal(true)}
-                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '0 16px', height: '40px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', border: 'none', color: 'black', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)', cursor: 'pointer', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase' }}
+                                    style={{
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        padding: '0 20px', height: '42px', borderRadius: '14px',
+                                        background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                                        border: 'none', color: 'black',
+                                        boxShadow: '0 8px 15px rgba(251, 191, 36, 0.25)',
+                                        cursor: 'pointer', fontWeight: '950', fontSize: '12px',
+                                        textTransform: 'uppercase', letterSpacing: '0.5px'
+                                    }}
                                 >
-                                    <Plus size={16} style={{ marginRight: '6px' }} /> <span className="hide-mobile">Add</span>
+                                    <Plus size={16} style={{ marginRight: '8px', strokeWidth: 3 }} />
+                                    <span className="hide-mobile">Quick Add</span>
                                 </button>
                             </div>
                         )}
@@ -1069,7 +1118,7 @@ const Freelancers = () => {
                     }}>
                         {[
                             { id: 'personnel', label: 'Drivers', icon: <UserIcon size={14} /> },
-                            { id: 'logistics', label: 'Freelancers', icon: <Car size={14} /> },
+                            { id: 'logistics', label: 'Dutys', icon: <Car size={14} /> },
                             { id: 'accounts', label: 'Settlement', icon: <IndianRupee size={14} /> }
                         ].map(tab => (
                             <button
@@ -2171,98 +2220,103 @@ const Freelancers = () => {
                     )
                 }
 
-                {/* Edit Duty Modal */}
                 {showEditDutyModal && (
-                    <Modal title={`Edit Duty Record`} onClose={() => setShowEditDutyModal(false)}>
-                        <form onSubmit={handleUpdateDuty} style={{ display: 'grid', gap: '20px' }}>
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                <Field label="Duty Date *" type="date" value={editDutyForm.date} onChange={v => setEditDutyForm({ ...editDutyForm, date: v })} required />
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(5,8,15,0.95)', zIndex: 11000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', backdropFilter: 'blur(16px)' }}>
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            className="premium-glass"
+                            style={{ width: '100%', maxWidth: '600px', borderRadius: '32px', overflow: 'hidden', maxHeight: '95vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.1)' }}
+                        >
+                            {/* Modal Header */}
+                            <div style={{ background: 'linear-gradient(135deg, rgba(99,102,241,0.15), rgba(79,70,229,0.05))', padding: '24px 30px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                    <div style={{ width: '45px', height: '45px', borderRadius: '15px', background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <Edit2 size={20} color="#818cf8" />
+                                    </div>
+                                    <div>
+                                        <h2 style={{ color: 'white', fontSize: '20px', margin: 0, fontWeight: '900' }}>Edit Duty Record</h2>
+                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Modify trip details & expenses</div>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowEditDutyModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '12px', padding: '10px', border: 'none', cursor: 'pointer' }}><X size={20} /></button>
+                            </div>
+
+                            <form onSubmit={handleUpdateDuty} style={{ padding: '30px', display: 'flex', flexDirection: 'column', gap: '22px' }}>
+                                {/* Basic Info Row */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <Field label="Duty Date *" type="date" value={editDutyForm.date} onChange={v => setEditDutyForm({ ...editDutyForm, date: v })} required />
+                                    <div>
+                                        <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Vehicle *</label>
+                                        <select
+                                            className="input-field"
+                                            required
+                                            value={editDutyForm.vehicleId}
+                                            onChange={e => setEditDutyForm({ ...editDutyForm, vehicleId: e.target.value })}
+                                            style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
+                                        >
+                                            {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber?.split('#')[0]}</option>)}
+                                        </select>
+                                    </div>
+                                </div>
+
                                 <div>
-                                    <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Vehicle *</label>
+                                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Freelancer *</label>
                                     <select
                                         className="input-field"
                                         required
-                                        value={editDutyForm.vehicleId}
-                                        onChange={e => setEditDutyForm({ ...editDutyForm, vehicleId: e.target.value })}
+                                        value={editDutyForm.driverId}
+                                        onChange={e => setEditDutyForm({ ...editDutyForm, driverId: e.target.value })}
                                         style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
                                     >
-                                        <option value="" style={{ background: '#0f172a', color: 'white' }}>Select Car</option>
-                                        {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a', color: 'white' }}>{v.carNumber?.split('#')[0]}</option>)}
+                                        {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name.split(' (F)')[0]}</option>)}
                                     </select>
                                 </div>
-                            </div>
 
-                            <div>
-                                <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>Driver *</label>
-                                <select
-                                    className="input-field"
-                                    required
-                                    value={editDutyForm.driverId}
-                                    onChange={e => setEditDutyForm({ ...editDutyForm, driverId: e.target.value })}
-                                    style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
-                                >
-                                    <option value="" style={{ background: '#0f172a', color: 'white' }}>Select Driver</option>
-                                    {drivers.map(d => <option key={d._id} value={d._id} style={{ background: '#0f172a', color: 'white' }}>{d.name.split(' (F)')[0]}</option>)}
-                                </select>
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                <Field label="Punch-In Time" type="datetime-local" value={editDutyForm.punchInTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchInTime: v })} />
-                                <Field label="Punch-Out Time" type="datetime-local" value={editDutyForm.punchOutTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchOutTime: v })} />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                <Field label="Starting KM" type="number" value={editDutyForm.startKm} onChange={v => setEditDutyForm({ ...editDutyForm, startKm: v })} />
-                                <Field label="Closing KM" type="number" value={editDutyForm.endKm} onChange={v => setEditDutyForm({ ...editDutyForm, endKm: v })} />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                <Field label="Pick-up Location" value={editDutyForm.pickUpLocation} onChange={v => setEditDutyForm({ ...editDutyForm, pickUpLocation: v })} />
-                                <Field label="Drop Location" value={editDutyForm.dropLocation} onChange={v => setEditDutyForm({ ...editDutyForm, dropLocation: v })} />
-                            </div>
-
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                <Field label="Parking/Toll (₹)" type="text" inputMode="decimal" value={editDutyForm.parkingAmount} onChange={v => {
-                                    const cleaned = v.replace(/[^0-9.]/g, '');
-                                    setEditDutyForm({ ...editDutyForm, parkingAmount: cleaned });
-                                }} />
-                                <div>
-                                    <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Paid By</label>
-                                    <div style={{ display: 'flex', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', padding: '4px', border: '1px solid rgba(255,255,255,0.05)', height: '52px' }}>
-                                        <button
-                                            type="button"
-                                            onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Self' })}
-                                            style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Self' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
-                                        >Self</button>
-                                        <button
-                                            type="button"
-                                            onClick={() => setEditDutyForm({ ...editDutyForm, parkingPaidBy: 'Office' })}
-                                            style={{ flex: 1, padding: '8px', borderRadius: '8px', border: 'none', background: editDutyForm.parkingPaidBy === 'Office' ? '#6366f1' : 'transparent', color: 'white', fontSize: '12px', fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s' }}
-                                        >Office</button>
+                                {/* Timing Section */}
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '20px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '15px' }}>Trip Duration & Timing</p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <Field label="Punch-In Time" type="datetime-local" value={editDutyForm.punchInTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchInTime: v })} />
+                                        <Field label="Punch-Out Time" type="datetime-local" value={editDutyForm.punchOutTime} onChange={v => setEditDutyForm({ ...editDutyForm, punchOutTime: v })} />
                                     </div>
                                 </div>
-                            </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
-                                <Field label="Daily Wage (₹) *" type="text" inputMode="decimal" value={editDutyForm.dailyWage} onChange={v => {
-                                    // Strip non-numeric except decimal point
-                                    const cleaned = v.replace(/[^0-9.]/g, '');
-                                    setEditDutyForm({ ...editDutyForm, dailyWage: cleaned });
-                                }} required />
-                                <Field label="Bonus Amount (₹)" type="text" inputMode="decimal" value={editDutyForm.bonusAmount} onChange={v => {
-                                    const cleaned = v.replace(/[^0-9.]/g, '');
-                                    setEditDutyForm({ ...editDutyForm, bonusAmount: cleaned });
-                                }} />
-                            </div>
+                                {/* Distance Section */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <Field label="Starting KM" type="number" value={editDutyForm.startKm} onChange={v => setEditDutyForm({ ...editDutyForm, startKm: v })} />
+                                    <Field label="Closing KM" type="number" value={editDutyForm.endKm} onChange={v => setEditDutyForm({ ...editDutyForm, endKm: v })} />
+                                </div>
 
-                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '11px', textAlign: 'center', marginTop: '-10px', marginBottom: '10px' }}>
-                                Day/Night bonus checkboxes removed. Please use the Bonus Amount field for any extras.
-                            </div>
+                                {/* Location Section */}
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <Field label="Pick-up Location" value={editDutyForm.pickUpLocation} onChange={v => setEditDutyForm({ ...editDutyForm, pickUpLocation: v })} />
+                                    <Field label="Drop Location" value={editDutyForm.dropLocation} onChange={v => setEditDutyForm({ ...editDutyForm, dropLocation: v })} />
+                                </div>
 
-                            <Field label="Remarks" value={editDutyForm.remarks} onChange={v => setEditDutyForm({ ...editDutyForm, remarks: v })} />
-                            <SubmitButton disabled={submitting} text="Update Duty Record" message={message} />
-                        </form>
-                    </Modal>
+                                {/* Financials Section */}
+                                <div style={{ background: 'rgba(16,185,129,0.03)', padding: '20px', borderRadius: '20px', border: '1px solid rgba(16,185,129,0.1)' }}>
+                                    <p style={{ color: '#10b981', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '15px' }}>Billing & Salary</p>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <Field label="Daily Wage (₹) *" type="text" inputMode="decimal" value={editDutyForm.dailyWage} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setEditDutyForm({ ...editDutyForm, dailyWage: cleaned });
+                                        }} required />
+                                        <Field label="Parking/Toll (₹)" type="text" inputMode="decimal" value={editDutyForm.parkingAmount} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setEditDutyForm({ ...editDutyForm, parkingAmount: cleaned });
+                                        }} />
+                                    </div>
+                                </div>
+
+                                <Field label="Admin Remarks" placeholder="Any special notes about this duty..." value={editDutyForm.remarks} onChange={v => setEditDutyForm({ ...editDutyForm, remarks: v })} />
+
+                                <div style={{ marginTop: '10px' }}>
+                                    <SubmitButton disabled={submitting} text="Update Duty Record" message={message} />
+                                </div>
+                            </form>
+                        </motion.div>
+                    </div>
                 )}
 
                 <AnimatePresence>

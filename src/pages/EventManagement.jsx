@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import {
-    Calendar, Plus, Search, Trash2, Edit, ChevronLeft, ChevronRight, Car,
+    Calendar, Plus, Search, Trash2, Edit, ChevronLeft, ChevronRight, Car, PlusCircle,
     User, MapPin, Target, Briefcase, X, Save, FileSpreadsheet, Users, Building2, TruckIcon, Wallet, Navigation
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,6 +33,9 @@ const EventManagement = () => {
     const [selectedDay, setSelectedDay] = useState('All'); // 'All' or 1-31
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
+    const [statusTab, setStatusTab] = useState('Running'); // 'Upcoming' | 'Running' | 'Closed'
+    const [selectedEventDetails, setSelectedEventDetails] = useState(null);
+    const [showDetailsModal, setShowDetailsModal] = useState(false);
 
     useEffect(() => {
         if (selectedDay === 'All') {
@@ -86,11 +89,52 @@ const EventManagement = () => {
                 defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, 1));
             }
         }
-        setEventFormData({ name: '', client: '', date: defaultDate, location: '', description: '' });
+        setEventFormData({ 
+            name: '', 
+            client: '', 
+            date: defaultDate, 
+            location: '', 
+            description: '',
+            totalRevenue: '',
+            advanceAmount: '',
+            amountReceived: '',
+            status: 'Upcoming'
+        });
         setShowEventModal(true);
     };
 
-    const [eventFormData, setEventFormData] = useState({ name: '', client: '', date: getToday(), location: '', description: '' });
+    const handleEditEvent = (ev) => {
+        setIsEditingEvent(true);
+        setSelectedId(ev._id);
+        setEventFormData({
+            name: ev.name,
+            client: ev.client,
+            date: toISTDateString(new Date(ev.date)),
+            location: ev.location || '',
+            description: ev.description || '',
+            totalRevenue: ev.totalRevenue || '',
+            advanceAmount: ev.advanceAmount || '',
+            amountReceived: ev.amountReceived || '',
+            status: ev.status || 'Upcoming'
+        });
+        setShowEventModal(true);
+    };
+
+    const fetchEventDetails = async (eventId) => {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const { data } = await axios.get(`/api/admin/events/details/${eventId}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setSelectedEventDetails(data);
+            setShowDetailsModal(true);
+        } catch (err) { alert('Error fetching details'); }
+    };
+
+    const [eventFormData, setEventFormData] = useState({ 
+        name: '', client: '', date: getToday(), location: '', description: '',
+        totalRevenue: '', advanceAmount: '', amountReceived: '', status: 'Upcoming'
+    });
     const [dutyFormData, setDutyFormData] = useState({
         carNumber: '', model: '', dropLocation: '', date: getToday(),
         eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', // 'Fleet' | 'External'
@@ -105,13 +149,13 @@ const EventManagement = () => {
             fetchVehicles();
             fetchMasterVehicles();
         }
-    }, [selectedCompany, fromDate, toDate]);
+    }, [selectedCompany, fromDate, toDate, statusTab]);
 
     const fetchEvents = async () => {
         if (!selectedCompany?._id) return;
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/admin/events/${selectedCompany._id}`, {
+            const { data } = await axios.get(`/api/admin/events/${selectedCompany._id}?status=${statusTab === 'Start' ? 'Upcoming' : statusTab === 'Close' ? 'Closed' : 'Running'}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setEvents(data || []);
@@ -219,6 +263,18 @@ const EventManagement = () => {
             fetchEvents();
             alert('Event saved successfully');
         } catch (err) { alert('Error saving event'); }
+    };
+
+    const handleDeleteEvent = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this event? This will also remove associated external car duties.')) return;
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.delete(`/api/admin/events/${id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            fetchEvents();
+            alert('Event deleted successfully');
+        } catch (err) { alert('Error deleting event'); }
     };
 
     const handleSubmitDuty = async (e) => {
@@ -329,6 +385,11 @@ const EventManagement = () => {
             const event = events.find(e => e._id === v.eventId);
             const eventName = event?.name || '';
             const clientName = event?.client || '';
+            const eventStatus = event?.status || '';
+
+            // ONLY show duties belonging to events in the CURRENT status tab phase
+            const currentTabStatus = statusTab === 'Start' ? 'Upcoming' : statusTab === 'Close' ? 'Closed' : 'Running';
+            if (v.eventId && eventStatus !== currentTabStatus) return false;
 
             const matchesSearch =
                 plate.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -341,12 +402,12 @@ const EventManagement = () => {
             const matchesSource = sourceFilter === 'All' || (v.vehicleSource || 'External') === sourceFilter;
 
             return matchesSearch && matchesClient && matchesSource;
-        }).sort((a, b) => {
-            const dA = (a.date || a.carNumber?.split('#')[1] || '');
-            const dB = (b.date || b.carNumber?.split('#')[1] || '');
+        }).sort((vA, vB) => {
+            const dA = (vA.date || vA.carNumber?.split('#')[1] || '');
+            const dB = (vB.date || vB.carNumber?.split('#')[1] || '');
             return dB.localeCompare(dA);
         });
-    }, [vehicles, events, searchTerm, clientFilter, fromDate, toDate, sourceFilter]);
+    }, [vehicles, events, searchTerm, clientFilter, fromDate, toDate, sourceFilter, statusTab]);
 
     // SMART DYNAMIC SUGGESTIONS (SAME AS OUTSIDE CARS)
     const dutyTypeSuggestions = React.useMemo(() => {
@@ -475,347 +536,243 @@ const EventManagement = () => {
                     </div>
                 </div>
             </div>
-            {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
+            {/* ═══ PREMIUM STATUS NAVIGATION ═══ */}
             <div style={{
-                background: 'rgba(15, 23, 42, 0.65)',
-                border: '1px solid rgba(255,255,255,0.07)',
-                borderRadius: '24px',
-                padding: 'clamp(15px, 3vw, 24px)',
-                marginBottom: '24px',
-                backdropFilter: 'blur(24px)',
-                display: 'flex', flexDirection: 'column', gap: '18px',
+                position: 'relative',
+                marginBottom: '40px',
+                padding: '12px',
+                background: 'rgba(15, 23, 42, 0.45)',
+                borderRadius: '30px',
+                border: '1px solid rgba(255,255,255,0.06)',
+                display: 'flex',
+                gap: '12px',
+                backdropFilter: 'blur(30px)',
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
             }}>
-                {/* Row 1: Search & Entity Context */}
-                <div className="flex-resp" style={{ gap: '16px', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div style={{ position: 'relative', flex: '1.5', minWidth: '250px' }}>
-                        <Search size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(251,191,36,0.4)' }} />
-                        <input
-                            type="text"
-                            placeholder="Identify specific duties, drivers, or plate numbers..."
-                            value={searchTerm}
-                            onChange={e => setSearchTerm(e.target.value)}
-                            className="premium-compact-input"
-                            style={{ paddingLeft: '48px', height: '50px', fontSize: '13px', background: 'rgba(0,0,0,0.25)', border: '1px solid rgba(255,255,255,0.04)' }}
-                        />
-                    </div>
-
-                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', gap: '2px' }}>
-                        {[
-                            { id: 'All', label: 'ALL', color: '#fbbf24' },
-                            { id: 'Fleet', label: 'FLEET', color: '#10b981' },
-                            { id: 'External', label: 'EXT', color: '#a855f7' }
-                        ].map(s => (
-                            <button key={s.id} onClick={() => setSourceFilter(s.id)} style={{
-                                padding: '8px 16px', borderRadius: '10px', border: 'none', cursor: 'pointer', fontSize: '10px', fontWeight: '950',
-                                background: sourceFilter === s.id ? `${s.color}15` : 'transparent',
-                                color: sourceFilter === s.id ? s.color : 'rgba(255,255,255,0.25)',
-                                transition: 'all 0.2s ease',
-                                letterSpacing: '1px'
-                            }}>{s.label}</button>
-                        ))}
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px', flex: '1', minWidth: '200px' }}>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                            <Building2 size={13} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
-                            <select value={clientFilter} onChange={e => setClientFilter(e.target.value)} className="premium-compact-input" style={{ width: '100%', height: '50px', paddingLeft: '38px', fontSize: '12px', background: 'rgba(0,0,0,0.2)' }}>
-                                <option value="All">All Clients</option>
-                                {uniqueClients.map(c => <option key={c} value={c}>{c}</option>)}
-                            </select>
+                {[
+                    { id: 'Start', label: 'Upcoming', color: '#10b981', icon: <Navigation size={20} />, count: events.filter(e => e.status === 'Upcoming' || !e.status).length },
+                    { id: 'Running', label: 'Live Now', color: '#fbbf24', icon: <Target size={20} />, count: events.filter(e => e.status === 'Running').length },
+                    { id: 'Close', label: 'Completed', color: '#f87171', icon: <FileSpreadsheet size={20} />, count: events.filter(e => e.status === 'Closed').length }
+                ].map((t) => (
+                    <button 
+                        key={t.id} 
+                        onClick={() => setStatusTab(t.id)} 
+                        style={{
+                            flex: 1, 
+                            padding: '16px 20px', 
+                            borderRadius: '20px', 
+                            border: 'none',
+                            background: statusTab === t.id ? 'rgba(255,255,255,0.05)' : 'transparent',
+                            color: statusTab === t.id ? 'white' : 'rgba(255,255,255,0.3)',
+                            cursor: 'pointer', 
+                            transition: '0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            gap: '12px',
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        <div style={{ 
+                            width: '40px', 
+                            height: '40px', 
+                            borderRadius: '12px', 
+                            background: statusTab === t.id ? `${t.color}20` : 'rgba(255,255,255,0.03)', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            justifyContent: 'center',
+                            color: statusTab === t.id ? t.color : 'inherit',
+                            transition: '0.3s'
+                        }}>
+                            {t.icon}
                         </div>
-                    </div>
-                </div>
-
-                {/* Row 2: Temporal Filters & Global Actions */}
-                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '20px', paddingTop: '18px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                            <button onClick={() => shiftDays(-1)} style={{ width: '38px', height: '38px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                <ChevronLeft size={16} />
-                            </button>
-                            <div onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                style={{ height: '38px', minWidth: '130px', background: 'rgba(56, 189, 248, 0.06)', border: '1px solid rgba(56, 189, 248, 0.1)', borderRadius: '14px', padding: '0 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 4px' }}>
-                                <span style={{ fontSize: '12px', fontWeight: '900', color: 'white', letterSpacing: '0.3px' }}>
-                                    {selectedDay === 'All' ? `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` : formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
-                                </span>
-                                <input type="date" value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))} onChange={e => { const d = new Date(e.target.value); setSelectedYear(d.getFullYear()); setSelectedMonth(d.getMonth()); setSelectedDay(d.getDate().toString()); }} style={{ position: 'absolute', inset: 0, opacity: 0 }} />
-                            </div>
-                            <button onClick={() => shiftDays(1)} style={{ width: '38px', height: '38px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                <ChevronRight size={16} />
-                            </button>
+                        <div style={{ textAlign: 'left' }}>
+                            <div style={{ fontSize: '14px', fontWeight: '950', letterSpacing: '-0.2px' }}>{t.label}</div>
+                            <div style={{ fontSize: '10px', opacity: 0.5, fontWeight: '800' }}>{t.count} Active Entries</div>
                         </div>
-
-                        {selectedDay !== 'All' && (
-                            <motion.button initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} onClick={() => setSelectedDay('All')}
-                                style={{ height: '46px', padding: '0 16px', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', color: '#fbbf24', fontSize: '10px', fontWeight: '950', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase' }}>
-                                <Calendar size={13} /> Full Month
-                            </motion.button>
+                        {statusTab === t.id && (
+                            <motion.div 
+                                layoutId="active-pill"
+                                style={{ 
+                                    position: 'absolute', 
+                                    inset: 0, 
+                                    border: `2px solid ${t.color}40`,
+                                    borderRadius: '20px',
+                                    pointerEvents: 'none'
+                                }} 
+                            />
                         )}
+                    </button>
+                ))}
+            </div>
 
-                        <div style={{ display: 'flex', gap: '6px' }}>
-                            <select value={selectedMonth} onChange={e => { setSelectedMonth(Number(e.target.value)); setSelectedDay('All'); }} className="premium-compact-input" style={{ height: '46px', width: '85px', borderRadius: '14px', fontSize: '11px', fontWeight: '800' }}>
-                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (<option key={m} value={idx}>{m}</option>))}
-                            </select>
-                            <select value={selectedYear} onChange={e => { setSelectedYear(Number(e.target.value)); setSelectedDay('All'); }} className="premium-compact-input" style={{ height: '46px', width: '85px', borderRadius: '14px', fontSize: '11px', fontWeight: '800' }}>
-                                {[2024, 2025, 2026, 2027].map(y => (<option key={y} value={y}>{y}</option>))}
-                            </select>
-                        </div>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        <button onClick={exportExcel} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '900', cursor: 'pointer', transition: '0.2s' }}>
-                            <FileSpreadsheet size={16} /> EXCEL
-                        </button>
-                        <button onClick={handleOpenEvent} style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 18px', background: 'rgba(251,191,36,0.05)', border: '1px solid rgba(251,191,36,0.15)', borderRadius: '16px', color: '#fbbf24', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}>
-                            <Plus size={16} /> EVENT
-                        </button>
-                        <button onClick={handleOpenDuty} className="btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '48px', padding: '0 24px', borderRadius: '16px', fontSize: '13px', fontWeight: '950', boxShadow: '0 10px 20px rgba(251,191,36,0.2)' }}>
-                            <Plus size={18} strokeWidth={3} /> ADD DUTY
-                        </button>
-                    </div>
+            <div style={{
+                background: 'rgba(15, 23, 42, 0.4)',
+                border: '1px solid rgba(255,255,255,0.06)',
+                borderRadius: '32px',
+                padding: '24px',
+                marginBottom: '32px',
+                backdropFilter: 'blur(34px)',
+                display: 'flex', gap: '20px', alignItems: 'center',
+                boxShadow: '0 30px 60px rgba(0,0,0,0.5)'
+            }}>
+                <div style={{ position: 'relative', flex: '1', minWidth: '280px' }}>
+                    <Search size={22} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
+                    <input
+                        type="text"
+                        placeholder="Search fleet, event name, or client..."
+                        value={searchTerm}
+                        onChange={e => setSearchTerm(e.target.value)}
+                        style={{
+                            width: '100%', padding: '18px 24px 18px 60px', borderRadius: '20px',
+                            background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)',
+                            color: 'white', fontSize: '15px', fontWeight: '800', transition: '0.3s', outline: 'none'
+                        }}
+                    />
+                </div>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                    <button onClick={() => { setIsEditingEvent(false); setEventFormData({ name: '', client: '', date: getToday(), status: 'Upcoming' }); setShowEventModal(true); }}
+                        style={{
+                            padding: '18px 28px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+                            background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', color: 'black',
+                            fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px',
+                            boxShadow: '0 10px 25px rgba(251,191,36,0.3)', transition: '0.3s'
+                        }}
+                    >
+                        <PlusCircle size={20} /> NEW MASTER EVENT
+                    </button>
+                    <button onClick={() => { setIsEditingDuty(false); setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '' }); setShowDutyModal(true); }}
+                        style={{
+                            padding: '18px 24px', borderRadius: '20px', border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.1)',
+                            color: '#10b981', fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px',
+                            cursor: 'pointer', transition: '0.3s'
+                        }}
+                    >
+                        <Car size={20} /> ADD DAILY DUTY
+                    </button>
                 </div>
             </div>
 
-            {/* ═══ CLEAN PREMIUM DESKTOP TABLE ═══ */}
-            <div className="glass-card hide-mobile" style={{
-                padding: 0,
-                overflow: 'hidden',
-                border: '1px solid rgba(255,255,255,0.08)',
-                background: 'rgba(8, 14, 26, 0.4)',
-                backdropFilter: 'blur(20px)',
-                borderRadius: '24px',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+            {/* ═══ EVENT ROW LIST ═══ */}
+            <div className="event-list" style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+                marginBottom: '40px'
             }}>
-                <div className="scroll-x">
-                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '900px' }}>
-                        <thead>
-                            <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                {[
-                                    { label: 'Timeline', width: '120px' },
-                                    { label: 'Vehicle / Resource', width: 'auto' },
-                                    { label: 'Assignment', width: 'auto' },
-                                    { label: 'Operational Logistics', width: 'auto' },
-                                    { label: 'Settlement', width: '140px', align: 'right' },
-                                    { label: '', width: '100px', align: 'right' }
-                                ].map((h, i) => (
-                                    <th key={i} style={{
-                                        padding: '18px 24px',
-                                        textAlign: h.align || 'left',
-                                        fontSize: '10px',
-                                        fontWeight: '900',
-                                        color: 'rgba(255,255,255,0.3)',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '1.5px',
-                                        borderBottom: '1px solid rgba(255,255,255,0.08)',
-                                        borderRight: i < 5 ? '1px solid rgba(255,255,255,0.03)' : 'none',
-                                        width: h.width
-                                    }}>
-                                        {h.label}
-                                    </th>
-                                ))}
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px 0' }}><div className="spinner" style={{ margin: '0 auto' }}></div></td></tr>
-                            ) : filtered.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '120px 0' }}>
-                                    <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}>
-                                        <Briefcase size={80} style={{ opacity: 0.05, color: 'white', marginBottom: '24px' }} />
-                                        <h3 style={{ color: 'white', fontWeight: '900', fontSize: '24px', marginBottom: '8px' }}>No Assignments</h3>
-                                        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>Refine your filters.</p>
-                                    </motion.div>
-                                </td></tr>
-                            ) : filtered.map((v, idx) => {
-                                const event = events.find(e => e._id === v.eventId);
-                                const dutyDate = v.carNumber?.split('#')[1];
-                                const src = v.vehicleSource || 'External';
-                                const isFleet = src === 'Fleet';
-
-                                return (
-                                    <motion.tr
-                                        key={v._id}
-                                        initial={{ opacity: 0, y: 10 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.03 }}
-                                        style={{
-                                            borderBottom: '1px solid rgba(255,255,255,0.05)',
-                                            background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)',
-                                            transition: 'all 0.2s ease'
-                                        }}
-                                        className="table-row-hover"
-                                    >
-                                        {/* Timeline Cell */}
-                                        <td style={{ padding: '20px 24px', borderRight: '1px solid rgba(255,255,255,0.03)' }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                <span style={{ fontSize: '15px', fontWeight: '900', color: 'white', letterSpacing: '-0.3px' }}>
-                                                    {dutyDate ? new Date(dutyDate + 'T12:00:00Z').toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }) : '—'}
-                                                </span>
-                                                <span style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '0.8px', marginTop: '2px', opacity: 0.8 }}>
-                                                    {dutyDate ? new Date(dutyDate + 'T12:00:00Z').toLocaleDateString('en-IN', { weekday: 'short' }) : '—'}
-                                                </span>
-                                            </div>
-                                        </td>
-
-                                        {/* Vehicle Cell */}
-                                        <td style={{ padding: '20px 24px', borderRight: '1px solid rgba(255,255,255,0.03)' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <div style={{
-                                                    width: '38px', height: '38px', borderRadius: '12px',
-                                                    background: isFleet ? 'rgba(16,185,129,0.08)' : 'rgba(168,85,247,0.08)',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                    border: `1px solid ${isFleet ? 'rgba(16,185,129,0.15)' : 'rgba(168,85,247,0.15)'}`
-                                                }}>
-                                                    <Car size={18} color={isFleet ? '#10b981' : '#a855f7'} />
-                                                </div>
-                                                <div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                        <span style={{ fontSize: '14px', fontWeight: '900', color: 'white' }}>{v.carNumber?.split('#')[0]}</span>
-                                                        <span style={{ fontSize: '7px', fontWeight: '950', padding: '1px 6px', borderRadius: '4px', background: isFleet ? '#10b98115' : '#a855f715', color: isFleet ? '#10b981' : '#a855f7', border: `1px solid ${isFleet ? '#10b98125' : '#a855f725'}`, letterSpacing: '0.5px' }}>{src.toUpperCase()}</span>
-                                                    </div>
-                                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', marginTop: '2px', fontWeight: '600' }}>
-                                                        {v.model} {v.driverName && <span style={{ opacity: 0.4 }}> • {v.driverName}</span>}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        {/* Assignment Cell */}
-                                        <td style={{ padding: '20px 24px', borderRight: '1px solid rgba(255,255,255,0.03)' }}>
-                                            <div style={{ maxWidth: '200px' }}>
-                                                <div style={{ color: 'white', fontSize: '13px', fontWeight: '800', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event?.name || 'Unassigned Event'}</div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                                    <Building2 size={10} color="rgba(255,255,255,0.2)" />
-                                                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '600', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{event?.client || 'N/A'}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-
-                                        {/* Logistics Cell */}
-                                        <td style={{ padding: '20px 24px', borderRight: '1px solid rgba(255,255,255,0.03)' }}>
-                                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                                {v.dutyType && <span style={{ padding: '3px 8px', borderRadius: '6px', background: 'rgba(251,191,36,0.05)', color: '#fbbf24', fontSize: '9px', fontWeight: '800', border: '1px solid rgba(251,191,36,0.1)' }}>{v.dutyType}</span>}
-                                                {v.dutyTime && (
-                                                    <span style={{ padding: '3px 8px', borderRadius: '6px', background: 'rgba(56,189,248,0.05)', color: '#38bdf8', fontSize: '9px', fontWeight: '800', border: '1px solid rgba(56,189,248,0.1)', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                                        {(() => {
-                                                            const [h, m] = v.dutyTime.split(':').map(Number);
-                                                            if (isNaN(h) || isNaN(m)) return v.dutyTime;
-                                                            const ampm = h >= 12 ? 'PM' : 'AM';
-                                                            const hour12 = h % 12 || 12;
-                                                            return `${hour12}:${String(m).padStart(2, '0')} ${ampm}`;
-                                                        })()}
-                                                    </span>
-                                                )}
-                                                {v.dropLocation && <span style={{ padding: '3px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={9} /> {v.dropLocation}</span>}
-                                            </div>
-                                        </td>
-
-                                        {/* Settlement Cell */}
-                                        <td style={{ padding: '20px 24px', textAlign: 'right', borderRight: '1px solid rgba(255,255,255,0.03)' }}>
-                                            <div style={{ fontSize: '16px', fontWeight: '950', color: '#10b981' }}>₹{Number(v.dutyAmount || 0).toLocaleString()}</div>
-                                            <div style={{ fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.2)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Net Duty Value</div>
-                                        </td>
-
-                                        {/* Actions Cell */}
-                                        <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                                                <button onClick={() => handleEditDuty(v)} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }} className="action-btn-hover">
-                                                    <Edit size={14} />
-                                                </button>
-                                                <button onClick={() => handleDeleteDuty(v._id)} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }} className="action-btn-hover-del">
-                                                    <Trash2 size={14} />
-                                                </button>
-                                            </div>
-                                        </td>
-                                    </motion.tr>
-                                );
-                            })}
-                        </tbody>
-                    </table>
-                </div>
-            </div >
-
-            {/* ═══ PREMIUM MOBILE CARDS ═══ */}
-            <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                {loading ? (
-                    <div style={{ padding: '60px 0', textAlign: 'center' }}><div className="spinner" style={{ margin: '0 auto' }} /></div>
-                ) : filtered.length === 0 ? (
-                    <div style={{ padding: '60px 20px', textAlign: 'center', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                        <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px', margin: 0 }}>No duties recorded for this period.</p>
+                {events.length === 0 ? (
+                    <div style={{ padding: '80px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '32px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                        <Target size={48} style={{ opacity: 0.1, marginBottom: '16px' }} />
+                        <h3 style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>No {statusTab} Events Found</h3>
+                        <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px' }}>Search returned no matching master records.</p>
                     </div>
-                ) : filtered.map((v, idx) => {
-                    const event = events.find(e => e._id === v.eventId);
-                    const dutyDate = v.carNumber?.split('#')[1];
-                    const src = v.vehicleSource || 'External';
-                    const isFleet = src === 'Fleet';
+                ) : events.filter(e => {
+                    if (searchTerm) return e.name.toLowerCase().includes(searchTerm.toLowerCase()) || e.client.toLowerCase().includes(searchTerm.toLowerCase());
+                    return true;
+                }).map((ev, i) => (
+                    <motion.div
+                        key={ev._id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: i * 0.05 }}
+                        onClick={() => fetchEventDetails(ev._id)}
+                        style={{
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            border: '1px solid rgba(255,255,255,0.06)',
+                            borderRadius: '24px',
+                            padding: '16px 24px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '24px',
+                            transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                            backdropFilter: 'blur(20px)',
+                            position: 'relative',
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+                        }}
+                        className="event-row-hover"
+                    >
+                        {/* 1. Date Block */}
+                        <div style={{ 
+                            width: '80px', padding: '10px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', 
+                            border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center', flexShrink: 0 
+                        }}>
+                            <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '950', letterSpacing: '1px', textTransform: 'uppercase' }}>{new Date(ev.date).toLocaleDateString('en-IN', { month: 'short' })}</div>
+                            <div style={{ fontSize: '22px', color: 'white', fontWeight: '950', lineHeight: 1 }}>{new Date(ev.date).getDate()}</div>
+                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{new Date(ev.date).getFullYear()}</div>
+                        </div>
 
-                    return (
-                        <motion.div
-                            key={v._id}
-                            initial={{ opacity: 0, y: 15 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: idx * 0.03 }}
-                            style={{
-                                background: 'rgba(15, 23, 42, 0.4)',
-                                border: '1px solid rgba(255,255,255,0.06)',
-                                borderRadius: '24px',
-                                overflow: 'hidden',
-                                boxShadow: '0 10px 30px rgba(0,0,0,0.2)'
-                            }}
-                        >
-                            {/* Card Header */}
-                            <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.1)' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: isFleet ? 'rgba(16,185,129,0.1)' : 'rgba(168,85,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Car size={18} color={isFleet ? '#10b981' : '#a855f7'} />
-                                    </div>
-                                    <div>
-                                        <div style={{ fontSize: '15px', fontWeight: '900', color: 'white' }}>{v.carNumber?.split('#')[0]}</div>
-                                        <div style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', textTransform: 'uppercase' }}>{formatDateDisplay(dutyDate)}</div>
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ fontSize: '16px', fontWeight: '950', color: '#10b981' }}>₹{Number(v.dutyAmount || 0).toLocaleString()}</div>
-                                    <span style={{ fontSize: '7px', fontWeight: '950', padding: '2px 8px', borderRadius: '20px', background: isFleet ? '#10b98120' : '#a855f720', color: isFleet ? '#10b981' : '#a855f7', border: `1px solid ${isFleet ? '#10b98130' : '#a855f730'}`, letterSpacing: '1px' }}>{src.toUpperCase()}</span>
+                        {/* 2. Info Section */}
+                        <div style={{ flex: 1, minWidth: '200px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                                <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>{ev.name}</h3>
+                                <div style={{ 
+                                    padding: '3px 10px', borderRadius: '12px', fontSize: '9px', fontWeight: '950',
+                                    background: ev.status === 'Running' ? '#fbbf2415' : ev.status === 'Closed' ? '#f8717115' : '#10b98115', 
+                                    color: ev.status === 'Running' ? '#fbbf24' : ev.status === 'Closed' ? '#f87171' : '#10b981',
+                                    border: `1px solid ${ev.status === 'Running' ? '#fbbf2425' : ev.status === 'Closed' ? '#f8717125' : '#10b98125'}`
+                                }}>
+                                    {ev.status?.toUpperCase()}
                                 </div>
                             </div>
+                            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '13px', margin: 0, fontWeight: '700' }}>{ev.client}</p>
+                        </div>
 
-                            {/* Card Body */}
-                            <div style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                                <div style={{ display: 'flex', gap: '12px' }}>
-                                    <div style={{ flex: 1.2 }}>
-                                        <label style={{ fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Event & Client</label>
-                                        <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>{event?.name || 'N/A'}</div>
-                                        <div style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(255,255,255,0.4)' }}>{event?.client || 'N/A'}</div>
-                                    </div>
-                                    {v.driverName && (
-                                        <div style={{ flex: 0.8 }}>
-                                            <label style={{ fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '4px', display: 'block' }}>Driver</label>
-                                            <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>{v.driverName}</div>
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                                    {v.dutyType && <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(251,191,36,0.06)', color: '#fbbf24', fontSize: '10px', fontWeight: '800' }}>{v.dutyType}</span>}
-                                    {v.dutyTime && <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(56,189,248,0.06)', color: '#38bdf8', fontSize: '10px', fontWeight: '800' }}>{v.dutyTime}</span>}
-                                    {v.dropLocation && <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(255,255,255,0.04)', color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}><MapPin size={10} /> {v.dropLocation}</span>}
-                                </div>
-
-                                <div style={{ borderTop: '1px solid rgba(255,255,255,0.03)', paddingTop: '16px', display: 'flex', gap: '10px' }}>
-                                    <button onClick={() => handleEditDuty(v)} style={{ flex: 1, height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontSize: '11px', fontWeight: '800', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}>
-                                        <Edit size={14} /> EDIT
-                                    </button>
-                                    <button onClick={() => handleDeleteDuty(v._id)} style={{ width: '40px', height: '36px', borderRadius: '10px', background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.15)', color: '#f87171', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                        <Trash2 size={14} />
-                                    </button>
-                                </div>
+                        {/* 3. Vehicle Counts */}
+                        <div style={{ display: 'flex', gap: '12px', flexShrink: 0 }}>
+                            <div style={{ textAlign: 'center', minWidth: '80px' }}>
+                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '4px' }}>COMPANY</div>
+                                <div style={{ color: '#10b981', fontSize: '18px', fontWeight: '950' }}>{ev.fleetCount || 0} <span style={{ fontSize: '10px', opacity: 0.4 }}>CARS</span></div>
                             </div>
-                        </motion.div>
-                    );
-                })}
-            </div >
+                            <div style={{ width: '1px', background: 'rgba(255,255,255,0.05)', height: '40px', alignSelf: 'center' }} />
+                            <div style={{ textAlign: 'center', minWidth: '80px' }}>
+                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '4px' }}>EXTERNAL</div>
+                                <div style={{ color: '#a855f7', fontSize: '18px', fontWeight: '950' }}>{ev.externalCount || 0} <span style={{ fontSize: '10px', opacity: 0.4 }}>CARS</span></div>
+                            </div>
+                        </div>
+
+                        {/* 4. Financials */}
+                        <div style={{ display: 'flex', gap: '24px', flexShrink: 0, paddingLeft: '24px' }}>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px' }}>REVENUE</div>
+                                <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '950' }}>₹{Number(ev.totalRevenue || 0).toLocaleString()}</div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px' }}>RECEIVED</div>
+                                <div style={{ color: 'white', fontSize: '16px', fontWeight: '950' }}>₹{Number(ev.amountReceived || 0).toLocaleString()}</div>
+                            </div>
+                        </div>
+
+                        {/* 5. Actions */}
+                        <div style={{ display: 'flex', gap: '8px', paddingLeft: '20px' }}>
+                            <button onClick={(e) => { e.stopPropagation(); handleEditEvent(ev); }} 
+                                style={{ 
+                                    width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', 
+                                    border: '1px solid rgba(251,191,36,0.15)', color: '#fbbf24', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s'
+                                }}
+                                className="action-btn-list"
+                            >
+                                <Edit size={18} />
+                            </button>
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteEvent(ev._id); }} 
+                                style={{ 
+                                    width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(244,63,94,0.1)', 
+                                    border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s'
+                                }}
+                                className="action-btn-list"
+                            >
+                                <Trash2 size={18} />
+                            </button>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* ═══ MASTER GRID FOCUS ═══ */}
+            {/* Removed global duty logs as requested by user to simplify and focus UI on Master Events */}
 
             {/* ═══ DUTY LOG MODAL ═══ */}
             <AnimatePresence>
@@ -1040,6 +997,195 @@ const EventManagement = () => {
                 )}
             </AnimatePresence >
 
+            {/* ═══ EVENT DETAILS MODAL ═══ */}
+            <AnimatePresence>
+                {showDetailsModal && selectedEventDetails && (
+                    <div className="modal-overlay">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="modal-container"
+                            style={{
+                                width: 'min(98%, 950px)',
+                                maxHeight: '95vh',
+                                background: '#0a0f1d',
+                                borderRadius: '32px',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column'
+                            }}
+                        >
+                            <div style={{ padding: '32px', background: 'rgba(15,23,42,0.8)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
+                                        <h2 style={{ color: 'white', fontSize: '32px', fontWeight: '950', margin: 0 }}>{selectedEventDetails.event.name}</h2>
+                                        <span style={{ 
+                                            padding: '6px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '950', 
+                                            background: selectedEventDetails.event.status === 'Running' ? '#fbbf2433' : selectedEventDetails.event.status === 'Closed' ? '#f8717133' : '#10b98133',
+                                            color: selectedEventDetails.event.status === 'Running' ? '#fbbf24' : selectedEventDetails.event.status === 'Closed' ? '#f87171' : '#10b981',
+                                            border: '1px solid rgba(255,255,255,0.05)'
+                                        }}>
+                                            {selectedEventDetails.event.status}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '14px', fontWeight: '700' }}>
+                                            <Building2 size={16} color="#fbbf24" /> {selectedEventDetails.event.client}
+                                        </div>
+                                        <div style={{ width: '1px', height: '14px', background: 'rgba(255,255,255,0.1)' }} />
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '14px', fontWeight: '700' }}>
+                                            <Calendar size={16} color="#fbbf24" /> {formatDateIST(selectedEventDetails.event.date)}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowDetailsModal(false)} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', width: '48px', height: '48px', borderRadius: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}>
+                                    <X size={28} />
+                                </button>
+                            </div>
+
+                            <div style={{ padding: '32px', overflowY: 'auto' }} className="premium-scroll">
+                                {/* Fin Summary */}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+                                    {[
+                                        { label: 'Expected Revenue', value: (selectedEventDetails.event.totalRevenue || 0), color: '#38bdf8', icon: <Wallet size={16} /> },
+                                        { label: 'Payments Received', value: (selectedEventDetails.event.amountReceived || 0), color: '#10b981', icon: <Save size={16} /> },
+                                        { label: 'Outstanding Balance', value: ((selectedEventDetails.event.totalRevenue || 0) - (selectedEventDetails.event.amountReceived || 0)), color: '#f87171', icon: <Target size={16} /> },
+                                        { label: 'Project Expense', value: (selectedEventDetails.event.totalExpense || 0), color: '#a855f7', icon: <TruckIcon size={16} /> }
+                                    ].map(s => (
+                                        <div key={s.label} style={{ background: 'rgba(255,255,255,0.02)', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                                                <div style={{ color: s.color }}>{s.icon}</div>
+                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{s.label}</div>
+                                            </div>
+                                            <div style={{ color: 'white', fontSize: '24px', fontWeight: '950' }}>₹{Number(s.value).toLocaleString()}</div>
+                                            <div style={{ height: '4px', width: '40px', background: s.color, borderRadius: '2px', marginTop: '12px' }} />
+                                        </div>
+                                    ))}
+                                </div>
+
+                                {/* ═══ CONSOLIDATED DUTY LOG TABLE ═══ */}
+                                <div style={{ 
+                                    background: 'rgba(15, 23, 42, 0.4)', 
+                                    borderRadius: '28px', 
+                                    border: '1px solid rgba(255,255,255,0.06)', 
+                                    overflow: 'hidden',
+                                    boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+                                    marginBottom: '20px'
+                                }}>
+                                    <div style={{ 
+                                        padding: '20px 24px', 
+                                        borderBottom: '1px solid rgba(255,255,255,0.06)', 
+                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                        background: 'rgba(255,255,255,0.02)'
+                                    }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                            <div style={{ background: 'rgba(251,191,36,0.1)', padding: '8px', borderRadius: '10px' }}>
+                                                <Briefcase size={18} color="#fbbf24" />
+                                            </div>
+                                            <h4 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '950', letterSpacing: '-0.5px' }}>OPERATIONAL LOGS</h4>
+                                        </div>
+                                    </div>
+                                    
+                                    <div style={{ overflowX: 'auto' }} className="premium-scroll">
+                                        <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse' }}>
+                                            <thead>
+                                                <tr style={{ background: 'rgba(255,255,255,0.01)' }}>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>TIMELINE</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>VEHICLE / RESOURCE</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>LOGISTICS</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>SETTLEMENT</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>ACTIONS</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {[...selectedEventDetails.fleetDuties, ...selectedEventDetails.externalDuties]
+                                                    .sort((a,b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+                                                    .map((d, idx) => (
+                                                    <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }} className="table-row-hover">
+                                                        {/* TIMELINE */}
+                                                        <td style={{ padding: '20px 24px' }}>
+                                                            <div style={{ color: 'white', fontWeight: '950', fontSize: '15px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
+                                                            <div style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginTop: '2px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { weekday: 'short' })}</div>
+                                                        </td>
+                                                        {/* RESOURCE */}
+                                                        <td style={{ padding: '20px 24px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: d.vehicleSource === 'Fleet' ? 'rgba(16,185,129,0.1)' : 'rgba(168,85,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                    <Car size={20} color={d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'} />
+                                                                </div>
+                                                                <div>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                        <span style={{ color: 'white', fontWeight: '900', fontSize: '14px', letterSpacing: '0.5px' }}>{d.isAttendance ? (d.vehicle?.carNumber) : (d.carNumber?.split('#')[0])}</span>
+                                                                        <span style={{ 
+                                                                            fontSize: '8px', padding: '2px 6px', borderRadius: '4px', fontWeight: '950',
+                                                                            background: d.vehicleSource === 'Fleet' ? '#10b98120' : '#a855f720',
+                                                                            color: d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'
+                                                                        }}>
+                                                                            {d.vehicleSource?.toUpperCase() || 'EXTERNAL'}
+                                                                        </span>
+                                                                    </div>
+                                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', marginTop: '4px' }}>
+                                                                        {d.isAttendance ? d.vehicle?.model : d.model} • <span style={{ color: 'rgba(255,255,255,0.25)' }}>{d.isAttendance ? d.driver?.name : d.driverName}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        {/* LOGISTICS */}
+                                                        <td style={{ padding: '20px 24px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                <div style={{ 
+                                                                    padding: '4px 10px', borderRadius: '8px', background: 'rgba(251,191,36,0.1)', 
+                                                                    color: '#fbbf24', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251,191,36,0.2)'
+                                                                }}>
+                                                                    {d.dutyType || 'General Duty'}
+                                                                </div>
+                                                                {d.dutyTime && (
+                                                                    <div style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                        <Calendar size={12} /> {d.dutyTime}
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '600', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                                <MapPin size={10} /> {d.dropLocation || 'Operation Base'}
+                                                            </div>
+                                                        </td>
+                                                        {/* SETTLEMENT */}
+                                                        <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                                                            <div style={{ color: '#10b981', fontWeight: '950', fontSize: '16px' }}>₹{Number(d.dutyAmount || 0).toLocaleString()}</div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', marginTop: '2px' }}>Net Duty Value</div>
+                                                        </td>
+                                                        {/* ACTIONS */}
+                                                        <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                                                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                                                <button onClick={(e) => { e.stopPropagation(); handleEditDuty(d); }} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                    <Edit size={14} />
+                                                                </button>
+                                                                <button onClick={(e) => { e.stopPropagation(); handleDeleteDuty(d._id); }} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                    <Trash2 size={14} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ))}
+                                                {selectedEventDetails.fleetDuties.length === 0 && selectedEventDetails.externalDuties.length === 0 && (
+                                                    <tr>
+                                                        <td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.2)' }}>
+                                                            <TruckIcon size={40} style={{ opacity: 0.1, marginBottom: '16px' }} />
+                                                            <p style={{ margin: 0, fontWeight: '800', fontSize: '14px' }}>No operational logs recorded for this event.</p>
+                                                        </td>
+                                                    </tr>
+                                                )}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
             {/* ═══ CONFIGURE EVENT MODAL ═══ */}
             <AnimatePresence>
                 {showEventModal && (
@@ -1089,28 +1235,57 @@ const EventManagement = () => {
 
                             {/* Body */}
                             <form onSubmit={handleCreateEvent} style={{ padding: 'clamp(20px, 5vw, 32px)', display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                <div className="premium-input-group">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Target size={12} color="#fbbf24" />
-                                        <label className="premium-label">Operational Name *</label>
+                                <div className="form-grid-2">
+                                    <div className="premium-input-group">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Target size={12} color="#fbbf24" />
+                                            <label className="premium-label">Operational Name *</label>
+                                        </div>
+                                        <input type="text" required value={eventFormData.name} onChange={e => setEventFormData({ ...eventFormData, name: e.target.value })} className="premium-compact-input" placeholder="Event Name" style={{ height: '52px' }} />
                                     </div>
-                                    <input type="text" required value={eventFormData.name} onChange={e => setEventFormData({ ...eventFormData, name: e.target.value })} className="premium-compact-input" placeholder="e.g. Global Tech Summit 2024" style={{ height: '52px' }} />
+                                    <div className="premium-input-group">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Building2 size={12} color="#fbbf24" />
+                                            <label className="premium-label">Direct Client *</label>
+                                        </div>
+                                        <input type="text" required value={eventFormData.client} onChange={e => setEventFormData({ ...eventFormData, client: e.target.value })} className="premium-compact-input" placeholder="Client Name" style={{ height: '52px' }} />
+                                    </div>
                                 </div>
 
-                                <div className="premium-input-group">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Building2 size={12} color="#fbbf24" />
-                                        <label className="premium-label">Direct Client *</label>
+                                <div className="form-grid-2">
+                                    <div className="premium-input-group">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Calendar size={12} color="#fbbf24" />
+                                            <label className="premium-label">Focus Date</label>
+                                        </div>
+                                        <input type="date" value={eventFormData.date} onChange={e => setEventFormData({ ...eventFormData, date: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark', height: '52px' }} />
                                     </div>
-                                    <input type="text" required value={eventFormData.client} onChange={e => setEventFormData({ ...eventFormData, client: e.target.value })} className="premium-compact-input" placeholder="Client or Organization Name" style={{ height: '52px' }} />
+                                    <div className="premium-input-group">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Target size={12} color="#fbbf24" />
+                                            <label className="premium-label">Phase / Status</label>
+                                        </div>
+                                        <select value={eventFormData.status} onChange={e => setEventFormData({ ...eventFormData, status: e.target.value })} className="premium-compact-input" style={{ height: '52px' }}>
+                                            <option value="Upcoming">Upcoming (Start)</option>
+                                            <option value="Running">Running</option>
+                                            <option value="Closed">Closed</option>
+                                        </select>
+                                    </div>
                                 </div>
 
-                                <div className="premium-input-group">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Calendar size={12} color="#fbbf24" />
-                                        <label className="premium-label">Operational Focus Date</label>
+                                <div className="form-grid-3">
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Total Revenue (Billing)</label>
+                                        <input type="number" value={eventFormData.totalRevenue} onChange={e => setEventFormData({ ...eventFormData, totalRevenue: e.target.value })} className="premium-compact-input" placeholder="₹ 0" style={{ height: '50px' }} />
                                     </div>
-                                    <input type="date" value={eventFormData.date} onChange={e => setEventFormData({ ...eventFormData, date: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark', height: '52px' }} />
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Advance (Initial)</label>
+                                        <input type="number" value={eventFormData.advanceAmount} onChange={e => setEventFormData({ ...eventFormData, advanceAmount: e.target.value })} className="premium-compact-input" placeholder="₹ 0" style={{ height: '50px' }} />
+                                    </div>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Amount Received</label>
+                                        <input type="number" value={eventFormData.amountReceived} onChange={e => setEventFormData({ ...eventFormData, amountReceived: e.target.value })} className="premium-compact-input" placeholder="₹ 0" style={{ height: '50px' }} />
+                                    </div>
                                 </div>
 
                                 <div style={{ marginTop: '10px', display: 'flex', gap: '12px' }}>
@@ -1232,8 +1407,38 @@ const EventManagement = () => {
                 /* ===== MOBILE CARD LEGACY (if needed for list view) ===== */
                 .mobile-duty-card { background: linear-gradient(140deg, rgba(20,30,50,0.8), rgba(10,15,30,0.95)); padding: 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.07); margin-bottom: 14px; }
 
+                .event-row-hover:hover { 
+                    transform: translateX(8px); 
+                    background: rgba(15, 23, 42, 0.6) !important;
+                    border-color: rgba(251,191,36,0.2) !important;
+                    box-shadow: 0 15px 40px rgba(0,0,0,0.4) !important;
+                }
+                .action-btn-list:hover { 
+                    transform: scale(1.1); 
+                    filter: brightness(1.2);
+                    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                }
+
+                .form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+                @media (max-width: 600px) { .form-grid-3 { grid-template-columns: 1fr; } }
+                .hide-scrollbar::-webkit-scrollbar { display: none; }
+                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+                .status-badge {
+                    padding: 4px 10px; borderRadius: 8px; fontSize: 10px; fontWeight: 900; letterSpacing: 0.5px; text-transform: uppercase;
+                }
+                
+                .table-row-hover:hover { 
+                    background: rgba(255,255,255,0.02) !important;
+                }
+
                 @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
-                @media (max-width: 768px) { .header-left { flex-direction: row; align-items: baseline; gap: 10px; } }
+                @media (max-width: 768px) { 
+                    .header-left { flex-direction: row; align-items: baseline; gap: 10px; } 
+                    .event-row-hover { flex-direction: column; align-items: flex-start; gap: 16px; padding: 24px; }
+                    .event-row-hover > div { width: 100% !important; border-left: none !important; padding-left: 0 !important; text-align: left !important; }
+                    .event-row-hover > div:last-child { justify-content: flex-start; }
+                }
             `}</style>
         </div>
     );

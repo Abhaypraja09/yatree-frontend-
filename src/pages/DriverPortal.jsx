@@ -729,31 +729,6 @@ const DriverPortal = () => {
                                     >
                                         <Car size={18} /> {t('parking')}
                                     </button>
-                                    <button
-                                        onClick={() => {
-                                            setExpenseEntries([]);
-                                            setExpenseModalType('other');
-                                            setShowExpenseModal(true);
-                                        }}
-                                        style={{
-                                            background: 'linear-gradient(135deg, #f43f5e 0%, #dc2626 100%)',
-                                            color: 'white',
-                                            height: '42px',
-                                            padding: '0 14px',
-                                            borderRadius: '12px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '6px',
-                                            border: 'none',
-                                            boxShadow: '0 6px 16px rgba(244, 63, 94, 0.25)',
-                                            cursor: 'pointer',
-                                            fontWeight: '700',
-                                            fontSize: '13px'
-                                        }}
-                                    >
-                                        <Wrench size={18} /> {t('driverSeva')}
-                                    </button>
                                     {showPunchOut && !showPunchOutForm && (
                                         <button
                                             onClick={() => setShowPunchOutForm(true)}

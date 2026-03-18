@@ -89,13 +89,10 @@ const DriverServices = () => {
                 const isWash = cat.includes('wash') || desc.includes('wash');
                 const isPuncture = cat.includes('punc') || desc.includes('punc');
                 const isTissue = cat.includes('tissue') || desc.includes('tissue');
-                const isWater = (cat.includes('water') && !cat.includes('repair') && !cat.includes('pump')) || 
-                               (desc.includes('water') && !desc.includes('repair') && !desc.includes('pump'));
-                const isTax = cat.includes('tax') || desc.includes('tax');
-                const isFastag = cat.includes('fastag') || desc.includes('fastag');
-                const isMaint = cat.includes('maint') || desc.includes('maint');
+                const isWater = cat.includes('water') || desc.includes('water');
+                const isOther = cat.includes('other') || desc.includes('other');
                 
-                return isWash || isPuncture || isTissue || isWater || isTax || isFastag || isMaint;
+                return isWash || isPuncture || isTissue || isWater || isOther;
             });
             setRecords(filteredData);
         } catch (err) { console.error(err); }
@@ -122,7 +119,7 @@ const DriverServices = () => {
     const [editingId, setEditingId] = useState(null);
     const [message, setMessage] = useState({ text: '', type: '' });
 
-    const serviceCategories = ['Car Wash', 'Puncture repair', 'Fuel Logs', 'Parking', 'Vehicles Maintenance', 'Border Tax', 'Fastag', 'Tissue Paper', 'Water Bottle'];
+    const serviceCategories = ['Car Wash', 'Puncture', 'Tissue Box', 'Water Bottle', 'Other details'];
 
     const fetchVehicles = async () => {
         if (!selectedCompany?._id) return;
@@ -291,12 +288,10 @@ const DriverServices = () => {
             matchesType = cat.includes('wash') || desc.includes('wash');
         } else if (selectedType === 'Puncture') {
             matchesType = cat.includes('punc') || desc.includes('punc');
-        } else if (selectedType === 'Maintenance') {
-            matchesType = cat.includes('maint') || desc.includes('maint');
-        } else if (selectedType === 'Tax') {
-            matchesType = cat.includes('tax') || desc.includes('tax');
-        } else if (selectedType === 'Fastag') {
-            matchesType = cat.includes('fastag') || desc.includes('fastag');
+        } else if (selectedType === 'Tissue') {
+            matchesType = cat.includes('tissue') || desc.includes('tissue');
+        } else if (selectedType === 'Water') {
+            matchesType = cat.includes('water') || desc.includes('water');
         }
 
         return matchesSearch && matchesVehicle && matchesType;
@@ -347,14 +342,56 @@ const DriverServices = () => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <button style={{ background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><ChevronLeft size={16} /></button>
-                        <div style={{ padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                             <div style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(255,255,255,0.05)', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.5)' }}>RANGE</div>
-                             <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none' }} />
-                        </div>
-                        <button style={{ background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><ChevronRight size={16} /></button>
+                    {/* Toggle between Range and Month */}
+                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <button 
+                            onClick={() => setFilterMode('month')}
+                            style={{ padding: '8px 15px', borderRadius: '10px', border: 'none', background: filterMode === 'month' ? 'rgba(255,255,255,0.08)' : 'transparent', color: filterMode === 'month' ? 'white' : 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', cursor: 'pointer', transition: 'all 0.2s' }}
+                        >
+                            MONTH
+                        </button>
+                        <button 
+                            onClick={() => setFilterMode('range')}
+                            style={{ padding: '8px 15px', borderRadius: '10px', border: 'none', background: filterMode === 'range' ? 'rgba(255,255,255,0.08)' : 'transparent', color: filterMode === 'range' ? 'white' : 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', cursor: 'pointer', transition: 'all 0.2s' }}
+                        >
+                            RANGE
+                        </button>
                     </div>
+
+                    {filterMode === 'month' ? (
+                        <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <select 
+                                value={selectedMonth} 
+                                onChange={e => setSelectedMonth(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '900', outline: 'none', padding: '10px', cursor: 'pointer' }}
+                            >
+                                {['All', '1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12'].map(m => (
+                                    <option key={m} value={m} style={{ background: '#0f172a' }}>
+                                        {m === 'All' ? 'Full Year' : new Date(2000, m-1).toLocaleString('default', { month: 'long' })}
+                                    </option>
+                                ))}
+                            </select>
+                            <select 
+                                value={selectedYear} 
+                                onChange={e => setSelectedYear(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '900', outline: 'none', padding: '10px', cursor: 'pointer' }}
+                            >
+                                {[2024, 2025, 2026, 2027].map(y => (
+                                    <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                                ))}
+                            </select>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <button style={{ background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><ChevronLeft size={16} /></button>
+                            <div style={{ padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none' }} />
+                                 <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: '900' }}>→</span>
+                                 <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none' }} />
+                            </div>
+                            <button style={{ background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><ChevronRight size={16} /></button>
+                        </div>
+                    )}
                     <button onClick={handleExport} style={{ height: '42px', padding: '0 20px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', fontWeight: '900', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                         <FileSpreadsheet size={16} /> EXCEL
                     </button>
@@ -413,7 +450,7 @@ const DriverServices = () => {
                 </div>
 
                 <div style={{ display: 'flex', gap: '10px', marginBottom: '20px', flexWrap: 'wrap' }}>
-                    {['All', 'Wash', 'Puncture', 'Maintenance', 'Tax', 'Fastag'].map(t => (
+                    {['All', 'Wash', 'Puncture', 'Tissue', 'Water'].map(t => (
                         <button
                             key={t}
                             onClick={() => setSelectedType(t)}

@@ -216,12 +216,12 @@ const AdminDashboard = () => {
                         }}>
                             {/* MONTHLY Mode Selects (Now the only mode) */}
                             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '0 5px' }}>
-                                <select 
-                                    value={selectedMonth} 
+                                <select
+                                    value={selectedMonth}
                                     onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                                    style={{ 
-                                        background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)', 
-                                        color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px', 
+                                    style={{
+                                        background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)',
+                                        color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px',
                                         height: '40px', borderRadius: '14px', outline: 'none', cursor: 'pointer',
                                         transition: 'all 0.2s'
                                     }}
@@ -232,12 +232,12 @@ const AdminDashboard = () => {
                                         </option>
                                     ))}
                                 </select>
-                                <select 
-                                    value={selectedYear} 
+                                <select
+                                    value={selectedYear}
                                     onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                    style={{ 
-                                        background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)', 
-                                        color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px', 
+                                    style={{
+                                        background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)',
+                                        color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px',
                                         height: '40px', borderRadius: '14px', outline: 'none', cursor: 'pointer',
                                         transition: 'all 0.2s'
                                     }}
@@ -297,23 +297,23 @@ const AdminDashboard = () => {
                             {/* Buy/Sell Related (Outside & Events) */}
                             {(user?.role === 'Admin' || user?.permissions?.buySell) && (
                                 <>
-                                    <StatCard 
-                                        icon={TrendingUp} 
-                                        label="OUTSIDE CARS (MONTHLY)" 
-                                        value={`₹${(stats.monthlyOutsideCarsTotal || 0).toLocaleString()}`} 
-                                        color="#8b5cf6" 
-                                        loading={loading} 
-                                        onClick={() => navigate('/admin/outside-cars')} 
+                                    <StatCard
+                                        icon={TrendingUp}
+                                        label="OUTSIDE CARS (MONTHLY)"
+                                        value={`₹${(stats.monthlyOutsideCarsTotal || 0).toLocaleString()}`}
+                                        color="#8b5cf6"
+                                        loading={loading}
+                                        onClick={() => navigate('/admin/outside-cars')}
                                         trend="TOTAL"
                                     />
-                                    <StatCard 
-                                        icon={Calendar} 
-                                        label="EVENT MANAGEMENT (M)" 
-                                        value={`₹${(stats.monthlyEventTotal || 0).toLocaleString()}`} 
-                                        color="#ec4899" 
-                                        loading={loading} 
-                                        onClick={() => navigate('/admin/event-management')} 
-                                        trend="TOTAL" 
+                                    <StatCard
+                                        icon={Calendar}
+                                        label="EVENT MANAGEMENT (M)"
+                                        value={`₹${(stats.monthlyEventTotal || 0).toLocaleString()}`}
+                                        color="#ec4899"
+                                        loading={loading}
+                                        onClick={() => navigate('/admin/event-management')}
+                                        trend="TOTAL"
                                     />
                                 </>
                             )}
@@ -322,7 +322,7 @@ const AdminDashboard = () => {
                             {(user?.role === 'Admin' || user?.permissions?.vehiclesManagement) && (
                                 <>
                                     <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
-                                    <StatCard icon={AlertTriangle} label="ACCIDENT COST (MONTHLY)" value={`₹${(stats.monthlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
+                                    <StatCard icon={AlertTriangle} label="ACCIDENT COST (YEARLY)" value={`₹${(stats.yearlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
                                     <StatCard icon={IndianRupee} label="FASTAG RECHARGE (MONTHLY)" value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/fastag')} trend="MONTHLY" subValue={`Today: ₹${(stats.dailyFastagTotal || 0).toLocaleString()}`} />
                                     <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
                                     <StatCard icon={Droplets} label="DRIVER SERVICES (MONTHLY)" value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/driver-services')} />
@@ -460,60 +460,6 @@ const AdminDashboard = () => {
                                 </div>
                             </div>
                         )}
-
-                        {/* LIVE STATUS OVERVIEW ROW */}
-                        <div className="dashboard-feeds-container" style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-                            gap: '20px',
-                            marginTop: '10px',
-                            marginBottom: '20px'
-                        }}>
-                            {/* Driver Overview Card */}
-                            {(user?.role === 'Admin' || user?.permissions?.driversService) && (
-                                <motion.div
-                                    whileHover={{ y: -5 }}
-                                    onClick={() => navigate('/admin/live-feed')}
-                                    className="glass-card"
-                                    style={{ padding: '24px', cursor: 'pointer', border: '1px solid rgba(16, 185, 129, 0.2)', background: 'rgba(16, 185, 129, 0.03)' }}
-                                >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                            <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                <Users color="#10b981" size={24} />
-                                            </div>
-                                            <div>
-                                                <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '900' }}>Driver Presence</h3>
-                                                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(16, 185, 129, 0.6)', fontWeight: '700' }}>{stats.countPunchIns} Present Today</p>
-                                            </div>
-                                        </div>
-                                        <ArrowUpRight color="rgba(16, 185, 129, 0.4)" />
-                                    </div>
-                                </motion.div>
-                            )}
-
-                            {/* Vehicle Overview Card */}
-                            {(user?.role === 'Admin' || user?.permissions?.vehiclesManagement) && (
-                                <motion.div
-                                    whileHover={{ y: -5 }}
-                                    className="glass-card"
-                                    style={{ padding: '24px', border: '1px solid rgba(14, 165, 233, 0.2)', background: 'rgba(14, 165, 233, 0.03)' }}
-                                >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                            <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                <Car color="#0ea5e9" size={24} />
-                                            </div>
-                                            <div>
-                                                <h3 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '900' }}>Fleet Utilization</h3>
-                                                <p style={{ margin: 0, fontSize: '12px', color: 'rgba(14, 165, 233, 0.6)', fontWeight: '700' }}>{stats.liveVehiclesFeed?.filter(v => v.status !== 'Idle').length} In Operation</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </motion.div>
-                            )}
-                        </div>
-
                     </motion.div>
                 )}
             </div>
