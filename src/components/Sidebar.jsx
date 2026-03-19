@@ -106,8 +106,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     const [openGroups, setOpenGroups] = useState({
         drivers: location.pathname.includes('/admin/drivers') || location.pathname.includes('/admin/freelancers') || location.pathname.includes('/admin/driver-salaries') || location.pathname.includes('/admin/driver-duty') || location.pathname.includes('/admin/freelancer-duty'),
         buysell: location.pathname.includes('/admin/outside-cars') || location.pathname.includes('/admin/event-management'),
-        maintenance: location.pathname.includes('/admin/fuel') || location.pathname.includes('/admin/parking') || location.pathname.includes('/admin/maintenance') || location.pathname.includes('/admin/vehicle-month-details'),
-        vehicles: location.pathname.includes('/admin/vehicles') || location.pathname.includes('/admin/driver-services') || location.pathname.includes('/admin/border-tax') || location.pathname.includes('/admin/fastag') || location.pathname.includes('/admin/accident-logs') || location.pathname.includes('/admin/warranties')
+        maintenance: location.pathname.includes('/admin/maintenance') || location.pathname.includes('/admin/vehicle-month-details') || location.pathname.includes('/admin/vehicles') || location.pathname.includes('/admin/accident-logs') || location.pathname.includes('/admin/warranties'),
+        vehicles: location.pathname.includes('/admin/fuel') || location.pathname.includes('/admin/border-tax') || location.pathname.includes('/admin/fastag') || location.pathname.includes('/admin/parking') || location.pathname.includes('/admin/driver-services') || location.pathname.includes('/admin/border-tax') || location.pathname.includes('/admin/fastag') || location.pathname.includes('/admin/accident-logs') || location.pathname.includes('/admin/warranties'),
+        logbook: location.pathname.includes('/admin/log-book')
     });
 
     const toggleGroup = (group) => {
@@ -189,12 +190,14 @@ const Sidebar = ({ isOpen, onClose }) => {
                 )}
 
                 {(user.role === 'Admin' || user.permissions?.driversService) && (
+                    <NavItem item={{ path: '/admin/log-book', icon: ClipboardList, label: 'Log Book' }} onClick={onClose} />
+                )}
+
+                {(user.role === 'Admin' || user.permissions?.driversService) && (
                     <NavGroup title="Drivers Services" icon={Users} isOpen={openGroups.drivers} onToggle={() => toggleGroup('drivers')}>
                         <NavItem item={{ path: '/admin/drivers', label: 'Driver Creation' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/driver-duty', label: 'Driver Duty' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/driver-salaries', label: 'Driver Salaries' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/freelancers', label: 'Freelancers' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/freelancer-duty', label: 'Freelancer Duty' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 
@@ -207,21 +210,21 @@ const Sidebar = ({ isOpen, onClose }) => {
 
                 {(user.role === 'Admin' || user.permissions?.vehiclesManagement) && (
                     <NavGroup title="Vehicles Maintenance" icon={Wrench} isOpen={openGroups.maintenance} onToggle={() => toggleGroup('maintenance')}>
-                        <NavItem item={{ path: '/admin/fuel', label: 'Fuel' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/parking', label: 'Parking' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/maintenance', label: 'Maintenance' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/vehicle-month-details', label: 'Car Logs' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/vehicles', label: 'Vehicles MGT' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/accident-logs', label: 'Active Logs' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/warranties', label: 'Parts Warranty' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 
-                {(user.role === 'Admin' || user.permissions?.vehiclesManagement) && (
+                {(user.role === 'Admin' || user.permissions?.fleetOperations) && (
                     <NavGroup title="Fleet Operations" icon={Settings} isOpen={openGroups.vehicles} onToggle={() => toggleGroup('vehicles')}>
-                        <NavItem item={{ path: '/admin/vehicles', label: 'Vehicles' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/driver-services', label: 'Driver Services' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/fuel', label: 'Fuel' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/border-tax', label: 'Border Tax' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/fastag', label: 'Fastag' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/accident-logs', label: 'Active Logs' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/warranties', label: 'Parts Warranty' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/parking', label: 'Parking' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/driver-services', label: 'Driver Services' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 

@@ -174,6 +174,7 @@ const AdminRoutes = () => {
           <Route path="freelancers/:driverId" element={<FreelancerSalaryDetail />} />
           <Route path="driver-duty" element={<Reports />} />
           <Route path="freelancer-duty" element={<Reports />} />
+          <Route path="log-book" element={<Reports />} />
         </>
       )}
 

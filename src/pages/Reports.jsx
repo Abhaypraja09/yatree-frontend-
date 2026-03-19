@@ -23,6 +23,7 @@ const fmtTime = (t) => t ? formatTimeIST(t) : '--';
 const TAB_CONFIG = {
     drivers: { label: 'Staff Drivers', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: UserIcon },
     freelancers: { label: 'Freelancers', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', icon: Users },
+    logbook: { label: 'Overall Log Book', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', icon: FileText },
 };
 
 /* ─── Chip (summary stat) ─── */
@@ -140,6 +141,7 @@ const Reports = () => {
                 // Filter by URL path first
                 if (location.pathname.includes('driver-duty')) return id === 'drivers';
                 if (location.pathname.includes('freelancer-duty')) return id === 'freelancers';
+                if (location.pathname.includes('log-book')) return id === 'drivers' || id === 'freelancers';
 
                 // Administrative overrides/permissions for standard /admin/reports
                 if (user?.role === 'Admin') return true;
@@ -161,6 +163,8 @@ const Reports = () => {
                 setActiveTabs(['drivers']);
             } else if (location.pathname.includes('freelancer-duty')) {
                 setActiveTabs(['freelancers']);
+            } else if (location.pathname.includes('log-book')) {
+                setActiveTabs(['drivers', 'freelancers']);
             } else if (activeTabs.length === 0) {
                 setActiveTabs([tabList[0].id]);
             }
@@ -345,7 +349,11 @@ const Reports = () => {
     };
 
     /* ── Attendance row renderer (shared for Staff + Freelancers + Outside) ── */
-    const AttRow = ({ r, idx, showFreelancerCols = false }) => {
+    const ATT_HEADERS = ['Date', 'Driver & Vehicle', 'Punch In', 'Punch Out', 'Open KM', 'Close KM', 'Total KM', 'Fuel', 'Parking', 'Salary', 'Status', 'Action'];
+    const LOGBOOK_HEADERS = ['Date', 'Type', 'Driver & Vehicle', 'Punch In', 'Punch Out', 'Open KM', 'Close KM', 'Total KM', 'Fuel', 'Parking', 'Salary', 'Status', 'Action'];
+
+    /* ── Attendance row renderer ── */
+    const AttRow = ({ r, idx, isLogbook = false }) => {
         const isCompleted = r.status === 'completed';
         const inTime = fmtTime(r.punchIn?.time);
         const outTime = fmtTime(r.punchOut?.time);
@@ -357,9 +365,28 @@ const Reports = () => {
         const parkAmt = Number(r.punchOut?.tollParkingAmount) || 0;
         const parkBy = r.punchOut?.parkingPaidBy || 'Self';
         const fuelAmt = Number(r.fuel?.amount) || 0;
+
+        const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
+
         return (
             <TR idx={idx}>
                 <TD noWrap><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700', fontSize: '13px' }}>{fmt(r.date)}</span></TD>
+                {isLogbook && (
+                    <TD noWrap>
+                        <span style={{
+                            fontSize: '9px',
+                            fontWeight: '900',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                            background: isFreelancer ? 'rgba(139,92,246,0.1)' : 'rgba(16,185,129,0.1)',
+                            color: isFreelancer ? '#a78bfa' : '#34d399',
+                            border: `1px solid ${isFreelancer ? 'rgba(139,92,246,0.2)' : 'rgba(16,185,129,0.2)'}`,
+                            textTransform: 'uppercase'
+                        }}>
+                            {isFreelancer ? 'Freelancer' : 'Staff'}
+                        </span>
+                    </TD>
+                )}
                 <TD>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                         <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
@@ -428,7 +455,7 @@ const Reports = () => {
         );
     };
 
-    const ATT_HEADERS = ['Date', 'Driver & Vehicle', 'Punch In', 'Punch Out', 'Open KM', 'Close KM', 'Total KM', 'Fuel', 'Parking', 'Salary', 'Status', 'Action'];
+
 
     /* ── render the active tab content ── */
     const renderSingleTab = (tabId) => {
@@ -490,6 +517,34 @@ const Reports = () => {
                 </div>
             </div>
         );
+
+        if (location.pathname.includes('log-book')) {
+            const data = [...staffDrivers, ...freelancerDrivers].filter(r => {
+                const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
+                if (isFreelancer) return activeTabs.includes('freelancers');
+                return activeTabs.includes('drivers');
+            }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+            const searchedData = applySearch(data);
+            const totalWage = searchedData.reduce((s, r) => s + (Number(r.dailyWage) || 0) + Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0), 0);
+            const totalKMs = searchedData.reduce((s, r) => s + (Number(r.totalKM) || 0), 0);
+            const totalFuel = searchedData.reduce((s, r) => s + (Number(r.fuel?.amount) || 0), 0);
+
+            return (
+                <TableSection tabId="logbook" fromDate={fromDate} toDate={toDate}
+                    chips={[
+                        <Chip key="c" label="Total Records" value={searchedData.length} color="#fbbf24" />,
+                        <Chip key="km" label="Total KM" value={`${totalKMs.toLocaleString()}`} color="#38bdf8" />,
+                        <Chip key="f" label="Fuel Amt" value={`₹${totalFuel.toLocaleString()}`} color="#f59e0b" />,
+                        <Chip key="w" label="Total Payout" value={`₹${totalWage.toLocaleString()}`} color="#10b981" />,
+                    ]}
+                    headers={LOGBOOK_HEADERS}
+                    rows={searchedData.map((r, i) => <AttRow key={r._id} r={r} idx={i} isLogbook />)}
+                    empty="No log book records found."
+                />
+            );
+        }
+
         return <>{activeTabs.map(t => <React.Fragment key={t}>{renderSingleTab(t)}</React.Fragment>)}</>;
     };
 
@@ -506,8 +561,8 @@ const Reports = () => {
                     <div>
                         <div style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Operational Insights</div>
                         <h1 style={{ color: 'white', fontSize: 'clamp(22px,5vw,30px)', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>
-                            {location.pathname.includes('driver-duty') ? 'Driver ' : (location.pathname.includes('freelancer-duty') ? 'Freelancer ' : 'Daily ')}
-                            <span className="text-gradient-yellow">Duty</span>
+                            {location.pathname.includes('driver-duty') ? 'Driver ' : (location.pathname.includes('freelancer-duty') ? 'Freelancer ' : (location.pathname.includes('log-book') ? 'Overall ' : 'Daily '))}
+                            <span className="text-gradient-yellow">{location.pathname.includes('log-book') ? 'Log Book' : 'Duty'}</span>
                         </h1>
                     </div>
                 </div>
@@ -604,7 +659,7 @@ const Reports = () => {
 
             {/* ── Search Bar ── */}
             <div style={{ position: 'relative', marginBottom: '22px', maxWidth: '420px' }}>
-                <input type="text" placeholder="Search driver, vehicle, border…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
+                <input type="text" placeholder="Search Car Logs…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
                     className="input-field" style={{ width: '100%', paddingLeft: '44px', height: '46px', borderRadius: '13px', marginBottom: 0 }} />
                 <Search size={18} style={{ position: 'absolute', left: '15px', top: '14px', color: 'var(--text-muted)' }} />
                 {searchTerm && <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', right: '12px', top: '13px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}><X size={16} /></button>}

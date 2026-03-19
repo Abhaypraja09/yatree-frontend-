@@ -7,7 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
-import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST } from '../utils/istUtils';
+import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
 
 const CameraModal = ({ onCapture, onClose }) => {
     const videoRef = React.useRef(null);
@@ -804,8 +804,8 @@ const ParkingPage = () => {
                                             <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>{entry.carNumber}</span>
                                             {entry.date && (
                                                 <span style={{ background: 'rgba(251, 191, 36, 0.08)', color: '#fbbf24', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
-                                                {formatDateIST(entry.date)}
-                                                </span>
+                                                 {formatDateTimeIST(entry.date)}
+                                                 </span>
                                             )}
                                         </div>
                                     </div>
@@ -956,7 +956,7 @@ const ParkingPage = () => {
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
                                                             <Calendar size={12} color="#64748b" />
                                                             <span style={{ color: '#64748b', fontSize: '12px', fontWeight: '600' }}>
-                                                                {formatDateIST(entry.date, { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric' })}
+                                                                {formatDateTimeIST(entry.date)}
                                                             </span>
                                                         </div>
                                                     )}
@@ -1268,7 +1268,7 @@ const ParkingPage = () => {
                                                     <div>
                                                         <div style={{ color: 'white', fontWeight: '800', fontSize: '16px', letterSpacing: '0.5px' }}>{e.driver}</div>
                                                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                            {formatDateIST(e.date, { day: '2-digit', month: 'short' })}
+                                                            {formatDateIST(e.date)}
                                                             {e.vehicle && <span style={{ opacity: 0.6 }}>• {e.vehicle.carNumber}</span>}
                                                         </div>
                                                     </div>
