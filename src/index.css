@@ -34,11 +34,15 @@
   --glass-bg: rgba(30, 41, 59, 0.55);
 }
 
+
+
+
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
 }
+
 
 html,
 body,
@@ -95,7 +99,7 @@ button {
 }
 
 .btn-primary {
-  background: var(--primary);
+  background: #fbbf24;
   color: #000;
   border: none;
   padding: 12px 24px;
@@ -129,6 +133,7 @@ button {
   outline: none;
   background: rgba(251, 191, 36, 0.04);
 }
+
 
 select.input-field {
   cursor: pointer;
@@ -182,7 +187,7 @@ select.input-field option {
   width: 30px;
   height: 30px;
   border: 3px solid rgba(99, 102, 241, 0.15);
-  border-top-color: var(--primary);
+  border-top-color: #fbbf24;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -894,7 +899,7 @@ header.dashboard-header {
 }
 
 .date-selector-inner button:last-child {
-  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  background: linear-gradient(135deg, #fbbf24, #fbbf24);
   border: none;
   font-size: clamp(10px, 2.5vw, 11px);
   font-weight: 800;
@@ -1039,7 +1044,7 @@ header.dashboard-header {
 }
 
 .action-button {
-  color: var(--primary);
+  color: #fbbf24;
   font-weight: 700;
   font-size: clamp(11px, 2.8vw, 13px);
   background: rgba(14, 165, 233, 0.1);
@@ -1249,7 +1254,7 @@ header.dashboard-header {
 .entry-card-title {
   font-size: clamp(12px, 2.8vw, 13px);
   font-weight: 800;
-  color: var(--primary);
+  color: #fbbf24;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1302,7 +1307,7 @@ header.dashboard-header {
 
 .photo-capture-button:hover {
   background: rgba(255, 255, 255, 0.05);
-  border-color: var(--primary);
+  border-color: #fbbf24;
 }
 
 .photo-preview-container {
@@ -1419,8 +1424,8 @@ header.dashboard-header {
 .add-another-button {
   width: 100%;
   padding: clamp(10px, 2.5vw, 12px);
-  border: 1px dashed var(--primary);
-  color: var(--primary);
+  border: 1px dashed #fbbf24;
+  color: #fbbf24;
   background: rgba(14, 165, 233, 0.05);
   border-radius: 10px;
   font-size: clamp(11px, 2.8vw, 12px);
@@ -2154,7 +2159,7 @@ header.dashboard-header {
   background: rgba(255, 255, 255, 0.08) !important;
   border-color: rgba(255, 255, 255, 0.15) !important;
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
 .action-btn-hover-del:hover {
@@ -2185,3 +2190,8 @@ header.dashboard-header {
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   overflow: hidden;
 }
+
+.sub-component {
+  width: 100%;
+  padding: 0;
+}

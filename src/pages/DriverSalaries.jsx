@@ -2,23 +2,23 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { 
-    Search, X, Car, ParkingSquare, TrendingDown, Wallet, Plus, 
-    Calendar, User, FileText, IndianRupee, CheckCircle, 
-    AlertCircle, Edit2, Download 
+import {
+    Search, X, Car, ParkingSquare, TrendingDown, Wallet, Plus,
+    Calendar, User, FileText, IndianRupee, CheckCircle,
+    AlertCircle, Edit2, Download
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
-import { 
-    todayIST, 
-    toISTDateString, 
-    formatDateIST, 
-    formatTimeIST, 
-    formatDateTimeIST 
+import {
+    todayIST,
+    toISTDateString,
+    formatDateIST,
+    formatTimeIST,
+    formatDateTimeIST
 } from '../utils/istUtils';
 
-const DriverSalaries = () => {
+const DriverSalaries = ({ isSubComponent = false }) => {
     const { selectedCompany } = useCompany();
     const [salaries, setSalaries] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -182,7 +182,7 @@ const DriverSalaries = () => {
             const pageHeight = doc.internal.pageSize.getHeight();
 
             // 1. HEADER (LUXURY STYLE)
-            doc.setFillColor(15, 23, 42); 
+            doc.setFillColor(15, 23, 42);
             doc.rect(0, 0, pageWidth, 50, 'F');
 
             if (logo) doc.addImage(logo, 'PNG', 12, 8, 30, 30);
@@ -238,7 +238,7 @@ const DriverSalaries = () => {
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
             doc.text('PAYMENT OVERVIEW', pageWidth / 2 + 5, 68);
-            
+
             const totalEarned = summary.grandTotal || ((summary.totalWages || 0) + (summary.parkingTotal || 0));
             const netPayable = summary.netPayable || (totalEarned - (summary.totalAdvances || 0));
 
@@ -247,7 +247,7 @@ const DriverSalaries = () => {
             doc.setTextColor(100, 116, 139);
             doc.text('Gross Earnings:', pageWidth / 2 + 5, 76);
             doc.text('Deductions/Advances:', pageWidth / 2 + 5, 82);
-            
+
             doc.setTextColor(15, 23, 42);
             doc.text(`Rs. ${totalEarned}`, pageWidth - 20, 76, { align: 'right' });
             doc.setTextColor(244, 63, 94);
@@ -391,10 +391,11 @@ const DriverSalaries = () => {
     const netPayable = summary.netPayable || (grandTotal - totalAdvances);
 
     return (
-        <div className="container-fluid" style={{ paddingBottom: '40px' }}>
-            <SEO title="Driver Payroll" description="View driver salary reports, duty days, and advances." />
+        <div className={isSubComponent ? "sub-component" : "container-fluid"} style={{ paddingBottom: '40px' }}>
+            {!isSubComponent && <SEO title="Driver Payroll" description="View driver salary reports, duty days, and advances." />}
 
             {/* Header */}
+            {!isSubComponent && (
             <header className="flex-resp" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', padding: '30px 0', marginBottom: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{ width: 'clamp(40px,10vw,50px)', height: 'clamp(40px,10vw,50px)', background: 'linear-gradient(135deg, white, #f8fafc)', borderRadius: '16px', padding: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
@@ -437,6 +438,34 @@ const DriverSalaries = () => {
                     </button>
                 </div>
             </header>
+            )}
+
+            {isSubComponent && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Salaries & Settlements</h2>
+                        <span style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(52, 211, 153, 0.1)', color: '#34d399', fontSize: '11px', fontWeight: '800' }}>MONTHLY REPORT</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '200px', borderRadius: '10px', height: '40px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <Search size={14} style={{ margin: '0 10px', color: 'rgba(255,255,255,0.4)' }} />
+                            <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', outline: 'none', width: '100%' }} />
+                        </div>
+                        <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="glass-card" style={{ padding: '0 10px', height: '40px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', background: '#0f172a', color: 'white' }}>
+                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                                <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'short' })}</option>
+                            ))}
+                        </select>
+                        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="glass-card" style={{ padding: '0 10px', height: '40px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', background: '#0f172a', color: 'white' }}>
+                            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                        </select>
+                        <button onClick={() => setShowAdvanceModal(true)} className="btn-primary" style={{ height: '40px', padding: '0 15px', borderRadius: '10px', fontSize: '12px', gap: '6px', display: 'flex', alignItems: 'center' }}>
+                            <Plus size={16} /> RECORD ADVANCE
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
                 <div className="glass-card" style={{ flex: '1.5', minWidth: '280px', padding: '20px', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid rgba(16,185,129,0.2)' }}>
@@ -500,7 +529,7 @@ const DriverSalaries = () => {
                                         <td style={{ padding: '20px 20px', color: '#f43f5e', fontWeight: '700' }}>₹ {s.totalAdvances}</td>
                                         <td style={{ padding: '20px 20px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {s.netPayable}</td>
                                         <td style={{ padding: '20px 20px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
-                                            <button 
+                                            <button
                                                 onClick={(e) => { e.stopPropagation(); handleQuickDownload(s.driverId); }}
                                                 className="btn-glass"
                                                 title="Download Salary Slip"
@@ -530,7 +559,7 @@ const DriverSalaries = () => {
                                 <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: '#10b981' }}>TOTAL</p>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
                                     <h3 style={{ margin: 0, color: '#10b981', fontSize: '18px' }}>₹ {s.netPayable}</h3>
-                                    <button 
+                                    <button
                                         onClick={(e) => { e.stopPropagation(); handleQuickDownload(s.driverId); }}
                                         style={{ background: 'rgba(16,185,129,0.1)', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                                     >
@@ -684,9 +713,9 @@ const DriverSalaries = () => {
             {/* RECORD ADVANCE MODAL */}
             <AnimatePresence>
                 {showAdvanceModal && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)', zIndex: 1100, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+                    <div className="modal-overlay" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1100 }}>
                         <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
-                            className="glass-card" style={{ width: '100%', maxWidth: '480px', padding: '40px', border: '1px solid rgba(255,255,255,0.1)', background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)' }}>
+                            className="modal-container" style={{ width: '100%', maxWidth: '480px', padding: '30px' }}>
 
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
                                 <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>{editingAdvanceId ? 'Edit Advance' : 'Record Advance'}</h2>
@@ -744,19 +773,19 @@ const DriverSalaries = () => {
             {/* DETAIL MODAL */}
             <AnimatePresence>
                 {showDetailModal && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '15px' }}>
+                    <div className="modal-overlay" style={{ background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(10px)' }}>
                         <motion.div initial={{ scale: 0.95, opacity: 0, y: 20 }} animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.95, opacity: 0, y: 20 }} className="glass-card"
-                            style={{ padding: '0', width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a' }}>
+                            exit={{ scale: 0.95, opacity: 0, y: 20 }} className="modal-container"
+                            style={{ width: '100%', maxWidth: '800px', maxHeight: '90vh', overflowY: 'auto' }}>
 
-                                                  <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to right, rgba(255,255,255,0.02), transparent)', position: 'sticky', top: 0, backdropFilter: 'blur(10px)', zIndex: 10 }}>
+                            <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to right, rgba(255,255,255,0.02), transparent)', position: 'sticky', top: 0, backdropFilter: 'blur(10px)', zIndex: 10 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                     <div>
                                         <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Salary Breakdown {selectedDriverDetails?.vID && <span style={{ fontSize: '10px', color: '#fbbf24' }}>({selectedDriverDetails.vID})</span>}</h2>
                                         {driverName && <p style={{ color: 'var(--primary)', fontSize: '13px', margin: '4px 0 0', fontWeight: '600' }}>{driverName}</p>}
                                     </div>
                                     {selectedDriverDetails && !detailLoading && (
-                                        <button 
+                                        <button
                                             onClick={() => handleExportPDF(selectedDriverDetails)}
                                             className="btn-primary"
                                             style={{ padding: '8px 16px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}

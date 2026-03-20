@@ -5,17 +5,17 @@ import { Plus, Minus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
-import { 
-    todayIST, 
-    toISTDateString, 
+import {
+    todayIST,
+    toISTDateString,
     toISTDateTimeString,
     nowISTDateTimeString,
-    formatDateIST, 
-    formatTimeIST, 
-    formatDateTimeIST 
+    formatDateIST,
+    formatTimeIST,
+    formatDateTimeIST
 } from '../utils/istUtils';
 
-const Drivers = () => {
+const Drivers = ({ isSubComponent = false }) => {
     const navigate = useNavigate();
     const { selectedCompany } = useCompany();
     const [drivers, setDrivers] = useState([]);
@@ -326,10 +326,11 @@ const Drivers = () => {
     const blockedDrivers = backendStats.blocked || staffDriversList.filter(d => d.status === 'blocked').length;
 
     return (
-        <div className="container-fluid" style={{ paddingBottom: '40px' }}>
-            <SEO title="Manage Drivers" description="View and manage all registered drivers in your fleet management system." />
+        <div className={isSubComponent ? "sub-component" : "container-fluid"} style={{ paddingBottom: '40px' }}>
+            {!isSubComponent && <SEO title="Manage Drivers" description="View and manage all registered drivers in your fleet management system." />}
 
             {/* Header Section */}
+            {!isSubComponent && (
             <header className="flex-resp" style={{
                 justifyContent: 'space-between',
                 flexWrap: 'wrap',
@@ -404,6 +405,27 @@ const Drivers = () => {
                     </button>
                 </div>
             </header>
+            )}
+            
+            {/* Sub-component quick header (Search and Add) */}
+            {isSubComponent && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Driver List</h2>
+                        <span style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', fontSize: '11px', fontWeight: '800' }}>{filteredDrivers.length} TOTAL</span>
+                    </div>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                         <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '220px', borderRadius: '10px', height: '40px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <Search size={16} style={{ margin: '0 10px', color: 'rgba(255,255,255,0.4)' }} />
+                            <input type="text" placeholder="Quick search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', outline: 'none', width: '100%' }} />
+                        </div>
+                        <button onClick={() => setShowModal(true)} className="btn-primary" style={{ height: '40px', padding: '0 15px', borderRadius: '10px', fontSize: '12px', gap: '6px', display: 'flex', alignItems: 'center' }}>
+                            <Plus size={16} /> ADD NEW
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {/* Stats Grid */}
             <div style={{
@@ -810,13 +832,13 @@ const Drivers = () => {
             {/* Edit Driver Modal */}
             <AnimatePresence>
                 {showEditModal && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '15px' }}>
+                    <div className="modal-overlay" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}>
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            className="glass-card"
-                            style={{ padding: '0', width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto', border: '1px solid rgba(255,255,255,0.1)', background: '#0f172a' }}
+                            className="modal-container"
+                            style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}
                         >
                             <div style={{ padding: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to right, rgba(255,255,255,0.02), transparent)' }}>
                                 <div>

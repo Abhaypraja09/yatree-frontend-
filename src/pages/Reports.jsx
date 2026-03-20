@@ -118,7 +118,7 @@ const LoadingRow = ({ cols }) => (
 );
 
 /* ═══════════════════════════════════════════════════════ MAIN COMPONENT */
-const Reports = () => {
+const Reports = ({ isSubComponent = false }) => {
     const { user } = useAuth();
     const { selectedCompany } = useCompany();
     const location = useLocation();
@@ -549,10 +549,11 @@ const Reports = () => {
     };
 
     return (
-        <div className="container-fluid" style={{ paddingBottom: '60px', background: 'radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.03), transparent 40%)' }}>
-            <SEO title="Daily Reports" description="Premium daily fleet reports with attendance, fuel, maintenance, advances and more." />
+        <div className={isSubComponent ? "sub-component" : "container-fluid"} style={{ paddingBottom: '60px', background: 'radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.03), transparent 40%)' }}>
+            {!isSubComponent && <SEO title="Daily Reports" description="Premium daily fleet reports with attendance, fuel, maintenance, advances and more." />}
 
             {/* ── Header ── */}
+            {!isSubComponent && (
             <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '28px 0 20px', flexWrap: 'wrap', gap: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
                     <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 8px 20px rgba(245,158,11,0.3)' }}>
@@ -609,6 +610,25 @@ const Reports = () => {
                     </button>
                 </div>
             </header>
+            )}
+            
+            {/* Sub-component quick header (Date/Search) */}
+            {isSubComponent && (
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', padding: '0 4px', flexWrap: 'wrap', gap: '15px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Operational Duty Logs</h2>
+                        <button onClick={handleDownloadExcel} style={{ background: 'rgba(16, 185, 129, 0.1)', border: 'none', color: '#10b981', padding: '6px 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <Download size={12} /> EXCEL
+                        </button>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <input type="date" value={fromDate} onChange={e => handleFromDate(e.target.value)}
+                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 10px', borderRadius: '8px', fontSize: '12px', outline: 'none' }} />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* ── Tab Bar (multi-select) ── */}
             {tabList.length > 1 && (

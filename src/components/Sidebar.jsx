@@ -195,8 +195,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
                 {(user.role === 'Admin' || user.permissions?.driversService) && (
                     <NavGroup title="Drivers Services" icon={Users} isOpen={openGroups.drivers} onToggle={() => toggleGroup('drivers')}>
-                        <NavItem item={{ path: '/admin/drivers', label: 'Driver Creation' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/driver-salaries', label: 'Driver Salaries' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/drivers-panel', label: 'Drivers' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/freelancers', label: 'Freelancers' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
@@ -229,7 +228,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 )}
 
                 <div style={{ height: '10px' }} />
-                
+
                 {(user.role === 'Admin' || user.permissions?.driversService) && <NavItem item={{ path: '/admin/staff', icon: Users, label: 'Staff Management' }} onClick={onClose} />}
                 {user.role === 'Admin' && <NavItem item={{ path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins' }} onClick={onClose} />}
             </nav>

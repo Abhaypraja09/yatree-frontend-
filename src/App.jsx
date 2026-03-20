@@ -28,6 +28,7 @@ const LiveFeed = lazy(() => import('./pages/LiveFeed'));
 const EventManagement = lazy(() => import('./pages/EventManagement'));
 const Reports = lazy(() => import('./pages/Reports'));
 const DriverServices = lazy(() => import('./pages/DriverServices'));
+const DriversPanel = lazy(() => import('./pages/DriversPanel'));
 import Sidebar from './components/Sidebar';
 import { CompanyProvider } from './context/CompanyContext';
 
@@ -167,6 +168,7 @@ const AdminRoutes = () => {
       {(isAdmin || p.driversService) && (
         <>
           <Route path="live-feed" element={<LiveFeed />} />
+          <Route path="drivers-panel" element={<DriversPanel />} />
           <Route path="drivers" element={<Drivers />} />
           <Route path="advances" element={<Advances />} />
           <Route path="driver-salaries" element={<DriverSalaries />} />
