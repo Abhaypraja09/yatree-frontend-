@@ -211,7 +211,7 @@ const Freelancers = () => {
         time: nowISTDateTimeString(),
         pickUpLocation: ''
     });
-    const [punchOutData, setPunchOutData] = useState({ km: '', time: nowISTDateTimeString(), fuelAmount: '0', parkingAmount: '0', parkingPaidBy: 'Self', review: '', dailyWage: '', dropLocation: '', parkingSlipPhoto: null });
+    const [punchOutData, setPunchOutData] = useState({ km: '', time: nowISTDateTimeString(), fuelAmount: '0', parkingAmount: '0', allowanceTA: '0', nightStayAmount: '0', parkingPaidBy: 'Self', review: '', dailyWage: '', dropLocation: '', parkingSlipPhoto: null });
     const [advanceData, setAdvanceData] = useState({ amount: '', remark: '', date: todayIST(), advanceType: 'Office', givenBy: 'Office' });
     const [manualData, setManualData] = useState({
         driverId: '',
@@ -225,8 +225,8 @@ const Freelancers = () => {
         dropLocation: '',
         fuelAmount: '0',
         parkingAmount: '0',
-        allowanceTA: false,
-        nightStayAmount: false,
+        allowanceTA: '0',
+        nightStayAmount: '0',
         otherBonus: '0',
         dailyWage: '',
         review: '',
@@ -647,7 +647,7 @@ const Freelancers = () => {
             });
             setShowPunchOutModal(false);
             setPunchOutPhotos({ kmPhoto: null });
-            setPunchOutData({ km: '', time: nowISTDateTimeString(), fuelAmount: '0', parkingAmount: '0', parkingPaidBy: 'Self', review: '', dailyWage: '', dropLocation: '', parkingSlipPhoto: null });
+            setPunchOutData({ km: '', time: nowISTDateTimeString(), fuelAmount: '0', parkingAmount: '0', allowanceTA: '0', nightStayAmount: '0', parkingPaidBy: 'Self', review: '', dailyWage: '', dropLocation: '', parkingSlipPhoto: null });
             await Promise.all([
                 fetchFreelancers(),
                 fetchVehicles(),
@@ -739,7 +739,7 @@ const Freelancers = () => {
                 driverId: '', vehicleId: '', date: todayIST(),
                 punchInKM: '', punchOutKM: '', punchInTime: todayIST() + 'T08:00', punchOutTime: todayIST() + 'T20:00',
                 pickUpLocation: '', dropLocation: '', fuelAmount: '0', parkingAmount: '0',
-                allowanceTA: false, nightStayAmount: false, otherBonus: '0',
+                allowanceTA: '0', nightStayAmount: '0', otherBonus: '0',
                 dailyWage: '', review: '', eventId: ''
             });
             fetchAttendance();
@@ -766,8 +766,10 @@ const Freelancers = () => {
                 startKm: Number(editDutyForm.startKm) || 0,
                 endKm: Number(editDutyForm.endKm) || 0,
                 parkingAmount: Number(editDutyForm.parkingAmount) || 0,
+                allowanceTA: Number(editDutyForm.allowanceTA) || 0,
+                nightStayAmount: Number(editDutyForm.nightStayAmount) || 0,
                 dailyWage: Number(editDutyForm.dailyWage) || 0,
-                bonusAmount: 0, // Explicitly zeroed as field removed
+                bonusAmount: Number(editDutyForm.bonusAmount) || 0,
                 fuelAmount: Number(editDutyForm.fuelAmount) || 0
             };
 
@@ -799,7 +801,7 @@ const Freelancers = () => {
 
     const openEditDutyModal = (duty) => {
         setEditingDuty(duty);
-        const fallbackWage = duty.isOutsideCar ? (Number(duty.dutyAmount) || 0) : (Number(duty.driver?.dailyWage) || 500);
+        const fallbackWage = duty.isOutsideCar ? (Number(duty.dutyAmount) || 0) : (Number(duty.driver?.dailyWage) || 0);
 
         // Debug log to trace what data we are loading into the modal
         console.log('[DEBUG] Opening Edit Modal for Duty:', {
@@ -1482,6 +1484,10 @@ const Freelancers = () => {
                                                     </div>
                                                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexShrink: 0 }}>
                                                         <div style={{ textAlign: 'right' }}>
+                                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Bonus</div>
+                                                            <div style={{ color: '#a855f7', fontWeight: '900', fontSize: '14px' }}>₹{(summary.totalBonus || 0).toLocaleString()}</div>
+                                                        </div>
+                                                        <div style={{ textAlign: 'right' }}>
                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Earned</div>
                                                             <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{summary.totalEarned.toLocaleString()}</div>
                                                         </div>
@@ -1549,6 +1555,10 @@ const Freelancers = () => {
                                                             <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', marginTop: '1px' }}>{dAttendance.length} duties</div>
                                                         </div>
                                                         <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexShrink: 0 }}>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Bonus</div>
+                                                                <div style={{ color: '#a855f7', fontWeight: '900', fontSize: '14px' }}>₹{Object.values(dEarnedByDate).reduce((sum, d) => sum + d.bonus, 0).toLocaleString()}</div>
+                                                            </div>
                                                             <div style={{ textAlign: 'right' }}>
                                                                 <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Earned</div>
                                                                 <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{dEarned.toLocaleString()}</div>
@@ -1625,6 +1635,7 @@ const Freelancers = () => {
                                                     <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
                                                     <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Route Details</th>
                                                     <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Timing & KM</th>
+                                                    <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Bonus</th>
                                                     <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Financials (+ Parking)</th>
                                                     <th style={{ padding: '18px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                                                 </tr>
@@ -1676,6 +1687,15 @@ const Freelancers = () => {
                                                             <td style={{ padding: '15px 25px' }}>
                                                                 <div style={{ color: 'white', fontSize: '12px', fontWeight: '700' }}>{punchInTime} - {punchOutTime || 'Active'}</div>
                                                                 <div style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900', marginTop: '4px' }}>{totalKM} KM Run</div>
+                                                            </td>
+                                                            <td style={{ padding: '15px 25px', textAlign: 'right' }}>
+                                                                <div style={{ color: '#a855f7', fontSize: '15px', fontWeight: '900' }}>
+                                                                    ₹{((Number(a.outsideTrip?.bonusAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)).toLocaleString()}
+                                                                </div>
+                                                                <div style={{ fontSize: '9px', color: 'rgba(168,85,247,0.4)', fontWeight: '700', marginTop: '2px' }}>
+                                                                    {((Number(a.punchOut?.allowanceTA) || 0) > 0) && `TA: ₹${a.punchOut.allowanceTA}`}
+                                                                    {((Number(a.punchOut?.nightStayAmount) || 0) > 0) && ` | N: ₹${a.punchOut.nightStayAmount}`}
+                                                                </div>
                                                             </td>
                                                             <td style={{ padding: '15px 25px', textAlign: 'right' }}>
                                                                 <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900', marginBottom: '4px' }}>
@@ -1950,22 +1970,22 @@ const Freelancers = () => {
                                         }} />
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px', alignItems: 'end' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
                                         <Field label="Duty Salary (Wage) *" type="text" inputMode="decimal" value={manualData.dailyWage} onChange={v => {
                                             const cleaned = v.replace(/[^0-9.]/g, '');
                                             setManualData({ ...manualData, dailyWage: cleaned });
                                         }} required />
-                                        <Field label="Extra Bonus (₹)" type="text" inputMode="decimal" value={manualData.otherBonus} onChange={v => {
-                                            const cleaned = v.replace(/[^0-9.]/g, '');
-                                            setManualData({ ...manualData, otherBonus: cleaned });
-                                        }} />
                                     </div>
 
-                                    {/* Bonus fields removed as per request */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
-                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', textAlign: 'center', fontStyle: 'italic' }}>
-                                            Day/Night bonus options simplified. Use 'Extra Bonus' field for any additional adjustments.
-                                        </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <Field label="T/A (₹)" type="text" inputMode="decimal" value={manualData.allowanceTA} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setManualData({ ...manualData, allowanceTA: cleaned });
+                                        }} />
+                                        <Field label="Night Charges (₹)" type="text" inputMode="decimal" value={manualData.nightStayAmount} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setManualData({ ...manualData, nightStayAmount: cleaned });
+                                        }} />
                                     </div>
 
                                     <button
@@ -2041,8 +2061,8 @@ const Freelancers = () => {
                                                 </div>
                                             </div>
                                             <div style={{ background: 'rgba(16,185,129,0.08)', padding: '12px 28px', borderBottom: '1px solid rgba(16,185,129,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ color: 'rgba(16,185,129,0.8)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase' }}>Total Payable (Daily + Parking)</span>
-                                                <span style={{ color: '#10b981', fontSize: '20px', fontWeight: '950' }}>₹{totalPayable.toLocaleString()}</span>
+                                                <span style={{ color: 'rgba(16,185,129,0.8)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase' }}>Total Payable (Daily + Parking + Bonus)</span>
+                                                <span style={{ color: '#10b981', fontSize: '20px', fontWeight: '950' }}>₹{((Number(punchOutData.dailyWage) || 0) + (Number(punchOutData.parkingAmount) || 0) + (Number(punchOutData.allowanceTA) || 0) + (Number(punchOutData.nightStayAmount) || 0)).toLocaleString()}</span>
                                             </div>
                                         </>
                                     );
@@ -2071,7 +2091,19 @@ const Freelancers = () => {
                                             const cleaned = v.replace(/[^0-9.]/g, '');
                                             setPunchOutData({ ...punchOutData, parkingAmount: cleaned });
                                         }} />
-                                        <PhotoUpload label="Parking Slip" icon={ImageIcon} onFileSelect={f => setPunchOutData({ ...punchOutData, parkingSlipPhoto: f })} previewFile={punchOutData.parkingSlipPhoto} />
+                                        <PhotoUpload label="Parking Slip" icon={ImageIcon || Camera} onFileSelect={f => setPunchOutData({ ...punchOutData, parkingSlipPhoto: f })} previewFile={punchOutData.parkingSlipPhoto} />
+                                    </div>
+
+                                    {/* Row 3.5: T/A + Night Charges */}
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                                        <Field label="T/A (₹)" type="text" inputMode="decimal" value={punchOutData.allowanceTA} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setPunchOutData({ ...punchOutData, allowanceTA: cleaned });
+                                        }} />
+                                        <Field label="Night Charges (₹)" type="text" inputMode="decimal" value={punchOutData.nightStayAmount} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setPunchOutData({ ...punchOutData, nightStayAmount: cleaned });
+                                        }} />
                                     </div>
 
                                     {/* Row 4: KM Photo */}
@@ -2305,6 +2337,14 @@ const Freelancers = () => {
                                         <Field label="Parking/Toll (₹)" type="text" inputMode="decimal" value={editDutyForm.parkingAmount} onChange={v => {
                                             const cleaned = v.replace(/[^0-9.]/g, '');
                                             setEditDutyForm({ ...editDutyForm, parkingAmount: cleaned });
+                                        }} />
+                                        <Field label="T/A (₹)" type="text" inputMode="decimal" value={editDutyForm.allowanceTA} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setEditDutyForm({ ...editDutyForm, allowanceTA: cleaned });
+                                        }} />
+                                        <Field label="Night Charges (₹)" type="text" inputMode="decimal" value={editDutyForm.nightStayAmount} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setEditDutyForm({ ...editDutyForm, nightStayAmount: cleaned });
                                         }} />
                                     </div>
                                 </div>
