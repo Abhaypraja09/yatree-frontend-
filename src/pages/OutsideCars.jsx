@@ -37,7 +37,14 @@ const OutsideCars = () => {
     const shiftDays = (n) => {
         let baseDate;
         if (selectedDay === 'All') {
-            baseDate = new Date(selectedYear, selectedMonth, 1);
+            const today = new Date();
+            // If the selected month/year is the current one, start navigation from TODAY
+            if (selectedMonth === today.getMonth() && selectedYear === today.getFullYear()) {
+                baseDate = today;
+            } else {
+                // Otherwise start from the 1st of that month
+                baseDate = new Date(selectedYear, selectedMonth, 1);
+            }
         } else {
             baseDate = new Date(selectedYear, selectedMonth, parseInt(selectedDay));
         }

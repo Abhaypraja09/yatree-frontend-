@@ -3,9 +3,9 @@ import axios from '../api/axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import {
-    Search, X, Car, ParkingSquare, TrendingDown, Wallet, Plus,
+    Search, X, Car, ParkingSquare, TrendingDown, Plus,
     Calendar, User, FileText, IndianRupee, CheckCircle,
-    AlertCircle, Edit2, Download
+    AlertCircle, Edit2, Download, Trash2, Wallet
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -44,13 +44,35 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     const [submittingAdvance, setSubmittingAdvance] = useState(false);
     const [advanceMessage, setAdvanceMessage] = useState({ type: '', text: '' });
     const [editingAdvanceId, setEditingAdvanceId] = useState(null);
+    
+    // Loans states
+    const [loans, setLoans] = useState([]);
+    const [loansLoading, setLoansLoading] = useState(false);
+    const [showLoanModal, setShowLoanModal] = useState(false);
+    const [loanFormData, setLoanFormData] = useState({
+        driverId: '',
+        totalAmount: '',
+        tenureMonths: '',
+        monthlyEMI: '',
+        remarks: ''
+    });
+    const [submittingLoan, setSubmittingLoan] = useState(false);
+    const [editingLoanId, setEditingLoanId] = useState(null);
 
     useEffect(() => {
         if (selectedCompany) {
             fetchSalaries();
             fetchAdvanceData();
+            fetchLoans();
         }
     }, [selectedCompany, month, year]);
+
+    useEffect(() => {
+        if (loanFormData.totalAmount && loanFormData.tenureMonths) {
+            const emi = Math.ceil(Number(loanFormData.totalAmount) / Number(loanFormData.tenureMonths));
+            setLoanFormData(prev => ({ ...prev, monthlyEMI: emi || '' }));
+        }
+    }, [loanFormData.totalAmount, loanFormData.tenureMonths]);
 
     const fetchSalaries = async () => {
         if (!selectedCompany?._id) return;
@@ -80,6 +102,81 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             setAdvances(advRes.data || []);
             setDrivers(driversRes.data.drivers || []);
         } catch (err) { console.error('Error fetching advance data:', err); }
+    };
+
+    const fetchLoans = async () => {
+        if (!selectedCompany?._id) return;
+        setLoansLoading(true);
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const { data } = await axios.get(`/api/admin/loans/${selectedCompany._id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setLoans(data || []);
+        } catch (err) {
+            console.error('Error fetching loans:', err);
+        } finally {
+            setLoansLoading(false);
+        }
+    };
+
+    const handleRecordLoan = async (e) => {
+        if (e) e.preventDefault();
+        setSubmittingLoan(true);
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            if (editingLoanId) {
+                await axios.put(`/api/admin/loans/${editingLoanId}`, {
+                    ...loanFormData,
+                    remainingAmount: loanFormData.totalAmount // In a simple edit, we might reset or keep track, but for now we update basic info
+                }, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+            } else {
+                await axios.post('/api/admin/loans', {
+                    ...loanFormData,
+                    companyId: selectedCompany._id
+                }, {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+            }
+            setShowLoanModal(false);
+            setEditingLoanId(null);
+            setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', remarks: '' });
+            fetchLoans();
+            fetchSalaries();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to save loan');
+        } finally {
+            setSubmittingLoan(false);
+        }
+    };
+
+    const handleEditLoan = (loan) => {
+        setEditingLoanId(loan._id);
+        const tenure = loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : '';
+        setLoanFormData({
+            driverId: loan.driver?._id || loan.driver,
+            totalAmount: loan.totalAmount,
+            tenureMonths: tenure,
+            monthlyEMI: loan.monthlyEMI,
+            remarks: loan.remarks || ''
+        });
+        setShowLoanModal(true);
+    };
+
+    const handleDeleteLoan = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this loan? This will remove all repayment history.')) return;
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.delete(`/api/admin/loans/${id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            fetchLoans();
+            fetchSalaries();
+        } catch (err) {
+            alert('Failed to delete loan');
+        }
     };
 
     const handleAddAdvance = async (e) => {
@@ -436,6 +533,13 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                     >
                         <Plus size={18} /> RECORD ADVANCE
                     </button>
+                    <button
+                        onClick={() => { setEditingLoanId(null); setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', remarks: '' }); setShowLoanModal(true); }}
+                        className="btn-primary"
+                        style={{ height: '45px', padding: '0 20px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', whiteSpace: 'nowrap', background: '#6366f1', border: 'none' }}
+                    >
+                        <Wallet size={18} /> RECORD LOAN
+                    </button>
                 </div>
             </header>
             )}
@@ -463,6 +567,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         <button onClick={() => setShowAdvanceModal(true)} className="btn-primary" style={{ height: '40px', padding: '0 15px', borderRadius: '10px', fontSize: '12px', gap: '6px', display: 'flex', alignItems: 'center' }}>
                             <Plus size={16} /> RECORD ADVANCE
                         </button>
+                        <button onClick={() => { setEditingLoanId(null); setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', remarks: '' }); setShowLoanModal(true); }} className="btn-primary" style={{ height: '40px', padding: '0 15px', borderRadius: '10px', fontSize: '12px', gap: '6px', display: 'flex', alignItems: 'center', background: '#6366f1', border: 'none' }}>
+                            <Wallet size={16} /> LOAN
+                        </button>
                     </div>
                 </div>
             )}
@@ -484,9 +591,15 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 </div>
                 <div className="glass-card" style={{ flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(244,63,94,0.1) 0%, rgba(244,63,94,0.05) 100%)', border: '1px solid rgba(244,63,94,0.2)' }}>
                     <p style={{ fontSize: '11px', fontWeight: '800', color: '#f43f5e', marginBottom: '4px', textTransform: 'uppercase' }}>
-                        Total Advances Issued
+                        Advances Taken
                     </p>
-                    <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredAdvances.reduce((sum, a) => sum + (a.amount || 0), 0).toLocaleString()}</h3>
+                    <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredSalaries.reduce((sum, s) => sum + (s.totalAdvances || 0), 0).toLocaleString()}</h3>
+                </div>
+                <div className="glass-card" style={{ flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.05) 100%)', border: '1px solid rgba(251,191,36,0.2)' }}>
+                    <p style={{ fontSize: '11px', fontWeight: '800', color: '#fbbf24', marginBottom: '4px', textTransform: 'uppercase' }}>
+                        EMI Deductions
+                    </p>
+                    <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredSalaries.reduce((sum, s) => sum + (s.totalEMI || 0), 0).toLocaleString()}</h3>
                 </div>
             </div>
 
@@ -495,7 +608,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
                     <thead>
                         <tr style={{ textAlign: 'left' }}>
-                            {['Driver', 'Daily Wage', 'Duty Days', 'Nights', 'Earnings', 'Advances', 'Total', 'Reports'].map(h => (
+                            {['Driver', 'Daily Wage', 'Duty Days', 'Nights', 'Earnings', 'Advances', 'EMI', 'Total', 'Reports'].map(h => (
                                 <th key={h} style={{ padding: '15px 20px', color: (h === 'Total' || h === 'Reports') ? '#10b981' : 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
                             ))}
                         </tr>
@@ -527,6 +640,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         </td>
                                         <td style={{ padding: '20px 20px', color: '#38bdf8', fontWeight: '700' }}>₹ {s.totalEarned}</td>
                                         <td style={{ padding: '20px 20px', color: '#f43f5e', fontWeight: '700' }}>₹ {s.totalAdvances}</td>
+                                        <td style={{ padding: '20px 20px', color: '#fbbf24', fontWeight: '700' }}>₹ {s.totalEMI}</td>
                                         <td style={{ padding: '20px 20px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {s.netPayable}</td>
                                         <td style={{ padding: '20px 20px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
                                             <button
@@ -957,6 +1071,143 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                     </>
                                 )}
                             </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Loan Management Section */}
+            <div style={{ marginTop: '60px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+                    <div style={{ width: '4px', height: '24px', background: '#6366f1', borderRadius: '2px' }}></div>
+                    <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Loan <span style={{ color: '#818cf8' }}>Management</span></h2>
+                </div>
+
+                <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
+                        <thead>
+                            <tr style={{ textAlign: 'left' }}>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Amount</th>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Monthly EMI</th>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remaining</th>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {loans.length === 0 ? (
+                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '60px 0', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '20px' }}>
+                                    <Wallet size={40} style={{ opacity: 0.1, marginBottom: '10px', color: '#6366f1' }} />
+                                    <p style={{ color: 'var(--text-muted)', margin: 0 }}>No active loans found.</p>
+                                </td></tr>
+                            ) : loans.map((loan, idx) => (
+                                <motion.tr
+                                    key={loan._id}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    transition={{ delay: idx * 0.03 }}
+                                    style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}
+                                >
+                                    <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
+                                        <div style={{ color: 'white', fontWeight: '700' }}>{loan.driver?.name}</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{loan.driver?.mobile}</div>
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <div style={{ color: 'white', fontWeight: '800' }}>₹ {loan.totalAmount?.toLocaleString()}</div>
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <div style={{ color: '#fbbf24', fontWeight: '800' }}>₹ {loan.monthlyEMI?.toLocaleString()}</div>
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <div style={{ color: '#f43f5e', fontWeight: '800' }}>₹ {loan.remainingAmount?.toLocaleString()}</div>
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <span style={{ 
+                                            padding: '4px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '800', 
+                                            background: loan.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)', 
+                                            color: loan.status === 'Active' ? '#10b981' : '#f43f5e' 
+                                        }}>
+                                            {loan.status?.toUpperCase()}
+                                        </span>
+                                    </td>
+                                    <td style={{ padding: '20px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                            <button
+                                                onClick={() => handleEditLoan(loan)}
+                                                style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                                            >
+                                                <Edit2 size={16} />
+                                            </button>
+                                            <button
+                                                onClick={() => handleDeleteLoan(loan._id)}
+                                                style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
+                                            >
+                                                <Trash2 size={16} />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </motion.tr>
+                            ))}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {/* LOAN MODAL */}
+            <AnimatePresence>
+                {showLoanModal && (
+                    <div className="modal-overlay" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 11000, position: 'fixed', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
+                            className="modal-container" style={{ width: '100%', maxWidth: '480px', padding: '30px', background: '#0f172a', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
+                                <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>{editingLoanId ? 'Update Driver Loan' : 'Add Driver Loan'}</h2>
+                                <button onClick={() => setShowLoanModal(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
+                            </div>
+
+                            <form onSubmit={handleRecordLoan} style={{ display: 'grid', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Select Driver</label>
+                                    <select
+                                        className="input-field"
+                                        required
+                                        disabled={editingLoanId}
+                                        value={loanFormData.driverId}
+                                        onChange={(e) => setLoanFormData({ ...loanFormData, driverId: e.target.value })}
+                                        style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)', opacity: editingLoanId ? 0.6 : 1 }}
+                                    >
+                                        <option value="" style={{ background: '#1e293b', color: 'white' }}>Choose a driver...</option>
+                                        {drivers.map(d => (
+                                            <option key={d._id} value={d._id} style={{ background: '#1e293b', color: 'white' }}>
+                                                {d.name} ({d.mobile})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                                    <div style={{ gridColumn: 'span 1' }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Total Loan</label>
+                                        <input type="number" className="input-field" required value={loanFormData.totalAmount} onChange={(e) => setLoanFormData({ ...loanFormData, totalAmount: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="₹ 0" />
+                                    </div>
+                                    <div style={{ gridColumn: 'span 1' }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Months</label>
+                                        <input type="number" className="input-field" required value={loanFormData.tenureMonths} onChange={(e) => setLoanFormData({ ...loanFormData, tenureMonths: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="E.g. 12" />
+                                    </div>
+                                    <div style={{ gridColumn: 'span 1' }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Monthly EMI</label>
+                                        <input type="number" className="input-field" readOnly value={loanFormData.monthlyEMI} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.05)', color: '#fbbf24', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed', fontWeight: '800' }} placeholder="₹ 0" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Remarks</label>
+                                    <textarea className="input-field" value={loanFormData.remarks} onChange={(e) => setLoanFormData({ ...loanFormData, remarks: e.target.value })} style={{ width: '100%', padding: '15px', background: '#1e293b', color: 'white', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }} rows="2" placeholder="Loan purpose..." />
+                                </div>
+
+                                <button type="submit" disabled={submittingLoan} className="btn-primary" style={{ height: '50px', fontWeight: '900', fontSize: '15px', background: '#6366f1', border: 'none', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                    {submittingLoan ? 'SAVING...' : (editingLoanId ? 'UPDATE LOAN' : 'RECORD LOAN')}
+                                </button>
+                            </form>
                         </motion.div>
                     </div>
                 )}

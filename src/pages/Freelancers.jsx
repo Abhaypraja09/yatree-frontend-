@@ -146,6 +146,8 @@ const Freelancers = () => {
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [vehicleSearch, setVehicleSearch] = useState('');
+    const [searchTerm, setSearchTerm] = useState(''); // Added search for drivers
+
 
     // Modals State
     const [showAddModal, setShowAddModal] = useState(false);
@@ -234,8 +236,9 @@ const Freelancers = () => {
         eventId: ''
     });
 
-    const [month, setMonth] = useState(new Date().getMonth() + 1);
-    const [year, setYear] = useState(new Date().getFullYear());
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedDay, setSelectedDay] = useState(new Date().getDate().toString());
     const [viewMode, setViewMode] = useState('monthly'); // 'monthly' or 'range'
     const [monthlySummaries, setMonthlySummaries] = useState([]);
     const [summaryLoading, setSummaryLoading] = useState(false);
@@ -291,53 +294,62 @@ const Freelancers = () => {
 
     const getToday = () => todayIST();
 
-    const [isRange, setIsRange] = useState(() => {
-        if (location.state?.from) return location.state.from !== location.state.to;
-        return false;
-    });
-    const [fromDate, setFromDate] = useState(() => {
-        if (location.state?.from) return location.state.from;
-        return todayIST();
-    });
-    const [toDate, setToDate] = useState(() => {
-        if (location.state?.to) return location.state.to;
-        return todayIST();
-    });
+    const [isRange, setIsRange] = useState(false);
+    const [fromDate, setFromDate] = useState(todayIST());
+    const [toDate, setToDate] = useState(todayIST());
 
-    // Reset dates when navigating to this page via Sidebar (location state will be null)
     useEffect(() => {
-        if (!location.state?.from) {
-            setFromDate(todayIST());
-            setToDate(todayIST());
-            setIsRange(false);
+        if (selectedDay === 'All') {
+            const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
+            const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+            setFromDate(start);
+            setToDate(end);
+        } else {
+            const d = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+            setFromDate(d);
+            setToDate(d);
         }
-    }, [location.state]);
+    }, [selectedMonth, selectedYear, selectedDay]);
+
+
 
     /* navigate dates */
     const shiftDays = (n) => {
-        // Use toDate for single mode, fromDate for range mode as reference
-        const referenceDate = isRange ? fromDate : toDate;
-        const f = nowIST(referenceDate);
-        f.setUTCDate(f.getUTCDate() + n);
-        const fStr = f.toISOString().split('T')[0];
-
-        if (isRange) {
-            setFromDate(fStr);
-            // In range mode, optional: move both or just from?
-            // Usually common to move both for "Next/Prev Period"
-            const t = nowIST(toDate);
-            t.setUTCDate(t.getUTCDate() + n);
-            setToDate(t.toISOString().split('T')[0]);
+        let baseDate;
+        if (selectedDay === 'All') {
+            const today = new Date();
+            // If the selected month/year is the current one, start navigation from TODAY
+            if (selectedMonth === today.getMonth() && selectedYear === today.getFullYear()) {
+                baseDate = today;
+            } else {
+                // Otherwise start from the 1st of that month
+                baseDate = new Date(selectedYear, selectedMonth, 1);
+            }
         } else {
-            setFromDate(fStr);
-            setToDate(fStr);
+            baseDate = new Date(selectedYear, selectedMonth, parseInt(selectedDay));
         }
+        baseDate.setDate(baseDate.getDate() + n);
+        setSelectedYear(baseDate.getFullYear());
+        setSelectedMonth(baseDate.getMonth());
+        setSelectedDay(baseDate.getDate().toString());
     };
 
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
 
+    const [loans, setLoans] = useState([]);
+    const [loansLoading, setLoansLoading] = useState(false);
+    const [showLoanModal, setShowLoanModal] = useState(false);
+    const [loanFormData, setLoanFormData] = useState({
+        driverId: '',
+        totalAmount: '',
+        monthlyEMI: '',
+        remarks: '',
+        startDate: todayIST()
+    });
+    const [submittingLoan, setSubmittingLoan] = useState(false);
 
+    // Filter Hub State
     const fetchAttendance = useCallback(async () => {
         if (!selectedCompany?._id) return;
         try {
@@ -370,7 +382,7 @@ const Freelancers = () => {
         setSummaryLoading(true);
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/admin/salary-summary/${selectedCompany._id}?month=${month}&year=${year}&isFreelancer=true`, {
+            const { data } = await axios.get(`/api/admin/salary-summary/${selectedCompany._id}?month=${selectedMonth + 1}&year=${selectedYear}&isFreelancer=true`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setMonthlySummaries(data || []);
@@ -379,7 +391,7 @@ const Freelancers = () => {
         } finally {
             setSummaryLoading(false);
         }
-    }, [selectedCompany, month, year, activeTab]);
+    }, [selectedCompany, selectedMonth, selectedYear, activeTab]);
 
     useEffect(() => {
         if (activeTab === 'accounts' && viewMode === 'monthly') {
@@ -444,6 +456,22 @@ const Freelancers = () => {
             setAllDrivers(resA.data.drivers || []);
         } catch (err) { console.error('fetchFreelancers error:', err?.response?.status, err?.response?.config?.url || err.message); }
         finally { setLoading(false); }
+    }, [selectedCompany]);
+
+    const fetchLoans = useCallback(async () => {
+        if (!selectedCompany?._id) return;
+        setLoansLoading(true);
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const { data } = await axios.get(`/api/admin/loans/${selectedCompany._id}?isFreelancer=true`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setLoans(data || []);
+        } catch (err) {
+            console.error('Err fetchLoans:', err);
+        } finally {
+            setLoansLoading(false);
+        }
     }, [selectedCompany]);
 
     const fetchVehicles = useCallback(async () => {
@@ -579,6 +607,69 @@ const Freelancers = () => {
         } catch (err) {
             setMessage({ type: 'error', text: err.response?.data?.message || 'Failed' });
         } finally { setSubmitting(false); }
+    };
+
+    const handleRecordLoan = async (e) => {
+        e.preventDefault();
+        setSubmittingLoan(true);
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.post('/api/admin/loans', {
+                ...loanFormData,
+                companyId: selectedCompany._id
+            }, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setShowLoanModal(false);
+            setLoanFormData({
+                driverId: '',
+                totalAmount: '',
+                monthlyEMI: '',
+                remarks: '',
+                startDate: todayIST()
+            });
+            fetchLoans();
+            if (typeof fetchSalarySummary === 'function') fetchSalarySummary();
+            alert('Loan recorded successfully');
+        } catch (err) {
+            alert(err.response?.data?.message || 'Failed to record loan');
+        } finally {
+            setSubmittingLoan(false);
+        }
+    };
+
+    const handleDeleteLoan = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this loan record?')) return;
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.delete(`/api/admin/loans/${id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            fetchLoans();
+            alert('Loan removed');
+        } catch (err) {
+            alert('Failed to remove loan');
+        }
+    };
+
+    const handleLoanRepayment = async (loanId, amount) => {
+        if (!window.confirm(`Mark ₹${amount} EMI as paid for ${new Date(0, selectedMonth).toLocaleString('default', { month: 'long' })}?`)) return;
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.post('/api/admin/loans/repayment', {
+                loanId,
+                amount,
+                month: selectedMonth + 1,
+                year: selectedYear
+            }, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            fetchLoans();
+            if (typeof fetchSalarySummary === 'function') fetchSalarySummary();
+            alert('Repayment recorded');
+        } catch (err) {
+            alert('Failed to record repayment');
+        }
     };
 
     const handlePunchIn = async (e) => {
@@ -880,7 +971,11 @@ const Freelancers = () => {
         }
     };
 
-    const baseDrivers = drivers.filter(d => driverFilter === 'All' || d._id === driverFilter);
+    const baseDrivers = drivers.filter(d => {
+        const matchesFilter = driverFilter === 'All' || d._id === driverFilter;
+        const matchesSearch = !searchTerm || d.name.toLowerCase().includes(searchTerm.toLowerCase()) || d.mobile?.includes(searchTerm);
+        return matchesFilter && matchesSearch;
+    });
 
     const onDutyDrivers = baseDrivers.filter(d => d.tripStatus === 'active');
     const availableDrivers = baseDrivers.filter(d => d.tripStatus !== 'active');
@@ -888,7 +983,9 @@ const Freelancers = () => {
     const filteredAttendance = attendance.filter(a => {
         const matchesDriver = driverFilter === 'All' || a.driver?._id === driverFilter || a.driver === driverFilter;
         const matchesVehicle = vehicleFilter === 'All' || a.vehicle?._id === vehicleFilter || a.vehicle?.carNumber?.split('#')[0] === vehicleFilter;
-        return matchesDriver && matchesVehicle;
+        const driverName = a.driver?.name || drivers.find(d => d._id === (a.driver?._id || a.driver))?.name || '';
+        const matchesSearch = !searchTerm || driverName.toLowerCase().includes(searchTerm.toLowerCase());
+        return matchesDriver && matchesVehicle && matchesSearch;
     });
 
     const totalLogisticsAmount = filteredAttendance.reduce((sum, a) => {
@@ -925,14 +1022,54 @@ const Freelancers = () => {
 
     const totalSettlement = Object.values(settlementByDriverDate).reduce((sum, item) => {
         return sum + item.wage + item.parking + item.bonus;
-    }, 0);
+    }, 0);    // Stats calculation for display
+    const currentStats = viewMode === 'monthly' ? monthlySummaries :
+        baseDrivers.map(driver => {
+            const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
+            const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
+            const dLoans = loans.filter(loan => loan.driver?._id === driver._id || loan.driver === driver._id);
 
-    const totalAdvances = advances.filter(adv =>
-        driverFilter === 'All' ? true : (adv.driver?._id === driverFilter || adv.driver === driverFilter)
-    ).reduce((sum, adv) => sum + adv.amount, 0);
-    const netPayable = totalSettlement - totalAdvances;
+            const dEarnedByDate = dAttendance.reduce((acc, a) => {
+                if (a.status !== 'completed' && !a.punchOut?.time) return acc;
+                const date = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : 'Unknown');
+                if (!acc[date]) acc[date] = { wage: 0, extra: 0, bonus: 0 };
+                if (acc[date].wage === 0) acc[date].wage = Number(a.dailyWage) || 0;
+                const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
+                const bonuses = (Number(a.punchOut?.allowanceTA) || 0) +
+                    (Number(a.punchOut?.nightStayAmount) || 0) +
+                    (Number(a.outsideTrip?.bonusAmount) || 0);
+                acc[date].extra += parking;
+                acc[date].bonus += bonuses;
+                return acc;
+            }, {});
+            const totalEarned = Object.values(dEarnedByDate).reduce((sum, d) => sum + d.wage + d.extra + d.bonus, 0);
+            const totalAdvances = dAdvances.reduce((s, adv) => s + adv.amount, 0);
+            const totalEMI = dLoans.filter(loan => loan.status === 'Active' && loan.remainingAmount > 0).reduce((sum, loan) => {
+                const repayment = (loan.repayments || []).find(r => r.month === (selectedMonth + 1) && r.year === selectedYear);
+                return sum + (repayment ? Number(repayment.amount) : Number(loan.monthlyEMI));
+            }, 0);
 
-    const filterDriverName = driverFilter === 'All' ? 'All Freelancers' : drivers.find(d => d._id === driverFilter)?.name;
+            return {
+                driverId: driver._id,
+                name: driver.name,
+                totalEarned,
+                totalAdvances,
+                totalEMI,
+                netPayable: totalEarned - totalAdvances - totalEMI,
+                activeLoans: dLoans.filter(loan => loan.status === 'Active' && loan.remainingAmount > 0).map(loan => ({
+                    loanId: loan._id,
+                    emi: loan.monthlyEMI,
+                    isPaid: (loan.repayments || []).some(r => r.month === (selectedMonth + 1) && r.year === selectedYear)
+                }))
+            };
+        }).filter(s => s.totalEarned > 0 || s.totalAdvances > 0 || s.totalEMI > 0);
+
+    const totalEarned = currentStats.reduce((sum, s) => sum + (s.totalEarned || 0), 0);
+    const totalAdvances = currentStats.reduce((sum, s) => sum + (s.totalAdvances || 0), 0);
+    const totalEMI = currentStats.reduce((sum, s) => sum + (s.totalEMI || 0), 0);
+    const totalPayable = totalEarned - totalAdvances - totalEMI;
+
+    const filterDriverName = driverFilter === 'All' ? 'Select Freelancer' : drivers.find(d => d._id === driverFilter)?.name;
 
     // Extract unique locations and vehicles for suggestions
     const uniquePickups = [...new Set(attendance.map(a => a.pickUpLocation).filter(Boolean))].sort();
@@ -1007,75 +1144,46 @@ const Freelancers = () => {
                         alignItems: 'center',
                         justifyContent: 'flex-end',
                         flex: 1,
-                        maxWidth: '500px'
+                        maxWidth: '550px'
                     }}>
-                        {/* Improved Filter Hub */}
+                        {/* Global Search Bar */}
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
                             background: 'rgba(0,0,0,0.25)',
                             borderRadius: '16px',
                             border: '1px solid rgba(255,255,255,0.08)',
-                            padding: '4px 6px',
+                            padding: '0 15px',
+                            height: '42px',
                             flex: 1,
-                            minWidth: '220px',
                             boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)'
                         }}>
-                            <div style={{
-                                width: '34px', height: '34px', borderRadius: '12px',
-                                background: 'rgba(251, 191, 36, 0.1)',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                border: '1px solid rgba(251, 191, 36, 0.15)',
-                                flexShrink: 0
-                            }}>
-                                <Filter size={14} color="#fbbf24" strokeWidth={3} />
-                            </div>
-
-                            <select
-                                value={activeTab === 'accounts' ? settlementDriverFilter : driverFilter}
-                                onChange={(e) => activeTab === 'accounts' ? setSettlementDriverFilter(e.target.value) : setDriverFilter(e.target.value)}
+                            <Search size={16} color="rgba(255,255,255,0.4)" strokeWidth={3} style={{ marginRight: '10px' }} />
+                            <input
+                                type="text"
+                                placeholder={`Search in ${activeTab}...`}
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
                                 style={{
                                     background: 'transparent',
                                     border: 'none',
                                     color: 'white',
-                                    height: '40px',
                                     fontSize: '12px',
-                                    fontWeight: '900',
+                                    fontWeight: '700',
                                     outline: 'none',
-                                    flex: 1,
-                                    cursor: 'pointer',
-                                    textTransform: 'uppercase',
-                                    paddingRight: '10px',
-                                    paddingLeft: '10px',
+                                    width: '100%',
                                     letterSpacing: '0.5px'
                                 }}
-                            >
-                                <option value="All" style={{ background: '#0f172a', fontWeight: '900', color: '#fbbf24' }}>● ALL FREELANCERS</option>
-                                <option disabled style={{ background: '#0f172a', opacity: 0.5 }}>────────────────</option>
-                                {drivers.map(d => (
-                                    <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>
-                                        {d.name.split(' (F)')[0].toUpperCase()}
-                                    </option>
-                                ))}
-                            </select>
+                            />
+                            {searchTerm && (
+                                <button onClick={() => setSearchTerm('')} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', padding: '5px' }}>
+                                    <X size={14} />
+                                </button>
+                            )}
                         </div>
 
                         {activeTab !== 'accounts' && (
                             <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                                <button
-                                    className="glass-card-hover-effect"
-                                    onClick={() => setShowManualModal(true)}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        width: '42px', height: '42px', borderRadius: '14px',
-                                        background: 'rgba(255,255,255,0.04)', color: 'white',
-                                        border: '1px solid rgba(255,255,255,0.08)', cursor: 'pointer',
-                                        transition: '0.3s'
-                                    }}
-                                    title="Manual Entry"
-                                >
-                                    <Edit2 size={16} />
-                                </button>
                                 <button
                                     onClick={() => setShowAddModal(true)}
                                     style={{
@@ -1089,7 +1197,7 @@ const Freelancers = () => {
                                     }}
                                 >
                                     <Plus size={16} style={{ marginRight: '8px', strokeWidth: 3 }} />
-                                    <span className="hide-mobile">Quick Add</span>
+                                    <span className="hide-mobile">Add New</span>
                                 </button>
                             </div>
                         )}
@@ -1122,7 +1230,7 @@ const Freelancers = () => {
                         {[
                             { id: 'personnel', label: 'Drivers', icon: <UserIcon size={14} /> },
                             { id: 'logistics', label: 'Dutys', icon: <Car size={14} /> },
-                            { id: 'accounts', label: 'Settlement', icon: <IndianRupee size={14} /> }
+                            { id: 'accounts', label: 'Salaries', icon: <IndianRupee size={14} /> }
                         ].map(tab => (
                             <button
                                 key={tab.id}
@@ -1154,55 +1262,97 @@ const Freelancers = () => {
                     {activeTab !== 'personnel' && (
                         <div className="flex-resp" style={{ alignItems: 'center', gap: '12px', flex: 1, justifyContent: 'flex-end' }}>
 
-                            {activeTab === 'accounts' ? (
-                                /* Settlement: always show Month + Year pickers */
-                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
-                                    <select value={month} onChange={(e) => setMonth(Number(e.target.value))}
-                                        style={{ padding: '0 12px', height: '40px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', fontSize: '11px', fontWeight: '900', cursor: 'pointer', textTransform: 'uppercase' }}>
-                                        {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                                            <option key={m} value={m} style={{ background: '#0f172a' }}>{new Date(0, m - 1).toLocaleString('default', { month: 'short' }).toUpperCase()}</option>
-                                        ))}
-                                    </select>
-                                    <select value={year} onChange={(e) => setYear(Number(e.target.value))}
-                                        style={{ padding: '0 12px', height: '40px', border: '1px solid rgba(255,255,255,0.08)', color: 'white', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}>
-                                        {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>)}
-                                    </select>
+                            {/* PREMIUM DAY NAV PILL (FROM OUTSIDE) */}
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                background: 'rgba(0,0,0,0.4)',
+                                padding: '4px',
+                                borderRadius: '20px',
+                                border: '1px solid rgba(255,255,255,0.06)'
+                            }}>
+                                <button onClick={() => shiftDays(-1)} style={{
+                                    width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}> <ChevronLeft size={16} /> </button>
+
+                                <div
+                                    onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                    style={{ height: '32px', minWidth: '110px', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.15)', borderRadius: '10px', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 4px' }}
+                                >
+                                    <span style={{ fontSize: '11px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                                        {selectedDay === 'All' ?
+                                            `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
+                                            formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)))).toUpperCase()}
+                                    </span>
+                                    <input
+                                        type="date"
+                                        value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                        onChange={e => {
+                                            const d = new Date(e.target.value);
+                                            setSelectedYear(d.getFullYear());
+                                            setSelectedMonth(d.getMonth());
+                                            setSelectedDay(d.getDate().toString());
+                                        }}
+                                        style={{ position: 'absolute', inset: 0, opacity: 0 }}
+                                    />
                                 </div>
-                            ) : (
-                                /* Duties: date navigator */
-                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'flex-end', flex: 1 }}>
-                                    <div style={{
-                                        display: 'flex', alignItems: 'center', gap: '4px',
-                                        background: 'rgba(0,0,0,0.25)', padding: '4px',
-                                        borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)'
-                                    }}>
-                                        <button onClick={() => shiftDays(-1)} style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <ChevronLeft size={16} />
-                                        </button>
-                                        <div style={{ display: 'flex', gap: '4px' }}>
-                                            {isRange && (
-                                                <div style={{ padding: '0 12px', height: '32px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '10px', position: 'relative', overflow: 'hidden' }}>
-                                                    <span style={{ color: '#fbbf24', fontSize: '9px', fontWeight: '900' }}>FROM</span>
-                                                    <span style={{ color: 'white', fontSize: '11px', fontWeight: '950' }}>{new Date(fromDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}</span>
-                                                    <input type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} onClick={(e) => e.target.showPicker?.()} style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: 2 }} />
-                                                </div>
-                                            )}
-                                            <div style={{ padding: '0 12px', height: '32px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(255,255,255,0.05)', borderRadius: '10px', position: 'relative', overflow: 'hidden' }}>
-                                                {isRange ? <span style={{ color: '#fbbf24', fontSize: '9px', fontWeight: '900' }}>TO</span> : <Calendar size={12} color="#fbbf24" />}
-                                                <span style={{ color: 'white', fontSize: '11px', fontWeight: '950' }}>{new Date(toDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }).toUpperCase()}</span>
-                                                <input type="date" value={toDate} onChange={(e) => { setToDate(e.target.value); if (!isRange) setFromDate(e.target.value); }} onClick={(e) => e.target.showPicker?.()} style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer', zIndex: 2 }} />
-                                            </div>
-                                        </div>
-                                        <button onClick={() => shiftDays(1)} style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                            <ChevronRight size={16} />
-                                        </button>
-                                    </div>
-                                    <button onClick={() => { const next = !isRange; setIsRange(next); if (!next) setFromDate(toDate); }}
-                                        style={{ padding: '0 12px', height: '40px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.06)', cursor: 'pointer', background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(255,255,255,0.03)', color: isRange ? '#fbbf24' : 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>
-                                        {isRange ? 'Range' : 'Single'}
+
+                                <button onClick={() => shiftDays(1)} style={{
+                                    width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                }}> <ChevronRight size={16} /> </button>
+                            </div>
+
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                {selectedDay !== 'All' && (
+                                    <button
+                                        onClick={() => setSelectedDay('All')}
+                                        style={{
+                                            height: '40px',
+                                            padding: '0 12px',
+                                            borderRadius: '12px',
+                                            background: 'rgba(251, 191, 36, 0.1)',
+                                            border: '1px solid rgba(251, 191, 36, 0.2)',
+                                            color: '#fbbf24',
+                                            fontSize: '10px',
+                                            fontWeight: '950',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '6px',
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px'
+                                        }}
+                                    >
+                                        <Calendar size={12} /> Full Month
                                     </button>
-                                </div>
-                            )}
+                                )}
+
+                                <select
+                                    value={selectedMonth}
+                                    onChange={e => {
+                                        setSelectedMonth(Number(e.target.value));
+                                        setSelectedDay('All');
+                                    }}
+                                    style={{ height: '40px', padding: '0 8px', fontSize: '11px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '70px', outline: 'none' }}
+                                >
+                                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
+                                        <option key={m} value={idx} style={{ background: '#0f172a' }}>{m.toUpperCase()}</option>
+                                    ))}
+                                </select>
+
+                                <select
+                                    value={selectedYear}
+                                    onChange={e => {
+                                        setSelectedYear(Number(e.target.value));
+                                        setSelectedDay('All');
+                                    }}
+                                    style={{ height: '40px', padding: '0 8px', fontSize: '11px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '70px', outline: 'none' }}
+                                >
+                                    {[2024, 2025, 2026, 2027].map(y => (
+                                        <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                                    ))}
+                                </select>
+                            </div>
 
                             <button onClick={() => { fetchAttendance(); fetchAdvances(); fetchFreelancers(); }}
                                 style={{ background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)', color: '#818cf8', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
@@ -1241,7 +1391,7 @@ const Freelancers = () => {
                                         <tbody>
                                             {loading ? (
                                                 <tr><td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Loading drivers...</td></tr>
-                                            ) : availableDrivers.length === 0 && onDutyDrivers.length === 0 ? (
+                                            ) : (availableDrivers.length === 0 && onDutyDrivers.length === 0) ? (
                                                 <tr>
                                                     <td colSpan="5" style={{ padding: '80px 40px', textAlign: 'center' }}>
                                                         <UserIcon size={40} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
@@ -1249,79 +1399,115 @@ const Freelancers = () => {
                                                         <p style={{ color: 'rgba(255,255,255,0.3)', marginBottom: '30px' }}>Add drivers to your network to see them here.</p>
                                                     </td>
                                                 </tr>
-                                            ) : [...onDutyDrivers.sort((a, b) => a.name.localeCompare(b.name)), ...availableDrivers.sort((a, b) => a.name.localeCompare(b.name))].map(d => {
-                                                const dayAttendance = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id);
-                                                const isOnDuty = d.tripStatus === 'active' || dayAttendance.some(a => a.status === 'incomplete');
-                                                const dutyCount = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id).length;
-                                                return (
-                                                    <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }} className="ledger-row">
-                                                        <td style={{ padding: '15px 25px' }}>
-                                                            <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                                                <div style={{
-                                                                    width: '40px', height: '40px', borderRadius: '12px',
-                                                                    background: isOnDuty ? 'rgba(244, 63, 94, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                                                                    display: 'flex', justifyContent: 'center', alignItems: 'center'
-                                                                }}>
-                                                                    <UserIcon size={18} style={{ color: isOnDuty ? '#f43f5e' : '#818cf8' }} />
-                                                                </div>
-                                                                <div>
-                                                                    <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{d.name.split(' (F)')[0]}</div>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px' }}>
-                                                                        <a href={`tel:${d.mobile}`} style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                            <Phone size={10} /> {d.mobile}
-                                                                        </a>
-                                                                        {d.licenseNumber && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px' }}>• {d.licenseNumber}</span>}
+                                            ) : [...onDutyDrivers.sort((a, b) => a.name.localeCompare(b.name)), ...availableDrivers.sort((a, b) => a.name.localeCompare(b.name))]
+                                                .filter(d =>
+                                                    d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                                    d.mobile?.includes(searchTerm)
+                                                )
+                                                .length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
+                                                        No drivers match your search query.
+                                                    </td>
+                                                </tr>
+                                            ) : [...onDutyDrivers.sort((a, b) => a.name.localeCompare(b.name)), ...availableDrivers.sort((a, b) => a.name.localeCompare(b.name))]
+                                                .filter(d =>
+                                                    d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                                                    d.mobile?.includes(searchTerm)
+                                                )
+                                                .map(d => {
+                                                    const dayAttendance = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id);
+                                                    const isOnDuty = d.tripStatus === 'active' || dayAttendance.some(a => a.status === 'incomplete');
+                                                    const dutyCount = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id).length;
+                                                    return (
+                                                        <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.3s' }} className="ledger-row">
+                                                            <td style={{ padding: '15px 25px' }}>
+                                                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                                                                    <div style={{
+                                                                        width: '40px', height: '40px', borderRadius: '12px',
+                                                                        background: isOnDuty ? 'rgba(244, 63, 94, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                                                                        display: 'flex', justifyContent: 'center', alignItems: 'center'
+                                                                    }}>
+                                                                        <UserIcon size={18} style={{ color: isOnDuty ? '#f43f5e' : '#818cf8' }} />
+                                                                    </div>
+                                                                    <div>
+                                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{d.name.split(' (F)')[0]}</div>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '3px' }}>
+                                                                            <a href={`tel:${d.mobile}`} style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                                <Phone size={10} /> {d.mobile}
+                                                                            </a>
+                                                                            {d.licenseNumber && <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px' }}>• {d.licenseNumber}</span>}
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        </td>
-                                                        <td style={{ padding: '15px 25px' }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOnDuty ? '#f43f5e' : '#10b981' }}></div>
-                                                                <span style={{ fontSize: '11px', color: isOnDuty ? '#f43f5e' : '#10b981', fontWeight: '900', textTransform: 'uppercase' }}>
-                                                                    {isOnDuty ? 'ON DUTY' : 'AVAILABLE'}
-                                                                </span>
-                                                            </div>
-                                                            {isOnDuty && d.assignedVehicle && (
-                                                                <div style={{ color: 'rgba(14,165,233,0.7)', fontSize: '10px', fontWeight: '800', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                                    <Car size={10} /> {d.assignedVehicle?.carNumber?.split('#')[0]}
+                                                            </td>
+                                                            <td style={{ padding: '15px 25px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: isOnDuty ? '#f43f5e' : '#10b981' }}></div>
+                                                                    <span style={{ fontSize: '11px', color: isOnDuty ? '#f43f5e' : '#10b981', fontWeight: '900', textTransform: 'uppercase' }}>
+                                                                        {isOnDuty ? 'ON DUTY' : 'AVAILABLE'}
+                                                                    </span>
                                                                 </div>
-                                                            )}
-                                                        </td>
-                                                        <td style={{ padding: '15px 25px' }}>
-                                                            <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{d.dailyWage || 0}</div>
-                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '900', marginTop: '2px' }}>BASE RATE</div>
-                                                        </td>
-                                                        <td style={{ padding: '15px 25px', textAlign: 'center' }}>
-                                                            <div style={{ display: 'inline-block', background: 'rgba(99, 102, 241, 0.1)', padding: '4px 12px', borderRadius: '100px', border: '1px solid rgba(99,102,241,0.1)' }}>
-                                                                <span style={{ color: '#818cf8', fontWeight: '900', fontSize: '13px' }}>{dutyCount}</span>
-                                                            </div>
-                                                        </td>
-                                                        <td style={{ padding: '15px 25px', textAlign: 'right' }}>
-                                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                                                {isOnDuty ? (
-                                                                    <div style={{ display: 'flex', gap: '5px' }}>
+                                                                {isOnDuty && d.assignedVehicle && (
+                                                                    <div style={{ color: 'rgba(14,165,233,0.7)', fontSize: '10px', fontWeight: '800', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                                        <Car size={10} /> {d.assignedVehicle?.carNumber?.split('#')[0]}
+                                                                    </div>
+                                                                )}
+                                                            </td>
+                                                            <td style={{ padding: '15px 25px' }}>
+                                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{d.dailyWage || 0}</div>
+                                                                <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '900', marginTop: '2px' }}>BASE RATE</div>
+                                                            </td>
+                                                            <td style={{ padding: '15px 25px', textAlign: 'center' }}>
+                                                                <div style={{ display: 'inline-block', background: 'rgba(99, 102, 241, 0.1)', padding: '4px 12px', borderRadius: '100px', border: '1px solid rgba(99,102,241,0.1)' }}>
+                                                                    <span style={{ color: '#818cf8', fontWeight: '900', fontSize: '13px' }}>{dutyCount}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td style={{ padding: '15px 25px', textAlign: 'right' }}>
+                                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                                    {isOnDuty ? (
+                                                                        <div style={{ display: 'flex', gap: '5px' }}>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    setSelectedDriver(d);
+                                                                                    const viewTime = nowISTDateTimeString();
+                                                                                    setPunchOutData({
+                                                                                        ...punchOutData,
+                                                                                        km: '',
+                                                                                        time: viewTime,
+                                                                                        dailyWage: d.dailyWage || '',
+                                                                                        nightStayAmount: d.nightStayBonus || ''
+                                                                                    });
+                                                                                    setShowPunchOutModal(true);
+                                                                                }}
+                                                                                style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '8px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
+                                                                            >FINISH</button>
+                                                                            <button
+                                                                                onClick={() => {
+                                                                                    setSelectedDriver(d);
+                                                                                    const yesterday = new Date();
+                                                                                    yesterday.setDate(yesterday.getDate() - 1);
+                                                                                    const viewDate = toISTDateString(yesterday);
+                                                                                    const viewTime = viewDate + 'T09:00';
+                                                                                    setPunchInData({
+                                                                                        ...punchInData,
+                                                                                        time: viewTime,
+                                                                                        date: viewDate
+                                                                                    });
+                                                                                    setShowPunchInModal(true);
+                                                                                }}
+                                                                                title="Add Past Duty"
+                                                                                style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.05)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                                                            >
+                                                                                <History size={14} />
+                                                                            </button>
+                                                                        </div>
+                                                                    ) : (
                                                                         <button
                                                                             onClick={() => {
                                                                                 setSelectedDriver(d);
-                                                                                const viewTime = nowISTDateTimeString();
-                                                                                setPunchOutData({
-                                                                                    ...punchOutData,
-                                                                                    km: '',
-                                                                                    time: viewTime,
-                                                                                    dailyWage: d.dailyWage || ''
-                                                                                });
-                                                                                setShowPunchOutModal(true);
-                                                                            }}
-                                                                            style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '8px 12px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
-                                                                        >FINISH</button>
-                                                                        <button
-                                                                            onClick={() => {
-                                                                                setSelectedDriver(d);
-                                                                                const yesterday = new Date();
-                                                                                yesterday.setDate(yesterday.getDate() - 1);
-                                                                                const viewDate = toISTDateString(yesterday);
-                                                                                const viewTime = viewDate + 'T09:00';
+                                                                                const viewDate = toDate || getToday();
+                                                                                const viewTime = viewDate + 'T' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
                                                                                 setPunchInData({
                                                                                     ...punchInData,
                                                                                     time: viewTime,
@@ -1329,47 +1515,28 @@ const Freelancers = () => {
                                                                                 });
                                                                                 setShowPunchInModal(true);
                                                                             }}
-                                                                            title="Add Past Duty"
-                                                                            style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.05)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
-                                                                        >
-                                                                            <History size={14} />
-                                                                        </button>
-                                                                    </div>
-                                                                ) : (
+                                                                            style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)', padding: '8px 15px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
+                                                                        >START</button>
+                                                                    )}
+                                                                    {/* Fuel option removed as per request */}
                                                                     <button
-                                                                        onClick={() => {
-                                                                            setSelectedDriver(d);
-                                                                            const viewDate = toDate || getToday();
-                                                                            const viewTime = viewDate + 'T' + new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
-                                                                            setPunchInData({
-                                                                                ...punchInData,
-                                                                                time: viewTime,
-                                                                                date: viewDate
-                                                                            });
-                                                                            setShowPunchInModal(true);
-                                                                        }}
-                                                                        style={{ background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)', padding: '8px 15px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
-                                                                    >START</button>
-                                                                )}
-                                                                {/* Fuel option removed as per request */}
-                                                                <button
-                                                                    onClick={() => { setSelectedDriver(d); setQuickExpenseType('parking'); setShowQuickExpenseModal(true); }}
-                                                                    title="Add Parking"
-                                                                    style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
-                                                                >
-                                                                    <MapPin size={13} />
-                                                                </button>
-                                                                <button onClick={() => openEditModal(d)} title="Edit" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
-                                                                    <Edit2 size={13} />
-                                                                </button>
-                                                                <button onClick={() => handleDelete(d._id)} title="Delete" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(244,63,94,0.05)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
-                                                                    <Trash2 size={13} />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                );
-                                            })}
+                                                                        onClick={() => { setSelectedDriver(d); setQuickExpenseType('parking'); setShowQuickExpenseModal(true); }}
+                                                                        title="Add Parking"
+                                                                        style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(99, 102, 241, 0.1)', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                                                    >
+                                                                        <MapPin size={13} />
+                                                                    </button>
+                                                                    <button onClick={() => openEditModal(d)} title="Edit" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
+                                                                        <Edit2 size={13} />
+                                                                    </button>
+                                                                    <button onClick={() => handleDelete(d._id)} title="Delete" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(244,63,94,0.05)', color: '#f43f5e', border: '1px solid rgba(244,63,94,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
+                                                                        <Trash2 size={13} />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
                                         </tbody>
                                     </table>
                                 </div>
@@ -1396,68 +1563,27 @@ const Freelancers = () => {
                                             gap: '15px',
                                             marginBottom: '10px'
                                         }}>
-                                            {(() => {
-                                                const stats = { earned: 0, advance: 0, payable: 0 };
-                                                if (viewMode === 'monthly') {
-                                                    monthlySummaries
-                                                        .filter(s => settlementDriverFilter === 'All' || s.driverId?.toString() === settlementDriverFilter)
-                                                        .forEach(s => {
-                                                            stats.earned += (Number(s.totalEarned) || 0);
-                                                            stats.advance += (Number(s.totalAdvances) || 0);
-                                                            stats.payable += (Number(s.netPayable) || 0);
-                                                        });
-                                                } else {
-                                                    baseDrivers
-                                                        .filter(d => settlementDriverFilter === 'All' || d._id === settlementDriverFilter)
-                                                        .forEach(driver => {
-                                                            const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
-                                                            const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
-
-                                                            const dEarnedByDate = dAttendance.reduce((acc, a) => {
-                                                                if (a.status !== 'completed' && !a.punchOut?.time) return acc;
-                                                                const date = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : 'Unknown');
-                                                                if (!acc[date]) acc[date] = { wage: 0, extra: 0, bonus: 0 };
-                                                                if (acc[date].wage === 0) acc[date].wage = Number(a.dailyWage) || 0;
-                                                                const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
-                                                                const bonuses = (Number(a.punchOut?.allowanceTA) || 0) +
-                                                                    (Number(a.punchOut?.nightStayAmount) || 0) +
-                                                                    (Number(a.outsideTrip?.bonusAmount) || 0);
-                                                                acc[date].extra += parking;
-                                                                acc[date].bonus += bonuses;
-                                                                return acc;
-                                                            }, {});
-                                                            const dEarned = Object.values(dEarnedByDate).reduce((sum, d) => sum + d.wage + d.extra + d.bonus, 0);
-                                                            const dAdvanced = dAdvances.reduce((s, adv) => s + adv.amount, 0);
-                                                            stats.earned += dEarned;
-                                                            stats.advance += dAdvanced;
-                                                            stats.payable += (dEarned - dAdvanced);
-                                                        });
-                                                }
-
-                                                return (
-                                                    <>
-                                                        <div className="premium-glass" style={{ padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(16, 185, 129, 0.05)' }}>
-                                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Total Earned</div>
-                                                            <div style={{ color: '#10b981', fontSize: '24px', fontWeight: '900' }}>₹{stats.earned.toLocaleString()}</div>
-                                                        </div>
-                                                        <div className="premium-glass" style={{ padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(244, 63, 94, 0.05)' }}>
-                                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Total Advance</div>
-                                                            <div style={{ color: '#f43f5e', fontSize: '24px', fontWeight: '900' }}>₹{stats.advance.toLocaleString()}</div>
-                                                        </div>
-                                                        <div className="premium-glass" style={{ padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(251, 191, 36, 0.1)' }}>
-                                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Net Company Owed</div>
-                                                            <div style={{ color: '#fbbf24', fontSize: '24px', fontWeight: '900' }}>₹{stats.payable.toLocaleString()}</div>
-                                                        </div>
-                                                    </>
-                                                );
-                                            })()}
+                                            <div className="premium-glass" style={{ padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(16, 185, 129, 0.05)' }}>
+                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Total Earned</div>
+                                                <div style={{ color: '#10b981', fontSize: '24px', fontWeight: '900' }}>₹{totalEarned.toLocaleString()}</div>
+                                            </div>
+                                            <div className="premium-glass" style={{ padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(244, 63, 94, 0.05)' }}>
+                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Total Advance</div>
+                                                <div style={{ color: '#f43f5e', fontSize: '24px', fontWeight: '900' }}>₹{totalAdvances.toLocaleString()}</div>
+                                            </div>
+                                            <div className="premium-glass" style={{ padding: '20px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(56, 189, 248, 0.05)' }}>
+                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Net Company Owed</div>
+                                                <div style={{ color: '#38bdf8', fontSize: '24px', fontWeight: '900' }}>₹{totalPayable.toLocaleString()}</div>
+                                            </div>
                                         </div>
                                     )}
                                     {summaryLoading ? (
                                         <div style={{ padding: '40px', textAlign: 'center' }}><div className="spinner"></div></div>
-                                    ) : viewMode === 'monthly' ? (
-                                        monthlySummaries
-                                            .filter(s => settlementDriverFilter === 'All' || s.driverId?.toString() === settlementDriverFilter)
+                                    ) : currentStats.length === 0 ? (
+                                        <div style={{ textAlign: 'center', padding: '50px', color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>No settlement data found for selected filters.</div>
+                                    ) : (
+                                        currentStats
+                                            .filter(s => !searchTerm || s.name?.toLowerCase().includes(searchTerm.toLowerCase()))
                                             .map(summary => (
                                                 <div
                                                     key={summary.driverId}
@@ -1481,13 +1607,9 @@ const Freelancers = () => {
                                                     </div>
                                                     <div style={{ flex: 1, minWidth: 0 }}>
                                                         <div style={{ color: 'white', fontWeight: '800', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{summary.name}</div>
-                                                        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', marginTop: '1px' }}>{summary.workingDays} days worked</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', marginTop: '1px' }}>{summary.workingDays || summary.dAttendance?.length || 0} days worked</div>
                                                     </div>
                                                     <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexShrink: 0 }}>
-                                                        <div style={{ textAlign: 'right' }}>
-                                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Bonus</div>
-                                                            <div style={{ color: '#a855f7', fontWeight: '900', fontSize: '14px' }}>₹{(summary.totalBonus || 0).toLocaleString()}</div>
-                                                        </div>
                                                         <div style={{ textAlign: 'right' }}>
                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Earned</div>
                                                             <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{summary.totalEarned.toLocaleString()}</div>
@@ -1498,94 +1620,13 @@ const Freelancers = () => {
                                                         </div>
                                                         <div style={{ textAlign: 'right', minWidth: '80px' }}>
                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Net Payable</div>
-                                                            <div style={{ color: summary.netPayable >= 0 ? '#fbbf24' : '#34d399', fontWeight: '900', fontSize: '16px' }}>₹{Math.abs(summary.netPayable).toLocaleString()}</div>
+                                                            <div style={{ color: summary.netPayable >= 0 ? '#34d399' : '#f43f5e', fontWeight: '900', fontSize: '16px' }}>₹{Math.abs(summary.netPayable).toLocaleString()}</div>
                                                         </div>
                                                     </div>
                                                     <ChevronRight size={15} color="rgba(255,255,255,0.2)" style={{ flexShrink: 0 }} />
                                                 </div>
                                             ))
-                                    ) : (
-                                        baseDrivers
-                                            .filter(d => settlementDriverFilter === 'All' || d._id === settlementDriverFilter)
-                                            .map(driver => {
-                                                const dAttendance = attendance.filter(a => a.driver?._id === driver._id || a.driver === driver._id);
-                                                const dAdvances = advances.filter(adv => adv.driver?._id === driver._id || adv.driver === driver._id);
-
-                                                const dEarnedByDate = dAttendance.reduce((acc, a) => {
-                                                    if (a.status !== 'completed' && !a.punchOut?.time) return acc;
-                                                    const date = a.date || (a.punchIn?.time ? new Date(a.punchIn.time).toISOString().split('T')[0] : 'Unknown');
-                                                    if (!acc[date]) acc[date] = { wage: 0, extra: 0, bonus: 0 };
-                                                    if (acc[date].wage === 0) acc[date].wage = Number(a.dailyWage) || 0;
-                                                    const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
-                                                    const bonuses = (Number(a.punchOut?.allowanceTA) || 0) +
-                                                        (Number(a.punchOut?.nightStayAmount) || 0) +
-                                                        (Number(a.outsideTrip?.bonusAmount) || 0);
-                                                    acc[date].extra += parking;
-                                                    acc[date].bonus += bonuses;
-                                                    return acc;
-                                                }, {});
-                                                const dEarned = Object.values(dEarnedByDate).reduce((sum, d) => sum + d.wage + d.extra + d.bonus, 0);
-                                                const dAdvanced = dAdvances.reduce((s, adv) => s + adv.amount, 0);
-                                                const dBalance = dEarned - dAdvanced;
-
-                                                if (dEarned === 0 && dAdvanced === 0) return null;
-
-                                                return (
-                                                    <div
-                                                        key={driver._id}
-                                                        onClick={() => navigate(`/admin/freelancers/${driver._id}?from=${fromDate}&to=${toDate}`)}
-                                                        style={{
-                                                            background: 'rgba(15,23,42,0.6)',
-                                                            border: '1px solid rgba(255,255,255,0.07)',
-                                                            borderRadius: '16px',
-                                                            padding: '14px 18px',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '14px',
-                                                            cursor: 'pointer',
-                                                            transition: 'border-color 0.2s'
-                                                        }}
-                                                        onMouseEnter={e => e.currentTarget.style.borderColor = 'rgba(99,102,241,0.4)'}
-                                                        onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
-                                                    >
-                                                        <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(99,102,241,0.12)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                                            <UserIcon size={16} color="#818cf8" />
-                                                        </div>
-                                                        <div style={{ flex: 1, minWidth: 0 }}>
-                                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '14px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{driver.name.split(' (F)')[0]}</div>
-                                                            <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', marginTop: '1px' }}>{dAttendance.length} duties</div>
-                                                        </div>
-                                                        <div style={{ display: 'flex', gap: '16px', alignItems: 'center', flexShrink: 0 }}>
-                                                            <div style={{ textAlign: 'right' }}>
-                                                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Bonus</div>
-                                                                <div style={{ color: '#a855f7', fontWeight: '900', fontSize: '14px' }}>₹{Object.values(dEarnedByDate).reduce((sum, d) => sum + d.bonus, 0).toLocaleString()}</div>
-                                                            </div>
-                                                            <div style={{ textAlign: 'right' }}>
-                                                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Earned</div>
-                                                                <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{dEarned.toLocaleString()}</div>
-                                                            </div>
-                                                            <div style={{ textAlign: 'right' }}>
-                                                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Advance</div>
-                                                                <div style={{ color: '#f87171', fontWeight: '900', fontSize: '14px' }}>₹{dAdvanced.toLocaleString()}</div>
-                                                            </div>
-                                                            <div style={{ textAlign: 'right', minWidth: '80px' }}>
-                                                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase', marginBottom: '2px' }}>Net Payable</div>
-                                                                <div style={{ color: dBalance >= 0 ? '#fbbf24' : '#34d399', fontWeight: '900', fontSize: '16px' }}>₹{Math.abs(dBalance).toLocaleString()}</div>
-                                                            </div>
-                                                        </div>
-                                                        <ChevronRight size={15} color="rgba(255,255,255,0.2)" style={{ flexShrink: 0 }} />
-                                                    </div>
-                                                );
-                                            }).filter(Boolean)
                                     )}
-
-                                    {((viewMode === 'monthly' && monthlySummaries.length === 0) || (viewMode === 'range' && baseDrivers.filter(d => {
-                                        const dAtt = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id);
-                                        const dAdv = advances.filter(a => a.driver?._id === d._id || a.driver === d._id);
-                                        return dAtt.length > 0 || dAdv.length > 0;
-                                    }).length === 0)) && !summaryLoading && (
-                                            <div style={{ textAlign: 'center', padding: '50px', color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>No settlement data found for selected filters.</div>
-                                        )}
                                 </div>
                             </div>
                         </motion.div>
@@ -1782,9 +1823,11 @@ const Freelancers = () => {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                     <Field label="Daily Wage (₹)" type="number" value={formData.dailyWage} onChange={v => setFormData({ ...formData, dailyWage: v })} />
-                                    <Field label="Night Stay (₹)" type="number" value={formData.nightStayBonus} onChange={v => setFormData({ ...formData, nightStayBonus: v })} />
+                                    <Field label="O.T. / Night (₹)" type="number" value={formData.nightStayBonus} onChange={v => setFormData({ ...formData, nightStayBonus: v })} />
                                 </div>
-                                <Field label="Same Day Return (₹)" type="number" value={formData.sameDayReturnBonus} onChange={v => setFormData({ ...formData, sameDayReturnBonus: v })} />
+                                <div style={{ display: 'none' }}>
+                                    <Field label="Same Day Return (₹)" type="number" value={formData.sameDayReturnBonus} onChange={v => setFormData({ ...formData, sameDayReturnBonus: v })} />
+                                </div>
                                 <SubmitButton disabled={submitting} text="Register Freelancer" message={message} />
                             </form>
                         </Modal>
@@ -1803,9 +1846,11 @@ const Freelancers = () => {
                                 </div>
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                     <Field label="Daily Wage (₹)" type="number" value={editForm.dailyWage} onChange={v => setEditForm({ ...editForm, dailyWage: v })} />
-                                    <Field label="Night Stay (₹)" type="number" value={editForm.nightStayBonus} onChange={v => setEditForm({ ...editForm, nightStayBonus: v })} />
+                                    <Field label="O.T. / Night (₹)" type="number" value={editForm.nightStayBonus} onChange={v => setEditForm({ ...editForm, nightStayBonus: v })} />
                                 </div>
-                                <Field label="Same Day Return (₹)" type="number" value={editForm.sameDayReturnBonus} onChange={v => setEditForm({ ...editForm, sameDayReturnBonus: v })} />
+                                <div style={{ display: 'none' }}>
+                                    <Field label="Same Day Return (₹)" type="number" value={editForm.sameDayReturnBonus} onChange={v => setEditForm({ ...editForm, sameDayReturnBonus: v })} />
+                                </div>
                                 <SubmitButton disabled={submitting} text="Update Freelancer" message={message} />
                             </form>
                         </Modal>
@@ -1904,7 +1949,12 @@ const Freelancers = () => {
                                                 value={manualData.driverId}
                                                 onChange={e => {
                                                     const d = allDrivers.find(drv => drv._id === e.target.value);
-                                                    setManualData({ ...manualData, driverId: e.target.value, dailyWage: d?.dailyWage || d?.salary || '' });
+                                                    setManualData({ 
+                                                        ...manualData, 
+                                                        driverId: e.target.value, 
+                                                        dailyWage: d?.dailyWage || d?.salary || '',
+                                                        nightStayAmount: d?.nightStayBonus || ''
+                                                    });
                                                 }}
                                                 style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
                                             >
@@ -1983,7 +2033,7 @@ const Freelancers = () => {
                                             const cleaned = v.replace(/[^0-9.]/g, '');
                                             setManualData({ ...manualData, allowanceTA: cleaned });
                                         }} />
-                                        <Field label="Night Charges (₹)" type="text" inputMode="decimal" value={manualData.nightStayAmount} onChange={v => {
+                                        <Field label="O.T. / Night (₹)" type="text" inputMode="decimal" value={manualData.nightStayAmount} onChange={v => {
                                             const cleaned = v.replace(/[^0-9.]/g, '');
                                             setManualData({ ...manualData, nightStayAmount: cleaned });
                                         }} />
@@ -2101,7 +2151,7 @@ const Freelancers = () => {
                                             const cleaned = v.replace(/[^0-9.]/g, '');
                                             setPunchOutData({ ...punchOutData, allowanceTA: cleaned });
                                         }} />
-                                        <Field label="Night Charges (₹)" type="text" inputMode="decimal" value={punchOutData.nightStayAmount} onChange={v => {
+                                        <Field label="O.T. / Night (₹)" type="text" inputMode="decimal" value={punchOutData.nightStayAmount} onChange={v => {
                                             const cleaned = v.replace(/[^0-9.]/g, '');
                                             setPunchOutData({ ...punchOutData, nightStayAmount: cleaned });
                                         }} />
@@ -2343,7 +2393,7 @@ const Freelancers = () => {
                                             const cleaned = v.replace(/[^0-9.]/g, '');
                                             setEditDutyForm({ ...editDutyForm, allowanceTA: cleaned });
                                         }} />
-                                        <Field label="Night Charges (₹)" type="text" inputMode="decimal" value={editDutyForm.nightStayAmount} onChange={v => {
+                                        <Field label="O.T. / Night (₹)" type="text" inputMode="decimal" value={editDutyForm.nightStayAmount} onChange={v => {
                                             const cleaned = v.replace(/[^0-9.]/g, '');
                                             setEditDutyForm({ ...editDutyForm, nightStayAmount: cleaned });
                                         }} />
@@ -2582,7 +2632,7 @@ const Freelancers = () => {
                     transition: all 0.3s ease !important;
                 }
             `}</style>
-        </div >
+        </div>
     );
 };
 

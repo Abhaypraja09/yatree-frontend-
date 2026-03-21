@@ -20,7 +20,8 @@ import {
 
 const EventManagement = () => {
     const { selectedCompany } = useCompany();
-    const [events, setEvents] = useState([]);
+    const [events, setEvents] = useState([]); // This will store ONLY events for CURRENT tab for easier usage in existing map
+    const [allMasterEvents, setAllMasterEvents] = useState([]); // This will store ALL events for counts
     const [vehicles, setVehicles] = useState([]);
     const [allVehiclesMaster, setAllVehiclesMaster] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -38,17 +39,20 @@ const EventManagement = () => {
     const [showDetailsModal, setShowDetailsModal] = useState(false);
 
     useEffect(() => {
-        if (selectedDay === 'All') {
-            const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
-            const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
-            setFromDate(start);
-            setToDate(end);
-        } else {
-            const d = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
-            setFromDate(d);
-            setToDate(d);
-        }
-    }, [selectedMonth, selectedYear, selectedDay]);
+        const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
+        const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+        setFromDate(start);
+        setToDate(end);
+    }, [selectedMonth, selectedYear]);
+
+    const shiftMonth = (amount) => {
+        let newMonth = selectedMonth + amount;
+        let newYear = selectedYear;
+        if (newMonth < 0) { newMonth = 11; newYear--; }
+        if (newMonth > 11) { newMonth = 0; newYear++; }
+        setSelectedMonth(newMonth);
+        setSelectedYear(newYear);
+    };
 
     const getToday = () => todayIST();
 
@@ -89,15 +93,12 @@ const EventManagement = () => {
                 defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, 1));
             }
         }
-        setEventFormData({ 
-            name: '', 
-            client: '', 
-            date: defaultDate, 
-            location: '', 
+        setEventFormData({
+            name: '',
+            client: '',
+            date: defaultDate,
+            location: '',
             description: '',
-            totalRevenue: '',
-            advanceAmount: '',
-            amountReceived: '',
             status: 'Upcoming'
         });
         setShowEventModal(true);
@@ -112,9 +113,6 @@ const EventManagement = () => {
             date: toISTDateString(new Date(ev.date)),
             location: ev.location || '',
             description: ev.description || '',
-            totalRevenue: ev.totalRevenue || '',
-            advanceAmount: ev.advanceAmount || '',
-            amountReceived: ev.amountReceived || '',
             status: ev.status || 'Upcoming'
         });
         setShowEventModal(true);
@@ -133,7 +131,7 @@ const EventManagement = () => {
 
     const [eventFormData, setEventFormData] = useState({ 
         name: '', client: '', date: getToday(), location: '', description: '',
-        totalRevenue: '', advanceAmount: '', amountReceived: '', status: 'Upcoming'
+        status: 'Upcoming'
     });
     const [dutyFormData, setDutyFormData] = useState({
         carNumber: '', model: '', dropLocation: '', date: getToday(),
@@ -155,12 +153,36 @@ const EventManagement = () => {
         if (!selectedCompany?._id) return;
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/admin/events/${selectedCompany._id}?status=${statusTab === 'Start' ? 'Upcoming' : statusTab === 'Close' ? 'Closed' : 'Running'}`, {
+            const { data } = await axios.get(`/api/admin/events/${selectedCompany._id}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
-            setEvents(data || []);
+            
+            const todayStr = todayIST();
+            const allWithVisualStatus = (data || []).map(e => {
+                const evDate = toISTDateString(new Date(e.date));
+                let visualStatus = e.status || 'Upcoming';
+                if (visualStatus === 'Upcoming' && evDate <= todayStr) visualStatus = 'Running';
+                return { ...e, visualStatus };
+            });
+            setAllMasterEvents(allWithVisualStatus);
         } catch (err) { console.error(err); }
     };
+
+    const filteredMasterByDate = React.useMemo(() => {
+        return allMasterEvents.filter(e => {
+            const evDate = toISTDateString(new Date(e.date));
+            return evDate >= fromDate && evDate <= toDate;
+        });
+    }, [allMasterEvents, fromDate, toDate]);
+
+    const currentTabEvents = React.useMemo(() => {
+        const currentTargetStatus = statusTab === 'Start' ? 'Upcoming' : statusTab === 'Close' ? 'Closed' : 'Running';
+        return filteredMasterByDate.filter(e => e.visualStatus === currentTargetStatus);
+    }, [filteredMasterByDate, statusTab]);
+
+    useEffect(() => {
+        setEvents(currentTabEvents);
+    }, [currentTabEvents]);
 
     const fetchVehicles = async () => {
         if (!selectedCompany?._id) return;
@@ -339,11 +361,14 @@ const EventManagement = () => {
         }
     };
 
-    const handleDeleteDuty = async (id) => {
+    const handleDeleteDuty = async (id, isAttendanceFlag) => {
         if (!window.confirm('Remove this vehicle duty?')) return;
         try {
             const duty = vehicles.find(d => d._id === id);
-            if (duty?.isAttendance) {
+            // Use flag if provided, otherwise fallback to finding in state
+            const isAttendance = (isAttendanceFlag !== undefined) ? isAttendanceFlag : duty?.isAttendance;
+
+            if (isAttendance) {
                 // For attendance, we just clear the eventId, we don't delete the whole attendance record usually
                 // BUT if they want to delete, we call deleteAttendance
                 await axios.delete(`/api/admin/attendance/${id}`, { headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}` } });
@@ -502,6 +527,35 @@ const EventManagement = () => {
                             <h1 style={{ color: 'white', fontSize: 'clamp(24px, 6vw, 42px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
                                 Event<span style={{ background: 'linear-gradient(90deg,#fbbf24,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}> Logistics</span>
                             </h1>
+
+                            {/* PREMIUM MONTH SELECTOR */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '15px' }}>
+                                <div style={{ 
+                                    display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)' 
+                                }}>
+                                    <button onClick={() => shiftMonth(-1)} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}> <ChevronLeft size={16} /> </button>
+                                    <div style={{ minWidth: '95px', padding: '0 12px', textAlign: 'center' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: '900', color: 'white', letterSpacing: '0.5px' }}>
+                                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} {selectedYear}
+                                        </span>
+                                    </div>
+                                    <button onClick={() => shiftMonth(1)} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}> <ChevronRight size={16} /> </button>
+                                </div>
+                                <select 
+                                    value={selectedMonth} 
+                                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'white', height: '38px', borderRadius: '12px', padding: '0 10px', outline: 'none', fontWeight: '800', fontSize: '12px', cursor: 'pointer' }}
+                                >
+                                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => <option key={m} value={i} style={{ background: '#0a0f1d' }}>{m}</option>)}
+                                </select>
+                                <select 
+                                    value={selectedYear} 
+                                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'white', height: '38px', borderRadius: '12px', padding: '0 10px', outline: 'none', fontWeight: '800', fontSize: '12px', cursor: 'pointer' }}
+                                >
+                                    {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0a0f1d' }}>{y}</option>)}
+                                </select>
+                            </div>
                         </div>
                     </div>
 
@@ -550,9 +604,9 @@ const EventManagement = () => {
                 boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
             }}>
                 {[
-                    { id: 'Start', label: 'Upcoming', color: '#10b981', icon: <Navigation size={20} />, count: events.filter(e => e.status === 'Upcoming' || !e.status).length },
-                    { id: 'Running', label: 'Live Now', color: '#fbbf24', icon: <Target size={20} />, count: events.filter(e => e.status === 'Running').length },
-                    { id: 'Close', label: 'Completed', color: '#f87171', icon: <FileSpreadsheet size={20} />, count: events.filter(e => e.status === 'Closed').length }
+                    { id: 'Start', label: 'Upcoming', color: '#10b981', icon: <Navigation size={20} />, count: filteredMasterByDate.filter(e => e.visualStatus === 'Upcoming').length },
+                    { id: 'Running', label: 'Live Now', color: '#fbbf24', icon: <Target size={20} />, count: filteredMasterByDate.filter(e => e.visualStatus === 'Running').length },
+                    { id: 'Close', label: 'Completed', color: '#f87171', icon: <FileSpreadsheet size={20} />, count: filteredMasterByDate.filter(e => e.visualStatus === 'Closed').length }
                 ].map((t) => (
                     <button 
                         key={t.id} 
@@ -575,81 +629,86 @@ const EventManagement = () => {
                         }}
                     >
                         <div style={{ 
-                            width: '40px', 
-                            height: '40px', 
-                            borderRadius: '12px', 
-                            background: statusTab === t.id ? `${t.color}20` : 'rgba(255,255,255,0.03)', 
+                            width: '44px', 
+                            height: '44px', 
+                            borderRadius: '14px', 
+                            background: statusTab === t.id ? `${t.color}25` : 'rgba(255,255,255,0.03)', 
                             display: 'flex', 
                             alignItems: 'center', 
                             justifyContent: 'center',
-                            color: statusTab === t.id ? t.color : 'inherit',
-                            transition: '0.3s'
+                            color: statusTab === t.id ? t.color : 'rgba(255,255,255,0.4)',
+                            transition: '0.3s',
+                            boxShadow: statusTab === t.id ? `0 0 15px ${t.color}30` : 'none',
+                            position: 'relative'
                         }}>
+                            {t.id === 'Running' && statusTab === 'Running' && (
+                                <div style={{ 
+                                    position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px', 
+                                    background: '#fbbf24', borderRadius: '50%', border: '2px solid #0a0f1d',
+                                    animation: 'pulse 1.5s infinite' 
+                                }} />
+                            )}
                             {t.icon}
                         </div>
                         <div style={{ textAlign: 'left' }}>
-                            <div style={{ fontSize: '14px', fontWeight: '950', letterSpacing: '-0.2px' }}>{t.label}</div>
-                            <div style={{ fontSize: '10px', opacity: 0.5, fontWeight: '800' }}>{t.count} Active Entries</div>
+                            <div style={{ fontSize: '15px', fontWeight: '950', letterSpacing: '-0.2px' }}>{t.label}</div>
+                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)', fontWeight: '800', marginTop: '3px', textTransform: 'uppercase' }}>
+                                {t.count} {t.count === 1 ? 'Event' : 'Events'} logged
+                            </div>
                         </div>
                         {statusTab === t.id && (
-                            <motion.div 
-                                layoutId="active-pill"
-                                style={{ 
-                                    position: 'absolute', 
-                                    inset: 0, 
-                                    border: `2px solid ${t.color}40`,
-                                    borderRadius: '20px',
-                                    pointerEvents: 'none'
-                                }} 
-                            />
+                            <motion.div layoutId="tab-underline" style={{ position: 'absolute', bottom: '0', left: '20%', right: '20%', height: '3px', background: t.color, borderRadius: '3px 3px 0 0', boxShadow: `0 0 10px ${t.color}` }} />
                         )}
                     </button>
                 ))}
             </div>
 
-            <div style={{
-                background: 'rgba(15, 23, 42, 0.4)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: '32px',
-                padding: '24px',
+            {/* ═══ COMMAND BAR ═══ */}
+            <div className="command-bar" style={{
+                display: 'flex',
+                gap: '16px',
                 marginBottom: '32px',
-                backdropFilter: 'blur(34px)',
-                display: 'flex', gap: '20px', alignItems: 'center',
-                boxShadow: '0 30px 60px rgba(0,0,0,0.5)'
+                alignItems: 'center',
+                flexWrap: 'wrap'
             }}>
-                <div style={{ position: 'relative', flex: '1', minWidth: '280px' }}>
-                    <Search size={22} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                    <input
-                        type="text"
-                        placeholder="Search fleet, event name, or client..."
+                <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}>
+                    <Search style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} size={18} />
+                    <input 
+                        className="premium-input-event"
+                        placeholder="Scan missions, client tags, or venue signals..."
                         value={searchTerm}
-                        onChange={e => setSearchTerm(e.target.value)}
+                        onChange={(e) => setSearchTerm(e.target.value)}
                         style={{
-                            width: '100%', padding: '18px 24px 18px 60px', borderRadius: '20px',
-                            background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)',
-                            color: 'white', fontSize: '15px', fontWeight: '800', transition: '0.3s', outline: 'none'
+                            width: '100%', height: '60px', borderRadius: '20px', background: 'rgba(15, 23, 42, 0.4)',
+                            border: '1px solid rgba(255,255,255,0.06)', padding: '0 20px 0 55px', color: 'white',
+                            fontSize: '14px', fontWeight: '600', outline: 'none', transition: '0.3s',
+                            boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
                         }}
                     />
                 </div>
+                
                 <div style={{ display: 'flex', gap: '12px' }}>
-                    <button onClick={() => { setIsEditingEvent(false); setEventFormData({ name: '', client: '', date: getToday(), status: 'Upcoming' }); setShowEventModal(true); }}
-                        style={{
-                            padding: '18px 28px', borderRadius: '20px', border: 'none', cursor: 'pointer',
-                            background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', color: 'black',
-                            fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px',
-                            boxShadow: '0 10px 25px rgba(251,191,36,0.3)', transition: '0.3s'
-                        }}
-                    >
-                        <PlusCircle size={20} /> NEW MASTER EVENT
-                    </button>
+                    {statusTab !== 'Close' && (
+                        <button onClick={() => { setIsEditingEvent(false); setEventFormData({ name: '', client: '', date: getToday(), status: 'Upcoming' }); setShowEventModal(true); }}
+                            className="primary-btn-premium"
+                            style={{
+                                height: '60px', padding: '0 32px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+                                background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black',
+                                fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '12px',
+                                boxShadow: '0 10px 30px rgba(251,191,36,0.25)', transition: '0.3s', letterSpacing: '0.5px'
+                            }}
+                        >
+                            <PlusCircle size={22} strokeWidth={2.5} /> NEW MISSION
+                        </button>
+                    )}
                     <button onClick={() => { setIsEditingDuty(false); setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '' }); setShowDutyModal(true); }}
                         style={{
-                            padding: '18px 24px', borderRadius: '20px', border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.1)',
-                            color: '#10b981', fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px',
-                            cursor: 'pointer', transition: '0.3s'
+                            height: '60px', padding: '0 28px', borderRadius: '20px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.05)',
+                            color: '#10b981', fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '12px',
+                            cursor: 'pointer', transition: '0.3s', letterSpacing: '0.5px'
                         }}
                     >
-                        <Car size={20} /> ADD DAILY DUTY
+                        <Car size={22} strokeWidth={2.5} /> LOG DUTY
                     </button>
                 </div>
             </div>
@@ -701,55 +760,60 @@ const EventManagement = () => {
                             <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '950', letterSpacing: '1px', textTransform: 'uppercase' }}>{new Date(ev.date).toLocaleDateString('en-IN', { month: 'short' })}</div>
                             <div style={{ fontSize: '22px', color: 'white', fontWeight: '950', lineHeight: 1 }}>{new Date(ev.date).getDate()}</div>
                             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{new Date(ev.date).getFullYear()}</div>
-                        </div>
-
-                        {/* 2. Info Section */}
-                        <div style={{ flex: 1, minWidth: '200px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
-                                <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>{ev.name}</h3>
+                        </div>                        {/* 2. Event Body */}
+                        <div style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+                                <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '950', margin: 0, letterSpacing: '-0.5px' }}>{ev.name}</h3>
                                 <div style={{ 
-                                    padding: '3px 10px', borderRadius: '12px', fontSize: '9px', fontWeight: '950',
-                                    background: ev.status === 'Running' ? '#fbbf2415' : ev.status === 'Closed' ? '#f8717115' : '#10b98115', 
-                                    color: ev.status === 'Running' ? '#fbbf24' : ev.status === 'Closed' ? '#f87171' : '#10b981',
-                                    border: `1px solid ${ev.status === 'Running' ? '#fbbf2425' : ev.status === 'Closed' ? '#f8717125' : '#10b98125'}`
+                                    padding: '4px 12px', borderRadius: '10px', fontSize: '9px', fontWeight: '900', 
+                                    background: ev.visualStatus === 'Running' ? 'rgba(251,191,36,0.1)' : ev.visualStatus === 'Upcoming' ? 'rgba(16,185,129,0.1)' : 'rgba(248,113,113,0.1)',
+                                    color: ev.visualStatus === 'Running' ? '#fbbf24' : ev.visualStatus === 'Upcoming' ? '#10b981' : '#f87171',
+                                    border: `1px solid ${ev.visualStatus === 'Running' ? 'rgba(251,191,36,0.2)' : ev.visualStatus === 'Upcoming' ? 'rgba(16,185,129,0.2)' : 'rgba(248,113,113,0.2)'}`,
+                                    textTransform: 'uppercase', letterSpacing: '1px'
                                 }}>
-                                    {ev.status?.toUpperCase()}
+                                    {ev.visualStatus === 'Running' ? 'LIVE NOW' : ev.visualStatus.toUpperCase()}
                                 </div>
                             </div>
-                            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '13px', margin: 0, fontWeight: '700' }}>{ev.client}</p>
-                        </div>
-
-                        {/* 3. Vehicle Counts */}
-                        <div style={{ display: 'flex', gap: '12px', flexShrink: 0 }}>
-                            <div style={{ textAlign: 'center', minWidth: '80px' }}>
-                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '4px' }}>COMPANY</div>
-                                <div style={{ color: '#10b981', fontSize: '18px', fontWeight: '950' }}>{ev.fleetCount || 0} <span style={{ fontSize: '10px', opacity: 0.4 }}>CARS</span></div>
-                            </div>
-                            <div style={{ width: '1px', background: 'rgba(255,255,255,0.05)', height: '40px', alignSelf: 'center' }} />
-                            <div style={{ textAlign: 'center', minWidth: '80px' }}>
-                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '4px' }}>EXTERNAL</div>
-                                <div style={{ color: '#a855f7', fontSize: '18px', fontWeight: '950' }}>{ev.externalCount || 0} <span style={{ fontSize: '10px', opacity: 0.4 }}>CARS</span></div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '700' }}>
+                                    <Briefcase size={14} /> {ev.client}
+                                </div>
+                                {ev.location && (
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.3)', fontSize: '13px', fontWeight: '600' }}>
+                                        <MapPin size={14} /> {ev.location}
+                                    </div>
+                                )}
                             </div>
                         </div>
 
-                        {/* 4. Financials */}
-                        <div style={{ display: 'flex', gap: '24px', flexShrink: 0, paddingLeft: '24px' }}>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px' }}>REVENUE</div>
-                                <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '950' }}>₹{Number(ev.totalRevenue || 0).toLocaleString()}</div>
+                        {/* 3. Resource Matrix */}
+                        <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '4px', letterSpacing: '1px' }}>FLEET</div>
+                                <div style={{ color: '#38bdf8', fontSize: '18px', fontWeight: '950' }}>{ev.fleetCount || 0} <span style={{ fontSize: '10px', opacity: 0.35 }}>CARS</span></div>
                             </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px' }}>RECEIVED</div>
-                                <div style={{ color: 'white', fontSize: '16px', fontWeight: '950' }}>₹{Number(ev.amountReceived || 0).toLocaleString()}</div>
+                            <div style={{ width: '1px', background: 'rgba(255,255,255,0.06)', height: '30px' }} />
+                            <div style={{ textAlign: 'center' }}>
+                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '4px', letterSpacing: '1px' }}>EXTERNAL</div>
+                                <div style={{ color: '#a855f7', fontSize: '18px', fontWeight: '950' }}>{ev.externalCount || 0} <span style={{ fontSize: '10px', opacity: 0.35 }}>CARS</span></div>
                             </div>
+                        </div>
+
+                        {/* 4. Settlement Summary */}
+                        <div style={{ 
+                            background: 'rgba(16,185,129,0.05)', padding: '12px 24px', borderRadius: '18px',
+                            border: '1px solid rgba(16,185,129,0.1)', minWidth: '140px', textAlign: 'right'
+                        }}>
+                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px', textTransform: 'uppercase' }}>Duty Value</div>
+                            <div style={{ color: '#10b981', fontSize: '18px', fontWeight: '950', textShadow: '0 0 10px rgba(16,185,129,0.2)' }}>₹{Number(ev.totalRevenue || 0).toLocaleString()}</div>
                         </div>
 
                         {/* 5. Actions */}
-                        <div style={{ display: 'flex', gap: '8px', paddingLeft: '20px' }}>
+                        <div style={{ display: 'flex', gap: '8px' }}>
                             <button onClick={(e) => { e.stopPropagation(); handleEditEvent(ev); }} 
                                 style={{ 
-                                    width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', 
-                                    border: '1px solid rgba(251,191,36,0.15)', color: '#fbbf24', cursor: 'pointer',
+                                    width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', 
+                                    border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s'
                                 }}
                                 className="action-btn-list"
@@ -758,7 +822,7 @@ const EventManagement = () => {
                             </button>
                             <button onClick={(e) => { e.stopPropagation(); handleDeleteEvent(ev._id); }} 
                                 style={{ 
-                                    width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(244,63,94,0.1)', 
+                                    width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(244,63,94,0.08)', 
                                     border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s'
                                 }}
@@ -1020,14 +1084,23 @@ const EventManagement = () => {
                                 <div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
                                         <h2 style={{ color: 'white', fontSize: '32px', fontWeight: '950', margin: 0 }}>{selectedEventDetails.event.name}</h2>
-                                        <span style={{ 
-                                            padding: '6px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '950', 
-                                            background: selectedEventDetails.event.status === 'Running' ? '#fbbf2433' : selectedEventDetails.event.status === 'Closed' ? '#f8717133' : '#10b98133',
-                                            color: selectedEventDetails.event.status === 'Running' ? '#fbbf24' : selectedEventDetails.event.status === 'Closed' ? '#f87171' : '#10b981',
-                                            border: '1px solid rgba(255,255,255,0.05)'
-                                        }}>
-                                            {selectedEventDetails.event.status}
-                                        </span>
+                                        {(() => {
+                                            const evDate = toISTDateString(new Date(selectedEventDetails.event.date));
+                                            const todayStr = todayIST();
+                                            let vStat = selectedEventDetails.event.status || 'Upcoming';
+                                            if (vStat === 'Upcoming' && evDate <= todayStr) vStat = 'Running';
+                                            
+                                            return (
+                                                <span style={{ 
+                                                    padding: '6px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '950', 
+                                                    background: vStat === 'Running' ? '#fbbf2433' : vStat === 'Closed' ? '#f8717133' : '#10b98133',
+                                                    color: vStat === 'Running' ? '#fbbf24' : vStat === 'Closed' ? '#f87171' : '#10b981',
+                                                    border: '1px solid rgba(255,255,255,0.05)'
+                                                }}>
+                                                    {vStat}
+                                                </span>
+                                            );
+                                        })()}
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '14px', fontWeight: '700' }}>
@@ -1046,20 +1119,59 @@ const EventManagement = () => {
 
                             <div style={{ padding: '32px', overflowY: 'auto' }} className="premium-scroll">
                                 {/* Fin Summary */}
-                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px', marginBottom: '32px' }}>
+                                <div className="stats-grid" style={{ 
+                                    display: 'grid', 
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
+                                    gap: '15px', 
+                                    marginBottom: '32px',
+                                    width: '100%'
+                                }}>
                                     {[
-                                        { label: 'Expected Revenue', value: (selectedEventDetails.event.totalRevenue || 0), color: '#38bdf8', icon: <Wallet size={16} /> },
-                                        { label: 'Payments Received', value: (selectedEventDetails.event.amountReceived || 0), color: '#10b981', icon: <Save size={16} /> },
-                                        { label: 'Outstanding Balance', value: ((selectedEventDetails.event.totalRevenue || 0) - (selectedEventDetails.event.amountReceived || 0)), color: '#f87171', icon: <Target size={16} /> },
-                                        { label: 'Project Expense', value: (selectedEventDetails.event.totalExpense || 0), color: '#a855f7', icon: <TruckIcon size={16} /> }
-                                    ].map(s => (
-                                        <div key={s.label} style={{ background: 'rgba(255,255,255,0.02)', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', boxShadow: '0 8px 16px rgba(0,0,0,0.1)' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                                                <div style={{ color: s.color }}>{s.icon}</div>
-                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{s.label}</div>
+                                        { 
+                                            label: 'Total Duties', 
+                                            value: (selectedEventDetails.fleetDuties.length + selectedEventDetails.externalDuties.length), 
+                                            color: '#fbbf24', 
+                                            icon: <TruckIcon size={18} />,
+                                            sub: 'All Resources'
+                                        },
+                                        { 
+                                            label: 'Fleet Revenue', 
+                                            value: `₹${(selectedEventDetails.fleetDuties.reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`, 
+                                            color: '#38bdf8', 
+                                            icon: <Car size={18} />,
+                                            sub: `${selectedEventDetails.fleetDuties.length} Fleet Vehicles`
+                                        },
+                                        { 
+                                            label: 'External Revenue', 
+                                            value: `₹${(selectedEventDetails.externalDuties.reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`, 
+                                            color: '#a855f7', 
+                                            icon: <Users size={18} />,
+                                            sub: `${selectedEventDetails.externalDuties.length} Market Cars`
+                                        },
+                                        { 
+                                            label: 'Grand Total', 
+                                            value: `₹${([...selectedEventDetails.externalDuties, ...selectedEventDetails.fleetDuties].reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`, 
+                                            color: '#10b981', 
+                                            icon: <Target size={18} />,
+                                            sub: 'Master Settlement'
+                                        },
+                                    ].map((s, i) => (
+                                        <div key={s.label}
+                                            style={{
+                                                padding: '16px', borderRadius: '20px',
+                                                background: 'rgba(15, 23, 42, 0.4)',
+                                                border: `1px solid rgba(255,255,255,0.05)`,
+                                                borderLeft: `3px solid ${s.color}`,
+                                                display: 'flex', flexDirection: 'column', gap: '4px',
+                                                boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{s.label}</span>
+                                                <div style={{ color: s.color, opacity: 0.6 }}>{s.icon}</div>
                                             </div>
-                                            <div style={{ color: 'white', fontSize: '24px', fontWeight: '950' }}>₹{Number(s.value).toLocaleString()}</div>
-                                            <div style={{ height: '4px', width: '40px', background: s.color, borderRadius: '2px', marginTop: '12px' }} />
+                                            <span style={{ color: 'white', fontSize: '20px', fontWeight: '950' }}>{s.value}</span>
+                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{s.sub}</span>
                                         </div>
                                     ))}
                                 </div>
@@ -1161,7 +1273,7 @@ const EventManagement = () => {
                                                                 <button onClick={(e) => { e.stopPropagation(); handleEditDuty(d); }} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                                     <Edit size={14} />
                                                                 </button>
-                                                                <button onClick={(e) => { e.stopPropagation(); handleDeleteDuty(d._id); }} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                <button onClick={(e) => { e.stopPropagation(); handleDeleteDuty(d._id, d.isAttendance); }} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                                     <Trash2 size={14} />
                                                                 </button>
                                                             </div>
@@ -1266,25 +1378,10 @@ const EventManagement = () => {
                                             <label className="premium-label">Phase / Status</label>
                                         </div>
                                         <select value={eventFormData.status} onChange={e => setEventFormData({ ...eventFormData, status: e.target.value })} className="premium-compact-input" style={{ height: '52px' }}>
-                                            <option value="Upcoming">Upcoming (Start)</option>
+                                            {!isEditingEvent && <option value="Upcoming">Upcoming (Start)</option>}
                                             <option value="Running">Running</option>
                                             <option value="Closed">Closed</option>
                                         </select>
-                                    </div>
-                                </div>
-
-                                <div className="form-grid-3">
-                                    <div className="premium-input-group">
-                                        <label className="premium-label">Total Revenue (Billing)</label>
-                                        <input type="number" value={eventFormData.totalRevenue} onChange={e => setEventFormData({ ...eventFormData, totalRevenue: e.target.value })} className="premium-compact-input" placeholder="₹ 0" style={{ height: '50px' }} />
-                                    </div>
-                                    <div className="premium-input-group">
-                                        <label className="premium-label">Advance (Initial)</label>
-                                        <input type="number" value={eventFormData.advanceAmount} onChange={e => setEventFormData({ ...eventFormData, advanceAmount: e.target.value })} className="premium-compact-input" placeholder="₹ 0" style={{ height: '50px' }} />
-                                    </div>
-                                    <div className="premium-input-group">
-                                        <label className="premium-label">Amount Received</label>
-                                        <input type="number" value={eventFormData.amountReceived} onChange={e => setEventFormData({ ...eventFormData, amountReceived: e.target.value })} className="premium-compact-input" placeholder="₹ 0" style={{ height: '50px' }} />
                                     </div>
                                 </div>
 

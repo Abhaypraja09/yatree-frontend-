@@ -8,11 +8,16 @@ export default defineConfig({
     alias: {
       stream: 'stream-browserify',
       util: 'util',
+      events: 'events',
+      buffer: 'buffer',
     },
   },
   define: {
     global: 'window',
     'process.env': {},
+    process: {
+      env: {}
+    }
   },
   server: {
     proxy: {

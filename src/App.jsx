@@ -13,6 +13,7 @@ const FreelancerSalaryDetail = lazy(() => import('./pages/FreelancerSalaryDetail
 const OutsideCars = lazy(() => import('./pages/OutsideCars'));
 const Fastag = lazy(() => import('./pages/Fastag'));
 const BorderTax = lazy(() => import('./pages/BorderTax'));
+const CarUtility = lazy(() => import('./pages/CarUtility'));
 const Maintenance = lazy(() => import('./pages/Maintenance'));
 const Fuel = lazy(() => import('./pages/Fuel'));
 const Parking = lazy(() => import('./pages/Parking'));
@@ -202,6 +203,7 @@ const AdminRoutes = () => {
       {(isAdmin || p.fleetOperations) && (
         <>
           <Route path="vehicles" element={<Vehicles />} />
+          <Route path="car-utility" element={<CarUtility />} />
           <Route path="driver-services" element={<DriverServices />} />
           <Route path="border-tax" element={<BorderTax />} />
           <Route path="fastag" element={<Fastag />} />

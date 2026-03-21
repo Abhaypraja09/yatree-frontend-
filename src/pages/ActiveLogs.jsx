@@ -19,7 +19,8 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
-import { todayIST, formatDateIST, nowIST } from '../utils/istUtils';
+import { todayIST, toISTDateString, formatDateIST, nowIST } from '../utils/istUtils';
+import { ChevronLeft, ChevronRight, ShoppingCart, TrendingUp } from 'lucide-react';
 
 const ActiveLogs = () => {
     const { selectedCompany } = useCompany();
@@ -32,6 +33,47 @@ const ActiveLogs = () => {
     const [filterStatus, setFilterStatus] = useState('All');
     const [filterVehicle, setFilterVehicle] = useState('All');
     const [viewPhoto, setViewPhoto] = useState(null);
+
+    // Modern Date Navigation States
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedDay, setSelectedDay] = useState('All'); 
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
+
+    useEffect(() => {
+        if (selectedDay === 'All') {
+            const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
+            const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+            setFromDate(start);
+            setToDate(end);
+        } else {
+            const d = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+            setFromDate(d);
+            setToDate(d);
+        }
+    }, [selectedMonth, selectedYear, selectedDay]);
+
+    const shiftDays = (n) => {
+        let baseDate;
+        if (selectedDay === 'All') {
+            const today = new Date();
+            // If the selected month/year is the current one, start navigation from TODAY
+            if (selectedMonth === today.getMonth() && selectedYear === today.getFullYear()) {
+                baseDate = today;
+            } else {
+                // Otherwise start from the 1st of that month
+                baseDate = new Date(selectedYear, selectedMonth, 1);
+            }
+        } else {
+            baseDate = new Date(selectedYear, selectedMonth, parseInt(selectedDay));
+        }
+        baseDate.setDate(baseDate.getDate() + n);
+        setSelectedYear(baseDate.getFullYear());
+        setSelectedMonth(baseDate.getMonth());
+        setSelectedDay(baseDate.getDate().toString());
+    };
+
 
     const getLocalYYYYMMDD = () => todayIST();
 
@@ -48,27 +90,25 @@ const ActiveLogs = () => {
     const [photos, setPhotos] = useState([]);
     const [submitting, setSubmitting] = useState(false);
 
-    // Simple Month/Year filter
-    const [filterMonth, setFilterMonth] = useState(nowIST().getUTCMonth()); // 0-indexed
-    const [filterYear, setFilterYear] = useState(nowIST().getUTCFullYear());
-
     useEffect(() => {
-        if (selectedCompany) {
+        if (selectedCompany && fromDate && toDate) {
             fetchLogs();
             fetchVehiclesAndDrivers();
         }
-    }, [selectedCompany]);
+    }, [selectedCompany, fromDate, toDate]);
+
 
     const fetchLogs = async () => {
         if (!selectedCompany?._id) return;
         setLoading(true);
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/admin/accident-logs/${selectedCompany._id}`, {
+            const { data } = await axios.get(`/api/admin/accident-logs/${selectedCompany._id}?from=${fromDate}&to=${toDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setLogs(data || []);
         } catch (err) {
+
             console.error(err);
         } finally {
             setLoading(false);
@@ -158,10 +198,9 @@ const ActiveLogs = () => {
         );
         const matchesStatus = filterStatus === 'All' || log.status === filterStatus;
         const matchesVehicle = filterVehicle === 'All' || log.vehicle?._id === filterVehicle;
-        const logDate = nowIST(log.date);
-        const matchesDate = logDate.getUTCMonth() === filterMonth && logDate.getUTCFullYear() === filterYear;
-        return matchesSearch && matchesStatus && matchesVehicle && matchesDate;
+        return matchesSearch && matchesStatus && matchesVehicle;
     });
+
 
     const totalEstLoss = filteredLogs.reduce((sum, log) => sum + (Number(log.amount) || 0), 0);
     const resolvedCount = filteredLogs.filter(l => l.status === 'Resolved').length;
@@ -296,29 +335,83 @@ const ActiveLogs = () => {
                     </div>
                 </div>
 
-                {/* Simple Month/Year Filter */}
-                <div style={{ marginTop: '20px', display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <select
-                        value={filterMonth}
-                        onChange={e => setFilterMonth(Number(e.target.value))}
-                        className="input-field"
-                        style={{ height: '48px', borderRadius: '14px', padding: '0 20px', fontWeight: '700', fontSize: '14px', width: '160px' }}
-                    >
-                        {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, i) => (
-                            <option key={i} value={i} style={{ background: '#0f172a' }}>{m}</option>
-                        ))}
-                    </select>
-                    <select
-                        value={filterYear}
-                        onChange={e => setFilterYear(Number(e.target.value))}
-                        className="input-field"
-                        style={{ height: '48px', borderRadius: '14px', padding: '0 20px', fontWeight: '700', fontSize: '14px', width: '110px' }}
-                    >
-                        {Array.from({ length: 5 }, (_, i) => nowIST().getUTCFullYear() - i).map(y => (
-                            <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
-                        ))}
-                    </select>
-                </div>
+                    <div className="flex-resp" style={{ gap: '15px' }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: 'rgba(0,0,0,0.4)',
+                            padding: '4px',
+                            borderRadius: '20px',
+                            border: '1px solid rgba(255,255,255,0.06)'
+                        }}>
+                            <button onClick={() => shiftDays(-1)} style={{
+                                width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
+                            }}> <ChevronLeft size={18} /> </button>
+
+                            <div
+                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                style={{ height: '42px', minWidth: '140px', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.15)', borderRadius: '16px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
+                            >
+                                <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                                    {selectedDay === 'All' ?
+                                        ` ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
+                                        formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
+                                </span>
+                                <input
+                                    type="date"
+                                    value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                    onChange={e => {
+                                        const d = new Date(e.target.value);
+                                        setSelectedYear(d.getFullYear());
+                                        setSelectedMonth(d.getMonth());
+                                        setSelectedDay(d.getDate().toString());
+                                    }}
+                                    style={{ position: 'absolute', inset: 0, opacity: 0 }}
+                                />
+                            </div>
+
+                            <button onClick={() => shiftDays(1)} style={{
+                                width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
+                            }}> <ChevronRight size={18} /> </button>
+                        </div>
+
+                        {selectedDay !== 'All' && (
+                            <button
+                                onClick={() => setSelectedDay('All')}
+                                style={{ height: '50px', padding: '0 20px', borderRadius: '16px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', color: '#fbbf24', fontSize: '11px', fontWeight: '950', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+                            >
+                                <Calendar size={14} /> View Full Month
+                            </button>
+                        )}
+
+                        <select
+                            value={selectedMonth}
+                            onChange={e => {
+                                setSelectedMonth(Number(e.target.value));
+                                setSelectedDay('All');
+                            }}
+                            className="input-field"
+                            style={{ height: '48px', borderRadius: '14px', padding: '0 12px', fontWeight: '700', fontSize: '14px', width: '90px' }}
+                        >
+                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => (
+                                <option key={i} value={i} style={{ background: '#0f172a' }}>{m}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={selectedYear}
+                            onChange={e => {
+                                setSelectedYear(Number(e.target.value));
+                                setSelectedDay('All');
+                            }}
+                            className="input-field"
+                            style={{ height: '48px', borderRadius: '14px', padding: '0 12px', fontWeight: '700', fontSize: '14px', width: '90px' }}
+                        >
+                            {[2024, 2025, 2026, 2027].map(y => (
+                                <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                            ))}
+                        </select>
+                    </div>
+
             </header>
 
             {/* Stats Row */}

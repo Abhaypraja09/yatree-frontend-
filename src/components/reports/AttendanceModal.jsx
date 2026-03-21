@@ -208,8 +208,8 @@ const AttendanceModal = ({ item, onClose }) => {
                 {(allowanceTA > 0 || nightStay > 0 || extraBonus > 0) && (
                     <div style={{ background: 'rgba(34,197,94,0.05)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(34,197,94,0.1)' }}>
                         <SH color="#22c55e" icon={Zap} title="Bonuses" />
-                        {allowanceTA > 0 && <Stat label="TA Allowance (Same Day Return)" value={`+₹${allowanceTA}`} color="#22c55e" />}
-                        {nightStay > 0 && <Stat label="Night Stay Allowance" value={`+₹${nightStay}`} color="#fbbf24" sub="Night shift duty" />}
+                        {allowanceTA > 0 && <Stat label="T/A Allowance" value={`+₹${allowanceTA}`} color="#22c55e" />}
+                        {nightStay > 0 && <Stat label="O.T. / Night" value={`+₹${nightStay}`} color="#fbbf24" sub="Overtime hours worked" />}
                         {extraBonus > 0 && <Stat label="Extra Bonus" value={`+₹${extraBonus}`} color="#38bdf8" sub={item.outsideTrip?.tripType} />}
                     </div>
                 )}

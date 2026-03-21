@@ -112,7 +112,21 @@ const Sidebar = ({ isOpen, onClose }) => {
     });
 
     const toggleGroup = (group) => {
-        setOpenGroups(prev => ({ ...prev, [group]: !prev[group] }));
+        setOpenGroups(prev => {
+            const isOpening = !prev[group];
+            if (isOpening) {
+                // If we are opening a group, close all others
+                const newState = {};
+                Object.keys(prev).forEach(key => {
+                    newState[key] = false;
+                });
+                newState[group] = true;
+                return newState;
+            } else {
+                // If we are closing the current one, just close it
+                return { ...prev, [group]: false };
+            }
+        });
     };
 
     const logoMap = {
@@ -197,6 +211,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     <NavGroup title="Drivers Services" icon={Users} isOpen={openGroups.drivers} onToggle={() => toggleGroup('drivers')}>
                         <NavItem item={{ path: '/admin/drivers-panel', label: 'Drivers' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/freelancers', label: 'Freelancers' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/fuel', label: 'Fuel' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 
@@ -219,11 +234,8 @@ const Sidebar = ({ isOpen, onClose }) => {
 
                 {(user.role === 'Admin' || user.permissions?.fleetOperations) && (
                     <NavGroup title="Fleet Operations" icon={Settings} isOpen={openGroups.vehicles} onToggle={() => toggleGroup('vehicles')}>
-                        <NavItem item={{ path: '/admin/fuel', label: 'Fuel' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/border-tax', label: 'Border Tax' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/fastag', label: 'Fastag' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/parking', label: 'Parking' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/driver-services', label: 'Driver Services' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 

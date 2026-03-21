@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
-    CalendarIcon, Search, Download, Eye, ArrowUpRight, ArrowDownLeft,
+    Calendar, CalendarIcon, Search, Download, Eye, ArrowUpRight, ArrowDownLeft,
     User as UserIcon, Users, Car, FileText, ChevronLeft, ChevronRight, X,
     Edit2, Trash2
 } from 'lucide-react';
@@ -123,11 +123,11 @@ const Reports = ({ isSubComponent = false }) => {
     const { selectedCompany } = useCompany();
     const location = useLocation();
 
-    const getToday = () => todayIST();
-
-    const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(getToday());
-    const [toDate, setToDate] = useState(getToday());
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedDay, setSelectedDay] = useState(new Date().getDate().toString());
+    const [fromDate, setFromDate] = useState(todayIST());
+    const [toDate, setToDate] = useState(todayIST());
 
     const [reports, setReports] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -161,20 +161,43 @@ const Reports = ({ isSubComponent = false }) => {
         if (tabList.length > 0) {
             if (location.pathname.includes('driver-duty')) {
                 setActiveTabs(['drivers']);
+                setSelectedDay('All');
             } else if (location.pathname.includes('freelancer-duty')) {
                 setActiveTabs(['freelancers']);
+                setSelectedDay('All');
             } else if (location.pathname.includes('log-book')) {
                 setActiveTabs(['drivers', 'freelancers']);
+                setSelectedDay('All');
             } else if (activeTabs.length === 0) {
                 setActiveTabs([tabList[0].id]);
+                setSelectedDay('All');
             }
         }
     }, [tabList, location.pathname]);
 
+    useEffect(() => {
+        if (selectedDay === 'All') {
+            const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
+            const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+            setFromDate(start);
+            setToDate(end);
+        } else {
+            const d = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+            setFromDate(d);
+            setToDate(d);
+        }
+    }, [selectedMonth, selectedYear, selectedDay]);
+
     const toggleTab = (id) => {
         setActiveTabs(prev => {
-            const next = prev.includes(id) ? prev.filter(t => t !== id) : [...prev, id];
-            return next.length === 0 ? [tabList[0].id] : next;
+            // Case: Switching from 'All' state to a specific one
+            if (prev.length > 1) return [id];
+            
+            // Case: If already on this specific one, toggle back to 'All'
+            if (prev.includes(id)) return tabList.map(t => t.id);
+            
+            // Case: Switching between two specific ones
+            return [id];
         });
     };
 
@@ -198,11 +221,11 @@ const Reports = ({ isSubComponent = false }) => {
         if (hasRangeTab && !isRange) {
             setIsRange(true);
             setFromDate(firstDayOfMonthIST());
-            setToDate(getToday());
+            setToDate(todayIST());
         } else if (!hasRangeTab && isRange) {
             setIsRange(false);
-            setFromDate(getToday());
-            setToDate(getToday());
+            setFromDate(todayIST());
+            setToDate(todayIST());
         }
     }, [activeTabs]);
     */
@@ -319,33 +342,23 @@ const Reports = ({ isSubComponent = false }) => {
 
     /* navigate dates */
     const shiftDays = (n) => {
-        const f = nowIST(fromDate);
-        f.setUTCDate(f.getUTCDate() + n);
-        const fStr = f.toISOString().split('T')[0];
-
-        if (isRange) {
-            // Also shift toDate by same amount to maintain the range window
-            const t = nowIST(toDate);
-            t.setUTCDate(t.getUTCDate() + n);
-            const tStr = t.toISOString().split('T')[0];
-            setFromDate(fStr);
-            setToDate(tStr);
+        let baseDate;
+        if (selectedDay === 'All') {
+            const today = new Date();
+            // If the selected month/year is the current one, start navigation from TODAY
+            if (selectedMonth === today.getMonth() && selectedYear === today.getFullYear()) {
+                baseDate = today;
+            } else {
+                // Otherwise start from the 1st of that month
+                baseDate = new Date(selectedYear, selectedMonth, 1);
+            }
         } else {
-            setFromDate(fStr);
-            setToDate(fStr);
+            baseDate = new Date(selectedYear, selectedMonth, parseInt(selectedDay));
         }
-    };
-    const handleFromDate = (val) => { setFromDate(val); if (!isRange) setToDate(val); };
-    const handleToggleRange = () => {
-        setIsRange(!isRange);
-        if (!isRange) {
-            // Switching to range: set fromDate to 1st of month to make it meaningful
-            setFromDate(firstDayOfMonthIST());
-            setToDate(todayIST());
-        } else {
-            // Switching back to single: set both to today or current fromDate
-            setToDate(fromDate);
-        }
+        baseDate.setDate(baseDate.getDate() + n);
+        setSelectedYear(baseDate.getFullYear());
+        setSelectedMonth(baseDate.getMonth());
+        setSelectedDay(baseDate.getDate().toString());
     };
 
     /* ── Attendance row renderer (shared for Staff + Freelancers + Outside) ── */
@@ -569,42 +582,99 @@ const Reports = ({ isSubComponent = false }) => {
                 </div>
 
                 {/* Date Navigator */}
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.3)', padding: '5px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.06)', flexWrap: 'wrap' }}>
-                    <button onClick={() => shiftDays(-1)} style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <ChevronLeft size={18} />
-                    </button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        background: 'rgba(0,0,0,0.4)',
+                        padding: '4px',
+                        borderRadius: '20px',
+                        border: '1px solid rgba(255,255,255,0.06)'
+                    }}>
+                        <button onClick={() => shiftDays(-1)} style={{
+                            width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
+                        }}> <ChevronLeft size={18} /> </button>
 
-                    <button
-                        onClick={handleToggleRange}
-                        style={{ background: isRange ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.04)', border: `1px solid ${isRange ? '#10b981' : 'rgba(255,255,255,0.1)'}30`, color: isRange ? '#10b981' : 'rgba(255,255,255,0.5)', padding: '0 12px', height: '36px', borderRadius: '12px', fontSize: '10px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
-                    >
-                        <CalendarIcon size={14} /> {isRange ? 'SINGLE DATE' : 'RANGE'}
-                    </button>
-
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <div style={{ position: 'relative' }}>
-                            <label style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', display: 'block', paddingLeft: '4px', marginBottom: '2px' }}>{isRange ? 'FROM' : 'DATE'}</label>
-                            <input type="date" value={fromDate} onChange={e => handleFromDate(e.target.value)} onClick={e => e.target.showPicker?.()}
-                                style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: 'white', padding: '6px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', outline: 'none', cursor: 'pointer', colorScheme: 'dark' }} />
+                        <div
+                            onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                            style={{ height: '42px', minWidth: '140px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '16px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
+                        >
+                            <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                                {selectedDay === 'All' ?
+                                    ` ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
+                                    fmt(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
+                            </span>
+                            <input
+                                type="date"
+                                value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                onChange={e => {
+                                    const d = new Date(e.target.value);
+                                    setSelectedYear(d.getFullYear());
+                                    setSelectedMonth(d.getMonth());
+                                    setSelectedDay(d.getDate().toString());
+                                }}
+                                style={{ position: 'absolute', inset: 0, opacity: 0 }}
+                            />
                         </div>
-                        {isRange && <>
-                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px', marginTop: '14px' }}>→</div>
-                            <div style={{ position: 'relative' }}>
-                                <label style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', display: 'block', paddingLeft: '4px', marginBottom: '2px' }}>TO</label>
-                                <input type="date" value={toDate} min={fromDate} onChange={e => setToDate(e.target.value)} onClick={e => e.target.showPicker?.()}
-                                    style={{ background: 'rgba(99,102,241,0.1)', border: '1px solid rgba(99,102,241,0.2)', color: 'white', padding: '6px 12px', borderRadius: '10px', fontSize: '12px', fontWeight: '700', outline: 'none', cursor: 'pointer', colorScheme: 'dark' }} />
-                            </div>
-                        </>}
+
+                        <button onClick={() => shiftDays(1)} style={{
+                            width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
+                        }}> <ChevronRight size={18} /> </button>
                     </div>
 
-                    <button onClick={() => shiftDays(1)} style={{ width: '36px', height: '36px', borderRadius: '12px', background: 'rgba(255,255,255,0.04)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                        <ChevronRight size={18} />
-                    </button>
+                    {selectedDay !== 'All' && (
+                        <button
+                            onClick={() => setSelectedDay('All')}
+                            style={{
+                                height: '50px',
+                                padding: '0 20px',
+                                borderRadius: '16px',
+                                background: 'rgba(251, 191, 36, 0.1)',
+                                border: '1px solid rgba(251, 191, 36, 0.2)',
+                                color: '#fbbf24',
+                                fontSize: '11px',
+                                fontWeight: '950',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                textTransform: 'uppercase',
+                                letterSpacing: '0.5px'
+                            }}
+                        >
+                            <Calendar size={14} /> Full Month
+                        </button>
+                    )}
+
+                    <select
+                        value={selectedMonth}
+                        onChange={e => {
+                            setSelectedMonth(Number(e.target.value));
+                            setSelectedDay('All');
+                        }}
+                        style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px', outline: 'none' }}
+                    >
+                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
+                            <option key={m} value={idx} style={{ background: '#0f172a' }}>{m}</option>
+                        ))}
+                    </select>
+
+                    <select
+                        value={selectedYear}
+                        onChange={e => {
+                            setSelectedYear(Number(e.target.value));
+                            setSelectedDay('All');
+                        }}
+                        style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '80px', outline: 'none' }}
+                    >
+                        {[2024, 2025, 2026, 2027].map(y => (
+                            <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                        ))}
+                    </select>
 
                     <button
                         onClick={handleDownloadExcel}
-                        style={{ marginLeft: '10px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 20px', height: '38px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
-                        title="Download selected categories to Excel"
+                        style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 20px', height: '50px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
                     >
                         <Download size={14} /> EXCEL
                     </button>
@@ -633,27 +703,7 @@ const Reports = ({ isSubComponent = false }) => {
             {/* ── Tab Bar (multi-select) ── */}
             {tabList.length > 1 && (
                 <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.04)', padding: '8px', marginBottom: '20px', backdropFilter: 'blur(10px)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', padding: '0 4px' }}>
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Explore Report Categories</span>
-                        <button
-                            onClick={handleSelectAll}
-                            style={{
-                                background: activeTabs.length === tabList.length ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)',
-                                border: activeTabs.length === tabList.length ? '1px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
-                                color: activeTabs.length === tabList.length ? '#10b981' : 'rgba(255,255,255,0.4)',
-                                fontSize: '10px',
-                                padding: '6px 14px',
-                                borderRadius: '10px',
-                                fontWeight: '900',
-                                cursor: 'pointer',
-                                textTransform: 'uppercase',
-                                transition: 'all 0.2s',
-                                letterSpacing: '0.8px'
-                            }}
-                        >
-                            {activeTabs.length === tabList.length ? '✓ ALL SELECTED' : 'SELECT ALL'}
-                        </button>
-                    </div>
+
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
                         {tabList.map(tab => {
                             const isActive = activeTabs.includes(tab.id);

@@ -333,8 +333,8 @@ const AdminDashboard = () => {
                             {(user?.role === 'Admin' || user?.permissions?.fleetOperations) && (
                                 <>
                                     <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
-                                    <StatCard icon={IndianRupee} label="FASTAG RECHARGE (MONTHLY)" value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/fastag')} trend="MONTHLY" subValue={`Today: ₹${(stats.dailyFastagTotal || 0).toLocaleString()}`} />
-                                    <StatCard icon={Droplets} label="DRIVER SERVICES (MONTHLY)" value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/driver-services')} />
+                                    <StatCard icon={IndianRupee} label="FASTAG RECHARGE (MONTHLY)" value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/car-utility')} trend="MONTHLY" subValue={`Today: ₹${(stats.dailyFastagTotal || 0).toLocaleString()}`} />
+                                    <StatCard icon={Droplets} label="DRIVER SERVICES (MONTHLY)" value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/car-utility')} />
                                     <StatCard icon={CreditCard} label="PARKING (MONTHLY)" value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
                                 </>
                             )}

@@ -16,7 +16,7 @@ const DriversPanel = () => {
     const navItems = [
         { id: 'drivers', title: 'DRIVERS', icon: User },
         // { id: 'dutys', title: 'DUTYS', icon: Car },
-        { id: 'settlement', title: 'SETTLEMENT', icon: IndianRupee }
+        { id: 'settlement', title: 'Salaries', icon: IndianRupee }
     ];
 
     const renderContent = () => {

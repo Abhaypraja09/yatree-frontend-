@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
-    MapPin, Plus, Search, Trash2, Calendar, History, Car, User, Shield, FileSpreadsheet, Edit, IndianRupee, Eye, X, Image as ImageIcon, Camera, ChevronDown, ChevronLeft, ChevronRight
+    MapPin, Plus, PlusCircle, Search, Trash2, Calendar, History, Car, User, Shield, FileSpreadsheet, Edit, IndianRupee, Eye, X, Image as ImageIcon, Camera, ChevronDown, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -107,18 +107,23 @@ const ParkingPage = () => {
     const [vehicles, setVehicles] = useState([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterDriver, setFilterDriver] = useState('All');
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [selectedDay, setSelectedDay] = useState(new Date().getDate().toString());
     const [isRange, setIsRange] = useState(false);
     const [fromDate, setFromDate] = useState(firstDayOfMonthIST()); // Start from 1st of month
     const [toDate, setToDate] = useState(todayIST());
 
-    /* navigate dates */
-    const shiftDays = (n) => {
-        const f = nowIST(fromDate);
-        f.setUTCDate(f.getUTCDate() + n);
-        const fStr = f.toISOString().split('T')[0];
-        setFromDate(fStr);
-        if (!isRange) setToDate(fStr);
+    const shiftMonth = (n) => {
+        let newMonth = selectedMonth + n;
+        let newYear = selectedYear;
+        if (newMonth > 11) { newMonth = 0; newYear++; }
+        if (newMonth < 0) { newMonth = 11; newYear--; }
+        setSelectedMonth(newMonth);
+        setSelectedYear(newYear);
     };
+
+    const isCurrentMonth = selectedMonth === new Date().getMonth() && selectedYear === new Date().getFullYear();
 
     // Form State
     const [formData, setFormData] = useState({
@@ -134,6 +139,14 @@ const ParkingPage = () => {
     const [selectedImage, setSelectedImage] = useState('');
     const [showCamera, setShowCamera] = useState(false);
     const [lastSeenPendingParking, setLastSeenPendingParking] = useState(0);
+
+    useEffect(() => {
+        // Correctly set from/to based on selected month/year
+        const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
+        const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+        setFromDate(start);
+        setToDate(end);
+    }, [selectedMonth, selectedYear]);
 
     useEffect(() => {
         if (selectedCompany) {
@@ -235,19 +248,26 @@ const ParkingPage = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
+            const finalPayload = {
+                ...formData,
+                companyId: selectedCompany._id
+            };
+
+            // Enhanced date logic: If today is selected, preserve current hour/min
+            if (formData.date === todayIST()) {
+                const now = new Date();
+                const d = new Date(formData.date);
+                d.setHours(now.getHours(), now.getMinutes(), now.getSeconds());
+                finalPayload.date = d;
+            }
+
             if (editingId) {
-                await axios.put(`/api/admin/parking/${editingId}`, {
-                    ...formData,
-                    companyId: selectedCompany._id
-                }, {
+                await axios.put(`/api/admin/parking/${editingId}`, finalPayload, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
                 alert('Parking entry updated successfully');
             } else {
-                await axios.post('/api/admin/parking', {
-                    ...formData,
-                    companyId: selectedCompany._id
-                }, {
+                await axios.post('/api/admin/parking', finalPayload, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 });
                 alert('Parking entry added successfully');
@@ -520,18 +540,17 @@ const ParkingPage = () => {
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '5px',
-                            background: 'rgba(0,0,0,0.25)',
+                            gap: '8px',
+                            background: 'rgba(0,0,0,0.3)',
                             padding: '4px',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
+                            borderRadius: '20px',
+                            border: '1px solid rgba(255,255,255,0.06)'
                         }}>
                             <button
                                 onClick={() => shiftDays(-1)}
                                 style={{
-                                    width: '36px', height: '36px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)', border: 'none',
+                                    width: '38px', height: '38px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
                                     color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}
@@ -539,96 +558,90 @@ const ParkingPage = () => {
                                 <ChevronLeft size={18} />
                             </button>
 
-                            <div style={{ display: 'flex', gap: '5px' }}>
-                                {isRange && (
-                                    <div style={{
-                                        padding: '0 15px', height: '36px', display: 'flex',
-                                        alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                        background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px',
-                                        border: '1px solid rgba(99, 102, 241, 0.15)',
-                                        position: 'relative', overflow: 'hidden'
-                                    }}>
-                                        <span style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
-                                        <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                            {formatDateIST(fromDate).toUpperCase()}
-                                        </span>
-                                        <input
-                                            type="date"
-                                            value={fromDate}
-                                            onChange={(e) => setFromDate(e.target.value)}
-                                            onClick={(e) => e.target.showPicker?.()}
-                                            style={{
-                                                position: 'absolute', opacity: 0, inset: 0,
-                                                width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
-                                            }}
-                                        />
-                                    </div>
-                                )}
-
-                                <div style={{
-                                    padding: '0 15px', height: '36px', display: 'flex',
-                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                    background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                                    borderRadius: '10px',
-                                    border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(99, 102, 241, 0.2)'}`,
-                                    position: 'relative', overflow: 'hidden'
-                                }}>
-                                    {isRange ? (
-                                        <span style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>TO:</span>
-                                    ) : (
-                                        <Calendar size={14} color="#818cf8" />
-                                    )}
-                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                        {formatDateIST(toDate).toUpperCase()}
-                                    </span>
-                                    <input
-                                        type="date"
-                                        value={toDate}
-                                        onChange={(e) => {
-                                            setToDate(e.target.value);
-                                            if (!isRange) setFromDate(e.target.value);
-                                        }}
-                                        onClick={(e) => e.target.showPicker?.()}
-                                        style={{
-                                            position: 'absolute', opacity: 0, inset: 0,
-                                            width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
-                                        }}
-                                    />
-                                </div>
+                            <div
+                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                style={{ height: '38px', minWidth: '130px', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.15)', borderRadius: '12px', padding: '0 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 4px' }}
+                            >
+                                <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                                    {selectedDay === 'All' ?
+                                        `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
+                                        formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)))).toUpperCase()}
+                                </span>
+                                <input
+                                    type="date"
+                                    value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                    onChange={e => {
+                                        const d = new Date(e.target.value);
+                                        setSelectedYear(d.getFullYear());
+                                        setSelectedMonth(d.getMonth());
+                                        setSelectedDay(d.getDate().toString());
+                                    }}
+                                    style={{ position: 'absolute', inset: 0, opacity: 0 }}
+                                />
                             </div>
 
                             <button
                                 onClick={() => shiftDays(1)}
                                 style={{
-                                    width: '36px', height: '36px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)', border: 'none',
+                                    width: '38px', height: '38px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
                                     color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    marginRight: '10px'
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}
                             >
                                 <ChevronRight size={18} />
                             </button>
+                        </div>
 
+                        {selectedDay !== 'All' && (
                             <button
-                                onClick={() => {
-                                    const next = !isRange;
-                                    setIsRange(next);
-                                    if (!next) setFromDate(toDate);
-                                }}
+                                onClick={() => setSelectedDay('All')}
                                 style={{
-                                    padding: '0 12px', height: '36px',
-                                    borderRadius: '10px', border: 'none', cursor: 'pointer',
-                                    background: isRange ? '#fbbf24' : 'rgba(255,255,255,0.05)',
-                                    color: isRange ? 'black' : 'rgba(255,255,255,0.4)',
-                                    fontSize: '10px', fontWeight: '900', textTransform: 'uppercase',
-                                    display: 'flex', alignItems: 'center', gap: '6px'
+                                    height: '48px',
+                                    padding: '0 20px',
+                                    borderRadius: '12px',
+                                    background: 'rgba(251, 191, 36, 0.1)',
+                                    border: '1px solid rgba(251, 191, 36, 0.2)',
+                                    color: '#fbbf24',
+                                    fontSize: '11px',
+                                    fontWeight: '950',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
                                 }}
                             >
-                                <Plus size={12} style={{ transform: isRange ? 'rotate(45deg)' : 'none', transition: '0.3s' }} />
-                                {isRange ? 'Range' : 'Single'}
+                                <Calendar size={14} /> Full Month
                             </button>
-                        </div>
+                        )}
+
+                        <select
+                            value={selectedMonth}
+                            onChange={e => {
+                                setSelectedMonth(Number(e.target.value));
+                                setSelectedDay('All');
+                            }}
+                            style={{ height: '48px', padding: '0 12px', fontSize: '12px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px', outline: 'none' }}
+                        >
+                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
+                                <option key={m} value={idx} style={{ background: '#0f172a' }}>{m.toUpperCase()}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={selectedYear}
+                            onChange={e => {
+                                setSelectedYear(Number(e.target.value));
+                                setSelectedDay('All');
+                            }}
+                            style={{ height: '48px', padding: '0 12px', fontSize: '12px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px', outline: 'none' }}
+                        >
+                            {[2024, 2025, 2026, 2027].map(y => (
+                                <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                            ))}
+                        </select>
 
                         <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', height: '48px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 200px', background: 'rgba(0,0,0,0.2)' }}>
                             <User size={18} style={{ marginRight: '10px', color: 'var(--primary)' }} />
@@ -648,7 +661,7 @@ const ParkingPage = () => {
                 </div>
             </header>
 
-            {/* ── Tab Switcher ── */}
+            {/* ══ Tab Switcher ══ */}
             <div style={{
                 display: 'flex',
                 gap: '8px',
@@ -660,44 +673,46 @@ const ParkingPage = () => {
                 width: 'fit-content'
             }}>
                 {[
-                    { key: 'parking', label: '🅿️ Parking Logs', count: pendingParking.length, badge: unreadParking > 0, activeColor: 'linear-gradient(135deg, #fbbf24, #d97706)', activeShadow: '0 4px 16px rgba(251,191,36,0.35)' },
-                    { key: 'rejected', label: '🚫 Rejected', count: rejectedEntries.length, badge: rejectedEntries.length > 0, activeColor: 'linear-gradient(135deg, #f43f5e, #e11d48)', activeShadow: '0 4px 16px rgba(244,63,94,0.35)' }
+                    { id: 'parking', label: 'Fleet Parking', icon: <Car size={18} />, count: pendingParking.length, color: '#fbbf24' },
+                    { id: 'rejected', label: 'Review Hub', icon: <Shield size={18} />, count: rejectedEntries.filter(e => e.type === 'parking').length, color: '#f43f5e' }
                 ].map(tab => (
                     <button
-                        key={tab.key}
-                        onClick={() => setActiveTab(tab.key)}
+                        key={tab.id}
+                        onClick={() => setActiveTab(tab.id)}
                         style={{
                             padding: '10px 22px',
                             borderRadius: '12px',
-                            fontWeight: '800',
+                            fontWeight: '950',
                             fontSize: '13px',
                             border: 'none',
+                            background: activeTab === tab.id ? `${tab.color}20` : 'transparent',
+                            color: activeTab === tab.id ? tab.color : 'rgba(255,255,255,0.4)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
                             cursor: 'pointer',
-                            transition: 'all 0.25s ease',
-                            background: activeTab === tab.key ? tab.activeColor : 'transparent',
-                            color: activeTab === tab.key ? (tab.key === 'parking' ? 'black' : 'white') : 'rgba(255,255,255,0.45)',
-                            boxShadow: activeTab === tab.key ? tab.activeShadow : 'none',
+                            transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             position: 'relative'
                         }}
                     >
+                        {tab.icon}
                         {tab.label}
-                        {tab.badge && (
+                        {tab.count > 0 && (
                             <span style={{
-                                position: 'absolute',
-                                top: '-6px',
-                                right: '-6px',
-                                background: '#f43f5e',
-                                color: 'white',
-                                borderRadius: '50%',
-                                width: '18px',
-                                height: '18px',
+                                background: tab.color,
+                                color: tab.id === 'parking' ? 'black' : 'white',
                                 fontSize: '10px',
-                                fontWeight: '900',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                boxShadow: '0 2px 8px rgba(244, 63, 94, 0.4)'
-                            }}>{tab.count}</span>
+                                padding: '2px 8px',
+                                borderRadius: '8px',
+                                fontWeight: '950',
+                                boxShadow: `0 4px 10px ${tab.color}40`,
+                                animation: tab.id === 'parking' ? 'pulse 1.5s infinite' : 'none'
+                            }}>
+                                {tab.count}
+                            </span>
+                        )}
+                        {activeTab === tab.id && (
+                            <motion.div layoutId="parking-tab-pill" style={{ position: 'absolute', bottom: '-4px', left: '20%', right: '20%', height: '3px', background: tab.color, borderRadius: '4px', boxShadow: `0 0 8px ${tab.color}60` }} />
                         )}
                     </button>
                 ))}
@@ -753,20 +768,22 @@ const ParkingPage = () => {
                             >
                                 <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
                                     {entry.slipPhoto ? (
-                                        <div style={{ position: 'relative' }}>
+                                        <div style={{ position: 'relative', flexShrink: 0 }}>
                                             <img
                                                 src={getImageUrl(entry.slipPhoto)}
                                                 onClick={() => { setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
-                                                style={{ width: '64px', height: '64px', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                                                style={{ width: '80px', height: '80px', borderRadius: '18px', objectFit: 'cover', cursor: 'pointer', border: '2px solid rgba(251, 191, 36, 0.3)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}
                                             />
-                                            <div style={{ position: 'absolute', bottom: '-8px', right: '-8px', background: '#f43f5e', color: 'white', padding: '2px 6px', borderRadius: '6px', fontSize: '10px', fontWeight: '900' }}>SLIP</div>
+                                            <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#fbbf24', color: 'black', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '950', border: '3px solid #1a2233' }}>
+                                                <ImageIcon size={12} />
+                                            </div>
                                         </div>
                                     ) : (
                                         <div
-                                            onClick={() => { setSelectedImage(''); setShowImageModal(true); }}
-                                            style={{ width: '64px', height: '64px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px dashed rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                            style={{ width: '80px', height: '80px', borderRadius: '18px', background: 'rgba(255,255,255,0.02)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', border: '2px dashed rgba(255,255,255,0.08)', flexShrink: 0, gap: '4px' }}
                                         >
-                                            <Eye size={24} color="rgba(255,255,255,0.2)" />
+                                            <Eye size={24} color="rgba(255,255,255,0.15)" />
+                                            <span style={{ fontSize: '8px', color: 'rgba(255,255,255,0.2)', fontWeight: '900' }}>NO SLIP</span>
                                         </div>
                                     )}
                                     <div style={{ flex: 1 }}>
@@ -819,20 +836,37 @@ const ParkingPage = () => {
                                             color: 'white',
                                             border: 'none',
                                             padding: '12px',
-                                            borderRadius: '12px',
-                                            fontWeight: '800',
+                                            borderRadius: '16px',
+                                            fontWeight: '950',
                                             fontSize: '14px',
                                             cursor: 'pointer',
-                                            boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)'
+                                            boxShadow: '0 8px 20px rgba(16, 185, 129, 0.25)',
+                                            transition: '0.3s',
+                                            letterSpacing: '0.5px'
                                         }}
+                                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
                                     >
-                                        Approve
+                                        ✓ APPROVE
                                     </button>
                                     <button
                                         onClick={() => handleApproveReject(entry.attendanceId, entry._id, 'rejected')}
-                                        style={{ flex: 1, background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '12px', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}
+                                        style={{ 
+                                            flex: 1, 
+                                            background: 'rgba(244, 63, 94, 0.08)', 
+                                            color: '#f43f5e', 
+                                            border: '1px solid rgba(244, 63, 94, 0.2)', 
+                                            padding: '12px', 
+                                            borderRadius: '16px', 
+                                            fontWeight: '900', 
+                                            fontSize: '13px', 
+                                            cursor: 'pointer',
+                                            transition: '0.3s'
+                                        }}
+                                        onMouseEnter={e => e.currentTarget.style.background = 'rgba(244,63,94,0.15)'}
+                                        onMouseLeave={e => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.08)'}
                                     >
-                                        Reject
+                                        REJECT
                                     </button>
                                 </div>
                             </motion.div>
@@ -1130,7 +1164,7 @@ const ParkingPage = () => {
                                             {filteredEntries.map((e) => (
                                                 <tr key={e._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'all 0.2s ease' }} className="hover-row">
                                                     <td style={{ padding: '18px 25px' }}>
-                                                        <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{formatDateIST(e.date)}</div>
+                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '14px', letterSpacing: '0.2px' }}>{formatDateTimeIST(e.date)}</div>
                                                     </td>
                                                     <td style={{ padding: '18px 25px' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1268,7 +1302,7 @@ const ParkingPage = () => {
                                                     <div>
                                                         <div style={{ color: 'white', fontWeight: '800', fontSize: '16px', letterSpacing: '0.5px' }}>{e.driver}</div>
                                                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                            {formatDateIST(e.date)}
+                                                            {formatDateTimeIST(e.date)}
                                                             {e.vehicle && <span style={{ opacity: 0.6 }}>• {e.vehicle.carNumber}</span>}
                                                         </div>
                                                     </div>
