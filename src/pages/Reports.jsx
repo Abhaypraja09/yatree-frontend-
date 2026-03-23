@@ -78,14 +78,38 @@ const ActionBtns = ({ onView, onEdit, onDelete }) => (
 );
 
 /* ─── TableWrapper ─── */
-const TableSection = ({ tabId, fromDate, toDate, chips, headers, rows, empty }) => {
+const TableSection = ({ tabId, fromDate, toDate, chips, headers, rows, empty, colSummaries }) => {
     const cfg = TAB_CONFIG[tabId] || {};
     return (
         <div style={{ background: 'rgba(15,23,42,0.8)', border: `1px solid ${cfg.color || '#fff'}20`, borderRadius: '20px', overflow: 'hidden', marginBottom: '28px' }}>
             <SectionBanner tabId={tabId} count={rows?.length || 0} chips={chips} fromDate={fromDate} toDate={toDate} />
             <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white', minWidth: '1000px' }}>
-                    <thead><tr>{headers.map((h, i) => <Th key={i} color={cfg.color}>{h}</Th>)}</tr></thead>
+                    <thead>
+                        {colSummaries && (
+                            <tr>
+                                {headers.map((h, i) => (
+                                    <th key={'sum-' + i} style={{ padding: '12px 16px 4px', background: 'rgba(255,255,255,0.02)' }}>
+                                        {colSummaries[h] && (
+                                            <div style={{ 
+                                                display: 'inline-block', 
+                                                padding: '4px 8px', 
+                                                borderRadius: '6px', 
+                                                background: 'rgba(255,255,255,0.05)', 
+                                                border: '1px solid rgba(255,255,255,0.08)',
+                                                color: colSummaries[h].color || 'white',
+                                                fontSize: '11px',
+                                                fontWeight: '950'
+                                            }}>
+                                                {colSummaries[h].value}
+                                            </div>
+                                        )}
+                                    </th>
+                                ))}
+                            </tr>
+                        )}
+                        <tr>{headers.map((h, i) => <Th key={i} color={cfg.color}>{h}</Th>)}</tr>
+                    </thead>
                     <tbody>
                         {rows?.length === 0
                             ? <tr><td colSpan={headers.length} style={{ padding: '50px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '13px' }}>{empty || 'No records found.'}</td></tr>
@@ -379,6 +403,9 @@ const Reports = ({ isSubComponent = false }) => {
         const parkBy = r.punchOut?.parkingPaidBy || 'Self';
         const fuelAmt = Number(r.fuel?.amount) || 0;
 
+        // Total to show in salary column (Wage + Bonus + Reimbursable Parking)
+        const rowSalaryTotal = wage + bonus + (parkBy !== 'Office' ? parkAmt : 0);
+
         const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
 
         return (
@@ -408,8 +435,6 @@ const Reports = ({ isSubComponent = false }) => {
                         <div>
                             <div style={{ color: 'white', fontWeight: '800', fontSize: '13px', whiteSpace: 'nowrap' }}>{r.driver?.name || r.vehicle?.driverName || 'N/A'}</div>
                             <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '1px' }}><Car size={9} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} />{r.vehicle?.carNumber?.split('#')[0] || '--'}</div>
-                            {r.pickUpLocation && <div style={{ fontSize: '9px', color: '#38bdf8', marginTop: '1px', fontWeight: '700' }}>📍 {r.pickUpLocation}</div>}
-                            {r.dropLocation && <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '1px' }}>🏁 {r.dropLocation}</div>}
                         </div>
                     </div>
                 </TD>
@@ -452,8 +477,14 @@ const Reports = ({ isSubComponent = false }) => {
                 </TD>
                 <TD>
                     <div>
-                        <span style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{(wage + bonus).toLocaleString()}</span>
-                        {bonus > 0 && <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>Base ₹{wage} + ₹{bonus}</div>}
+                        <span style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{rowSalaryTotal.toLocaleString()}</span>
+                        {(bonus > 0 || (parkBy !== 'Office' && parkAmt > 0)) && (
+                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
+                                Base ₹{wage} 
+                                {bonus > 0 && ` + ₹${bonus} Bonus`}
+                                {parkBy !== 'Office' && parkAmt > 0 && ` + ₹${parkAmt} Park`}
+                            </div>
+                        )}
                     </div>
                 </TD>
                 <TD noWrap><StatusBadge ok={isCompleted} okLabel="✓ Done" badLabel="⏳ Active" /></TD>
@@ -477,17 +508,28 @@ const Reports = ({ isSubComponent = false }) => {
             /* ── STAFF DRIVERS ── */
             case 'drivers': {
                 const data = applySearch(staffDrivers);
-                const totalWage = data.reduce((s, r) => s + (Number(r.dailyWage) || 0), 0);
+                
+                // Alignment with Payroll Logic (Base wage once per day, all bonuses sum, plus self-paid parking)
+                const aggr = {};
+                data.forEach(r => {
+                    const key = `${r.driver?._id || r.driver || 'unk'}-${r.date}`;
+                    if (!aggr[key]) aggr[key] = { w: Number(r.dailyWage) || 0, b: 0, p: 0 };
+                    const b = Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
+                    const p = r.punchOut?.parkingPaidBy !== 'Office' ? (Number(r.punchOut?.tollParkingAmount) || 0) : 0;
+                    aggr[key].b += b;
+                    aggr[key].p += p;
+                });
+                const totalSalary = Object.values(aggr).reduce((s, v) => s + v.w + v.b + v.p, 0);
                 const totalKMs = data.reduce((s, r) => s + (Number(r.totalKM) || 0), 0);
                 const totalFuel = data.reduce((s, r) => s + (Number(r.fuel?.amount) || 0), 0);
                 return (
                     <TableSection tabId="drivers" fromDate={fromDate} toDate={toDate}
-                        chips={[
-                            <Chip key="c" label="Total Duties" value={data.length} color="#10b981" />,
-                            <Chip key="km" label="Total KM" value={`${totalKMs.toLocaleString()}`} color="#38bdf8" />,
-                            <Chip key="f" label="Fuel Amt" value={`₹${totalFuel.toLocaleString()}`} color="#f59e0b" />,
-                            <Chip key="w" label="Total Salary" value={`₹${totalWage.toLocaleString()}`} color="#10b981" />,
-                        ]}
+                        colSummaries={{
+                            'Date': { value: `Total: ${data.length}`, color: cfg.color },
+                            'Total KM': { value: `${totalKMs.toLocaleString()}`, color: '#38bdf8' },
+                            'Fuel': { value: `₹${totalFuel.toLocaleString()}`, color: '#f59e0b' },
+                            'Salary': { value: `₹${totalSalary.toLocaleString()}`, color: cfg.color }
+                        }}
                         headers={ATT_HEADERS}
                         rows={data.map((r, i) => <AttRow key={r._id} r={r} idx={i} />)}
                         empty="No staff driver records found."
@@ -498,19 +540,30 @@ const Reports = ({ isSubComponent = false }) => {
             /* ── FREELANCERS ── */
             case 'freelancers': {
                 const data = applySearch(freelancerDrivers);
-                const totalWage = data.reduce((s, r) => s + (Number(r.dailyWage) || 0), 0);
+                
+                // Alignment with Payroll Logic
+                const aggr = {};
+                data.forEach(r => {
+                    const key = `${r.driver?._id || r.driver || 'unk'}-${r.date}`;
+                    if (!aggr[key]) aggr[key] = { w: Number(r.dailyWage) || 0, b: 0, p: 0 };
+                    const b = Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
+                    const p = r.punchOut?.parkingPaidBy !== 'Office' ? (Number(r.punchOut?.tollParkingAmount) || 0) : 0;
+                    aggr[key].b += b;
+                    aggr[key].p += p;
+                });
+                const totalSalary = Object.values(aggr).reduce((s, v) => s + v.w + v.b + v.p, 0);
                 const totalKMs = data.reduce((s, r) => s + (Number(r.totalKM) || 0), 0);
                 const totalFuel = data.reduce((s, r) => s + (Number(r.fuel?.amount) || 0), 0);
                 const totalParking = data.reduce((s, r) => s + (Number(r.punchOut?.tollParkingAmount) || 0), 0);
                 return (
                     <TableSection tabId="freelancers" fromDate={fromDate} toDate={toDate}
-                        chips={[
-                            <Chip key="c" label="Total Duties" value={data.length} color="#8b5cf6" />,
-                            <Chip key="km" label="Total KM" value={`${totalKMs.toLocaleString()}`} color="#38bdf8" />,
-                            <Chip key="f" label="Fuel Amt" value={`₹${totalFuel.toLocaleString()}`} color="#f59e0b" />,
-                            <Chip key="p" label="Total Parking" value={`₹${totalParking.toLocaleString()}`} color="#818cf8" />,
-                            <Chip key="w" label="Total Salary" value={`₹${totalWage.toLocaleString()}`} color="#8b5cf6" />,
-                        ]}
+                        colSummaries={{
+                            'Date': { value: `Total: ${data.length}`, color: cfg.color },
+                            'Total KM': { value: `${totalKMs.toLocaleString()}`, color: '#38bdf8' },
+                            'Fuel': { value: `₹${totalFuel.toLocaleString()}`, color: '#f59e0b' },
+                            'Parking': { value: `₹${totalParking.toLocaleString()}`, color: '#818cf8' },
+                            'Salary': { value: `₹${totalSalary.toLocaleString()}`, color: cfg.color }
+                        }}
                         headers={ATT_HEADERS}
                         rows={data.map((r, i) => <AttRow key={r._id} r={r} idx={i} showFreelancerCols />)}
                         empty="No freelancer records found."
@@ -539,18 +592,31 @@ const Reports = ({ isSubComponent = false }) => {
             }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
             const searchedData = applySearch(data);
-            const totalWage = searchedData.reduce((s, r) => s + (Number(r.dailyWage) || 0) + Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0), 0);
+            
+            // Alignment with Payroll Logic
+            const aggr = {};
+            searchedData.forEach(r => {
+                const key = `${r.driver?._id || r.driver || 'unk'}-${r.date}`;
+                if (!aggr[key]) aggr[key] = { w: Number(r.dailyWage) || 0, b: 0, p: 0 };
+                const b = Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
+                const p = r.punchOut?.parkingPaidBy !== 'Office' ? (Number(r.punchOut?.tollParkingAmount) || 0) : 0;
+                aggr[key].b += b;
+                aggr[key].p += p;
+            });
+            const totalSalary = Object.values(aggr).reduce((s, v) => s + v.w + v.b + v.p, 0);
+
             const totalKMs = searchedData.reduce((s, r) => s + (Number(r.totalKM) || 0), 0);
             const totalFuel = searchedData.reduce((s, r) => s + (Number(r.fuel?.amount) || 0), 0);
+            const totalParking = searchedData.reduce((s, r) => s + (Number(r.punchOut?.tollParkingAmount) || 0), 0);
 
             return (
                 <TableSection tabId="logbook" fromDate={fromDate} toDate={toDate}
-                    chips={[
-                        <Chip key="c" label="Total Records" value={searchedData.length} color="#fbbf24" />,
-                        <Chip key="km" label="Total KM" value={`${totalKMs.toLocaleString()}`} color="#38bdf8" />,
-                        <Chip key="f" label="Fuel Amt" value={`₹${totalFuel.toLocaleString()}`} color="#f59e0b" />,
-                        <Chip key="w" label="Total Payout" value={`₹${totalWage.toLocaleString()}`} color="#10b981" />,
-                    ]}
+                    colSummaries={{
+                        'Date': { value: `Total: ${searchedData.length}`, color: '#fbbf24' },
+                        'Total KM': { value: `${totalKMs.toLocaleString()}`, color: '#38bdf8' },
+                        'Fuel': { value: `₹${totalFuel.toLocaleString()}`, color: '#f59e0b' },
+                        'Parking': { value: `₹${totalParking.toLocaleString()}`, color: '#818cf8' }
+                    }}
                     headers={LOGBOOK_HEADERS}
                     rows={searchedData.map((r, i) => <AttRow key={r._id} r={r} idx={i} isLogbook />)}
                     empty="No log book records found."

@@ -28,7 +28,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
-import { todayIST, formatDateIST, nowIST } from '../utils/istUtils';
+import { todayIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
 import ParkingModal from '../components/ParkingModal';
 
 const Chip = ({ label, value, color }) => (
@@ -54,10 +54,12 @@ const DriverServices = () => {
     const [endDate, setEndDate] = useState(todayIST());
     const [selectedType, setSelectedType] = useState('All'); // 'All', 'Wash', 'Puncture'
     const [selectedVehicleFilter, setSelectedVehicleFilter] = useState('All');
+    const [pendingRecords, setPendingRecords] = useState([]);
 
     useEffect(() => {
         if (selectedCompany) {
             fetchRecords();
+            fetchPending();
             fetchVehicles();
             fetchDrivers();
         }
@@ -97,6 +99,14 @@ const DriverServices = () => {
             setRecords(filteredData);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
+    };
+
+    const fetchPending = async () => {
+        if (!selectedCompany?._id) return;
+        try {
+            const { data } = await axios.get(`/api/admin/maintenance/pending/${selectedCompany._id}`);
+            setPendingRecords(data || []);
+        } catch (err) { console.error(err); }
     };
 
     // Form State for Manual Entry
@@ -174,6 +184,7 @@ const DriverServices = () => {
                 setShowModal(false);
                 resetForm();
                 fetchRecords();
+                fetchPending();
                 setMessage({ text: '', type: '' });
             }, 1500);
         } catch (err) {
@@ -230,6 +241,25 @@ const DriverServices = () => {
         try {
             await axios.delete(`/api/admin/maintenance/${id}`);
             fetchRecords();
+            fetchPending();
+        } catch (err) { console.error(err); }
+    };
+
+    const handleApprove = async (attendanceId, expenseId) => {
+        if (!window.confirm('Approve this service?')) return;
+        try {
+            await axios.patch(`/api/admin/attendance/${attendanceId}/expense/${expenseId}`, { status: 'approved' });
+            fetchRecords();
+            fetchPending();
+        } catch (err) { console.error(err); }
+    };
+
+    const handleReject = async (attendanceId, expenseId) => {
+        if (!window.confirm('Reject this service?')) return;
+        try {
+            await axios.patch(`/api/admin/attendance/${attendanceId}/expense/${expenseId}`, { status: 'rejected' });
+            fetchRecords();
+            fetchPending();
         } catch (err) { console.error(err); }
     };
 
@@ -397,6 +427,68 @@ const DriverServices = () => {
                     </button>
                 </div>
             </header>
+
+            {/* Pending Approvals Section */}
+            {pendingRecords.length > 0 && (
+                <div style={{ marginBottom: '40px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                        <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981' }}></div>
+                        <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Service Approvals (Awaiting)</h3>
+                    </div>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                        {pendingRecords.map((entry) => (
+                            <motion.div
+                                key={entry._id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="glass-card"
+                                style={{ padding: '20px', borderLeft: '4px solid #10b981', background: 'rgba(16, 185, 129, 0.05)' }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        {entry.slipPhoto ? (
+                                            <img
+                                                src={`/${entry.slipPhoto}`}
+                                                onClick={() => setSelectedImage(entry.slipPhoto)}
+                                                style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                                            />
+                                        ) : (
+                                            <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                <Droplets size={24} color="rgba(255,255,255,0.1)" />
+                                            </div>
+                                        )}
+                                        <div>
+                                            <p style={{ color: 'white', fontWeight: '900', fontSize: '18px', margin: 0 }}>₹{entry.amount}</p>
+                                            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: '4px 0 0' }}>{entry.driver || 'Driver'} • {entry.carNumber}</p>
+                                        </div>
+                                    </div>
+                                    <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '10px', padding: '4px 10px', borderRadius: '8px', fontWeight: '900', textTransform: 'uppercase' }}>{entry.fuelType || 'Wash'}</span>
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'rgba(255,255,255,0.4)', marginBottom: '15px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '10px' }}>
+                                    <span>{entry.km} KM</span>
+                                    <span>{formatDateTimeIST(entry.date)}</span>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button
+                                        onClick={() => handleApprove(entry.attendanceId, entry._id)}
+                                        style={{ flex: 1, background: '#10b981', color: 'white', border: 'none', padding: '12px', borderRadius: '12px', fontWeight: '900', cursor: 'pointer', fontSize: '13px' }}
+                                    >
+                                        Approve
+                                    </button>
+                                    <button
+                                        onClick={() => handleReject(entry.attendanceId, entry._id)}
+                                        style={{ flex: 1, background: 'rgba(255,255,255,0.03)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '12px', borderRadius: '12px', fontWeight: '900', cursor: 'pointer', fontSize: '13px' }}
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Search and Action Bar */}
             <div style={{ display: 'flex', gap: '20px', marginBottom: '30px', alignItems: 'center' }}>

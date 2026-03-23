@@ -114,13 +114,12 @@ const ParkingPage = () => {
     const [fromDate, setFromDate] = useState(firstDayOfMonthIST()); // Start from 1st of month
     const [toDate, setToDate] = useState(todayIST());
 
-    const shiftMonth = (n) => {
-        let newMonth = selectedMonth + n;
-        let newYear = selectedYear;
-        if (newMonth > 11) { newMonth = 0; newYear++; }
-        if (newMonth < 0) { newMonth = 11; newYear--; }
-        setSelectedMonth(newMonth);
-        setSelectedYear(newYear);
+    const shiftDays = (n) => {
+        const d = new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay));
+        d.setDate(d.getDate() + n);
+        setSelectedYear(d.getFullYear());
+        setSelectedMonth(d.getMonth());
+        setSelectedDay(d.getDate().toString());
     };
 
     const isCurrentMonth = selectedMonth === new Date().getMonth() && selectedYear === new Date().getFullYear();
@@ -386,11 +385,16 @@ const ParkingPage = () => {
         const matchesSearch = (carNum.toLowerCase().includes(searchTerm.toLowerCase()) ||
             drvName.toLowerCase().includes(searchTerm.toLowerCase()));
 
-        // const isFreelancer = e.driverId?.isFreelancer || e.driver?.includes('(F)');
-        // if (isFreelancer) return false;
-
         const matchesDriver = filterDriver === 'All' || (e.driverId?._id === filterDriver) || (e.driver === filterDriver);
-        return matchesSearch && matchesDriver;
+
+        let matchesDay = true;
+        if (selectedDay !== 'All') {
+            const entryDate = toISTDateString(e.date);
+            const targetDate = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+            matchesDay = (entryDate === targetDate);
+        }
+
+        return matchesSearch && matchesDriver && matchesDay;
     });
 
     const totalAmount = filteredEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
@@ -1164,7 +1168,7 @@ const ParkingPage = () => {
                                             {filteredEntries.map((e) => (
                                                 <tr key={e._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'all 0.2s ease' }} className="hover-row">
                                                     <td style={{ padding: '18px 25px' }}>
-                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '14px', letterSpacing: '0.2px' }}>{formatDateTimeIST(e.date)}</div>
+                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '14px', letterSpacing: '0.2px' }}>{formatDateIST(e.date)}</div>
                                                     </td>
                                                     <td style={{ padding: '18px 25px' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -1302,7 +1306,7 @@ const ParkingPage = () => {
                                                     <div>
                                                         <div style={{ color: 'white', fontWeight: '800', fontSize: '16px', letterSpacing: '0.5px' }}>{e.driver}</div>
                                                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                            {formatDateTimeIST(e.date)}
+                                                            {formatDateIST(e.date)}
                                                             {e.vehicle && <span style={{ opacity: 0.6 }}>• {e.vehicle.carNumber}</span>}
                                                         </div>
                                                     </div>

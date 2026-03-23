@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X } from 'lucide-react';
+import { X, Clock } from 'lucide-react';
+import { toISTDateTimeString } from '../../utils/istUtils';
 
 const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
     const [formData, setFormData] = useState({
@@ -13,7 +14,9 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
         startKm: item.punchIn?.km || 0,
         endKm: item.punchOut?.km || 0,
         date: item.date || '',
-        dailyWage: item.dailyWage || 0
+        dailyWage: item.dailyWage || 0,
+        punchInTime: toISTDateTimeString(item.punchIn?.time),
+        punchOutTime: toISTDateTimeString(item.punchOut?.time)
     });
 
     const handleSubmit = (e) => {
@@ -32,7 +35,7 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="glass-card modal-content"
-                style={{ width: '100%', maxWidth: '450px', padding: '25px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px' }}
+                style={{ width: '100%', maxWidth: '450px', maxHeight: '90vh', overflowY: 'auto', padding: '25px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px' }}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
                     <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Edit Report</h2>
@@ -60,6 +63,30 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                             style={{ width: '100%', marginBottom: 0, height: '48px', colorScheme: 'dark' }}
                         />
                     </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                        <div className="form-group">
+                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}><Clock size={10} style={{marginRight: '4px'}}/> Punch In</label>
+                            <input
+                                type="datetime-local"
+                                className="input-field"
+                                value={formData.punchInTime}
+                                onChange={(e) => setFormData({ ...formData, punchInTime: e.target.value })}
+                                style={{ width: '100%', marginBottom: 0, height: '48px', colorScheme: 'dark', fontSize: '12px' }}
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}><Clock size={10} style={{marginRight: '4px'}}/> Punch Out</label>
+                            <input
+                                type="datetime-local"
+                                className="input-field"
+                                value={formData.punchOutTime}
+                                onChange={(e) => setFormData({ ...formData, punchOutTime: e.target.value })}
+                                style={{ width: '100%', marginBottom: 0, height: '48px', colorScheme: 'dark', fontSize: '12px' }}
+                            />
+                        </div>
+                    </div>
+
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                         <div className="form-group">
                             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Start KM</label>

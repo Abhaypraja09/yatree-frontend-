@@ -48,16 +48,17 @@ const LiveFeed = () => {
     const [loading, setLoading] = useState(true);
     const [activeTab, setActiveTab] = useState('drivers'); // 'drivers', 'vehicles', 'history'
     const [searchQuery, setSearchQuery] = useState('');
-    const [currentTimeIST, setCurrentTimeIST] = useState(formatTimeIST(nowIST(), true));
+    const [currentTimeIST, setCurrentTimeIST] = useState(formatTimeIST(new Date()));
     const [selectedDriver, setSelectedDriver] = useState(null);
     const [showDriverModal, setShowDriverModal] = useState(false);
     const [events, setEvents] = useState([]);
     const [assigningEventId, setAssigningEventId] = useState(null);
+    const [viewerUrl, setViewerUrl] = useState(null);
     const dateInputRef = useRef(null);
 
     useEffect(() => {
         const timer = setInterval(() => {
-            setCurrentTimeIST(formatTimeIST(nowIST(), true));
+            setCurrentTimeIST(formatTimeIST(new Date()));
         }, 1000);
         return () => clearInterval(timer);
     }, []);
@@ -76,8 +77,8 @@ const LiveFeed = () => {
 
     const formatDuration = (start, end) => {
         if (!start || !end) return '0h';
-        const d1 = nowIST(start);
-        const d2 = nowIST(end);
+        const d1 = new Date(start);
+        const d2 = new Date(end);
         const diffMs = Math.abs(d2 - d1);
         const h = Math.floor(diffMs / (1000 * 60 * 60));
         const m = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
@@ -94,7 +95,7 @@ const LiveFeed = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setStats(data);
-            setLastUpdated(formatTimeIST(nowIST(), true));
+            setLastUpdated(formatTimeIST(new Date()));
         } catch (err) {
             console.error('Error fetching feed', err);
         } finally {
@@ -987,19 +988,19 @@ const LiveFeed = () => {
                                                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                                             {att.punchIn?.kmPhoto && (
                                                                 <div style={{ textAlign: 'center' }}>
-                                                                    <img src={att.punchIn.kmPhoto} onClick={() => window.open(att.punchIn.kmPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                    <img src={att.punchIn.kmPhoto} onClick={() => setViewerUrl(att.punchIn.kmPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                     <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>METER</div>
                                                                 </div>
                                                             )}
                                                             {att.punchIn?.selfie && (
                                                                 <div style={{ textAlign: 'center' }}>
-                                                                    <img src={att.punchIn.selfie} onClick={() => window.open(att.punchIn.selfie)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                    <img src={att.punchIn.selfie} onClick={() => setViewerUrl(att.punchIn.selfie)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                     <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>DRIVER</div>
                                                                 </div>
                                                             )}
                                                             {(att.punchIn?.carSelfie || att.punchIn?.carPhoto) && (
                                                                 <div style={{ textAlign: 'center' }}>
-                                                                    <img src={att.punchIn.carSelfie || att.punchIn.carPhoto} onClick={() => window.open(att.punchIn.carSelfie || att.punchIn.carPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                    <img src={att.punchIn.carSelfie || att.punchIn.carPhoto} onClick={() => setViewerUrl(att.punchIn.carSelfie || att.punchIn.carPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                     <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>VEHICLE</div>
                                                                 </div>
                                                             )}
@@ -1020,19 +1021,19 @@ const LiveFeed = () => {
                                                                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                                                     {att.punchOut?.kmPhoto && (
                                                                         <div style={{ textAlign: 'center' }}>
-                                                                            <img src={att.punchOut.kmPhoto} onClick={() => window.open(att.punchOut.kmPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                            <img src={att.punchOut.kmPhoto} onClick={() => setViewerUrl(att.punchOut.kmPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>METER</div>
                                                                         </div>
                                                                     )}
                                                                     {att.punchOut?.selfie && !selectedDriver?.isFreelancer && (
                                                                         <div style={{ textAlign: 'center' }}>
-                                                                            <img src={att.punchOut.selfie} onClick={() => window.open(att.punchOut.selfie)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                            <img src={att.punchOut.selfie} onClick={() => setViewerUrl(att.punchOut.selfie)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>DRIVER</div>
                                                                         </div>
                                                                     )}
                                                                     {(att.punchOut?.carSelfie || att.punchOut?.carPhoto) && (
                                                                         <div style={{ textAlign: 'center' }}>
-                                                                            <img src={att.punchOut.carSelfie || att.punchOut.carPhoto} onClick={() => window.open(att.punchOut.carSelfie || att.punchOut.carPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                            <img src={att.punchOut.carSelfie || att.punchOut.carPhoto} onClick={() => setViewerUrl(att.punchOut.carSelfie || att.punchOut.carPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>VEHICLE</div>
                                                                         </div>
                                                                     )}
@@ -1241,6 +1242,26 @@ const LiveFeed = () => {
                     }
                 }
             `}</style>
+
+            {/* Lightbox Viewer */}
+            <AnimatePresence>
+                {viewerUrl && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        onClick={() => setViewerUrl(null)}
+                        style={{ position: 'fixed', inset: 0, zIndex: 30000, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'clamp(20px, 5vw, 60px)', cursor: 'zoom-out' }}
+                    >
+                        <motion.img 
+                            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                            src={viewerUrl} 
+                            style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '20px', boxShadow: '0 40px 100px rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)' }} 
+                        />
+                        <button style={{ position: 'absolute', top: '30px', right: '30px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(5px)' }} onClick={() => setViewerUrl(null)}>
+                            <X size={24} />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
         </div>
     );

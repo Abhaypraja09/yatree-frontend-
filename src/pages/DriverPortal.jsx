@@ -154,7 +154,7 @@ const DriverPortal = () => {
     const [fuelFilled, setFuelFilled] = useState(false);
     const [fuelEntries, setFuelEntries] = useState([{ amount: '', km: '', fuelType: 'Diesel', slip: null, preview: null }]);
     // Use quantity in expenseEntries for fuel
-    const [expenseEntries, setExpenseEntries] = useState([{ type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', paymentSource: 'Yatree Office', slip: null, preview: null }]);
+    const [expenseEntries, setExpenseEntries] = useState([{ type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', paymentSource: 'Office', slip: null, preview: null }]);
     const [parkingPaid, setParkingPaid] = useState(false);
     const [parkingEntries, setParkingEntries] = useState([{ amount: '', slip: null, preview: null }]);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -361,7 +361,7 @@ const DriverPortal = () => {
             formData.append('fuelTypes', entry.fuelType || '');
             formData.append('fuelQuantities', entry.quantity || 0);
             formData.append('fuelRates', entry.rate || 0);
-            formData.append('paymentSources', entry.paymentSource || 'Yatree Office');
+            formData.append('paymentSources', entry.paymentSource || 'Office');
             if (entry.slip) {
                 // Important: Use the index from the activeEntries array
                 formData.append(`slip_${index}`, entry.slip);
@@ -680,7 +680,7 @@ const DriverPortal = () => {
                                     )}
                                     <button
                                         onClick={() => {
-                                            const newFuelEntry = { type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', paymentSource: 'Yatree Office', slip: null, preview: null };
+                                            const newFuelEntry = { type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', paymentSource: 'Office', slip: null, preview: null };
                                             setExpenseEntries([newFuelEntry]);
                                             setExpenseModalType('fuel');
                                             setShowExpenseModal(true);
@@ -1264,22 +1264,11 @@ const DriverPortal = () => {
                                             {/* Remarks (Punch-Out only) */}
                                             {showPunchOut && (
                                                 <div style={{ marginBottom: 'clamp(20px, 5vw, 28px)' }}>
-                                                    <div className="input-wrapper-full">
-                                                        <label className="input-label">{t('remarksAdmin')}</label>
-                                                        <textarea
-                                                            className="input-field"
-                                                            placeholder={t('enterRemarks')}
-                                                            value={remarks}
-                                                            onChange={(e) => setRemarks(e.target.value)}
-                                                            style={{ marginBottom: '15px', resize: 'vertical', minHeight: '60px' }}
-                                                        />
-                                                    </div>
-
                                                     <div className="input-wrapper-full" style={{ marginTop: '4px' }}>
-                                                        <label className="input-label">{t('otherRemarks')}</label>
+                                                        <label className="input-label">Duty Details</label>
                                                         <textarea
                                                             className="input-field"
-                                                            placeholder={t('explainOptional')}
+                                                            placeholder="Enter duty details..."
                                                             value={otherRemarks}
                                                             onChange={(e) => setOtherRemarks(e.target.value)}
                                                             style={{ fontSize: '14px', resize: 'vertical', minHeight: '60px' }}
@@ -1346,7 +1335,7 @@ const DriverPortal = () => {
                                                     <div style={{ display: 'flex', justifyContent: 'center' }}>
                                                         {expenseModalType === 'fuel' && (
                                                             <button
-                                                                onClick={() => setExpenseEntries([{ type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', paymentSource: 'Yatree Office', slip: null, preview: null }])}
+                                                                onClick={() => setExpenseEntries([{ type: 'fuel', amount: '', quantity: '', km: '', fuelType: 'Diesel', paymentSource: 'Office', slip: null, preview: null }])}
                                                                 className="btn-primary"
                                                                 style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}
                                                             >
@@ -1535,7 +1524,7 @@ const DriverPortal = () => {
                                                                     <div className="input-wrapper-full" style={{ marginTop: '4px', marginBottom: '16px' }}>
                                                                         <label className="input-label" style={{ fontSize: '10px', marginBottom: '6px' }}>{t('paymentSource') || 'Payment Source'}</label>
                                                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                                                            {['Yatree Office', 'Guest'].map((source) => (
+                                                                            {['Office', 'Guest'].map((source) => (
                                                                                 <button
                                                                                     key={source}
                                                                                     type="button"
@@ -1550,9 +1539,9 @@ const DriverPortal = () => {
                                                                                         fontSize: '11px',
                                                                                         fontWeight: '800',
                                                                                         border: '1px solid',
-                                                                                        borderColor: (entry.paymentSource || 'Yatree Office') === source ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
-                                                                                        background: (entry.paymentSource || 'Yatree Office') === source ? 'rgba(14, 165, 233, 0.15)' : 'rgba(255,255,255,0.02)',
-                                                                                        color: (entry.paymentSource || 'Yatree Office') === source ? 'var(--primary)' : 'var(--text-muted)',
+                                                                                        borderColor: (entry.paymentSource || 'Office') === source ? 'var(--primary)' : 'rgba(255,255,255,0.1)',
+                                                                                        background: (entry.paymentSource || 'Office') === source ? 'rgba(14, 165, 233, 0.15)' : 'rgba(255,255,255,0.02)',
+                                                                                        color: (entry.paymentSource || 'Office') === source ? 'var(--primary)' : 'var(--text-muted)',
                                                                                         transition: 'all 0.2s ease'
                                                                                     }}
                                                                                 >

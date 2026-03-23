@@ -7,7 +7,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
-import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST } from '../utils/istUtils';
+import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
 
 
 const CameraModal = ({ onCapture, onClose }) => {
@@ -127,7 +127,7 @@ const FuelPage = () => {
         odometer: '',
         stationName: '',
         paymentMode: 'Cash',
-        paymentSource: 'Yatree Office',
+        paymentSource: 'Office',
         driver: '',
         slipPhoto: ''
     });
@@ -252,7 +252,7 @@ const FuelPage = () => {
             odometer: '',
             stationName: '',
             paymentMode: 'Cash',
-            paymentSource: 'Yatree Office',
+            paymentSource: 'Office',
             driver: '',
             slipPhoto: ''
         });
@@ -271,7 +271,7 @@ const FuelPage = () => {
             odometer: entry.odometer || '',
             stationName: entry.stationName || '',
             paymentMode: entry.paymentMode || 'Cash',
-            paymentSource: entry.paymentSource || 'Yatree Office',
+            paymentSource: entry.paymentSource || 'Office',
             driver: entry.driver || '',
             slipPhoto: entry.slipPhoto || ''
         });
@@ -393,7 +393,7 @@ const FuelPage = () => {
             'Odometer (KM)': e.odometer,
             'Distance (KM)': e.distance || 0,
             'Mileage (KM/L)': e.mileage || 0,
-            'Payment Source': e.paymentSource || 'Yatree Office',
+            'Payment Source': e.paymentSource || 'Office',
             'Payment Mode': e.paymentMode,
             'Station': e.stationName || 'N/A',
             'Driver': e.driver || 'N/A',
@@ -664,7 +664,7 @@ const FuelPage = () => {
 
                                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '15px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
                                         <span>{entry.km} KM Reading</span>
-                                        <span>{formatDateIST(entry.date)}</span>
+                                        <span>{formatDateTimeIST(entry.date)}</span>
                                     </div>
 
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
@@ -820,7 +820,7 @@ const FuelPage = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{e.paymentSource || 'Yatree Office'}</div>
+                                            <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{e.paymentSource || 'Office'}</div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
                                             <div style={{ color: 'white', fontWeight: '800', fontSize: '16px' }}>₹{e.amount.toLocaleString()}</div>
@@ -1049,7 +1049,7 @@ const FuelPage = () => {
                                         <div>
                                             <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Payment Source</label>
                                             <select className="input-field" value={formData.paymentSource} onChange={(e) => setFormData({ ...formData, paymentSource: e.target.value })} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }}>
-                                                <option value="Yatree Office" style={{ background: '#0f172a' }}>Yatree Office (Default)</option>
+                                                <option value="Office" style={{ background: '#0f172a' }}>Office (Default)</option>
                                                 <option value="Guest / Client" style={{ background: '#0f172a' }}>Guest / Client</option>
                                             </select>
                                         </div>

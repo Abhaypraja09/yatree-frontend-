@@ -432,7 +432,7 @@ const OutsideCars = () => {
                                     />
                                 </svg>
                                 <span style={{ fontSize: '7px', fontWeight: '950', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px', position: 'relative', zIndex: 1 }}>Payout</span>
-                                <span style={{ color: 'white', fontSize: 'clamp(12px, 3vw, 15px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalPayable > 99999 ? (totalPayable / 1000).toFixed(1) + 'k' : '₹' + totalPayable.toLocaleString()}</span>
+                                <span style={{ color: 'white', fontSize: 'clamp(12px, 3vw, 15px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>₹{totalPayable.toLocaleString()}</span>
                             </motion.div>
 
                             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} style={{

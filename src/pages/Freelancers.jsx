@@ -180,7 +180,7 @@ const Freelancers = () => {
         odometer: '',
         stationName: '',
         paymentMode: 'Cash',
-        paymentSource: 'Yatree Office'
+        paymentSource: 'Office'
     });
     const [documentForm, setDocumentForm] = useState({ documentType: 'Driving License', expiryDate: '' });
     const [documentFile, setDocumentFile] = useState(null);
@@ -579,7 +579,7 @@ const Freelancers = () => {
                     odometer: '',
                     stationName: '',
                     paymentMode: 'Cash',
-                    paymentSource: 'Yatree Office'
+                    paymentSource: 'Office'
                 });
                 setMessage({ type: '', text: '' });
                 fetchAttendance(); // Refresh to show if needed
@@ -2509,7 +2509,7 @@ const Freelancers = () => {
                                                         onChange={(e) => setQuickExpenseData({ ...quickExpenseData, paymentSource: e.target.value })}
                                                         style={{ width: '100%', height: '52px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', color: 'white', padding: '0 15px' }}
                                                     >
-                                                        <option value="Yatree Office" style={{ background: '#0f172a' }}>Yatree Office (Default)</option>
+                                                        <option value="Office" style={{ background: '#0f172a' }}>Office (Default)</option>
                                                         <option value="Driver App" style={{ background: '#0f172a' }}>Personal Pay / Driver</option>
                                                     </select>
                                                 </div>

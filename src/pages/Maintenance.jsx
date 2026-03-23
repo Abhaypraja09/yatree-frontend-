@@ -23,7 +23,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
-import { todayIST, formatDateIST, nowIST } from '../utils/istUtils';
+import { todayIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
 
 const Maintenance = () => {
     const { selectedCompany } = useCompany();
@@ -36,6 +36,7 @@ const Maintenance = () => {
     const [filterType, setFilterType] = useState('All');
     const [selectedMonth, setSelectedMonth] = useState('All');
     const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear());
+    const [pendingExpenses, setPendingExpenses] = useState([]);
     const [filterGarage, setFilterGarage] = useState('All');
     const [selectedBillPhoto, setSelectedBillPhoto] = useState(null);
 
@@ -85,6 +86,7 @@ const Maintenance = () => {
     useEffect(() => {
         if (selectedCompany) {
             fetchRecords();
+            fetchPending();
             fetchVehicles();
             fetchDrivers();
         }
@@ -106,6 +108,20 @@ const Maintenance = () => {
             setRecords(data || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
+    };
+
+    const fetchPending = async () => {
+        if (!selectedCompany?._id) return;
+        try {
+            const userInfoStr = localStorage.getItem('userInfo');
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+            if (!userInfo?.token) return;
+
+            const { data } = await axios.get(`/api/admin/maintenance/pending/${selectedCompany._id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setPendingExpenses(data || []);
+        } catch (err) { console.error(err); }
     };
 
     const fetchVehicles = async () => {
@@ -179,6 +195,7 @@ const Maintenance = () => {
             setShowNextService(false);
             resetForm();
             fetchRecords();
+            fetchPending();
         } catch (err) {
             console.error(err);
             alert(err.response?.data?.message || 'Error saving record');
@@ -250,6 +267,7 @@ const Maintenance = () => {
         try {
             await axios.patch(`/api/admin/attendance/${attendanceId}/expense/${expenseId}`, { status: 'approved' });
             fetchRecords();
+            fetchPending();
         } catch (err) {
             console.error('Approval failed:', err);
             alert(err.response?.data?.message || 'Failed to approve expense');
@@ -261,6 +279,7 @@ const Maintenance = () => {
         try {
             await axios.patch(`/api/admin/attendance/${attendanceId}/expense/${expenseId}`, { status: 'rejected' });
             fetchRecords();
+            fetchPending();
         } catch (err) {
             console.error('Rejection failed:', err);
             alert(err.response?.data?.message || 'Failed to reject expense');
@@ -414,6 +433,68 @@ const Maintenance = () => {
                     </div>
                 </div>
             </header>
+
+            {/* Pending Approvals Section */}
+            {pendingExpenses.length > 0 && (
+                <div style={{ marginBottom: '40px' }}>
+                    <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '800', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f43f5e', boxShadow: '0 0 10px #f43f5e' }}></div>
+                        Driver Approvals (Awaiting)
+                    </h3>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '20px' }}>
+                        {pendingExpenses.map((entry) => (
+                            <motion.div
+                                key={entry._id}
+                                initial={{ opacity: 0, y: 10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="glass-card"
+                                style={{ padding: '20px', borderLeft: '4px solid #fbbf24', background: 'rgba(251, 191, 36, 0.05)' }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                                    <div style={{ display: 'flex', gap: '12px' }}>
+                                        {entry.slipPhoto ? (
+                                            <img
+                                                src={`/${entry.slipPhoto}`}
+                                                onClick={() => setSelectedBillPhoto(entry.slipPhoto)}
+                                                style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                                            />
+                                        ) : (
+                                            <div style={{ width: '50px', height: '50px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                <FileText size={20} color="rgba(255,255,255,0.2)" />
+                                            </div>
+                                        )}
+                                        <div>
+                                            <p style={{ color: 'white', fontWeight: '800', fontSize: '16px', margin: 0 }}>₹{entry.amount}</p>
+                                            <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: '4px 0 0' }}>{entry.driver || 'Driver'} • {entry.carNumber}</p>
+                                        </div>
+                                    </div>
+                                    <span style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', fontSize: '10px', padding: '4px 8px', borderRadius: '6px', fontWeight: '800', textTransform: 'uppercase' }}>{entry.fuelType || 'Service'}</span>
+                                </div>
+
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '15px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
+                                    <span>{entry.km} KM</span>
+                                    <span>{formatDateTimeIST(entry.date)}</span>
+                                </div>
+
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                                    <button
+                                        onClick={() => handleApprove(entry.attendanceId, entry._id)}
+                                        style={{ background: '#10b981', color: 'white', border: 'none', padding: '10px', borderRadius: '8px', fontWeight: '800', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
+                                    >
+                                        Approve
+                                    </button>
+                                    <button
+                                        onClick={() => handleReject(entry.attendanceId, entry._id)}
+                                        style={{ background: 'rgba(255,255,255,0.05)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.3)', padding: '10px', borderRadius: '8px', fontWeight: '800', cursor: 'pointer' }}
+                                    >
+                                        Reject
+                                    </button>
+                                </div>
+                            </motion.div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Summary Row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '30px' }}>

@@ -1,24 +1,22 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
     X, ArrowUpRight, ArrowDownLeft, MapPin, Car, Fuel, ParkingSquare,
     IndianRupee, TrendingUp, Moon, Zap, Camera, CheckCircle2, Clock
 } from 'lucide-react';
 
+import { formatDateIST, formatTimeIST } from '../../utils/istUtils';
+
 /* ─── tiny helpers ─── */
-const fmt = (d) => {
-    if (!d) return '--';
-    const s = typeof d === 'string' ? d.split('T')[0] : new Date(d).toISOString().split('T')[0];
-    const [y, m, dd] = s.split('-');
-    return `${dd}/${m}/${y}`;
-};
-const fmtTime = (t) => t ? new Date(t).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' }) : '--';
+const fmt = (d) => formatDateIST(d);
+const fmtTime = (t) => t ? formatTimeIST(t) : '--';
 
 /* ─── Photo card ─── */
-const PhotoCard = ({ url, label }) => {
+const PhotoCard = ({ url, label, onView }) => {
     if (!url) return null;
     return (
-        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }} onClick={() => window.open(url, '_blank')}>
+        <div style={{ position: 'relative', overflow: 'hidden', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer' }} 
+            onClick={() => onView ? onView(url) : window.open(url, '_blank')}>
             <div style={{ position: 'absolute', top: '8px', left: '8px', zIndex: 2, background: 'rgba(0,0,0,0.7)', padding: '3px 8px', borderRadius: '6px', fontSize: '9px', color: 'rgba(255,255,255,0.8)', fontWeight: '800', textTransform: 'uppercase' }}>{label}</div>
             <img src={url} alt={label} style={{ width: '100%', height: '130px', objectFit: 'cover', transition: 'transform 0.3s' }}
                 onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
@@ -54,6 +52,7 @@ const SH = ({ color, icon: Icon, title, time }) => (
 
 /* ═══════════════════════════════ MAIN MODAL */
 const AttendanceModal = ({ item, onClose }) => {
+    const [viewerUrl, setViewerUrl] = React.useState(null);
     if (!item) return null;
     const isAttendance = item.entryType === 'attendance';
 
@@ -104,15 +103,14 @@ const AttendanceModal = ({ item, onClose }) => {
                 <SH color="#10b981" icon={ArrowUpRight} title="Punch-In Proof" time={fmtTime(item.punchIn?.time)} />
                 {(item.punchIn?.selfie || item.punchIn?.kmPhoto || item.punchIn?.carSelfie) && (
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-                        <PhotoCard url={item.punchIn?.selfie} label="Driver Selfie" />
-                        <PhotoCard url={item.punchIn?.kmPhoto} label="Start KM" />
-                        {item.punchIn?.carSelfie && <div style={{ gridColumn: '1/-1' }}><PhotoCard url={item.punchIn.carSelfie} label="Vehicle" /></div>}
+                        <PhotoCard onView={setViewerUrl} url={item.punchIn?.selfie} label="Driver Selfie" />
+                        <PhotoCard onView={setViewerUrl} url={item.punchIn?.kmPhoto} label="Start KM" />
+                        {item.punchIn?.carSelfie && <div style={{ gridColumn: '1/-1' }}><PhotoCard onView={setViewerUrl} url={item.punchIn.carSelfie} label="Vehicle" /></div>}
                     </div>
                 )}
                 <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '14px' }}>
                     <Stat label="Opening KM" value={openKM != null ? `${openKM} km` : '--'} color="#38bdf8" />
                     <Stat label="Date" value={fmt(item.date)} />
-                    <Stat label="Pickup Location" value={item.pickUpLocation || 'N/A'} color="rgba(255,255,255,0.7)" />
                 </div>
             </div>
 
@@ -123,17 +121,16 @@ const AttendanceModal = ({ item, onClose }) => {
                     <>
                         {(item.punchOut?.selfie || item.punchOut?.kmPhoto || item.punchOut?.carSelfie || item.punchOut?.parkingReceipt) && (
                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-                                <PhotoCard url={item.punchOut?.selfie} label="Driver Selfie" />
-                                <PhotoCard url={item.punchOut?.kmPhoto} label="Close KM" />
-                                <PhotoCard url={item.punchOut?.carSelfie} label="Vehicle" />
-                                <PhotoCard url={item.punchOut?.parkingReceipt} label="Parking Slip" />
+                                <PhotoCard onView={setViewerUrl} url={item.punchOut?.selfie} label="Driver Selfie" />
+                                <PhotoCard onView={setViewerUrl} url={item.punchOut?.kmPhoto} label="Close KM" />
+                                <PhotoCard onView={setViewerUrl} url={item.punchOut?.carSelfie} label="Vehicle" />
+                                <PhotoCard onView={setViewerUrl} url={item.punchOut?.parkingReceipt} label="Parking Slip" />
                             </div>
                         )}
                         <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '14px' }}>
                             <Stat label="Closing KM" value={closeKM != null ? `${closeKM} km` : '--'} color="#f43f5e" />
                             <Stat label="Total KM Run" value={totalKM != null ? `${totalKM} km` : '--'} color="white"
                                 sub={openKM != null && closeKM != null ? `${openKM} → ${closeKM}` : undefined} />
-                            <Stat label="Drop Location" value={item.dropLocation || 'N/A'} color="rgba(255,255,255,0.7)" />
                             {item.punchOut?.otherRemarks && <Stat label="Remarks" value={item.punchOut.otherRemarks} color="#f59e0b" />}
                         </div>
                     </>
@@ -179,13 +176,13 @@ const AttendanceModal = ({ item, onClose }) => {
                                 {fe.km && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '3px' }}>At {fe.km} KM · {fe.quantity || '--'} L</div>}
                                 {fe.slipPhoto && (
                                     <div style={{ marginTop: '8px' }}>
-                                        <PhotoCard url={fe.slipPhoto} label="Fuel Slip" />
+                                        <PhotoCard onView={setViewerUrl} url={fe.slipPhoto} label="Fuel Slip" />
                                     </div>
                                 )}
                             </div>
                         ))}
                         {/* Legacy single entry */}
-                        {fuelEntries.length === 0 && item.fuel?.slipPhoto && <PhotoCard url={item.fuel.slipPhoto} label="Fuel Slip" />}
+                        {fuelEntries.length === 0 && item.fuel?.slipPhoto && <PhotoCard onView={setViewerUrl} url={item.fuel.slipPhoto} label="Fuel Slip" />}
                     </div>
                 )}
 
@@ -198,9 +195,9 @@ const AttendanceModal = ({ item, onClose }) => {
                             color={parkingBy === 'Office' ? '#10b981' : '#a78bfa'}
                             sub={parkingBy === 'Self' ? 'Will be reimbursed to driver' : 'Company expense'} />
                         {(item.parking || []).map((p, i) => (
-                            p.slipPhoto && <div key={i} style={{ marginTop: '8px' }}><PhotoCard url={p.slipPhoto} label={`Parking Slip #${i + 1}`} /></div>
+                            p.slipPhoto && <div key={i} style={{ marginTop: '8px' }}><PhotoCard onView={setViewerUrl} url={p.slipPhoto} label={`Parking Slip #${i + 1}`} /></div>
                         ))}
-                        {item.punchOut?.parkingReceipt && <div style={{ marginTop: '8px' }}><PhotoCard url={item.punchOut.parkingReceipt} label="Parking Slip" /></div>}
+                        {item.punchOut?.parkingReceipt && <div style={{ marginTop: '8px' }}><PhotoCard onView={setViewerUrl} url={item.punchOut.parkingReceipt} label="Parking Slip" /></div>}
                     </div>
                 )}
 
@@ -247,7 +244,7 @@ const AttendanceModal = ({ item, onClose }) => {
                     <Stat label="Odometer" value={item.odometer ? `${item.odometer} KM` : '--'} />
                     <Stat label="Payment" value={item.paymentMethod || item.paymentSource || '--'} />
                 </div>
-                {item.slipPhoto && <div style={{ marginTop: '16px' }}><PhotoCard url={item.slipPhoto} label="Fuel Slip" /></div>}
+                {item.slipPhoto && <div style={{ marginTop: '16px' }}><PhotoCard onView={setViewerUrl} url={item.slipPhoto} label="Fuel Slip" /></div>}
             </div>
         </div>
     );
@@ -282,7 +279,7 @@ const AttendanceModal = ({ item, onClose }) => {
                     <Stat label="Source" value={item.source || 'Admin'} />
                     <Stat label="Status" value={item.isReimbursable ? 'Reimbursable' : 'Office Cost'} color={item.isReimbursable ? '#10b981' : '#f59e0b'} />
                 </div>
-                {item.slipPhoto && <div style={{ marginTop: '16px' }}><PhotoCard url={item.slipPhoto} label="Parking Slip" /></div>}
+                {item.slipPhoto && <div style={{ marginTop: '16px' }}><PhotoCard onView={setViewerUrl} url={item.slipPhoto} label="Parking Slip" /></div>}
             </div>
         </div>
     );
@@ -299,7 +296,7 @@ const AttendanceModal = ({ item, onClose }) => {
                     <Stat label="Amount" value={`₹${item.cost || 0}`} color="#ef4444" />
                     <Stat label="Vendor" value={item.vendor || '--'} />
                 </div>
-                {item.receiptPhoto && <div style={{ marginTop: '16px' }}><PhotoCard url={item.receiptPhoto} label="Bill / Receipt" /></div>}
+                {item.receiptPhoto && <div style={{ marginTop: '16px' }}><PhotoCard onView={setViewerUrl} url={item.receiptPhoto} label="Bill / Receipt" /></div>}
             </div>
         </div>
     );
@@ -315,7 +312,7 @@ const AttendanceModal = ({ item, onClose }) => {
                     <Stat label="Amount" value={`₹${item.amount || 0}`} color="#a855f7" />
                     <Stat label="Remarks" value={item.remarks || '--'} />
                 </div>
-                {item.receiptPhoto && <div style={{ marginTop: '16px' }}><PhotoCard url={item.receiptPhoto} label="Receipt" /></div>}
+                {item.receiptPhoto && <div style={{ marginTop: '16px' }}><PhotoCard onView={setViewerUrl} url={item.receiptPhoto} label="Receipt" /></div>}
             </div>
         </div>
     );
@@ -365,6 +362,26 @@ const AttendanceModal = ({ item, onClose }) => {
                     </button>
                 </div>
             </motion.div>
+
+            {/* Lightbox Viewer */}
+            <AnimatePresence>
+                {viewerUrl && (
+                    <motion.div 
+                        initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                        onClick={() => setViewerUrl(null)}
+                        style={{ position: 'fixed', inset: 0, zIndex: 20000, background: 'rgba(0,0,0,0.92)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px', cursor: 'zoom-out' }}
+                    >
+                        <motion.img 
+                            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
+                            src={viewerUrl} 
+                            style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '12px', boxShadow: '0 25px 50px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }} 
+                        />
+                        <button style={{ position: 'absolute', top: '30px', right: '30px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', borderRadius: '50%', width: '45px', height: '45px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={() => setViewerUrl(null)}>
+                            <X size={24} />
+                        </button>
+                    </motion.div>
+                )}
+            </AnimatePresence>
         </div>
     );
 };
