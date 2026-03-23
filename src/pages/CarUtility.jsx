@@ -138,7 +138,7 @@ const CarUtility = () => {
             border: bFilt.reduce((s, e) => s + (Number(e.amount) || 0), 0),
             service: sFilt.reduce((s, r) => s + (Number(r.amount) || 0), 0),
             total: fFilt.reduce((s, h) => s + (Number(h.amount) || 0), 0) + bFilt.reduce((s, e) => s + (Number(e.amount) || 0), 0) + sFilt.reduce((s, r) => s + (Number(r.amount) || 0), 0),
-            items: { fastag: fHist, border: bAll, service: sAll }
+            items: { fastag: fFilt, border: bFilt, service: sFilt }
         };
     };
 
@@ -285,6 +285,7 @@ const CarUtility = () => {
                                             setViewingImage={setViewingImage} 
                                             submitting={submitting} 
                                             vehicle={selectedVehicle} 
+                                            companyId={selectedCompany?._id}
                                         />
                                     </div>
                                 )}
@@ -318,7 +319,7 @@ const HubCard = ({ n, i: Icon, col, onClick, v, m }) => (
     </div>
 );
 
-const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setViewingImage, submitting, vehicle, getImageUrl }) => {
+const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setViewingImage, submitting, vehicle, getImageUrl, companyId }) => {
     const [form, setForm] = useState({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash' });
     const [file, setFile] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
@@ -348,14 +349,29 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
         
         let success = false;
         if (type === 'fastag') {
-            const data = { amount: form.amount, remarks: form.remarks, method: 'UPI', date: todayIST() };
+            const data = { amount: form.amount, remarks: form.remarks, method: 'UPI', date: form.date || todayIST() };
             if (editingItem) success = await onUpdate(editingItem._id, data);
             else { await onAdd(data); success = true; }
         } else {
             const fd = new FormData(); 
-            Object.keys(form).forEach(k => form[k] && fd.append(k, form[k]));
-            if (file) fd.append(type==='border'?'receiptPhoto':'billPhoto', file);
-            if (type==='services') { fd.append('vehicleId', vehicle._id); fd.append('maintenanceType', 'Driver Services'); }
+            Object.keys(form).forEach(k => {
+                if (form[k] && !['date', 'billDate'].includes(k)) {
+                    fd.append(k, form[k]);
+                }
+            });
+            
+            // Send exactly one date value for both possible backend field names
+            const finalDate = form.date || form.billDate || todayIST();
+            fd.append('date', finalDate);
+            fd.append('billDate', finalDate);
+
+            if (companyId) fd.append('companyId', companyId);
+            if (vehicle?._id) fd.append('vehicleId', vehicle._id);
+            
+            if (file) fd.append(type === 'border' ? 'receiptPhoto' : 'billPhoto', file);
+            if (type === 'services') { 
+                fd.append('maintenanceType', 'Driver Services'); 
+            }
             
             if (editingItem) success = await onUpdate(editingItem._id, fd);
             else { await onAdd(fd); success = true; }
@@ -374,12 +390,22 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                 <h4 style={{ margin: '0 0 30px 0', fontSize: '17px', fontWeight: '900' }}>{editingItem ? 'Edit Entry' : 'Create Entry'}</h4>
                 <div style={{ display: 'grid', gap: '22px' }}>
                     <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>AMOUNT (₹)</label><input type="number" value={form.amount} onChange={e=>setForm({...form, amount:e.target.value})} className="input-field" style={{height:'54px', borderRadius:'14px', background:'rgba(0,0,0,0.3)', fontSize:'18px', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
-                    {type === 'fastag' && <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>NOTE</label><input type="text" value={form.remarks} onChange={e=>setForm({...form, remarks:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}} /></div>}
+                    {type === 'fastag' && (
+                        <>
+                            <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>NOTE</label><input type="text" value={form.remarks} onChange={e=>setForm({...form, remarks:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
+                            <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>DATE</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', colorScheme:'dark', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
+                        </>
+                    )}
                     {type === 'border' && <>
                         <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>STATE/BORDER</label><input type="text" value={form.borderName} onChange={e=>setForm({...form, borderName:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
                         <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>DATE</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', colorScheme:'dark', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
                     </>}
-                    {type === 'services' && <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>SERVICE TYPE</label><select value={form.category} onChange={e=>setForm({...form, category:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}}><option>Car Wash</option><option>Puncture</option><option>Oil/Coolant</option><option>Other</option></select></div>}
+                    {type === 'services' && (
+                        <>
+                            <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>SERVICE TYPE</label><select value={form.category} onChange={e=>setForm({...form, category:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}}><option>Car Wash</option><option>Puncture</option><option>Oil/Coolant</option><option>Other</option></select></div>
+                            <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>DATE</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', colorScheme:'dark', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
+                        </>
+                    )}
                     {(type === 'border' || type === 'services') && <div style={{background:'rgba(0,0,0,0.3)', padding:'20px', borderRadius:'15px', textAlign:'center', border:'1px dashed rgba(255,255,255,0.1)'}}><input type="file" id="sl-file" style={{display:'none'}} onChange={e=>setFile(e.target.files[0])}/><label htmlFor="sl-file" style={{cursor:'pointer', color:color, fontSize:'14px', fontWeight:'900'}}>{file ? file.name : (editingItem ? 'Change Bill/Slip' : 'Upload Bill/Slip')}</label></div>}
                     <div style={{ display: 'flex', gap: '10px' }}>
                         {editingItem && <button onClick={() => setEditingItem(null)} style={{ flex: 1, height:'60px', background:'rgba(255,255,255,0.05)', color:'#fff', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'15px', fontWeight:'900', cursor:'pointer' }}>CANCEL</button>}

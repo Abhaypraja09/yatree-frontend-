@@ -194,10 +194,10 @@ const AdminDashboard = () => {
                             <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                     <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
-                                    <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Control Center</span>
+                                    <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>{t('fleet_control_center')}</span>
                                 </div>
                                 <h1 className="header-title" style={{ color: 'white', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
-                                    Executive <span className="text-gradient-yellow">Dashboard</span>
+                                    {t('executive_dashboard').split(' ')[0]} <span className="text-gradient-yellow">{t('executive_dashboard').split(' ')[1]}</span>
                                 </h1>
                             </div>
                         </div>
@@ -229,7 +229,7 @@ const AdminDashboard = () => {
                                 >
                                     {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
                                         <option key={m} value={m} style={{ background: '#0f172a' }}>
-                                            {new Date(0, m - 1).toLocaleString('default', { month: 'long' })}
+                                            {t('month_' + m)}
                                         </option>
                                     ))}
                                 </select>
@@ -288,10 +288,10 @@ const AdminDashboard = () => {
                             {/* Drivers Service Related */}
                             {(user?.role === 'Admin' || user?.permissions?.driversService) && (
                                 <>
-                                    <StatCard icon={Users} label="TOTAL DRIVER SALARY" value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/driver-salaries')} trend="MONTHLY" />
-                                    <StatCard icon={CreditCard} label="TOTAL DRIVER ADVANCE" value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
-                                    <StatCard icon={Fuel} label="FUEL (MONTHLY)" value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
-                                    <StatCard icon={Users} label="FREELANCERS (MONTHLY)" value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />
+                                    <StatCard icon={Users} label={t('total_driver_salary')} value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/driver-salaries')} trend="MONTHLY" />
+                                    <StatCard icon={CreditCard} label={t('total_driver_advance')} value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
+                                    <StatCard icon={Fuel} label={t('fuel_monthly')} value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
+                                    <StatCard icon={Users} label={t('freelancers_monthly')} value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />
 
                                 </>
                             )}
@@ -301,7 +301,7 @@ const AdminDashboard = () => {
                                 <>
                                     <StatCard
                                         icon={TrendingUp}
-                                        label="OUTSIDE CARS (MONTHLY)"
+                                        label={t('outside_cars_monthly')}
                                         value={`₹${(stats.monthlyOutsideCarsTotal || 0).toLocaleString()}`}
                                         color="#8b5cf6"
                                         loading={loading}
@@ -310,7 +310,7 @@ const AdminDashboard = () => {
                                     />
                                     <StatCard
                                         icon={Calendar}
-                                        label="EVENT MANAGEMENT (M)"
+                                        label={t('event_management_m')}
                                         value={`₹${(stats.monthlyEventTotal || 0).toLocaleString()}`}
                                         color="#ec4899"
                                         loading={loading}
@@ -323,13 +323,13 @@ const AdminDashboard = () => {
                             {/* Vehicles Maintenance Related */}
                             {(user?.role === 'Admin' || user?.permissions?.vehiclesManagement) && (
                                 <>
-                                    <StatCard icon={Wrench} label="MAINTENANCE (MONTHLY)" value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
-                                    <StatCard icon={AlertTriangle} label="ACCIDENT COST (YEARLY)" value={`₹${(stats.yearlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
-                                    <StatCard icon={CreditCard} label="PARKING (MONTHLY)" value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
-                                    <StatCard icon={IndianRupee} label="FASTAG RECHARGE (MONTHLY)" value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/car-utility')} trend="MONTHLY" subValue={`Today: ₹${(stats.dailyFastagTotal || 0).toLocaleString()}`} />
-                                    <StatCard icon={Droplets} label="DRIVER SERVICES (MONTHLY)" value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/car-utility')} />
-                                    <StatCard icon={ShieldCheck} label="WARRANTY COST (TOTAL)" value={`₹${(stats.totalWarrantyCost || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/warranties')} />
-                                    <StatCard icon={Car} label="FLEET SIZE" value={stats.totalVehicles} color="#8b5cf6" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
+                                    <StatCard icon={Wrench} label={t('maintenance_monthly')} value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
+                                    <StatCard icon={AlertTriangle} label={t('accident_cost_yearly')} value={`₹${(stats.yearlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
+                                    <StatCard icon={CreditCard} label={t('parking_monthly')} value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
+                                    <StatCard icon={IndianRupee} label={t('fastag_recharge_monthly')} value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/car-utility')} trend="MONTHLY" subValue={`Today: ₹${(stats.dailyFastagTotal || 0).toLocaleString()}`} />
+                                    <StatCard icon={Droplets} label={t('driver_services_monthly')} value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/car-utility')} />
+                                    <StatCard icon={ShieldCheck} label={t('warranty_cost_total')} value={`₹${(stats.totalWarrantyCost || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/warranties')} />
+                                    <StatCard icon={Car} label={t('fleet_size_label')} value={stats.totalVehicles} color="#8b5cf6" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
                                 </>
                             )}
 
@@ -347,8 +347,8 @@ const AdminDashboard = () => {
                         {/* Expiry Alerts */}
                         {stats.expiringAlerts && stats.expiringAlerts.length > 0 && (
                             <div className="glass-card" style={{
-                                border: '1px solid rgba(244, 63, 94, 0.2)',
-                                background: 'linear-gradient(145deg, rgba(244, 63, 94, 0.05), rgba(15, 23, 42, 0.2))',
+                                border: '1px solid rgba(244, 63, 114, 0.2)',
+                                background: 'linear-gradient(145deg, rgba(244, 63, 114, 0.05), rgba(15, 23, 42, 0.2))',
                                 marginBottom: 'clamp(20px, 4vw, 30px)',
                                 width: '100%',
                                 boxSizing: 'border-box'
@@ -369,7 +369,7 @@ const AdminDashboard = () => {
                                         textTransform: 'uppercase',
                                         letterSpacing: '0.5px'
                                     }}>
-                                        Expiry Alerts
+                                        {t('expiry_alerts')}
                                     </h3>
                                 </div>
                                 <div className="expiry-alerts-grid">
@@ -417,8 +417,8 @@ const AdminDashboard = () => {
                                                     boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
                                                 }}>
                                                     {alert.type === 'Service'
-                                                        ? (alert.daysLeft <= 0 ? `${Math.abs(alert.daysLeft)} KM Overdue` : `${alert.daysLeft} KM Due`)
-                                                        : (alert.daysLeft < 0 ? `${Math.abs(alert.daysLeft)}d Overdue` : (alert.daysLeft === 0 ? 'Today' : `${alert.daysLeft}d Left`))}
+                                                        ? (alert.daysLeft <= 0 ? `${Math.abs(alert.daysLeft)} ${t('km_overdue')}` : `${alert.daysLeft} ${t('km_due')}`)
+                                                        : (alert.daysLeft < 0 ? `${Math.abs(alert.daysLeft)}d ${t('overdue')}` : (alert.daysLeft === 0 ? t('today_label') : `${alert.daysLeft}d ${t('days_left_label')}`))}
                                                 </span>
                                             </div>
                                             <div className="alert-type" style={{ color: 'white', marginBottom: '8px' }}>

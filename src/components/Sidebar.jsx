@@ -25,81 +25,89 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
+import { useLanguage } from '../context/LanguageContext';
 
-const NavItem = ({ item, onClick, isSubItem = false }) => (
-    <NavLink
-        to={item.path}
-        onClick={onClick}
-        end={item.path === '/admin'}
-        style={({ isActive }) => ({
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            padding: isSubItem ? '10px 14px 10px 44px' : '12px 14px',
-            borderRadius: '12px',
-            marginBottom: '4px',
-            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-            background: isActive ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-            color: isActive ? '#a5b4fc' : '#64748b',
-            border: isActive ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid transparent',
-            textDecoration: 'none',
-        })}
-    >
-        {item.icon && <item.icon size={isSubItem ? 18 : 20} />}
-        <span style={{ fontWeight: '600', fontSize: isSubItem ? '14px' : '15px' }}>{item.label}</span>
-    </NavLink>
-);
-
-const NavGroup = ({ title, icon: Icon, children, isOpen, onToggle }) => (
-    <div style={{ marginBottom: '6px' }}>
-        <button
-            onClick={onToggle}
-            style={{
+const NavItem = ({ item, onClick, isSubItem = false }) => {
+    const { t } = useLanguage();
+    return (
+        <NavLink
+            to={item.path}
+            onClick={onClick}
+            end={item.path === '/admin'}
+            style={({ isActive }) => ({
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
-                width: '100%',
-                padding: '12px 14px',
+                gap: '12px',
+                padding: isSubItem ? '10px 14px 10px 44px' : '12px 14px',
                 borderRadius: '12px',
-                background: isOpen ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
-                border: 'none',
-                color: isOpen ? 'white' : '#64748b',
-                cursor: 'pointer',
-                transition: 'all 0.3s ease',
-            }}
+                marginBottom: '4px',
+                transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                background: isActive ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
+                color: isActive ? '#a5b4fc' : '#64748b',
+                border: isActive ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid transparent',
+                textDecoration: 'none',
+            })}
         >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <Icon size={20} />
-                <span style={{ fontWeight: '700', fontSize: '15px' }}>{title}</span>
-            </div>
-            <motion.div
-                animate={{ rotate: isOpen ? 180 : 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
+            {item.icon && <item.icon size={isSubItem ? 18 : 20} />}
+            <span style={{ fontWeight: '600', fontSize: isSubItem ? '14px' : '15px' }}>{t(item.labelKey) || item.label}</span>
+        </NavLink>
+    );
+};
+
+const NavGroup = ({ title, labelKey, icon: Icon, children, isOpen, onToggle }) => {
+    const { t } = useLanguage();
+    return (
+        <div style={{ marginBottom: '6px' }}>
+            <button
+                onClick={onToggle}
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    width: '100%',
+                    padding: '12px 14px',
+                    borderRadius: '12px',
+                    background: isOpen ? 'rgba(255, 255, 255, 0.03)' : 'transparent',
+                    border: 'none',
+                    color: isOpen ? 'white' : '#64748b',
+                    cursor: 'pointer',
+                    transition: 'all 0.3s ease',
+                }}
             >
-                <ChevronDown size={18} />
-            </motion.div>
-        </button>
-        <AnimatePresence>
-            {isOpen && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <Icon size={20} />
+                    <span style={{ fontWeight: '700', fontSize: '15px' }}>{t(labelKey) || title}</span>
+                </div>
                 <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
+                    animate={{ rotate: isOpen ? 180 : 0 }}
                     transition={{ duration: 0.3, ease: "easeInOut" }}
-                    style={{ overflow: 'hidden' }}
                 >
-                    <div style={{ paddingTop: '4px' }}>
-                        {children}
-                    </div>
+                    <ChevronDown size={18} />
                 </motion.div>
-            )}
-        </AnimatePresence>
-    </div>
-);
+            </button>
+            <AnimatePresence>
+                {isOpen && (
+                    <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: 'auto', opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.3, ease: "easeInOut" }}
+                        style={{ overflow: 'hidden' }}
+                    >
+                        <div style={{ paddingTop: '4px' }}>
+                            {children}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+        </div>
+    );
+};
 
 const Sidebar = ({ isOpen, onClose }) => {
     const { logout, user } = useAuth();
     const { selectedCompany } = useCompany();
+    const { language, setLanguage, t } = useLanguage();
     const location = useLocation();
 
     // Group state
@@ -192,58 +200,104 @@ const Sidebar = ({ isOpen, onClose }) => {
                     </div>
                     <div>
                         <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>{selectedCompany?.name || 'Yatree Destination'}</h2>
-                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>Automotive Excellence</p>
+                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>{t('automotive_excellence')}</p>
                     </div>
                 </div>
             </div>
 
+            {/* Language Toggle */}
+            <div style={{ marginBottom: '20px', padding: '0 10px' }}>
+                <div style={{ 
+                    display: 'flex', 
+                    background: 'rgba(255,255,255,0.05)', 
+                    borderRadius: '12px', 
+                    padding: '4px',
+                    border: '1px solid rgba(255,255,255,0.1)'
+                }}>
+                    <button
+                        onClick={() => setLanguage('en')}
+                        style={{
+                            flex: 1,
+                            padding: '8px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: language === 'en' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                            color: language === 'en' ? '#a5b4fc' : '#64748b',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease'
+                        }}
+                    >
+                        English
+                    </button>
+                    <button
+                        onClick={() => setLanguage('hi')}
+                        style={{
+                            flex: 1,
+                            padding: '8px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            background: language === 'hi' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
+                            color: language === 'hi' ? '#a5b4fc' : '#64748b',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            cursor: 'pointer',
+                            transition: 'all 0.3s ease'
+                        }}
+                    >
+                        हिन्दी
+                    </button>
+                </div>
+            </div>
+
             <nav style={{ flex: 1, overflowY: 'auto', paddingRight: '5px' }} className="sidebar-nav-scroll">
-                <NavItem item={{ path: '/admin', icon: LayoutDashboard, label: 'Dashboard' }} onClick={onClose} />
+                <NavItem item={{ path: '/admin', icon: LayoutDashboard, label: 'Dashboard', labelKey: 'dashboard' }} onClick={onClose} />
                 {(user.role === 'Admin' || user.permissions?.driversService) && (
-                    <NavItem item={{ path: '/admin/live-feed', icon: Activity, label: 'Live Feed' }} onClick={onClose} />
+                    <NavItem item={{ path: '/admin/live-feed', icon: Activity, label: 'Live Feed', labelKey: 'live_feed' }} onClick={onClose} />
                 )}
 
                 {(user.role === 'Admin' || user.permissions?.driversService) && (
-                    <NavItem item={{ path: '/admin/log-book', icon: ClipboardList, label: 'Log Book' }} onClick={onClose} />
+                    <NavItem item={{ path: '/admin/log-book', icon: ClipboardList, label: 'Log Book', labelKey: 'log_book' }} onClick={onClose} />
                 )}
 
                 {(user.role === 'Admin' || user.permissions?.driversService) && (
-                    <NavGroup title="Drivers Services" icon={Users} isOpen={openGroups.drivers} onToggle={() => toggleGroup('drivers')}>
-                        <NavItem item={{ path: '/admin/drivers-panel', label: 'Drivers' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/freelancers', label: 'Freelancers' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/parking', label: 'Parking' }} onClick={onClose} isSubItem />
+                    <NavGroup title="Drivers Services" labelKey="drivers_services" icon={Users} isOpen={openGroups.drivers} onToggle={() => toggleGroup('drivers')}>
+                        <NavItem item={{ path: '/admin/drivers-panel', label: 'Drivers', labelKey: 'drivers' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/freelancers', label: 'Freelancers', labelKey: 'freelancers' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/parking', label: 'Parking', labelKey: 'parking' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 
                 {(user.role === 'Admin' || user.permissions?.buySell) && (
-                    <NavGroup title="Buy/Sell" icon={Briefcase} isOpen={openGroups.buysell} onToggle={() => toggleGroup('buysell')}>
-                        <NavItem item={{ path: '/admin/outside-cars', label: 'Outside Cars' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/event-management', label: 'Event Management' }} onClick={onClose} isSubItem />
+                    <NavGroup title="Buy/Sell" labelKey="buy_sell" icon={Briefcase} isOpen={openGroups.buysell} onToggle={() => toggleGroup('buysell')}>
+                        <NavItem item={{ path: '/admin/outside-cars', label: 'Outside Cars', labelKey: 'outside_cars' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/event-management', label: 'Event Management', labelKey: 'event_management' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 
                 {(user.role === 'Admin' || user.permissions?.vehiclesManagement) && (
-                    <NavGroup title="Vehicles Maintenance" icon={Wrench} isOpen={openGroups.maintenance} onToggle={() => toggleGroup('maintenance')}>
-                        <NavItem item={{ path: '/admin/maintenance', label: 'Maintenance' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/vehicle-month-details', label: 'Car Logs' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/vehicles', label: 'Vehicles MGT' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/accident-logs', label: 'Active Logs' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/warranties', label: 'Parts Warranty' }} onClick={onClose} isSubItem />
+                    <NavGroup title="Vehicles Maintenance" labelKey="vehicles_maintenance" icon={Wrench} isOpen={openGroups.maintenance} onToggle={() => toggleGroup('maintenance')}>
+                        <NavItem item={{ path: '/admin/maintenance', label: 'Maintenance', labelKey: 'maintenance' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/vehicle-month-details', label: 'Car Logs', labelKey: 'car_logs' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/vehicles', label: 'Vehicles MGT', labelKey: 'vehicles_mgt' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/accident-logs', label: 'Active Logs', labelKey: 'active_logs' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/warranties', label: 'Parts Warranty', labelKey: 'parts_warranty' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 
                 {(user.role === 'Admin' || user.permissions?.fleetOperations) && (
-                    <NavGroup title="Fleet Operations" icon={Settings} isOpen={openGroups.vehicles} onToggle={() => toggleGroup('vehicles')}>
-                        <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/fuel', label: 'Fuel' }} onClick={onClose} isSubItem />
+                    <NavGroup title="Fleet Operations" labelKey="fleet_operations" icon={Settings} isOpen={openGroups.vehicles} onToggle={() => toggleGroup('vehicles')}>
+                        <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility', labelKey: 'car_utility' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/fuel', label: 'Fuel', labelKey: 'fuel' }} onClick={onClose} isSubItem />
 
                     </NavGroup>
                 )}
 
                 <div style={{ height: '10px' }} />
 
-                {(user.role === 'Admin' || user.permissions?.driversService) && <NavItem item={{ path: '/admin/staff', icon: Users, label: 'Staff Management' }} onClick={onClose} />}
-                {user.role === 'Admin' && <NavItem item={{ path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins' }} onClick={onClose} />}
+                {(user.role === 'Admin' || user.permissions?.driversService) && <NavItem item={{ path: '/admin/staff', icon: Users, label: 'Staff Management', labelKey: 'staff_management' }} onClick={onClose} />}
+                {user.role === 'Admin' && <NavItem item={{ path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins', labelKey: 'manage_admins' }} onClick={onClose} />}
             </nav>
 
             <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
@@ -294,7 +348,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     }}
                 >
                     <LogOut size={20} />
-                    <span style={{ fontWeight: '700', fontSize: '15px' }}>Logout</span>
+                    <span style={{ fontWeight: '700', fontSize: '15px' }}>{t('logout')}</span>
                 </button>
             </div>
         </div>
