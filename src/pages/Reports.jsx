@@ -21,8 +21,9 @@ const fmtTime = (t) => t ? formatTimeIST(t) : '--';
 
 /* ─── shared table theme tokens ─── */
 const TAB_CONFIG = {
-    drivers: { label: 'Staff Drivers', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: UserIcon },
-    freelancers: { label: 'Freelancers', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', icon: Users },
+    drivers: { label: 'Staff Duties', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: UserIcon },
+    freelancers: { label: 'Freelancer Duties', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', icon: Users },
+    parking: { label: 'Parking & Toll', color: '#818cf8', bg: 'rgba(129,140,248,0.12)', icon: ArrowUpRight },
     logbook: { label: 'Overall Log Book', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', icon: FileText },
 };
 
@@ -91,11 +92,11 @@ const TableSection = ({ tabId, fromDate, toDate, chips, headers, rows, empty, co
                                 {headers.map((h, i) => (
                                     <th key={'sum-' + i} style={{ padding: '12px 16px 4px', background: 'rgba(255,255,255,0.02)' }}>
                                         {colSummaries[h] && (
-                                            <div style={{ 
-                                                display: 'inline-block', 
-                                                padding: '4px 8px', 
-                                                borderRadius: '6px', 
-                                                background: 'rgba(255,255,255,0.05)', 
+                                            <div style={{
+                                                display: 'inline-block',
+                                                padding: '4px 8px',
+                                                borderRadius: '6px',
+                                                background: 'rgba(255,255,255,0.05)',
                                                 border: '1px solid rgba(255,255,255,0.08)',
                                                 color: colSummaries[h].color || 'white',
                                                 fontSize: '11px',
@@ -153,7 +154,16 @@ const Reports = ({ isSubComponent = false }) => {
     const [fromDate, setFromDate] = useState(todayIST());
     const [toDate, setToDate] = useState(todayIST());
 
-    const [reports, setReports] = useState([]);
+    const [reportsData, setReportsData] = useState({
+        attendance: [],
+        parking: [],
+        fuel: [],
+        maintenance: [],
+        advances: [],
+        borderTax: [],
+        accidentLogs: [],
+        partsWarranty: []
+    });
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
@@ -216,10 +226,10 @@ const Reports = ({ isSubComponent = false }) => {
         setActiveTabs(prev => {
             // Case: Switching from 'All' state to a specific one
             if (prev.length > 1) return [id];
-            
+
             // Case: If already on this specific one, toggle back to 'All'
             if (prev.includes(id)) return tabList.map(t => t.id);
-            
+
             // Case: Switching between two specific ones
             return [id];
         });
@@ -258,12 +268,12 @@ const Reports = ({ isSubComponent = false }) => {
 
     const fetchReports = async () => {
         if (!selectedCompany) return;
-        if (reports.length === 0) setLoading(true); // Flicker-free background updates
+        if (reportsData.attendance.length === 0) setLoading(true); // Flicker-free background updates
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const { data } = await axios.get(`/api/admin/reports/${selectedCompany._id}?from=${fromDate}&to=${toDate}&_t=${Date.now()}`, { headers: { Authorization: `Bearer ${userInfo.token}` } });
 
-            setReports(data.attendance || []);
+            setReportsData(data);
         } catch (err) { console.error('fetchReports error:', err?.response?.status, err?.response?.config?.url || err.message); }
         finally { setLoading(false); }
     };
@@ -355,8 +365,9 @@ const Reports = ({ isSubComponent = false }) => {
     };
 
     /* ── filtered attendance partitions ── */
-    const staffDrivers = useMemo(() => reports.filter(r => !r.vehicle?.isOutsideCar && !r.isOutsideCar && !r.isFreelancer && !r.driver?.isFreelancer).map(r => ({ ...r, entryType: 'attendance' })), [reports]);
-    const freelancerDrivers = useMemo(() => reports.filter(r => r.isFreelancer || r.driver?.isFreelancer).map(r => ({ ...r, entryType: 'attendance' })), [reports]);
+    const staffDrivers = useMemo(() => reportsData.attendance.filter(r => r.driver && !r.vehicle?.isOutsideCar && !r.isOutsideCar && !r.isFreelancer && !r.driver?.isFreelancer).map(r => ({ ...r, entryType: 'attendance' })), [reportsData.attendance]);
+    const freelancerDrivers = useMemo(() => reportsData.attendance.filter(r => r.driver && (r.isFreelancer || r.driver?.isFreelancer)).map(r => ({ ...r, entryType: 'attendance' })), [reportsData.attendance]);
+    const standaloneParking = useMemo(() => (reportsData.parking || []).map(r => ({ ...r, entryType: 'parking' })), [reportsData.parking]);
 
     const applySearch = (list) => {
         if (!searchTerm) return list;
@@ -391,6 +402,7 @@ const Reports = ({ isSubComponent = false }) => {
 
     /* ── Attendance row renderer ── */
     const AttRow = ({ r, idx, isLogbook = false }) => {
+        const entryType = r.entryType || 'attendance';
         const isCompleted = r.status === 'completed';
         const inTime = fmtTime(r.punchIn?.time);
         const outTime = fmtTime(r.punchOut?.time);
@@ -399,14 +411,26 @@ const Reports = ({ isSubComponent = false }) => {
         const totalKM = r.totalKM ?? (typeof openKM === 'number' && typeof closeKM === 'number' ? closeKM - openKM : '--');
         const wage = Number(r.dailyWage) || 0;
         const bonus = Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
-        const parkAmt = Number(r.punchOut?.tollParkingAmount) || 0;
-        const parkBy = r.punchOut?.parkingPaidBy || 'Self';
+        const parkAmt = (entryType === 'parking' ? Number(r.amount) : Number(r.punchOut?.tollParkingAmount)) || 0;
+        const parkBy = r.punchOut?.parkingPaidBy || (entryType === 'parking' ? 'Office' : 'Self');
         const fuelAmt = Number(r.fuel?.amount) || 0;
 
         // Total to show in salary column (Wage + Bonus + Reimbursable Parking)
         const rowSalaryTotal = wage + bonus + (parkBy !== 'Office' ? parkAmt : 0);
 
         const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
+
+        let typeLabel = isFreelancer ? 'Freelancer' : 'Staff';
+        let typeColor = isFreelancer ? '#a78bfa' : '#34d399';
+        let typeBg = isFreelancer ? 'rgba(139,92,246,0.1)' : 'rgba(16,185,129,0.1)';
+        let typeBorder = isFreelancer ? 'rgba(139,92,246,0.2)' : 'rgba(16,185,129,0.2)';
+
+        if (entryType === 'parking') {
+            typeLabel = 'Parking (Exp)';
+            typeColor = '#818cf8';
+            typeBg = 'rgba(129,140,248,0.1)';
+            typeBorder = 'rgba(129,140,248,0.2)';
+        }
 
         return (
             <TR idx={idx}>
@@ -418,12 +442,12 @@ const Reports = ({ isSubComponent = false }) => {
                             fontWeight: '900',
                             padding: '2px 8px',
                             borderRadius: '6px',
-                            background: isFreelancer ? 'rgba(139,92,246,0.1)' : 'rgba(16,185,129,0.1)',
-                            color: isFreelancer ? '#a78bfa' : '#34d399',
-                            border: `1px solid ${isFreelancer ? 'rgba(139,92,246,0.2)' : 'rgba(16,185,129,0.2)'}`,
+                            background: typeBg,
+                            color: typeColor,
+                            border: `1px solid ${typeBorder}`,
                             textTransform: 'uppercase'
                         }}>
-                            {isFreelancer ? 'Freelancer' : 'Staff'}
+                            {typeLabel}
                         </span>
                     </TD>
                 )}
@@ -433,32 +457,32 @@ const Reports = ({ isSubComponent = false }) => {
                             <UserIcon size={15} color="rgba(255,255,255,0.5)" />
                         </div>
                         <div>
-                            <div style={{ color: 'white', fontWeight: '800', fontSize: '13px', whiteSpace: 'nowrap' }}>{r.driver?.name || r.vehicle?.driverName || 'N/A'}</div>
+                            <div style={{ color: 'white', fontWeight: '800', fontSize: '13px', whiteSpace: 'nowrap' }}>{r.driver?.name || r.vehicle?.driverName || (entryType === 'parking' ? 'Administrative' : 'N/A')}</div>
                             <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '1px' }}><Car size={9} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} />{r.vehicle?.carNumber?.split('#')[0] || '--'}</div>
                         </div>
                     </div>
                 </TD>
-                <TD noWrap><div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#10b981', fontWeight: '800', fontSize: '13px' }}><ArrowUpRight size={13} />{inTime}</div></TD>
+                <TD noWrap>{entryType === 'attendance' ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#10b981', fontWeight: '800', fontSize: '13px' }}><ArrowUpRight size={13} />{inTime}</div> : '--'}</TD>
                 <TD noWrap>
-                    {isCompleted
+                    {entryType !== 'attendance' ? '--' : (isCompleted
                         ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#f43f5e', fontWeight: '800', fontSize: '13px' }}><ArrowDownLeft size={13} />{outTime}</div>
-                        : <StatusBadge ok={false} badLabel="⏳ On Duty" />}
+                        : <StatusBadge ok={false} badLabel="⏳ On Duty" />)}
                 </TD>
                 <TD noWrap>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: '#38bdf8', fontWeight: '900', fontSize: '14px' }}>{openKM}</div>
+                        <div style={{ color: entryType === 'attendance' ? '#38bdf8' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{openKM}</div>
                         <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>OPEN KM</div>
                     </div>
                 </TD>
                 <TD noWrap>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: isCompleted ? '#f43f5e' : 'rgba(255,255,255,0.2)', fontWeight: '900', fontSize: '14px' }}>{closeKM}</div>
+                        <div style={{ color: (entryType === 'attendance' && isCompleted) ? '#f43f5e' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{closeKM}</div>
                         <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>CLOSE KM</div>
                     </div>
                 </TD>
                 <TD noWrap>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{totalKM !== '--' ? totalKM : '--'}</div>
+                        <div style={{ color: entryType === 'attendance' ? 'white' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{totalKM !== '--' ? totalKM : '--'}</div>
                         <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>KM RUN</div>
                     </div>
                 </TD>
@@ -477,22 +501,28 @@ const Reports = ({ isSubComponent = false }) => {
                 </TD>
                 <TD>
                     <div>
-                        <span style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{rowSalaryTotal.toLocaleString()}</span>
-                        {(bonus > 0 || (parkBy !== 'Office' && parkAmt > 0)) && (
-                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
-                                Base ₹{wage} 
-                                {bonus > 0 && ` + ₹${bonus} Bonus`}
-                                {parkBy !== 'Office' && parkAmt > 0 && ` + ₹${parkAmt} Park`}
-                            </div>
+                        {entryType === 'attendance' ? (
+                            <>
+                                <span style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{rowSalaryTotal.toLocaleString()}</span>
+                                {(bonus > 0 || (parkBy !== 'Office' && parkAmt > 0)) && (
+                                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
+                                        Base ₹{wage}
+                                        {bonus > 0 && ` + ₹${bonus} Bonus`}
+                                        {parkBy !== 'Office' && parkAmt > 0 && ` + ₹${parkAmt} Park`}
+                                    </div>
+                                )}
+                            </>
+                        ) : (
+                            <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '12px' }}>—</span>
                         )}
                     </div>
                 </TD>
-                <TD noWrap><StatusBadge ok={isCompleted} okLabel="✓ Done" badLabel="⏳ Active" /></TD>
+                <TD noWrap>{entryType === 'attendance' ? <StatusBadge ok={isCompleted} okLabel="✓ Done" badLabel="⏳ Active" /> : <StatusBadge ok={true} okLabel="✓ Recorded" />}</TD>
                 <TD>
                     <ActionBtns
-                        onView={() => setSelectedItem({ ...r, entryType: 'attendance' })}
-                        onEdit={() => setEditingItem(r)}
-                        onDelete={() => handleDelete({ ...r, entryType: 'attendance' })}
+                        onView={() => setSelectedItem({ ...r, entryType: entryType === 'parking' ? 'parking' : 'attendance' })}
+                        onEdit={entryType === 'attendance' ? () => setEditingItem(r) : null}
+                        onDelete={() => handleDelete({ ...r, entryType: entryType === 'parking' ? 'parking' : 'attendance' })}
                     />
                 </TD>
             </TR>
@@ -508,7 +538,7 @@ const Reports = ({ isSubComponent = false }) => {
             /* ── STAFF DRIVERS ── */
             case 'drivers': {
                 const data = applySearch(staffDrivers);
-                
+
                 // Alignment with Payroll Logic (Base wage once per day, all bonuses sum, plus self-paid parking)
                 const aggr = {};
                 data.forEach(r => {
@@ -540,7 +570,7 @@ const Reports = ({ isSubComponent = false }) => {
             /* ── FREELANCERS ── */
             case 'freelancers': {
                 const data = applySearch(freelancerDrivers);
-                
+
                 // Alignment with Payroll Logic
                 const aggr = {};
                 data.forEach(r => {
@@ -571,6 +601,23 @@ const Reports = ({ isSubComponent = false }) => {
                 );
             }
 
+            /* ── PARKING ── */
+            case 'parking': {
+                const data = applySearch(standaloneParking);
+                const totalParking = data.reduce((s, r) => s + (Number(r.amount) || 0), 0);
+                return (
+                    <TableSection tabId="parking" fromDate={fromDate} toDate={toDate}
+                        colSummaries={{
+                            'Date': { value: `Total: ${data.length}`, color: cfg.color },
+                            'Parking': { value: `₹${totalParking.toLocaleString()}`, color: cfg.color }
+                        }}
+                        headers={ATT_HEADERS}
+                        rows={data.map((r, i) => <AttRow key={r._id} r={r} idx={i} />)}
+                        empty="No standalone parking records found."
+                    />
+                );
+            }
+
             default: return null;
         }
     };
@@ -585,17 +632,19 @@ const Reports = ({ isSubComponent = false }) => {
         );
 
         if (location.pathname.includes('log-book')) {
+            // Keep standalone parking separate and only in its specific tab to avoid duties view clutter
             const data = [...staffDrivers, ...freelancerDrivers].filter(r => {
                 const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
-                if (isFreelancer) return activeTabs.includes('freelancers');
-                return activeTabs.includes('drivers');
+                if (isFreelancer) return activeTabs.includes('freelancers') || activeTabs.length > 1;
+                return activeTabs.includes('drivers') || activeTabs.length > 1;
             }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
             const searchedData = applySearch(data);
-            
+
             // Alignment with Payroll Logic
             const aggr = {};
             searchedData.forEach(r => {
+                if (r.entryType !== 'attendance') return; // Only attendance counts for driver salary aggr here
                 const key = `${r.driver?._id || r.driver || 'unk'}-${r.date}`;
                 if (!aggr[key]) aggr[key] = { w: Number(r.dailyWage) || 0, b: 0, p: 0 };
                 const b = Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
@@ -633,121 +682,121 @@ const Reports = ({ isSubComponent = false }) => {
 
             {/* ── Header ── */}
             {!isSubComponent && (
-            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '28px 0 20px', flexWrap: 'wrap', gap: '16px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                    <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 8px 20px rgba(245,158,11,0.3)' }}>
-                        <FileText size={24} color="white" />
+                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '28px 0 20px', flexWrap: 'wrap', gap: '16px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                        <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 8px 20px rgba(245,158,11,0.3)' }}>
+                            <FileText size={24} color="white" />
+                        </div>
+                        <div>
+                            <div style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Operational Insights</div>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(22px,5vw,30px)', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>
+                                {location.pathname.includes('driver-duty') ? 'Driver ' : (location.pathname.includes('freelancer-duty') ? 'Freelancer ' : (location.pathname.includes('log-book') ? 'Overall ' : 'Daily '))}
+                                <span className="text-gradient-yellow">{location.pathname.includes('log-book') ? 'Log Book' : 'Duty'}</span>
+                            </h1>
+                        </div>
                     </div>
-                    <div>
-                        <div style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Operational Insights</div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(22px,5vw,30px)', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>
-                            {location.pathname.includes('driver-duty') ? 'Driver ' : (location.pathname.includes('freelancer-duty') ? 'Freelancer ' : (location.pathname.includes('log-book') ? 'Overall ' : 'Daily '))}
-                            <span className="text-gradient-yellow">{location.pathname.includes('log-book') ? 'Log Book' : 'Duty'}</span>
-                        </h1>
-                    </div>
-                </div>
 
-                {/* Date Navigator */}
-                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        background: 'rgba(0,0,0,0.4)',
-                        padding: '4px',
-                        borderRadius: '20px',
-                        border: '1px solid rgba(255,255,255,0.06)'
-                    }}>
-                        <button onClick={() => shiftDays(-1)} style={{
-                            width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
-                        }}> <ChevronLeft size={18} /> </button>
+                    {/* Date Navigator */}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            background: 'rgba(0,0,0,0.4)',
+                            padding: '4px',
+                            borderRadius: '20px',
+                            border: '1px solid rgba(255,255,255,0.06)'
+                        }}>
+                            <button onClick={() => shiftDays(-1)} style={{
+                                width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
+                            }}> <ChevronLeft size={18} /> </button>
 
-                        <div
-                            onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                            style={{ height: '42px', minWidth: '140px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '16px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
-                        >
-                            <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
-                                {selectedDay === 'All' ?
-                                    ` ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
-                                    fmt(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
-                            </span>
-                            <input
-                                type="date"
-                                value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
-                                onChange={e => {
-                                    const d = new Date(e.target.value);
-                                    setSelectedYear(d.getFullYear());
-                                    setSelectedMonth(d.getMonth());
-                                    setSelectedDay(d.getDate().toString());
-                                }}
-                                style={{ position: 'absolute', inset: 0, opacity: 0 }}
-                            />
+                            <div
+                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                style={{ height: '42px', minWidth: '140px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '16px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
+                            >
+                                <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                                    {selectedDay === 'All' ?
+                                        ` ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
+                                        fmt(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
+                                </span>
+                                <input
+                                    type="date"
+                                    value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                    onChange={e => {
+                                        const d = new Date(e.target.value);
+                                        setSelectedYear(d.getFullYear());
+                                        setSelectedMonth(d.getMonth());
+                                        setSelectedDay(d.getDate().toString());
+                                    }}
+                                    style={{ position: 'absolute', inset: 0, opacity: 0 }}
+                                />
+                            </div>
+
+                            <button onClick={() => shiftDays(1)} style={{
+                                width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
+                            }}> <ChevronRight size={18} /> </button>
                         </div>
 
-                        <button onClick={() => shiftDays(1)} style={{
-                            width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
-                        }}> <ChevronRight size={18} /> </button>
-                    </div>
+                        {selectedDay !== 'All' && (
+                            <button
+                                onClick={() => setSelectedDay('All')}
+                                style={{
+                                    height: '50px',
+                                    padding: '0 20px',
+                                    borderRadius: '16px',
+                                    background: 'rgba(251, 191, 36, 0.1)',
+                                    border: '1px solid rgba(251, 191, 36, 0.2)',
+                                    color: '#fbbf24',
+                                    fontSize: '11px',
+                                    fontWeight: '950',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
+                                }}
+                            >
+                                <Calendar size={14} /> Full Month
+                            </button>
+                        )}
 
-                    {selectedDay !== 'All' && (
-                        <button
-                            onClick={() => setSelectedDay('All')}
-                            style={{
-                                height: '50px',
-                                padding: '0 20px',
-                                borderRadius: '16px',
-                                background: 'rgba(251, 191, 36, 0.1)',
-                                border: '1px solid rgba(251, 191, 36, 0.2)',
-                                color: '#fbbf24',
-                                fontSize: '11px',
-                                fontWeight: '950',
-                                cursor: 'pointer',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                textTransform: 'uppercase',
-                                letterSpacing: '0.5px'
+                        <select
+                            value={selectedMonth}
+                            onChange={e => {
+                                setSelectedMonth(Number(e.target.value));
+                                setSelectedDay('All');
                             }}
+                            style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px', outline: 'none' }}
                         >
-                            <Calendar size={14} /> Full Month
+                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
+                                <option key={m} value={idx} style={{ background: '#0f172a' }}>{m}</option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={selectedYear}
+                            onChange={e => {
+                                setSelectedYear(Number(e.target.value));
+                                setSelectedDay('All');
+                            }}
+                            style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '80px', outline: 'none' }}
+                        >
+                            {[2024, 2025, 2026, 2027].map(y => (
+                                <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                            ))}
+                        </select>
+
+                        <button
+                            onClick={handleDownloadExcel}
+                            style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 20px', height: '50px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
+                        >
+                            <Download size={14} /> EXCEL
                         </button>
-                    )}
-
-                    <select
-                        value={selectedMonth}
-                        onChange={e => {
-                            setSelectedMonth(Number(e.target.value));
-                            setSelectedDay('All');
-                        }}
-                        style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px', outline: 'none' }}
-                    >
-                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
-                            <option key={m} value={idx} style={{ background: '#0f172a' }}>{m}</option>
-                        ))}
-                    </select>
-
-                    <select
-                        value={selectedYear}
-                        onChange={e => {
-                            setSelectedYear(Number(e.target.value));
-                            setSelectedDay('All');
-                        }}
-                        style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '80px', outline: 'none' }}
-                    >
-                        {[2024, 2025, 2026, 2027].map(y => (
-                            <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
-                        ))}
-                    </select>
-
-                    <button
-                        onClick={handleDownloadExcel}
-                        style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 20px', height: '50px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
-                    >
-                        <Download size={14} /> EXCEL
-                    </button>
-                </div>
-            </header>
+                    </div>
+                </header>
             )}
-            
+
             {/* Sub-component quick header (Date/Search) */}
             {isSubComponent && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px', padding: '0 4px', flexWrap: 'wrap', gap: '15px' }}>
@@ -758,7 +807,7 @@ const Reports = ({ isSubComponent = false }) => {
                         </button>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                             <input type="date" value={fromDate} onChange={e => handleFromDate(e.target.value)}
                                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 10px', borderRadius: '8px', fontSize: '12px', outline: 'none' }} />
                         </div>

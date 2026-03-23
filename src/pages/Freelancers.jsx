@@ -205,8 +205,8 @@ const Freelancers = () => {
     const [expandedLedger, setExpandedLedger] = useState(null);
 
     // Form States
-    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '', nightStayBonus: '500', sameDayReturnBonus: '100' });
-    const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '', nightStayBonus: '500', sameDayReturnBonus: '100' });
+    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '', nightStayBonus: '0', sameDayReturnBonus: '0' });
+    const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '', nightStayBonus: '0', sameDayReturnBonus: '0' });
     const [punchInData, setPunchInData] = useState({
         vehicleId: '',
         km: '',
@@ -1587,7 +1587,7 @@ const Freelancers = () => {
                                             .map(summary => (
                                                 <div
                                                     key={summary.driverId}
-                                                    onClick={() => navigate(`/admin/freelancers/${summary.driverId}?month=${month}&year=${year}`)}
+                                                    onClick={() => navigate(`/admin/freelancers/${summary.driverId}?month=${selectedMonth + 1}&year=${selectedYear}`)}
                                                     style={{
                                                         background: 'rgba(15,23,42,0.6)',
                                                         border: '1px solid rgba(255,255,255,0.07)',

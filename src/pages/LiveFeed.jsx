@@ -10,11 +10,11 @@ import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
-import { 
-    todayIST, 
-    formatDateIST, 
-    formatTimeIST, 
-    nowIST 
+import {
+    todayIST,
+    formatDateIST,
+    formatTimeIST,
+    nowIST
 } from '../utils/istUtils';
 
 const styles = `
@@ -152,7 +152,7 @@ const LiveFeed = () => {
             fetchFeed(); // Refresh to show assignment
             if (selectedDriver) {
                 // Update local selectedDriver state to reflect change immediately if needed
-                const updatedAttendances = selectedDriver.attendances.map(a => 
+                const updatedAttendances = selectedDriver.attendances.map(a =>
                     a._id === attendanceId ? { ...a, eventId: eventId } : a
                 );
                 setSelectedDriver({ ...selectedDriver, attendances: updatedAttendances });
@@ -243,12 +243,12 @@ const LiveFeed = () => {
                             <div style={{ height: '40px', padding: '0 20px', borderRadius: '14px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', alignItems: 'center', gap: '10px', color: 'white', fontWeight: '800', fontSize: '14px', border: '1px solid rgba(14, 165, 233, 0.2)', position: 'relative' }}>
                                 <Calendar size={16} color="#0ea5e9" />
                                 {formatDate(selectedDate)}
-                                <input 
-                                    type="date" 
-                                    value={selectedDate} 
-                                    onChange={(e) => setSelectedDate(e.target.value)} 
+                                <input
+                                    type="date"
+                                    value={selectedDate}
+                                    onChange={(e) => setSelectedDate(e.target.value)}
                                     onClick={(e) => e.target.showPicker?.()}
-                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer', colorScheme: 'dark', zIndex: 10 }} 
+                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer', colorScheme: 'dark', zIndex: 10 }}
                                 />
                             </div>
                             <button
@@ -272,85 +272,105 @@ const LiveFeed = () => {
                 </div>
 
                 {/* Stats Grid — 5 boxes */}
-                <div className="livefeed-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '15px' }}>
-                    {[
-                        { label: 'Active Drivers', value: stats?.liveDriversFeed?.filter(d => d.status === 'Present').length || 0, icon: Users, color: '#10b981', bg: 'rgba(16, 185, 129, 0.1)' },
-                        { label: 'In Use Fleet', value: stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use').length || 0, icon: Car, color: '#0ea5e9', bg: 'rgba(14, 165, 233, 0.1)' },
-                        {
-                            label: 'Daily Fuel',
-                            value: `₹${(stats?.dailyFuelAmount?.total || 0).toLocaleString()}`,
-                            icon: Fuel,
-                            color: '#f59e0b',
-                            bg: 'rgba(245, 158, 11, 0.1)'
-                        },
-                        { label: 'Completed', value: stats?.liveDriversFeed?.filter(d => d.status === 'Completed').length || 0, icon: CheckCircle2, color: '#8b5cf6', bg: 'rgba(139, 92, 246, 0.1)' }
-                    ].map((stat, i) => (
-                        <motion.div
-                            key={i}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            transition={{ delay: i * 0.08 }}
-                            style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px' }}
-                        >
-                            <div style={{ width: '45px', height: '45px', background: stat.bg, borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${stat.color}20`, flexShrink: 0 }}>
-                                <stat.icon size={22} color={stat.color} />
-                            </div>
-                            <div>
-                                <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>{stat.value}</div>
-                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{stat.label}</div>
-                                {stat.subValue && <div style={{ fontSize: '10px', color: stat.color, fontWeight: '900', marginTop: '2px' }}>{stat.subValue}</div>}
-                            </div>
-                        </motion.div>
-                    ))}
-
-                    {/* 5th Box — Company vs Freelancer */}
+                <div className="livefeed-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
                     {(() => {
-                        const feed = stats?.liveDriversFeed || [];
-                        const companyDrivers = feed.filter(d => !d.isFreelancer);
-                        const companyTotal = companyDrivers.length;
-                        const companyActive = companyDrivers.filter(d => d.status === 'Present').length;
-                        const companyCompleted = companyDrivers.filter(d => d.status === 'Completed').length;
-                        const companyAbsent = companyDrivers.filter(d => d.status === 'Absent').length;
+                        const isPast = selectedDate < getTodayLocal();
+                        const driversActive = stats?.liveDriversFeed?.filter(d => d.status === 'Present').length || 0;
+                        const driversCompleted = stats?.liveDriversFeed?.filter(d => d.status === 'Completed').length || 0;
+                        const vehiclesInUse = stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use').length || 0;
 
-                        const freelancerFeed = feed.filter(d => d.isFreelancer);
-                        const freelancerActive = freelancerFeed.filter(d => d.status === 'Present').length;
-                        const freelancerCompleted = freelancerFeed.filter(d => d.status === 'Completed').length;
-                        const freelancerAvailable = freelancerActive + freelancerCompleted;
+                        const regTotal = stats?.dailyStats?.regularSalary || 0;
+                        const freeTotal = stats?.dailyStats?.freelancerSalary || 0;
+                        const fuelAmt = stats?.dailyFuelAmount?.total || 0;
+                        const grandTotal = stats?.dailyStats?.grandTotal || 0;
 
                         return (
-                            <motion.div
-                                initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.32 }}
-                                style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px' }}
-                            >
-                                <div style={{ width: '45px', height: '45px', background: 'rgba(255,255,255,0.05)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(255,255,255,0.1)', flexShrink: 0 }}>
-                                    <PieChart size={22} color="rgba(255,255,255,0.8)" />
-                                </div>
-                                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                                    {/* Company section */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '9px', fontWeight: '900', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.8px' }}>COMPANY (TODAY)</span>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <span style={{ fontSize: '18px', fontWeight: '950', color: 'white' }}>{companyActive + companyCompleted}</span>
-                                            <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
-                                                <span style={{ color: '#10b981' }}>{companyActive} Act</span> • <span style={{ color: '#8b5cf6' }}>{companyCompleted} Done</span>
-                                            </div>
+                            <>
+                                {/* 1. Drivers Box */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                                    style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                >
+                                    <div style={{ width: '45px', height: '45px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #10b98120', flexShrink: 0 }}>
+                                        <Users size={22} color="#10b981" />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>{isPast ? (driversActive + driversCompleted) : driversActive}</div>
+                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{isPast ? 'Total Drivers' : 'Active Drivers'}</div>
+                                    </div>
+                                </motion.div>
+
+                                {/* 2. Fleet Box */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                                    style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                >
+                                    <div style={{ width: '45px', height: '45px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #0ea5e920', flexShrink: 0 }}>
+                                        <Car size={22} color="#0ea5e9" />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>{vehiclesInUse}</div>
+                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{isPast ? 'Used Fleet' : 'In Use Fleet'}</div>
+                                    </div>
+                                </motion.div>
+
+                                {/* 3. Company Total (Pay + Parking) */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+                                    style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                >
+                                    <div style={{ width: '45px', height: '45px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #10b98120', flexShrink: 0 }}>
+                                        <IndianRupee size={22} color="#10b981" />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{regTotal.toLocaleString()}</div>
+                                        <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver Salary</div>
+                                    </div>
+                                </motion.div>
+
+                                {/* 4. Freelancer Total (Pay + Parking) */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
+                                    style={{ background: 'rgba(129, 140, 248, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(129, 140, 248, 0.1)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                >
+                                    <div style={{ width: '45px', height: '45px', background: 'rgba(129, 140, 248, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #818cf820', flexShrink: 0 }}>
+                                        <Briefcase size={22} color="#818cf8" />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{freeTotal.toLocaleString()}</div>
+                                        <div style={{ fontSize: '11px', color: '#818cf8', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Freelancer Salary
                                         </div>
                                     </div>
+                                </motion.div>
 
-                                    <div style={{ height: '1px', background: 'rgba(255,255,255,0.06)' }} />
-
-                                    {/* Freelancer section */}
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                        <span style={{ fontSize: '9px', fontWeight: '900', color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.8px' }}>FREELANCER (TODAY)</span>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <span style={{ fontSize: '18px', fontWeight: '950', color: 'white' }}>{freelancerAvailable}</span>
-                                            <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
-                                                <span style={{ color: '#10b981' }}>{freelancerActive} Act</span> • <span style={{ color: '#818cf8' }}>{freelancerCompleted} Done</span>
-                                            </div>
-                                        </div>
+                                {/* 5. Daily Fuel */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
+                                    style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                >
+                                    <div style={{ width: '45px', height: '45px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #f59e0b20', flexShrink: 0 }}>
+                                        <Fuel size={22} color="#f59e0b" />
                                     </div>
-                                </div>
-                            </motion.div>
+                                    <div>
+                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{fuelAmt.toLocaleString()}</div>
+                                        <div style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Fuel</div>
+                                    </div>
+                                </motion.div>
+
+                                {/* 6. Grand Total */}
+                                <motion.div
+                                    initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+                                    style={{ background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.2))', padding: '20px', borderRadius: '24px', border: '1px solid rgba(14, 165, 233, 0.3)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                >
+                                    <div style={{ width: '45px', height: '45px', background: 'rgba(14, 165, 233, 0.2)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #0ea5e980', flexShrink: 0 }}>
+                                        <Activity size={22} color="#0ea5e9" />
+                                    </div>
+                                    <div>
+                                        <div style={{ fontSize: '20px', fontWeight: '1000', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{(grandTotal + fuelAmt).toLocaleString()}</div>
+                                        <div style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '1000', textTransform: 'uppercase', letterSpacing: '1px' }}>Net Daily Cost</div>
+                                    </div>
+                                </motion.div>
+                            </>
                         );
                     })()}
                 </div>
@@ -466,7 +486,7 @@ const LiveFeed = () => {
                                         {driver.attendances && driver.attendances.length > 0 ? (
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                 {driver.attendances.map((att, idx) => {
-                                                    const isComp = att.status === 'completed' && !!att.punchOut?.time;
+                                                    const isComp = att.status === 'completed';
                                                     return (
                                                         <div key={idx} style={{
                                                             padding: '12px',
@@ -557,8 +577,8 @@ const LiveFeed = () => {
                                             {vehicle.attendances && vehicle.attendances.length > 0 ? (
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                     {vehicle.attendances.map((att, idx) => {
-                                                        const isComp = att.status === 'completed' && !!att.punchOut?.time;
-                                                        return (
+                                                         const isComp = att.status === 'completed';
+                                                         return (
                                                             <div key={idx} style={{
                                                                 padding: '10px 14px',
                                                                 borderRadius: '14px',
@@ -666,14 +686,14 @@ const LiveFeed = () => {
                                             </div>
                                         </div>
 
-                                        <div style={{ 
-                                            display: 'grid', 
-                                            gridTemplateColumns: '1fr 1fr', 
-                                            gap: '12px', 
-                                            padding: '16px', 
-                                            background: 'rgba(15, 23, 42, 0.4)', 
-                                            borderRadius: '20px', 
-                                            border: '1px solid rgba(255,255,255,0.03)' 
+                                        <div style={{
+                                            display: 'grid',
+                                            gridTemplateColumns: '1fr 1fr',
+                                            gap: '12px',
+                                            padding: '16px',
+                                            background: 'rgba(15, 23, 42, 0.4)',
+                                            borderRadius: '20px',
+                                            border: '1px solid rgba(255,255,255,0.03)'
                                         }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Driver</span>
@@ -698,12 +718,12 @@ const LiveFeed = () => {
                                         </div>
 
                                         {(fuelEntry.stationName || fuelEntry.source) && (
-                                            <div style={{ 
-                                                display: 'flex', 
-                                                alignItems: 'center', 
-                                                gap: '10px', 
-                                                color: 'rgba(255,255,255,0.5)', 
-                                                fontSize: '11px', 
+                                            <div style={{
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '10px',
+                                                color: 'rgba(255,255,255,0.5)',
+                                                fontSize: '11px',
                                                 fontWeight: '700',
                                                 padding: '0 4px'
                                             }}>
@@ -820,14 +840,14 @@ const LiveFeed = () => {
                                                         borderRadius: '8px',
                                                         fontSize: '11px',
                                                         fontWeight: '900',
-                                                        background: (att.status === 'completed' && !!att.punchOut?.time) ? 'rgba(139, 92, 246, 0.1)' : 'rgba(14, 165, 233, 0.1)',
-                                                        color: (att.status === 'completed' && !!att.punchOut?.time) ? '#8b5cf6' : '#0ea5e9',
-                                                        border: `1px solid ${(att.status === 'completed' && !!att.punchOut?.time) ? 'rgba(139, 92, 246, 0.2)' : 'rgba(14, 165, 233, 0.2)'}`,
+                                                        background: att.status === 'completed' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(14, 165, 233, 0.1)',
+                                                        color: att.status === 'completed' ? '#8b5cf6' : '#0ea5e9',
+                                                        border: `1px solid ${att.status === 'completed' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(14, 165, 233, 0.2)'}`,
                                                         display: 'flex',
                                                         alignItems: 'center',
                                                         gap: '8px'
                                                     }}>
-                                                        {(att.status === 'completed' && !!att.punchOut?.time) ? 'COMPLETED' : (att.punchOut?.time ? 'COMPLETED' : 'ON DUTY')}
+                                                        {att.status === 'completed' ? 'COMPLETED' : 'ON DUTY'}
 
                                                         {user?.role === 'Admin' && (
                                                             <button
@@ -899,7 +919,7 @@ const LiveFeed = () => {
                                                         <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>▼</div>
                                                     </div>
                                                     {att.eventId && (
-                                                        <button 
+                                                        <button
                                                             onClick={() => handleAssignEvent(att._id, '')}
                                                             style={{ background: 'transparent', border: 'none', color: '#f43f5e', fontSize: '10px', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase' }}
                                                         >
@@ -1045,6 +1065,67 @@ const LiveFeed = () => {
                                                                 <div style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: '900', letterSpacing: '1px' }}>IN PROGRESS</div>
                                                             </div>
                                                         )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Financial Breakdown (Hisab) */}
+                                                <div style={{
+                                                    background: 'rgba(16, 185, 129, 0.05)',
+                                                    borderRadius: '20px',
+                                                    border: '1px solid rgba(16, 185, 129, 0.1)',
+                                                    padding: '20px',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: '15px'
+                                                }}>
+                                                    <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                        <IndianRupee size={12} /> Financial Breakdown
+                                                    </div>
+
+                                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '15px' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>DAILY WAGE</span>
+                                                            <span style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>₹{att.dailyWage || 0}</span>
+                                                        </div>
+
+                                                        {(Number(att.punchOut?.allowanceTA) > 0 || Number(att.punchOut?.nightStayAmount) > 0 || Number(att.outsideTrip?.bonusAmount) > 0) && (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>BONUS / TA</span>
+                                                                <span style={{ color: '#fbbf24', fontWeight: '900', fontSize: '16px' }}>
+                                                                    ₹{Math.max((Number(att.punchOut?.allowanceTA) || 0) + (Number(att.punchOut?.nightStayAmount) || 0), Number(att.outsideTrip?.bonusAmount) || 0)}
+                                                                </span>
+                                                            </div>
+                                                        )}
+
+                                                        {(Number(att.punchOut?.tollParkingAmount) > 0) && (
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>PARKING</span>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                    <span style={{ color: '#818cf8', fontWeight: '900', fontSize: '16px' }}>₹{att.punchOut.tollParkingAmount}</span>
+                                                                    <span style={{
+                                                                        fontSize: '8px',
+                                                                        padding: '2px 6px',
+                                                                        background: att.punchOut.parkingPaidBy === 'Office' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(139, 92, 246, 0.1)',
+                                                                        color: att.punchOut.parkingPaidBy === 'Office' ? '#10b981' : '#a78bfa',
+                                                                        borderRadius: '4px',
+                                                                        fontWeight: '900'
+                                                                    }}>
+                                                                        {att.punchOut.parkingPaidBy === 'Office' ? 'OFFICE' : 'SELF'}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        )}
+
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', background: 'rgba(16, 185, 129, 0.1)', padding: '8px 12px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                                                            <span style={{ fontSize: '9px', color: '#10b981', fontWeight: '900' }}>SHIFT TOTAL</span>
+                                                            <span style={{ color: '#10b981', fontWeight: '950', fontSize: '18px' }}>
+                                                                ₹{(
+                                                                    (Number(att.dailyWage) || 0) +
+                                                                    Math.max((Number(att.punchOut?.allowanceTA) || 0) + (Number(att.punchOut?.nightStayAmount) || 0), Number(att.outsideTrip?.bonusAmount) || 0) +
+                                                                    (att.punchOut?.parkingPaidBy !== 'Office' ? (Number(att.punchOut?.tollParkingAmount) || 0) : 0)
+                                                                ).toLocaleString()}
+                                                            </span>
+                                                        </div>
                                                     </div>
                                                 </div>
 
@@ -1246,15 +1327,15 @@ const LiveFeed = () => {
             {/* Lightbox Viewer */}
             <AnimatePresence>
                 {viewerUrl && (
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
                         onClick={() => setViewerUrl(null)}
                         style={{ position: 'fixed', inset: 0, zIndex: 30000, background: 'rgba(0,0,0,0.95)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: 'clamp(20px, 5vw, 60px)', cursor: 'zoom-out' }}
                     >
-                        <motion.img 
+                        <motion.img
                             initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-                            src={viewerUrl} 
-                            style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '20px', boxShadow: '0 40px 100px rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)' }} 
+                            src={viewerUrl}
+                            style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: '20px', boxShadow: '0 40px 100px rgba(0,0,0,0.8)', border: '1px solid rgba(255,255,255,0.1)' }}
                         />
                         <button style={{ position: 'absolute', top: '30px', right: '30px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', borderRadius: '50%', width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', backdropFilter: 'blur(5px)' }} onClick={() => setViewerUrl(null)}>
                             <X size={24} />
