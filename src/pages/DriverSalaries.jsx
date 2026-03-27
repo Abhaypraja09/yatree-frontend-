@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from '../api/axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -54,6 +54,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         totalAmount: '',
         tenureMonths: '',
         monthlyEMI: '',
+        startDate: todayIST(),
         remarks: ''
     });
     const [submittingLoan, setSubmittingLoan] = useState(false);
@@ -120,6 +121,36 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         }
     };
 
+    const filteredLoans = useMemo(() => {
+        if (!loans) return [];
+        const currentMonthNum = Number(month);
+        const currentYearNum = Number(year);
+        // Correct total for comparisons (Year * 12 + Month)
+        const selectedMonthValue = (currentYearNum * 12) + currentMonthNum;
+
+        return loans.filter(loan => {
+            if (!loan.startDate) return true; // Show if no date to be safe
+            const start = new Date(loan.startDate);
+            const startMonth = start.getMonth() + 1;
+            const startYear = start.getFullYear();
+            const loanStartValue = (startYear * 12) + startMonth;
+            
+            // 1. HIDDEN in Future: If loan starts AFTER the selected month
+            if (loanStartValue > selectedMonthValue) return false;
+
+            // 2. STRICT TENURE FILTER: Only show during the planned months
+            // Fallback: If tenureMonths is missing, calculate from Total/EMI
+            const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 12);
+            const loanEndValue = loanStartValue + tenure - 1; 
+
+            const isDuringTenure = selectedMonthValue <= loanEndValue;
+            const isActiveStatus = loan.status !== 'Completed';
+
+            // Show ONLY during the tenure period itself
+            return isDuringTenure && isActiveStatus;
+        });
+    }, [loans, month, year]);
+
     const handleRecordLoan = async (e) => {
         if (e) e.preventDefault();
         setSubmittingLoan(true);
@@ -142,7 +173,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             }
             setShowLoanModal(false);
             setEditingLoanId(null);
-            setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', remarks: '' });
+            setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', startDate: todayIST(), remarks: '' });
             fetchLoans();
             fetchSalaries();
         } catch (err) {
@@ -154,12 +185,13 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
     const handleEditLoan = (loan) => {
         setEditingLoanId(loan._id);
-        const tenure = loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : '';
+        const tenure = loan.tenureMonths || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : '');
         setLoanFormData({
             driverId: loan.driver?._id || loan.driver,
             totalAmount: loan.totalAmount,
             tenureMonths: tenure,
             monthlyEMI: loan.monthlyEMI,
+            startDate: loan.startDate ? toISTDateString(loan.startDate) : todayIST(),
             remarks: loan.remarks || ''
         });
         setShowLoanModal(true);
@@ -1088,6 +1120,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         <thead>
                             <tr style={{ textAlign: 'left' }}>
                                 <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
+                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Start Date</th>
                                 <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Amount</th>
                                 <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Monthly EMI</th>
                                 <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remaining</th>
@@ -1096,12 +1129,12 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {loans.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '60px 0', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '20px' }}>
+                            {filteredLoans.length === 0 ? (
+                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '60px 0', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '20px' }}>
                                     <Wallet size={40} style={{ opacity: 0.1, marginBottom: '10px', color: '#6366f1' }} />
-                                    <p style={{ color: 'var(--text-muted)', margin: 0 }}>No active loans found.</p>
+                                    <p style={{ color: 'var(--text-muted)', margin: 0 }}>No active loans found for this period.</p>
                                 </td></tr>
-                            ) : loans.map((loan, idx) => (
+                            ) : filteredLoans.map((loan, idx) => (
                                 <motion.tr
                                     key={loan._id}
                                     initial={{ opacity: 0, y: 10 }}
@@ -1112,6 +1145,24 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                     <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
                                         <div style={{ color: 'white', fontWeight: '700' }}>{loan.driver?.name}</div>
                                         <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{loan.driver?.mobile}</div>
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{loan.startDate ? formatDateIST(loan.startDate) : '—'}</div>
+                                        {(() => {
+                                            const sDate = new Date(loan.startDate);
+                                            const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
+                                            const selVal = (parseInt(year) * 12) + parseInt(month);
+                                            const monthIdx = (selVal - sVal) + 1;
+                                            
+                                            // Smart fallback for tenure (Total / EMI)
+                                            const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
+                                            
+                                            return (
+                                                <div style={{ fontSize: '10px', color: '#818cf8', fontWeight: '900', marginTop: '4px', textTransform: 'uppercase' }}>
+                                                    {monthIdx <= tenure ? `Month ${monthIdx} of ${tenure}` : `Extended (Past ${tenure}M)`}
+                                                </div>
+                                            );
+                                        })()}
                                     </td>
                                     <td style={{ padding: '20px 25px' }}>
                                         <div style={{ color: 'white', fontWeight: '800' }}>₹ {loan.totalAmount?.toLocaleString()}</div>
@@ -1185,7 +1236,11 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         ))}
                                     </select>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
+                                    <div style={{ gridColumn: 'span 1' }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Loan Date</label>
+                                        <input type="date" className="input-field" required value={loanFormData.startDate} onChange={(e) => setLoanFormData({ ...loanFormData, startDate: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                    </div>
                                     <div style={{ gridColumn: 'span 1' }}>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Total Loan</label>
                                         <input type="number" className="input-field" required value={loanFormData.totalAmount} onChange={(e) => setLoanFormData({ ...loanFormData, totalAmount: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="₹ 0" />
@@ -1195,7 +1250,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         <input type="number" className="input-field" required value={loanFormData.tenureMonths} onChange={(e) => setLoanFormData({ ...loanFormData, tenureMonths: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="E.g. 12" />
                                     </div>
                                     <div style={{ gridColumn: 'span 1' }}>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Monthly EMI</label>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>EMI</label>
                                         <input type="number" className="input-field" readOnly value={loanFormData.monthlyEMI} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.05)', color: '#fbbf24', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed', fontWeight: '800' }} placeholder="₹ 0" />
                                     </div>
                                 </div>

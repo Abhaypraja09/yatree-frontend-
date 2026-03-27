@@ -18,7 +18,8 @@ import {
     Filter,
     ChevronDown,
     Upload,
-    FileSpreadsheet
+    FileSpreadsheet,
+    Settings
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -39,6 +40,7 @@ const Maintenance = () => {
     const [pendingExpenses, setPendingExpenses] = useState([]);
     const [filterGarage, setFilterGarage] = useState('All');
     const [selectedBillPhoto, setSelectedBillPhoto] = useState(null);
+    const [activeCategory, setActiveCategory] = useState('All');
 
     // Form State
     const [formData, setFormData] = useState({
@@ -322,12 +324,21 @@ const Maintenance = () => {
 
         // Exclude Wash, Puncture, Tissues, Water, Cleaning, Masks, Sanitizers as they are in Driver Services
         const serviceRegex = /wash|puncture|puncher|tissue|water|cleaning|mask|sanitizer/i;
-        const isService = serviceRegex.test(r.category || '') || 
-                          serviceRegex.test(r.description || '') || 
-                          serviceRegex.test(r.maintenanceType || '');
+        const isService = serviceRegex.test(r.category || '') ||
+            serviceRegex.test(r.description || '') ||
+            serviceRegex.test(r.maintenanceType || '');
 
-        return matchesSearch && matchesType && matchesGarage && matchesVehicle && !isService;
+        const matchesCategory = activeCategory === 'All' || r.maintenanceType === activeCategory;
+
+        return matchesSearch && matchesType && matchesGarage && matchesVehicle && matchesCategory && !isService;
     });
+
+    const categoryStats = maintenanceTypes.reduce((acc, type) => {
+        acc[type] = (records || []).filter(r => r.maintenanceType === type).length;
+        return acc;
+    }, {});
+
+    const frequencyInSelectedPeriod = filteredRecords.length;
 
     const totalMaintenanceCost = filteredRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
@@ -534,21 +545,21 @@ const Maintenance = () => {
 
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#8b5cf6' }}>
-                            <MapPin size={20} />
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Garage Filter</p>
-                            <select
-                                value={filterGarage}
-                                onChange={(e) => setFilterGarage(e.target.value)}
-                                style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '700', fontSize: '14px', width: '100%', outline: 'none', cursor: 'pointer', textOverflow: 'ellipsis' }}
-                            >
-                                <option value="All" style={{ background: '#1e293b', color: 'white' }}>All Garages</option>
-                                {uniqueGarages.map(g => <option key={g} value={g} style={{ background: '#1e293b', color: 'white' }}>{g}</option>)}
-                            </select>
-                        </div>
-                    </motion.div>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#8b5cf6' }}>
+                        <MapPin size={20} />
+                    </div>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Garage Filter</p>
+                        <select
+                            value={filterGarage}
+                            onChange={(e) => setFilterGarage(e.target.value)}
+                            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '700', fontSize: '14px', width: '100%', outline: 'none', cursor: 'pointer', textOverflow: 'ellipsis' }}
+                        >
+                            <option value="All" style={{ background: '#1e293b', color: 'white' }}>All Garages</option>
+                            {uniqueGarages.map(g => <option key={g} value={g} style={{ background: '#1e293b', color: 'white' }}>{g}</option>)}
+                        </select>
+                    </div>
+                </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fbbf24' }}>
@@ -568,165 +579,255 @@ const Maintenance = () => {
                 </motion.div>
             </div>
 
+            {/* Simplified & Compact Category Filter Bar */}
+            <div style={{ marginBottom: '30px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', paddingLeft: '4px' }}>
+                    <h3 style={{ color: 'white', fontSize: '15px', fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Settings size={16} color="#fbbf24" /> Maintenance Categories
+                    </h3>
+                    {activeCategory !== 'All' && (
+                        <motion.span 
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', padding: '2px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251, 191, 36, 0.2)' }}
+                        >
+                            {frequencyInSelectedPeriod} {frequencyInSelectedPeriod === 1 ? 'Service' : 'Services'} this {selectedMonth === 'All' ? 'Year' : 'Month'}
+                        </motion.span>
+                    )}
+                </div>
+                
+                <div className="premium-scroll" style={{ 
+                    display: 'flex', 
+                    gap: '6px', 
+                    overflowX: 'auto', 
+                    padding: '6px',
+                    background: 'rgba(15, 23, 42, 0.3)',
+                    borderRadius: '18px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    scrollbarWidth: 'none' 
+                }}>
+                    <button
+                        onClick={() => setActiveCategory('All')}
+                        style={{
+                            padding: '10px 20px',
+                            background: activeCategory === 'All' ? 'rgba(251, 191, 36, 0.15)' : 'transparent',
+                            border: 'none',
+                            borderRadius: '12px',
+                            cursor: 'pointer',
+                            color: activeCategory === 'All' ? '#fbbf24' : 'rgba(255,255,255,0.4)',
+                            fontSize: '11px',
+                            fontWeight: '800',
+                            transition: '0.2s',
+                            whiteSpace: 'nowrap'
+                        }}
+                    >
+                        All Types
+                    </button>
+
+                    {maintenanceTypes.map((type) => (
+                        <motion.button
+                            key={type}
+                            whileTap={{ scale: 0.96 }}
+                            onClick={() => setActiveCategory(type)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '10px 20px',
+                                background: activeCategory === type ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                                border: 'none',
+                                borderRadius: '12px',
+                                cursor: 'pointer',
+                                transition: '0.2s',
+                                whiteSpace: 'nowrap'
+                            }}
+                        >
+                            <span style={{ 
+                                fontSize: '11px', 
+                                fontWeight: '800', 
+                                color: activeCategory === type ? '#38bdf8' : 'rgba(255,255,255,0.5)',
+                                letterSpacing: '0.3px'
+                            }}>
+                                {type}
+                            </span>
+                            
+                            {/* Simple dynamic count bubble */}
+                            {records.filter(r => r.maintenanceType === type).length > 0 && (
+                                <span style={{ 
+                                    padding: '2px 7px', 
+                                    borderRadius: '6px', 
+                                    background: activeCategory === type ? '#38bdf8' : 'rgba(255,255,255,0.06)', 
+                                    color: activeCategory === type ? 'black' : 'rgba(255,255,255,0.3)',
+                                    fontSize: '9px',
+                                    fontWeight: '950'
+                                }}>
+                                    {records.filter(r => r.maintenanceType === type).length}
+                                </span>
+                            )}
+                        </motion.button>
+                    ))}
+                </div>
+            </div>
+
             {/* Desktop Table Content */}
             <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
-                    {loading ? (
-                        <div style={{ padding: '100px', textAlign: 'center' }}>
-                            <div className="spinner" style={{ margin: '0 auto' }}></div>
-                            <p style={{ color: 'var(--text-muted)', marginTop: '20px' }}>Loading history...</p>
-                        </div>
-                    ) : (
-                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
-                            <thead>
-                                <tr style={{ textAlign: 'left', background: 'rgba(255,255,255,0.02)' }}>
-                                    <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Date & Vehicle</th>
-                                    <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Service Details</th>
-                                    <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Garage / Vendor</th>
-                                    <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Cost & Pay</th>
-                                    <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
+                {loading ? (
+                    <div style={{ padding: '100px', textAlign: 'center' }}>
+                        <div className="spinner" style={{ margin: '0 auto' }}></div>
+                        <p style={{ color: 'var(--text-muted)', marginTop: '20px' }}>Loading history...</p>
+                    </div>
+                ) : (
+                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
+                        <thead>
+                            <tr style={{ textAlign: 'left', background: 'rgba(255,255,255,0.02)' }}>
+                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Date & Vehicle</th>
+                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Service Details</th>
+                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Garage / Vendor</th>
+                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Cost & Pay</th>
+                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {filteredRecords.length === 0 ? (
+                                <tr>
+                                    <td colSpan="5" style={{ padding: '100px', textAlign: 'center' }}>
+                                        <Wrench size={48} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
+                                        <h3 style={{ color: 'white' }}>No history found</h3>
+                                    </td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {filteredRecords.length === 0 ? (
-                                    <tr>
-                                        <td colSpan="5" style={{ padding: '100px', textAlign: 'center' }}>
-                                            <Wrench size={48} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
-                                            <h3 style={{ color: 'white' }}>No history found</h3>
-                                        </td>
-                                    </tr>
-                                ) : filteredRecords.map((record, idx) => (
-                                    <motion.tr
-                                        key={record._id || idx}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
-                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
-                                    >
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>
-                                                {record.billDate ? formatDateIST(record.billDate) : 'N/A'}
+                            ) : filteredRecords.map((record, idx) => (
+                                <motion.tr
+                                    key={record._id || idx}
+                                    initial={{ opacity: 0, x: -10 }}
+                                    animate={{ opacity: 1, x: 0 }}
+                                    transition={{ delay: idx * 0.05 }}
+                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
+                                >
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>
+                                            {record.billDate ? formatDateIST(record.billDate) : 'N/A'}
+                                        </div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                            <Car size={12} style={{ color: 'var(--primary)' }} />
+                                            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontWeight: '700' }}>{record.vehicle?.carNumber || 'N/A'}</span>
+                                        </div>
+                                        {record.driver && (
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Driver: {record.driver.name}</span>
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                                                <Car size={12} style={{ color: 'var(--primary)' }} />
-                                                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontWeight: '700' }}>{record.vehicle?.carNumber || 'N/A'}</span>
-                                            </div>
-                                            {record.driver && (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                                    <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Driver: {record.driver.name}</span>
-                                                </div>
-                                            )}
-                                        </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                        )}
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <span style={{
+                                                fontSize: '10px',
+                                                padding: '2px 8px',
+                                                borderRadius: '4px',
+                                                background: 'rgba(99, 102, 241, 0.1)',
+                                                color: '#818cf8',
+                                                fontWeight: '800',
+                                                textTransform: 'uppercase'
+                                            }}>{record.maintenanceType}</span>
+                                            {record.status === 'pending' && (
                                                 <span style={{
                                                     fontSize: '10px',
                                                     padding: '2px 8px',
                                                     borderRadius: '4px',
-                                                    background: 'rgba(99, 102, 241, 0.1)',
-                                                    color: '#818cf8',
+                                                    background: 'rgba(245, 158, 11, 0.1)',
+                                                    color: '#f59e0b',
                                                     fontWeight: '800',
                                                     textTransform: 'uppercase'
-                                                }}>{record.maintenanceType}</span>
-                                                {record.status === 'pending' && (
-                                                    <span style={{
-                                                        fontSize: '10px',
-                                                        padding: '2px 8px',
-                                                        borderRadius: '4px',
-                                                        background: 'rgba(245, 158, 11, 0.1)',
-                                                        color: '#f59e0b',
-                                                        fontWeight: '800',
-                                                        textTransform: 'uppercase'
-                                                    }}>PENDING APPROVAL</span>
-                                                )}
-                                                {record.source === 'Driver App' && (
-                                                    <span style={{
-                                                        fontSize: '10px',
-                                                        padding: '2px 8px',
-                                                        borderRadius: '4px',
-                                                        background: 'rgba(16, 185, 129, 0.1)',
-                                                        color: '#10b981',
-                                                        fontWeight: '800',
-                                                        textTransform: 'uppercase'
-                                                    }}>DRIVER APP</span>
-                                                )}
-                                            </div>
-                                            <div style={{ color: 'white', fontSize: '13px', marginTop: '4px', fontWeight: '500' }}>
-                                                {record.category || 'General Service'}
-                                            </div>
-                                            {record.currentKm && (
-                                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                                    At {Number(record.currentKm).toLocaleString()} KM
-                                                </div>
+                                                }}>PENDING APPROVAL</span>
                                             )}
-                                        </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{record.garageName || record.vendorName || 'Self/Local'}</div>
+                                            {record.source === 'Driver App' && (
+                                                <span style={{
+                                                    fontSize: '10px',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '4px',
+                                                    background: 'rgba(16, 185, 129, 0.1)',
+                                                    color: '#10b981',
+                                                    fontWeight: '800',
+                                                    textTransform: 'uppercase'
+                                                }}>DRIVER APP</span>
+                                            )}
+                                        </div>
+                                        <div style={{ color: 'white', fontSize: '13px', marginTop: '4px', fontWeight: '500' }}>
+                                            {record.category || 'General Service'}
+                                        </div>
+                                        {record.currentKm && (
                                             <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                                Bill: {record.billNumber || 'N/A' || record.description}
+                                                At {Number(record.currentKm).toLocaleString()} KM
                                             </div>
-                                        </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: '#10b981', fontWeight: '800', fontSize: '16px' }}>₹{Number(record.amount || 0).toLocaleString()}</div>
-                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                                via {record.paymentMode}
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '20px 25px', textAlign: 'right' }}>
-                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                                {record.status === 'pending' ? (
-                                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                                        <button
-                                                            onClick={() => handleApprove(record.attendanceId, record._id)}
-                                                            className="glass-card-hover-effect"
-                                                            style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', cursor: 'pointer', fontSize: '11px', fontWeight: '800' }}
-                                                        >
-                                                            APPROVE
-                                                        </button>
-                                                        <button
-                                                            onClick={() => handleReject(record.attendanceId, record._id)}
-                                                            className="glass-card-hover-effect"
-                                                            style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', cursor: 'pointer', fontSize: '11px', fontWeight: '800' }}
-                                                        >
-                                                            REJECT
-                                                        </button>
-                                                    </div>
-                                                ) : null}
-                                                <div style={{ display: 'flex', gap: '8px', marginLeft: '8px' }}>
-                                                    {record.billPhoto && (
-                                                        <button
-                                                            onClick={() => setSelectedBillPhoto(record.billPhoto)}
-                                                            className="glass-card-hover-effect"
-                                                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                            title="View Bill"
-                                                        >
-                                                            <FileText size={16} />
-                                                        </button>
-                                                    )}
+                                        )}
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{record.garageName || record.vendorName || 'Self/Local'}</div>
+                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
+                                            Bill: {record.billNumber || 'N/A' || record.description}
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        <div style={{ color: '#10b981', fontWeight: '800', fontSize: '16px' }}>₹{Number(record.amount || 0).toLocaleString()}</div>
+                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
+                                            via {record.paymentMode}
+                                        </div>
+                                    </td>
+                                    <td style={{ padding: '20px 25px', textAlign: 'right' }}>
+                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                            {record.status === 'pending' ? (
+                                                <div style={{ display: 'flex', gap: '8px' }}>
                                                     <button
-                                                        onClick={() => handleEdit(record)}
+                                                        onClick={() => handleApprove(record.attendanceId, record._id)}
                                                         className="glass-card-hover-effect"
-                                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                        title="Edit Entry"
+                                                        style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', cursor: 'pointer', fontSize: '11px', fontWeight: '800' }}
                                                     >
-                                                        <Wrench size={16} />
+                                                        APPROVE
                                                     </button>
                                                     <button
-                                                        onClick={() => handleDelete(record._id)}
+                                                        onClick={() => handleReject(record.attendanceId, record._id)}
                                                         className="glass-card-hover-effect"
-                                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                        title="Delete Entry"
+                                                        style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', cursor: 'pointer', fontSize: '11px', fontWeight: '800' }}
                                                     >
-                                                        <Trash2 size={16} />
+                                                        REJECT
                                                     </button>
                                                 </div>
+                                            ) : null}
+                                            <div style={{ display: 'flex', gap: '8px', marginLeft: '8px' }}>
+                                                {record.billPhoto && (
+                                                    <button
+                                                        onClick={() => setSelectedBillPhoto(record.billPhoto)}
+                                                        className="glass-card-hover-effect"
+                                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                        title="View Bill"
+                                                    >
+                                                        <FileText size={16} />
+                                                    </button>
+                                                )}
+                                                <button
+                                                    onClick={() => handleEdit(record)}
+                                                    className="glass-card-hover-effect"
+                                                    style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                    title="Edit Entry"
+                                                >
+                                                    <Wrench size={16} />
+                                                </button>
+                                                <button
+                                                    onClick={() => handleDelete(record._id)}
+                                                    className="glass-card-hover-effect"
+                                                    style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                    title="Delete Entry"
+                                                >
+                                                    <Trash2 size={16} />
+                                                </button>
                                             </div>
-                                        </td>
-                                    </motion.tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    )}
-                </div>
+                                        </div>
+                                    </td>
+                                </motion.tr>
+                            ))}
+                        </tbody>
+                    </table>
+                )}
+            </div>
 
 
 

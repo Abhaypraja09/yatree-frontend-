@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { User, Car, IndianRupee, Users } from 'lucide-react';
 import { motion } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -10,8 +10,12 @@ import DriverSalaries from './DriverSalaries';
 
 const DriversPanel = () => {
     const navigate = useNavigate();
-    const location = useLocation();
-    const [activeTab, setActiveTab] = React.useState('drivers');
+    const [searchParams, setSearchParams] = useSearchParams();
+    const activeTab = searchParams.get('tab') || 'drivers';
+
+    const setActiveTab = (tab) => {
+        setSearchParams({ tab });
+    };
 
     const navItems = [
         { id: 'drivers', title: 'DRIVERS', icon: User },

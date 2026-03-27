@@ -54,32 +54,34 @@ const SH = ({ color, icon: Icon, title, time }) => (
 const AttendanceModal = ({ item, onClose }) => {
     const [viewerUrl, setViewerUrl] = React.useState(null);
     if (!item) return null;
-    const isAttendance = item.entryType === 'attendance';
 
-    const openKM = item.punchIn?.km;
-    const closeKM = item.punchOut?.km;
+    const isGroup = item.entryType === 'attendance_group';
+    const isAttendance = item.entryType === 'attendance' || isGroup;
+
+    const openKM = isGroup ? item.attendances[0]?.punchIn?.km : item.punchIn?.km;
+    const closeKM = isGroup ? item.attendances[item.attendances.length - 1]?.punchOut?.km : item.punchOut?.km;
     const totalKM = item.totalKM ?? (typeof openKM === 'number' && typeof closeKM === 'number' ? Math.max(0, closeKM - openKM) : null);
 
     const salary = Number(item.dailyWage) || 0;
+    
+    // For single attendance
     const allowanceTA = Number(item.punchOut?.allowanceTA) || 0;
     const nightStay = Number(item.punchOut?.nightStayAmount) || 0;
     const outsideBonusTotal = Number(item.outsideTrip?.bonusAmount) || 0;
-    
-    // Calculate extra bonus beyond TA and Night Stay
     const extraBonus = Math.max(0, outsideBonusTotal - allowanceTA - nightStay);
-    const bonus = allowanceTA + nightStay + extraBonus;
+    const bonus = isGroup ? (item.bonusAmt || 0) : (allowanceTA + nightStay + extraBonus);
 
-    const fuelAmt = Number(item.fuel?.amount) || 0;
-    const fuelEntries = item.fuel?.entries || [];
-    const parkingAmt = Number(item.punchOut?.tollParkingAmount) || 0;
-    const parkingBy = item.punchOut?.parkingPaidBy || 'Self';
+    const fuelAmt = isGroup ? (item.fuelAmt || 0) : (Number(item.fuel?.amount) || 0);
+    const parkingAmt = isGroup ? (item.parkAmt || 0) : (Number(item.punchOut?.tollParkingAmount) || 0);
+    const parkingBy = isGroup ? 'Mixed' : (item.punchOut?.parkingPaidBy || 'Self');
 
-    const isCompleted = item.status === 'completed';
-    const totalPayable = salary + bonus + (parkingBy !== 'Office' ? parkingAmt : 0);
+    const isCompleted = isGroup ? (item.status !== 'incomplete') : (item.status === 'completed');
+    const totalPayable = salary + bonus + (isGroup ? (item.parkAmt || 0) : (parkingBy !== 'Office' ? parkingAmt : 0));
 
     /* render per entry-type */
     const renderBody = () => {
-        if (isAttendance) return renderAttendance();
+        if (isGroup) return renderGroup();
+        if (isAttendance) return renderAttendance(item);
         if (item.entryType === 'fuel') return renderFuel();
         if (item.entryType === 'advance') return renderAdvance();
         if (item.entryType === 'parking') return renderParking();
@@ -95,140 +97,173 @@ const AttendanceModal = ({ item, onClose }) => {
         );
     };
 
-    const renderAttendance = () => (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', padding: '24px' }}>
-
-            {/* ── LEFT: Punch In ── */}
-            <div style={{ background: 'rgba(16,185,129,0.04)', borderRadius: '18px', padding: '22px', border: '1px solid rgba(16,185,129,0.1)' }}>
-                <SH color="#10b981" icon={ArrowUpRight} title="Punch-In Proof" time={fmtTime(item.punchIn?.time)} />
-                {(item.punchIn?.selfie || item.punchIn?.kmPhoto || item.punchIn?.carSelfie) && (
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-                        <PhotoCard onView={setViewerUrl} url={item.punchIn?.selfie} label="Driver Selfie" />
-                        <PhotoCard onView={setViewerUrl} url={item.punchIn?.kmPhoto} label="Start KM" />
-                        {item.punchIn?.carSelfie && <div style={{ gridColumn: '1/-1' }}><PhotoCard onView={setViewerUrl} url={item.punchIn.carSelfie} label="Vehicle" /></div>}
+    const renderGroup = () => (
+        <div style={{ padding: '24px' }}>
+            <div style={{ background: 'rgba(16,185,129,0.06)', borderRadius: '24px', padding: '25px', border: '1px solid rgba(16,185,129,0.15)', marginBottom: '30px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                    <div>
+                        <div style={{ color: '#10b981', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Daily Consolidated Summary</div>
+                        <div style={{ color: 'white', fontSize: '24px', fontWeight: '950', marginTop: '4px' }}>{item.attendances.length} Duties Performed</div>
                     </div>
-                )}
-                <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '14px' }}>
-                    <Stat label="Opening KM" value={openKM != null ? `${openKM} km` : '--'} color="#38bdf8" />
-                    <Stat label="Date" value={fmt(item.date)} />
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ color: '#10b981', fontSize: '28px', fontWeight: '950' }}>₹{totalPayable.toLocaleString()}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', fontWeight: '800' }}>TOTAL PAYABLE TODAY</div>
+                    </div>
                 </div>
-            </div>
-
-            {/* ── MIDDLE: Punch Out ── */}
-            <div style={{ background: isCompleted ? 'rgba(244,63,94,0.04)' : 'rgba(245,158,11,0.03)', borderRadius: '18px', padding: '22px', border: `1px solid ${isCompleted ? 'rgba(244,63,94,0.1)' : 'rgba(245,158,11,0.1)'}` }}>
-                <SH color={isCompleted ? '#f43f5e' : '#f59e0b'} icon={ArrowDownLeft} title={isCompleted ? 'Punch-Out Proof' : 'On Duty'} time={fmtTime(item.punchOut?.time)} />
-                {isCompleted ? (
-                    <>
-                        {(item.punchOut?.selfie || item.punchOut?.kmPhoto || item.punchOut?.carSelfie || item.punchOut?.parkingReceipt) && (
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
-                                <PhotoCard onView={setViewerUrl} url={item.punchOut?.selfie} label="Driver Selfie" />
-                                <PhotoCard onView={setViewerUrl} url={item.punchOut?.kmPhoto} label="Close KM" />
-                                <PhotoCard onView={setViewerUrl} url={item.punchOut?.carSelfie} label="Vehicle" />
-                                <PhotoCard onView={setViewerUrl} url={item.punchOut?.parkingReceipt} label="Parking Slip" />
-                            </div>
-                        )}
-                        <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '14px' }}>
-                            <Stat label="Closing KM" value={closeKM != null ? `${closeKM} km` : '--'} color="#f43f5e" />
-                            <Stat label="Total KM Run" value={totalKM != null ? `${totalKM} km` : '--'} color="white"
-                                sub={openKM != null && closeKM != null ? `${openKM} → ${closeKM}` : undefined} />
-                            {item.punchOut?.otherRemarks && <Stat label="Remarks" value={item.punchOut.otherRemarks} color="#f59e0b" />}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px' }}>
+                    {[
+                        { label: 'BASE WAGE', val: `₹${salary}`, color: 'white' },
+                        { label: 'TOTAL BONUS', val: `₹${bonus}`, color: '#22c55e' },
+                        { label: 'KM RUN', val: `${totalKM || 0} KM`, color: '#38bdf8' },
+                        { label: 'EXPENSES', val: `₹${fuelAmt + parkingAmt}`, color: '#f59e0b' },
+                    ].map(s => (
+                        <div key={s.label} style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '16px', padding: '15px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <div style={{ color: s.color, fontSize: '18px', fontWeight: '950' }}>{s.val}</div>
+                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', marginTop: '4px' }}>{s.label}</div>
                         </div>
-                    </>
-                ) : (
-                    <div style={{ textAlign: 'center', padding: '40px 20px', background: 'rgba(245,158,11,0.03)', borderRadius: '14px', border: '1px dashed rgba(245,158,11,0.15)' }}>
-                        <Clock size={32} color="rgba(245,158,11,0.4)" style={{ marginBottom: '10px' }} />
-                        <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '13px', fontWeight: '700', margin: 0 }}>Duty still in progress…</p>
-                    </div>
-                )}
+                    ))}
+                </div>
             </div>
 
-            {/* ── RIGHT: Expenses + Salary ── */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-
-                {/* KM Summary */}
-                <div style={{ background: 'rgba(56,189,248,0.05)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(56,189,248,0.1)' }}>
-                    <SH color="#38bdf8" icon={TrendingUp} title="KM Summary" />
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px', textAlign: 'center' }}>
-                        {[
-                            { label: 'Open KM', val: openKM, color: '#38bdf8' },
-                            { label: 'Close KM', val: closeKM, color: '#f43f5e' },
-                            { label: 'Total Run', val: totalKM, color: 'white' },
-                        ].map(({ label, val, color }) => (
-                            <div key={label} style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '10px', padding: '12px 6px' }}>
-                                <div style={{ color, fontWeight: '900', fontSize: '18px' }}>{val ?? '--'}</div>
-                                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', marginTop: '3px' }}>{label}</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                {item.attendances.map((att, idx) => (
+                    <div key={idx} style={{ position: 'relative' }}>
+                        <div style={{ position: 'absolute', left: '-15px', top: '0', bottom: '-40px', width: '2px', background: 'rgba(255,255,255,0.05)', display: idx === item.attendances.length - 1 ? 'none' : 'block' }}></div>
+                        <div style={{ position: 'absolute', left: '-21px', top: '10px', width: '14px', height: '14px', borderRadius: '50%', background: '#10b981', border: '3px solid #0f172a', zIndex: 2 }}></div>
+                        
+                        <div style={{ marginLeft: '10px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
+                                <span style={{ padding: '4px 12px', background: 'rgba(16,185,129,0.1)', color: '#10b981', borderRadius: '8px', fontSize: '11px', fontWeight: '900' }}>DUTY #{idx + 1}</span>
+                                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>—</span>
+                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{fmtTime(att.punchIn?.time)} to {fmtTime(att.punchOut?.time)}</span>
                             </div>
-                        ))}
+                            {renderAttendance(att, true)}
+                        </div>
                     </div>
-                </div>
-
-                {/* Fuel */}
-                {(fuelAmt > 0 || fuelEntries.length > 0) && (
-                    <div style={{ background: 'rgba(245,158,11,0.05)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(245,158,11,0.1)' }}>
-                        <SH color="#f59e0b" icon={Fuel} title="Fuel" />
-                        <Stat label="Total Fuel Cost" value={`₹${fuelAmt}`} color="#f59e0b" />
-                        {fuelEntries.map((fe, i) => (
-                            <div key={i} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '10px', padding: '10px', marginTop: '8px' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '700' }}>
-                                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>Fill #{i + 1} · {fe.fuelType || 'Diesel'}</span>
-                                    <span style={{ color: '#f59e0b' }}>₹{fe.amount}</span>
-                                </div>
-                                {fe.km && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '3px' }}>At {fe.km} KM · {fe.quantity || '--'} L</div>}
-                                {fe.slipPhoto && (
-                                    <div style={{ marginTop: '8px' }}>
-                                        <PhotoCard onView={setViewerUrl} url={fe.slipPhoto} label="Fuel Slip" />
-                                    </div>
-                                )}
-                            </div>
-                        ))}
-                        {/* Legacy single entry */}
-                        {fuelEntries.length === 0 && item.fuel?.slipPhoto && <PhotoCard onView={setViewerUrl} url={item.fuel.slipPhoto} label="Fuel Slip" />}
-                    </div>
-                )}
-
-                {/* Parking */}
-                {parkingAmt > 0 && (
-                    <div style={{ background: 'rgba(129,140,248,0.05)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(129,140,248,0.1)' }}>
-                        <SH color="#818cf8" icon={MapPin} title="Parking / Toll" />
-                        <Stat label="Amount" value={`₹${parkingAmt}`} color="#818cf8" />
-                        <Stat label="Paid By" value={parkingBy}
-                            color={parkingBy === 'Office' ? '#10b981' : '#a78bfa'}
-                            sub={parkingBy === 'Self' ? 'Will be reimbursed to driver' : 'Company expense'} />
-                        {(item.parking || []).map((p, i) => (
-                            p.slipPhoto && <div key={i} style={{ marginTop: '8px' }}><PhotoCard onView={setViewerUrl} url={p.slipPhoto} label={`Parking Slip #${i + 1}`} /></div>
-                        ))}
-                        {item.punchOut?.parkingReceipt && <div style={{ marginTop: '8px' }}><PhotoCard onView={setViewerUrl} url={item.punchOut.parkingReceipt} label="Parking Slip" /></div>}
-                    </div>
-                )}
-
-                {/* Bonuses */}
-                {(allowanceTA > 0 || nightStay > 0 || extraBonus > 0) && (
-                    <div style={{ background: 'rgba(34,197,94,0.05)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(34,197,94,0.1)' }}>
-                        <SH color="#22c55e" icon={Zap} title="Bonuses" />
-                        {allowanceTA > 0 && <Stat label="T/A Allowance" value={`+₹${allowanceTA}`} color="#22c55e" />}
-                        {nightStay > 0 && <Stat label="O.T. / Night" value={`+₹${nightStay}`} color="#fbbf24" sub="Overtime hours worked" />}
-                        {extraBonus > 0 && <Stat label="Extra Bonus" value={`+₹${extraBonus}`} color="#38bdf8" sub={item.outsideTrip?.tripType} />}
-                    </div>
-                )}
-
-                {/* Salary Summary */}
-                <div style={{ background: 'rgba(16,185,129,0.06)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(16,185,129,0.15)' }}>
-                    <SH color="#10b981" icon={IndianRupee} title="Settlement" />
-                    <Stat label="Daily Wage" value={`₹${salary}`} color="white" />
-                    {bonus > 0 && <Stat label="Total Bonus" value={`+₹${bonus}`} color="#22c55e" />}
-                    {parkingBy !== 'Office' && parkingAmt > 0 && <Stat label="Parking (Reimburse)" value={`+₹${parkingAmt}`} color="#818cf8" />}
-                    <div style={{ borderTop: '1px solid rgba(16,185,129,0.2)', marginTop: '8px', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <span style={{ color: '#10b981', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase' }}>Total Payable</span>
-                        <span style={{ color: '#10b981', fontWeight: '900', fontSize: '22px' }}>₹{totalPayable.toLocaleString()}</span>
-                    </div>
-                    {isCompleted
-                        ? <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontSize: '11px', fontWeight: '800' }}><CheckCircle2 size={14} /> Duty Completed</div>
-                        : <div style={{ marginTop: '10px', display: 'flex', alignItems: 'center', gap: '6px', color: '#f59e0b', fontSize: '11px', fontWeight: '800' }}><Clock size={14} /> Duty In Progress</div>
-                    }
-                </div>
+                ))}
             </div>
         </div>
     );
+
+    const renderAttendance = (attItem, isNested = false) => {
+        const aOpenKM = attItem.punchIn?.km;
+        const aCloseKM = attItem.punchOut?.km;
+        const aTotalKM = (typeof aOpenKM === 'number' && typeof aCloseKM === 'number' ? Math.max(0, aCloseKM - aOpenKM) : null);
+        const aIsCompleted = attItem.status === 'completed';
+
+        const aSalary = Number(attItem.dailyWage) || 0;
+        const aAllowanceTA = Number(attItem.punchOut?.allowanceTA) || 0;
+        const aNightStay = Number(attItem.punchOut?.nightStayAmount) || 0;
+        const aOutsideBonusTotal = Number(attItem.outsideTrip?.bonusAmount) || 0;
+        const aExtraBonus = Math.max(0, aOutsideBonusTotal - aAllowanceTA - aNightStay);
+        const aBonus = aAllowanceTA + aNightStay + aExtraBonus;
+        const aFuelAmt = Number(attItem.fuel?.amount) || 0;
+        const aParkingAmt = Number(attItem.punchOut?.tollParkingAmount) || 0;
+        const aParkingBy = attItem.punchOut?.parkingPaidBy || 'Self';
+        const aTotalPayable = (isNested ? 0 : aSalary) + aBonus + (aParkingBy !== 'Office' ? aParkingAmt : 0);
+
+        return (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', padding: isNested ? '0' : '24px' }}>
+                {/* ── LEFT: Punch In ── */}
+                <div style={{ background: 'rgba(16,185,129,0.04)', borderRadius: '18px', padding: '22px', border: '1px solid rgba(16,185,129,0.1)' }}>
+                    <SH color="#10b981" icon={ArrowUpRight} title="Punch-In Proof" time={fmtTime(attItem.punchIn?.time)} />
+                    {(attItem.punchIn?.selfie || attItem.punchIn?.kmPhoto || attItem.punchIn?.carSelfie) && (
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+                            <PhotoCard onView={setViewerUrl} url={attItem.punchIn?.selfie} label="Driver Selfie" />
+                            <PhotoCard onView={setViewerUrl} url={attItem.punchIn?.kmPhoto} label="Start KM" />
+                            {attItem.punchIn?.carSelfie && <div style={{ gridColumn: '1/-1' }}><PhotoCard onView={setViewerUrl} url={attItem.punchIn.carSelfie} label="Vehicle" /></div>}
+                        </div>
+                    )}
+                    <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '14px' }}>
+                        <Stat label="Opening KM" value={aOpenKM != null ? `${aOpenKM} km` : '--'} color="#38bdf8" />
+                        <Stat label="Date" value={fmt(attItem.date)} />
+                        {attItem.vehicle?.carNumber && <Stat label="Vehicle" value={attItem.vehicle.carNumber.split('#')[0]} color="white" />}
+                    </div>
+                </div>
+
+                {/* ── MIDDLE: Punch Out ── */}
+                <div style={{ background: aIsCompleted ? 'rgba(244,63,94,0.04)' : 'rgba(245,158,11,0.03)', borderRadius: '18px', padding: '22px', border: `1px solid ${aIsCompleted ? 'rgba(244,63,94,0.1)' : 'rgba(245,158,11,0.1)'}` }}>
+                    <SH color={aIsCompleted ? '#f43f5e' : '#f59e0b'} icon={ArrowDownLeft} title={aIsCompleted ? 'Punch-Out Proof' : 'On Duty'} time={fmtTime(attItem.punchOut?.time)} />
+                    {aIsCompleted ? (
+                        <>
+                            {(attItem.punchOut?.selfie || attItem.punchOut?.kmPhoto || attItem.punchOut?.carSelfie || attItem.punchOut?.parkingReceipt) && (
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
+                                    <PhotoCard onView={setViewerUrl} url={attItem.punchOut?.selfie} label="Driver Selfie" />
+                                    <PhotoCard onView={setViewerUrl} url={attItem.punchOut?.kmPhoto} label="Close KM" />
+                                    <PhotoCard onView={setViewerUrl} url={attItem.punchOut?.carSelfie} label="Vehicle" />
+                                    <PhotoCard onView={setViewerUrl} url={attItem.punchOut?.parkingReceipt} label="Parking Slip" />
+                                </div>
+                            )}
+                            <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '14px' }}>
+                                <Stat label="Closing KM" value={aCloseKM != null ? `${aCloseKM} km` : '--'} color="#f43f5e" />
+                                <Stat label="Shift Run" value={aTotalKM != null ? `${aTotalKM} km` : '--'} color="white"
+                                    sub={aOpenKM != null && aCloseKM != null ? `${aOpenKM} → ${aCloseKM}` : undefined} />
+                                {attItem.punchOut?.otherRemarks && <Stat label="Remarks" value={attItem.punchOut.otherRemarks} color="#f59e0b" />}
+                            </div>
+                        </>
+                    ) : (
+                        <div style={{ textAlign: 'center', padding: '40px 20px', background: 'rgba(245,158,11,0.03)', borderRadius: '14px', border: '1px dashed rgba(245,158,11,0.15)' }}>
+                            <Clock size={32} color="rgba(245,158,11,0.4)" style={{ marginBottom: '10px' }} />
+                            <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '13px', fontWeight: '700', margin: 0 }}>Duty still in progress…</p>
+                        </div>
+                    )}
+                </div>
+
+                {/* ── RIGHT: Expenses + Salary ── */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    {/* Fuel (This Shift) */}
+                    {(aFuelAmt > 0 || (attItem.fuel?.entries && attItem.fuel.entries.length > 0)) && (
+                        <div style={{ background: 'rgba(245,158,11,0.05)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(245,158,11,0.1)' }}>
+                            <SH color="#f59e0b" icon={Fuel} title="Fuel (This Shift)" />
+                            <Stat label="Amount" value={`₹${aFuelAmt}`} color="#f59e0b" />
+                            {(attItem.fuel?.entries || []).map((fe, i) => (
+                                <div key={i} style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '10px', padding: '10px', marginTop: '8px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '700' }}>
+                                        <span style={{ color: 'rgba(255,255,255,0.6)' }}>Fill #{i + 1}</span>
+                                        <span style={{ color: '#f59e0b' }}>₹{fe.amount}</span>
+                                    </div>
+                                    {fe.slipPhoto && <div style={{ marginTop: '8px' }}><PhotoCard onView={setViewerUrl} url={fe.slipPhoto} label="Fuel Slip" /></div>}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {/* Parking (This Shift) */}
+                    {aParkingAmt > 0 && (
+                        <div style={{ background: 'rgba(129,140,248,0.05)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(129,140,248,0.1)' }}>
+                            <SH color="#818cf8" icon={MapPin} title="Parking (This Shift)" />
+                            <Stat label="Amount" value={`₹${aParkingAmt}`} color="#818cf8" />
+                            <Stat label="Paid By" value={aParkingBy} color={aParkingBy === 'Office' ? '#10b981' : '#a78bfa'} />
+                        </div>
+                    )}
+
+                    {/* Bonuses (This Shift) */}
+                    {(aBonus > 0) && (
+                        <div style={{ background: 'rgba(34,197,94,0.05)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(34,197,94,0.1)' }}>
+                            <SH color="#22c55e" icon={Zap} title="Bonuses (This Shift)" />
+                            {aAllowanceTA > 0 && <Stat label="T/A Allowance" value={`+₹${aAllowanceTA}`} color="#22c55e" />}
+                            {aNightStay > 0 && <Stat label="O.T. / Night" value={`+₹${aNightStay}`} color="#fbbf24" />}
+                            {aExtraBonus > 0 && <Stat label="Extra Bonus" value={`+₹${aExtraBonus}`} color="#38bdf8" sub={attItem.outsideTrip?.tripType} />}
+                        </div>
+                    )}
+
+                    {/* Duty Settlement */}
+                    {!isNested && (
+                        <div style={{ background: 'rgba(16,185,129,0.06)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(16,185,129,0.15)' }}>
+                            <SH color="#10b981" icon={IndianRupee} title="Settlement" />
+                            <Stat label="Daily Wage" value={`₹${aSalary}`} color="white" />
+                            {aBonus > 0 && <Stat label="Total Bonus" value={`+₹${aBonus}`} color="#22c55e" />}
+                            {aParkingBy !== 'Office' && aParkingAmt > 0 && <Stat label="Parking (Reimburse)" value={`+₹${aParkingAmt}`} color="#818cf8" />}
+                            <div style={{ borderTop: '1px solid rgba(16,185,129,0.2)', marginTop: '8px', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <span style={{ color: '#10b981', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase' }}>Duty Payable</span>
+                                <span style={{ color: '#10b981', fontWeight: '900', fontSize: '22px' }}>₹{aTotalPayable.toLocaleString()}</span>
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
 
     const renderFuel = () => (
         <div style={{ padding: '24px' }}>

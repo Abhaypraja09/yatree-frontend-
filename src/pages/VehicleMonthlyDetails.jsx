@@ -7,6 +7,7 @@ import {
     User,
     Droplets,
     Wrench,
+    MapPin,
     Search,
     FileSpreadsheet,
     ChevronRight,
@@ -17,12 +18,12 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
-import { 
-    todayIST, 
-    toISTDateString, 
-    formatDateIST, 
-    formatTimeIST, 
-    formatDateTimeIST 
+import {
+    todayIST,
+    toISTDateString,
+    formatDateIST,
+    formatTimeIST,
+    formatDateTimeIST
 } from '../utils/istUtils';
 
 const VehicleMonthlyDetails = () => {
@@ -91,7 +92,8 @@ const VehicleMonthlyDetails = () => {
     const totalDriverSalary = filteredData.reduce((sum, v) => sum + (v.driverSalary || 0), 0);
     const totalServiceAmount = filteredData.reduce((sum, v) => sum + (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0), 0);
     const totalMaintAmount = filteredData.reduce((sum, v) => sum + (v.maintenance?.totalAmount || 0), 0);
-    const grandTotal = totalFuelAmount + totalDriverSalary + totalServiceAmount + totalMaintAmount;
+    const totalParkingAmount = filteredData.reduce((sum, v) => sum + (v.parking?.totalAmount || 0), 0);
+    const grandTotal = totalFuelAmount + totalDriverSalary + totalServiceAmount + totalMaintAmount + totalParkingAmount;
 
     const downloadExcel = () => {
         const exportData = filteredData.map(v => ({
@@ -100,13 +102,14 @@ const VehicleMonthlyDetails = () => {
             'Drivers': v.drivers?.join(', ') || 'Unassigned',
             'Fuel Quantity (L)': (v.fuel?.totalQuantity || 0).toFixed(2),
             'Fuel Amount (₹)': v.fuel?.totalAmount || 0,
+            'Parking (₹)': v.parking?.totalAmount || 0,
             'Wash Count': v.services?.wash?.count || 0,
             'Wash Amount (₹)': v.services?.wash?.amount || 0,
             'Puncture Count': v.services?.puncture?.count || 0,
             'Puncture Amount (₹)': v.services?.puncture?.amount || 0,
             'Other Maintenance (₹)': v.maintenance?.totalAmount || 0,
             'Driver Salary (₹)': v.driverSalary || 0,
-            'Total Month Expense (₹)': (v.fuel?.totalAmount || 0) + (v.maintenance?.totalAmount || 0) + (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0) + (v.driverSalary || 0)
+            'Total Month Expense (₹)': (v.fuel?.totalAmount || 0) + (v.maintenance?.totalAmount || 0) + (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0) + (v.driverSalary || 0) + (v.parking?.totalAmount || 0)
         }));
 
         const ws = XLSX.utils.json_to_sheet(exportData);
@@ -176,6 +179,7 @@ const VehicleMonthlyDetails = () => {
                 <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginBottom: '30px' }}>
                     <SummaryCard icon={Droplets} label="Monthly Fuel" value={totalFuelAmount} color="#3b82f6" />
                     <SummaryCard icon={User} label="Driver Salaries" value={totalDriverSalary} color="#a855f7" />
+                    <SummaryCard icon={MapPin} label="Total Parking" value={totalParkingAmount} color="#ec4899" />
                     <SummaryCard icon={Wrench} label="Repairs & Maint." value={totalMaintAmount} color="#f59e0b" />
                     <SummaryCard icon={Info} label="Other Services" value={totalServiceAmount} color="#10b981" />
                     <div style={{
@@ -217,7 +221,7 @@ const VehicleMonthlyDetails = () => {
                         />
                     </div>
 
-                    <div style={{ position: 'relative', width: '200px' }}>
+                    {/* <div style={{ position: 'relative', width: '200px' }}>
                         <User style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
                         <select
                             value={driverFilter}
@@ -241,7 +245,7 @@ const VehicleMonthlyDetails = () => {
                                 <option key={name} value={name} style={{ background: '#1e293b' }}>{name}</option>
                             ))}
                         </select>
-                    </div>
+                    </div> */}
 
                     <div style={{ position: 'relative', width: '200px' }}>
                         <Car style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
@@ -279,6 +283,7 @@ const VehicleMonthlyDetails = () => {
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver Salary</th>
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Fuel Expense</th>
+                                <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Parking</th>
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Maintenance</th>
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Wash & Punc.</th>
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Total Amount</th>
@@ -361,6 +366,24 @@ const VehicleMonthlyDetails = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
+                                            <div style={{ color: '#ec4899', fontWeight: '900', fontSize: '15px' }}>₹{(v.parking?.totalAmount || 0).toLocaleString()}</div>
+                                            <div style={{ marginTop: '8px' }}>
+                                                {v.parking?.records?.length > 0 ? (
+                                                    <select value="" onChange={() => { }} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(236, 72, 153, 0.1)', border: '1px solid rgba(236, 72, 153, 0.25)', borderRadius: '8px', color: '#f9a8d4', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
+                                                        <option value="" hidden>View {v.parking.records.length} Logs</option>
+                                                        {v.parking.records.map((p, i) => {
+                                                            const displayLocation = (p.location && p.location !== 'Not Specified') ? p.location : (p.remark || 'Parking Charge');
+                                                            return (
+                                                                <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>
+                                                                    {formatDateIST(p.date)} - {displayLocation} - ₹{p.amount.toLocaleString()}
+                                                                </option>
+                                                            );
+                                                        })}
+                                                    </select>
+                                                ) : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px', fontWeight: '700' }}>No Logs</span>}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '20px 25px' }}>
                                             <div style={{ color: '#f59e0b', fontWeight: '900', fontSize: '15px' }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</div>
                                             <div style={{ marginTop: '8px' }}>
                                                 {v.maintenance?.records?.length > 0 ? (
@@ -380,7 +403,7 @@ const VehicleMonthlyDetails = () => {
                                                     <select value="" onChange={() => { }} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.25)', borderRadius: '8px', color: '#93c5fd', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
                                                         <option value="" hidden>View Logs</option>
                                                         {[...((v.services?.wash?.records || []).map(r => ({ ...r, type: 'Wash' }))), ...((v.services?.puncture?.records || []).map(r => ({ ...r, type: 'Puncture' })))].sort((a, b) => new Date(b.date) - new Date(a.date)).map((r, i) => (
-                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>{r.type} - {formatDateIST(r.date).split(' ').slice(0,2).join(' ')} - ₹{(r.amount || 0).toLocaleString()}</option>
+                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>{r.type} - {formatDateIST(r.date).split(' ').slice(0, 2).join(' ')} - ₹{(r.amount || 0).toLocaleString()}</option>
                                                         ))}
                                                     </select>
                                                 ) : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px', fontWeight: '700' }}>No Logs</span>}
@@ -388,7 +411,7 @@ const VehicleMonthlyDetails = () => {
                                         </td>
                                         <td style={{ padding: '20px 25px', textAlign: 'right' }}>
                                             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Total Cost</div>
-                                            <div style={{ color: '#10b981', fontWeight: '950', fontSize: '18px', letterSpacing: '-0.5px' }}>₹{((v.fuel?.totalAmount || 0) + (v.maintenance?.totalAmount || 0) + (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0) + (v.driverSalary || 0)).toLocaleString()}</div>
+                                            <div style={{ color: '#10b981', fontWeight: '950', fontSize: '18px', letterSpacing: '-0.5px' }}>₹{((v.fuel?.totalAmount || 0) + (v.maintenance?.totalAmount || 0) + (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0) + (v.driverSalary || 0) + (v.parking?.totalAmount || 0)).toLocaleString()}</div>
                                         </td>
                                     </motion.tr>
                                 ))

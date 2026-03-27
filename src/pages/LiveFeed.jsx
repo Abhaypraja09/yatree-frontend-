@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import axios from '../api/axios';
 import {
     Users, Clock, Fuel, X, Camera, LogIn, IndianRupee, Activity,
     Calendar, ChevronLeft, ChevronRight, Car, Search, Filter,
-    CheckCircle2, AlertCircle, History, MapPin, Phone, Trash2, PieChart, Briefcase
+    CheckCircle2, AlertCircle, History, MapPin, Phone, Trash2, PieChart, Briefcase, RefreshCw
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -42,6 +43,8 @@ const styles = `
 
 const LiveFeed = () => {
     const { user } = useAuth();
+    const navigate = useNavigate();
+    const [searchParams] = useSearchParams();
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
     const [lastUpdated, setLastUpdated] = useState(null);
@@ -85,13 +88,13 @@ const LiveFeed = () => {
         return `${h}h ${m}m`;
     };
 
-    const fetchFeed = async () => {
+    const fetchFeed = async (force = false) => {
         if (!selectedCompany) return;
         if (!stats) setLoading(true); // Don't flip to loading on background refreshes
         try {
             const userInfoRaw = localStorage.getItem('userInfo');
             const userInfo = JSON.parse(userInfoRaw);
-            const { data } = await axios.get(`/api/admin/live-feed/${selectedCompany._id}?date=${selectedDate}`, {
+            const { data } = await axios.get(`/api/admin/live-feed/${selectedCompany._id}?date=${selectedDate}${force ? '&refresh=true' : ''}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setStats(data);
@@ -117,7 +120,7 @@ const LiveFeed = () => {
     useEffect(() => {
         fetchFeed();
         fetchEvents();
-        const interval = setInterval(fetchFeed, 60000); // Auto refresh every minute
+        const interval = setInterval(() => fetchFeed(false), 60000); // Auto refresh (no force)
         return () => clearInterval(interval);
     }, [selectedCompany, selectedDate]);
 
@@ -130,6 +133,13 @@ const LiveFeed = () => {
         v.carNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
         v.model.toLowerCase().includes(searchQuery.toLowerCase())
     ) || [];
+
+    const isPastDate = selectedDate < getTodayLocal();
+    const inUseVehicles = stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use').length || 0;
+    const totalWorkingVehicles = stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use' || v.status === 'Used').length || 0;
+    const totalUsedVehicles = totalWorkingVehicles; // Align with expectation
+    const activeFleetCount = stats?.activeVehiclesCount || inUseVehicles;
+    const totalCompanyVehicles = stats?.totalVehicles || 0;
 
     // History is filtered for the selectedDate and by searchQuery
     const dutyHistory = (stats?.dutyHistoryThisMonth || [])
@@ -263,21 +273,15 @@ const LiveFeed = () => {
                                 <ChevronRight size={20} />
                             </button>
                         </div>
-                        <button onClick={fetchFeed} disabled={loading} style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <motion.div animate={{ rotate: loading ? 360 : 0 }} transition={{ repeat: loading ? Infinity : 0, duration: 1, ease: 'linear' }}>
-                                <History size={20} />
-                            </motion.div>
-                        </button>
+
                     </div>
                 </div>
 
                 {/* Stats Grid — 5 boxes */}
-                <div className="livefeed-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '15px' }}>
+                <div className="livefeed-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px' }}>
                     {(() => {
-                        const isPast = selectedDate < getTodayLocal();
                         const driversActive = stats?.liveDriversFeed?.filter(d => d.status === 'Present').length || 0;
                         const driversCompleted = stats?.liveDriversFeed?.filter(d => d.status === 'Completed').length || 0;
-                        const vehiclesInUse = stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use').length || 0;
 
                         const regTotal = stats?.dailyStats?.regularSalary || 0;
                         const freeTotal = stats?.dailyStats?.freelancerSalary || 0;
@@ -295,8 +299,8 @@ const LiveFeed = () => {
                                         <Users size={22} color="#10b981" />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>{isPast ? (driversActive + driversCompleted) : driversActive}</div>
-                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{isPast ? 'Total Drivers' : 'Active Drivers'}</div>
+                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>{isPastDate ? (driversActive + driversCompleted) : driversActive}</div>
+                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{isPastDate ? 'Total Drivers' : 'Active Drivers'}</div>
                                     </div>
                                 </motion.div>
 
@@ -309,15 +313,30 @@ const LiveFeed = () => {
                                         <Car size={22} color="#0ea5e9" />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>{vehiclesInUse}</div>
-                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{isPast ? 'Used Fleet' : 'In Use Fleet'}</div>
+                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                                            <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>
+                                                {inUseVehicles}
+                                            </div>
+                                            {(isPastDate || totalUsedVehicles > 0) && (
+                                                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>
+                                                    / {totalUsedVehicles}
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                            Total Used Fleet
+                                        </div>
+                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)', fontWeight: '800', marginTop: '2px' }}>
+                                            Total Today: {totalUsedVehicles}
+                                        </div>
                                     </div>
                                 </motion.div>
 
                                 {/* 3. Company Total (Pay + Parking) */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-                                    style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                    onClick={() => navigate('/admin/drivers-panel?tab=settlement')}
+                                    style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer' }}
                                 >
                                     <div style={{ width: '45px', height: '45px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #10b98120', flexShrink: 0 }}>
                                         <IndianRupee size={22} color="#10b981" />
@@ -331,14 +350,19 @@ const LiveFeed = () => {
                                 {/* 4. Freelancer Total (Pay + Parking) */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
-                                    style={{ background: 'rgba(129, 140, 248, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(129, 140, 248, 0.1)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                    onClick={() => navigate('/admin/freelancers?tab=logistics')}
+                                    style={{ background: 'rgba(129, 140, 248, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(129, 140, 248, 0.1)', display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer' }}
                                 >
                                     <div style={{ width: '45px', height: '45px', background: 'rgba(129, 140, 248, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #818cf820', flexShrink: 0 }}>
                                         <Briefcase size={22} color="#818cf8" />
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{freeTotal.toLocaleString()}</div>
-                                        <div style={{ fontSize: '11px', color: '#818cf8', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Freelancer Salary
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexWrap: 'wrap' }}>
+                                            <div style={{ fontSize: '11px', color: '#818cf8', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', whiteSpace: 'nowrap', lineHeight: 1.2 }}>F/Salary</div>
+                                            <div style={{ fontSize: '9px', background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', padding: '2px 6px', borderRadius: '4px', fontWeight: '800', whiteSpace: 'nowrap' }}>
+                                                {stats?.liveDriversFeed?.filter(d => d.isFreelancer).length || 0} Duty
+                                            </div>
                                         </div>
                                     </div>
                                 </motion.div>
@@ -346,7 +370,8 @@ const LiveFeed = () => {
                                 {/* 5. Daily Fuel */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-                                    style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                    onClick={() => navigate('/admin/fuel')}
+                                    style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer' }}
                                 >
                                     <div style={{ width: '45px', height: '45px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #f59e0b20', flexShrink: 0 }}>
                                         <Fuel size={22} color="#f59e0b" />
@@ -360,14 +385,14 @@ const LiveFeed = () => {
                                 {/* 6. Grand Total */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                                    style={{ background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(99, 102, 241, 0.2))', padding: '20px', borderRadius: '24px', border: '1px solid rgba(14, 165, 233, 0.3)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                    style={{ background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(99, 102, 241, 0.15))', padding: '18px', borderRadius: '24px', border: '1px solid rgba(14, 165, 233, 0.2)', display: 'flex', alignItems: 'center', gap: '12px' }}
                                 >
-                                    <div style={{ width: '45px', height: '45px', background: 'rgba(14, 165, 233, 0.2)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #0ea5e980', flexShrink: 0 }}>
-                                        <Activity size={22} color="#0ea5e9" />
+                                    <div style={{ width: '42px', height: '42px', background: 'rgba(14, 165, 233, 0.2)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #0ea5e980', flexShrink: 0 }}>
+                                        <Activity size={20} color="#0ea5e9" />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '20px', fontWeight: '1000', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{(grandTotal + fuelAmt).toLocaleString()}</div>
-                                        <div style={{ fontSize: '11px', color: '#38bdf8', fontWeight: '1000', textTransform: 'uppercase', letterSpacing: '1px' }}>Net Daily Cost</div>
+                                        <div style={{ fontSize: '18px', fontWeight: '1000', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{(grandTotal + fuelAmt).toLocaleString()}</div>
+                                        <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Net Daily Cost</div>
                                     </div>
                                 </motion.div>
                             </>
@@ -376,53 +401,71 @@ const LiveFeed = () => {
                 </div>
             </header>
 
-
-            {/* Dashboard Container */}
-            <div style={{ background: 'rgba(30, 41, 59, 0.3)', borderRadius: '32px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', backdropFilter: 'blur(30px)' }}>
-                {/* Control Bar */}
-                <div className="livefeed-control-bar" style={{ padding: '20px 30px', background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '20px', flexWrap: 'wrap' }}>
-                    <div className="livefeed-tabs" style={{ display: 'flex', gap: '8px' }}>
+            {/* Dashboard Container with Premium Glow */}
+            <div style={{
+                background: 'rgba(15, 23, 42, 0.4)',
+                borderRadius: '32px',
+                border: '1px solid rgba(255,255,255,0.08)',
+                overflow: 'hidden',
+                backdropFilter: 'blur(40px)',
+                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5), inset 0 1px 1px rgba(255,255,255,0.05)'
+            }}>
+                {/* Control Bar - High Tech Style */}
+                <div className="livefeed-control-bar" style={{
+                    padding: '16px 24px',
+                    background: 'rgba(0,0,0,0.3)',
+                    borderBottom: '1px solid rgba(255,255,255,0.05)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '20px',
+                    flexWrap: 'wrap'
+                }}>
+                    <div className="livefeed-tabs" style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.03)' }}>
                         <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length} />
-                        <TabButton id="vehicles" label="Fleet" icon={Car} count={stats?.totalVehicles} />
+                        <TabButton id="vehicles" label="Fleet" icon={Car} count={inUseVehicles} />
                         <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length} />
                     </div>
 
-                    <div style={{ position: 'relative', flex: 1, minWidth: '200px', maxWidth: '400px', width: '100%' }}>
-                        <Search style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} size={18} />
+                    <div style={{ position: 'relative', flex: 1, minWidth: '220px', maxWidth: '450px' }}>
+                        <div style={{ position: 'absolute', left: '22px', top: '50%', transform: 'translateY(-50%)', color: '#38bdf8', filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.4))' }}>
+                            <Search size={20} strokeWidth={3} />
+                        </div>
                         <input
                             type="text"
-                            placeholder={`Search ${activeTab}...`}
+                            placeholder={`Locate ${activeTab}...`}
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{
                                 width: '100%',
-                                padding: '16px 24px 16px 56px',
-                                background: 'rgba(0,0,0,0.2)',
-                                border: '1px solid rgba(255,255,255,0.05)',
-                                borderRadius: '20px',
+                                padding: '18px 24px 18px 64px',
+                                background: 'rgba(0,0,0,0.4)',
+                                border: '1px solid rgba(14, 165, 233, 0.2)',
+                                borderRadius: '22px',
                                 color: 'white',
-                                fontSize: '14px',
-                                fontWeight: '600',
+                                fontSize: '15px',
+                                fontWeight: '700',
                                 outline: 'none',
-                                transition: 'all 0.3s ease',
-                                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
+                                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                boxShadow: 'inset 0 4px 12px rgba(0,0,0,0.2)',
+                                letterSpacing: '0.5px'
                             }}
                             className="search-input-focus"
                         />
                     </div>
                 </div>
 
-                {/* Content Area */}
-                <div style={{ padding: '25px', minHeight: '60vh' }} className="custom-scrollbar">
+                {/* Content Area - Optimized Grid Layout */}
+                <div style={{ padding: '20px', minHeight: '65vh' }} className="custom-scrollbar">
                     <AnimatePresence mode="wait">
                         {activeTab === 'drivers' && (
                             <motion.div
                                 key="drivers"
-                                initial={{ opacity: 0, y: 10 }}
+                                initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                className="livefeed-cards-grid"
-                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '20px' }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ duration: 0.4, ease: "easeOut" }}
+                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '25px' }}
                             >
                                 {filteredDrivers.sort((a, b) => {
                                     const statusPriority = { 'Present': 1, 'Completed': 2, 'Absent': 3 };
@@ -430,93 +473,188 @@ const LiveFeed = () => {
                                 }).map((driver) => (
                                     <motion.div
                                         key={driver._id}
-                                        whileHover={{ y: -5, background: 'rgba(255,255,255,0.05)' }}
+                                        layout
+                                        whileHover={{ y: -8, scale: 1.01, boxShadow: '0 30px 60px -12px rgba(0,0,0,0.7)' }}
                                         onClick={() => {
                                             setSelectedDriver(driver);
                                             setShowDriverModal(true);
                                         }}
                                         style={{
-                                            padding: '20px',
-                                            background: 'rgba(255,255,255,0.02)',
-                                            borderRadius: '24px',
-                                            border: '1px solid rgba(255,255,255,0.05)',
+                                            padding: '24px',
+                                            background: 'linear-gradient(165deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9))',
+                                            borderRadius: '32px',
+                                            border: '1px solid rgba(255,255,255,0.08)',
+                                            backdropFilter: 'blur(20px)',
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '16px',
+                                            gap: '20px',
                                             cursor: 'pointer',
-                                            transition: 'all 0.3s ease'
+                                            transition: 'all 0.5s cubic-bezier(0.23, 1, 0.32, 1)',
+                                            position: 'relative',
+                                            overflow: 'hidden'
                                         }}
                                     >
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                                        {/* Status Glow Indicator */}
+                                        <div style={{
+                                            position: 'absolute',
+                                            top: 0,
+                                            left: 0,
+                                            width: '4px',
+                                            height: '100%',
+                                            background: driver.status === 'Present' ? '#10b981' : (driver.status === 'Completed' ? '#8b5cf6' : 'transparent'),
+                                            boxShadow: driver.status === 'Present' ? '0 0 20px #10b981' : (driver.status === 'Completed' ? '0 0 20px #8b5cf6' : 'none')
+                                        }} />
+
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
                                                 <div style={{
-                                                    width: '50px',
-                                                    height: '50px',
-                                                    borderRadius: '16px',
-                                                    background: driver.status === 'Present' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.05)',
+                                                    width: '60px',
+                                                    height: '60px',
+                                                    borderRadius: '22px',
+                                                    background: driver.status === 'Present' ? 'linear-gradient(135deg, #059669, #10b981)' : 'rgba(255,255,255,0.03)',
                                                     display: 'flex',
                                                     justifyContent: 'center',
                                                     alignItems: 'center',
-                                                    border: `1px solid ${driver.status === 'Present' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(255,255,255,0.1)'}`
+                                                    border: `1px solid ${driver.status === 'Present' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255,255,255,0.08)'}`,
+                                                    boxShadow: driver.status === 'Present' ? '0 12px 24px -6px rgba(16, 185, 129, 0.4)' : 'none',
+                                                    position: 'relative'
                                                 }}>
-                                                    <span style={{ fontSize: '18px', fontWeight: '900', color: driver.status === 'Present' ? '#10b981' : 'white' }}>{driver.name.charAt(0)}</span>
+                                                    <span style={{ fontSize: '24px', fontWeight: '1000', color: driver.status === 'Present' ? 'white' : 'rgba(255,255,255,0.3)' }}>{driver.name.charAt(0)}</span>
+                                                    {driver.status === 'Present' && (
+                                                        <div className="pulse-animation" style={{
+                                                            position: 'absolute',
+                                                            bottom: '-4px',
+                                                            right: '-4px',
+                                                            width: '14px',
+                                                            height: '14px',
+                                                            borderRadius: '50%',
+                                                            background: '#10b981',
+                                                            border: '3px solid #0f172a',
+                                                            boxShadow: '0 0 10px #10b981'
+                                                        }} />
+                                                    )}
                                                 </div>
                                                 <div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                        <h4 style={{ margin: 0, color: 'white', fontSize: '16px', fontWeight: '800' }}>{driver.name}</h4>
-                                                        {driver.status === 'Present' && <div className="pulse-animation" style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />}
+                                                    <h4 style={{ margin: 0, color: 'white', fontSize: '20px', fontWeight: '1000', letterSpacing: '-0.5px', marginBottom: '4px' }}>{driver.name}</h4>
+                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div style={{ padding: '4px', borderRadius: '6px', background: 'rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center' }}>
+                                                            <Phone size={11} color="rgba(255,255,255,0.3)" />
+                                                        </div>
+                                                        {driver.mobile}
                                                     </div>
-                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '600', marginTop: '1px' }}>{driver.mobile}</div>
                                                 </div>
                                             </div>
                                             <div style={{
-                                                fontSize: '10px',
-                                                fontWeight: '900',
-                                                color: driver.status === 'Present' ? '#10b981' : (driver.status === 'Completed' ? '#8b5cf6' : 'rgba(255,255,255,0.3)'),
-                                                background: driver.status === 'Present' ? 'rgba(16, 185, 129, 0.1)' : (driver.status === 'Completed' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255,255,255,0.05)'),
-                                                padding: '4px 10px',
-                                                borderRadius: '8px',
+                                                fontSize: '11px',
+                                                fontWeight: '1000',
+                                                color: driver.status === 'Present' ? '#10b981' : (driver.status === 'Completed' ? '#a78bfa' : 'rgba(255,255,255,0.3)'),
+                                                background: driver.status === 'Present' ? 'rgba(16, 185, 129, 0.1)' : (driver.status === 'Completed' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255,255,255,0.03)'),
+                                                padding: '6px 14px',
+                                                borderRadius: '12px',
                                                 textTransform: 'uppercase',
-                                                letterSpacing: '0.5px'
+                                                letterSpacing: '1.2px',
+                                                border: `1px solid ${driver.status === 'Present' ? 'rgba(16, 185, 129, 0.2)' : (driver.status === 'Completed' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.05)')}`,
+                                                boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
                                             }}>
                                                 {driver.status}
                                             </div>
                                         </div>
 
-                                        {driver.attendances && driver.attendances.length > 0 ? (
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                {driver.attendances.map((att, idx) => {
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', position: 'relative' }}>
+                                            {driver.attendances && driver.attendances.length > 0 ? (
+                                                driver.attendances.map((att, idx) => {
                                                     const isComp = att.status === 'completed';
                                                     return (
                                                         <div key={idx} style={{
-                                                            padding: '12px',
-                                                            background: 'rgba(0,0,0,0.2)',
-                                                            borderRadius: '16px',
-                                                            border: '1px solid rgba(255,255,255,0.03)',
+                                                            padding: '16px',
+                                                            background: isComp ? 'rgba(15, 23, 42, 0.4)' : 'rgba(14, 165, 233, 0.05)',
+                                                            borderRadius: '24px',
+                                                            border: `1px solid ${isComp ? 'rgba(255,255,255,0.05)' : 'rgba(14, 165, 233, 0.2)'}`,
                                                             display: 'flex',
                                                             justifyContent: 'space-between',
-                                                            alignItems: 'center'
+                                                            alignItems: 'center',
+                                                            transition: 'all 0.3s ease',
+                                                            position: 'relative'
                                                         }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                                <Car size={14} color={isComp ? 'rgba(255,255,255,0.2)' : '#0ea5e9'} />
-                                                                <span style={{ fontSize: '13px', color: 'white', fontWeight: '700' }}>{att.vehicle?.carNumber?.split('#')[0]}</span>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                                                <div style={{
+                                                                    width: '40px',
+                                                                    height: '40px',
+                                                                    borderRadius: '14px',
+                                                                    background: isComp ? 'rgba(255,255,255,0.02)' : 'rgba(14, 165, 233, 0.1)',
+                                                                    display: 'flex',
+                                                                    justifyContent: 'center',
+                                                                    alignItems: 'center',
+                                                                    border: `1px solid ${isComp ? 'rgba(255,255,255,0.04)' : 'rgba(14, 165, 233, 0.2)'}`
+                                                                }}>
+                                                                    <Car size={18} color={isComp ? 'rgba(255,255,255,0.2)' : '#0ea5e9'} strokeWidth={2.5} />
+                                                                </div>
+                                                                <div>
+                                                                    <div style={{ fontSize: '15px', color: isComp ? 'rgba(255,255,255,0.7)' : 'white', fontWeight: '1000', letterSpacing: '0.4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                                        {att.vehicle?.carNumber?.split('#')[0]}
+                                                                        {att.vehicle?.model && (
+                                                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '700', textTransform: 'uppercase' }}>
+                                                                                • {att.vehicle.model}
+                                                                            </span>
+                                                                        )}
+                                                                    </div>
+                                                                    <div style={{
+                                                                        fontSize: '9px',
+                                                                        color: isComp ? 'rgba(255,255,255,0.25)' : '#0ea5e9',
+                                                                        fontWeight: '900',
+                                                                        textTransform: 'uppercase',
+                                                                        letterSpacing: '1px',
+                                                                        marginTop: '2px',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '4px'
+                                                                    }}>
+                                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isComp ? 'rgba(255,255,255,0.1)' : '#0ea5e9' }} />
+                                                                        {isComp ? 'Shift Ended' : 'Active Duty'}
+                                                                    </div>
+                                                                </div>
                                                             </div>
-                                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontWeight: '600' }}>
-                                                                {formatTime(att.punchIn?.time)}
-                                                                {att.punchOut?.time && ` → ${formatTime(att.punchOut.time)}`}
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <div style={{ fontSize: '13px', color: isComp ? 'rgba(255,255,255,0.6)' : 'white', fontWeight: '900', fontFamily: 'monospace' }}>{formatTime(att.punchIn?.time)}</div>
+                                                                {att.punchOut?.time && (
+                                                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)', fontWeight: '800', marginTop: '1px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
+                                                                        <Clock size={10} />
+                                                                        {formatTime(att.punchOut.time)}
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     );
-                                                })}
-                                            </div>
-                                        ) : (
-                                            <div style={{ padding: '12px', textAlign: 'center', color: 'rgba(255,255,255,0.15)', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>NO ACTIVE SHIFTS</div>
-                                        )}
+                                                })
+                                            ) : (
+                                                <div style={{
+                                                    padding: '30px',
+                                                    textAlign: 'center',
+                                                    color: 'rgba(255,255,255,0.05)',
+                                                    fontSize: '11px',
+                                                    fontWeight: '1000',
+                                                    letterSpacing: '3px',
+                                                    border: '2px dashed rgba(255,255,255,0.03)',
+                                                    borderRadius: '24px',
+                                                    textTransform: 'uppercase'
+                                                }}>Stationary</div>
+                                            )}
+                                        </div>
 
                                         {driver.isFreelancer && (
-                                            <div style={{ marginTop: 'auto', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.03)', display: 'flex', justifyContent: 'flex-end' }}>
-                                                <span style={{ fontSize: '9px', background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', padding: '2px 8px', borderRadius: '6px', fontWeight: '900', letterSpacing: '0.5px' }}>FREELANCER</span>
-                                            </div>
+                                            <div style={{
+                                                position: 'absolute',
+                                                bottom: '12px',
+                                                right: '24px',
+                                                fontSize: '9px',
+                                                background: 'linear-gradient(135deg, rgba(129, 140, 248, 0.1), rgba(99, 102, 241, 0.1))',
+                                                color: '#818cf8',
+                                                padding: '3px 10px',
+                                                borderRadius: '8px',
+                                                fontWeight: '1000',
+                                                letterSpacing: '1px',
+                                                border: '1px solid rgba(129, 140, 248, 0.15)'
+                                            }}>FREELANCER UNIT</div>
                                         )}
                                     </motion.div>
                                 ))}
@@ -526,77 +664,90 @@ const LiveFeed = () => {
                         {activeTab === 'vehicles' && (
                             <motion.div
                                 key="vehicles"
-                                initial={{ opacity: 0, y: 10 }}
+                                initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                exit={{ opacity: 0, y: -10 }}
-                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '20px' }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ duration: 0.4 }}
+                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '25px' }}
                             >
                                 {filteredVehicles.sort((a, b) => (a.status !== 'Idle' ? -1 : 1)).map((vehicle) => (
                                     <motion.div
                                         key={vehicle._id}
-                                        whileHover={{ y: -5, background: 'rgba(255,255,255,0.05)' }}
+                                        whileHover={{ y: -8, scale: 1.02 }}
                                         style={{
-                                            padding: '20px',
-                                            background: 'rgba(255,255,255,0.02)',
-                                            borderRadius: '24px',
-                                            border: '1px solid rgba(255,255,255,0.05)',
+                                            padding: '24px',
+                                            background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.6))',
+                                            borderRadius: '28px',
+                                            border: '1px solid rgba(255,255,255,0.06)',
                                             display: 'flex',
                                             flexDirection: 'column',
-                                            gap: '16px',
-                                            transition: 'all 0.3s ease'
+                                            gap: '20px',
+                                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
                                         }}
                                     >
                                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
                                                 <div style={{
-                                                    width: '50px',
-                                                    height: '50px',
-                                                    borderRadius: '16px',
-                                                    background: 'rgba(14, 165, 233, 0.05)',
+                                                    width: '56px',
+                                                    height: '56px',
+                                                    borderRadius: '20px',
+                                                    background: 'rgba(14, 165, 233, 0.08)',
                                                     display: 'flex',
                                                     justifyContent: 'center',
                                                     alignItems: 'center',
-                                                    border: '1px solid rgba(14, 165, 233, 0.1)'
+                                                    border: '1px solid rgba(14, 165, 233, 0.2)'
                                                 }}>
-                                                    <Car size={24} color="#0ea5e9" />
+                                                    <Car size={28} color="#0ea5e9" strokeWidth={2.5} />
                                                 </div>
                                                 <div>
-                                                    <h4 style={{ margin: 0, color: 'white', fontSize: '16px', fontWeight: '800' }}>{vehicle.carNumber.split('#')[0]}</h4>
-                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '600' }}>{vehicle.model}</div>
+                                                    <h4 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '950', letterSpacing: '-0.5px' }}>{vehicle.carNumber.split('#')[0]}</h4>
+                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', fontWeight: '700' }}>{vehicle.model}</div>
                                                 </div>
                                             </div>
                                             {vehicle.fuelAmount > 0 && (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', background: 'rgba(245, 158, 11, 0.1)', padding: '4px 10px', borderRadius: '10px', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                                                    <Fuel size={12} />
-                                                    <span style={{ fontSize: '11px', fontWeight: '900' }}>₹{vehicle.fuelAmount}</span>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(245, 158, 11, 0.12)', padding: '6px 14px', borderRadius: '14px', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.25)', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.1)' }}>
+                                                    <Fuel size={14} strokeWidth={3} />
+                                                    <span style={{ fontSize: '13px', fontWeight: '1000' }}>₹{vehicle.fuelAmount.toLocaleString()}</span>
                                                 </div>
                                             )}
                                         </div>
 
-                                        <div style={{ padding: '4px', background: 'rgba(0,0,0,0.2)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                        <div style={{ padding: '6px', background: 'rgba(0,0,0,0.25)', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
                                             {vehicle.attendances && vehicle.attendances.length > 0 ? (
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                                     {vehicle.attendances.map((att, idx) => {
-                                                         const isComp = att.status === 'completed';
-                                                         return (
+                                                        const isComp = att.status === 'completed';
+                                                        return (
                                                             <div key={idx} style={{
-                                                                padding: '10px 14px',
-                                                                borderRadius: '14px',
+                                                                padding: '12px 16px',
+                                                                borderRadius: '18px',
                                                                 background: isComp ? 'transparent' : 'rgba(255,255,255,0.03)',
                                                                 display: 'flex',
                                                                 justifyContent: 'space-between',
                                                                 alignItems: 'center'
                                                             }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                                    <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '11px', fontWeight: '900', color: 'white' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                    <div style={{
+                                                                        width: '32px',
+                                                                        height: '32px',
+                                                                        borderRadius: '50%',
+                                                                        background: 'linear-gradient(135deg, #334155, #1e293b)',
+                                                                        display: 'flex',
+                                                                        justifyContent: 'center',
+                                                                        alignItems: 'center',
+                                                                        fontSize: '12px',
+                                                                        fontWeight: '1000',
+                                                                        color: 'white',
+                                                                        border: '1px solid rgba(255,255,255,0.1)'
+                                                                    }}>
                                                                         {att.driver?.name?.charAt(0) || '👤'}
                                                                     </div>
                                                                     <div>
-                                                                        <div style={{ fontSize: '12px', color: 'white', fontWeight: '700' }}>{att.driver?.name || 'Driver'}</div>
-                                                                        <div style={{ fontSize: '10px', color: isComp ? 'rgba(255,255,255,0.3)' : '#0ea5e9', fontWeight: '800', textTransform: 'uppercase' }}>{isComp ? 'Completed' : 'On Duty'}</div>
+                                                                        <div style={{ fontSize: '13px', color: 'white', fontWeight: '800' }}>{att.driver?.name || 'Driver'}</div>
+                                                                        <div style={{ fontSize: '10px', color: isComp ? 'rgba(255,255,255,0.2)' : '#0ea5e9', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{isComp ? 'Exited' : 'Commanding'}</div>
                                                                     </div>
                                                                 </div>
-                                                                <div style={{ textAlign: 'right', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>
+                                                                <div style={{ textAlign: 'right', fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>
                                                                     {formatTime(att.punchIn?.time)}
                                                                 </div>
                                                             </div>
@@ -604,7 +755,15 @@ const LiveFeed = () => {
                                                     })}
                                                 </div>
                                             ) : (
-                                                <div style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.1)', fontSize: '11px', fontWeight: '900', letterSpacing: '2px' }}>IDLE</div>
+                                                <div style={{
+                                                    padding: '30px',
+                                                    textAlign: 'center',
+                                                    color: 'rgba(255,255,255,0.08)',
+                                                    fontSize: '12px',
+                                                    fontWeight: '1000',
+                                                    letterSpacing: '3px',
+                                                    textTransform: 'uppercase'
+                                                }}>Hangar / Idle</div>
                                             )}
                                         </div>
                                     </motion.div>

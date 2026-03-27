@@ -224,14 +224,14 @@ const Reports = ({ isSubComponent = false }) => {
 
     const toggleTab = (id) => {
         setActiveTabs(prev => {
-            // Case: Switching from 'All' state to a specific one
-            if (prev.length > 1) return [id];
-
-            // Case: If already on this specific one, toggle back to 'All'
-            if (prev.includes(id)) return tabList.map(t => t.id);
-
-            // Case: Switching between two specific ones
-            return [id];
+            // Toggle logic: add if missing, remove if present.
+            if (prev.includes(id)) {
+                // If this is the only one active, clicking it again should reset/show all 
+                // to make it easier to go back to the standard view.
+                if (prev.length === 1) return tabList.map(t => t.id);
+                return prev.filter(t => t !== id);
+            }
+            return [...prev, id];
         });
     };
 
@@ -364,9 +364,54 @@ const Reports = ({ isSubComponent = false }) => {
         XLSX.writeFile(wb, `Reports_${dateSuffix}.xlsx`);
     };
 
+    /* ── Grouping Helper (One Row Per Driver Per Day) ── */
+    const groupAttendance = (list) => {
+        const map = new Map();
+        list.forEach(r => {
+            const dId = r.driver?._id || r.driver || 'unk';
+            const dateStr = r.date;
+            const key = `${dId}_${dateStr}`;
+            
+            const isSelfPaid = (att) => att.punchOut?.parkingPaidBy !== 'Office';
+            const parkVal = (att) => Number(att.punchOut?.tollParkingAmount) || 0;
+            const bonusVal = (att) => Math.max((Number(att.punchOut?.allowanceTA) || 0) + (Number(att.punchOut?.nightStayAmount) || 0), Number(att.outsideTrip?.bonusAmount) || 0);
+
+            if (!map.has(key)) {
+                map.set(key, {
+                    ...r,
+                    _id: `group_${key}`,
+                    attendances: [r],
+                    totalKM: Number(r.totalKM) || 0,
+                    fuelAmt: Number(r.fuel?.amount) || 0,
+                    parkAmt: parkVal(r),
+                    reimbursableParkAmt: isSelfPaid(r) ? parkVal(r) : 0,
+                    bonusAmt: bonusVal(r),
+                    entryType: 'attendance_group'
+                });
+            } else {
+                const grp = map.get(key);
+                grp.attendances.push(r);
+                grp.totalKM += (Number(r.totalKM) || 0);
+                grp.fuelAmt += (Number(r.fuel?.amount) || 0);
+                grp.parkAmt += parkVal(r);
+                grp.reimbursableParkAmt += (isSelfPaid(r) ? parkVal(r) : 0);
+                grp.bonusAmt += bonusVal(r);
+                
+                if (r.status !== 'completed') grp.status = 'incomplete';
+                if (r.punchOut?.time && (!grp.punchOut?.time || new Date(r.punchOut.time) > new Date(grp.punchOut.time))) {
+                    grp.punchOut = r.punchOut;
+                }
+            }
+        });
+        return Array.from(map.values());
+    };
+
     /* ── filtered attendance partitions ── */
-    const staffDrivers = useMemo(() => reportsData.attendance.filter(r => r.driver && !r.vehicle?.isOutsideCar && !r.isOutsideCar && !r.isFreelancer && !r.driver?.isFreelancer).map(r => ({ ...r, entryType: 'attendance' })), [reportsData.attendance]);
-    const freelancerDrivers = useMemo(() => reportsData.attendance.filter(r => r.driver && (r.isFreelancer || r.driver?.isFreelancer)).map(r => ({ ...r, entryType: 'attendance' })), [reportsData.attendance]);
+    const staffDriversRaw = useMemo(() => reportsData.attendance.filter(r => r.driver && !r.vehicle?.isOutsideCar && !r.isOutsideCar && !r.isFreelancer && !r.driver?.isFreelancer).map(r => ({ ...r, entryType: 'attendance' })), [reportsData.attendance]);
+    const freelancerDriversRaw = useMemo(() => reportsData.attendance.filter(r => r.driver && (r.isFreelancer || r.driver?.isFreelancer)).map(r => ({ ...r, entryType: 'attendance' })), [reportsData.attendance]);
+    
+    const staffDrivers = useMemo(() => groupAttendance(staffDriversRaw), [staffDriversRaw]);
+    const freelancerDrivers = useMemo(() => groupAttendance(freelancerDriversRaw), [freelancerDriversRaw]);
     const standaloneParking = useMemo(() => (reportsData.parking || []).map(r => ({ ...r, entryType: 'parking' })), [reportsData.parking]);
 
     const applySearch = (list) => {
@@ -403,20 +448,23 @@ const Reports = ({ isSubComponent = false }) => {
     /* ── Attendance row renderer ── */
     const AttRow = ({ r, idx, isLogbook = false }) => {
         const entryType = r.entryType || 'attendance';
+        const isGroup = entryType === 'attendance_group';
         const isCompleted = r.status === 'completed';
         const inTime = fmtTime(r.punchIn?.time);
         const outTime = fmtTime(r.punchOut?.time);
-        const openKM = r.punchIn?.km ?? '--';
-        const closeKM = r.punchOut?.km ?? '--';
-        const totalKM = r.totalKM ?? (typeof openKM === 'number' && typeof closeKM === 'number' ? closeKM - openKM : '--');
+        const openKM = isGroup ? r.attendances[0]?.punchIn?.km : (r.punchIn?.km ?? '--');
+        const closeKM = isGroup ? r.attendances[r.attendances.length - 1]?.punchOut?.km : (r.punchOut?.km ?? '--');
+        const totalKM = isGroup ? r.totalKM : (r.totalKM ?? (typeof openKM === 'number' && typeof closeKM === 'number' ? closeKM - openKM : '--'));
+        
         const wage = Number(r.dailyWage) || 0;
-        const bonus = Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
-        const parkAmt = (entryType === 'parking' ? Number(r.amount) : Number(r.punchOut?.tollParkingAmount)) || 0;
+        const bonus = isGroup ? r.bonusAmt : Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
+        const parkAmt = isGroup ? r.parkAmt : ((entryType === 'parking' ? Number(r.amount) : Number(r.punchOut?.tollParkingAmount)) || 0);
+        const reimbursableParkAmt = isGroup ? r.reimbursableParkAmt : (r.punchOut?.parkingPaidBy !== 'Office' ? parkAmt : 0);
         const parkBy = r.punchOut?.parkingPaidBy || (entryType === 'parking' ? 'Office' : 'Self');
-        const fuelAmt = Number(r.fuel?.amount) || 0;
+        const fuelAmt = isGroup ? r.fuelAmt : (Number(r.fuel?.amount) || 0);
 
         // Total to show in salary column (Wage + Bonus + Reimbursable Parking)
-        const rowSalaryTotal = wage + bonus + (parkBy !== 'Office' ? parkAmt : 0);
+        const rowSalaryTotal = wage + bonus + (entryType === 'parking' ? 0 : reimbursableParkAmt);
 
         const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
 
@@ -458,37 +506,40 @@ const Reports = ({ isSubComponent = false }) => {
                         </div>
                         <div>
                             <div style={{ color: 'white', fontWeight: '800', fontSize: '13px', whiteSpace: 'nowrap' }}>{r.driver?.name || r.vehicle?.driverName || (entryType === 'parking' ? 'Administrative' : 'N/A')}</div>
-                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '1px' }}><Car size={9} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} />{r.vehicle?.carNumber?.split('#')[0] || '--'}</div>
+                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '1px' }}>
+                                <Car size={9} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} />
+                                {isGroup ? `${r.attendances.length} Duty Logs` : (r.vehicle?.carNumber?.split('#')[0] || '--')}
+                            </div>
                         </div>
                     </div>
                 </TD>
-                <TD noWrap>{entryType === 'attendance' ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#10b981', fontWeight: '800', fontSize: '13px' }}><ArrowUpRight size={13} />{inTime}</div> : '--'}</TD>
+                <TD noWrap>{entryType.includes('attendance') ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#10b981', fontWeight: '800', fontSize: '13px' }}><ArrowUpRight size={13} />{inTime}</div> : '--'}</TD>
                 <TD noWrap>
-                    {entryType !== 'attendance' ? '--' : (isCompleted
+                    {entryType.includes('attendance') ? (isCompleted
                         ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#f43f5e', fontWeight: '800', fontSize: '13px' }}><ArrowDownLeft size={13} />{outTime}</div>
-                        : <StatusBadge ok={false} badLabel="⏳ On Duty" />)}
+                        : <StatusBadge ok={false} badLabel="⏳ On Duty" />) : '--'}
                 </TD>
                 <TD noWrap>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: entryType === 'attendance' ? '#38bdf8' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{openKM}</div>
+                        <div style={{ color: entryType.includes('attendance') ? '#38bdf8' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{openKM}</div>
                         <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>OPEN KM</div>
                     </div>
                 </TD>
                 <TD noWrap>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: (entryType === 'attendance' && isCompleted) ? '#f43f5e' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{closeKM}</div>
+                        <div style={{ color: (entryType.includes('attendance') && isCompleted) ? '#f43f5e' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{closeKM}</div>
                         <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>CLOSE KM</div>
                     </div>
                 </TD>
                 <TD noWrap>
                     <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: entryType === 'attendance' ? 'white' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{totalKM !== '--' ? totalKM : '--'}</div>
+                        <div style={{ color: entryType.includes('attendance') ? 'white' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{totalKM !== '--' ? totalKM : '--'}</div>
                         <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>KM RUN</div>
                     </div>
                 </TD>
                 <TD>
                     {fuelAmt > 0
-                        ? <div><span style={{ color: '#f59e0b', fontWeight: '900', fontSize: '13px' }}>₹{fuelAmt}</span><div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)' }}>{r.fuel?.entries?.length || 1} fill</div></div>
+                        ? <div><span style={{ color: '#f59e0b', fontWeight: '900', fontSize: '13px' }}>₹{fuelAmt}</span><div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)' }}>{isGroup ? r.attendances.filter(a => a.fuel?.amount > 0).length : (r.fuel?.entries?.length || 1)} fill</div></div>
                         : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
                 </TD>
                 <TD>
@@ -501,7 +552,7 @@ const Reports = ({ isSubComponent = false }) => {
                 </TD>
                 <TD>
                     <div>
-                        {entryType === 'attendance' ? (
+                        {entryType.includes('attendance') ? (
                             <>
                                 <span style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{rowSalaryTotal.toLocaleString()}</span>
                                 {(bonus > 0 || (parkBy !== 'Office' && parkAmt > 0)) && (
@@ -517,12 +568,12 @@ const Reports = ({ isSubComponent = false }) => {
                         )}
                     </div>
                 </TD>
-                <TD noWrap>{entryType === 'attendance' ? <StatusBadge ok={isCompleted} okLabel="✓ Done" badLabel="⏳ Active" /> : <StatusBadge ok={true} okLabel="✓ Recorded" />}</TD>
+                <TD noWrap>{entryType.includes('attendance') ? <StatusBadge ok={isCompleted} okLabel={isGroup ? `✓ ${r.attendances.length} Duties` : "✓ Done"} badLabel="⏳ Active" /> : <StatusBadge ok={true} okLabel="✓ Recorded" />}</TD>
                 <TD>
                     <ActionBtns
-                        onView={() => setSelectedItem({ ...r, entryType: entryType === 'parking' ? 'parking' : 'attendance' })}
-                        onEdit={entryType === 'attendance' ? () => setEditingItem(r) : null}
-                        onDelete={() => handleDelete({ ...r, entryType: entryType === 'parking' ? 'parking' : 'attendance' })}
+                        onView={() => setSelectedItem({ ...r, entryType: entryType === 'parking' ? 'parking' : (isGroup ? 'attendance_group' : 'attendance') })}
+                        onEdit={(entryType === 'attendance' || (isGroup && r.attendances?.length === 1)) ? () => setEditingItem(isGroup ? r.attendances[0] : r) : null}
+                        onDelete={(!isGroup || (isGroup && r.attendances?.length === 1)) ? () => handleDelete(isGroup ? { ...r.attendances[0], entryType: 'attendance' } : { ...r, entryType: entryType === 'parking' ? 'parking' : 'attendance' }) : null}
                     />
                 </TD>
             </TR>
@@ -538,26 +589,17 @@ const Reports = ({ isSubComponent = false }) => {
             /* ── STAFF DRIVERS ── */
             case 'drivers': {
                 const data = applySearch(staffDrivers);
-
-                // Alignment with Payroll Logic (Base wage once per day, all bonuses sum, plus self-paid parking)
-                const aggr = {};
-                data.forEach(r => {
-                    const key = `${r.driver?._id || r.driver || 'unk'}-${r.date}`;
-                    if (!aggr[key]) aggr[key] = { w: Number(r.dailyWage) || 0, b: 0, p: 0 };
-                    const b = Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
-                    const p = r.punchOut?.parkingPaidBy !== 'Office' ? (Number(r.punchOut?.tollParkingAmount) || 0) : 0;
-                    aggr[key].b += b;
-                    aggr[key].p += p;
-                });
-                const totalSalary = Object.values(aggr).reduce((s, v) => s + v.w + v.b + v.p, 0);
+                const totalSalary = data.reduce((s, v) => s + (Number(v.dailyWage) || 0) + (Number(v.bonusAmt) || 0) + (v.reimbursableParkAmt || 0), 0);
                 const totalKMs = data.reduce((s, r) => s + (Number(r.totalKM) || 0), 0);
-                const totalFuel = data.reduce((s, r) => s + (Number(r.fuel?.amount) || 0), 0);
+                const totalFuel = data.reduce((s, r) => s + (Number(r.fuelAmt) || 0), 0);
+                const totalParking = data.reduce((s, r) => s + (Number(r.parkAmt) || 0), 0);
                 return (
                     <TableSection tabId="drivers" fromDate={fromDate} toDate={toDate}
                         colSummaries={{
-                            'Date': { value: `Total: ${data.length}`, color: cfg.color },
+                            'Date': { value: `Total: ${data.length} Groups`, color: cfg.color },
                             'Total KM': { value: `${totalKMs.toLocaleString()}`, color: '#38bdf8' },
                             'Fuel': { value: `₹${totalFuel.toLocaleString()}`, color: '#f59e0b' },
+                            'Parking': { value: `₹${totalParking.toLocaleString()}`, color: '#818cf8' },
                             'Salary': { value: `₹${totalSalary.toLocaleString()}`, color: cfg.color }
                         }}
                         headers={ATT_HEADERS}
@@ -570,25 +612,14 @@ const Reports = ({ isSubComponent = false }) => {
             /* ── FREELANCERS ── */
             case 'freelancers': {
                 const data = applySearch(freelancerDrivers);
-
-                // Alignment with Payroll Logic
-                const aggr = {};
-                data.forEach(r => {
-                    const key = `${r.driver?._id || r.driver || 'unk'}-${r.date}`;
-                    if (!aggr[key]) aggr[key] = { w: Number(r.dailyWage) || 0, b: 0, p: 0 };
-                    const b = Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
-                    const p = r.punchOut?.parkingPaidBy !== 'Office' ? (Number(r.punchOut?.tollParkingAmount) || 0) : 0;
-                    aggr[key].b += b;
-                    aggr[key].p += p;
-                });
-                const totalSalary = Object.values(aggr).reduce((s, v) => s + v.w + v.b + v.p, 0);
+                const totalSalary = data.reduce((s, v) => s + (Number(v.dailyWage) || 0) + (Number(v.bonusAmt) || 0) + (v.reimbursableParkAmt || 0), 0);
                 const totalKMs = data.reduce((s, r) => s + (Number(r.totalKM) || 0), 0);
-                const totalFuel = data.reduce((s, r) => s + (Number(r.fuel?.amount) || 0), 0);
-                const totalParking = data.reduce((s, r) => s + (Number(r.punchOut?.tollParkingAmount) || 0), 0);
+                const totalFuel = data.reduce((s, r) => s + (Number(r.fuelAmt) || 0), 0);
+                const totalParking = data.reduce((s, r) => s + (Number(r.parkAmt) || 0), 0);
                 return (
                     <TableSection tabId="freelancers" fromDate={fromDate} toDate={toDate}
                         colSummaries={{
-                            'Date': { value: `Total: ${data.length}`, color: cfg.color },
+                            'Date': { value: `Total: ${data.length} Groups`, color: cfg.color },
                             'Total KM': { value: `${totalKMs.toLocaleString()}`, color: '#38bdf8' },
                             'Fuel': { value: `₹${totalFuel.toLocaleString()}`, color: '#f59e0b' },
                             'Parking': { value: `₹${totalParking.toLocaleString()}`, color: '#818cf8' },
@@ -626,45 +657,34 @@ const Reports = ({ isSubComponent = false }) => {
         if (loading) return (
             <div style={{ padding: '80px', textAlign: 'center' }}>
                 <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', color: 'rgba(255,255,255,0.3)' }}>
-                    <div className="spinner" /><span style={{ fontSize: '14px' }}>Loading data…</span>
+                    <div className="spinner" /><span style={{ fontSize: '14px' }}>Loading data...</span>
                 </div>
             </div>
         );
 
         if (location.pathname.includes('log-book')) {
-            // Keep standalone parking separate and only in its specific tab to avoid duties view clutter
-            const data = [...staffDrivers, ...freelancerDrivers].filter(r => {
+            const rawData = [...staffDriversRaw, ...freelancerDriversRaw].filter(r => {
                 const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
                 if (isFreelancer) return activeTabs.includes('freelancers') || activeTabs.length > 1;
                 return activeTabs.includes('drivers') || activeTabs.length > 1;
-            }).sort((a, b) => new Date(b.date) - new Date(a.date));
-
+            });
+            
+            const data = groupAttendance(rawData).sort((a, b) => new Date(b.date) - new Date(a.date));
             const searchedData = applySearch(data);
 
-            // Alignment with Payroll Logic
-            const aggr = {};
-            searchedData.forEach(r => {
-                if (r.entryType !== 'attendance') return; // Only attendance counts for driver salary aggr here
-                const key = `${r.driver?._id || r.driver || 'unk'}-${r.date}`;
-                if (!aggr[key]) aggr[key] = { w: Number(r.dailyWage) || 0, b: 0, p: 0 };
-                const b = Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
-                const p = r.punchOut?.parkingPaidBy !== 'Office' ? (Number(r.punchOut?.tollParkingAmount) || 0) : 0;
-                aggr[key].b += b;
-                aggr[key].p += p;
-            });
-            const totalSalary = Object.values(aggr).reduce((s, v) => s + v.w + v.b + v.p, 0);
-
+            const totalSalary = searchedData.reduce((s, v) => s + (Number(v.dailyWage) || 0) + (Number(v.bonusAmt) || 0) + (v.reimbursableParkAmt || 0), 0);
             const totalKMs = searchedData.reduce((s, r) => s + (Number(r.totalKM) || 0), 0);
-            const totalFuel = searchedData.reduce((s, r) => s + (Number(r.fuel?.amount) || 0), 0);
-            const totalParking = searchedData.reduce((s, r) => s + (Number(r.punchOut?.tollParkingAmount) || 0), 0);
+            const totalFuel = searchedData.reduce((s, r) => s + (Number(r.fuelAmt) || 0), 0);
+            const totalParking = searchedData.reduce((s, r) => s + (Number(r.parkAmt) || 0), 0);
 
             return (
                 <TableSection tabId="logbook" fromDate={fromDate} toDate={toDate}
                     colSummaries={{
-                        'Date': { value: `Total: ${searchedData.length}`, color: '#fbbf24' },
+                        'Date': { value: `Total: ${searchedData.length} Groups`, color: '#fbbf24' },
                         'Total KM': { value: `${totalKMs.toLocaleString()}`, color: '#38bdf8' },
                         'Fuel': { value: `₹${totalFuel.toLocaleString()}`, color: '#f59e0b' },
-                        'Parking': { value: `₹${totalParking.toLocaleString()}`, color: '#818cf8' }
+                        'Parking': { value: `₹${totalParking.toLocaleString()}`, color: '#818cf8' },
+                        'Salary': { value: `₹${totalSalary.toLocaleString()}`, color: '#fbbf24' }
                     }}
                     headers={LOGBOOK_HEADERS}
                     rows={searchedData.map((r, i) => <AttRow key={r._id} r={r} idx={i} isLogbook />)}

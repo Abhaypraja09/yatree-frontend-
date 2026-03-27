@@ -19,19 +19,22 @@ const OutsideCars = () => {
     const [ownerFilter, setOwnerFilter] = useState('All');
     const [propertyFilter, setPropertyFilter] = useState('All');
     const [transactionFilter, setTransactionFilter] = useState('Buy');
+    const [viewMode, setViewMode] = useState('monthly'); // 'monthly' or 'range'
 
     useEffect(() => {
-        if (selectedDay === 'All') {
-            const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
-            const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
-            setFromDate(start);
-            setToDate(end);
-        } else {
-            const d = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
-            setFromDate(d);
-            setToDate(d);
+        if (viewMode === 'monthly') {
+            if (selectedDay === 'All') {
+                const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
+                const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+                setFromDate(start);
+                setToDate(end);
+            } else {
+                const d = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+                setFromDate(d);
+                setToDate(d);
+            }
         }
-    }, [selectedMonth, selectedYear, selectedDay]);
+    }, [selectedMonth, selectedYear, selectedDay, viewMode]);
 
     /* navigate dates */
     const shiftDays = (n) => {
@@ -633,100 +636,160 @@ const OutsideCars = () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            {/* PREMIUM DAY NAV PILL (FROM IMAGE) */}
-                            <div style={{
+                            <div className="premium-scroll" style={{
                                 display: 'flex',
-                                alignItems: 'center',
-                                background: 'rgba(0,0,0,0.4)',
+                                background: 'rgba(15, 23, 42, 0.6)',
                                 padding: '4px',
-                                borderRadius: '20px',
-                                border: '1px solid rgba(255,255,255,0.06)'
+                                borderRadius: '16px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                gap: '4px'
                             }}>
-                                <button onClick={() => shiftDays(-1)} style={{
-                                    width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
-                                }}> <ChevronLeft size={18} /> </button>
-
-                                <div
-                                    onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                    style={{ height: '42px', minWidth: '140px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '16px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
-                                >
-                                    <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
-                                        {selectedDay === 'All' ?
-                                            ` ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
-                                            formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
-                                    </span>
-                                    <input
-                                        type="date"
-                                        value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
-                                        onChange={e => {
-                                            const d = new Date(e.target.value);
-                                            setSelectedYear(d.getFullYear());
-                                            setSelectedMonth(d.getMonth());
-                                            setSelectedDay(d.getDate().toString());
-                                        }}
-                                        style={{ position: 'absolute', inset: 0, opacity: 0 }}
-                                    />
-                                </div>
-
-                                <button onClick={() => shiftDays(1)} style={{
-                                    width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
-                                }}> <ChevronRight size={18} /> </button>
+                                <button
+                                    onClick={() => setViewMode('monthly')}
+                                    style={{
+                                        padding: '8px 16px',
+                                        borderRadius: '12px',
+                                        fontSize: '10px',
+                                        fontWeight: '900',
+                                        cursor: 'pointer',
+                                        background: viewMode === 'monthly' ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
+                                        color: viewMode === 'monthly' ? '#38bdf8' : 'rgba(255,255,255,0.4)',
+                                        border: 'none',
+                                        textTransform: 'uppercase'
+                                    }}
+                                >Monthly</button>
+                                <button
+                                    onClick={() => setViewMode('range')}
+                                    style={{
+                                        padding: '8px 16px',
+                                        borderRadius: '12px',
+                                        fontSize: '10px',
+                                        fontWeight: '900',
+                                        cursor: 'pointer',
+                                        background: viewMode === 'range' ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
+                                        color: viewMode === 'range' ? '#38bdf8' : 'rgba(255,255,255,0.4)',
+                                        border: 'none',
+                                        textTransform: 'uppercase'
+                                    }}
+                                >Range</button>
                             </div>
 
-                            {/* DYNAMIC "SHOW FULL MONTH" TAB */}
-                            {selectedDay !== 'All' && (
-                                <motion.button
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    onClick={() => setSelectedDay('All')}
-                                    style={{
-                                        height: '50px',
-                                        padding: '0 20px',
-                                        borderRadius: '16px',
-                                        background: 'rgba(251, 191, 36, 0.1)',
-                                        border: '1px solid rgba(251, 191, 36, 0.2)',
-                                        color: '#fbbf24',
-                                        fontSize: '11px',
-                                        fontWeight: '950',
-                                        cursor: 'pointer',
+                            {viewMode === 'monthly' ? (
+                                <>
+                                    {/* PREMIUM DAY NAV PILL */}
+                                    <div style={{
                                         display: 'flex',
                                         alignItems: 'center',
-                                        gap: '8px',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.5px'
-                                    }}
-                                >
-                                    <Calendar size={14} /> View Full Month
-                                </motion.button>
+                                        background: 'rgba(0,0,0,0.4)',
+                                        padding: '4px',
+                                        borderRadius: '20px',
+                                        border: '1px solid rgba(255,255,255,0.06)'
+                                    }}>
+                                        <button onClick={() => shiftDays(-1)} style={{
+                                            width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
+                                        }}> <ChevronLeft size={18} /> </button>
+
+                                        <div
+                                            onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                            style={{ height: '42px', minWidth: '140px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '16px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
+                                        >
+                                            <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                                                {selectedDay === 'All' ?
+                                                    ` ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
+                                                    formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
+                                            </span>
+                                            <input
+                                                type="date"
+                                                value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                                onChange={e => {
+                                                    const d = new Date(e.target.value);
+                                                    setSelectedYear(d.getFullYear());
+                                                    setSelectedMonth(d.getMonth());
+                                                    setSelectedDay(d.getDate().toString());
+                                                }}
+                                                style={{ position: 'absolute', inset: 0, opacity: 0 }}
+                                            />
+                                        </div>
+
+                                        <button onClick={() => shiftDays(1)} style={{
+                                            width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
+                                        }}> <ChevronRight size={18} /> </button>
+                                    </div>
+
+                                    {/* DYNAMIC "SHOW FULL MONTH" TAB */}
+                                    {selectedDay !== 'All' && (
+                                        <motion.button
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            onClick={() => setSelectedDay('All')}
+                                            style={{
+                                                height: '50px',
+                                                padding: '0 20px',
+                                                borderRadius: '16px',
+                                                background: 'rgba(251, 191, 36, 0.1)',
+                                                border: '1px solid rgba(251, 191, 36, 0.2)',
+                                                color: '#fbbf24',
+                                                fontSize: '11px',
+                                                fontWeight: '950',
+                                                cursor: 'pointer',
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '8px',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '0.5px'
+                                            }}
+                                        >
+                                            <Calendar size={14} /> View Full Month
+                                        </motion.button>
+                                    )}
+
+                                    <select
+                                        value={selectedMonth}
+                                        onChange={e => {
+                                            setSelectedMonth(Number(e.target.value));
+                                            setSelectedDay('All'); // Show full month on change
+                                        }}
+                                        className="premium-compact-input"
+                                        style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px' }}
+                                    >
+                                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
+                                            <option key={m} value={idx}>{m}</option>
+                                        ))}
+                                    </select>
+
+                                    <select
+                                        value={selectedYear}
+                                        onChange={e => {
+                                            setSelectedYear(Number(e.target.value));
+                                            setSelectedDay('All'); // Show full month on change
+                                        }}
+                                        className="premium-compact-input"
+                                        style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '80px' }}
+                                    >
+                                        {[2024, 2025, 2026, 2027].map(y => (
+                                            <option key={y} value={y}>{y}</option>
+                                        ))}
+                                    </select>
+                                </>
+                            ) : (
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                    <input
+                                        type="date"
+                                        value={fromDate}
+                                        onChange={e => setFromDate(e.target.value)}
+                                        className="premium-compact-input"
+                                        style={{ height: '42px', width: '130px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', fontSize: '11px', padding: '0 12px' }}
+                                    />
+                                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900' }}>TO</span>
+                                    <input
+                                        type="date"
+                                        value={toDate}
+                                        onChange={e => setToDate(e.target.value)}
+                                        className="premium-compact-input"
+                                        style={{ height: '42px', width: '130px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', fontSize: '11px', padding: '0 12px' }}
+                                    />
+                                </div>
                             )}
-
-                            <select
-                                value={selectedMonth}
-                                onChange={e => {
-                                    setSelectedMonth(Number(e.target.value));
-                                    setSelectedDay('All'); // Show full month on change
-                                }}
-                                className="premium-compact-input"
-                                style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px' }}
-                            >
-                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
-                                    <option key={m} value={idx}>{m}</option>
-                                ))}
-                            </select>
-
-                            <select
-                                value={selectedYear}
-                                onChange={e => {
-                                    setSelectedYear(Number(e.target.value));
-                                    setSelectedDay('All'); // Show full month on change
-                                }}
-                                className="premium-compact-input"
-                                style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '80px' }}
-                            >
-                                {[2024, 2025, 2026, 2027].map(y => (
-                                    <option key={y} value={y}>{y}</option>
-                                ))}
-                            </select>
                         </div>
                     </div>
                 </div>
