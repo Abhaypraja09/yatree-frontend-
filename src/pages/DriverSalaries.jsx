@@ -369,24 +369,33 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             doc.text('PAYMENT OVERVIEW', pageWidth / 2 + 5, 68);
 
             const totalEarned = summary.grandTotal || ((summary.totalWages || 0) + (summary.parkingTotal || 0));
-            const netPayable = summary.netPayable || (totalEarned - (summary.totalAdvances || 0));
+            const totalEMI = Number(summary.totalEMI) || 0;
+            const netPayable = summary.netPayable || (totalEarned - (summary.totalAdvances || 0) - totalEMI);
 
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(100, 116, 139);
-            doc.text('Gross Earnings:', pageWidth / 2 + 5, 76);
-            doc.text('Deductions/Advances:', pageWidth / 2 + 5, 82);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 116, 139);
+            doc.text('Gross Earnings:', pageWidth / 2 + 5, 74);
+            doc.text('Advances Deducted:', pageWidth / 2 + 5, 78);
+            doc.text('EMI Deduction (Loan):', pageWidth / 2 + 5, 82);
 
             doc.setTextColor(15, 23, 42);
-            doc.text(`Rs. ${totalEarned}`, pageWidth - 20, 76, { align: 'right' });
+            doc.text(`Rs. ${totalEarned.toLocaleString('en-IN')}`, pageWidth - 20, 74, { align: 'right' });
             doc.setTextColor(244, 63, 94);
-            doc.text(`- Rs. ${summary.totalAdvances || 0}`, pageWidth - 20, 82, { align: 'right' });
-            doc.line(pageWidth / 2 + 5, 85, pageWidth - 20, 85);
-            doc.setFontSize(12);
+            doc.text(`- Rs. ${(summary.totalAdvances || 0).toLocaleString('en-IN')}`, pageWidth - 20, 78, { align: 'right' });
+            doc.text(`- Rs. ${totalEMI.toLocaleString('en-IN')}`, pageWidth - 20, 82, { align: 'right' });
+            
+            doc.setDrawColor(203, 213, 225);
+            doc.line(pageWidth / 2 + 5, 86, pageWidth - 20, 86);
+            
+            doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(16, 185, 129);
-            doc.text('NET PAYABLE:', pageWidth / 2 + 5, 93);
-            doc.text(`Rs. ${netPayable}`, pageWidth - 20, 93, { align: 'right' });
+            doc.text('NET PAYABLE:', pageWidth / 2 + 5, 95);
+            doc.text(`Rs. ${netPayable.toLocaleString('en-IN')}`, pageWidth - 20, 95, { align: 'right' });
 
             // 3. DUTY LOGS TABLE
             doc.setTextColor(15, 23, 42);
@@ -396,18 +405,16 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
             const dutyRows = (data.breakdown || []).map(day => [
                 formatDateIST(day.date),
-                day.vehicleNumber || 'N/A',
-                `${day.totalKM || '-'}`,
-                `Rs. ${day.wage || 0}`,
-                `Rs. ${day.sameDayReturn || 0}`,
-                `Rs. ${day.nightStay || 0}`,
-                `Rs. ${day.otherBonuses || 0}`,
-                `Rs. ${day.parking || 0}`,
-                `Rs. ${day.total || 0}`
+                day.vehicle || 'N/A',
+                `Rs. ${(day.wage || 0).toLocaleString('en-IN')}`,
+                `Rs. ${(day.sameDayReturn || 0).toLocaleString('en-IN')}`,
+                `Rs. ${(day.nightStay || 0).toLocaleString('en-IN')}`,
+                `Rs. ${(day.parking || 0).toLocaleString('en-IN')}`,
+                `Rs. ${(day.total || 0).toLocaleString('en-IN')}`
             ]);
 
             autoTable(doc, {
-                head: [['DATE', 'VEHICLE', 'KM', 'WAGE', 'SAME DAY', 'NIGHT', 'OTHER', 'PARKING', 'TOTAL']],
+                head: [['DATE', 'VEHICLE NO.', 'WAGE', 'SAME DAY', 'NIGHT STAY', 'PARKING', 'TOTAL']],
                 body: dutyRows,
                 startY: 120,
                 theme: 'grid',
@@ -425,7 +432,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             const advRows = (data.advances || []).map(adv => [
                 formatDateIST(adv.date),
                 (adv.remark || '').toUpperCase(),
-                `Rs. ${adv.amount}`,
+                `Rs. ${(adv.amount || 0).toLocaleString('en-IN')}`,
                 (adv.status || 'PENDING').toUpperCase() === 'PENDING' ? 'PAID' : (adv.status || '').toUpperCase()
             ]);
 
@@ -439,8 +446,60 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 margin: { left: 15, right: 15 }
             });
 
-            // 5. SIGNATURE & FOOTER
-            let footerY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 35;
+            // 5. LOAN & EMI SECTION
+            let loanY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 15;
+            if (loanY > pageHeight - 80) { doc.addPage(); loanY = 20; }
+            doc.setTextColor(15, 23, 42); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+            doc.text('LOANS & EMI PROGRESS', 15, loanY);
+
+            const loanRows = (data.loans || []).map(loan => {
+                const sDate = new Date(loan.startDate);
+                const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
+                const selVal = (parseInt(year) * 12) + parseInt(month);
+                const monthIdx = (selVal - sVal) + 1;
+                
+                // Smart fallback for tenure (Total / EMI)
+                const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
+                const isCompleted = loan.status === 'Completed';
+                
+                let progress = '';
+                if (isCompleted) {
+                    progress = 'Completed';
+                } else if (monthIdx <= 0) {
+                    progress = 'Upcoming';
+                } else if (monthIdx > tenure) {
+                    progress = `Extended (Month ${monthIdx} of ${tenure})`;
+                } else {
+                    progress = `Month ${monthIdx} of ${tenure}`;
+                }
+
+                return [
+                    formatDateIST(loan.startDate),
+                    `Rs. ${loan.totalAmount?.toLocaleString()}`,
+                    `Rs. ${loan.monthlyEMI?.toLocaleString()}`,
+                    `Rs. ${loan.remainingAmount?.toLocaleString()}`,
+                    progress,
+                    loan.status?.toUpperCase()
+                ];
+            });
+
+            if (loanRows.length > 0) {
+                autoTable(doc, {
+                    head: [['LOAN DATE', 'TOTAL AMOUNT', 'EMI AMOUNT', 'REMAINING', 'EMI PROGRESS', 'STATUS']],
+                    body: loanRows,
+                    startY: loanY + 5,
+                    theme: 'grid',
+                    headStyles: { fillColor: [99, 102, 241], fontSize: 8, halign: 'center' },
+                    bodyStyles: { fontSize: 8, halign: 'center', textColor: [51, 65, 85] },
+                    margin: { left: 15, right: 15 }
+                });
+            } else {
+                doc.setFontSize(9); doc.setFont('helvetica', 'italic'); doc.setTextColor(150, 150, 150);
+                doc.text('No active or historical loans recorded for this driver.', 15, loanY + 10);
+            }
+
+            // 6. SIGNATURE & FOOTER
+            let footerY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : loanY) + 35;
             if (footerY > pageHeight - 60) { doc.addPage(); footerY = 30; }
 
             doc.setFontSize(8);
@@ -516,8 +575,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     const totalWages = summary.totalWages || 0;
     const parkingTotal = summary.parkingTotal || det?.parkingEntries?.reduce((s, p) => s + (Number(p.amount) || 0), 0) || 0;
     const totalAdvances = summary.totalAdvances || det?.advances?.reduce((s, a) => s + (Number(a.amount) || 0), 0) || 0;
+    const totalEMI = Number(summary.totalEMI) || 0;
     const grandTotal = summary.grandTotal || (totalWages + parkingTotal);
-    const netPayable = summary.netPayable || (grandTotal - totalAdvances);
+    const netPayable = summary.netPayable || (grandTotal - totalAdvances - totalEMI);
 
     return (
         <div className={isSubComponent ? "sub-component" : "container-fluid"} style={{ paddingBottom: '40px' }}>
@@ -972,17 +1032,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>{det?.parkingEntries?.length || 0} entries</div>
                                             </div>
 
-                                            {/* Total Earned */}
-                                            <div style={{ background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: '12px', padding: '14px' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                                                    <Wallet size={14} color="#10b981" />
-                                                    <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '800', textTransform: 'uppercase' }}>Total Earned</span>
-                                                </div>
-                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{grandTotal.toLocaleString()}</div>
-                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Wages + Parking</div>
-                                            </div>
-
-                                            {/* Advances */}
+                                            {/* Advances Card */}
                                             <div style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '12px', padding: '14px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                                                     <TrendingDown size={14} color="#f43f5e" />
@@ -991,13 +1041,23 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{totalAdvances.toLocaleString()}</div>
                                                 <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>{det?.advances?.length || 0} taken</div>
                                             </div>
+
+                                            {/* EMI Deduction Card */}
+                                            <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', borderRadius: '12px', padding: '14px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                                    <Wallet size={14} color="#818cf8" />
+                                                    <span style={{ fontSize: '10px', color: '#818cf8', fontWeight: '800', textTransform: 'uppercase' }}>EMI Deduction</span>
+                                                </div>
+                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{totalEMI.toLocaleString()}</div>
+                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Loan Repayment</div>
+                                            </div>
                                         </div>
 
                                         {/* NET PAYABLE BANNER */}
                                         <div style={{ background: netPayable >= 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))' : 'linear-gradient(135deg, rgba(244,63,94,0.15), rgba(244,63,94,0.05))', border: `1px solid ${netPayable >= 0 ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'}`, borderRadius: '12px', padding: '16px 20px', marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <div>
                                                 <div style={{ fontSize: '11px', fontWeight: '800', color: netPayable >= 0 ? '#10b981' : '#f43f5e', textTransform: 'uppercase', marginBottom: '4px' }}>Total This Month</div>
-                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>₹{grandTotal.toLocaleString()} earned − ₹{totalAdvances.toLocaleString()} advances</div>
+                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>₹{grandTotal.toLocaleString()} earned − ₹{totalAdvances.toLocaleString()} advances − ₹{totalEMI.toLocaleString()} EMI</div>
                                             </div>
                                             <div style={{ color: netPayable >= 0 ? '#10b981' : '#f43f5e', fontWeight: '900', fontSize: '26px' }}>₹{Math.abs(netPayable).toLocaleString()}</div>
                                         </div>

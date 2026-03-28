@@ -2,7 +2,8 @@ import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
     X, ArrowUpRight, ArrowDownLeft, MapPin, Car, Fuel, ParkingSquare,
-    IndianRupee, TrendingUp, Moon, Zap, Camera, CheckCircle2, Clock
+    IndianRupee, TrendingUp, Moon, Zap, Camera, CheckCircle2, Clock,
+    Edit2, Trash2
 } from 'lucide-react';
 
 import { formatDateIST, formatTimeIST } from '../../utils/istUtils';
@@ -51,8 +52,9 @@ const SH = ({ color, icon: Icon, title, time }) => (
 );
 
 /* ═══════════════════════════════ MAIN MODAL */
-const AttendanceModal = ({ item, onClose }) => {
+const AttendanceModal = ({ item, onClose, onEdit, onDelete }) => {
     const [viewerUrl, setViewerUrl] = React.useState(null);
+    const [activeDutyIdx, setActiveDutyIdx] = React.useState(0);
     if (!item) return null;
 
     const isGroup = item.entryType === 'attendance_group';
@@ -98,50 +100,101 @@ const AttendanceModal = ({ item, onClose }) => {
     };
 
     const renderGroup = () => (
-        <div style={{ padding: '24px' }}>
-            <div style={{ background: 'rgba(16,185,129,0.06)', borderRadius: '24px', padding: '25px', border: '1px solid rgba(16,185,129,0.15)', marginBottom: '30px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                    <div>
-                        <div style={{ color: '#10b981', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Daily Consolidated Summary</div>
-                        <div style={{ color: 'white', fontSize: '24px', fontWeight: '950', marginTop: '4px' }}>{item.attendances.length} Duties Performed</div>
+        <div style={{ padding: '0 24px 24px' }}>
+            {/* --- Consolidated Summary Bar --- */}
+            <div style={{
+                background: 'rgba(16,185,129,0.08)',
+                borderRadius: '20px',
+                padding: '18px 24px',
+                border: '1px solid rgba(16,185,129,0.15)',
+                margin: '20px 0',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                flexWrap: 'wrap',
+                gap: '20px'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ padding: '10px', background: 'rgba(16,185,129,0.1)', borderRadius: '12px', color: '#10b981' }}>
+                        <CheckCircle2 size={24} />
                     </div>
-                    <div style={{ textAlign: 'right' }}>
-                        <div style={{ color: '#10b981', fontSize: '28px', fontWeight: '950' }}>₹{totalPayable.toLocaleString()}</div>
-                        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '10px', fontWeight: '800' }}>TOTAL PAYABLE TODAY</div>
+                    <div>
+                        <div style={{ color: 'white', fontSize: '18px', fontWeight: '950' }}>{item.attendances.length} Duties Completed</div>
+                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Total Daily Performance Summary</div>
                     </div>
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '15px' }}>
-                    {[
-                        { label: 'BASE WAGE', val: `₹${salary}`, color: 'white' },
-                        { label: 'TOTAL BONUS', val: `₹${bonus}`, color: '#22c55e' },
-                        { label: 'KM RUN', val: `${totalKM || 0} KM`, color: '#38bdf8' },
-                        { label: 'EXPENSES', val: `₹${fuelAmt + parkingAmt}`, color: '#f59e0b' },
-                    ].map(s => (
-                        <div key={s.label} style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '16px', padding: '15px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <div style={{ color: s.color, fontSize: '18px', fontWeight: '950' }}>{s.val}</div>
-                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', marginTop: '4px' }}>{s.label}</div>
-                        </div>
-                    ))}
+
+                <div style={{ display: 'flex', gap: '30px', alignItems: 'center' }}>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: 'white', fontSize: '18px', fontWeight: '950' }}>{totalKM || 0} km</div>
+                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900' }}>TOTAL KM</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                        <div style={{ color: '#f59e0b', fontSize: '18px', fontWeight: '950' }}>₹{fuelAmt + parkingAmt}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900' }}>TOTAL EXP.</div>
+                    </div>
+                    <div style={{ textAlign: 'right' }}>
+                        <div style={{ color: '#10b981', fontSize: '26px', fontWeight: '950' }}>₹{totalPayable.toLocaleString()}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.35)', fontSize: '9px', fontWeight: '800' }}>NET PAYABLE TODAY</div>
+                    </div>
                 </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
-                {item.attendances.map((att, idx) => (
-                    <div key={idx} style={{ position: 'relative' }}>
-                        <div style={{ position: 'absolute', left: '-15px', top: '0', bottom: '-40px', width: '2px', background: 'rgba(255,255,255,0.05)', display: idx === item.attendances.length - 1 ? 'none' : 'block' }}></div>
-                        <div style={{ position: 'absolute', left: '-21px', top: '10px', width: '14px', height: '14px', borderRadius: '50%', background: '#10b981', border: '3px solid #0f172a', zIndex: 2 }}></div>
-                        
-                        <div style={{ marginLeft: '10px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
-                                <span style={{ padding: '4px 12px', background: 'rgba(16,185,129,0.1)', color: '#10b981', borderRadius: '8px', fontSize: '11px', fontWeight: '900' }}>DUTY #{idx + 1}</span>
-                                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>—</span>
-                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{fmtTime(att.punchIn?.time)} to {fmtTime(att.punchOut?.time)}</span>
-                            </div>
-                            {renderAttendance(att, true)}
-                        </div>
-                    </div>
+            {/* --- Duty Switcher Tabs --- */}
+            <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', overflowX: 'auto', paddingBottom: '8px' }} className="no-scrollbar">
+                {item.attendances.map((_, i) => (
+                    <button
+                        key={i}
+                        onClick={() => setActiveDutyIdx(i)}
+                        style={{
+                            padding: '10px 18px',
+                            borderRadius: '12px',
+                            background: activeDutyIdx === i ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.03)',
+                            border: `1px solid ${activeDutyIdx === i ? '#10b98150' : 'rgba(255,255,255,0.06)'}`,
+                            color: activeDutyIdx === i ? '#10b981' : 'rgba(255,255,255,0.5)',
+                            fontSize: '12px',
+                            fontWeight: '900',
+                            cursor: 'pointer',
+                            whiteSpace: 'nowrap',
+                            transition: '0.2s'
+                        }}
+                    >
+                        Duty #{i + 1}
+                    </button>
                 ))}
             </div>
+
+            <AnimatePresence mode="wait">
+                <motion.div
+                    key={activeDutyIdx}
+                    initial={{ opacity: 0, x: 10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: -10 }}
+                    transition={{ duration: 0.2 }}
+                >
+                    <div style={{ position: 'relative' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '0 20px 10px' }}>
+                            <div style={{ background: '#0f172a', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', letterSpacing: '1px' }}>
+                                SHOWING EVIDENCE FOR DUTY #{activeDutyIdx + 1}
+                            </div>
+                            
+                            {item.mode === 'edit' && (
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    <button onClick={() => onEdit({ ...item.attendances[activeDutyIdx], isSecondary: activeDutyIdx > 0 })} style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: '800' }}>
+                                        <Edit2 size={12} /> Edit Duty #{activeDutyIdx + 1}
+                                    </button>
+                                    <button onClick={() => onDelete({ ...item.attendances[activeDutyIdx], entryType: 'attendance'})} style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)', color: '#f43f5e', borderRadius: '8px', padding: '6px 12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', fontWeight: '800' }}>
+                                        <Trash2 size={12} /> Delete
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                        <div style={{ background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                            {renderAttendance(item.attendances[activeDutyIdx], true)}
+                        </div>
+                    </div>
+                </motion.div>
+            </AnimatePresence>
         </div>
     );
 
@@ -177,7 +230,7 @@ const AttendanceModal = ({ item, onClose }) => {
                     <div style={{ background: 'rgba(0,0,0,0.25)', borderRadius: '12px', padding: '14px' }}>
                         <Stat label="Opening KM" value={aOpenKM != null ? `${aOpenKM} km` : '--'} color="#38bdf8" />
                         <Stat label="Date" value={fmt(attItem.date)} />
-                        {attItem.vehicle?.carNumber && <Stat label="Vehicle" value={attItem.vehicle.carNumber.split('#')[0]} color="white" />}
+                        {attItem.vehicle?.carNumber && <Stat label="Vehicle" value={attItem.vehicle.carNumber} color="white" />}
                     </div>
                 </div>
 
@@ -378,7 +431,7 @@ const AttendanceModal = ({ item, onClose }) => {
                     <div>
                         <h2 style={{ color: 'white', fontSize: '20px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{titleMap[item.entryType] || 'Record Details'}</h2>
                         <p style={{ color: 'rgba(255,255,255,0.35)', fontSize: '11px', fontWeight: '700', margin: '3px 0 0', textTransform: 'uppercase' }}>
-                            {item.driver?.name || item.driverName || ''}{(item.driver?.name || item.driverName) && item.vehicle?.carNumber ? ' · ' : ''}{item.vehicle?.carNumber?.split('#')[0] || ''}
+                            {item.driver?.name || item.driverName || ''}{(item.driver?.name || item.driverName) && item.vehicle?.carNumber ? ' · ' : ''}{item.vehicle?.carNumber || ''}
                             {fmt(item.date) !== '--' ? ` · ${fmt(item.date)}` : ''}
                         </p>
                     </div>

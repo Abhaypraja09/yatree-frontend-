@@ -103,17 +103,25 @@ const FuelPage = () => {
     const [selectedPending, setSelectedPending] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterVehicle, setFilterVehicle] = useState('All');
-    const [isRange, setIsRange] = useState(false);
-    const [fromDate, setFromDate] = useState(firstDayOfMonthIST());
-    const [toDate, setToDate] = useState(todayIST());
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [fromDate, setFromDate] = useState('');
+    const [toDate, setToDate] = useState('');
 
-    /* navigate dates */
-    const shiftDays = (n) => {
-        const f = nowIST(fromDate);
-        f.setUTCDate(f.getUTCDate() + n);
-        const fStr = f.toISOString().split('T')[0];
-        setFromDate(fStr);
-        if (!isRange) setToDate(fStr);
+    useEffect(() => {
+        const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
+        const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+        setFromDate(start);
+        setToDate(end);
+    }, [selectedMonth, selectedYear]);
+
+    const shiftMonth = (amount) => {
+        let newMonth = selectedMonth + amount;
+        let newYear = selectedYear;
+        if (newMonth < 0) { newMonth = 11; newYear--; }
+        if (newMonth > 11) { newMonth = 0; newYear++; }
+        setSelectedMonth(newMonth);
+        setSelectedYear(newYear);
     };
 
     // Form State
@@ -480,118 +488,36 @@ const FuelPage = () => {
                             Fuel <span className="text-gradient-yellow">Management</span>
                         </h1>
                     </div>
-                </div>
-
-                <div className="flex-resp" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-                    {/* Premium Modern Calendar UI */}
-                    <div style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '5px',
-                        background: 'rgba(0,0,0,0.25)',
-                        padding: '4px',
-                        borderRadius: '16px',
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)'
-                    }}>
-                        <button
-                            onClick={() => shiftDays(-1)}
-                            style={{
-                                width: '36px', height: '36px', borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.03)', border: 'none',
-                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-
-                        <div style={{ display: 'flex', gap: '5px' }}>
-                            {isRange && (
-                                <div style={{
-                                    padding: '0 15px', height: '36px', display: 'flex',
-                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                    background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px',
-                                    border: '1px solid rgba(99, 102, 241, 0.15)',
-                                    position: 'relative', overflow: 'hidden'
-                                }}>
-                                    <span style={{ color: '#818cf8', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>FROM:</span>
-                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                        {formatDateIST(fromDate).toUpperCase()}
-                                    </span>
-                                    <input
-                                        type="date"
-                                        value={fromDate}
-                                        onChange={(e) => setFromDate(e.target.value)}
-                                        onClick={(e) => e.target.showPicker?.()}
-                                        style={{
-                                            position: 'absolute', opacity: 0, inset: 0,
-                                            width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
-                                        }}
-                                    />
-                                </div>
-                            )}
-
-                            <div style={{
-                                padding: '0 15px', height: '36px', display: 'flex',
-                                alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                background: isRange ? 'rgba(251, 191, 36, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                                borderRadius: '10px',
-                                border: `1px solid ${isRange ? 'rgba(251, 191, 36, 0.2)' : 'rgba(99, 102, 241, 0.2)'}`,
-                                position: 'relative', overflow: 'hidden'
-                            }}>
-                                {isRange ? (
-                                    <span style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>TO:</span>
-                                ) : (
-                                    <Calendar size={14} color="#818cf8" />
-                                )}
-                                <span style={{ color: 'white', fontSize: '12px', fontWeight: '950' }}>
-                                    {formatDateIST(toDate).toUpperCase()}
-                                </span>
-                                <input
-                                    type="date"
-                                    value={toDate}
-                                    onChange={(e) => {
-                                        setToDate(e.target.value);
-                                        if (!isRange) setFromDate(e.target.value);
-                                    }}
-                                    onClick={(e) => e.target.showPicker?.()}
-                                    style={{
-                                        position: 'absolute', opacity: 0, inset: 0,
-                                        width: '100%', height: '100%', cursor: 'pointer', zIndex: 2
-                                    }}
-                                />
-                            </div>
+                </div>                <div className="flex-resp" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap', alignItems: 'center' }}>
+                    {/* Month Year Navigator From Outside Cars */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '6px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <button onClick={() => shiftMonth(-1)} style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronLeft size={20} /></button>
+                        <div style={{ padding: '0 24px', height: '42px', display: 'flex', alignItems: 'center', background: 'rgba(251,191,36,0.05)', borderRadius: '14px', border: '1px solid rgba(251,191,36,0.1)', cursor: 'pointer' }} onClick={() => setSelectedMonth(new Date().getMonth())}>
+                            <span style={{ color: 'white', fontSize: '15px', fontWeight: '950', letterSpacing: '0.5px' }}>{new Date(selectedYear, selectedMonth).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }).toUpperCase()}</span>
                         </div>
-
-                        <button
-                            onClick={() => shiftDays(1)}
-                            style={{
-                                width: '36px', height: '36px', borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.03)', border: 'none',
-                                color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center'
-                            }}
-                        >
-                            <ChevronRight size={18} />
-                        </button>
+                        <button onClick={() => shiftMonth(1)} style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronRight size={20} /></button>
                     </div>
-                    <button
-                        onClick={() => {
-                            const next = !isRange;
-                            setIsRange(next);
-                            if (!next) setFromDate(toDate);
-                        }}
-                        style={{
-                            marginLeft: '5px', padding: '0 10px', height: '36px',
-                            borderRadius: '10px', border: 'none', cursor: 'pointer',
-                            background: isRange ? '#6366f1' : 'rgba(255,255,255,0.05)',
-                            color: isRange ? 'white' : 'rgba(255,255,255,0.4)',
-                            fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
-                        }}
-                    >
-                        {isRange ? 'Range' : 'Single'}
-                    </button>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <select
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                            style={{ height: '52px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px', fontWeight: '800', fontSize: '14px', cursor: 'pointer' }}
+                        >
+                            {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, i) => (
+                                <option key={m} value={i} style={{ background: '#1e293b' }}>{m}</option>
+                            ))}
+                        </select>
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                            style={{ height: '52px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px', fontWeight: '800', fontSize: '14px', cursor: 'pointer' }}
+                        >
+                            {[2024, 2025, 2026, 2027].map(y => (
+                                <option key={y} value={y} style={{ background: '#1e293b' }}>{y}</option>
+                            ))}
+                        </select>
+                    </div>
                     <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', maxWidth: '300px', width: '100%', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 200px' }}>
                         <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
                         <input
@@ -708,6 +634,7 @@ const FuelPage = () => {
                     <div>
                         <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Liters</p>
                         <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{totalLiters.toFixed(2)} L</h2>
+                        <span style={{ fontSize: '10px', color: 'rgba(56, 189, 248, 0.6)', fontWeight: '800' }}>Overall Avg: {avgMileage} KM/L</span>
                     </div>
                 </motion.div>
 

@@ -15,7 +15,7 @@ import { useAuth } from '../context/AuthContext';
 import SEO from '../components/SEO';
 import { todayIST, formatDateIST, firstDayOfMonthIST, nowIST } from '../utils/istUtils';
 
-const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick }) => (
+const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick, subValue }) => (
     <motion.div
         whileHover={{ y: -8, scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
@@ -94,10 +94,23 @@ const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick }) 
                             border: '1px solid rgba(16, 185, 129, 0.2)'
                         }}>
                             <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 5px #10b981' }}></div>
-                            LIVE
+                            {trend}
                         </span>
                     )}
                 </div>
+                {subValue && (
+                    <div style={{ 
+                        fontSize: '11px', 
+                        color: 'rgba(255,255,255,0.5)', 
+                        fontWeight: '800', 
+                        marginTop: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px'
+                    }}>
+                        {subValue}
+                    </div>
+                )}
             </div>
         </div>
     </motion.div>
@@ -139,8 +152,22 @@ const AdminDashboard = () => {
 
     useEffect(() => {
         fetchStats();
-        const interval = setInterval(fetchStats, 60000);
-        return () => clearInterval(interval);
+        let interval = setInterval(fetchStats, 5 * 60 * 1000); // Refresh every 5 min
+
+        // Pause polling when tab is hidden, resume when visible
+        const handleVisibility = () => {
+            if (document.visibilityState === 'visible') {
+                fetchStats(); // Immediately refresh on return
+                interval = setInterval(fetchStats, 5 * 60 * 1000);
+            } else {
+                clearInterval(interval);
+            }
+        };
+        document.addEventListener('visibilitychange', handleVisibility);
+        return () => {
+            clearInterval(interval);
+            document.removeEventListener('visibilitychange', handleVisibility);
+        };
     }, [selectedCompany, selectedMonth, selectedYear]);
 
     return (
@@ -290,9 +317,17 @@ const AdminDashboard = () => {
                                 <>
                                     <StatCard icon={Users} label={t('total_driver_salary')} value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/driver-salaries')} trend="MONTHLY" />
                                     <StatCard icon={CreditCard} label={t('total_driver_advance')} value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
-                                    <StatCard icon={Fuel} label={t('fuel_monthly')} value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} color="#0ea5e9" loading={loading} onClick={() => navigate('/admin/fuel')} />
+                                    <StatCard 
+                                         icon={Fuel} 
+                                         label={t('fuel_monthly')} 
+                                         value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} 
+                                         color="#0ea5e9" 
+                                         loading={loading} 
+                                         onClick={() => navigate('/admin/fuel')} 
+                                         subValue={`${stats.monthlyFuelQuantity?.toFixed(1) || 0}L • ${stats.monthlyFuelQuantity > 0 ? ((stats.monthlyTotalDistance || 0) / stats.monthlyFuelQuantity).toFixed(2) : 0} KM/L Avg`}
+                                     />
                                     <StatCard icon={Users} label={t('freelancers_monthly')} value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />
-
+                                    <StatCard icon={CreditCard} label={t('parking_monthly')} value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
                                 </>
                             )}
 
@@ -325,9 +360,6 @@ const AdminDashboard = () => {
                                 <>
                                     <StatCard icon={Wrench} label={t('maintenance_monthly')} value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
                                     <StatCard icon={AlertTriangle} label={t('accident_cost_yearly')} value={`₹${(stats.yearlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
-                                    <StatCard icon={CreditCard} label={t('parking_monthly')} value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
-                                    <StatCard icon={IndianRupee} label={t('fastag_recharge_monthly')} value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/car-utility')} trend="MONTHLY" subValue={`Today: ₹${(stats.dailyFastagTotal || 0).toLocaleString()}`} />
-                                    <StatCard icon={Droplets} label={t('driver_services_monthly')} value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/car-utility')} />
                                     <StatCard icon={ShieldCheck} label={t('warranty_cost_total')} value={`₹${(stats.totalWarrantyCost || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/warranties')} />
                                     <StatCard icon={Car} label={t('fleet_size_label')} value={stats.totalVehicles} color="#8b5cf6" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
                                 </>
@@ -336,6 +368,8 @@ const AdminDashboard = () => {
                             {/* Fleet Operations Related */}
                             {(user?.role === 'Admin' || user?.permissions?.fleetOperations) && (
                                 <>
+                                    <StatCard icon={IndianRupee} label={t('fastag_recharge_monthly')} value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/car-utility')} trend="MONTHLY" subValue={`Today: ₹${(stats.dailyFastagTotal || 0).toLocaleString()}`} />
+                                    <StatCard icon={Droplets} label={t('driver_services_monthly')} value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/car-utility')} />
                                 </>
                             )}
                         </div>
@@ -345,7 +379,12 @@ const AdminDashboard = () => {
 
 
                         {/* Expiry Alerts */}
-                        {stats.expiringAlerts && stats.expiringAlerts.length > 0 && (
+                        {stats.expiringAlerts && stats.expiringAlerts.filter(alert => {
+                            if (user?.role === 'Admin') return true;
+                            if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
+                            if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
+                            return true;
+                        }).length > 0 && (
                             <div className="glass-card" style={{
                                 border: '1px solid rgba(244, 63, 114, 0.2)',
                                 background: 'linear-gradient(145deg, rgba(244, 63, 114, 0.05), rgba(15, 23, 42, 0.2))',
@@ -373,7 +412,12 @@ const AdminDashboard = () => {
                                     </h3>
                                 </div>
                                 <div className="expiry-alerts-grid">
-                                    {stats.expiringAlerts.map((alert, index) => (
+                                    {stats.expiringAlerts.filter(alert => {
+                            if (user?.role === 'Admin') return true;
+                            if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
+                            if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
+                            return true;
+                        }).map((alert, index) => (
                                         <div
                                             key={index}
                                             className="alert-card glass-card-hover-effect"

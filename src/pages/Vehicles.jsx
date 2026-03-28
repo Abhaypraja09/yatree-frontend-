@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Plus, Car, AlertCircle, Trash2, Calendar, ExternalLink, Search, Wallet, Shield, MapPin, Clock, CheckCircle2, XCircle, Info, Wrench } from 'lucide-react';
+import { Plus, Car, AlertCircle, Trash2, Calendar, ExternalLink, Search, Wallet, Shield, MapPin, Clock, CheckCircle2, XCircle, Info, Wrench, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
@@ -23,6 +23,8 @@ const Vehicles = () => {
     const [fastagNumber, setFastagNumber] = useState('');
     const [fastagBalance, setFastagBalance] = useState('');
     const [fastagBank, setFastagBank] = useState('');
+    const [seatingCapacity, setSeatingCapacity] = useState('4');
+    const [remarks, setRemarks] = useState('');
 
     const [creating, setCreating] = useState(false);
     const [docs, setDocs] = useState({
@@ -98,6 +100,8 @@ const Vehicles = () => {
             formData.append('fastagNumber', fastagNumber);
             formData.append('fastagBalance', fastagBalance || 0);
             formData.append('fastagBank', fastagBank);
+            formData.append('seatingCapacity', seatingCapacity || '4');
+            formData.append('remarks', remarks);
 
             // Add Documents
             Object.keys(docs).forEach(type => {
@@ -128,6 +132,7 @@ const Vehicles = () => {
             setShowModal(false);
             setCarNumber(''); setModel('');
             setCarType('SUV'); setFastagNumber(''); setFastagBalance(''); setFastagBank('');
+            setSeatingCapacity('4'); setRemarks('');
             setDocs({ rc: null, insurance: null, puc: null, fitness: null, permit: null });
             setDocExpiries({ rc: '', insurance: '', puc: '', fitness: '', permit: '' });
             setEditingId(null);
@@ -209,7 +214,7 @@ const Vehicles = () => {
                         </h2>
                     </div>
                     <div className="scroll-x" style={{ display: 'flex', gap: '20px', paddingBottom: '20px' }}>
-                        {alerts.map((alert, idx) => {
+                        {alerts.filter(a => a.type !== 'Service').map((alert, idx) => {
                             const isKmAlert = !alert.expiryDate;
                             const isOverdue = alert.daysLeft <= 0;
                             const unit = isKmAlert ? 'KM' : 'days';
@@ -346,7 +351,12 @@ const Vehicles = () => {
                                 style={{ paddingLeft: '48px', marginBottom: 0, height: '48px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', width: '100%' }}
                             />
                         </div>
-                        <button className="btn-primary" onClick={() => { setEditingId(null); setCarNumber(''); setModel(''); setCarType('SUV'); setFastagNumber(''); setFastagBalance(''); setFastagBank(''); setShowModal(true); }} style={{ height: '48px', padding: '0 15px', borderRadius: '12px', fontWeight: '800', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+                        <button className="btn-primary" onClick={() => { 
+                            setEditingId(null); setCarNumber(''); setModel(''); setCarType('SUV'); 
+                            setFastagNumber(''); setFastagBalance(''); setFastagBank(''); 
+                            setSeatingCapacity('4'); setRemarks('');
+                            setShowModal(true); 
+                        }} style={{ height: '48px', padding: '0 15px', borderRadius: '12px', fontWeight: '800', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                             <Plus size={20} /> <span className="hide-mobile">Add Vehicle</span><span className="show-mobile">Add</span>
                         </button>
                     </div>
@@ -365,9 +375,6 @@ const Vehicles = () => {
                             className="glass-card"
                             style={{ padding: '24px', display: 'flex', flexDirection: 'column', position: 'relative', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}
                         >
-                            {/* Accent Background */}
-
-
                             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', alignItems: 'flex-start', position: 'relative', zIndex: 1 }}>
                                 <div style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px', borderRadius: '14px', color: 'rgba(255,255,255,0.7)' }}>
                                     <Car size={24} />
@@ -386,11 +393,13 @@ const Vehicles = () => {
                                             setFastagNumber(v.fastagNumber || '');
                                             setFastagBalance(v.fastagBalance || '');
                                             setFastagBank(v.fastagBank || '');
+                                            setSeatingCapacity(v.seatingCapacity || '4');
+                                            setRemarks(v.remarks || '');
                                             setShowModal(true);
                                         }}
                                         style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.1)', transition: '0.2s' }}
                                     >
-                                        <Wrench size={16} />
+                                        <Edit3 size={16} />
                                     </button>
                                     <button
                                         onClick={() => handleDelete(v._id)}
@@ -408,7 +417,7 @@ const Vehicles = () => {
                                 <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginBottom: '20px', fontWeight: '500' }}>{v.model}</p>
 
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '25px' }}>
-                                    {['RC', 'INSURANCE', 'PERMIT', 'FITNESS'].map(type => {
+                                    {['INSURANCE', 'PERMIT', 'FITNESS', 'PUC', 'RC'].map(type => {
                                         const doc = v.documents?.find(d => d.documentType === type);
                                         const isExpired = doc ? new Date(doc.expiryDate).toISOString().split('T')[0] < todayIST() : true;
                                         return (
@@ -431,47 +440,27 @@ const Vehicles = () => {
                                 </div>
                             </div>
 
-                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', zIndex: 1 }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', gap: '15px' }}>
-                                        <div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: v.currentDriver ? '#10b981' : '#f59e0b' }}></div>
-                                                <p style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', letterSpacing: '0.4px', margin: 0 }}>Driver</p>
-                                            </div>
-                                            <p style={{ color: 'white', fontSize: '14px', fontWeight: '700', margin: 0 }}>
-                                                {v.currentDriver?.name || 'Available / Yard'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setShowDocsModal(v)}
-                                        style={{
-                                            background: '#0ea5e9',
-                                            color: 'white',
-                                            border: 'none',
-                                            padding: '8px 18px',
-                                            borderRadius: '10px',
-                                            fontSize: '12px',
-                                            fontWeight: '800',
-                                            boxShadow: '0 4px 12px rgba(14, 165, 233, 0.2)',
-                                            transition: '0.3s'
-                                        }}
-                                        onMouseEnter={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
-                                        onMouseLeave={(e) => e.currentTarget.style.transform = 'translateY(0)'}
-                                    >
-                                        Manage
-                                    </button>
-                                </div>
-                                <div style={{ display: 'flex', borderTop: '1px solid rgba(255,255,255,0.05)', marginTop: '12px', paddingTop: '12px', justifyContent: 'flex-start' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                        <Wallet size={14} style={{ color: 'var(--text-muted)' }} />
-                                        <div>
-                                            <span style={{ fontSize: '12px', color: 'white', fontWeight: '800' }}>₹{v.fastagBalance || 0}</span>
-                                            <span style={{ fontSize: '9px', color: 'var(--text-muted)', marginLeft: '4px' }}>Fastag Balance</span>
-                                        </div>
-                                    </div>
-                                </div>
+                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '16px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'center' }}>
+                                <button
+                                    onClick={() => setShowDocsModal(v)}
+                                    style={{
+                                        background: 'rgba(255,255,255,0.05)',
+                                        color: '#0ea5e9',
+                                        border: '1px solid rgba(14, 165, 233, 0.2)',
+                                        padding: '10px 24px',
+                                        borderRadius: '12px',
+                                        fontSize: '12px',
+                                        fontWeight: '900',
+                                        width: '100%',
+                                        transition: '0.3s',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px'
+                                    }}
+                                    onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(14, 165, 233, 0.1)'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                                    onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.05)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+                                >
+                                    View Documents
+                                </button>
                             </div>
                         </motion.div>
                     ))
@@ -615,111 +604,24 @@ const Vehicles = () => {
                             </div>
 
                             {/* Section 2: Financials & Tracking */}
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
                                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981' }}></div>
-                                    <h3 style={{ color: 'white', fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', margin: 0, letterSpacing: '1px' }}>Financials & Tracking</h3>
+                                    <h3 style={{ color: 'white', fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', margin: 0, letterSpacing: '1px' }}>Tracking Details</h3>
                                 </div>
-                                <div className="form-grid-3">
+                                <div className="form-grid-2">
                                     <div className="form-group">
-                                        <label>Fastag ID</label>
+                                        <label>Fastag Number</label>
                                         <input className="input-field" style={{ height: '50px' }} placeholder="ID Number" value={fastagNumber} onChange={(e) => setFastagNumber(e.target.value)} />
                                     </div>
                                     <div className="form-group">
                                         <label>Fastag Bank</label>
                                         <input className="input-field" style={{ height: '50px' }} placeholder="e.g. ICICI" value={fastagBank} onChange={(e) => setFastagBank(e.target.value)} />
                                     </div>
-                                    <div className="form-group">
-                                        <label>Fastag Balance (₹)</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <div style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontWeight: '900' }}>₹</div>
-                                            <input type="number" className="input-field no-spinner" style={{ height: '50px', paddingLeft: '32px' }} placeholder="0.00" value={fastagBalance} onChange={(e) => setFastagBalance(e.target.value)} />
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
-                            {/* Section 3: Documents */}
-                            <div style={{
-                                padding: '25px',
-                                background: 'rgba(255,255,255,0.02)',
-                                borderRadius: '24px',
-                                border: '1px solid rgba(255,255,255,0.05)',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '20px'
-                            }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#f59e0b' }}></div>
-                                        <h3 style={{ color: 'white', fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', margin: 0, letterSpacing: '1px' }}>Fleet Documentation</h3>
-                                    </div>
-                                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>JPG/PNG/PDF • MAX 5MB</span>
-                                </div>
-
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                                    {['rc', 'insurance', 'puc', 'fitness', 'permit'].map(type => (
-                                        <div key={type} style={{
-                                            display: 'grid',
-                                            gridTemplateColumns: '100px 1fr 180px',
-                                            gap: '20px',
-                                            alignItems: 'center',
-                                            padding: '12px 15px',
-                                            background: 'rgba(0,0,0,0.2)',
-                                            borderRadius: '16px',
-                                            border: docs[type] ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid transparent'
-                                        }}>
-                                            <label style={{ color: 'white', fontSize: '12px', fontWeight: '900', textTransform: 'uppercase' }}>{type}</label>
-
-                                            <div style={{ position: 'relative' }}>
-                                                <input
-                                                    id={`file-${type}`}
-                                                    type="file"
-                                                    onChange={(e) => setDocs({ ...docs, [type]: e.target.files[0] })}
-                                                    style={{ display: 'none' }}
-                                                />
-                                                <label
-                                                    htmlFor={`file-${type}`}
-                                                    style={{
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '10px',
-                                                        padding: '10px 15px',
-                                                        background: docs[type] ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.05)',
-                                                        borderRadius: '10px',
-                                                        border: '1px dashed rgba(255,255,255,0.1)',
-                                                        cursor: 'pointer',
-                                                        fontSize: '13px',
-                                                        color: docs[type] ? '#10b981' : 'rgba(255,255,255,0.4)',
-                                                        fontWeight: '700',
-                                                        transition: 'all 0.2s ease'
-                                                    }}
-                                                >
-                                                    {docs[type] ? <CheckCircle2 size={16} /> : <Clock size={16} />}
-                                                    {docs[type] ? docs[type].name.substring(0, 20) + (docs[type].name.length > 20 ? '...' : '') : 'Upload Scan'}
-                                                </label>
-                                            </div>
-
-                                            <div style={{ position: 'relative' }}>
-                                                <Calendar size={14} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
-                                                <input
-                                                    type="date"
-                                                    className="input-field"
-                                                    placeholder="Expiry"
-                                                    style={{ marginBottom: 0, padding: '8px 12px 8px 35px', fontSize: '13px', height: '42px', colorScheme: 'dark' }}
-                                                    value={docExpiries[type]}
-                                                    onChange={(e) => setDocExpiries({ ...docExpiries, [type]: e.target.value })}
-                                                />
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontStyle: 'italic', textAlign: 'center' }}>
-                                    <Info size={10} style={{ marginRight: '5px' }} />
-                                    Document upload is optional during creation, but required for duty assignments.
-                                </p>
-                            </div>
-
+                            {/* Fleet Documentation section removed - managed externally */}
                             {/* Actions */}
                             <div style={{ display: 'flex', gap: '15px', padding: '10px 0' }}>
                                 <button
@@ -802,7 +704,7 @@ const Vehicles = () => {
                         </div>
 
                         <div className="grid-responsive" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '25px', marginBottom: '40px' }}>
-                            {['RC', 'INSURANCE', 'PERMIT', 'FITNESS', 'PUC'].map((type) => {
+                            {['INSURANCE', 'PERMIT', 'FITNESS', 'PUC', 'RC'].map((type) => {
                                 const doc = showDocsModal.documents?.find(d => d.documentType === type);
                                 const isExpired = doc ? new Date(doc.expiryDate).toISOString().split('T')[0] < todayIST() : true;
 

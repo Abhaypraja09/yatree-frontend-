@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Plus, Trash2, Shield, User as UserIcon, Lock, Phone, UserCheck, CheckSquare, Square, Settings, Activity, X, Users } from 'lucide-react';
+import { Plus, Trash2, Shield, User as UserIcon, Lock, Phone, UserCheck, CheckSquare, Square, Settings, Activity, X, Users, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 
@@ -213,7 +213,7 @@ const Admins = () => {
                                                 style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', padding: '10px', borderRadius: '10px', border: '1px solid rgba(56, 189, 248, 0.1)', cursor: 'pointer', transition: '0.2s' }}
                                                 className="btn-hover-scale"
                                             >
-                                                <Lock size={18} />
+                                                <Edit3 size={18} />
                                             </button>
                                             <button
                                                 onClick={() => handleDelete(admin._id)}

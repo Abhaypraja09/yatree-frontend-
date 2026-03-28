@@ -121,9 +121,8 @@ const Staff = () => {
             fetchStaff();
             fetchAttendance();
             fetchPendingLeaves();
-            if (view === 'summary') {
-                fetchMonthlyReport();
-            }
+            // Pre-load summaries in background for instant modal opens
+            fetchMonthlyReport();
         }
     }, [selectedCompany, fromDate, toDate, view, selectedMonth, selectedYear]);
 
@@ -295,14 +294,22 @@ const Staff = () => {
     };
 
     // Unified detail view
-    const [selectedStaff, setSelectedStaff] = useState(null);
-
     const handleStaffClick = async (staff) => {
+        // 1. Instant check check from pre-loaded data
+        const cached = (monthlyReport || []).find(r => r.staffId === (staff._id || staff.staffId));
+        if (cached) {
+            setSelectedStaffReport(cached);
+            setView('summary');
+            return;
+        }
+
         try {
-            const { data } = await axios.get(`/api/admin/staff-attendance/${selectedCompany._id}?month=${selectedMonth}&year=${selectedYear}`);
-            const report = data.report.find(r => r.staffId === staff._id);
+            // 2. Targeted Fetch for speed (Optimized backend will handle staffId)
+            const { data } = await axios.get(`/api/admin/staff-attendance/${selectedCompany._id}?month=${selectedMonth}&year=${selectedYear}&staffId=${staff._id}`);
+            const report = data.report?.[0] || data.report?.find(r => r.staffId === staff._id);
             if (report) {
                 setSelectedStaffReport(report);
+                setView('summary');
             } else {
                 setSelectedStaffReport({
                     staffId: staff._id,
@@ -312,9 +319,11 @@ const Staff = () => {
                     presentDays: 0,
                     leavesTaken: 0,
                     sundaysWorked: 0,
+                    sundaysPassed: 0,
                     finalSalary: 0,
                     attendanceData: []
                 });
+                setView('summary');
             }
         } catch (err) {
             console.error(err);
@@ -1730,7 +1739,7 @@ const Staff = () => {
                                             <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '14px', padding: '10px 12px', marginBottom: '10px' }}>
                                                 <p style={{ margin: 0, fontSize: '9px', color: '#818cf8', fontWeight: '700', letterSpacing: '0.5px' }}>📐 HOW IS SALARY CALCULATED?</p>
                                                 <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.65)', fontWeight: '600', lineHeight: '1.5' }}>
-                                                    (Present + Free Leaves + Sundays) × ₹{selectedStaffReport.perDaySalary || Math.round((selectedStaffReport.salary || 0) / 30)}/day
+                                                    (Present + Paid Leaves + Sundays + Extras) × ₹{selectedStaffReport.perDaySalary || Math.round((selectedStaffReport.salary || 0) / 30)}/day
                                                 </p>
                                             </div>
 
@@ -1762,7 +1771,18 @@ const Staff = () => {
                                                     <span style={{ fontWeight: '800', color: '#0ea5e9', fontSize: '13px' }}>{selectedStaffReport.paidLeavesUsed || 0} <small style={{ fontSize: '9px', opacity: 0.6 }}>days</small></span>
                                                 </div>
 
-                                                {/* Sunday Bonus */}
+                                                {/* Sunday Holidays (Paid) */}
+                                                {(selectedStaffReport.sundaysPassed || 0) > 0 && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(251, 191, 36, 0.05)', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
+                                                        <div>
+                                                            <p style={{ margin: 0, fontSize: '10px', color: '#fbbf24', fontWeight: '700' }}>⭐ SUNDAY HOLIDAYS</p>
+                                                            <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: 'rgba(251, 191, 36, 0.5)', fontWeight: '500' }}>Automatically paid rest days</p>
+                                                        </div>
+                                                        <span style={{ fontWeight: '800', color: '#fbbf24', fontSize: '13px' }}>{selectedStaffReport.sundaysPassed} <small style={{ fontSize: '9px', opacity: 0.6 }}>days</small></span>
+                                                    </div>
+                                                )}
+
+                                                {/* Sunday Extras (Worked) */}
                                                 {(selectedStaffReport.sundaysWorked || 0) > 0 && (
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(99,102,241,0.07)', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(99,102,241,0.14)' }}>
                                                         <div>
@@ -1771,7 +1791,6 @@ const Staff = () => {
                                                         </div>
                                                         <div style={{ textAlign: 'right' }}>
                                                             <p style={{ margin: 0, fontWeight: '800', color: '#818cf8', fontSize: '13px' }}>+{selectedStaffReport.sundaysWorked} days</p>
-                                                            <p style={{ margin: '2px 0 0 0', fontSize: '10px', color: '#818cf8', fontWeight: '600' }}>+₹{(selectedStaffReport.sundayBonus || 0).toLocaleString()}</p>
                                                         </div>
                                                     </div>
                                                 )}
@@ -1796,9 +1815,10 @@ const Staff = () => {
                                                 <div style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(251,191,36,0.03))', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '14px', padding: '12px 14px', marginTop: '2px' }}>
                                                     <p style={{ margin: 0, fontSize: '9px', color: '#fbbf24', fontWeight: '700', letterSpacing: '1px' }}>🧮 STEP-BY-STEP</p>
                                                     <p style={{ margin: '6px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.55)', fontWeight: '600', lineHeight: '1.7' }}>
-                                                        ({selectedStaffReport.presentDays || 0} present
-                                                        {(selectedStaffReport.paidLeavesUsed || 0) > 0 ? ` + ${selectedStaffReport.paidLeavesUsed} leave` : ''}
-                                                        {(selectedStaffReport.sundaysWorked || 0) > 0 ? ` + ${selectedStaffReport.sundaysWorked} sun` : ''})
+                                                        ({selectedStaffReport.presentDays || 0} presents
+                                                        {(selectedStaffReport.paidLeavesUsed || 0) > 0 ? ` + ${selectedStaffReport.paidLeavesUsed} leaves` : ''}
+                                                        {(selectedStaffReport.sundaysPassed || 0) > 0 ? ` + ${selectedStaffReport.sundaysPassed} sundays` : ''}
+                                                        {(selectedStaffReport.sundaysWorked || 0) > 0 ? ` + ${selectedStaffReport.sundaysWorked} extras` : ''})
                                                         {' × ₹'}{selectedStaffReport.perDaySalary || Math.round((selectedStaffReport.salary || 0) / 30)}
                                                     </p>
                                                     <p style={{ margin: '5px 0 0 0', fontSize: '15px', fontWeight: '900', color: '#fbbf24' }}>= ₹{(selectedStaffReport.finalSalary || 0).toLocaleString()}</p>

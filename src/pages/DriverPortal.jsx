@@ -476,25 +476,31 @@ const DriverPortal = () => {
             doc.setFont('helvetica', 'bold');
             doc.text('PAYMENT OVERVIEW', pageWidth / 2 + 5, 68);
             
+            const totalEarned = ledgerData.summary.totalEarned || 0;
+            const totalEMI = Number(ledgerData.summary.totalEMI) || 0;
+            const netPayable = ledgerData.summary.netPayable || (totalEarned - (ledgerData.summary.pendingAdvance || 0) - totalEMI);
+
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(100, 116, 139);
-            doc.text('Gross Earnings:', pageWidth / 2 + 5, 76);
-            doc.text('Deductions/Advances:', pageWidth / 2 + 5, 82);
-            
+            doc.text('Gross Earnings:', pageWidth / 2 + 5, 74);
+            doc.text('Advances Deducted:', pageWidth / 2 + 5, 78);
+            doc.text('EMI Deduction (Loan):', pageWidth / 2 + 5, 82);
+
             doc.setTextColor(15, 23, 42);
-            doc.text(`Rs. ${ledgerData.summary.totalEarned}`, pageWidth - 20, 76, { align: 'right' });
-            doc.setTextColor(244, 63, 94); // Red for deductions
-            doc.text(`- Rs. ${ledgerData.summary.totalAdvances}`, pageWidth - 20, 82, { align: 'right' });
+            doc.text(`Rs. ${totalEarned.toLocaleString('en-IN')}`, pageWidth - 20, 74, { align: 'right' });
+            doc.setTextColor(244, 63, 94);
+            doc.text(`- Rs. ${(ledgerData.summary.pendingAdvance || 0).toLocaleString('en-IN')}`, pageWidth - 20, 78, { align: 'right' });
+            doc.text(`- Rs. ${totalEMI.toLocaleString('en-IN')}`, pageWidth - 20, 82, { align: 'right' });
             
-            doc.setDrawColor(226, 232, 240);
-            doc.line(pageWidth / 2 + 5, 85, pageWidth - 20, 85);
+            doc.setDrawColor(203, 213, 225);
+            doc.line(pageWidth / 2 + 5, 86, pageWidth - 20, 86);
             
-            doc.setFontSize(12);
+            doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(16, 185, 129); // Green for net payable
-            doc.text('NET PAYABLE:', pageWidth / 2 + 5, 93);
-            doc.text(`Rs. ${ledgerData.summary.netPayable}`, pageWidth - 20, 93, { align: 'right' });
+            doc.text('NET PAYABLE:', pageWidth / 2 + 5, 95);
+            doc.text(`Rs. ${netPayable.toLocaleString('en-IN')}`, pageWidth - 20, 95, { align: 'right' });
 
             // 3. DUTY LOGS TABLE
             doc.setTextColor(15, 23, 42);
@@ -502,20 +508,18 @@ const DriverPortal = () => {
             doc.setFont('helvetica', 'bold');
             doc.text('DUTY & TRIP DETAILS', 15, 115);
 
-            const dutyRows = ledgerData.history.map(att => [
+            const dutyRows = (ledgerData.history || []).map(att => [
                 toISTDateString(att.date),
                 att.vehicle || 'N/A',
-                `${att.totalKM || 0} KM`,
                 `Rs. ${att.dailyWage || 0}`,
                 `Rs. ${att.sameDayReturn || 0}`,
                 `Rs. ${att.nightStay || 0}`,
-                `Rs. ${att.otherBonuses || 0}`,
                 `Rs. ${att.parking || 0}`,
                 `Rs. ${(att.dailyWage || 0) + (att.bonuses || 0) + (att.parking || 0)}`
             ]);
 
             autoTable(doc, {
-                head: [['DATE', 'VEHICLE', 'KM', 'WAGE', 'SAME DAY', 'NIGHT', 'OTHER', 'PARKING', 'TOTAL']],
+                head: [['DATE', 'VEHICLE NO.', 'WAGE', 'SAME DAY', 'NIGHT STAY', 'PARKING', 'TOTAL (Rs.)']],
                 body: dutyRows,
                 startY: 120,
                 theme: 'grid',
@@ -576,8 +580,59 @@ const DriverPortal = () => {
                 margin: { left: 15, right: 15 }
             });
 
-            // 5. FOOTER & SIGNATURE SECTION
-            let footerY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 35;
+            // 5. LOAN & EMI SECTION
+            let loanY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 15;
+            if (loanY > pageHeight - 80) { doc.addPage(); loanY = 20; }
+            doc.setTextColor(15, 23, 42); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+            doc.text('LOANS & EMI PROGRESS', 15, loanY);
+
+            const loanRows = (ledgerData.loans || []).map(loan => {
+                const sDate = new Date(loan.startDate);
+                const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
+                const selVal = (parseInt(ledgerYear) * 12) + parseInt(ledgerMonth);
+                const monthIdx = (selVal - sVal) + 1;
+                
+                const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
+                const isCompleted = loan.status === 'Completed';
+                
+                let progress = '';
+                if (isCompleted) {
+                    progress = 'Completed';
+                } else if (monthIdx <= 0) {
+                    progress = 'Upcoming';
+                } else if (monthIdx > tenure) {
+                    progress = `Extended (Month ${monthIdx} of ${tenure})`;
+                } else {
+                    progress = `Month ${monthIdx} of ${tenure}`;
+                }
+
+                return [
+                    formatDateIST(loan.startDate),
+                    `Rs. ${loan.totalAmount?.toLocaleString()}`,
+                    `Rs. ${loan.monthlyEMI?.toLocaleString()}`,
+                    `Rs. ${loan.remainingAmount?.toLocaleString()}`,
+                    progress,
+                    loan.status?.toUpperCase()
+                ];
+            });
+
+            if (loanRows.length > 0) {
+                autoTable(doc, {
+                    head: [['LOAN DATE', 'TOTAL AMOUNT', 'EMI AMOUNT', 'REMAINING', 'EMI PROGRESS', 'STATUS']],
+                    body: loanRows,
+                    startY: loanY + 5,
+                    theme: 'grid',
+                    headStyles: { fillColor: [99, 102, 241], fontSize: 8, halign: 'center' },
+                    bodyStyles: { fontSize: 8, halign: 'center', textColor: [51, 65, 85] },
+                    margin: { left: 15, right: 15 }
+                });
+            } else {
+                doc.setFontSize(9); doc.setFont('helvetica', 'italic'); doc.setTextColor(150, 150, 150);
+                doc.text('No active or historical loans recorded for this driver.', 15, loanY + 10);
+            }
+
+            // 6. FOOTER & SIGNATURE SECTION
+            let footerY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : loanY) + 35;
             if (footerY > pageHeight - 60) { doc.addPage(); footerY = 30; }
 
             // Disclaimer & Note
@@ -1734,22 +1789,27 @@ const DriverPortal = () => {
                             ) : (
                                 <div className="ledger-content">
                                     {/* Summary Cards */}
-                                    <div className="ledger-summary-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px', marginBottom: '24px' }}>
-                                        <div className="glass-card" style={{ padding: '16px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                                            <p style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(16, 185, 129, 0.8)', marginBottom: '4px', textTransform: 'uppercase' }}>{t('totalEarned')}</p>
-                                            <h3 style={{ fontSize: '20px', fontWeight: '900', color: 'white' }}>Rs. {ledgerData?.summary?.totalEarned || 0}</h3>
+                                    <div className="ledger-summary-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '24px' }}>
+                                        <div className="glass-card" style={{ padding: '14px', background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(16, 185, 129, 0.05) 100%)', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                                            <p style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(16, 185, 129, 0.8)', marginBottom: '4px', textTransform: 'uppercase' }}>{t('totalEarned') || 'Earnings'}</p>
+                                            <h3 style={{ fontSize: '18px', fontWeight: '900', color: 'white' }}>Rs. {(ledgerData?.summary?.totalEarned || 0).toLocaleString()}</h3>
                                         </div>
-                                        <div className="glass-card" style={{ padding: '16px', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                                            <p style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(245, 158, 11, 0.8)', marginBottom: '4px', textTransform: 'uppercase' }}>{t('workingDays')}</p>
-                                            <h3 style={{ fontSize: '20px', fontWeight: '900', color: 'white' }}>{ledgerData?.summary?.workingDays || 0} Days</h3>
+                                        <div className="glass-card" style={{ padding: '14px', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(245, 158, 11, 0.05) 100%)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                                            <p style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(245, 158, 11, 0.8)', marginBottom: '4px', textTransform: 'uppercase' }}>{t('workingDays') || 'Working Days'}</p>
+                                            <h3 style={{ fontSize: '18px', fontWeight: '900', color: 'white' }}>{ledgerData?.summary?.workingDays || 0}</h3>
                                         </div>
-                                        <div className="glass-card" style={{ padding: '16px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                                            <p style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(99, 102, 241, 0.8)', marginBottom: '4px', textTransform: 'uppercase' }}>{t('pendingAdvance')}</p>
-                                            <h3 style={{ fontSize: '20px', fontWeight: '900', color: 'white' }}>Rs. {ledgerData?.summary?.pendingAdvance || 0}</h3>
+                                        <div className="glass-card" style={{ padding: '14px', background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, rgba(244, 63, 94, 0.05) 100%)', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
+                                            <p style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(244, 63, 94, 0.8)', marginBottom: '4px', textTransform: 'uppercase' }}>{t('pendingAdvance') || 'Advances'}</p>
+                                            <h3 style={{ fontSize: '18px', fontWeight: '900', color: 'white' }}>Rs. {(ledgerData?.summary?.pendingAdvance || 0).toLocaleString()}</h3>
                                         </div>
-                                        <div className="glass-card" style={{ padding: '16px', background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.1) 0%, rgba(14, 165, 233, 0.05) 100%)', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
-                                            <p style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(14, 165, 233, 0.8)', marginBottom: '4px', textTransform: 'uppercase' }}>{t('netPayable')}</p>
-                                            <h3 style={{ fontSize: '20px', fontWeight: '900', color: 'white' }}>Rs. {ledgerData?.summary?.netPayable || 0}</h3>
+                                        <div className="glass-card" style={{ padding: '14px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0.05) 100%)', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                                            <p style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(99, 102, 241, 0.8)', marginBottom: '4px', textTransform: 'uppercase' }}>EMI (Loan)</p>
+                                            <h3 style={{ fontSize: '18px', fontWeight: '900', color: 'white' }}>Rs. {(ledgerData?.summary?.totalEMI || 0).toLocaleString()}</h3>
+                                        </div>
+                                        <div className="glass-card" style={{ gridColumn: 'span 2', padding: '16px', background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.15) 0%, rgba(14, 165, 233, 0.05) 100%)', border: '1px solid rgba(14, 165, 233, 0.3)' }}>
+                                            <p style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(14, 165, 233, 0.9)', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>{t('netPayable') || 'Net Salary (In-Hand)'}</p>
+                                            <h3 style={{ fontSize: '26px', fontWeight: '900', color: 'white' }}>Rs. {(ledgerData?.summary?.netPayable || 0).toLocaleString()}</h3>
+                                            <p style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '4px' }}>Calculated after advances and loan deductions</p>
                                         </div>
                                     </div>
 
@@ -1773,7 +1833,7 @@ const DriverPortal = () => {
                                                 <div key={item._id} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <div>
                                                         <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{toISTDateString(item.date)}</p>
-                                                        <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{item.vehicle} • {item.totalKM} KM</p>
+                                                        <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{item.vehicle}</p>
                                                     </div>
                                                     <div style={{ textAlign: 'right' }}>
                                                         <p style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>Rs. {(item.dailyWage || 0) + (item.bonuses || 0) + (item.parking || 0)}</p>
@@ -1810,6 +1870,58 @@ const DriverPortal = () => {
                                                     </div>
                                                 </div>
                                             ))}
+                                        </div>
+                                    )}
+
+                                    {/* Loan History */}
+                                    <h4 style={{ color: 'white', marginTop: '32px', marginBottom: '16px', fontSize: '16px', fontWeight: '800' }}>{t('loanHistory') || 'Loan History'}</h4>
+                                    {(!ledgerData?.loans || ledgerData.loans.length === 0) ? (
+                                        <div className="glass-card" style={{ padding: '32px', textAlign: 'center', marginBottom: '40px' }}>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: '600' }}>No active loans records</p>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'grid', gap: '12px', marginBottom: '40px' }}>
+                                            {ledgerData?.loans?.map(item => {
+                                                const sDate = new Date(item.startDate);
+                                                const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
+                                                const selVal = (parseInt(ledgerYear) * 12) + parseInt(ledgerMonth);
+                                                const monthIdx = (selVal - sVal) + 1;
+                                                const tenure = parseInt(item.tenureMonths, 10) || (item.monthlyEMI > 0 ? Math.round(item.totalAmount / item.monthlyEMI) : 1);
+                                                const isCompleted = item.status === 'Completed' || monthIdx > tenure;
+
+                                                return (
+                                                    <div key={item._id} className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #6366f1' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                                                            <div>
+                                                                <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{formatDateIST(item.startDate)}</p>
+                                                                <p style={{ color: 'var(--text-muted)', fontSize: '11px', textTransform: 'uppercase', fontWeight: '700' }}>
+                                                                    {monthIdx > 0 && monthIdx <= tenure ? `Month ${monthIdx} of ${tenure}` : (isCompleted ? 'Loan Completed' : 'Loan Schedule')}
+                                                                </p>
+                                                            </div>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <p style={{ color: '#fbbf24', fontWeight: '900', fontSize: '15px' }}>EMI: Rs. {item.monthlyEMI?.toLocaleString()}</p>
+                                                                <span style={{ 
+                                                                    padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '900', 
+                                                                    background: item.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', 
+                                                                    color: item.status === 'Active' ? '#10b981' : 'rgba(255,255,255,0.4)' 
+                                                                }}>
+                                                                    {item.status?.toUpperCase()}
+                                                                </span>
+                                                            </div>
+                                                        </div>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginTop: '10px', pt: '10px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                            <div>
+                                                                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', textTransform: 'uppercase' }}>Total Loan</p>
+                                                                <p style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>Rs. {item.totalAmount?.toLocaleString()}</p>
+                                                            </div>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', textTransform: 'uppercase' }}>Remaining</p>
+                                                                <p style={{ color: '#f43f5e', fontSize: '13px', fontWeight: '900' }}>Rs. {item.remainingAmount?.toLocaleString()}</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                );
+                                            })}
                                         </div>
                                     )}
                                 </div>

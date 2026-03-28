@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import {
     Calendar, Plus, Search, Trash2, Edit, ChevronLeft, ChevronRight, Car, PlusCircle,
-    User, MapPin, Target, Briefcase, X, Save, FileSpreadsheet, Users, Building2, TruckIcon, Wallet, Navigation
+    User, MapPin, Target, Briefcase, X, Save, FileSpreadsheet, Users, Building2, TruckIcon, Wallet, Navigation, Download, FileText, IndianRupee
 } from 'lucide-react';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
@@ -76,7 +78,7 @@ const EventManagement = () => {
                 defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, 1));
             }
         }
-        setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: defaultDate, eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: currentTimeIST() });
+        setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: defaultDate, eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: currentTimeIST(), remarks: '', guestCount: '' });
         setShowDutyModal(true);
     };
 
@@ -129,14 +131,14 @@ const EventManagement = () => {
         } catch (err) { alert('Error fetching details'); }
     };
 
-    const [eventFormData, setEventFormData] = useState({ 
+    const [eventFormData, setEventFormData] = useState({
         name: '', client: '', date: getToday(), location: '', description: '',
         status: 'Upcoming'
     });
     const [dutyFormData, setDutyFormData] = useState({
         carNumber: '', model: '', dropLocation: '', date: getToday(),
-        eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', // 'Fleet' | 'External'
-        dutyType: '', dutyTime: ''
+        eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet',
+        dutyType: '', dutyTime: '', remarks: '', guestCount: ''
     });
 
     useEffect(() => {
@@ -156,7 +158,7 @@ const EventManagement = () => {
             const { data } = await axios.get(`/api/admin/events/${selectedCompany._id}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
-            
+
             const todayStr = todayIST();
             const allWithVisualStatus = (data || []).map(e => {
                 const evDate = toISTDateString(new Date(e.date));
@@ -212,12 +214,14 @@ const EventManagement = () => {
                     driverName: a.driver?.name || 'N/A',
                     vehicleSource: 'Fleet',
                     eventId: a.eventId?._id || a.eventId,
-                    dutyAmount: 0,
+                    dutyAmount: a.dailyWage || 0,
                     dropLocation: a.dropLocation || '',
                     date: a.date,
                     isAttendance: true,
-                    dutyType: a.punchOut?.remarks || 'Fleet Duty',
-                    dutyTime: a.punchIn?.time ? formatTimeIST(a.punchIn.time) : ''
+                    dutyType: a.dutyType || a.punchOut?.remarks || 'Fleet Duty',
+                    dutyTime: a.dutyTime || (a.punchIn?.time ? formatTimeIST(a.punchIn.time) : ''),
+                    remarks: a.remarks || '',
+                    guestCount: a.guestCount || ''
                 }));
 
             setVehicles([...outsideDuties, ...attendanceDuties]);
@@ -311,7 +315,12 @@ const EventManagement = () => {
                 // Update Fleet Attendance Record
                 const attendancePayload = {
                     eventId: dutyFormData.eventId || undefined,
-                    dropLocation: dutyFormData.dropLocation
+                    dropLocation: dutyFormData.dropLocation,
+                    dutyType: dutyFormData.dutyType,
+                    dutyTime: dutyFormData.dutyTime,
+                    remarks: dutyFormData.remarks,
+                    guestCount: Number(dutyFormData.guestCount) || 0,
+                    dailyWage: Number(dutyFormData.dutyAmount) || 0
                 };
                 await axios.put(`/api/admin/attendance/${selectedId}`, attendancePayload, config);
             } else {
@@ -339,7 +348,9 @@ const EventManagement = () => {
                     driverName: dutyFormData.driverName?.trim() || '',
                     vehicleSource: dutyFormData.vehicleSource,
                     dutyType: dutyFormData.dutyType,
-                    dutyTime: dutyFormData.dutyTime
+                    dutyTime: dutyFormData.dutyTime,
+                    remarks: dutyFormData.remarks,
+                    guestCount: Number(dutyFormData.guestCount) || 0
                 };
 
                 if (isEditingDuty && selectedId) {
@@ -354,7 +365,10 @@ const EventManagement = () => {
             }
             setShowDutyModal(false);
             fetchVehicles();
-            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '' });
+            if (showDetailsModal && selectedEventDetails?._id) {
+                fetchEventDetails(selectedEventDetails._id);
+            }
+            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestCount: '' });
         } catch (err) {
             console.error('Save Error:', err.response?.data || err.message);
             alert('Error saving duty entry: ' + (err.response?.data?.message || 'Check connection'));
@@ -376,6 +390,9 @@ const EventManagement = () => {
                 await axios.delete(`/api/admin/vehicles/${id}`, { headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}` } });
             }
             fetchVehicles();
+            if (showDetailsModal && selectedEventDetails?._id) {
+                fetchEventDetails(selectedEventDetails._id);
+            }
         } catch (err) { alert('Error deleting'); }
     };
 
@@ -386,11 +403,13 @@ const EventManagement = () => {
             dropLocation: v.dropLocation || '',
             date: v.carNumber?.split('#')[1] || getToday(),
             eventId: v.eventId || '',
-            dutyAmount: v.dutyAmount || '',
+            dutyAmount: v.dutyAmount || v.dailyWage || '',
             driverName: v.driverName || '',
             vehicleSource: v.vehicleSource || 'External',
             dutyType: v.dutyType || '',
-            dutyTime: v.dutyTime || ''
+            dutyTime: v.dutyTime || '',
+            remarks: v.remarks || '',
+            guestCount: v.guestCount || ''
         });
         setSelectedId(v._id);
         setIsEditingDuty(true);
@@ -494,6 +513,187 @@ const EventManagement = () => {
 
     const formatDateDisplay = (dateStr) => formatDateIST(dateStr);
 
+    const loadImage = (url) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = url;
+        });
+    };
+
+    const handleExportEventPDF = async (mode = 'internal') => {
+        try {
+            if (!selectedEventDetails) {
+                alert("No event data available.");
+                return;
+            }
+
+            const logo = await loadImage('/logos/yatree_logo.png').catch(() => null);
+            const signature = await loadImage('/logos/kavish_sign.png').catch(() => null);
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+
+            // 1. PREMIUM HEADER
+            doc.setFillColor(15, 23, 42);
+            doc.rect(0, 0, pageWidth, 50, 'F');
+
+            if (logo) doc.addImage(logo, 'PNG', 12, 8, 30, 30);
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(22);
+            doc.setFont('helvetica', 'bold');
+            doc.text('YATREE DESTINATION', 45, 22);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(200, 200, 200);
+            doc.text('Premium Fleet Management & Travel Solutions', 45, 30);
+            doc.setTextColor(251, 191, 36);
+            doc.text('www.yatreedestination.com', 45, 37);
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text(mode === 'client' ? 'CLIENT MISSION REPORT' : 'INTERNAL OPS REPORT', pageWidth - 15, 22, { align: 'right' });
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(150, 150, 150);
+            doc.text(`DATE GENERATED`, pageWidth - 15, 30, { align: 'right' });
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(11);
+            doc.text(todayIST().toUpperCase(), pageWidth - 15, 36, { align: 'right' });
+
+            // 2. MISSION INFORMATION
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('EVENT SPECIFICATIONS', 15, 65);
+            doc.setDrawColor(251, 191, 36);
+            doc.setLineWidth(0.5);
+            doc.line(15, 68, 50, 68);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139);
+            doc.text('MISSION NAME', 15, 76);
+            doc.text('CLIENT', 15, 84);
+            doc.text('EVENT DATE', 15, 92);
+
+            doc.setTextColor(15, 23, 42);
+            doc.setFont('helvetica', 'bold');
+            doc.text(selectedEventDetails.event?.name?.toUpperCase() || 'N/A', 50, 76);
+            doc.text(selectedEventDetails.event?.client?.toUpperCase() || 'N/A', 50, 84);
+            doc.text(formatDateIST(selectedEventDetails.event?.date), 50, 92);
+
+            // Summary Stats Box
+            doc.setFillColor(248, 250, 252);
+            doc.roundedRect(pageWidth / 2, 60, pageWidth / 2 - 15, 45, 3, 3, 'F');
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(11);
+            doc.setFont('helvetica', 'bold');
+            doc.text('MISSION STATISTICS', pageWidth / 2 + 5, 70);
+
+            const allDuties = [...selectedEventDetails.fleetDuties, ...selectedEventDetails.externalDuties];
+            const totalEarned = allDuties.reduce((sum, d) => sum + (Number(d.dutyAmount || d.dailyWage) || 0), 0);
+            const fleetCount = selectedEventDetails.fleetDuties.length;
+            const extCount = selectedEventDetails.externalDuties.length;
+
+            doc.setFontSize(9);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(100, 116, 139);
+
+            if (mode === 'client') {
+                doc.text('Total Mission Vehicles:', pageWidth / 2 + 5, 83);
+                doc.text('Total Operations Logistics:', pageWidth / 2 + 5, 88);
+
+                doc.setTextColor(15, 23, 42);
+                doc.text(allDuties.length.toString(), pageWidth - 20, 83, { align: 'right' });
+                doc.text('Verified', pageWidth - 20, 88, { align: 'right' });
+            } else {
+                doc.text('Vanguard Vehicles (Fleet):', pageWidth / 2 + 5, 78);
+                doc.text('External Support (Cars):', pageWidth / 2 + 5, 83);
+                doc.text('Total Resource Count:', pageWidth / 2 + 5, 88);
+
+                doc.setTextColor(15, 23, 42);
+                doc.text(fleetCount.toString(), pageWidth - 20, 78, { align: 'right' });
+                doc.text(extCount.toString(), pageWidth - 20, 83, { align: 'right' });
+                doc.text(allDuties.length.toString(), pageWidth - 20, 88, { align: 'right' });
+            }
+
+            doc.setDrawColor(203, 213, 225);
+            doc.line(pageWidth / 2 + 5, 92, pageWidth - 20, 92);
+
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(16, 185, 129);
+            doc.text('GRAND TOTAL VALUE:', pageWidth / 2 + 5, 100);
+            doc.text(`Rs. ${totalEarned.toLocaleString('en-IN')}`, pageWidth - 20, 100, { align: 'right' });
+
+            // 3. DUTY LOGS TABLE
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('OPERATIONAL LOGS', 15, 115);
+
+            const headers = mode === 'client'
+                ? [['DATE', 'VEHICLE ID', 'RESOURCES', 'MISSION ROLE', 'SERVICE VAL']]
+                : [['DATE', 'VEHICLE ID', 'LOG SOURCE', 'OPERATIVE', 'MISSION ROLE', 'SETTLEMENT']];
+
+            const body = allDuties.sort((a, b) => new Date(a.date || a.createdAt) - new Date(b.date || b.createdAt)).map(d => {
+                const dateText = formatDateIST(d.date || d.createdAt);
+                const vehNo = (d.vehicle?.carNumber || d.vehicleNumber || d.carNumber?.split('#')[0] || 'N/A').toUpperCase();
+                const amount = `${Number(d.dutyAmount || d.dailyWage || 0).toLocaleString('en-IN')}`;
+
+                if (mode === 'client') {
+                    // Match the 5 client headers: ['DATE', 'VEHICLE ID', 'RESOURCES', 'MISSION ROLE', 'SERVICE VAL']
+                    return [dateText, vehNo, d.vehicle?.model || d.model || 'N/A', d.dutyType || 'MISSION SUPPORT', amount];
+                } else {
+                    return [dateText, vehNo, d.vehicleSource?.toUpperCase() || 'EXTERNAL', d.isAttendance ? d.driver?.name : d.driverName, d.dutyType || 'General', amount];
+                }
+            });
+
+            autoTable(doc, {
+                head: headers,
+                body: body,
+                startY: 120,
+                theme: 'grid',
+                headStyles: { fillColor: mode === 'client' ? [30, 41, 59] : [15, 23, 42], fontSize: 8, halign: 'center' },
+                bodyStyles: { fontSize: 8, halign: 'center', textColor: [51, 65, 85] },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                columnStyles: {
+                    4: { halign: 'right', fontStyle: 'bold', textColor: [16, 185, 129] },
+                    5: { halign: 'right', fontStyle: 'bold', textColor: [16, 185, 129] }
+                },
+                margin: { left: 15, right: 15 }
+            });
+
+            // 4. SIGNATURE SECTION
+            let footerY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 120) + 35;
+            if (footerY > pageHeight - 60) { doc.addPage(); footerY = 30; }
+
+            doc.setFontSize(8);
+            doc.setTextColor(148, 163, 184);
+            doc.setFont('helvetica', 'italic');
+            doc.text('This is a computer-generated operational report for missions logistical audit.', 15, footerY);
+
+            const sigX = pageWidth - 75;
+            if (signature) doc.addImage(signature, 'PNG', sigX, footerY - 20, 55, 22);
+            doc.setDrawColor(15, 23, 42); doc.setLineWidth(0.6);
+            doc.line(sigX - 5, footerY + 5, pageWidth - 15, footerY + 5);
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); doc.text('KAVISH JAIN', sigX - 2, footerY + 12);
+            doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
+            doc.text('Founder & Director', sigX - 2, footerY + 17);
+            doc.text('Yatree Destination Pvt. Ltd.', sigX - 2, footerY + 21);
+
+            doc.save(`${mode === 'client' ? 'Client' : 'Internal'}_Report_${selectedEventDetails.event?.name.replace(/\s+/g, '_')}.pdf`);
+        } catch (error) {
+            console.error(error);
+            alert("Error generating mission PDF report: " + error.message);
+        }
+    };
+
     return (
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Event Command Center" description="Unified tracking for company and external vehicles assigned to events." />
@@ -530,8 +730,8 @@ const EventManagement = () => {
 
                             {/* PREMIUM MONTH SELECTOR */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '15px' }}>
-                                <div style={{ 
-                                    display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)' 
+                                <div style={{
+                                    display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)'
                                 }}>
                                     <button onClick={() => shiftMonth(-1)} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}> <ChevronLeft size={16} /> </button>
                                     <div style={{ minWidth: '95px', padding: '0 12px', textAlign: 'center' }}>
@@ -541,15 +741,15 @@ const EventManagement = () => {
                                     </div>
                                     <button onClick={() => shiftMonth(1)} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}> <ChevronRight size={16} /> </button>
                                 </div>
-                                <select 
-                                    value={selectedMonth} 
+                                <select
+                                    value={selectedMonth}
                                     onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
                                     style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'white', height: '38px', borderRadius: '12px', padding: '0 10px', outline: 'none', fontWeight: '800', fontSize: '12px', cursor: 'pointer' }}
                                 >
                                     {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => <option key={m} value={i} style={{ background: '#0a0f1d' }}>{m}</option>)}
                                 </select>
-                                <select 
-                                    value={selectedYear} 
+                                <select
+                                    value={selectedYear}
                                     onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                                     style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'white', height: '38px', borderRadius: '12px', padding: '0 10px', outline: 'none', fontWeight: '800', fontSize: '12px', cursor: 'pointer' }}
                                 >
@@ -608,33 +808,33 @@ const EventManagement = () => {
                     { id: 'Running', label: 'Live Now', color: '#fbbf24', icon: <Target size={20} />, count: filteredMasterByDate.filter(e => e.visualStatus === 'Running').length },
                     { id: 'Close', label: 'Completed', color: '#f87171', icon: <FileSpreadsheet size={20} />, count: filteredMasterByDate.filter(e => e.visualStatus === 'Closed').length }
                 ].map((t) => (
-                    <button 
-                        key={t.id} 
-                        onClick={() => setStatusTab(t.id)} 
+                    <button
+                        key={t.id}
+                        onClick={() => setStatusTab(t.id)}
                         style={{
-                            flex: 1, 
-                            padding: '16px 20px', 
-                            borderRadius: '20px', 
+                            flex: 1,
+                            padding: '16px 20px',
+                            borderRadius: '20px',
                             border: 'none',
                             background: statusTab === t.id ? 'rgba(255,255,255,0.05)' : 'transparent',
                             color: statusTab === t.id ? 'white' : 'rgba(255,255,255,0.3)',
-                            cursor: 'pointer', 
-                            transition: '0.4s cubic-bezier(0.4, 0, 0.2, 1)', 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                            cursor: 'pointer',
+                            transition: '0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                            display: 'flex',
+                            alignItems: 'center',
                             justifyContent: 'center',
                             gap: '12px',
                             position: 'relative',
                             overflow: 'hidden'
                         }}
                     >
-                        <div style={{ 
-                            width: '44px', 
-                            height: '44px', 
-                            borderRadius: '14px', 
-                            background: statusTab === t.id ? `${t.color}25` : 'rgba(255,255,255,0.03)', 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        <div style={{
+                            width: '44px',
+                            height: '44px',
+                            borderRadius: '14px',
+                            background: statusTab === t.id ? `${t.color}25` : 'rgba(255,255,255,0.03)',
+                            display: 'flex',
+                            alignItems: 'center',
                             justifyContent: 'center',
                             color: statusTab === t.id ? t.color : 'rgba(255,255,255,0.4)',
                             transition: '0.3s',
@@ -642,10 +842,10 @@ const EventManagement = () => {
                             position: 'relative'
                         }}>
                             {t.id === 'Running' && statusTab === 'Running' && (
-                                <div style={{ 
-                                    position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px', 
+                                <div style={{
+                                    position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px',
                                     background: '#fbbf24', borderRadius: '50%', border: '2px solid #0a0f1d',
-                                    animation: 'pulse 1.5s infinite' 
+                                    animation: 'pulse 1.5s infinite'
                                 }} />
                             )}
                             {t.icon}
@@ -673,7 +873,7 @@ const EventManagement = () => {
             }}>
                 <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}>
                     <Search style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} size={18} />
-                    <input 
+                    <input
                         className="premium-input-event"
                         placeholder="Scan missions, client tags, or venue signals..."
                         value={searchTerm}
@@ -686,10 +886,19 @@ const EventManagement = () => {
                         }}
                     />
                 </div>
-                
+
                 <div style={{ display: 'flex', gap: '12px' }}>
                     {statusTab !== 'Close' && (
-                        <button onClick={() => { setIsEditingEvent(false); setEventFormData({ name: '', client: '', date: getToday(), status: 'Upcoming' }); setShowEventModal(true); }}
+                        <button onClick={() => {
+                            setIsEditingEvent(false);
+                            setEventFormData({
+                                name: '',
+                                client: '',
+                                date: getToday(),
+                                status: statusTab === 'Running' ? 'Running' : 'Upcoming'
+                            });
+                            setShowEventModal(true);
+                        }}
                             className="primary-btn-premium"
                             style={{
                                 height: '60px', padding: '0 32px', borderRadius: '20px', border: 'none', cursor: 'pointer',
@@ -701,15 +910,23 @@ const EventManagement = () => {
                             <PlusCircle size={22} strokeWidth={2.5} /> NEW MISSION
                         </button>
                     )}
-                    <button onClick={() => { setIsEditingDuty(false); setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '' }); setShowDutyModal(true); }}
-                        style={{
-                            height: '60px', padding: '0 28px', borderRadius: '20px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.05)',
-                            color: '#10b981', fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '12px',
-                            cursor: 'pointer', transition: '0.3s', letterSpacing: '0.5px'
+                    {statusTab !== 'Start' && (
+                        <button onClick={() => {
+                            setIsEditingDuty(false);
+                            setDutyFormData({
+                                carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestCount: ''
+                            });
+                            setShowDutyModal(true);
                         }}
-                    >
-                        <Car size={22} strokeWidth={2.5} /> LOG DUTY
-                    </button>
+                            style={{
+                                height: '60px', padding: '0 28px', borderRadius: '20px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.05)',
+                                color: '#10b981', fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '12px',
+                                cursor: 'pointer', transition: '0.3s', letterSpacing: '0.5px'
+                            }}
+                        >
+                            <Car size={22} strokeWidth={2.5} /> Add Vehicle
+                        </button>
+                    )}
                 </div>
             </div>
 
@@ -753,19 +970,21 @@ const EventManagement = () => {
                         className="event-row-hover"
                     >
                         {/* 1. Date Block */}
-                        <div style={{ 
-                            width: '80px', padding: '10px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)', 
-                            border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center', flexShrink: 0 
-                        }}>
-                            <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '950', letterSpacing: '1px', textTransform: 'uppercase' }}>{new Date(ev.date).toLocaleDateString('en-IN', { month: 'short' })}</div>
-                            <div style={{ fontSize: '22px', color: 'white', fontWeight: '950', lineHeight: 1 }}>{new Date(ev.date).getDate()}</div>
-                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{new Date(ev.date).getFullYear()}</div>
-                        </div>                        {/* 2. Event Body */}
+                        {statusTab !== 'Start' && (
+                            <div style={{
+                                width: '80px', padding: '10px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)',
+                                border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center', flexShrink: 0
+                            }}>
+                                <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '950', letterSpacing: '1px', textTransform: 'uppercase' }}>{new Date(ev.date).toLocaleDateString('en-IN', { month: 'short' })}</div>
+                                <div style={{ fontSize: '22px', color: 'white', fontWeight: '950', lineHeight: 1 }}>{new Date(ev.date).getDate()}</div>
+                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{new Date(ev.date).getFullYear()}</div>
+                            </div>
+                        )}                        {/* 2. Event Body */}
                         <div style={{ flex: 1 }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
                                 <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '950', margin: 0, letterSpacing: '-0.5px' }}>{ev.name}</h3>
-                                <div style={{ 
-                                    padding: '4px 12px', borderRadius: '10px', fontSize: '9px', fontWeight: '900', 
+                                <div style={{
+                                    padding: '4px 12px', borderRadius: '10px', fontSize: '9px', fontWeight: '900',
                                     background: ev.visualStatus === 'Running' ? 'rgba(251,191,36,0.1)' : ev.visualStatus === 'Upcoming' ? 'rgba(16,185,129,0.1)' : 'rgba(248,113,113,0.1)',
                                     color: ev.visualStatus === 'Running' ? '#fbbf24' : ev.visualStatus === 'Upcoming' ? '#10b981' : '#f87171',
                                     border: `1px solid ${ev.visualStatus === 'Running' ? 'rgba(251,191,36,0.2)' : ev.visualStatus === 'Upcoming' ? 'rgba(16,185,129,0.2)' : 'rgba(248,113,113,0.2)'}`,
@@ -800,19 +1019,21 @@ const EventManagement = () => {
                         </div>
 
                         {/* 4. Settlement Summary */}
-                        <div style={{ 
-                            background: 'rgba(16,185,129,0.05)', padding: '12px 24px', borderRadius: '18px',
-                            border: '1px solid rgba(16,185,129,0.1)', minWidth: '140px', textAlign: 'right'
-                        }}>
-                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px', textTransform: 'uppercase' }}>Duty Value</div>
-                            <div style={{ color: '#10b981', fontSize: '18px', fontWeight: '950', textShadow: '0 0 10px rgba(16,185,129,0.2)' }}>₹{Number(ev.totalRevenue || 0).toLocaleString()}</div>
-                        </div>
+                        {statusTab !== 'Start' && (
+                            <div style={{
+                                background: 'rgba(16,185,129,0.05)', padding: '12px 24px', borderRadius: '18px',
+                                border: '1px solid rgba(16,185,129,0.1)', minWidth: '140px', textAlign: 'right'
+                            }}>
+                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px', textTransform: 'uppercase' }}>Duty Value</div>
+                                <div style={{ color: '#10b981', fontSize: '18px', fontWeight: '950', textShadow: '0 0 10px rgba(16,185,129,0.2)' }}>₹{Number(ev.totalRevenue || 0).toLocaleString()}</div>
+                            </div>
+                        )}
 
                         {/* 5. Actions */}
                         <div style={{ display: 'flex', gap: '8px' }}>
-                            <button onClick={(e) => { e.stopPropagation(); handleEditEvent(ev); }} 
-                                style={{ 
-                                    width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', 
+                            <button onClick={(e) => { e.stopPropagation(); handleEditEvent(ev); }}
+                                style={{
+                                    width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)',
                                     border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s'
                                 }}
@@ -820,9 +1041,9 @@ const EventManagement = () => {
                             >
                                 <Edit size={18} />
                             </button>
-                            <button onClick={(e) => { e.stopPropagation(); handleDeleteEvent(ev._id); }} 
-                                style={{ 
-                                    width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(244,63,94,0.08)', 
+                            <button onClick={(e) => { e.stopPropagation(); handleDeleteEvent(ev._id); }}
+                                style={{
+                                    width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(244,63,94,0.08)',
                                     border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s'
                                 }}
@@ -841,7 +1062,7 @@ const EventManagement = () => {
             {/* ═══ DUTY LOG MODAL ═══ */}
             <AnimatePresence>
                 {showDutyModal && (
-                    <div className="modal-overlay">
+                    <div className="modal-overlay" style={{ zIndex: 10000 }}>
                         <motion.div
                             initial={{ y: 50, opacity: 0, scale: 0.95 }}
                             animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -939,7 +1160,7 @@ const EventManagement = () => {
                                             <div className="premium-input-group">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <Car size={12} color="#10b981" />
-                                                    <label className="premium-label">Plate Identification</label>
+                                                    <label className="premium-label">Vehicle Numbers</label>
                                                 </div>
                                                 <input type="text" list={dutyFormData.vehicleSource === 'Fleet' ? "masterCars" : undefined} required value={dutyFormData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} className="premium-compact-input" placeholder="Search Vehicle..." style={{ textTransform: 'uppercase', height: '50px' }} />
                                                 {dutyFormData.vehicleSource === 'Fleet' && (
@@ -967,13 +1188,21 @@ const EventManagement = () => {
                                             </div>
                                             <div className="premium-input-group">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Wallet size={12} color="#10b981" />
-                                                    <label className="premium-label">Payout Amount</label>
+                                                    <Users size={12} color="#10b981" />
+                                                    <label className="premium-label">Guest / Members Count</label>
                                                 </div>
-                                                <div style={{ position: 'relative' }}>
-                                                    <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', fontWeight: '900', color: '#10b981' }}>₹</span>
-                                                    <input type="number" required value={dutyFormData.dutyAmount} onChange={e => setDutyFormData({ ...dutyFormData, dutyAmount: e.target.value })} className="premium-compact-input" placeholder="0" style={{ paddingLeft: '35px', color: '#10b981', fontWeight: '800', height: '50px' }} />
-                                                </div>
+                                                <input type="number" value={dutyFormData.guestCount} onChange={e => setDutyFormData({ ...dutyFormData, guestCount: e.target.value })} className="premium-compact-input" placeholder="e.g. 4" style={{ height: '50px' }} />
+                                            </div>
+                                        </div>
+
+                                        <div className="premium-input-group">
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Wallet size={12} color="#10b981" />
+                                                <label className="premium-label">Selling Amount (Revenue)</label>
+                                            </div>
+                                            <div style={{ position: 'relative' }}>
+                                                <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', fontWeight: '900', color: '#10b981' }}>₹</span>
+                                                <input type="number" required value={dutyFormData.dutyAmount} onChange={e => setDutyFormData({ ...dutyFormData, dutyAmount: e.target.value })} className="premium-compact-input" placeholder="0" style={{ paddingLeft: '35px', color: '#10b981', fontWeight: '800', height: '50px' }} />
                                             </div>
                                         </div>
                                     </div>
@@ -1034,6 +1263,13 @@ const EventManagement = () => {
                                             {dropLocationSuggestions.map(loc => <option key={loc} value={loc} />)}
                                         </datalist>
                                     </div>
+                                    <div className="premium-input-group" style={{ marginBottom: '10px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <FileText size={12} color="#fbbf24" style={{ opacity: 0.7 }} />
+                                            <label className="premium-label">Operational Remarks / Guest Names</label>
+                                        </div>
+                                        <textarea rows="2" value={dutyFormData.remarks} onChange={e => setDutyFormData({ ...dutyFormData, remarks: e.target.value })} className="premium-compact-input" placeholder="Enter important mission notes here..." style={{ height: 'auto', padding: '12px', minHeight: '80px', resize: 'none' }} />
+                                    </div>
                                 </div>
 
                                 {/* Fixed Footer */}
@@ -1089,10 +1325,10 @@ const EventManagement = () => {
                                             const todayStr = todayIST();
                                             let vStat = selectedEventDetails.event.status || 'Upcoming';
                                             if (vStat === 'Upcoming' && evDate <= todayStr) vStat = 'Running';
-                                            
+
                                             return (
-                                                <span style={{ 
-                                                    padding: '6px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '950', 
+                                                <span style={{
+                                                    padding: '6px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '950',
                                                     background: vStat === 'Running' ? '#fbbf2433' : vStat === 'Closed' ? '#f8717133' : '#10b98133',
                                                     color: vStat === 'Running' ? '#fbbf24' : vStat === 'Closed' ? '#f87171' : '#10b981',
                                                     border: '1px solid rgba(255,255,255,0.05)'
@@ -1112,46 +1348,64 @@ const EventManagement = () => {
                                         </div>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowDetailsModal(false)} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', width: '48px', height: '48px', borderRadius: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}>
-                                    <X size={28} />
-                                </button>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                    {selectedEventDetails.event?.status === 'Closed' && (
+                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                onClick={() => handleExportEventPDF('internal')}
+                                                style={{ height: '42px', padding: '0 18px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)', color: '#818cf8', fontWeight: '800', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                            >
+                                                <FileText size={16} /> INTERNAL PDF
+                                            </button>
+                                            <button
+                                                onClick={() => handleExportEventPDF('client')}
+                                                style={{ height: '42px', padding: '0 18px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', fontWeight: '800', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                            >
+                                                <Download size={16} /> CLIENT PDF
+                                            </button>
+                                        </div>
+                                    )}
+                                    <button onClick={() => setShowDetailsModal(false)} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', width: '48px', height: '48px', borderRadius: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}>
+                                        <X size={28} />
+                                    </button>
+                                </div>
                             </div>
 
                             <div style={{ padding: '32px', overflowY: 'auto' }} className="premium-scroll">
                                 {/* Fin Summary */}
-                                <div className="stats-grid" style={{ 
-                                    display: 'grid', 
-                                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', 
-                                    gap: '15px', 
+                                <div className="stats-grid" style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                                    gap: '15px',
                                     marginBottom: '32px',
                                     width: '100%'
                                 }}>
                                     {[
-                                        { 
-                                            label: 'Total Duties', 
-                                            value: (selectedEventDetails.fleetDuties.length + selectedEventDetails.externalDuties.length), 
-                                            color: '#fbbf24', 
+                                        {
+                                            label: 'Total Duties',
+                                            value: (selectedEventDetails.fleetDuties.length + selectedEventDetails.externalDuties.length),
+                                            color: '#fbbf24',
                                             icon: <TruckIcon size={18} />,
                                             sub: 'All Resources'
                                         },
-                                        { 
-                                            label: 'Fleet Revenue', 
-                                            value: `₹${(selectedEventDetails.fleetDuties.reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`, 
-                                            color: '#38bdf8', 
+                                        {
+                                            label: 'Fleet Revenue',
+                                            value: `₹${(selectedEventDetails.fleetDuties.reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`,
+                                            color: '#38bdf8',
                                             icon: <Car size={18} />,
                                             sub: `${selectedEventDetails.fleetDuties.length} Fleet Vehicles`
                                         },
-                                        { 
-                                            label: 'External Revenue', 
-                                            value: `₹${(selectedEventDetails.externalDuties.reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`, 
-                                            color: '#a855f7', 
+                                        {
+                                            label: 'External Revenue',
+                                            value: `₹${(selectedEventDetails.externalDuties.reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`,
+                                            color: '#a855f7',
                                             icon: <Users size={18} />,
                                             sub: `${selectedEventDetails.externalDuties.length} Market Cars`
                                         },
-                                        { 
-                                            label: 'Grand Total', 
-                                            value: `₹${([...selectedEventDetails.externalDuties, ...selectedEventDetails.fleetDuties].reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`, 
-                                            color: '#10b981', 
+                                        {
+                                            label: 'Grand Total',
+                                            value: `₹${([...selectedEventDetails.externalDuties, ...selectedEventDetails.fleetDuties].reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`,
+                                            color: '#10b981',
                                             icon: <Target size={18} />,
                                             sub: 'Master Settlement'
                                         },
@@ -1177,17 +1431,17 @@ const EventManagement = () => {
                                 </div>
 
                                 {/* ═══ CONSOLIDATED DUTY LOG TABLE ═══ */}
-                                <div style={{ 
-                                    background: 'rgba(15, 23, 42, 0.4)', 
-                                    borderRadius: '28px', 
-                                    border: '1px solid rgba(255,255,255,0.06)', 
+                                <div style={{
+                                    background: 'rgba(15, 23, 42, 0.4)',
+                                    borderRadius: '28px',
+                                    border: '1px solid rgba(255,255,255,0.06)',
                                     overflow: 'hidden',
                                     boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
                                     marginBottom: '20px'
                                 }}>
-                                    <div style={{ 
-                                        padding: '20px 24px', 
-                                        borderBottom: '1px solid rgba(255,255,255,0.06)', 
+                                    <div style={{
+                                        padding: '20px 24px',
+                                        borderBottom: '1px solid rgba(255,255,255,0.06)',
                                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                         background: 'rgba(255,255,255,0.02)'
                                     }}>
@@ -1198,7 +1452,7 @@ const EventManagement = () => {
                                             <h4 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '950', letterSpacing: '-0.5px' }}>OPERATIONAL LOGS</h4>
                                         </div>
                                     </div>
-                                    
+
                                     <div style={{ overflowX: 'auto' }} className="premium-scroll">
                                         <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse' }}>
                                             <thead>
@@ -1206,80 +1460,116 @@ const EventManagement = () => {
                                                     <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>TIMELINE</th>
                                                     <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>VEHICLE / RESOURCE</th>
                                                     <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>LOGISTICS</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>MEMBERS</th>
                                                     <th style={{ padding: '16px 24px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>SETTLEMENT</th>
                                                     <th style={{ padding: '16px 24px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>ACTIONS</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {[...selectedEventDetails.fleetDuties, ...selectedEventDetails.externalDuties]
-                                                    .sort((a,b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+                                                    .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
                                                     .map((d, idx) => (
-                                                    <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }} className="table-row-hover">
-                                                        {/* TIMELINE */}
-                                                        <td style={{ padding: '20px 24px' }}>
-                                                            <div style={{ color: 'white', fontWeight: '950', fontSize: '15px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
-                                                            <div style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginTop: '2px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { weekday: 'short' })}</div>
-                                                        </td>
-                                                        {/* RESOURCE */}
-                                                        <td style={{ padding: '20px 24px' }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                                <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: d.vehicleSource === 'Fleet' ? 'rgba(16,185,129,0.1)' : 'rgba(168,85,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                    <Car size={20} color={d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'} />
-                                                                </div>
-                                                                <div>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                        <span style={{ color: 'white', fontWeight: '900', fontSize: '14px', letterSpacing: '0.5px' }}>{d.isAttendance ? (d.vehicle?.carNumber) : (d.carNumber?.split('#')[0])}</span>
-                                                                        <span style={{ 
-                                                                            fontSize: '8px', padding: '2px 6px', borderRadius: '4px', fontWeight: '950',
-                                                                            background: d.vehicleSource === 'Fleet' ? '#10b98120' : '#a855f720',
-                                                                            color: d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'
-                                                                        }}>
-                                                                            {d.vehicleSource?.toUpperCase() || 'EXTERNAL'}
-                                                                        </span>
+                                                        <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }} className="table-row-hover">
+                                                            {/* TIMELINE */}
+                                                            <td style={{ padding: '20px 24px' }}>
+                                                                <div style={{ color: 'white', fontWeight: '950', fontSize: '15px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
+                                                                <div style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginTop: '2px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { weekday: 'short' })}</div>
+                                                            </td>
+                                                            {/* RESOURCE */}
+                                                            <td style={{ padding: '20px 24px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: d.vehicleSource === 'Fleet' ? 'rgba(16,185,129,0.1)' : 'rgba(168,85,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                        <Car size={20} color={d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'} />
                                                                     </div>
-                                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', marginTop: '4px' }}>
-                                                                        {d.isAttendance ? d.vehicle?.model : d.model} • <span style={{ color: 'rgba(255,255,255,0.25)' }}>{d.isAttendance ? d.driver?.name : d.driverName}</span>
+                                                                    <div>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                            <span style={{ color: 'white', fontWeight: '900', fontSize: '14px', letterSpacing: '0.5px' }}>{d.vehicle?.carNumber || d.vehicleNumber || d.carNumber?.split('#')[0] || 'N/A'}</span>
+                                                                            <span style={{
+                                                                                fontSize: '8px', padding: '2px 6px', borderRadius: '4px', fontWeight: '950',
+                                                                                background: d.vehicleSource === 'Fleet' ? '#10b98120' : '#a855f720',
+                                                                                color: d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'
+                                                                            }}>
+                                                                                {d.vehicleSource?.toUpperCase() || 'EXTERNAL'}
+                                                                            </span>
+                                                                        </div>
+                                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', marginTop: '4px' }}>
+                                                                            {d.vehicle?.model || d.model || 'N/A'} • <span style={{ color: 'rgba(255,255,255,0.25)' }}>{d.driver?.name || d.driverName || 'N/A'}</span>
+                                                                        </div>
                                                                     </div>
                                                                 </div>
-                                                            </div>
-                                                        </td>
-                                                        {/* LOGISTICS */}
-                                                        <td style={{ padding: '20px 24px' }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                                <div style={{ 
-                                                                    padding: '4px 10px', borderRadius: '8px', background: 'rgba(251,191,36,0.1)', 
-                                                                    color: '#fbbf24', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251,191,36,0.2)'
-                                                                }}>
-                                                                    {d.dutyType || 'General Duty'}
+                                                            </td>
+                                                            {/* LOGISTICS */}
+                                                            <td style={{ padding: '20px 24px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                    <div style={{
+                                                                        padding: '4px 10px', borderRadius: '8px', background: 'rgba(251,191,36,0.1)',
+                                                                        color: '#fbbf24', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251,191,36,0.2)'
+                                                                    }}>
+                                                                        {d.dutyType || 'General Duty'}
+                                                                    </div>
+                                                                    {d.dutyTime && (
+                                                                        <div style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                            <Calendar size={12} /> {d.dutyTime}
+                                                                        </div>
+                                                                    )}
                                                                 </div>
-                                                                {d.dutyTime && (
-                                                                    <div style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                        <Calendar size={12} /> {d.dutyTime}
+                                                                {d.remarks && (
+                                                                    <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', borderLeft: '2px solid rgba(251,191,36,0.3)', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600', fontStyle: 'italic' }}>
+                                                                        "{d.remarks}"
                                                                     </div>
                                                                 )}
-                                                            </div>
-                                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '600', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                                                <MapPin size={10} /> {d.dropLocation || 'Operation Base'}
-                                                            </div>
-                                                        </td>
-                                                        {/* SETTLEMENT */}
-                                                        <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                                                            <div style={{ color: '#10b981', fontWeight: '950', fontSize: '16px' }}>₹{Number(d.dutyAmount || 0).toLocaleString()}</div>
-                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', marginTop: '2px' }}>Net Duty Value</div>
-                                                        </td>
-                                                        {/* ACTIONS */}
-                                                        <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                                                            <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                                                                <button onClick={(e) => { e.stopPropagation(); handleEditDuty(d); }} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                    <Edit size={14} />
-                                                                </button>
-                                                                <button onClick={(e) => { e.stopPropagation(); handleDeleteDuty(d._id, d.isAttendance); }} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                    <Trash2 size={14} />
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                ))}
+                                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', marginTop: '6px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                        <Navigation size={10} color="#0ea5e9" />
+                                                                        <span>{d.pickUpLocation || 'HQ'}</span>
+                                                                    </div>
+                                                                    <ChevronRight size={10} style={{ opacity: 0.3 }} />
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                        <MapPin size={10} color="#f43f5e" />
+                                                                        <span>{d.dropLocation || 'BASE'}</span>
+                                                                    </div>
+                                                                </div>
+                                                            </td>
+                                                            {/* GUESTS */}
+                                                            <td style={{ padding: '20px 24px', textAlign: 'center' }}>
+                                                                {d.guestCount ? (
+                                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(168,85,247,0.1)', padding: '6px 12px', borderRadius: '10px', border: '1px solid rgba(168,85,247,0.2)' }}>
+                                                                        <Users size={14} color="#a855f7" />
+                                                                        <span style={{ color: 'white', fontWeight: '950', fontSize: '14px' }}>{d.guestCount}</span>
+                                                                    </div>
+                                                                ) : (
+                                                                    <span style={{ opacity: 0.1 }}>—</span>
+                                                                )}
+                                                            </td>
+                                                            {/* SETTLEMENT */}
+                                                            <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                                                                <div style={{
+                                                                    background: 'rgba(16,185,129,0.05)',
+                                                                    padding: '8px 16px',
+                                                                    borderRadius: '12px',
+                                                                    border: '1px solid rgba(16,185,129,0.1)',
+                                                                    display: 'inline-block'
+                                                                }}>
+                                                                    <div style={{ color: '#10b981', fontWeight: '950', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
+                                                                        <IndianRupee size={14} />
+                                                                        {Number(d.dutyAmount || d.dailyWage || 0).toLocaleString()}
+                                                                    </div>
+                                                                    <div style={{ color: 'rgba(16,185,129,0.5)', fontSize: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Settled Amount</div>
+                                                                </div>
+                                                            </td>
+                                                            {/* ACTIONS */}
+                                                            <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                                                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleEditDuty(d); }} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                        <Edit size={14} />
+                                                                    </button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteDuty(d._id, d.isAttendance); }} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                        <Trash2 size={14} />
+                                                                    </button>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
                                                 {selectedEventDetails.fleetDuties.length === 0 && selectedEventDetails.externalDuties.length === 0 && (
                                                     <tr>
                                                         <td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.2)' }}>
@@ -1351,14 +1641,14 @@ const EventManagement = () => {
                                     <div className="premium-input-group">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <Target size={12} color="#fbbf24" />
-                                            <label className="premium-label">Operational Name *</label>
+                                            <label className="premium-label">Event Name *</label>
                                         </div>
-                                        <input type="text" required value={eventFormData.name} onChange={e => setEventFormData({ ...eventFormData, name: e.target.value })} className="premium-compact-input" placeholder="Event Name" style={{ height: '52px' }} />
+                                        <input type="text" required value={eventFormData.name} onChange={e => setEventFormData({ ...eventFormData, name: e.target.value })} className="premium-compact-input" placeholder="Event" style={{ height: '52px' }} />
                                     </div>
                                     <div className="premium-input-group">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <Building2 size={12} color="#fbbf24" />
-                                            <label className="premium-label">Direct Client *</label>
+                                            <label className="premium-label">Client *</label>
                                         </div>
                                         <input type="text" required value={eventFormData.client} onChange={e => setEventFormData({ ...eventFormData, client: e.target.value })} className="premium-compact-input" placeholder="Client Name" style={{ height: '52px' }} />
                                     </div>
@@ -1378,7 +1668,7 @@ const EventManagement = () => {
                                             <label className="premium-label">Phase / Status</label>
                                         </div>
                                         <select value={eventFormData.status} onChange={e => setEventFormData({ ...eventFormData, status: e.target.value })} className="premium-compact-input" style={{ height: '52px' }}>
-                                            {!isEditingEvent && <option value="Upcoming">Upcoming (Start)</option>}
+                                            {!isEditingEvent && statusTab !== 'Running' && <option value="Upcoming">Upcoming (Start)</option>}
                                             <option value="Running">Running</option>
                                             <option value="Closed">Closed</option>
                                         </select>
@@ -1393,7 +1683,7 @@ const EventManagement = () => {
                                     <button type="submit" style={{
                                         flex: 2, height: '56px', borderRadius: '16px', background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
                                         color: 'black', fontWeight: '900', fontSize: '15px', letterSpacing: '1px', border: 'none'
-                                    }}>{isEditingEvent ? 'UPDATE' : 'PROVISION'}</button>
+                                    }}>{isEditingEvent ? 'UPDATE' : 'SUBMIT'}</button>
                                 </div>
                             </form>
                         </motion.div>

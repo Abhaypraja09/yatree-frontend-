@@ -384,7 +384,7 @@ const Fastag = () => {
                                                     <div style={{ display: 'flex', gap: 'clamp(15px, 4vw, 30px)' }}>
                                                         <div>
                                                             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Balance</div>
-                                                            <div style={{ fontSize: '18px', fontWeight: '900', color: (v.fastagBalance || 0) < 500 ? '#f43f5e' : '#10b981' }}>₹ {(v.fastagBalance || 0).toLocaleString()}</div>
+                                                            <div style={{ fontSize: '18px', fontWeight: '900', color: 'white' }}>₹ {(v.fastagBalance || 0).toLocaleString()}</div>
                                                         </div>
                                                         <div className="hide-mobile">
                                                             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Transactions</div>

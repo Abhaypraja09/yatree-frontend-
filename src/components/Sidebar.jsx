@@ -207,10 +207,10 @@ const Sidebar = ({ isOpen, onClose }) => {
 
             {/* Language Toggle */}
             <div style={{ marginBottom: '20px', padding: '0 10px' }}>
-                <div style={{ 
-                    display: 'flex', 
-                    background: 'rgba(255,255,255,0.05)', 
-                    borderRadius: '12px', 
+                <div style={{
+                    display: 'flex',
+                    background: 'rgba(255,255,255,0.05)',
+                    borderRadius: '12px',
                     padding: '4px',
                     border: '1px solid rgba(255,255,255,0.1)'
                 }}>
@@ -288,8 +288,8 @@ const Sidebar = ({ isOpen, onClose }) => {
 
                 {(user.role === 'Admin' || user.permissions?.fleetOperations) && (
                     <NavGroup title="Fleet Operations" labelKey="fleet_operations" icon={Settings} isOpen={openGroups.vehicles} onToggle={() => toggleGroup('vehicles')}>
-                        <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility', labelKey: 'car_utility' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/fuel', label: 'Fuel', labelKey: 'fuel' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility', labelKey: 'car_utility' }} onClick={onClose} isSubItem />
 
                     </NavGroup>
                 )}

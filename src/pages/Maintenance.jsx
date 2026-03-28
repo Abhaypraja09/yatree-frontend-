@@ -242,7 +242,11 @@ const Maintenance = () => {
         setEditingId(null);
     };
 
+    const NEXT_SERVICE_TYPES = ['Regular Service', 'Tyres & Wheels'];
+
     const handleEdit = (record) => {
+        const types = (record.maintenanceType || '').split(', ').filter(Boolean);
+        const isEligibleForReminder = types.some(t => NEXT_SERVICE_TYPES.includes(t));
         setFormData({
             vehicleId: record.vehicle?._id || record.vehicle || '',
             driverId: record.driver?._id || record.driver || '',
@@ -260,7 +264,8 @@ const Maintenance = () => {
             status: record.status || 'Completed'
         });
         setEditingId(record._id);
-        if (record.nextServiceKm) setShowNextService(true);
+        // Auto-show reminder if record has value OR if it's an eligible type
+        setShowNextService(isEligibleForReminder && !!record.nextServiceKm);
         setShowModal(true);
     };
 
@@ -516,30 +521,6 @@ const Maintenance = () => {
                     <div>
                         <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Spend (Filtered)</p>
                         <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>₹{totalMaintenanceCost.toLocaleString()}</h2>
-                    </div>
-                </motion.div>
-
-
-
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                        <History size={18} color="#fbbf24" />
-                        <h4 style={{ color: 'white', margin: 0, fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Yearly Spending</h4>
-                    </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                        {Object.entries(
-                            filteredRecords.reduce((acc, r) => {
-                                const year = r.billDate ? nowIST(r.billDate).getUTCFullYear() : 'N/A';
-                                acc[year] = (acc[year] || 0) + (Number(r.amount) || 0);
-                                return acc;
-                            }, {})
-                        ).sort(([a], [b]) => b - a).map(([year, total]) => (
-                            <div key={year} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 15px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <span style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '800', fontSize: '13px' }}>{year}</span>
-                                <span style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹{total.toLocaleString()}</span>
-                            </div>
-                        ))}
-                        {filteredRecords.length === 0 && <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '12px', padding: '10px' }}>No records in this range</div>}
                     </div>
                 </motion.div>
 
@@ -1140,23 +1121,30 @@ const Maintenance = () => {
 
                                     {/* Reminders & Actions */}
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 300px), 1fr))', gap: '20px' }}>
-                                        <div style={{ padding: '20px', background: showNextService ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.02)', borderRadius: '16px', border: showNextService ? '1px solid rgba(16, 185, 129, 0.1)' : '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s ease' }}>
-                                            <div
-                                                onClick={() => setShowNextService(!showNextService)}
-                                                style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: showNextService ? '15px' : '0' }}
-                                            >
-                                                <p style={{ color: showNextService ? '#10b981' : 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Next Service Reminder</p>
-                                                <div style={{ width: '40px', height: '20px', background: showNextService ? '#10b981' : 'rgba(255,255,255,0.1)', borderRadius: '20px', position: 'relative', transition: 'all 0.3s ease' }}>
-                                                    <div style={{ width: '16px', height: '16px', background: 'white', borderRadius: '50%', position: 'absolute', top: '2px', left: showNextService ? '22px' : '2px', transition: 'all 0.3s ease' }}></div>
+                                        {/* Next Service Reminder — only for Regular Service & Tyres & Wheels */}
+                                        {(() => {
+                                            const selectedTypes = formData.maintenanceType.split(', ').filter(Boolean);
+                                            const showReminderSection = selectedTypes.some(t => ['Regular Service', 'Tyres & Wheels'].includes(t));
+                                            if (!showReminderSection) return null;
+                                            return (
+                                                <div style={{ padding: '20px', background: showNextService ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.02)', borderRadius: '16px', border: showNextService ? '1px solid rgba(16, 185, 129, 0.1)' : '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s ease' }}>
+                                                    <div
+                                                        onClick={() => setShowNextService(!showNextService)}
+                                                        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer', marginBottom: showNextService ? '15px' : '0' }}
+                                                    >
+                                                        <p style={{ color: showNextService ? '#10b981' : 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Next Service Reminder (KM)</p>
+                                                        <div style={{ width: '40px', height: '20px', background: showNextService ? '#10b981' : 'rgba(255,255,255,0.1)', borderRadius: '20px', position: 'relative', transition: 'all 0.3s ease' }}>
+                                                            <div style={{ width: '16px', height: '16px', background: 'white', borderRadius: '50%', position: 'absolute', top: '2px', left: showNextService ? '22px' : '2px', transition: 'all 0.3s ease' }}></div>
+                                                        </div>
+                                                    </div>
+                                                    {showNextService && (
+                                                        <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ display: 'grid', gap: '15px' }}>
+                                                            <input type="number" className="input-field" style={{ borderRadius: '10px' }} placeholder="Next Service at KM (e.g. 50000)" value={formData.nextServiceKm} onChange={(e) => setFormData({ ...formData, nextServiceKm: e.target.value })} />
+                                                        </motion.div>
+                                                    )}
                                                 </div>
-                                            </div>
-
-                                            {showNextService && (
-                                                <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} style={{ display: 'grid', gap: '15px' }}>
-                                                    <input type="number" className="input-field" style={{ borderRadius: '10px' }} placeholder="Next Service KM" value={formData.nextServiceKm} onChange={(e) => setFormData({ ...formData, nextServiceKm: e.target.value })} />
-                                                </motion.div>
-                                            )}
-                                        </div>
+                                            );
+                                        })()}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                             <button
                                                 type="submit"

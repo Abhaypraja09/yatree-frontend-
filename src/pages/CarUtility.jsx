@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import axios from '../api/axios';
 import { 
-    ShieldAlert, Wallet, Droplets, Car, Search, ChevronRight, 
+    ShieldAlert, Wallet, Droplets, Car, Search, ChevronRight, ChevronLeft,
     X, Plus, CreditCard, Wrench, AlertCircle, CheckCircle2,
     Calendar, Filter, TrendingUp, Zap, Layers, Trash2, Edit3
 } from 'lucide-react';
@@ -28,8 +28,14 @@ const CarUtility = () => {
     const [selectedMonth, setSelectedMonth] = useState(new Date().getUTCMonth());
     const [selectedYear, setSelectedYear] = useState(new Date().getUTCFullYear());
 
-    const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    const years = [2024, 2025, 2026, 2027];
+    const shiftMonth = (amount) => {
+        let newMonth = selectedMonth + amount;
+        let newYear = selectedYear;
+        if (newMonth < 0) { newMonth = 11; newYear--; }
+        if (newMonth > 11) { newMonth = 0; newYear++; }
+        setSelectedMonth(newMonth);
+        setSelectedYear(newYear);
+    };
 
     useEffect(() => {
         if (selectedCompany) fetchAllData();
@@ -166,14 +172,36 @@ const CarUtility = () => {
             
             <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap:'wrap', gap:'20px' }}>
-                    <div>
-                        <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900' }}>Garage <span style={{color:'#0ea5e9'}}>Utility</span></h1>
-                        <p style={{ margin: '5px 0 0', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>Comprehensive Fastag & Service Management</p>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{ width: '50px', height: '50px', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>
+                            <Wrench size={24} color="white" />
+                        </div>
+                        <div>
+                            <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900', letterSpacing: '-1px' }}>Fleet <span style={{color:'#0ea5e9'}}>Utility</span></h1>
+                            <p style={{ margin: '2px 0 0', color: 'rgba(255,255,255,0.4)', fontWeight: '700', fontSize: '12px' }}>Operational Maintenance & Expense Hub</p>
+                        </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '15px', background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.1)' }}>
-                        <select value={selectedMonth} onChange={e => setSelectedMonth(Number(e.target.value))} style={{ background: 'none', border: 'none', color: '#fff', padding: '5px 10px', fontWeight: '700', cursor: 'pointer', outline: 'none' }}>{months.map((m, i) => <option key={m} value={i} style={{background:'#0a101f'}}>{m}</option>)}</select>
-                        <select value={selectedYear} onChange={e => setSelectedYear(Number(e.target.value))} style={{ background: 'none', border: 'none', color: '#fff', padding: '5px 10px', fontWeight: '700', cursor: 'pointer', outline: 'none' }}>{years.map(y => <option key={y} value={y} style={{background:'#0a101f'}}>{y}</option>)}</select>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        {/* Premium Monthly Navigator */}
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <button onClick={() => shiftMonth(-1)} style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronLeft size={20} /></button>
+                            <div style={{ padding: '0 24px', height: '42px', display: 'flex', alignItems: 'center', background: 'rgba(14, 165, 233, 0.05)', borderRadius: '14px', border: '1px solid rgba(14, 165, 233, 0.1)', cursor: 'pointer' }} onClick={() => setSelectedMonth(new Date().getUTCMonth())}>
+                                <span style={{ color: 'white', fontSize: '15px', fontWeight: '950', letterSpacing: '0.5px' }}>{new Date(Date.UTC(selectedYear, selectedMonth)).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' }).toUpperCase()}</span>
+                            </div>
+                            <button onClick={() => shiftMonth(1)} style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronRight size={20} /></button>
+                        </div>
+
+                        <button 
+                            onClick={() => { setSelectedVehicleId(vehicles[0]?._id); setActiveUtility(null); }}
+                            style={{ 
+                                height: '54px', padding: '0 30px', background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)', 
+                                border: 'none', borderRadius: '16px', color: 'white', fontWeight: '1000', fontSize: '14px', 
+                                display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', boxShadow: '0 10px 25px rgba(99, 102, 241, 0.3)' 
+                            }}
+                        >
+                            <Plus size={20} /> ADD UTILITY
+                        </button>
                     </div>
                 </div>
 
@@ -185,15 +213,9 @@ const CarUtility = () => {
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
-                    <div style={{ position: 'relative', width: '350px' }}>
+                    <div style={{ position: 'relative', width: '400px' }}>
                         <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                        <input type="text" placeholder="Search vehicle..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="input-field" style={{ paddingLeft: '45px', borderRadius: '15px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', height:'50px', marginBottom:0 }} />
-                    </div>
-                    <div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '10px 20px', background: lowBalanceOnly ? '#f43f5e15' : 'rgba(255,255,255,0.02)', borderRadius: '15px', border: `1px solid ${lowBalanceOnly ? '#f43f5e30' : 'rgba(255,255,255,0.08)'}`, transition: '0.2s' }}>
-                            <input type="checkbox" checked={lowBalanceOnly} onChange={e => setLowBalanceOnly(e.target.checked)} style={{ transform: 'scale(1.2)' }} />
-                            <span style={{ fontSize: '13px', fontWeight: '900', color: lowBalanceOnly ? '#f43f5e' : 'rgba(255,255,255,0.6)' }}>Low Fastag Balance (&lt; ₹500)</span>
-                        </label>
+                        <input type="text" placeholder="Search by vehicle number or model..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="input-field" style={{ paddingLeft: '45px', borderRadius: '15px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', height:'50px', marginBottom:0 }} />
                     </div>
                 </div>
 
@@ -207,7 +229,6 @@ const CarUtility = () => {
                                     <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '12px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Border Tax</th>
                                     <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '12px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Services</th>
                                     <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '12px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Current Total</th>
-                                    <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '12px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Operations</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -235,9 +256,6 @@ const CarUtility = () => {
                                             <td style={{ padding: '22px 30px', textAlign: 'right' }}>
                                                 <div style={{ fontSize: '20px', fontWeight: '1000', color: '#10b981' }}>₹{act.total.toLocaleString()}</div>
                                             </td>
-                                            <td style={{ padding: '22px 30px', textAlign: 'right' }}>
-                                                <button onClick={() => { setSelectedVehicleId(v._id); setActiveUtility(null); }} style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: '1px solid rgba(255,255,255,0.1)', padding: '10px 20px', borderRadius: '12px', fontSize: '12px', fontWeight: '900', cursor: 'pointer' }}>MANAGE</button>
-                                            </td>
                                         </tr>
                                     );
                                 })}
@@ -251,13 +269,35 @@ const CarUtility = () => {
                 {selectedVehicleId && selectedVehicle && (
                     <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(2, 6, 23, 0.97)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
                         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }} style={{ width: '100%', maxWidth: '1100px', height: '94vh', background: '#0a101f', borderRadius: '35px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ padding: '30px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ display:'flex', alignItems:'center', gap:'20px' }}>
-                                    <div style={{width:'50px', height:'50px', background:'#0ea5e920', color:'#0ea5e9', borderRadius:'15px', display:'flex', justifyContent:'center', alignItems:'center'}}><Car size={26}/></div>
-                                    <h2 style={{ margin: 0, fontWeight: '900', fontSize: '26px' }}>{selectedVehicle.carNumber} Hub</h2>
+                            <div style={{ padding: '30px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)' }}>
+                                <div style={{ display:'flex', alignItems:'center', gap:'25px' }}>
+                                    <div style={{width:'50px', height:'50px', background:'linear-gradient(135deg, #0ea5e960, #6366f160)', color:'#fff', borderRadius:'15px', display:'flex', justifyContent:'center', alignItems:'center'}}><Zap size={26}/></div>
+                                    <div>
+                                        <h2 style={{ margin: 0, fontWeight: '950', fontSize: '26px', letterSpacing: '-0.5px' }}>Operational <span style={{color:'#6366f1'}}>Workflow</span></h2>
+                                        <p style={{ margin:'4px 0 0', color: 'rgba(255,255,255,0.3)', fontSize:'12px', fontWeight:'700' }}>Select vehicle and log utility expenses</p>
+                                    </div>
                                 </div>
-                                <button onClick={() => { setSelectedVehicleId(null); setActiveUtility(null); }} style={{ background: 'rgba(255,255,255,0.05)', width: '40px', height: '40px', borderRadius: '50%', border:'none', color:'white', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}><X size={22}/></button>
+                                <button onClick={() => { setSelectedVehicleId(null); setActiveUtility(null); }} style={{ background: 'rgba(255,255,255,0.05)', width: '40px', height: '40px', borderRadius: '50%', border:'1px solid rgba(255,255,255,0.1)', color:'white', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}><X size={22}/></button>
                             </div>
+
+                            {/* Vehicle Selector (Embedded in Modal) */}
+                            {!activeUtility && (
+                                <div style={{ padding: '30px 40px', background: 'rgba(0,0,0,0.3)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                        <div style={{ flex: 1 }}>
+                                            <label style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '10px', display: 'block' }}>TARGET VEHICLE</label>
+                                            <select 
+                                                value={selectedVehicleId} 
+                                                onChange={e => setSelectedVehicleId(e.target.value)} 
+                                                className="input-field" 
+                                                style={{ height: '54px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', fontWeight: '900', fontSize: '15px' }}
+                                            >
+                                                {vehicles.map(v => <option key={v._id} value={v._id} style={{background:'#0a101f'}}>{v.carNumber} — {v.model}</option>)}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
 
                             <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
                                 {message.text && (
@@ -399,11 +439,13 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                     {type === 'border' && <>
                         <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>STATE/BORDER</label><input type="text" value={form.borderName} onChange={e=>setForm({...form, borderName:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
                         <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>DATE</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', colorScheme:'dark', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
+                        <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>REMARKS / NOTES</label><input type="text" value={form.remarks} onChange={e=>setForm({...form, remarks:e.target.value})} className="input-field" placeholder="Enter border tax notes..." style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
                     </>}
                     {type === 'services' && (
                         <>
-                            <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>SERVICE TYPE</label><select value={form.category} onChange={e=>setForm({...form, category:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}}><option>Car Wash</option><option>Puncture</option><option>Oil/Coolant</option><option>Other</option></select></div>
+                            <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>SERVICE TYPE</label><select value={form.category} onChange={e=>setForm({...form, category:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)', fontWeight:'800'}}><option style={{background:'#0a101f'}}>Car Wash</option><option style={{background:'#0a101f'}}>Puncture</option><option style={{background:'#0a101f'}}>Other</option></select></div>
                             <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>DATE</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', colorScheme:'dark', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
+                            <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>REMARKS / NOTES</label><input type="text" value={form.remarks} onChange={e=>setForm({...form, remarks:e.target.value})} className="input-field" placeholder="Enter service description..." style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
                         </>
                     )}
                     {(type === 'border' || type === 'services') && <div style={{background:'rgba(0,0,0,0.3)', padding:'20px', borderRadius:'15px', textAlign:'center', border:'1px dashed rgba(255,255,255,0.1)'}}><input type="file" id="sl-file" style={{display:'none'}} onChange={e=>setFile(e.target.files[0])}/><label htmlFor="sl-file" style={{cursor:'pointer', color:color, fontSize:'14px', fontWeight:'900'}}>{file ? file.name : (editingItem ? 'Change Bill/Slip' : 'Upload Bill/Slip')}</label></div>}
@@ -416,21 +458,55 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
 
             <div style={{ maxHeight: '650px', overflowY: 'auto' }} className="sidebar-nav-scroll">
                 <div style={{ display: 'grid', gap: '15px' }}>
-                    {hist.length === 0 ? <p style={{textAlign:'center', color:'rgba(255,255,255,0.2)', padding:'40px'}}>No records logged for this vehicle.</p> : hist.sort((a,b)=>new Date(b.date||b.billDate)-new Date(a.date||a.billDate)).map((item, i) => (
-                        <div key={item._id || i} style={{ padding: '18px 25px', background: 'rgba(255,255,255,0.02)', borderRadius: '18px', border:'1px solid rgba(255,255,255,0.04)', display:'flex', justifyContent:'space-between', alignItems:'center', outline: editingItem?._id === item._id ? `2px solid ${color}` : 'none' }}>
-                            <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                                {(item.receiptPhoto || item.billPhoto) && <img src={getImageUrl(item.receiptPhoto || item.billPhoto)} onClick={() => setViewingImage(getImageUrl(item.receiptPhoto || item.billPhoto))} style={{ width: '50px', height: '50px', borderRadius: '10px', objectFit: 'cover', cursor: 'pointer', border:'1px solid rgba(255,255,255,0.1)' }} />}
-                                <div>
-                                    <div style={{ fontSize: '18px', fontWeight: '950', color: '#fff' }}>₹{(item.amount || 0).toLocaleString()} <span style={{fontSize:'13px', color:'rgba(255,255,255,0.2)', marginLeft:'8px'}}>— {item.borderName || item.category || item.remarks || 'Recharge'}</span></div>
-                                    <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', marginTop: '4px' }}>{formatDateIST(item.date || item.billDate)}</div>
+                    {hist.length === 0 ? (
+                        <div style={{ textAlign: 'center', padding: '100px 40px', background: 'rgba(255,255,255,0.01)', borderRadius: '25px', border: '1px dashed rgba(255,255,255,0.05)' }}>
+                            <div style={{ width: '60px', height: '60px', background: 'rgba(255,255,255,0.03)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
+                                <AlertCircle size={30} color="rgba(255,255,255,0.1)" />
+                            </div>
+                            <p style={{ color: 'rgba(255,255,255,0.3)', fontWeight: '800', margin: 0 }}>No records found for the selected period.</p>
+                        </div>
+                    ) : hist.sort((a,b)=>new Date(b.date||b.billDate)-new Date(a.date||a.billDate)).map((item, i) => (
+                        <div key={item._id || i} style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '22px', border:'1px solid rgba(255,255,255,0.04)', display:'flex', justifyContent:'space-between', alignItems:'center', transition: '0.3s', outline: editingItem?._id === item._id ? `2px solid ${color}` : 'none' }}>
+                            <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flex: 1 }}>
+                                {(item.receiptPhoto || item.billPhoto) ? (
+                                    <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setViewingImage(getImageUrl(item.receiptPhoto || item.billPhoto))}>
+                                        <img src={getImageUrl(item.receiptPhoto || item.billPhoto)} style={{ width: '64px', height: '64px', borderRadius: '16px', objectFit: 'cover', border:'2px solid rgba(255,255,255,0.08)' }} />
+                                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: '0.2s', hover: { opacity: 1 } }}>
+                                            <Search size={16} color="white" />
+                                        </div>
+                                    </div>
+                                ) : (
+                                    <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: `${color}10`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <Layers size={24} />
+                                    </div>
+                                )}
+                                
+                                <div style={{ flex: 1 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
+                                        <span style={{ fontSize: '20px', fontWeight: '1000', color: '#fff' }}>₹{(item.amount || 0).toLocaleString()}</span>
+                                        <span style={{ padding: '4px 10px', borderRadius: '8px', background: `${color}15`, color: color, fontSize: '10px', fontWeight: '950', border: `1px solid ${color}30`, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                            {item.borderName || item.category || 'RECHARGE'}
+                                        </span>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>
+                                            <Calendar size={13} />
+                                            {formatDateIST(item.date || item.billDate)}
+                                        </div>
+                                        {item.remarks && (
+                                            <div style={{ paddingLeft: '15px', borderLeft: '1px solid rgba(255,255,255,0.08)', fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: '600', fontStyle: 'italic' }}>
+                                                "{item.remarks}"
+                                            </div>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '12px' }}>
-                                <button onClick={() => setEditingItem(item)} style={{ color: 'rgba(255,255,255,0.3)', background: 'none', border:'none', cursor:'pointer' }} onMouseOver={e=>e.currentTarget.style.color='#fff'} onMouseOut={e=>e.currentTarget.style.color='rgba(255,255,255,0.3)'}><Edit3 size={18}/></button>
-                                <button onClick={() => onDelete(item._id)} style={{ color: '#f43f5e', background: 'none', border:'none', cursor:'pointer' }} onMouseOver={e=>e.currentTarget.style.color='#f43f5e'} onMouseOut={e=>e.currentTarget.style.color='#f43f5e'}><Trash2 size={18}/></button>
+                            <div style={{ display: 'flex', gap: '15px' }}>
+                                <button onClick={() => setEditingItem(item)} style={{ width: '40px', height: '40px', borderRadius: '12px', color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.05)', cursor:'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}><Edit3 size={18}/></button>
+                                <button onClick={() => onDelete(item._id)} style={{ width: '40px', height: '40px', borderRadius: '12px', color: '#f43f5e', background: 'rgba(244,63,94,0.08)', border:'1px solid rgba(244,63,94,0.15)', cursor:'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}><Trash2 size={18}/></button>
                             </div>
                         </div>
-                    ))}
+                    )) }
                 </div>
             </div>
         </div>

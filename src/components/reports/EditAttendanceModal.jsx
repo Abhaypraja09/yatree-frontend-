@@ -5,43 +5,39 @@ import { toISTDateTimeString } from '../../utils/istUtils';
 
 const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
     const [formData, setFormData] = useState({
-        allowanceTA: item.punchOut?.allowanceTA || 0,
-        nightStayAmount: item.punchOut?.nightStayAmount || 0,
-        // Calculate the 'extra' part of the bonus for the form
-        bonusAmount: Math.max(0, (item.outsideTrip?.bonusAmount || 0) - (item.punchOut?.allowanceTA || 0) - (item.punchOut?.nightStayAmount || 0)),
         remarks: item.punchOut?.remarks || '',
         status: item.status || 'incomplete',
         startKm: item.punchIn?.km || 0,
         endKm: item.punchOut?.km || 0,
         date: item.date || '',
-        dailyWage: item.dailyWage || 0,
+        dailyWage: item.isSecondary ? 0 : (item.dailyWage || 0),
         punchInTime: toISTDateTimeString(item.punchIn?.time),
         punchOutTime: toISTDateTimeString(item.punchOut?.time)
     });
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        // Sum it up so backend receives the TOTAL in bonusAmount
-        const finalData = {
-            ...formData,
-            bonusAmount: Number(formData.allowanceTA) + Number(formData.nightStayAmount) + Number(formData.bonusAmount)
-        };
-        onUpdate(item._id, finalData);
+        onUpdate(item._id, formData);
     };
 
     return (
-        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 1100, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+        <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 11000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(5px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
             <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="glass-card modal-content"
                 style={{ width: '100%', maxWidth: '450px', maxHeight: '90vh', overflowY: 'auto', padding: '25px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px' }}
             >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                     <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Edit Report</h2>
                     <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: 'none', padding: '8px', borderRadius: '50%', display: 'flex', cursor: 'pointer' }}>
                         <X size={18} />
                     </button>
+                </div>
+                
+                <div style={{ marginBottom: '25px', padding: '12px 18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '15px' }}>
+                    <p style={{ margin: 0, fontSize: '9px', color: 'rgba(255,255,255,0.35)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver / Service Provider</p>
+                    <p style={{ margin: '4px 0 0', color: '#fbbf24', fontSize: '15px', fontWeight: '800' }}>{item.driver?.name || 'Unknown Driver'}</p>
                 </div>
 
                 {item.outsideTrip?.tripType && (
@@ -111,43 +107,21 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                     </div>
                     <div className="form-group">
                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Daily Wage (Base Pay)</label>
-                        <input
-                            type="number"
-                            className="input-field"
-                            value={formData.dailyWage}
-                            onChange={(e) => setFormData({ ...formData, dailyWage: e.target.value })}
-                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Same Day Allowance (TA)</label>
-                        <input
-                            type="number"
-                            className="input-field"
-                            value={formData.allowanceTA}
-                            onChange={(e) => setFormData({ ...formData, allowanceTA: e.target.value })}
-                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Night Stay Amount</label>
-                        <input
-                            type="number"
-                            className="input-field"
-                            value={formData.nightStayAmount}
-                            onChange={(e) => setFormData({ ...formData, nightStayAmount: e.target.value })}
-                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Other Bonus / Trip Incentive</label>
-                        <input
-                            type="number"
-                            className="input-field"
-                            value={formData.bonusAmount}
-                            onChange={(e) => setFormData({ ...formData, bonusAmount: e.target.value })}
-                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type="number"
+                                className="input-field"
+                                value={formData.dailyWage}
+                                onChange={(e) => setFormData({ ...formData, dailyWage: e.target.value })}
+                                disabled={item.isSecondary}
+                                style={{ width: '100%', marginBottom: 0, height: '48px', opacity: item.isSecondary ? 0.5 : 1 }}
+                            />
+                            {item.isSecondary && (
+                                <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '10px', color: '#fbbf24', fontWeight: '800' }}>
+                                    Salary already included in Duty #1
+                                </div>
+                            )}
+                        </div>
                     </div>
                     <div className="form-group">
                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Duty Remarks / Destination</label>
@@ -159,16 +133,7 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                         />
                     </div>
 
-                    <div className="form-group" style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <input
-                            type="checkbox"
-                            id="statusComplete"
-                            checked={formData.status === 'completed'}
-                            onChange={(e) => setFormData({ ...formData, status: e.target.checked ? 'completed' : 'incomplete' })}
-                            style={{ width: '20px', height: '20px', cursor: 'pointer' }}
-                        />
-                        <label htmlFor="statusComplete" style={{ color: 'white', fontSize: '13px', fontWeight: '700', cursor: 'pointer' }}>Mark Duty as Completed</label>
-                    </div>
+
 
                     <button type="submit" className="btn-primary" style={{ height: '52px', fontWeight: '900', marginTop: '10px', fontSize: '14px' }}>
                         SAVE UPDATED DETAILS

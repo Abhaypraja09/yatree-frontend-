@@ -70,11 +70,12 @@ const StatusBadge = ({ ok, okLabel = '✓ Done', badLabel = '⏳ Active' }) => (
 );
 
 /* ─── Action Buttons ─── */
-const ActionBtns = ({ onView, onEdit, onDelete }) => (
+const ActionBtns = ({ onView, onEdit, onDelete, onDeleteBonus }) => (
     <div style={{ display: 'flex', gap: '6px' }}>
         {onView && <button onClick={onView} title="View Details" style={{ background: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.2)', color: '#38bdf8', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '800', transition: 'all 0.2s' }} className="btn-hover-scale"><Eye size={14} /> View</button>}
         {onEdit && <button onClick={onEdit} title="Edit" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '800', transition: 'all 0.2s' }} className="btn-hover-scale"><Edit2 size={14} /></button>}
         {onDelete && <button onClick={onDelete} title="Delete" style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)', color: '#f43f5e', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }} className="btn-hover-scale"><Trash2 size={14} /></button>}
+        {onDeleteBonus && <button onClick={onDeleteBonus} title="Delete Bonus Only" style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', fontSize: '11px', fontWeight: '950', transition: 'all 0.2s' }} className="btn-hover-scale">Bonus Delete</button>}
     </div>
 );
 
@@ -311,6 +312,22 @@ const Reports = ({ isSubComponent = false }) => {
         } catch (error) { alert('Failed: ' + (error.response?.data?.message || error.message)); }
     };
 
+    const handleDeleteBonus = async (item) => {
+        if (!window.confirm('Clear all bonus amounts for this duty? (TA/DA/Trip Bonus will be set to zero)')) return;
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const updateData = {
+                "punchOut.allowanceTA": 0,
+                "punchOut.nightStayAmount": 0,
+                "outsideTrip.occurred": false,
+                "outsideTrip.bonusAmount": 0
+            };
+            await axios.put(`/api/admin/attendance/${item._id}`, updateData, { headers: { Authorization: `Bearer ${userInfo.token}` } });
+            fetchReports();
+            alert('Bonus cleared successfully');
+        } catch (error) { alert('Failed: ' + (error.response?.data?.message || error.message)); }
+    };
+
     /* ── Smart Excel Export ── */
     const handleDownloadExcel = () => {
         if (activeTabs.length === 0) return alert('No report categories selected.');
@@ -371,7 +388,7 @@ const Reports = ({ isSubComponent = false }) => {
             const dId = r.driver?._id || r.driver || 'unk';
             const dateStr = r.date;
             const key = `${dId}_${dateStr}`;
-            
+
             const isSelfPaid = (att) => att.punchOut?.parkingPaidBy !== 'Office';
             const parkVal = (att) => Number(att.punchOut?.tollParkingAmount) || 0;
             const bonusVal = (att) => Math.max((Number(att.punchOut?.allowanceTA) || 0) + (Number(att.punchOut?.nightStayAmount) || 0), Number(att.outsideTrip?.bonusAmount) || 0);
@@ -396,20 +413,28 @@ const Reports = ({ isSubComponent = false }) => {
                 grp.parkAmt += parkVal(r);
                 grp.reimbursableParkAmt += (isSelfPaid(r) ? parkVal(r) : 0);
                 grp.bonusAmt += bonusVal(r);
-                
+
                 if (r.status !== 'completed') grp.status = 'incomplete';
                 if (r.punchOut?.time && (!grp.punchOut?.time || new Date(r.punchOut.time) > new Date(grp.punchOut.time))) {
                     grp.punchOut = r.punchOut;
                 }
             }
         });
-        return Array.from(map.values());
+
+        const result = Array.from(map.values());
+
+        // Sort individual attendances within each group by punch-in time
+        result.forEach(grp => {
+            grp.attendances.sort((a, b) => new Date(a.punchIn?.time || 0) - new Date(b.punchIn?.time || 0));
+        });
+
+        return result;
     };
 
     /* ── filtered attendance partitions ── */
     const staffDriversRaw = useMemo(() => reportsData.attendance.filter(r => r.driver && !r.vehicle?.isOutsideCar && !r.isOutsideCar && !r.isFreelancer && !r.driver?.isFreelancer).map(r => ({ ...r, entryType: 'attendance' })), [reportsData.attendance]);
     const freelancerDriversRaw = useMemo(() => reportsData.attendance.filter(r => r.driver && (r.isFreelancer || r.driver?.isFreelancer)).map(r => ({ ...r, entryType: 'attendance' })), [reportsData.attendance]);
-    
+
     const staffDrivers = useMemo(() => groupAttendance(staffDriversRaw), [staffDriversRaw]);
     const freelancerDrivers = useMemo(() => groupAttendance(freelancerDriversRaw), [freelancerDriversRaw]);
     const standaloneParking = useMemo(() => (reportsData.parking || []).map(r => ({ ...r, entryType: 'parking' })), [reportsData.parking]);
@@ -447,6 +472,7 @@ const Reports = ({ isSubComponent = false }) => {
 
     /* ── Attendance row renderer ── */
     const AttRow = ({ r, idx, isLogbook = false }) => {
+        const [isExpanded, setIsExpanded] = useState(false);
         const entryType = r.entryType || 'attendance';
         const isGroup = entryType === 'attendance_group';
         const isCompleted = r.status === 'completed';
@@ -455,7 +481,7 @@ const Reports = ({ isSubComponent = false }) => {
         const openKM = isGroup ? r.attendances[0]?.punchIn?.km : (r.punchIn?.km ?? '--');
         const closeKM = isGroup ? r.attendances[r.attendances.length - 1]?.punchOut?.km : (r.punchOut?.km ?? '--');
         const totalKM = isGroup ? r.totalKM : (r.totalKM ?? (typeof openKM === 'number' && typeof closeKM === 'number' ? closeKM - openKM : '--'));
-        
+
         const wage = Number(r.dailyWage) || 0;
         const bonus = isGroup ? r.bonusAmt : Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
         const parkAmt = isGroup ? r.parkAmt : ((entryType === 'parking' ? Number(r.amount) : Number(r.punchOut?.tollParkingAmount)) || 0);
@@ -463,8 +489,8 @@ const Reports = ({ isSubComponent = false }) => {
         const parkBy = r.punchOut?.parkingPaidBy || (entryType === 'parking' ? 'Office' : 'Self');
         const fuelAmt = isGroup ? r.fuelAmt : (Number(r.fuel?.amount) || 0);
 
-        // Total to show in salary column (Wage + Bonus + Reimbursable Parking)
-        const rowSalaryTotal = wage + bonus + (entryType === 'parking' ? 0 : reimbursableParkAmt);
+        // Total to show in salary column (Wage + Bonus - exclude parking reimbursement to avoid double-showing)
+        const rowSalaryTotal = wage + bonus;
 
         const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
 
@@ -481,102 +507,154 @@ const Reports = ({ isSubComponent = false }) => {
         }
 
         return (
-            <TR idx={idx}>
-                <TD noWrap><span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700', fontSize: '13px' }}>{fmt(r.date)}</span></TD>
-                {isLogbook && (
+            <>
+                <TR idx={idx}>
                     <TD noWrap>
-                        <span style={{
-                            fontSize: '9px',
-                            fontWeight: '900',
-                            padding: '2px 8px',
-                            borderRadius: '6px',
-                            background: typeBg,
-                            color: typeColor,
-                            border: `1px solid ${typeBorder}`,
-                            textTransform: 'uppercase'
-                        }}>
-                            {typeLabel}
-                        </span>
-                    </TD>
-                )}
-                <TD>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                        <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
-                            <UserIcon size={15} color="rgba(255,255,255,0.5)" />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            {isGroup && r.attendances.length > 1 && (
+                                <button onClick={() => setIsExpanded(!isExpanded)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', padding: '4px', display: 'flex', transition: '0.2s', transform: isExpanded ? 'rotate(0deg)' : 'rotate(-90deg)' }}>
+                                    <ChevronRight size={14} />
+                                </button>
+                            )}
+                            <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700', fontSize: '13px' }}>{fmt(r.date)}</span>
                         </div>
-                        <div>
-                            <div style={{ color: 'white', fontWeight: '800', fontSize: '13px', whiteSpace: 'nowrap' }}>{r.driver?.name || r.vehicle?.driverName || (entryType === 'parking' ? 'Administrative' : 'N/A')}</div>
-                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '1px' }}>
-                                <Car size={9} style={{ display: 'inline', marginRight: '3px', verticalAlign: 'middle' }} />
-                                {isGroup ? `${r.attendances.length} Duty Logs` : (r.vehicle?.carNumber?.split('#')[0] || '--')}
+                    </TD>
+                    {isLogbook && (
+                        <TD noWrap>
+                            <span style={{
+                                fontSize: '9px',
+                                fontWeight: '900',
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                background: typeBg,
+                                color: typeColor,
+                                border: `1px solid ${typeBorder}`,
+                                textTransform: 'uppercase'
+                            }}>
+                                {typeLabel}
+                            </span>
+                        </TD>
+                    )}
+                    <TD>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
+                                <UserIcon size={15} color="rgba(255,255,255,0.5)" />
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '13px', fontWeight: '900', color: 'white' }}>{r.driver?.name || 'Unknown'}</div>
+                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
+                                    {isGroup
+                                        ? <><Users size={10} style={{ marginRight: '3px' }} /> {r.attendances.length} Duty Logs · {Array.from(new Set(r.attendances.map(a => a.vehicle?.carNumber).filter(Boolean))).join(', ') || 'No Machine'}</>
+                                        : r.vehicle?.carNumber || 'No Machine'
+                                    }</div>
                             </div>
                         </div>
-                    </div>
-                </TD>
-                <TD noWrap>{entryType.includes('attendance') ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#10b981', fontWeight: '800', fontSize: '13px' }}><ArrowUpRight size={13} />{inTime}</div> : '--'}</TD>
-                <TD noWrap>
-                    {entryType.includes('attendance') ? (isCompleted
-                        ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#f43f5e', fontWeight: '800', fontSize: '13px' }}><ArrowDownLeft size={13} />{outTime}</div>
-                        : <StatusBadge ok={false} badLabel="⏳ On Duty" />) : '--'}
-                </TD>
-                <TD noWrap>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: entryType.includes('attendance') ? '#38bdf8' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{openKM}</div>
-                        <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>OPEN KM</div>
-                    </div>
-                </TD>
-                <TD noWrap>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: (entryType.includes('attendance') && isCompleted) ? '#f43f5e' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{closeKM}</div>
-                        <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>CLOSE KM</div>
-                    </div>
-                </TD>
-                <TD noWrap>
-                    <div style={{ textAlign: 'center' }}>
-                        <div style={{ color: entryType.includes('attendance') ? 'white' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{totalKM !== '--' ? totalKM : '--'}</div>
-                        <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>KM RUN</div>
-                    </div>
-                </TD>
-                <TD>
-                    {fuelAmt > 0
-                        ? <div><span style={{ color: '#f59e0b', fontWeight: '900', fontSize: '13px' }}>₹{fuelAmt}</span><div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)' }}>{isGroup ? r.attendances.filter(a => a.fuel?.amount > 0).length : (r.fuel?.entries?.length || 1)} fill</div></div>
-                        : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
-                </TD>
-                <TD>
-                    {parkAmt > 0
-                        ? <div>
-                            <span style={{ color: '#818cf8', fontWeight: '900', fontSize: '13px' }}>₹{parkAmt}</span>
-                            <div style={{ fontSize: '9px', fontWeight: '800', marginTop: '2px', color: parkBy === 'Office' ? '#10b981' : '#a78bfa' }}>{parkBy === 'Office' ? 'Office Paid' : 'Self Paid'}</div>
+                    </TD>
+                    <TD noWrap>{entryType.includes('attendance') ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#10b981', fontWeight: '800', fontSize: '13px' }}><ArrowUpRight size={13} />{inTime}</div> : '--'}</TD>
+                    <TD noWrap>
+                        {entryType.includes('attendance') ? (isCompleted
+                            ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#f43f5e', fontWeight: '800', fontSize: '13px' }}><ArrowDownLeft size={13} />{outTime}</div>
+                            : <StatusBadge ok={false} badLabel="⏳ On Duty" />) : '--'}
+                    </TD>
+                    <TD noWrap>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: entryType.includes('attendance') ? '#38bdf8' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{openKM}</div>
+                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>OPEN KM</div>
                         </div>
-                        : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
-                </TD>
-                <TD>
-                    <div>
-                        {entryType.includes('attendance') ? (
-                            <>
-                                <span style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{rowSalaryTotal.toLocaleString()}</span>
-                                {(bonus > 0 || (parkBy !== 'Office' && parkAmt > 0)) && (
-                                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
-                                        Base ₹{wage}
-                                        {bonus > 0 && ` + ₹${bonus} Bonus`}
-                                        {parkBy !== 'Office' && parkAmt > 0 && ` + ₹${parkAmt} Park`}
-                                    </div>
-                                )}
-                            </>
-                        ) : (
-                            <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '12px' }}>—</span>
-                        )}
-                    </div>
-                </TD>
-                <TD noWrap>{entryType.includes('attendance') ? <StatusBadge ok={isCompleted} okLabel={isGroup ? `✓ ${r.attendances.length} Duties` : "✓ Done"} badLabel="⏳ Active" /> : <StatusBadge ok={true} okLabel="✓ Recorded" />}</TD>
-                <TD>
-                    <ActionBtns
-                        onView={() => setSelectedItem({ ...r, entryType: entryType === 'parking' ? 'parking' : (isGroup ? 'attendance_group' : 'attendance') })}
-                        onEdit={(entryType === 'attendance' || (isGroup && r.attendances?.length === 1)) ? () => setEditingItem(isGroup ? r.attendances[0] : r) : null}
-                        onDelete={(!isGroup || (isGroup && r.attendances?.length === 1)) ? () => handleDelete(isGroup ? { ...r.attendances[0], entryType: 'attendance' } : { ...r, entryType: entryType === 'parking' ? 'parking' : 'attendance' }) : null}
-                    />
-                </TD>
-            </TR>
+                    </TD>
+                    <TD noWrap>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: (entryType.includes('attendance') && isCompleted) ? '#f43f5e' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{closeKM}</div>
+                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>CLOSE KM</div>
+                        </div>
+                    </TD>
+                    <TD noWrap>
+                        <div style={{ textAlign: 'center' }}>
+                            <div style={{ color: entryType.includes('attendance') ? 'white' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{totalKM !== '--' ? totalKM : '--'}</div>
+                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>KM RUN</div>
+                        </div>
+                    </TD>
+                    <TD>
+                        {fuelAmt > 0
+                            ? <div><span style={{ color: '#f59e0b', fontWeight: '900', fontSize: '13px' }}>₹{fuelAmt}</span><div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)' }}>{isGroup ? r.attendances.filter(a => a.fuel?.amount > 0).length : (r.fuel?.entries?.length || 1)} fill</div></div>
+                            : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
+                    </TD>
+                    <TD>
+                        {parkAmt > 0
+                            ? <div>
+                                <span style={{ color: '#818cf8', fontWeight: '900', fontSize: '13px' }}>₹{parkAmt}</span>
+                                <div style={{ fontSize: '9px', fontWeight: '800', marginTop: '2px', color: parkBy === 'Office' ? '#10b981' : '#a78bfa' }}>{parkBy === 'Office' ? 'Office Paid' : ''}</div>
+                            </div>
+                            : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
+                    </TD>
+                    <TD><div>{entryType.includes('attendance') ? <><span style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{rowSalaryTotal.toLocaleString()}</span>{bonus > 0 && <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>Base ₹{wage} + ₹{bonus} T/A</div>}</> : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '12px' }}>—</span>}</div></TD>
+                    <TD noWrap>{entryType.includes('attendance') ? <StatusBadge ok={isCompleted} okLabel={isGroup ? `✓ ${r.attendances.length} Duties` : "✓ Done"} badLabel="⏳ Active" /> : <StatusBadge ok={true} okLabel="✓ Recorded" />}</TD>
+                    <TD>
+                        <ActionBtns
+                            onView={() => setSelectedItem({ ...r, entryType: entryType === 'parking' ? 'parking' : (isGroup ? 'attendance_group' : 'attendance'), mode: 'view' })}
+                            onEdit={(isFreelancer && !isCompleted) ? null : (() => {
+                                if (isGroup && r.attendances?.length > 1) setIsExpanded(!isExpanded);
+                                else setEditingItem(isGroup ? r.attendances[0] : r);
+                            })}
+                            onDelete={() => {
+                                if (isGroup && r.attendances?.length > 1) setIsExpanded(!isExpanded);
+                                else handleDelete(isGroup ? { ...r.attendances[0], entryType: 'attendance' } : { ...r, entryType: entryType === 'parking' ? 'parking' : 'attendance' });
+                            }}
+                            onDeleteBonus={(isFreelancer && bonus > 0 && isCompleted) ? (() => handleDeleteBonus(isGroup ? r.attendances[0] : r)) : null}
+                        />
+                    </TD>
+                </TR>
+
+                <AnimatePresence>
+                    {isExpanded && isGroup && r.attendances.length > 1 && (
+                        <motion.tr initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}>
+                            <td colSpan={isLogbook ? 13 : 12} style={{ padding: '0 16px 16px 48px' }}>
+                                <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                    <div style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Breakdown of {r.attendances.length} Duties</div>
+                                    {r.attendances.map((att, attIdx) => (
+                                        <div key={att._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                <div style={{ minWidth: '100px' }}>
+                                                    <div style={{ fontSize: '13px', color: 'white', fontWeight: '800' }}>Duty #{attIdx + 1}</div>
+                                                    <div style={{ fontSize: '10px', color: '#818cf8', fontWeight: '900', marginTop: '2px' }}>{att.vehicle?.carNumber || 'No Machine'}</div>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}><div style={{ fontSize: '12px', color: '#10b981', fontWeight: '800' }}>{fmtTime(att.punchIn?.time)}</div><div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>IN KM: {att.punchIn?.km || '--'}</div></div><div style={{ color: 'rgba(255,255,255,0.1)' }}>→</div><div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}><div style={{ fontSize: '12px', color: '#f43f5e', fontWeight: '800' }}>{fmtTime(att.punchOut?.time) || 'ACTIVE'}</div><div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>OUT KM: {att.punchOut?.km || '--'}</div></div><div style={{ marginLeft: '15px', padding: '4px 8px', background: 'rgba(255,255,255,0.04)', borderRadius: '6px' }}><div style={{ fontSize: '10px', color: 'white', fontWeight: '950' }}>{att.totalKM || (att.punchOut?.km - att.punchIn?.km) || 0} KM</div></div></div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{ textAlign: 'right' }}>
+                                                    {attIdx === 0 && Number(r.dailyWage) > 0 && (
+                                                        <div style={{ marginBottom: '2px' }}>
+                                                            <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '950' }}>₹{(Number(r.dailyWage) || 0).toLocaleString()}</div>
+                                                            <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Salary</div>
+                                                        </div>
+                                                    )}
+                                                    {Math.max((Number(att.punchOut?.allowanceTA) || 0) + (Number(att.punchOut?.nightStayAmount) || 0), Number(att.outsideTrip?.bonusAmount) || 0) > 0 && (
+                                                        <div>
+                                                            <div style={{ fontSize: '12px', color: '#818cf8', fontWeight: '950' }}>₹{Math.max((Number(att.punchOut?.allowanceTA) || 0) + (Number(att.punchOut?.nightStayAmount) || 0), Number(att.outsideTrip?.bonusAmount) || 0).toLocaleString()}</div>
+                                                            <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>T/A</div>
+                                                        </div>
+                                                    )}
+                                                    {!(attIdx === 0 && Number(r.dailyWage) > 0) && !(Math.max((Number(att.punchOut?.allowanceTA) || 0) + (Number(att.punchOut?.nightStayAmount) || 0), Number(att.outsideTrip?.bonusAmount) || 0) > 0) && (
+                                                        <div>
+                                                            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.1)', fontWeight: '950' }}>₹0</div>
+                                                            <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.1)', textTransform: 'uppercase' }}>T/A</div>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <ActionBtns
+                                                    onView={() => setSelectedItem({ ...att, entryType: 'attendance', mode: 'view' })}
+                                                    onEdit={(isFreelancer && att.status !== 'completed') ? null : (() => setEditingItem({ ...att, isSecondary: attIdx > 0 }))}
+                                                    onDelete={() => handleDelete({ ...att, entryType: 'attendance' })}
+                                                    onDeleteBonus={(isFreelancer && (Math.max((Number(att.punchOut?.allowanceTA) || 0) + (Number(att.punchOut?.nightStayAmount) || 0), Number(att.outsideTrip?.bonusAmount) || 0) > 0) && att.status === 'completed') ? (() => handleDeleteBonus(att)) : null}
+                                                />
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </td>
+                        </motion.tr>
+                    )}
+                </AnimatePresence>
+            </>
         );
     };
 
@@ -589,21 +667,10 @@ const Reports = ({ isSubComponent = false }) => {
             /* ── STAFF DRIVERS ── */
             case 'drivers': {
                 const data = applySearch(staffDrivers);
-                const totalSalary = data.reduce((s, v) => s + (Number(v.dailyWage) || 0) + (Number(v.bonusAmt) || 0) + (v.reimbursableParkAmt || 0), 0);
-                const totalKMs = data.reduce((s, r) => s + (Number(r.totalKM) || 0), 0);
-                const totalFuel = data.reduce((s, r) => s + (Number(r.fuelAmt) || 0), 0);
-                const totalParking = data.reduce((s, r) => s + (Number(r.parkAmt) || 0), 0);
                 return (
                     <TableSection tabId="drivers" fromDate={fromDate} toDate={toDate}
-                        colSummaries={{
-                            'Date': { value: `Total: ${data.length} Groups`, color: cfg.color },
-                            'Total KM': { value: `${totalKMs.toLocaleString()}`, color: '#38bdf8' },
-                            'Fuel': { value: `₹${totalFuel.toLocaleString()}`, color: '#f59e0b' },
-                            'Parking': { value: `₹${totalParking.toLocaleString()}`, color: '#818cf8' },
-                            'Salary': { value: `₹${totalSalary.toLocaleString()}`, color: cfg.color }
-                        }}
                         headers={ATT_HEADERS}
-                        rows={data.map((r, i) => <AttRow key={r._id} r={r} idx={i} />)}
+                        rows={data.map((r, i) => <AttRow key={r._id || `staff-${i}`} r={r} idx={i} />)}
                         empty="No staff driver records found."
                     />
                 );
@@ -612,21 +679,10 @@ const Reports = ({ isSubComponent = false }) => {
             /* ── FREELANCERS ── */
             case 'freelancers': {
                 const data = applySearch(freelancerDrivers);
-                const totalSalary = data.reduce((s, v) => s + (Number(v.dailyWage) || 0) + (Number(v.bonusAmt) || 0) + (v.reimbursableParkAmt || 0), 0);
-                const totalKMs = data.reduce((s, r) => s + (Number(r.totalKM) || 0), 0);
-                const totalFuel = data.reduce((s, r) => s + (Number(r.fuelAmt) || 0), 0);
-                const totalParking = data.reduce((s, r) => s + (Number(r.parkAmt) || 0), 0);
                 return (
                     <TableSection tabId="freelancers" fromDate={fromDate} toDate={toDate}
-                        colSummaries={{
-                            'Date': { value: `Total: ${data.length} Groups`, color: cfg.color },
-                            'Total KM': { value: `${totalKMs.toLocaleString()}`, color: '#38bdf8' },
-                            'Fuel': { value: `₹${totalFuel.toLocaleString()}`, color: '#f59e0b' },
-                            'Parking': { value: `₹${totalParking.toLocaleString()}`, color: '#818cf8' },
-                            'Salary': { value: `₹${totalSalary.toLocaleString()}`, color: cfg.color }
-                        }}
                         headers={ATT_HEADERS}
-                        rows={data.map((r, i) => <AttRow key={r._id} r={r} idx={i} showFreelancerCols />)}
+                        rows={data.map((r, i) => <AttRow key={r._id || `freelance-${i}`} r={r} idx={i} showFreelancerCols />)}
                         empty="No freelancer records found."
                     />
                 );
@@ -635,13 +691,8 @@ const Reports = ({ isSubComponent = false }) => {
             /* ── PARKING ── */
             case 'parking': {
                 const data = applySearch(standaloneParking);
-                const totalParking = data.reduce((s, r) => s + (Number(r.amount) || 0), 0);
                 return (
                     <TableSection tabId="parking" fromDate={fromDate} toDate={toDate}
-                        colSummaries={{
-                            'Date': { value: `Total: ${data.length}`, color: cfg.color },
-                            'Parking': { value: `₹${totalParking.toLocaleString()}`, color: cfg.color }
-                        }}
                         headers={ATT_HEADERS}
                         rows={data.map((r, i) => <AttRow key={r._id} r={r} idx={i} />)}
                         empty="No standalone parking records found."
@@ -668,24 +719,12 @@ const Reports = ({ isSubComponent = false }) => {
                 if (isFreelancer) return activeTabs.includes('freelancers') || activeTabs.length > 1;
                 return activeTabs.includes('drivers') || activeTabs.length > 1;
             });
-            
+
             const data = groupAttendance(rawData).sort((a, b) => new Date(b.date) - new Date(a.date));
             const searchedData = applySearch(data);
 
-            const totalSalary = searchedData.reduce((s, v) => s + (Number(v.dailyWage) || 0) + (Number(v.bonusAmt) || 0) + (v.reimbursableParkAmt || 0), 0);
-            const totalKMs = searchedData.reduce((s, r) => s + (Number(r.totalKM) || 0), 0);
-            const totalFuel = searchedData.reduce((s, r) => s + (Number(r.fuelAmt) || 0), 0);
-            const totalParking = searchedData.reduce((s, r) => s + (Number(r.parkAmt) || 0), 0);
-
             return (
                 <TableSection tabId="logbook" fromDate={fromDate} toDate={toDate}
-                    colSummaries={{
-                        'Date': { value: `Total: ${searchedData.length} Groups`, color: '#fbbf24' },
-                        'Total KM': { value: `${totalKMs.toLocaleString()}`, color: '#38bdf8' },
-                        'Fuel': { value: `₹${totalFuel.toLocaleString()}`, color: '#f59e0b' },
-                        'Parking': { value: `₹${totalParking.toLocaleString()}`, color: '#818cf8' },
-                        'Salary': { value: `₹${totalSalary.toLocaleString()}`, color: '#fbbf24' }
-                    }}
                     headers={LOGBOOK_HEADERS}
                     rows={searchedData.map((r, i) => <AttRow key={r._id} r={r} idx={i} isLogbook />)}
                     empty="No log book records found."
@@ -837,21 +876,19 @@ const Reports = ({ isSubComponent = false }) => {
 
             {/* ── Tab Bar (multi-select) ── */}
             {tabList.length > 1 && (
-                <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.04)', padding: '8px', marginBottom: '20px', backdropFilter: 'blur(10px)' }}>
-
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '22px', flexWrap: 'wrap' }}>
+                    {/* Primary Tab Group */}
+                    <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.06)', padding: '6px', display: 'flex', gap: '4px' }}>
                         {tabList.map(tab => {
-                            const isActive = activeTabs.includes(tab.id);
+                            const isActive = activeTabs.includes(tab.id) && activeTabs.length === 1;
                             const Icon = tab.icon;
                             return (
                                 <button key={tab.id} onClick={() => toggleTab(tab.id)}
                                     style={{
-                                        display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)', fontSize: '12px', fontWeight: '800',
-                                        background: isActive ? tab.bg : 'rgba(255,255,255,0.02)',
-                                        border: isActive ? `1px solid ${tab.color}70` : '1px solid rgba(255,255,255,0.06)',
+                                        display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '14px', cursor: 'pointer', transition: '0.2s', fontSize: '12px', fontWeight: '900',
+                                        background: isActive ? tab.bg : 'transparent',
+                                        border: 'none',
                                         color: isActive ? 'white' : 'rgba(255,255,255,0.3)',
-                                        transform: isActive ? 'translateY(-1px)' : 'none',
-                                        boxShadow: isActive ? `0 4px 12px ${tab.color}25` : 'none'
                                     }}
                                 >
                                     <Icon size={14} color={isActive ? tab.color : 'rgba(255,255,255,0.3)'} />{tab.label}
@@ -859,6 +896,21 @@ const Reports = ({ isSubComponent = false }) => {
                             );
                         })}
                     </div>
+
+                    {/* Standalone 'Both' Toggle */}
+                    {location.pathname.includes('log-book') && (
+                        <button onClick={() => setActiveTabs(['drivers', 'freelancers'])}
+                            style={{
+                                display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 22px', borderRadius: '18px', cursor: 'pointer', transition: '0.3s', fontSize: '12px', fontWeight: '950',
+                                background: (activeTabs.includes('drivers') && activeTabs.includes('freelancers')) ? 'rgba(251, 191, 36, 0.12)' : 'rgba(255,255,255,0.03)',
+                                border: `1px solid ${(activeTabs.includes('drivers') && activeTabs.includes('freelancers')) ? '#fbbf2460' : 'rgba(255,255,255,0.08)'}`,
+                                color: (activeTabs.includes('drivers') && activeTabs.includes('freelancers')) ? '#fbbf24' : 'rgba(255,255,255,0.4)',
+                                boxShadow: (activeTabs.includes('drivers') && activeTabs.includes('freelancers')) ? '0 8px 25px rgba(251, 191, 36, 0.1)' : 'none'
+                            }}
+                        >
+                            <FileText size={15} /> All Duties (Both)
+                        </button>
+                    )}
                 </div>
             )}
 
@@ -875,8 +927,16 @@ const Reports = ({ isSubComponent = false }) => {
 
             {/* ── Modals ── */}
             <AnimatePresence>
-                {selectedItem && <AttendanceModal item={selectedItem} onClose={() => setSelectedItem(null)} />}
-                {editingItem && <EditAttendanceModal item={editingItem} onClose={() => setEditingItem(null)} onUpdate={handleUpdateAttendance} />}
+                {selectedItem && (
+                    <AttendanceModal
+                        key="view-modal"
+                        item={selectedItem}
+                        onClose={() => setSelectedItem(null)}
+                        onEdit={setEditingItem}
+                        onDelete={handleDelete}
+                    />
+                )}
+                {editingItem && <EditAttendanceModal key="edit-modal" item={editingItem} onClose={() => setEditingItem(null)} onUpdate={handleUpdateAttendance} />}
             </AnimatePresence>
         </div>
     );

@@ -4,9 +4,13 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 
 const instance = axios.create({
     baseURL: API_URL,
+    timeout: 30000, // 30s timeout to prevent hanging requests
 });
 
-// Add a request interceptor to add the token to headers
+// --- IN-FLIGHT REQUEST DEDUPLICATION ---
+// Prevents the same GET request from firing multiple times simultaneously
+const pendingRequests = new Map();
+
 instance.interceptors.request.use(
     (config) => {
         const userInfo = localStorage.getItem('userInfo');
@@ -22,17 +26,13 @@ instance.interceptors.request.use(
         }
         return config;
     },
-    (error) => {
-        return Promise.reject(error);
-    }
+    (error) => Promise.reject(error)
 );
 
-// Add a response interceptor to handle 401 errors (expired token)
 instance.interceptors.response.use(
     (response) => response,
     (error) => {
         if (error.response && error.response.status === 401) {
-            // If the error is not from the login page itself
             if (!window.location.pathname.includes('/login')) {
                 localStorage.removeItem('userInfo');
                 window.location.href = '/login';

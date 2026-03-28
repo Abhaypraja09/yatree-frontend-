@@ -32,47 +32,29 @@ const ActiveLogs = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [filterStatus, setFilterStatus] = useState('All');
     const [filterVehicle, setFilterVehicle] = useState('All');
+    const [filterDriver, setFilterDriver] = useState('All');
     const [viewPhoto, setViewPhoto] = useState(null);
 
     // Modern Date Navigation States
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+    const [selectedMonth, setSelectedMonth] = useState('All');
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [selectedDay, setSelectedDay] = useState('All'); 
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
 
     useEffect(() => {
-        if (selectedDay === 'All') {
-            const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
-            const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+        if (selectedMonth === 'All') {
+            const start = toISTDateString(new Date(selectedYear, 0, 1));
+            const end = toISTDateString(new Date(selectedYear, 12, 0));
             setFromDate(start);
             setToDate(end);
         } else {
-            const d = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
-            setFromDate(d);
-            setToDate(d);
+            const m = parseInt(selectedMonth);
+            const start = toISTDateString(new Date(selectedYear, m, 1));
+            const end = toISTDateString(new Date(selectedYear, m + 1, 0));
+            setFromDate(start);
+            setToDate(end);
         }
-    }, [selectedMonth, selectedYear, selectedDay]);
-
-    const shiftDays = (n) => {
-        let baseDate;
-        if (selectedDay === 'All') {
-            const today = new Date();
-            // If the selected month/year is the current one, start navigation from TODAY
-            if (selectedMonth === today.getMonth() && selectedYear === today.getFullYear()) {
-                baseDate = today;
-            } else {
-                // Otherwise start from the 1st of that month
-                baseDate = new Date(selectedYear, selectedMonth, 1);
-            }
-        } else {
-            baseDate = new Date(selectedYear, selectedMonth, parseInt(selectedDay));
-        }
-        baseDate.setDate(baseDate.getDate() + n);
-        setSelectedYear(baseDate.getFullYear());
-        setSelectedMonth(baseDate.getMonth());
-        setSelectedDay(baseDate.getDate().toString());
-    };
+    }, [selectedMonth, selectedYear]);
 
 
     const getLocalYYYYMMDD = () => todayIST();
@@ -198,7 +180,8 @@ const ActiveLogs = () => {
         );
         const matchesStatus = filterStatus === 'All' || log.status === filterStatus;
         const matchesVehicle = filterVehicle === 'All' || log.vehicle?._id === filterVehicle;
-        return matchesSearch && matchesStatus && matchesVehicle;
+        const matchesDriver = filterDriver === 'All' || log.driver?._id === filterDriver;
+        return matchesSearch && matchesStatus && matchesVehicle && matchesDriver;
     });
 
 
@@ -322,6 +305,18 @@ const ActiveLogs = () => {
                         </select>
                         <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '8px 4px' }}></div>
                         <select
+                            value={filterDriver}
+                            onChange={(e) => setFilterDriver(e.target.value)}
+                            className="input-field"
+                            style={{ height: '46px', border: 'none', background: 'transparent', width: '160px', fontWeight: '700', fontSize: '13px' }}
+                        >
+                            <option value="All" style={{ background: '#0f172a' }}>Filter Drivers</option>
+                            {drivers.map(d => (
+                                <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name}</option>
+                            ))}
+                        </select>
+                        <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', margin: '8px 4px' }}></div>
+                        <select
                             value={filterStatus}
                             onChange={(e) => setFilterStatus(e.target.value)}
                             className="input-field"
@@ -335,132 +330,29 @@ const ActiveLogs = () => {
                     </div>
                 </div>
 
-                    <div className="flex-resp" style={{ gap: '15px' }}>
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            background: 'rgba(0,0,0,0.4)',
-                            padding: '4px',
-                            borderRadius: '20px',
-                            border: '1px solid rgba(255,255,255,0.06)'
-                        }}>
-                            <button onClick={() => shiftDays(-1)} style={{
-                                width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
-                            }}> <ChevronLeft size={18} /> </button>
-
-                            <div
-                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                style={{ height: '42px', minWidth: '140px', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.15)', borderRadius: '16px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
+                <div className="flex-resp" style={{ gap: '15px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '14px', display: 'flex', gap: '5px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', color: 'white', padding: '8px 12px', fontWeight: '800', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
                             >
-                                <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
-                                    {selectedDay === 'All' ?
-                                        ` ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
-                                        formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
-                                </span>
-                                <input
-                                    type="date"
-                                    value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
-                                    onChange={e => {
-                                        const d = new Date(e.target.value);
-                                        setSelectedYear(d.getFullYear());
-                                        setSelectedMonth(d.getMonth());
-                                        setSelectedDay(d.getDate().toString());
-                                    }}
-                                    style={{ position: 'absolute', inset: 0, opacity: 0 }}
-                                />
-                            </div>
-
-                            <button onClick={() => shiftDays(1)} style={{
-                                width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
-                            }}> <ChevronRight size={18} /> </button>
+                                <option value="All" style={{ background: '#0f172a' }}>All Months</option>
+                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => <option key={i} value={i} style={{ background: '#0f172a' }}>{m}</option>)}
+                            </select>
+                            <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', height: '20px', alignSelf: 'center' }}></div>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                style={{ background: 'transparent', border: 'none', color: 'white', padding: '8px 12px', fontWeight: '800', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
+                            >
+                                {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>)}
+                            </select>
                         </div>
-
-                        {selectedDay !== 'All' && (
-                            <button
-                                onClick={() => setSelectedDay('All')}
-                                style={{ height: '50px', padding: '0 20px', borderRadius: '16px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', color: '#fbbf24', fontSize: '11px', fontWeight: '950', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}
-                            >
-                                <Calendar size={14} /> View Full Month
-                            </button>
-                        )}
-
-                        <select
-                            value={selectedMonth}
-                            onChange={e => {
-                                setSelectedMonth(Number(e.target.value));
-                                setSelectedDay('All');
-                            }}
-                            className="input-field"
-                            style={{ height: '48px', borderRadius: '14px', padding: '0 12px', fontWeight: '700', fontSize: '14px', width: '90px' }}
-                        >
-                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => (
-                                <option key={i} value={i} style={{ background: '#0f172a' }}>{m}</option>
-                            ))}
-                        </select>
-                        <select
-                            value={selectedYear}
-                            onChange={e => {
-                                setSelectedYear(Number(e.target.value));
-                                setSelectedDay('All');
-                            }}
-                            className="input-field"
-                            style={{ height: '48px', borderRadius: '14px', padding: '0 12px', fontWeight: '700', fontSize: '14px', width: '90px' }}
-                        >
-                            {[2024, 2025, 2026, 2027].map(y => (
-                                <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
-                            ))}
-                        </select>
                     </div>
-
+                </div>
             </header>
-
-            {/* Stats Row */}
-            <div className="stats-grid" style={{ marginBottom: '40px', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))' }}>
-                <motion.div
-                    whileHover={{ translateY: -5 }}
-                    className="glass-card"
-                    style={{ background: 'linear-gradient(145deg, rgba(244, 63, 94, 0.08), rgba(244, 63, 94, 0.02))', borderColor: 'rgba(244, 63, 94, 0.15)', padding: '25px' }}
-                >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                        <div style={{ padding: '10px', background: 'rgba(244, 63, 94, 0.1)', borderRadius: '12px', color: '#f43f5e' }}>
-                            <AlertTriangle size={20} />
-                        </div>
-                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#f43f5e', letterSpacing: '1px' }}>INCIDENTS</span>
-                    </div>
-                    <h2 style={{ fontSize: '32px', fontWeight: '900', color: 'white', margin: 0 }}>{filteredLogs.length}</h2>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '5px', fontWeight: '600' }}>Active reports recorded</p>
-                </motion.div>
-
-                <motion.div
-                    whileHover={{ translateY: -5 }}
-                    className="glass-card"
-                    style={{ background: 'linear-gradient(145deg, rgba(251, 191, 36, 0.08), rgba(251, 191, 36, 0.02))', borderColor: 'rgba(251, 191, 36, 0.15)', padding: '25px' }}
-                >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                        <div style={{ padding: '10px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', color: '#fbbf24' }}>
-                            <IndianRupee size={20} />
-                        </div>
-                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px' }}>EST. COST</span>
-                    </div>
-                    <h2 style={{ fontSize: '32px', fontWeight: '900', color: 'white', margin: 0 }}>₹{totalEstLoss.toLocaleString()}</h2>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '5px', fontWeight: '600' }}>Projected financial impact</p>
-                </motion.div>
-
-                <motion.div
-                    whileHover={{ translateY: -5 }}
-                    className="glass-card"
-                    style={{ background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02))', borderColor: 'rgba(16, 185, 129, 0.15)', padding: '25px' }}
-                >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                        <div style={{ padding: '10px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '12px', color: '#10b981' }}>
-                            <CheckCircle2 size={20} />
-                        </div>
-                        <span style={{ fontSize: '10px', fontWeight: '900', color: '#10b981', letterSpacing: '1px' }}>RESOLVED</span>
-                    </div>
-                    <h2 style={{ fontSize: '32px', fontWeight: '900', color: 'white', margin: 0 }}>{resolvedCount}</h2>
-                    <p style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '5px', fontWeight: '600' }}>Closed incident cases</p>
-                </motion.div>
-            </div>
 
             {loading ? (
                 <div style={{ padding: '100px', textAlign: 'center' }}>
@@ -510,8 +402,8 @@ const ActiveLogs = () => {
                                             </td>
                                             <td style={{ padding: '20px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fbbf24', fontWeight: '800', fontSize: '13px' }}>
-                                                        {log.vehicle?.carNumber?.slice(-2)}
+                                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fbbf24', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>
+                                                        {log.driver?.name?.charAt(0) || 'U'}
                                                     </div>
                                                     <div>
                                                         <div style={{ color: 'white', fontWeight: '700', fontSize: '13px' }}>{log.vehicle?.carNumber}</div>
@@ -723,21 +615,10 @@ const ActiveLogs = () => {
                                         <textarea className="input-field" style={{ minHeight: '100px', resize: 'vertical', borderRadius: '15px', paddingTop: '15px' }} value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} placeholder="Provide a detailed description of the event and visible damages..." required />
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '20px' }}>
-                                        <div>
-                                            <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Upload Evidence (Photos)</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <input type="file" multiple onChange={e => setPhotos(e.target.files)} className="input-field" style={{ height: '54px', borderRadius: '15px', paddingTop: '15px', cursor: 'pointer' }} />
-                                                <Camera size={20} style={{ position: 'absolute', right: '18px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24' }} />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Process Status</label>
-                                            <select className="input-field" style={{ height: '54px', borderRadius: '15px', fontWeight: '700' }} value={formData.status} onChange={e => setFormData({ ...formData, status: e.target.value })}>
-                                                <option value="Pending" style={{ background: '#0f172a' }}>Pending Review</option>
-                                                <option value="In Repair" style={{ background: '#0f172a' }}>In Repair Process</option>
-                                                <option value="Resolved" style={{ background: '#0f172a' }}>Resolved / Closed</option>
-                                            </select>
+                                    <div>
+                                        <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Upload Evidence (Photos)</label>
+                                        <div style={{ position: 'relative' }}>
+                                            <input type="file" multiple onChange={e => setPhotos(e.target.files)} className="input-field" style={{ height: '54px', borderRadius: '15px', paddingTop: '15px', cursor: 'pointer', outline: 'none' }} />
                                         </div>
                                     </div>
 
