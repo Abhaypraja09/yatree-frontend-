@@ -37,27 +37,13 @@ export default defineConfig({
     minify: 'esbuild',
     rollupOptions: {
       output: {
-        manualChunks(id) {
-          // React core — always needed, load first
-          if (id.includes('node_modules/react/') || id.includes('node_modules/react-dom/') || id.includes('node_modules/react-router-dom/')) {
-            return 'react-core';
-          }
-          // Animation — heavy, lazy-load separately
-          if (id.includes('node_modules/framer-motion')) {
-            return 'framer-motion';
-          }
-          // Icons — medium, lazy-load separately
-          if (id.includes('node_modules/lucide-react')) {
-            return 'lucide';
-          }
-          // Excel export — only needed on demand
-          if (id.includes('node_modules/xlsx') || id.includes('node_modules/xlsx-js-style')) {
-            return 'excel';
-          }
-          // Other node_modules
-          if (id.includes('node_modules')) {
-            return 'vendor';
-          }
+        manualChunks: {
+          // React core + router + framer-motion MUST stay together — they share circular deps
+          vendor: ['react', 'react-dom', 'react-router-dom', 'framer-motion'],
+          // Icons are safe to split separately
+          icons: ['lucide-react'],
+          // Excel is only used on export — completely safe to split
+          excel: ['xlsx', 'xlsx-js-style']
         }
       }
     }
