@@ -138,17 +138,31 @@ const LiveFeed = () => {
         };
     }, [selectedCompany, selectedDate]);
 
+    const isToday = selectedDate === getTodayLocal();
+    const isPastDate = selectedDate < getTodayLocal();
+
     const filteredDrivers = stats?.liveDriversFeed?.filter(d =>
         d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
         d.mobile.includes(searchQuery)
     ) || [];
 
-    const filteredVehicles = stats?.liveVehiclesFeed?.filter(v =>
-        v.carNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        v.model.toLowerCase().includes(searchQuery.toLowerCase())
-    ) || [];
+    const filteredVehicles = (stats?.liveVehiclesFeed || [])
+        .filter(v => {
+            const searchMatch = v.carNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                v.model.toLowerCase().includes(searchQuery.toLowerCase());
 
-    const isPastDate = selectedDate < getTodayLocal();
+            if (!searchMatch) return false;
+
+            // Operational Logic: 
+            // Today: Only show currently 'In Use' as per user's "automatic reduce" request
+            // Past Dates: Show all that were 'Used' or 'In Use' (completed duties)
+            if (isToday) {
+                return v.status === 'In Use';
+            } else {
+                return v.status === 'Used' || v.status === 'In Use';
+            }
+        });
+
     const inUseVehicles = stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use').length || 0;
     const totalWorkingVehicles = stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use' || v.status === 'Used').length || 0;
     const totalUsedVehicles = totalWorkingVehicles; // Align with expectation
@@ -357,20 +371,15 @@ const LiveFeed = () => {
                                     }}>
                                         <Car size={16} color="#0ea5e9" />
                                         <div style={{ fontSize: '13px', fontWeight: '1000', color: 'white', lineHeight: 1 }}>
-                                            {inUseVehicles}
+                                            {stats?.totalUsedVehiclesCount || 0}
                                         </div>
                                     </div>
                                     <div>
-                                        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
-                                            <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>
-                                                {inUseVehicles} <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>In Use</span>
-                                            </div>
+                                        <div style={{ fontSize: '24px', fontWeight: '950', color: '#0ea5e9', lineHeight: 1.1, marginBottom: '2px' }}>
+                                            {stats?.totalUsedVehiclesCount || 0}
                                         </div>
-                                        <div style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                            Used Today: {stats?.totalUsedVehiclesCount || 0}
-                                        </div>
-                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)', fontWeight: '800', marginTop: '2px' }}>
-                                            Fleet Size: {totalCompanyVehicles}
+                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                            {isToday ? `${activeFleetCount} Active Now` : 'Fleet Utilized'}
                                         </div>
                                     </div>
                                 </motion.div>
@@ -394,9 +403,8 @@ const LiveFeed = () => {
                                         flexShrink: 0,
                                         gap: '2px'
                                     }}>
-                                        <IndianRupee size={16} color="#10b981" strokeWidth={3} />
                                         <div style={{
-                                            fontSize: '13px',
+                                            fontSize: '22px',
                                             fontWeight: '1000',
                                             color: 'white',
                                             lineHeight: 1,
@@ -430,9 +438,9 @@ const LiveFeed = () => {
                                         flexShrink: 0,
                                         gap: '2px'
                                     }}>
-                                        <Briefcase size={16} color="#818cf8" strokeWidth={2.5} />
+
                                         <div style={{
-                                            fontSize: '13px',
+                                            fontSize: '22px',
                                             fontWeight: '1000',
                                             color: 'white',
                                             lineHeight: 1,
@@ -502,9 +510,9 @@ const LiveFeed = () => {
                     gap: '20px',
                     flexWrap: 'wrap'
                 }}>
-                    <div className="livefeed-tabs" style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <div className="livefeed-tabs" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.03)' }}>
                         <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length} />
-                        <TabButton id="vehicles" label="Fleet" icon={Car} count={inUseVehicles} />
+                        <TabButton id="vehicles" label="Fleet" icon={Car} count={isToday ? activeFleetCount : stats?.totalUsedVehiclesCount} />
                         <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length} />
                     </div>
 

@@ -636,46 +636,7 @@ const OutsideCars = () => {
                         </div>
 
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <div className="premium-scroll" style={{
-                                display: 'flex',
-                                background: 'rgba(15, 23, 42, 0.6)',
-                                padding: '4px',
-                                borderRadius: '16px',
-                                border: '1px solid rgba(255,255,255,0.05)',
-                                gap: '4px'
-                            }}>
-                                <button
-                                    onClick={() => setViewMode('monthly')}
-                                    style={{
-                                        padding: '8px 16px',
-                                        borderRadius: '12px',
-                                        fontSize: '10px',
-                                        fontWeight: '900',
-                                        cursor: 'pointer',
-                                        background: viewMode === 'monthly' ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
-                                        color: viewMode === 'monthly' ? '#38bdf8' : 'rgba(255,255,255,0.4)',
-                                        border: 'none',
-                                        textTransform: 'uppercase'
-                                    }}
-                                >Monthly</button>
-                                <button
-                                    onClick={() => setViewMode('range')}
-                                    style={{
-                                        padding: '8px 16px',
-                                        borderRadius: '12px',
-                                        fontSize: '10px',
-                                        fontWeight: '900',
-                                        cursor: 'pointer',
-                                        background: viewMode === 'range' ? 'rgba(56, 189, 248, 0.15)' : 'transparent',
-                                        color: viewMode === 'range' ? '#38bdf8' : 'rgba(255,255,255,0.4)',
-                                        border: 'none',
-                                        textTransform: 'uppercase'
-                                    }}
-                                >Range</button>
-                            </div>
 
-                            {viewMode === 'monthly' ? (
-                                <>
                                     {/* PREMIUM DAY NAV PILL */}
                                     <div style={{
                                         display: 'flex',
@@ -770,26 +731,6 @@ const OutsideCars = () => {
                                             <option key={y} value={y}>{y}</option>
                                         ))}
                                     </select>
-                                </>
-                            ) : (
-                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <input
-                                        type="date"
-                                        value={fromDate}
-                                        onChange={e => setFromDate(e.target.value)}
-                                        className="premium-compact-input"
-                                        style={{ height: '42px', width: '130px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', fontSize: '11px', padding: '0 12px' }}
-                                    />
-                                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900' }}>TO</span>
-                                    <input
-                                        type="date"
-                                        value={toDate}
-                                        onChange={e => setToDate(e.target.value)}
-                                        className="premium-compact-input"
-                                        style={{ height: '42px', width: '130px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '16px', fontSize: '11px', padding: '0 12px' }}
-                                    />
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -1014,75 +955,113 @@ const OutsideCars = () => {
             </div>
 
             {/* ═══ PREMIUM OUTSIDE FLEET LOG MODAL ═══ */}
+            {/* ═══ PREMIUM OUTSIDE FLEET LOG MODAL ═══ */}
             <AnimatePresence>
                 {showModal && (
-                    <div className="modal-overlay">
+                    <div className="modal-overlay" style={{ backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.7)' }}>
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            initial={{ scale: 0.95, opacity: 0, y: 10 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            exit={{ scale: 0.95, opacity: 0, y: 10 }}
                             className="modal-container"
                             style={{
-                                background: '#080d18',
-                                border: '1px solid rgba(255,255,255,0.12)',
-                                boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
-                                borderRadius: '28px',
+                                background: 'linear-gradient(165deg, #0f172a 0%, #020617 100%)',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                boxShadow: '0 40px 100px -20px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05)',
+                                borderRadius: '32px',
                                 display: 'flex',
                                 flexDirection: 'column',
-                                maxHeight: '90vh',
-                                width: '100%',
-                                maxWidth: '640px',
-                                overflow: 'hidden'
+                                maxHeight: '92vh',
+                                width: '95%',
+                                maxWidth: '700px',
+                                overflow: 'hidden',
+                                position: 'relative'
                             }}
                         >
+                            {/* Decorative Background Elements */}
+                            <div style={{ position: 'absolute', top: -100, right: -100, width: 300, height: 300, background: 'radial-gradient(circle, rgba(251, 191, 36, 0.05) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
+                            <div style={{ position: 'absolute', bottom: -100, left: -100, width: 300, height: 300, background: 'radial-gradient(circle, rgba(56, 189, 248, 0.05) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
+
                             {/* Modal Header */}
                             <div style={{
-                                padding: 'clamp(20px, 4vw, 24px) clamp(20px, 5vw, 32px)',
-                                background: 'linear-gradient(to right, rgba(251, 191, 36, 0.08), transparent)',
-                                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                                padding: '32px 40px',
+                                borderBottom: '1px solid rgba(255,255,255,0.05)',
                                 display: 'flex',
                                 justifyContent: 'space-between',
-                                alignItems: 'center'
+                                alignItems: 'center',
+                                position: 'relative',
+                                zIndex: 1
                             }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                                    <div style={{ width: 'clamp(40px, 8vw, 48px)', height: 'clamp(40px, 8vw, 48px)', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <Edit size={20} color="#fbbf24" />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                    <div style={{
+                                        width: '56px', height: '56px', borderRadius: '18px',
+                                        background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%)',
+                                        border: '1px solid rgba(251, 191, 36, 0.2)',
+                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
+                                    }}>
+                                        <Car size={26} color="#fbbf24" style={{ filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.3))' }} />
                                     </div>
                                     <div>
-                                        <h3 style={{ fontSize: 'clamp(17px, 4vw, 20px)', fontWeight: '900', color: 'white', margin: 0 }}>{editMode ? 'Update Log' : 'External Log'}</h3>
-                                        <p className="hide-mobile" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', margin: '4px 0 0' }}>Registry Entry System</p>
+                                        <h3 style={{ fontSize: '24px', fontWeight: '950', color: 'white', margin: 0, letterSpacing: '-0.5px' }}>
+                                            {editMode ? 'Edit Duty Log' : 'External Fleet Log'}
+                                        </h3>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
+                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Operational Registry</span>
+                                        </div>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowModal(false)} className="close-btn" style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '14px', width: '36px', height: '36px' }}><X size={18} /></button>
+                                <button onClick={() => setShowModal(false)} style={{
+                                    background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)',
+                                    border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px',
+                                    width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                    cursor: 'pointer', transition: '0.2s hover'
+                                }}><X size={20} /></button>
                             </div>
 
                             {/* Modal Content */}
-                            <div style={{ padding: 'clamp(20px, 5vw, 32px)', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                            <div style={{ padding: '0 40px 40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '32px', position: 'relative', zIndex: 1 }} className="premium-scroll">
 
-                                {/* Section: Logistics */}
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                        <Calendar size={14} color="#fbbf24" style={{ opacity: 0.7 }} />
-                                        <span style={{ fontSize: '10px', fontWeight: '950', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>Operational Context</span>
-                                    </div>
-                                    <div className="form-grid-2">
-                                        <div
-                                            className="premium-input-group"
-                                            onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                            style={{ cursor: 'pointer' }}
-                                        >
-                                            <label className="premium-label">Duty Timeline *</label>
+                                <div style={{ height: '24px' }}></div> {/* Spacer */}
+
+                                {/* SECTION 1: CORE LOGISTICS */}
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                    <div className="form-grid-2" style={{ gap: '20px' }}>
+                                        <div className="premium-input-group">
+                                            <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', display: 'block' }}>LOG DATE *</label>
                                             <div style={{ position: 'relative' }}>
-                                                <Calendar size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
-                                                <input type="date" className="premium-compact-input" required value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} onClick={e => { e.stopPropagation(); if (e.target.showPicker) e.target.showPicker(); }} style={{ paddingLeft: '48px', height: '52px' }} />
+                                                <Calendar size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', opacity: 0.6, zIndex: 2 }} />
+                                                <input
+                                                    type="date"
+                                                    className="premium-compact-input"
+                                                    required
+                                                    value={formData.date}
+                                                    onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                                    style={{
+                                                        background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
+                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
+                                                        fontSize: '14px', fontWeight: '700'
+                                                    }}
+                                                />
                                             </div>
                                         </div>
                                         <div className="premium-input-group">
-                                            <label className="premium-label">Client Property *</label>
+                                            <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', display: 'block' }}>CLIENT PROPERTY *</label>
                                             <div style={{ position: 'relative' }}>
-                                                <Plus size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                                                <input type="text" list="propertyReminders" className="premium-compact-input" required value={formData.property} onChange={e => setFormData({ ...formData, property: e.target.value })} placeholder="e.g. Radisson" style={{ paddingLeft: '48px', height: '52px' }} />
-                                                <datalist id="propertyReminders">
+                                                <Plus size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', opacity: 0.6, zIndex: 2 }} />
+                                                <input
+                                                    type="text" list="propList" className="premium-compact-input"
+                                                    required value={formData.property}
+                                                    onChange={e => setFormData({ ...formData, property: e.target.value })}
+                                                    placeholder="Select or Type..."
+                                                    style={{
+                                                        background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
+                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
+                                                        fontSize: '14px', fontWeight: '700'
+                                                    }}
+                                                />
+                                                <datalist id="propList">
                                                     {propertySuggestions.map(p => <option key={p} value={p} />)}
                                                 </datalist>
                                             </div>
@@ -1090,68 +1069,85 @@ const OutsideCars = () => {
                                     </div>
                                 </div>
 
-                                {/* Section: Resource */}
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                        <Car size={14} color="#38bdf8" style={{ opacity: 0.7 }} />
-                                        <span style={{ fontSize: '10px', fontWeight: '950', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>Resource Identification</span>
+                                {/* SECTION 2: RESOURCE DATA */}
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.04)' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                                        <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#38bdf8' }}></div>
+                                        <span style={{ fontSize: '11px', fontWeight: '950', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '2px' }}>Resource Identification</span>
                                     </div>
-                                    <div className="form-grid-2" style={{ marginBottom: '20px' }}>
+
+                                    <div className="form-grid-2" style={{ gap: '20px', marginBottom: '20px' }}>
                                         <div className="premium-input-group">
-                                            <label className="premium-label">Full Vehicle Plate *</label>
+                                            <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>VEHICLE PLATE *</label>
                                             <div style={{ position: 'relative' }}>
-                                                <Car size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                                                <input type="text" list="carCodes" className="premium-compact-input" required disabled={editMode} value={formData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} placeholder="RJ-27-PA-1000" style={{ paddingLeft: '48px', textTransform: 'uppercase', height: '52px' }} />
-                                                <datalist id="carCodes">
+                                                <Car size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#38bdf8', opacity: 0.6, zIndex: 2 }} />
+                                                <input
+                                                    type="text" list="plateList" className="premium-compact-input"
+                                                    required value={formData.carNumber}
+                                                    onChange={e => handleCarNumberChange(e.target.value)}
+                                                    placeholder="RJ-XX-XX-XXXX"
+                                                    style={{
+                                                        background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)',
+                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
+                                                        fontSize: '16px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px'
+                                                    }}
+                                                />
+                                                <datalist id="plateList">
                                                     {carNumberSuggestions.map(s => <option key={s} value={s} />)}
                                                 </datalist>
                                             </div>
                                         </div>
                                         <div className="premium-input-group">
-                                            <label className="premium-label">Asset Model *</label>
-                                            <input type="text" className="premium-compact-input" required value={formData.model} onChange={e => setFormData({ ...formData, model: e.target.value })} placeholder="e.g. Crysta" style={{ height: '52px' }} />
+                                            <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>ASSET MODEL *</label>
+                                            <input
+                                                type="text" className="premium-compact-input"
+                                                required value={formData.model}
+                                                onChange={e => setFormData({ ...formData, model: e.target.value })}
+                                                placeholder="e.g. Innova Crysta"
+                                                style={{
+                                                    background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)',
+                                                    borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 20px',
+                                                    fontSize: '14px', fontWeight: '700'
+                                                }}
+                                            />
                                         </div>
                                     </div>
-                                    <div className="form-grid-2">
+
+                                    <div className="form-grid-2" style={{ gap: '20px' }}>
                                         <div className="premium-input-group">
-                                            <label className="premium-label">Vendor (Proprietor) *</label>
-                                            <input type="text" className="premium-compact-input" required value={formData.ownerName} onChange={e => setFormData({ ...formData, ownerName: e.target.value })} placeholder="Provider Name" style={{ height: '52px' }} />
+                                            <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>VENDOR NAME *</label>
+                                            <input
+                                                type="text" className="premium-compact-input"
+                                                required value={formData.ownerName}
+                                                onChange={e => setFormData({ ...formData, ownerName: e.target.value })}
+                                                placeholder="Proprietor Name"
+                                                style={{
+                                                    background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)',
+                                                    borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 20px',
+                                                    fontSize: '14px', fontWeight: '700'
+                                                }}
+                                            />
                                         </div>
                                         <div className="premium-input-group">
-                                            <label className="premium-label">Transaction Type *</label>
-                                            <div style={{
-                                                display: 'flex',
-                                                background: 'rgba(0,0,0,0.3)',
-                                                padding: '4px',
-                                                borderRadius: '16px',
-                                                border: '1px solid rgba(255,255,255,0.06)',
-                                                gap: '6px'
-                                            }}>
+                                            <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>TRANSACTION MODE *</label>
+                                            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.4)', padding: '6px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', gap: '6px', height: '56px' }}>
                                                 {[
                                                     { id: 'Buy', label: 'Buy', icon: ShoppingCart, color: '#22c55e' },
                                                     { id: 'Sell', label: 'Sell', icon: TrendingUp, color: '#ef4444' }
                                                 ].map(t => (
                                                     <button
-                                                        key={t.id}
-                                                        type="button"
+                                                        key={t.id} type="button"
                                                         onClick={() => setFormData({ ...formData, transactionType: t.id })}
                                                         style={{
-                                                            flex: 1,
-                                                            padding: '10px 4px',
-                                                            borderRadius: '12px',
-                                                            border: '1px solid ' + (formData.transactionType === t.id ? t.color + '50' : 'transparent'),
-                                                            background: formData.transactionType === t.id ? t.color + '15' : 'rgba(255,255,255,0.02)',
-                                                            color: formData.transactionType === t.id ? t.color : 'rgba(255,255,255,0.3)',
-                                                            cursor: 'pointer',
-                                                            display: 'flex',
-                                                            flexDirection: 'column',
-                                                            alignItems: 'center',
-                                                            gap: '4px',
-                                                            transition: '0.2s'
+                                                            flex: 1, borderRadius: '14px', cursor: 'pointer', transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none',
+                                                            background: formData.transactionType === t.id ? t.color : 'transparent',
+                                                            color: formData.transactionType === t.id ? 'black' : 'rgba(255,255,255,0.3)',
+                                                            boxShadow: formData.transactionType === t.id ? `0 4px 12px ${t.color}40` : 'none'
                                                         }}
                                                     >
-                                                        <t.icon size={16} />
-                                                        <span style={{ fontSize: '9px', fontWeight: '950', textTransform: 'uppercase' }}>{t.label}</span>
+                                                        <t.icon size={16} strokeWidth={formData.transactionType === t.id ? 3 : 2} />
+                                                        <span style={{ fontSize: '11px', fontWeight: '950', textTransform: 'uppercase' }}>{t.label}</span>
                                                     </button>
                                                 ))}
                                             </div>
@@ -1159,71 +1155,119 @@ const OutsideCars = () => {
                                     </div>
                                 </div>
 
-                                {/* Section: Service & Settlement */}
-                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: 'clamp(15px, 4vw, 24px)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                        <Save size={14} color="#10b981" style={{ opacity: 0.7 }} />
-                                        <span style={{ fontSize: '10px', fontWeight: '950', color: 'white', textTransform: 'uppercase', letterSpacing: '1px' }}>Service Settlement</span>
+                                {/* SECTION 3: SERVICE DETAILS */}
+                                <div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
+                                        <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#10b981' }}></div>
+                                        <span style={{ fontSize: '11px', fontWeight: '950', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '2px' }}>Service Settlement</span>
                                     </div>
-                                    <div className="form-grid-2" style={{ marginBottom: '20px' }}>
-                                        <div className="premium-input-group">
-                                            <label className="premium-label">Service Category</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <Briefcase size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', opacity: 0.6 }} />
-                                                <input type="text" list="serviceTypes" className="premium-compact-input" value={formData.dutyType} onChange={e => setFormData({ ...formData, dutyType: e.target.value })} placeholder="e.g. Airport Drop" style={{ paddingLeft: '48px', height: '52px' }} />
-                                                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-                                                    {['Airport PickUp', 'Airport Drop', 'RSD PickUp', 'RSD Drop', 'Bus Stand PickUp', 'Bus Stand Drop'].map(t => (
-                                                        <button
-                                                            key={t}
-                                                            type="button"
-                                                            onClick={() => setFormData({ ...formData, dutyType: t })}
-                                                            style={{
-                                                                fontSize: '9px',
-                                                                fontWeight: '900',
-                                                                background: formData.dutyType === t ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                                                                color: formData.dutyType === t ? '#fbbf24' : 'rgba(255, 255, 255, 0.4)',
-                                                                padding: '4px 10px',
-                                                                borderRadius: '6px',
-                                                                border: `1px solid ${formData.dutyType === t ? 'rgba(251, 191, 36, 0.3)' : 'rgba(255, 255, 255, 0.1)'}`,
-                                                                cursor: 'pointer',
-                                                                transition: '0.2s'
-                                                            }}
-                                                        >
-                                                            {t}
-                                                        </button>
-                                                    ))}
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+                                        <div className="form-grid-2" style={{ gap: '24px' }}>
+                                            <div className="premium-input-group">
+                                                <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', display: 'block' }}>SERVICE CATEGORY</label>
+                                                <div style={{ position: 'relative' }}>
+                                                    <Briefcase size={18} style={{ position: 'absolute', left: '16px', top: '28px', transform: 'translateY(-50%)', color: '#10b981', opacity: 0.6, zIndex: 2 }} />
+                                                    <input
+                                                        type="text" list="catList" className="premium-compact-input"
+                                                        value={formData.dutyType}
+                                                        onChange={e => setFormData({ ...formData, dutyType: e.target.value })}
+                                                        placeholder="e.g. Airport Transfer"
+                                                        style={{
+                                                            background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
+                                                            borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
+                                                            fontSize: '14px', fontWeight: '700', marginBottom: '12px'
+                                                        }}
+                                                    />
+                                                    <datalist id="catList">
+                                                        {dutyTypeSuggestions.map(s => <option key={s} value={s} />)}
+                                                    </datalist>
+                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                        {['Airport PickUp', 'Airport Drop', 'Local Duty', 'Outstation'].map(t => (
+                                                            <button
+                                                                key={t} type="button"
+                                                                onClick={() => setFormData({ ...formData, dutyType: t })}
+                                                                style={{
+                                                                    fontSize: '10px', fontWeight: '800', padding: '8px 14px', borderRadius: '10px', cursor: 'pointer', transition: '0.2s',
+                                                                    background: formData.dutyType === t ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)',
+                                                                    border: `1px solid ${formData.dutyType === t ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255,255,255,0.06)'}`,
+                                                                    color: formData.dutyType === t ? '#10b981' : 'rgba(255,255,255,0.4)'
+                                                                }}
+                                                            >
+                                                                {t}
+                                                            </button>
+                                                        ))}
+                                                    </div>
                                                 </div>
-                                                <datalist id="serviceTypes">
-                                                    {dutyTypeSuggestions.map(s => <option key={s} value={s} />)}
+                                            </div>
+                                            <div className="premium-input-group">
+                                                <label className="premium-label" style={{ fontSize: '11px', color: '#10b981', fontWeight: '900', marginBottom: '12px', display: 'block' }}>PAYOUT AMOUNT (₹) *</label>
+                                                <div style={{
+                                                    position: 'relative', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '20px',
+                                                    border: '1px solid rgba(16, 185, 129, 0.2)', padding: '12px 24px',
+                                                    display: 'flex', alignItems: 'center', gap: '16px', height: '80px',
+                                                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)'
+                                                }}>
+                                                    <span style={{ fontSize: '24px', fontWeight: '950', color: '#10b981' }}>₹</span>
+                                                    <input
+                                                        type="number" className="premium-compact-input"
+                                                        required value={formData.dutyAmount}
+                                                        onChange={e => setFormData({ ...formData, dutyAmount: e.target.value })}
+                                                        placeholder="0.00"
+                                                        style={{
+                                                            background: 'transparent', border: 'none', color: '#10b981',
+                                                            fontSize: '32px', fontWeight: '950', outline: 'none', width: '100%',
+                                                            letterSpacing: '-1px'
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div className="premium-input-group">
+                                            <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', display: 'block' }}>OPERATIONAL DESTINATION</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <MapPin size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#38bdf8', opacity: 0.6, zIndex: 2 }} />
+                                                <input
+                                                    type="text" list="locList" className="premium-compact-input"
+                                                    value={formData.dropLocation}
+                                                    onChange={e => setFormData({ ...formData, dropLocation: e.target.value })}
+                                                    placeholder="Enter destination details..."
+                                                    style={{
+                                                        background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
+                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
+                                                        fontSize: '14px', fontWeight: '700'
+                                                    }}
+                                                />
+                                                <datalist id="locList">
+                                                    {dropLocationSuggestions.map(item => <option key={item} value={item} />)}
                                                 </datalist>
                                             </div>
-                                        </div>
-                                        <div className="premium-input-group">
-                                            <label className="premium-label" style={{ color: '#10b981' }}>Payout Amount (₹) *</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹</span>
-                                                <input type="number" className="premium-compact-input" required value={formData.dutyAmount} onChange={e => setFormData({ ...formData, dutyAmount: e.target.value })} placeholder="0.00" style={{ paddingLeft: '40px', color: '#10b981', height: '52px' }} />
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div className="premium-input-group">
-                                        <label className="premium-label">Operational Destination</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <MapPin size={16} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#38bdf8', opacity: 0.6 }} />
-                                            <input type="text" list="points" className="premium-compact-input" value={formData.dropLocation} onChange={e => setFormData({ ...formData, dropLocation: e.target.value })} placeholder="Destination Details" style={{ paddingLeft: '48px', height: '52px' }} />
-                                            <datalist id="points">
-                                                {dropLocationSuggestions.map(item => <option key={item} value={item} />)}
-                                            </datalist>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* Modal Footer */}
-                            <div style={{ padding: 'clamp(20px, 4vw, 24px) clamp(20px, 5vw, 32px)', background: 'rgba(0,0,0,0.4)', borderTop: '1px solid rgba(255,255,255,0.06)', display: 'flex', gap: '12px' }}>
-                                <button onClick={() => setShowModal(false)} style={{ flex: 1, height: '52px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.02)', color: 'rgba(255,255,255,0.6)', fontWeight: '800', fontSize: '13px' }}>Cancel</button>
-                                <button onClick={handleSubmit} style={{ flex: 2, height: '52px', borderRadius: '16px', border: 'none', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black', fontWeight: '950', fontSize: '14px', textTransform: 'uppercase' }}>
-                                    {editMode ? 'Save' : 'Log'}
+                            <div style={{
+                                padding: '32px 40px', background: 'rgba(0,0,0,0.4)',
+                                borderTop: '1px solid rgba(255,255,255,0.05)',
+                                display: 'flex', gap: '16px', position: 'relative', zIndex: 1
+                            }}>
+                                <button onClick={() => setShowModal(false)} style={{
+                                    flex: 1, height: '60px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.1)',
+                                    background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)',
+                                    fontWeight: '800', fontSize: '14px', cursor: 'pointer', transition: '0.2s'
+                                }}>Dismiss</button>
+                                <button onClick={handleSubmit} style={{
+                                    flex: 2, height: '60px', borderRadius: '18px', border: 'none',
+                                    background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                                    color: 'black', fontWeight: '950', fontSize: '15px', textTransform: 'uppercase',
+                                    letterSpacing: '1px', cursor: 'pointer', boxShadow: '0 10px 20px rgba(217, 119, 6, 0.3)',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px'
+                                }}>
+                                    <Save size={20} />
+                                    {editMode ? 'Synchronize Record' : 'Submit'}
                                 </button>
                             </div>
                         </motion.div>

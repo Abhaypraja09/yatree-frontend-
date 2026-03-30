@@ -67,22 +67,36 @@ const Maintenance = () => {
     const maintenanceTypes = [
         'Regular Service',
         'Engine & Mechanical',
-        'Tyres & Wheels',
+        'Suspension System',
+        'Steering System',
+        'Fuel System',
+        'Exhaust System',
+        'Clutch & Transmission',
         'Brake System',
+        'Tyres & Wheels',
         'Electrical & Battery',
+        'Sensors & Electronics',
         'AC & Cooling',
         'Body & Interior',
+        'Emergency Repairs',
         'Other'
     ];
 
     const subCategories = {
         'Regular Service': ['Engine oil change', 'Oil filter', 'Air filter', 'Fuel filter', 'General servicing'],
-        'Engine & Mechanical': ['Clutch plate', 'Gearbox repair', 'Engine overhaul', 'Timing belt', 'Mountings'],
-        'Tyres & Wheels': ['New tyre purchase', 'Tyre rotation', 'Alignment & Balancing'],
-        'Brake System': ['Brake pads', 'Brake shoe', 'Disc/Drum', 'Brake oil'],
-        'Electrical & Battery': ['Battery replacement', 'Alternator', 'Starter motor', 'Wiring', 'Lights'],
-        'AC & Cooling': ['AC gas refill', 'Compressor repair', 'Radiator service', 'Coolant top-up'],
-        'Body & Interior': ['Denting painting', 'Seat covers', 'Dashboard repair', 'Mirror/Glass', 'Wipers']
+        'Engine & Mechanical': ['Engine overhaul', 'Timing belt', 'Mountings', 'Valve adjustment', 'Gasket replacement'],
+        'Suspension System': ['Shock absorbers', 'Bushings', 'Struts', 'Springs', 'Link rods', 'Control arms'],
+        'Steering System': ['Power steering pump', 'Steering rack', 'Tie rod ends', 'Steering oil', 'Steering belt'],
+        'Fuel System': ['Fuel pump', 'Fuel lines', 'Fuel tank cleaning', 'Injectors'],
+        'Exhaust System': ['Silencer repair', 'Catalytic converter', 'Exhaust manifold', 'Muffler'],
+        'Clutch & Transmission': ['Clutch plate', 'Pressure plate', 'Release bearing', 'Gear oil', 'Gearbox repair', 'CV joints'],
+        'Tyres & Wheels': ['New tyre purchase', 'Tyre rotation', 'Alignment & Balancing', 'Wheel bearings'],
+        'Brake System': ['Brake pads', 'Brake shoe', 'Disc/Drum', 'Brake oil', 'Brake lines'],
+        'Electrical & Battery': ['Battery replacement', 'Alternator', 'Starter motor', 'Wiring', 'Lights', 'Fuses'],
+        'Sensors & Electronics': ['ECU repair', 'Oxygen sensor', 'ABS sensor', 'Parking sensors', 'Wiring harness'],
+        'AC & Cooling': ['AC gas refill', 'Compressor repair', 'Radiator service', 'Coolant top-up', 'Thermostat'],
+        'Body & Interior': ['Denting painting', 'Seat covers', 'Dashboard repair', 'Mirror/Glass', 'Wipers', 'Door locks'],
+        'Emergency Repairs': ['Breakdown towing', 'On-road repair', 'Jump start', 'Accident repair']
     };
 
     useEffect(() => {
@@ -242,7 +256,17 @@ const Maintenance = () => {
         setEditingId(null);
     };
 
-    const NEXT_SERVICE_TYPES = ['Regular Service', 'Tyres & Wheels'];
+    const NEXT_SERVICE_TYPES = [
+        'Regular Service', 
+        'Suspension System', 
+        'Steering System', 
+        'Clutch & Transmission', 
+        'Brake System', 
+        'Tyres & Wheels', 
+        'Engine & Mechanical', 
+        'Fuel System', 
+        'Exhaust System'
+    ];
 
     const handleEdit = (record) => {
         const types = (record.maintenanceType || '').split(', ').filter(Boolean);
@@ -567,7 +591,7 @@ const Maintenance = () => {
                         <Settings size={16} color="#fbbf24" /> Maintenance Categories
                     </h3>
                     {activeCategory !== 'All' && (
-                        <motion.span 
+                        <motion.span
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
                             style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', padding: '2px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251, 191, 36, 0.2)' }}
@@ -576,16 +600,16 @@ const Maintenance = () => {
                         </motion.span>
                     )}
                 </div>
-                
-                <div className="premium-scroll" style={{ 
-                    display: 'flex', 
-                    gap: '6px', 
-                    overflowX: 'auto', 
+
+                <div className="premium-scroll" style={{
+                    display: 'flex',
+                    gap: '6px',
+                    overflowX: 'auto',
                     padding: '6px',
                     background: 'rgba(15, 23, 42, 0.3)',
                     borderRadius: '18px',
                     border: '1px solid rgba(255,255,255,0.05)',
-                    scrollbarWidth: 'none' 
+                    scrollbarWidth: 'none'
                 }}>
                     <button
                         onClick={() => setActiveCategory('All')}
@@ -623,21 +647,21 @@ const Maintenance = () => {
                                 whiteSpace: 'nowrap'
                             }}
                         >
-                            <span style={{ 
-                                fontSize: '11px', 
-                                fontWeight: '800', 
+                            <span style={{
+                                fontSize: '11px',
+                                fontWeight: '800',
                                 color: activeCategory === type ? '#38bdf8' : 'rgba(255,255,255,0.5)',
                                 letterSpacing: '0.3px'
                             }}>
                                 {type}
                             </span>
-                            
+
                             {/* Simple dynamic count bubble */}
                             {records.filter(r => r.maintenanceType === type).length > 0 && (
-                                <span style={{ 
-                                    padding: '2px 7px', 
-                                    borderRadius: '6px', 
-                                    background: activeCategory === type ? '#38bdf8' : 'rgba(255,255,255,0.06)', 
+                                <span style={{
+                                    padding: '2px 7px',
+                                    borderRadius: '6px',
+                                    background: activeCategory === type ? '#38bdf8' : 'rgba(255,255,255,0.06)',
                                     color: activeCategory === type ? 'black' : 'rgba(255,255,255,0.3)',
                                     fontSize: '9px',
                                     fontWeight: '950'
@@ -1124,7 +1148,7 @@ const Maintenance = () => {
                                         {/* Next Service Reminder — only for Regular Service & Tyres & Wheels */}
                                         {(() => {
                                             const selectedTypes = formData.maintenanceType.split(', ').filter(Boolean);
-                                            const showReminderSection = selectedTypes.some(t => ['Regular Service', 'Tyres & Wheels'].includes(t));
+                                            const showReminderSection = selectedTypes.some(t => NEXT_SERVICE_TYPES.includes(t));
                                             if (!showReminderSection) return null;
                                             return (
                                                 <div style={{ padding: '20px', background: showNextService ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.02)', borderRadius: '16px', border: showNextService ? '1px solid rgba(16, 185, 129, 0.1)' : '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s ease' }}>

@@ -511,6 +511,26 @@ const EventManagement = () => {
         XLSX.writeFile(wb, `Event_Duties_${fromDate}_to_${toDate}.xlsx`);
     };
 
+    const exportEventSpecificExcel = (eventData) => {
+        if (!eventData) return;
+        const allDuties = [...eventData.fleetDuties, ...eventData.externalDuties];
+        const data = allDuties.map(v => ({
+            'Date': toISTDateString(new Date(v.date || v.createdAt)),
+            'Vehicle': (v.vehicle?.carNumber || v.vehicleNumber || v.carNumber?.split('#')[0] || 'N/A').toUpperCase(),
+            'Model': v.vehicle?.model || v.model || 'N/A',
+            'Driver': v.driver?.name || v.driverName || 'N/A',
+            'Source': v.vehicleSource || 'EXTERNAL',
+            'Duty Type': v.dutyType || 'General Duty',
+            'Location': v.dropLocation || 'BASE',
+            'Time': v.dutyTime || '-',
+            'Amount': Number(v.dutyAmount || v.dailyWage || 0)
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Event Duty Logs");
+        XLSX.writeFile(wb, `Event_Log_${eventData.event.name.replace(/\s+/g, '_')}_${toISTDateString(new Date(eventData.event.date))}.xlsx`);
+    };
+
     const formatDateDisplay = (dateStr) => formatDateIST(dateStr);
 
     const loadImage = (url) => {
@@ -925,6 +945,18 @@ const EventManagement = () => {
                             }}
                         >
                             <Car size={22} strokeWidth={2.5} /> Add Vehicle
+                        </button>
+                    )}
+                    {statusTab === 'Close' && (
+                        <button onClick={exportExcel}
+                            style={{
+                                height: '60px', padding: '0 24px', borderRadius: '20px', border: '1px solid rgba(56,189,248,0.2)', background: 'rgba(56,189,248,0.05)',
+                                color: '#38bdf8', fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '12px',
+                                cursor: 'pointer', transition: '0.3s', letterSpacing: '0.5px'
+                            }}
+                            title="Export all completed duties to Excel"
+                        >
+                            <Download size={22} strokeWidth={2.5} /> EXCEL
                         </button>
                     )}
                 </div>
@@ -1351,6 +1383,12 @@ const EventManagement = () => {
                                 <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                     {selectedEventDetails.event?.status === 'Closed' && (
                                         <div style={{ display: 'flex', gap: '8px' }}>
+                                            <button
+                                                onClick={() => exportEventSpecificExcel(selectedEventDetails)}
+                                                style={{ height: '42px', padding: '0 18px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', color: '#38bdf8', fontWeight: '800', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
+                                            >
+                                                <FileSpreadsheet size={16} /> EXCEL
+                                            </button>
                                             <button
                                                 onClick={() => handleExportEventPDF('internal')}
                                                 style={{ height: '42px', padding: '0 18px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)', color: '#818cf8', fontWeight: '800', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}

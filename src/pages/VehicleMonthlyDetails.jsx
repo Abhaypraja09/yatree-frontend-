@@ -106,7 +106,7 @@ const VehicleMonthlyDetails = () => {
             'Drivers': v.drivers?.join(', ') || 'Unassigned',
             'Total Distance (KM)': v.totalDistance || 0,
             'Fuel Quantity (L)': (v.fuel?.totalQuantity || 0).toFixed(2),
-            'Average KM/L': v.fuel?.totalQuantity > 0 ? ((v.totalDistance || 0) / v.fuel.totalQuantity).toFixed(2) : '0',
+            'Average KM/L': (v.fuel?.avgMileage || 0).toFixed(2),
             'Fuel Amount (₹)': v.fuel?.totalAmount || 0,
             'Parking (₹)': v.parking?.totalAmount || 0,
             'Wash Amount (₹)': v.services?.wash?.amount || 0,
@@ -124,7 +124,7 @@ const VehicleMonthlyDetails = () => {
         XLSX.writeFile(wb, `Car_Logs_Report_${month}_${year}.xlsx`);
     };
 
-    const SummaryCard = ({ icon: Icon, label, value, color }) => (
+    const SummaryCard = ({ icon: Icon, label, value, color, subValue, displayOverride }) => (
         <div style={{
             background: 'rgba(30, 41, 59, 0.4)',
             border: '1px solid rgba(255,255,255,0.05)',
@@ -141,7 +141,12 @@ const VehicleMonthlyDetails = () => {
             </div>
             <div>
                 <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</div>
-                <div style={{ fontSize: '20px', color: 'white', fontWeight: '900' }}>₹{(value || 0).toLocaleString()}</div>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+                    <div style={{ fontSize: '20px', color: 'white', fontWeight: '900' }}>
+                        {displayOverride ? displayOverride : `₹${(value || 0).toLocaleString()}`}
+                    </div>
+                    {subValue && <div style={{ fontSize: '12px', color: color, fontWeight: '800' }}>{subValue}</div>}
+                </div>
             </div>
         </div>
     );
@@ -149,7 +154,6 @@ const VehicleMonthlyDetails = () => {
     return (
         <div style={{ padding: 'clamp(15px, 4vw, 40px)', background: 'radial-gradient(circle at top right, #1e293b, #0f172a)', minHeight: '100vh' }}>
             <SEO title="Car Logs" description="Track monthly fuel, maintenance and driver history for each vehicle." />
-
             <header style={{ marginBottom: '40px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
@@ -182,12 +186,25 @@ const VehicleMonthlyDetails = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginBottom: '30px' }}>
-                    <SummaryCard icon={Droplets} label="Monthly Fuel" value={totalFuelAmount} color="#3b82f6" />
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '30px' }}>
+                    <SummaryCard 
+                        icon={Droplets} 
+                        label="Monthly Fuel" 
+                        value={totalFuelAmount} 
+                        color="#3b82f6" 
+                        subValue={`${filteredData.reduce((sum, v) => sum + (v.fuel?.totalQuantity || 0), 0).toFixed(1)}L`}
+                    />
+                    <SummaryCard 
+                        icon={Zap} 
+                        label="Avg. Mileage" 
+                        color="#10b981" 
+                        displayOverride={`${(filteredData.filter(v => v.fuel?.avgMileage > 0).reduce((sum, v) => sum + (v.fuel?.avgMileage || 0), 0) / (filteredData.filter(v => v.fuel?.avgMileage > 0).length || 1)).toFixed(2)} KM/L`}
+                        subValue={`Overall efficiency`}
+                    />
                     <SummaryCard icon={User} label="Driver Salaries" value={totalDriverSalary} color="#a855f7" />
                     <SummaryCard icon={MapPin} label="Total Parking" value={totalParkingAmount} color="#ec4899" />
                     <SummaryCard icon={Wrench} label="Repairs & Maint." value={totalMaintAmount} color="#f59e0b" />
-                    <SummaryCard icon={Info} label="Services & Taxes" value={totalServiceAmount + totalFastagAmount + totalBorderTaxAmount} color="#10b981" />
+                    
                     <div style={{
                         background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
                         borderRadius: '20px',
@@ -195,8 +212,6 @@ const VehicleMonthlyDetails = () => {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
-                        flex: '1',
-                        minWidth: '200px',
                         boxShadow: '0 15px 30px rgba(14, 165, 233, 0.2)'
                     }}>
                         <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Monthly Expense</div>
@@ -204,56 +219,29 @@ const VehicleMonthlyDetails = () => {
                     </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginBottom: '30px' }}>
+                <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', marginBottom: '10px', alignItems: 'center' }}>
                     <div style={{ position: 'relative', flex: '1', minWidth: '300px' }}>
                         <Search style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
                         <input
                             type="text"
-                            placeholder="Search by vehicle number or model..."
+                            placeholder="Search vehicle number or model..."
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             style={{
                                 width: '100%',
                                 padding: '14px 15px 14px 45px',
-                                background: 'rgba(255,255,255,0.05)',
+                                background: 'rgba(30,30,40,0.4)',
                                 border: '1px solid rgba(255,255,255,0.1)',
                                 borderRadius: '16px',
                                 color: 'white',
                                 fontSize: '14px',
                                 fontWeight: '600',
-                                outline: 'none',
-                                transition: 'all 0.3s'
+                                outline: 'none'
                             }}
                         />
                     </div>
 
-                    {/* <div style={{ position: 'relative', width: '200px' }}>
-                        <User style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
-                        <select
-                            value={driverFilter}
-                            onChange={(e) => setDriverFilter(e.target.value)}
-                            style={{
-                                width: '100%',
-                                padding: '14px 15px 14px 45px',
-                                background: 'rgba(255,255,255,0.05)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: '16px',
-                                color: 'white',
-                                fontSize: '14px',
-                                fontWeight: '600',
-                                outline: 'none',
-                                appearance: 'none',
-                                cursor: 'pointer'
-                            }}
-                        >
-                            <option value="All" style={{ background: '#1e293b' }}>All Drivers</option>
-                            {driverList.map(name => (
-                                <option key={name} value={name} style={{ background: '#1e293b' }}>{name}</option>
-                            ))}
-                        </select>
-                    </div> */}
-
-                    <div style={{ position: 'relative', width: '200px' }}>
+                    <div style={{ position: 'relative', width: '220px' }}>
                         <Car style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
                         <select
                             value={vehicleFilter}
@@ -261,7 +249,7 @@ const VehicleMonthlyDetails = () => {
                             style={{
                                 width: '100%',
                                 padding: '14px 15px 14px 45px',
-                                background: 'rgba(255,255,255,0.05)',
+                                background: 'rgba(30,30,40,0.4)',
                                 border: '1px solid rgba(255,255,255,0.1)',
                                 borderRadius: '16px',
                                 color: 'white',
@@ -297,9 +285,9 @@ const VehicleMonthlyDetails = () => {
                         </thead>
                         <tbody>
                             {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px', color: 'white', fontWeight: '800' }}>Aggregating monthly reports...</td></tr>
+                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '100px', color: 'white', fontWeight: '800' }}>Aggregating monthly reports...</td></tr>
                             ) : filteredData.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>No records found for this period.</td></tr>
+                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '100px', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>No records found for this period.</td></tr>
                             ) : (
                                 filteredData.map((v, idx) => (
                                     <motion.tr
@@ -307,8 +295,9 @@ const VehicleMonthlyDetails = () => {
                                         initial={{ opacity: 0, x: -10 }}
                                         animate={{ opacity: 1, x: 0 }}
                                         transition={{ delay: idx * 0.03 }}
-                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
+                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }}
                                         whileHover={{ background: 'rgba(255,255,255,0.02)' }}
+                                        onClick={() => setSelectedVehicle(v)}
                                     >
                                         <td style={{ padding: '20px 25px' }}>
                                             <div style={{ color: 'white', fontWeight: '900', fontSize: '16px', letterSpacing: '-0.5px' }}>{v.carNumber}</div>
@@ -318,17 +307,18 @@ const VehicleMonthlyDetails = () => {
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <div style={{ color: '#a855f7', fontWeight: '900', fontSize: '15px' }}>₹{(v.driverSalary || 0).toLocaleString()}</div>
                                             </div>
-                                            <div style={{ marginTop: '8px' }}>
+                                            <div style={{ marginTop: '10px' }}>
                                                 {v.drivers?.length > 0 ? (
                                                     <select
                                                         value=""
                                                         onChange={() => { }}
+                                                        onClick={(e) => e.stopPropagation()}
                                                         style={{
                                                             width: '100%',
-                                                            maxWidth: '220px',
+                                                            maxWidth: '180px',
                                                             padding: '6px 10px',
-                                                            background: 'rgba(168, 85, 247, 0.1)',
-                                                            border: '1px solid rgba(168, 85, 247, 0.25)',
+                                                            background: 'rgba(168, 85, 247, 0.08)',
+                                                            border: '1px solid rgba(168, 85, 247, 0.2)',
                                                             borderRadius: '8px',
                                                             color: '#e9d5ff',
                                                             fontSize: '11px',
@@ -337,7 +327,7 @@ const VehicleMonthlyDetails = () => {
                                                             cursor: 'pointer',
                                                         }}
                                                     >
-                                                        <option value="" hidden>View {v.drivers.length} Driver{v.drivers.length > 1 ? 's' : ''}</option>
+                                                        <option value="" hidden>{v.drivers.length} Driver{v.drivers.length > 1 ? 's' : ''}</option>
                                                         {v.driverBreakdown && v.driverBreakdown.length > 0 ? (
                                                             v.driverBreakdown.map((db, i) => (
                                                                 <option key={i} value={db.name} style={{ background: '#0f172a', color: 'white' }}>
@@ -356,19 +346,38 @@ const VehicleMonthlyDetails = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{(v.fuel?.totalAmount || 0).toLocaleString()}</div>
-                                                <div style={{ color: '#10b981', fontSize: '12px', fontWeight: '800' }}>{(v.fuel?.totalQuantity || 0).toFixed(1)}L</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>₹{(v.fuel?.totalAmount || 0).toLocaleString()}</div>
+                                                <div style={{ color: '#10b981', fontSize: '11px', fontWeight: '900', background: 'rgba(16,185,129,0.12)', padding: '2px 6px', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.1)' }}>{(v.fuel?.totalQuantity || 0).toFixed(1)} L</div>
                                             </div>
-                                            <div style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: '900', marginTop: '4px' }}>
-                                                {v.fuel?.totalQuantity > 0 ? `${((v.totalDistance || 0) / v.fuel.totalQuantity).toFixed(2)} KM/L` : '0 KM/L'}
+                                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(60px, auto) minmax(60px, auto)', gap: '10px', marginBottom: '10px' }}>
+                                                <div>
+                                                    <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '2px' }}>Avg</div>
+                                                    <div style={{ color: '#0ea5e9', fontWeight: '950', fontSize: '12px' }}>{(v.fuel?.avgMileage || 0).toFixed(2)}<span style={{fontSize: '9px', opacity: 0.6}}> KM/L</span></div>
+                                                </div>
+                                                <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '10px' }}>
+                                                    <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '2px' }}>Run</div>
+                                                    <div style={{ color: 'white', opacity: 0.9, fontWeight: '950', fontSize: '12px' }}>{(v.totalDistance || 0).toLocaleString()}<span style={{fontSize: '9px', opacity: 0.6}}> KM</span></div>
+                                                </div>
+                                            </div>
+                                            <div>
+                                                {v.fuel?.records?.length > 0 ? (
+                                                    <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '140px', padding: '6px 10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', color: '#10b981', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
+                                                        <option value="" hidden>{v.fuel.records.length} Fills</option>
+                                                        {v.fuel.records.map((f, i) => (
+                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>
+                                                                {formatDateIST(f.date)} - {f.quantity.toFixed(1)}L - {f.mileage > 0 ? `${f.mileage.toFixed(2)} KML` : 'Entry'}
+                                                            </option>
+                                                        ))}
+                                                    </select>
+                                                ) : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px', fontWeight: '700' }}>No Records</span>}
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
                                             <div style={{ color: '#ec4899', fontWeight: '900', fontSize: '15px' }}>₹{(v.parking?.totalAmount || 0).toLocaleString()}</div>
                                             <div style={{ marginTop: '8px' }}>
                                                 {v.parking?.records?.length > 0 ? (
-                                                    <select value="" onChange={() => { }} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(236, 72, 153, 0.1)', border: '1px solid rgba(236, 72, 153, 0.25)', borderRadius: '8px', color: '#f9a8d4', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
+                                                    <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(236, 72, 153, 0.1)', border: '1px solid rgba(236, 72, 153, 0.25)', borderRadius: '8px', color: '#f9a8d4', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
                                                         <option value="" hidden>View {v.parking.records.length} Logs</option>
                                                         {v.parking.records.map((p, i) => {
                                                             const displayLocation = (p.location && p.location !== 'Not Specified') ? p.location : (p.remark || 'Parking Charge');
@@ -386,7 +395,7 @@ const VehicleMonthlyDetails = () => {
                                             <div style={{ color: '#f59e0b', fontWeight: '900', fontSize: '15px' }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</div>
                                             <div style={{ marginTop: '8px' }}>
                                                 {v.maintenance?.records?.length > 0 ? (
-                                                    <select value="" onChange={() => { }} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '8px', color: '#fcd34d', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
+                                                    <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '8px', color: '#fcd34d', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
                                                         <option value="" hidden>View {v.maintenance.records.length} Jobs</option>
                                                         {v.maintenance.records.map((m, i) => (
                                                             <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>{formatDateIST(m.date)} - {m.category || 'Repair'} - ₹{m.amount.toLocaleString()}</option>
@@ -397,9 +406,9 @@ const VehicleMonthlyDetails = () => {
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
                                             <div style={{ color: '#818cf8', fontWeight: '900', fontSize: '15px' }}>₹{((v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0) + (v.fastag?.totalAmount || 0) + (v.borderTax?.totalAmount || 0)).toLocaleString()}</div>
-                                            <div style={{ marginTop: '8px' }}>
-                                                <select value="" onChange={() => { }} style={{ width: '100%', maxWidth: '200px', padding: '6px 10px', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.25)', borderRadius: '8px', color: '#818cf8', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
-                                                    <option value="" hidden>View Breakdown</option>
+                                            <div style={{ marginTop: '10px' }}>
+                                                <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: '8px', color: '#818cf8', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
+                                                    <option value="" hidden>Breakdown</option>
                                                     <option value="wash" style={{ background: '#0f172a', color: 'white' }}>Wash/Punc: ₹{((v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0)).toLocaleString()}</option>
                                                     <option value="fastag" style={{ background: '#0f172a', color: 'white' }}>Fastag: ₹{(v.fastag?.totalAmount || 0).toLocaleString()}</option>
                                                     <option value="tax" style={{ background: '#0f172a', color: 'white' }}>Border Tax: ₹{(v.borderTax?.totalAmount || 0).toLocaleString()}</option>
@@ -436,14 +445,19 @@ const VehicleMonthlyDetails = () => {
                             </div>
 
                             <div style={{ padding: '30px' }}>
-                                <div style={{ marginBottom: '40px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '20px' }}>
+                                <div style={{ marginBottom: '40px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '20px' }}>
                                     <div style={{ padding: '20px', background: 'rgba(168, 85, 247, 0.05)', borderRadius: '20px', border: '1px solid rgba(168, 85, 247, 0.1)' }}>
                                         <div style={{ fontSize: '10px', color: '#a855f7', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px' }}>Total Driver Wages</div>
                                         <div style={{ fontSize: '24px', color: 'white', fontWeight: '900' }}>₹{(selectedVehicle.driverSalary || 0).toLocaleString()}</div>
                                         <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>{selectedVehicle.drivers.length} drivers operated</div>
                                     </div>
                                     <div style={{ padding: '20px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '20px', border: '1px solid rgba(59, 130, 246, 0.1)' }}>
-                                        <div style={{ fontSize: '10px', color: '#60a5fa', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px' }}>Repair & Maintenance</div>
+                                        <div style={{ fontSize: '10px', color: '#60a5fa', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px' }}>Fuel & Mileage</div>
+                                        <div style={{ fontSize: '24px', color: 'white', fontWeight: '900' }}>₹{(selectedVehicle.fuel?.totalAmount || 0).toLocaleString()}</div>
+                                        <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '800', marginTop: '4px' }}>{(selectedVehicle.fuel?.totalQuantity || 0).toFixed(1)}L • {(selectedVehicle.fuel?.avgMileage || 0).toFixed(2)} KM/L</div>
+                                    </div>
+                                    <div style={{ padding: '20px', background: 'rgba(236, 72, 153, 0.05)', borderRadius: '20px', border: '1px solid rgba(236, 72, 153, 0.1)' }}>
+                                        <div style={{ fontSize: '10px', color: '#ec4899', fontWeight: '900', textTransform: 'uppercase', marginBottom: '8px' }}>Repair & Maint.</div>
                                         <div style={{ fontSize: '24px', color: 'white', fontWeight: '900' }}>₹{selectedVehicle.maintenance.totalAmount.toLocaleString()}</div>
                                         <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginTop: '4px' }}>{selectedVehicle.maintenance.records.length} jobs logged</div>
                                     </div>

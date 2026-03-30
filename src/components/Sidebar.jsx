@@ -269,6 +269,13 @@ const Sidebar = ({ isOpen, onClose }) => {
                     </NavGroup>
                 )}
 
+                {(user.role === 'Admin' || user.permissions?.fleetOperations) && (
+                    <NavGroup title="Fleet Operations" labelKey="fleet_operations" icon={Settings} isOpen={openGroups.vehicles} onToggle={() => toggleGroup('vehicles')}>
+                        <NavItem item={{ path: '/admin/fuel', label: 'Fuel', labelKey: 'fuel' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility', labelKey: 'car_utility' }} onClick={onClose} isSubItem />
+                    </NavGroup>
+                )}
+
                 {(user.role === 'Admin' || user.permissions?.buySell) && (
                     <NavGroup title="Buy/Sell" labelKey="buy_sell" icon={Briefcase} isOpen={openGroups.buysell} onToggle={() => toggleGroup('buysell')}>
                         <NavItem item={{ path: '/admin/outside-cars', label: 'Outside Cars', labelKey: 'outside_cars' }} onClick={onClose} isSubItem />
@@ -283,14 +290,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                         <NavItem item={{ path: '/admin/vehicles', label: 'Vehicles MGT', labelKey: 'vehicles_mgt' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/accident-logs', label: 'Active Logs', labelKey: 'active_logs' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/warranties', label: 'Parts Warranty', labelKey: 'parts_warranty' }} onClick={onClose} isSubItem />
-                    </NavGroup>
-                )}
-
-                {(user.role === 'Admin' || user.permissions?.fleetOperations) && (
-                    <NavGroup title="Fleet Operations" labelKey="fleet_operations" icon={Settings} isOpen={openGroups.vehicles} onToggle={() => toggleGroup('vehicles')}>
-                        <NavItem item={{ path: '/admin/fuel', label: 'Fuel', labelKey: 'fuel' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility', labelKey: 'car_utility' }} onClick={onClose} isSubItem />
-
                     </NavGroup>
                 )}
 

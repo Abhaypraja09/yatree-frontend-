@@ -315,7 +315,7 @@ const AdminDashboard = () => {
                             {/* Drivers Service Related */}
                             {(user?.role === 'Admin' || user?.permissions?.driversService) && (
                                 <>
-                                    <StatCard icon={Users} label={t('total_driver_salary')} value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/driver-salaries')} trend="MONTHLY" />
+                                    <StatCard icon={Users} label={t('total_driver_salary')} value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
                                     <StatCard icon={CreditCard} label={t('total_driver_advance')} value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
                                     <StatCard 
                                          icon={Fuel} 
@@ -324,7 +324,6 @@ const AdminDashboard = () => {
                                          color="#0ea5e9" 
                                          loading={loading} 
                                          onClick={() => navigate('/admin/fuel')} 
-                                         subValue={`${stats.monthlyFuelQuantity?.toFixed(1) || 0}L • ${stats.monthlyFuelQuantity > 0 ? ((stats.monthlyTotalDistance || 0) / stats.monthlyFuelQuantity).toFixed(2) : 0} KM/L Avg`}
                                      />
                                     <StatCard icon={Users} label={t('freelancers_monthly')} value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />
                                     <StatCard icon={CreditCard} label={t('parking_monthly')} value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
@@ -341,7 +340,6 @@ const AdminDashboard = () => {
                                         color="#8b5cf6"
                                         loading={loading}
                                         onClick={() => navigate('/admin/outside-cars')}
-                                        trend="TOTAL"
                                     />
                                     <StatCard
                                         icon={Calendar}
@@ -350,7 +348,6 @@ const AdminDashboard = () => {
                                         color="#ec4899"
                                         loading={loading}
                                         onClick={() => navigate('/admin/event-management')}
-                                        trend="TOTAL"
                                     />
                                 </>
                             )}
@@ -368,7 +365,7 @@ const AdminDashboard = () => {
                             {/* Fleet Operations Related */}
                             {(user?.role === 'Admin' || user?.permissions?.fleetOperations) && (
                                 <>
-                                    <StatCard icon={IndianRupee} label={t('fastag_recharge_monthly')} value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/car-utility')} trend="MONTHLY" subValue={`Today: ₹${(stats.dailyFastagTotal || 0).toLocaleString()}`} />
+                                    <StatCard icon={IndianRupee} label={t('fastag_recharge_monthly')} value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/car-utility')} />
                                     <StatCard icon={Droplets} label={t('driver_services_monthly')} value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/car-utility')} />
                                 </>
                             )}

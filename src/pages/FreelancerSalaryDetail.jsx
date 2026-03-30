@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import axios from '../api/axios';
-import { ArrowLeft, Car, ParkingSquare, Wallet, TrendingDown, IndianRupee, Plus, X, User, Edit2, Trash2, Award } from 'lucide-react';
+import { ArrowLeft, Car, ParkingSquare, Wallet, TrendingDown, IndianRupee, Plus, X, User, Edit2, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 import { useCompany } from '../context/CompanyContext';
@@ -189,8 +189,7 @@ const FreelancerSalaryDetail = () => {
                         {[
                             { icon: Car, color: '#38bdf8', borderColor: 'rgba(14,165,233,0.2)', bg: 'rgba(14,165,233,0.08)', label: 'WAGES', value: `₹${totalWages.toLocaleString()}`, sub: `${summary.workingDays || 0} duty days` },
                             { icon: ParkingSquare, color: '#f59e0b', borderColor: 'rgba(245,158,11,0.2)', bg: 'rgba(245,158,11,0.08)', label: 'PARKING', value: `₹${parkingTotal.toLocaleString()}`, sub: `${det?.parkingEntries?.length || 0} entries` },
-                            { icon: Award, color: '#a855f7', borderColor: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.08)', label: 'BONUSES', value: `₹${(grandTotal - totalWages - parkingTotal).toLocaleString()}`, sub: 'Extra & Manual Bonuses' },
-                            { icon: Wallet, color: '#10b981', borderColor: 'rgba(16,185,129,0.2)', bg: 'rgba(16,185,129,0.08)', label: 'GROSS EARNED', value: `₹${grandTotal.toLocaleString()}`, sub: 'Wages + Parking + Bonus' },
+                            { icon: Wallet, color: '#10b981', borderColor: 'rgba(16,185,129,0.2)', bg: 'rgba(16,185,129,0.08)', label: 'GROSS EARNED', value: `₹${grandTotal.toLocaleString()}`, sub: 'Wages + Parking' },
                             { icon: TrendingDown, color: '#f43f5e', borderColor: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.08)', label: 'PAID / ADVANCE', value: `₹${totalAdvances.toLocaleString()}`, sub: `${det?.advances?.length || 0} payments` },
                         ].map(({ icon: Icon, color, borderColor, bg, label, value, sub }) => (
                             <div key={label} style={{ background: bg, border: `1px solid ${borderColor}`, borderRadius: '20px', padding: '20px' }}>
@@ -232,8 +231,8 @@ const FreelancerSalaryDetail = () => {
                         <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px', minWidth: '700px' }}>
                             <thead>
                                 <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                    {['Date', 'WAGES', 'Parking', 'Bonuses', 'Total'].map(h => (
-                                        <th key={h} style={{ padding: '14px 18px', textAlign: h === 'Date' ? 'left' : 'right', color: h === 'Total' ? '#10b981' : 'rgba(255,255,255,0.35)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.8px', width: (h === 'Bonuses' || h === 'Total' || h === 'Parking') ? '100px' : 'auto' }}>{h}</th>
+                                    {['Date', 'WAGES', 'Parking', 'Total'].map(h => (
+                                        <th key={h} style={{ padding: '14px 18px', textAlign: h === 'Date' ? 'left' : 'right', color: h === 'Total' ? '#10b981' : 'rgba(255,255,255,0.35)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.8px', width: (h === 'Total' || h === 'Parking') ? '140px' : 'auto' }}>{h}</th>
                                     ))}
                                 </tr>
                             </thead>
@@ -247,7 +246,6 @@ const FreelancerSalaryDetail = () => {
                                         </td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.wage || 0}</td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{day.parking || 0}</td>
-                                        <td style={{ padding: '14px 18px', textAlign: 'right', color: '#a855f7', fontWeight: '800' }}>₹{(day.sameDayReturn + day.nightStay + day.otherBonuses) || 0}</td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: '#10b981', fontWeight: '800' }}>₹{(day.total || 0).toLocaleString()}</td>
                                     </tr>
                                 ))}
@@ -273,7 +271,7 @@ const FreelancerSalaryDetail = () => {
                                 {/* Grand Total Row */}
                                 {det?.breakdown?.length > 0 && (
                                     <tr style={{ background: 'rgba(16,185,129,0.05)', borderTop: '2px solid rgba(16,185,129,0.15)' }}>
-                                        <td colSpan="4" style={{ padding: '16px 18px', color: '#10b981', fontWeight: '900', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Grand Total (Wages + Parking + Bonuses)</td>
+                                        <td colSpan="3" style={{ padding: '16px 18px', color: '#10b981', fontWeight: '900', fontSize: '13px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Grand Total (Wages + Parking)</td>
                                         <td style={{ padding: '16px 18px', textAlign: 'right', color: '#10b981', fontWeight: '900', fontSize: '16px' }}>₹{grandTotal.toLocaleString()}</td>
                                     </tr>
                                 )}
