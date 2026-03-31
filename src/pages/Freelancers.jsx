@@ -205,8 +205,8 @@ const Freelancers = () => {
     const [expandedLedger, setExpandedLedger] = useState(null);
 
     // Form States
-    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '', nightStayBonus: '0', sameDayReturnBonus: '0' });
-    const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '', nightStayBonus: '0', sameDayReturnBonus: '0' });
+    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '' });
+    const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '' });
     const [punchInData, setPunchInData] = useState({
         vehicleId: '',
         km: '',
@@ -1021,7 +1021,9 @@ const Freelancers = () => {
 
     const totalLogisticsAmount = filteredAttendance.reduce((sum, a) => {
         const rowTotal = (Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) +
-            (Number(a.punchOut?.tollParkingAmount) || 0);
+            (Number(a.punchOut?.tollParkingAmount) || 0) +
+            (Number(a.punchOut?.allowanceTA) || 0) + 
+            (Number(a.punchOut?.nightStayAmount) || 0);
         return sum + rowTotal;
     }, 0);
 
@@ -1040,8 +1042,10 @@ const Freelancers = () => {
         acc[key].wage = Math.max(acc[key].wage, wage);
 
         const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
+        const ta = Number(a.punchOut?.allowanceTA) || 0;
+        const nightStay = Number(a.punchOut?.nightStayAmount) || 0;
 
-        acc[key].parking += parking;
+        acc[key].parking += parking + ta + nightStay;
 
         return acc;
     }, {});
@@ -1061,7 +1065,9 @@ const Freelancers = () => {
                 if (!acc[date]) acc[date] = { wage: 0, extra: 0 };
                 if (acc[date].wage === 0) acc[date].wage = Number(a.dailyWage) || 0;
                 const parking = a.punchOut?.parkingPaidBy !== 'Office' ? (Number(a.punchOut?.tollParkingAmount) || 0) : 0;
-                acc[date].extra += parking;
+                const ta = Number(a.punchOut?.allowanceTA) || 0;
+                const nightStay = Number(a.punchOut?.nightStayAmount) || 0;
+                acc[date].extra += parking + ta + nightStay;
                 return acc;
             }, {});
             const totalEarned = Object.values(dEarnedByDate).reduce((sum, d) => sum + d.wage + d.extra, 0);
@@ -1113,6 +1119,8 @@ const Freelancers = () => {
             'Salary': a.dailyWage || 0,
             'Fuel': a.fuel?.amount || 0,
             'Parking/Toll': a.punchOut?.tollParkingAmount || 0,
+            'T/A': a.punchOut?.allowanceTA || 0,
+            'Night Stay': a.punchOut?.nightStayAmount || 0,
             'Remarks': a.punchOut?.remarks || ''
         }));
 
@@ -1405,7 +1413,6 @@ const Freelancers = () => {
                                             <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                                 <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Freelancer</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Current Status</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Daily Wage</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Duties</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                                             </tr>
@@ -1476,10 +1483,7 @@ const Freelancers = () => {
                                                                     </div>
                                                                 )}
                                                             </td>
-                                                            <td style={{ padding: '15px 25px' }}>
-                                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{d.dailyWage || 0}</div>
-                                                                <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '900', marginTop: '2px' }}>BASE RATE</div>
-                                                            </td>
+
                                                             <td style={{ padding: '15px 25px', textAlign: 'center' }}>
                                                                 <div style={{ display: 'inline-block', background: 'rgba(99, 102, 241, 0.1)', padding: '4px 12px', borderRadius: '100px', border: '1px solid rgba(99,102,241,0.1)' }}>
                                                                     <span style={{ color: '#818cf8', fontWeight: '900', fontSize: '13px' }}>{dutyCount}</span>
@@ -1744,7 +1748,7 @@ const Freelancers = () => {
                                                             </td>
                                                             <td style={{ padding: '15px 25px', textAlign: 'right' }}>
                                                                 <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900', marginBottom: '4px' }}>
-                                                                    ₹{(Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) + (Number(a.punchOut?.tollParkingAmount) || 0)}
+                                                                    ₹{(Number(a.dailyWage) || Number(a.driver?.dailyWage) || 0) + (Number(a.punchOut?.tollParkingAmount) || 0) + (Number(a.punchOut?.allowanceTA) || 0) + (Number(a.punchOut?.nightStayAmount) || 0)}
                                                                 </div>
                                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
                                                                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: '700' }}>
@@ -1757,6 +1761,16 @@ const Freelancers = () => {
                                                                             textDecoration: a.punchOut?.parkingPaidBy === 'Office' ? 'line-through' : 'none'
                                                                         }}>
                                                                             P: ₹{a.punchOut.tollParkingAmount}{a.punchOut?.parkingPaidBy === 'Office' ? ' (O)' : ' (S)'}
+                                                                        </span>
+                                                                    )}
+                                                                    {Number(a.punchOut?.allowanceTA) > 0 && (
+                                                                        <span style={{ color: '#fbbf24', fontSize: '9px', fontWeight: '900' }}>
+                                                                            T/A: ₹{a.punchOut.allowanceTA}
+                                                                        </span>
+                                                                    )}
+                                                                    {Number(a.punchOut?.nightStayAmount) > 0 && (
+                                                                        <span style={{ color: '#ca8a04', fontSize: '9px', fontWeight: '900' }}>
+                                                                            NS: ₹{a.punchOut.nightStayAmount}
                                                                         </span>
                                                                     )}
                                                                 </div>
@@ -1825,11 +1839,7 @@ const Freelancers = () => {
                                     <Field label="Mobile Number *" value={formData.mobile} onChange={v => setFormData({ ...formData, mobile: v })} required />
                                     <Field label="License Number" value={formData.licenseNumber} onChange={v => setFormData({ ...formData, licenseNumber: v })} />
                                 </div>
-                                <div style={{ display: 'none' }}>
-                                    <Field label="Daily Wage (₹)" type="number" value={formData.dailyWage} onChange={v => setFormData({ ...formData, dailyWage: v })} />
-                                    <Field label="O.T. / Night (₹)" type="number" value={formData.nightStayBonus} onChange={v => setFormData({ ...formData, nightStayBonus: v })} />
-                                    <Field label="Same Day Return (₹)" type="number" value={formData.sameDayReturnBonus} onChange={v => setFormData({ ...formData, sameDayReturnBonus: v })} />
-                                </div>
+
                                 <SubmitButton disabled={submitting} text="Register Freelancer" message={message} />
                             </form>
                         </Modal>
@@ -1846,11 +1856,7 @@ const Freelancers = () => {
                                     <Field label="Mobile Number *" value={editForm.mobile} onChange={v => setEditForm({ ...editForm, mobile: v })} required />
                                     <Field label="License Number" value={editForm.licenseNumber} onChange={v => setEditForm({ ...editForm, licenseNumber: v })} />
                                 </div>
-                                <div style={{ display: 'none' }}>
-                                    <Field label="Daily Wage (₹)" type="number" value={editForm.dailyWage} onChange={v => setEditForm({ ...editForm, dailyWage: v })} />
-                                    <Field label="O.T. / Night (₹)" type="number" value={editForm.nightStayBonus} onChange={v => setEditForm({ ...editForm, nightStayBonus: v })} />
-                                    <Field label="Same Day Return (₹)" type="number" value={editForm.sameDayReturnBonus} onChange={v => setEditForm({ ...editForm, sameDayReturnBonus: v })} />
-                                </div>
+
                                 <SubmitButton disabled={submitting} text="Update Freelancer" message={message} />
                             </form>
                         </Modal>
@@ -2027,7 +2033,11 @@ const Freelancers = () => {
                                         }} />
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                        <Field label="Daily Wage (Salary) *" type="text" inputMode="decimal" value={manualData.dailyWage} onChange={v => {
+                                            const cleaned = v.replace(/[^0-9.]/g, '');
+                                            setManualData({ ...manualData, dailyWage: cleaned });
+                                        }} required />
                                         <Field label="T/A (₹)" type="text" inputMode="decimal" value={manualData.allowanceTA} onChange={v => {
                                             const cleaned = v.replace(/[^0-9.]/g, '');
                                             setManualData({ ...manualData, allowanceTA: cleaned });
@@ -2062,50 +2072,45 @@ const Freelancers = () => {
                 </AnimatePresence>
 
                 {/* Punch Out Modal */}
-                {showPunchOutModal && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(5,8,15,0.92)', zIndex: 10000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', backdropFilter: 'blur(16px)' }}>
-                        <div className="premium-glass" style={{ width: '100%', maxWidth: '520px', borderRadius: '28px', overflow: 'hidden', maxHeight: '92vh', overflowY: 'auto' }}>
-                            {/* Header Banner */}
-                            <div style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.2) 0%, rgba(239,68,68,0.05) 100%)', padding: '24px 28px', borderBottom: '1px solid rgba(244,63,94,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                    <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <LogOut size={20} color="#f43f5e" />
+                {showPunchOutModal && (() => {
+                    const activeRecord = attendance.find(a => a.driver?._id === selectedDriver?._id && a.status === 'incomplete');
+                    return (
+                        <div style={{ position: 'fixed', inset: 0, background: 'rgba(5,8,15,0.92)', zIndex: 10000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', backdropFilter: 'blur(16px)' }}>
+                            <div className="premium-glass" style={{ width: '100%', maxWidth: '520px', borderRadius: '28px', overflow: 'hidden', maxHeight: '92vh', overflowY: 'auto' }}>
+                                {/* Header Banner */}
+                                <div style={{ background: 'linear-gradient(135deg, rgba(244,63,94,0.2) 0%, rgba(239,68,68,0.05) 100%)', padding: '24px 28px', borderBottom: '1px solid rgba(244,63,94,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+                                        <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(244,63,94,0.12)', border: '1px solid rgba(244,63,94,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <LogOut size={20} color="#f43f5e" />
+                                        </div>
+                                        <div>
+                                            <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Duty Completion</div>
+                                            <div style={{ color: 'white', fontSize: '18px', fontWeight: '900', marginTop: '1px' }}>{selectedDriver?.name?.split(' (F)')[0]}</div>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <div style={{ color: 'rgba(255,255,255,0.45)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Duty Completion</div>
-                                        <div style={{ color: 'white', fontSize: '18px', fontWeight: '900', marginTop: '1px' }}>{selectedDriver?.name?.split(' (F)')[0]}</div>
+                                    <button onClick={() => setShowPunchOutModal(false)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                        <X size={18} />
+                                    </button>
+                                </div>
+
+                                <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px 28px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <div style={{ display: 'flex', gap: '20px' }}>
+                                        <div>
+                                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', display: 'block' }}>Initial KM</span>
+                                            <span style={{ color: '#818cf8', fontWeight: '800', fontSize: '14px' }}>{activeRecord?.startKm || 0}</span>
+                                        </div>
+                                        <div>
+                                            <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', display: 'block' }}>Vehicle</span>
+                                            <span style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>
+                                                {activeRecord?.vehicle?.carNumber || activeRecord?.vehicleNumber || selectedDriver?.assignedVehicle?.carNumber || 'N/A'}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                                <button onClick={() => setShowPunchOutModal(false)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <X size={18} />
-                                </button>
-                            </div>
-
-                            {(() => {
-                                const activeRecord = attendance.find(a => a.driver?._id === selectedDriver?._id && a.status === 'incomplete');
-                                return (
-                                    <>
-                                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '15px 28px', display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                            <div style={{ display: 'flex', gap: '20px' }}>
-                                                <div>
-                                                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', display: 'block' }}>Initial KM</span>
-                                                    <span style={{ color: '#818cf8', fontWeight: '800', fontSize: '14px' }}>{activeRecord?.startKm || 0}</span>
-                                                </div>
-                                                <div>
-                                                    <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', display: 'block' }}>Vehicle</span>
-                                                    <span style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>
-                                                        {activeRecord?.vehicle?.carNumber || activeRecord?.vehicleNumber || selectedDriver?.assignedVehicle?.carNumber || 'N/A'}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div style={{ background: 'rgba(16,185,129,0.08)', padding: '12px 28px', borderBottom: '1px solid rgba(16,185,129,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                            <span style={{ color: 'rgba(16,185,129,0.8)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Current Duty Total</span>
-                                            <span style={{ color: '#10b981', fontSize: '20px', fontWeight: '950' }}>₹{((Number(activeRecord?.dailyWage) || 0) + (punchOutData.parkings?.reduce((s, p) => s + (Number(p.amount) || 0), 0) || 0) + (Number(punchOutData.allowanceTA) || 0) + (Number(punchOutData.nightStayAmount) || 0)).toLocaleString()}</span>
-                                        </div>
-                                    </>
-                                );
-                            })()}
+                                <div style={{ background: 'rgba(16,185,129,0.08)', padding: '12px 28px', borderBottom: '1px solid rgba(16,185,129,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <span style={{ color: 'rgba(16,185,129,0.8)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Current Duty Total</span>
+                                    <span style={{ color: '#10b981', fontSize: '20px', fontWeight: '950' }}>₹{((Number(activeRecord?.dailyWage) || 0) + (punchOutData.parkings?.reduce((s, p) => s + (Number(p.amount) || 0), 0) || 0) + (Number(punchOutData.allowanceTA) || 0) + (Number(punchOutData.nightStayAmount) || 0)).toLocaleString()}</span>
+                                </div>
 
                             {/* Form */}
                             <form onSubmit={handlePunchOut} style={{ padding: '24px 28px', display: 'grid', gap: '20px' }}>
@@ -2198,7 +2203,13 @@ const Freelancers = () => {
                                     }} />
                                 </div>
 
-                                <Field label="Duty Remarks/Notes" value={punchOutData.review} onChange={v => setPunchOutData({ ...punchOutData, review: v })} />
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                                    <Field label="Daily Wage Override" type="text" inputMode="decimal" value={punchOutData.dailyWage} onChange={v => {
+                                        const cleaned = v.replace(/[^0-9.]/g, '');
+                                        setPunchOutData({ ...punchOutData, dailyWage: cleaned });
+                                    }} placeholder={activeRecord?.dailyWage || '0'} />
+                                    <Field label="Duty Remarks/Notes" value={punchOutData.review} onChange={v => setPunchOutData({ ...punchOutData, review: v })} />
+                                </div>
 
                                 {/* Submit button */}
                                 <button
@@ -2219,7 +2230,8 @@ const Freelancers = () => {
                             </form>
                         </div>
                     </div>
-                )}
+                );
+            })()}
 
                 {/* Enhanced Advance Payment Modal */}
                 {

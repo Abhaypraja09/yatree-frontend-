@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Phone, AlertCircle, ChevronRight, Globe, Shield, User, Landmark } from 'lucide-react';
+import { Lock, Phone, AlertCircle, ChevronRight, Globe, Shield, User, Landmark, Activity } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 
@@ -22,7 +22,14 @@ const Login = () => {
         setIsLoading(true);
         try {
             const user = await login(mobile, password);
-            if (user.role === 'Admin' || user.role === 'Executive') navigate('/admin');
+            
+            // 🛡️ MULTI-TENANCY SYNC: Clear old selected company on new login to prevent 403s
+            localStorage.removeItem('selectedCompany');
+            
+            const role = user.role?.toLowerCase() || '';
+            const isAdmin = role === 'admin' || role === 'executive' || role === 'superadmin' || role.includes('admin');
+            
+            if (isAdmin) navigate('/admin');
             else if (user.role === 'Staff') navigate('/staff');
             else navigate('/driver');
         } catch (err) {
@@ -43,7 +50,7 @@ const Login = () => {
             padding: '20px',
             fontFamily: "'Inter', sans-serif"
         }}>
-            <SEO title="Login | Yatree Destination" />
+            <SEO title="Secure Login | Enterprise Fleet Suite" />
 
             <motion.div
                 initial={{ opacity: 0, scale: 0.95 }}
@@ -59,13 +66,12 @@ const Login = () => {
                     textAlign: 'center'
                 }}
             >
-                {/* Logo Area */}
-                <div style={{ marginBottom: '40px' }}>
-                    <img src="/logos/logo.png" alt="Yatree" style={{ width: '100px', marginBottom: '20px' }} />
-                    <h2 style={{ fontSize: '28px', fontWeight: '900', color: 'white', margin: '0 0 5px 0' }}>Yatree Destination</h2>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '15px', fontWeight: '500', margin: 0, letterSpacing: '0.5px' }}>
-                        SECURE ACCESS PORTAL
-                    </p>
+                <div style={{ textAlign: 'center', marginBottom: '30px' }}>
+                    <div style={{ width: '80px', height: '80px', background: 'rgba(56, 189, 248, 0.1)', borderRadius: '24px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(56, 189, 248, 0.2)', marginBottom: '20px' }}>
+                        <Activity size={40} color="#0ea5e9" />
+                    </div>
+                    <h2 style={{ fontSize: '32px', fontWeight: '950', color: 'white', margin: '0 0 5px 0', letterSpacing: '-1px' }}>Fleet <span style={{ color: '#0ea5e9' }}>Console</span></h2>
+                    <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '700', fontSize: '14px' }}>Log in to access your secure dashboard</p>
                 </div>
 
                 <AnimatePresence mode="wait">

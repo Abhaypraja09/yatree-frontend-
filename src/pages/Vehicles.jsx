@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import axios from '../api/axios';
 import { Plus, Car, AlertCircle, Trash2, Calendar, ExternalLink, Search, Wallet, Shield, MapPin, Clock, CheckCircle2, XCircle, Info, Wrench, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -188,13 +188,24 @@ const Vehicles = () => {
     };
 
 
+    const deduplicatedVehicles = useMemo(() => {
+        const map = new Map();
+        vehicles.forEach(v => {
+            const plate = (v.carNumber || '').split('#')[0].trim().toUpperCase();
+            if (!plate) return;
+            const existing = map.get(plate);
+            if (!existing || new Date(v.createdAt) > new Date(existing.createdAt)) {
+                map.set(plate, v);
+            }
+        });
+        return Array.from(map.values());
+    }, [vehicles]);
+
     const [searchTerm, setSearchTerm] = useState('');
 
-    const filteredVehicles = vehicles.filter(v =>
-        !v.isOutsideCar && (
-            v.carNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            v.model?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+    const filteredVehicles = deduplicatedVehicles.filter(v =>
+        v.carNumber?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        v.model?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
 

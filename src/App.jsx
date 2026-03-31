@@ -59,7 +59,8 @@ const ProtectedRoute = ({ children, role }) => {
   if (loading) return <div style={{ color: 'white', padding: '20px' }}>Loading...</div>;
   if (!user) return <Navigate to="/login" />;
 
-  const isAdminOrExecutive = user.role === 'Admin' || user.role === 'Executive';
+  const userRole = user.role?.toLowerCase() || '';
+  const isAdminOrExecutive = userRole === 'admin' || userRole === 'executive' || userRole === 'superadmin' || userRole.includes('admin');
 
   if (role === 'Admin') {
     if (!isAdminOrExecutive) return <Navigate to="/driver" />;
@@ -96,7 +97,7 @@ const AdminLayout = ({ children }) => {
       }} className="show-mobile-flex">
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img src="/logos/logo.png" alt="Logo" style={{ width: '30px', height: 'auto' }} />
-          <h2 style={{ fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>Yatree Destination</h2>
+          <h2 style={{ fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>Fleet CRM</h2>
         </div>
         <button
           onClick={() => setIsSidebarOpen(!isSidebarOpen)}
@@ -158,7 +159,8 @@ const AdminLayout = ({ children }) => {
 
 const AdminRoutes = () => {
   const { user } = useAuth();
-  const isAdmin = user?.role === 'Admin';
+  const userRole = user?.role?.toLowerCase() || '';
+  const isAdmin = userRole === 'admin' || userRole === 'executive' || userRole === 'superadmin' || userRole.includes('admin');
   const p = user?.permissions || {};
 
   return (

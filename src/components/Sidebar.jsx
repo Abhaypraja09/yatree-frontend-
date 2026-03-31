@@ -110,6 +110,9 @@ const Sidebar = ({ isOpen, onClose }) => {
     const { language, setLanguage, t } = useLanguage();
     const location = useLocation();
 
+    const userRole = user?.role?.toLowerCase() || '';
+    const isAdmin = userRole === 'admin' || userRole === 'executive' || userRole.includes('admin');
+
     // Group state
     const [openGroups, setOpenGroups] = useState({
         drivers: location.pathname.includes('/admin/drivers') || location.pathname.includes('/admin/freelancers') || location.pathname.includes('/admin/driver-salaries') || location.pathname.includes('/admin/driver-duty') || location.pathname.includes('/admin/freelancer-duty'),
@@ -199,7 +202,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                         />
                     </div>
                     <div>
-                        <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>{selectedCompany?.name || 'Yatree Destination'}</h2>
+                        <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>{selectedCompany?.name || 'Loading CRM...'}</h2>
                         <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>{t('automotive_excellence')}</p>
                     </div>
                 </div>
@@ -253,15 +256,15 @@ const Sidebar = ({ isOpen, onClose }) => {
 
             <nav style={{ flex: 1, overflowY: 'auto', paddingRight: '5px' }} className="sidebar-nav-scroll">
                 <NavItem item={{ path: '/admin', icon: LayoutDashboard, label: 'Dashboard', labelKey: 'dashboard' }} onClick={onClose} />
-                {(user.role === 'Admin' || user.permissions?.driversService) && (
+                {(isAdmin || user.permissions?.driversService) && (
                     <NavItem item={{ path: '/admin/live-feed', icon: Activity, label: 'Live Feed', labelKey: 'live_feed' }} onClick={onClose} />
                 )}
 
-                {(user.role === 'Admin' || user.permissions?.driversService) && (
+                {(isAdmin || user.permissions?.driversService) && (
                     <NavItem item={{ path: '/admin/log-book', icon: ClipboardList, label: 'Log Book', labelKey: 'log_book' }} onClick={onClose} />
                 )}
 
-                {(user.role === 'Admin' || user.permissions?.driversService) && (
+                {(isAdmin || user.permissions?.driversService) && (
                     <NavGroup title="Drivers Services" labelKey="drivers_services" icon={Users} isOpen={openGroups.drivers} onToggle={() => toggleGroup('drivers')}>
                         <NavItem item={{ path: '/admin/drivers-panel', label: 'Drivers', labelKey: 'drivers' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/freelancers', label: 'Freelancers', labelKey: 'freelancers' }} onClick={onClose} isSubItem />
@@ -269,21 +272,21 @@ const Sidebar = ({ isOpen, onClose }) => {
                     </NavGroup>
                 )}
 
-                {(user.role === 'Admin' || user.permissions?.fleetOperations) && (
+                {(isAdmin || user.permissions?.fleetOperations) && (
                     <NavGroup title="Fleet Operations" labelKey="fleet_operations" icon={Settings} isOpen={openGroups.vehicles} onToggle={() => toggleGroup('vehicles')}>
                         <NavItem item={{ path: '/admin/fuel', label: 'Fuel', labelKey: 'fuel' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility', labelKey: 'car_utility' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 
-                {(user.role === 'Admin' || user.permissions?.buySell) && (
+                {(isAdmin || user.permissions?.buySell) && (
                     <NavGroup title="Buy/Sell" labelKey="buy_sell" icon={Briefcase} isOpen={openGroups.buysell} onToggle={() => toggleGroup('buysell')}>
                         <NavItem item={{ path: '/admin/outside-cars', label: 'Outside Cars', labelKey: 'outside_cars' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/event-management', label: 'Event Management', labelKey: 'event_management' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 
-                {(user.role === 'Admin' || user.permissions?.vehiclesManagement) && (
+                {(isAdmin || user.permissions?.vehiclesManagement) && (
                     <NavGroup title="Vehicles Maintenance" labelKey="vehicles_maintenance" icon={Wrench} isOpen={openGroups.maintenance} onToggle={() => toggleGroup('maintenance')}>
                         <NavItem item={{ path: '/admin/maintenance', label: 'Maintenance', labelKey: 'maintenance' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/vehicle-month-details', label: 'Car Logs', labelKey: 'car_logs' }} onClick={onClose} isSubItem />
@@ -295,8 +298,8 @@ const Sidebar = ({ isOpen, onClose }) => {
 
                 <div style={{ height: '10px' }} />
 
-                {(user.role === 'Admin' || user.permissions?.driversService) && <NavItem item={{ path: '/admin/staff', icon: Users, label: 'Staff Management', labelKey: 'staff_management' }} onClick={onClose} />}
-                {user.role === 'Admin' && <NavItem item={{ path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins', labelKey: 'manage_admins' }} onClick={onClose} />}
+                {(isAdmin || user.permissions?.driversService) && <NavItem item={{ path: '/admin/staff', icon: Users, label: 'Staff Management', labelKey: 'staff_management' }} onClick={onClose} />}
+                {isAdmin && <NavItem item={{ path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins', labelKey: 'manage_admins' }} onClick={onClose} />}
             </nav>
 
             <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>

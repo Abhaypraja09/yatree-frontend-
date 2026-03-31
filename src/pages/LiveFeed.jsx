@@ -4,7 +4,7 @@ import axios from '../api/axios';
 import {
     Users, Clock, Fuel, X, Camera, LogIn, IndianRupee, Activity,
     Calendar, ChevronLeft, ChevronRight, Car, Search, Filter,
-    CheckCircle2, AlertCircle, History, MapPin, Phone, Trash2, PieChart, Briefcase, RefreshCw
+    CheckCircle2, AlertCircle, History, MapPin, Phone, Trash2, PieChart, Briefcase, RefreshCw, Landmark
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -153,21 +153,14 @@ const LiveFeed = () => {
 
             if (!searchMatch) return false;
 
-            // Operational Logic: 
-            // Today: Only show currently 'In Use' as per user's "automatic reduce" request
-            // Past Dates: Show all that were 'Used' or 'In Use' (completed duties)
-            if (isToday) {
-                return v.status === 'In Use';
-            } else {
-                return v.status === 'Used' || v.status === 'In Use';
-            }
+            // Show all that were utilized that day (Active or Finished)
+            return v.status === 'Used' || v.status === 'In Use';
         });
 
     const inUseVehicles = stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use').length || 0;
+    const activeFleetCount = isToday ? inUseVehicles : (stats?.activeVehiclesCount || inUseVehicles);
     const totalWorkingVehicles = stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use' || v.status === 'Used').length || 0;
-    const totalUsedVehicles = totalWorkingVehicles; // Align with expectation
-    const activeFleetCount = stats?.activeVehiclesCount || inUseVehicles;
-    const totalCompanyVehicles = stats?.totalVehicles || 0;
+    const totalUsedVehicles = totalWorkingVehicles;
 
     // History is filtered for the selectedDate and by searchQuery
     const dutyHistory = (stats?.dutyHistoryThisMonth || [])
@@ -329,25 +322,21 @@ const LiveFeed = () => {
                                         background: 'rgba(16, 185, 129, 0.12)',
                                         borderRadius: '14px',
                                         display: 'flex',
-                                        flexDirection: 'column',
                                         justifyContent: 'center',
                                         alignItems: 'center',
                                         border: '1px solid #10b98130',
-                                        flexShrink: 0,
-                                        gap: '2px'
+                                        flexShrink: 0
                                     }}>
-                                        <Users size={16} color="#10b981" />
-                                        <div style={{ fontSize: '13px', fontWeight: '1000', color: 'white', lineHeight: 1 }}>
-                                            {isPastDate ? (driversActive + driversCompleted) : driversActive}
-                                        </div>
+                                        <Users size={20} color="#10b981" />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>
-                                            {isPastDate ? (driversActive + driversCompleted) : driversActive}
+                                        <div style={{ fontSize: '24px', fontWeight: '950', color: '#10b981', lineHeight: 1.1, marginBottom: '2px' }}>
+                                            {driversActive}
                                         </div>
-                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                            {isPastDate ? 'Total Drivers' : 'Active Drivers'}
+                                        <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', marginTop: '2px' }}>
+                                            Active Drivers
                                         </div>
+
                                     </div>
                                 </motion.div>
 
@@ -362,25 +351,23 @@ const LiveFeed = () => {
                                         background: 'rgba(14, 165, 233, 0.12)',
                                         borderRadius: '14px',
                                         display: 'flex',
-                                        flexDirection: 'column',
                                         justifyContent: 'center',
                                         alignItems: 'center',
                                         border: '1px solid #0ea5e930',
-                                        flexShrink: 0,
-                                        gap: '2px'
+                                        flexShrink: 0
                                     }}>
-                                        <Car size={16} color="#0ea5e9" />
-                                        <div style={{ fontSize: '13px', fontWeight: '1000', color: 'white', lineHeight: 1 }}>
-                                            {stats?.totalUsedVehiclesCount || 0}
-                                        </div>
+                                        <Car size={20} color="#0ea5e9" />
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '24px', fontWeight: '950', color: '#0ea5e9', lineHeight: 1.1, marginBottom: '2px' }}>
-                                            {stats?.totalUsedVehiclesCount || 0}
+                                            {activeFleetCount}
                                         </div>
-                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                            {isToday ? `${activeFleetCount} Active Now` : 'Fleet Utilized'}
+
+
+                                        <div style={{ fontSize: '13px', color: '#0ea5e9', fontWeight: '700', marginTop: '2px' }}>
+                                            Active Fleets
                                         </div>
+
                                     </div>
                                 </motion.div>
 
@@ -396,22 +383,12 @@ const LiveFeed = () => {
                                         background: 'rgba(16, 185, 129, 0.12)',
                                         borderRadius: '14px',
                                         display: 'flex',
-                                        flexDirection: 'column',
                                         justifyContent: 'center',
                                         alignItems: 'center',
                                         border: '1px solid #10b98130',
-                                        flexShrink: 0,
-                                        gap: '2px'
+                                        flexShrink: 0
                                     }}>
-                                        <div style={{
-                                            fontSize: '22px',
-                                            fontWeight: '1000',
-                                            color: 'white',
-                                            lineHeight: 1,
-                                            textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                                        }}>
-                                            {stats?.dailyStats?.regularDriversCount || 0}
-                                        </div>
+                                        <Landmark size={20} color="#10b981" />
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{regTotal.toLocaleString()}</div>
@@ -431,23 +408,12 @@ const LiveFeed = () => {
                                         background: 'rgba(129, 140, 248, 0.12)',
                                         borderRadius: '14px',
                                         display: 'flex',
-                                        flexDirection: 'column',
                                         justifyContent: 'center',
                                         alignItems: 'center',
                                         border: '1px solid #818cf830',
-                                        flexShrink: 0,
-                                        gap: '2px'
+                                        flexShrink: 0
                                     }}>
-
-                                        <div style={{
-                                            fontSize: '22px',
-                                            fontWeight: '1000',
-                                            color: 'white',
-                                            lineHeight: 1,
-                                            textShadow: '0 2px 4px rgba(0,0,0,0.3)'
-                                        }}>
-                                            {stats?.dailyStats?.freelancerDriversCount || 0}
-                                        </div>
+                                        <Activity size={20} color="#818cf8" />
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{freeTotal.toLocaleString()}</div>
@@ -512,7 +478,7 @@ const LiveFeed = () => {
                 }}>
                     <div className="livefeed-tabs" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.03)' }}>
                         <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length} />
-                        <TabButton id="vehicles" label="Fleet" icon={Car} count={isToday ? activeFleetCount : stats?.totalUsedVehiclesCount} />
+                        <TabButton id="vehicles" label="Fleet" icon={Car} count={isToday ? totalUsedVehicles : stats?.totalUsedVehiclesCount} />
                         <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length} />
                     </div>
 
@@ -705,12 +671,6 @@ const LiveFeed = () => {
                                                             </div>
                                                             <div style={{ textAlign: 'right' }}>
                                                                 <div style={{ fontSize: '13px', color: isComp ? 'rgba(255,255,255,0.6)' : 'white', fontWeight: '900', fontFamily: 'monospace' }}>{formatTime(att.punchIn?.time)}</div>
-                                                                {att.punchOut?.time && (
-                                                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)', fontWeight: '800', marginTop: '1px', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '4px' }}>
-                                                                        <Clock size={10} />
-                                                                        {formatTime(att.punchOut.time)}
-                                                                    </div>
-                                                                )}
                                                             </div>
                                                         </div>
                                                     );
@@ -759,7 +719,23 @@ const LiveFeed = () => {
                                 transition={{ duration: 0.4 }}
                                 style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '25px' }}
                             >
-                                {filteredVehicles.sort((a, b) => (a.status !== 'Idle' ? -1 : 1)).map((vehicle) => (
+                                {filteredVehicles.sort((a, b) => {
+                                    // Priority: 'Used' before 'In Use' to show free/completed cars first
+                                    if (a.status === 'Used' && b.status === 'In Use') return -1;
+                                    if (a.status === 'In Use' && b.status === 'Used') return 1;
+
+                                    if (a.status === 'Used' && b.status === 'Used') {
+                                        // Sort by punch-out time: earliest first
+                                        const aLastOut = a.attendances?.[a.attendances.length - 1]?.punchOut?.time || 0;
+                                        const bLastOut = b.attendances?.[b.attendances.length - 1]?.punchOut?.time || 0;
+                                        return new Date(aLastOut) - new Date(bLastOut);
+                                    }
+
+                                    // Secondary sort for 'In Use': Latest punch-in first (active ones)
+                                    const aLastIn = a.attendances?.[a.attendances.length - 1]?.punchIn?.time || 0;
+                                    const bLastIn = b.attendances?.[b.attendances.length - 1]?.punchIn?.time || 0;
+                                    return new Date(bLastIn) - new Date(aLastIn);
+                                }).map((vehicle) => (
                                     <motion.div
                                         key={vehicle._id}
                                         whileHover={{ y: -8, scale: 1.02 }}
@@ -836,8 +812,15 @@ const LiveFeed = () => {
                                                                         <div style={{ fontSize: '10px', color: isComp ? 'rgba(255,255,255,0.2)' : '#0ea5e9', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{isComp ? 'Exited' : 'On Duty'}</div>
                                                                     </div>
                                                                 </div>
-                                                                <div style={{ textAlign: 'right', fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>
-                                                                    {formatTime(att.punchIn?.time)}
+                                                                <div style={{ textAlign: 'right' }}>
+                                                                    <div style={{ fontSize: '12px', color: isComp ? 'rgba(255,255,255,0.6)' : 'white', fontWeight: '900', fontFamily: 'monospace' }}>
+                                                                        {isComp ? formatTime(att.punchOut?.time) : formatTime(att.punchIn?.time)}
+                                                                    </div>
+                                                                    {isComp && (
+                                                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '700', textTransform: 'uppercase' }}>
+                                                                            Closed Time
+                                                                        </div>
+                                                                    )}
                                                                 </div>
                                                             </div>
                                                         );

@@ -696,8 +696,8 @@ const DriverPortal = () => {
                     <header className="dashboard-header" style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         <div className="header-logo-section">
                             <img
-                                src="/logos/logo.png"
-                                alt="Yatree Destination"
+                                src={user.company?.logo || "/logos/logo.png"}
+                                alt={user.company?.name || "Fleet CRM"}
                                 style={{
                                     width: '100px',
                                     height: 'auto',
@@ -706,7 +706,7 @@ const DriverPortal = () => {
                             />
                             <div>
                                 <h1 className="header-title" style={{ fontSize: 'clamp(20px, 5vw, 26px)', fontWeight: '900', letterSpacing: '-0.5px', background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '4px' }}>
-                                    Yatree Destination
+                                    {user.company?.name || "Fleet CRM"}
                                 </h1>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }}></div>

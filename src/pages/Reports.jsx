@@ -176,7 +176,8 @@ const Reports = ({ isSubComponent = false }) => {
                 // Filter by URL path first
                 if (location.pathname.includes('driver-duty')) return id === 'drivers';
                 if (location.pathname.includes('freelancer-duty')) return id === 'freelancers';
-                if (location.pathname.includes('log-book')) return id === 'drivers' || id === 'freelancers';
+                if (location.pathname.includes('outside-cars')) return id === 'outsideCars';
+                if (location.pathname.includes('log-book')) return id === 'drivers' || id === 'freelancers' || id === 'outsideCars';
 
                 // Administrative overrides/permissions for standard /admin/reports
                 if (user?.role === 'Admin') return true;
@@ -201,7 +202,7 @@ const Reports = ({ isSubComponent = false }) => {
                 setActiveTabs(['freelancers']);
                 setSelectedDay('All');
             } else if (location.pathname.includes('log-book')) {
-                setActiveTabs(['drivers']);
+                setActiveTabs(['drivers', 'freelancers', 'outsideCars']); // All active by default in Log Book
                 setSelectedDay('All');
             } else if (activeTabs.length === 0) {
                 setActiveTabs([tabList[0].id]);
@@ -224,11 +225,24 @@ const Reports = ({ isSubComponent = false }) => {
     }, [selectedMonth, selectedYear, selectedDay]);
 
     const toggleTab = (id) => {
-        // Simple assignment for Log Book functionality to ensure exclusive view
         if (location.pathname.includes('log-book')) {
-            setActiveTabs([id]);
+            setActiveTabs(prev => {
+                const bothActive = prev.length > 1;
+                const onlyThisActive = prev.length === 1 && prev[0] === id;
+
+                if (bothActive) {
+                    // Both active → click one = show ONLY that one
+                    return [id];
+                } else if (onlyThisActive) {
+                    // Same tab clicked again when solo → restore both
+                    return ['drivers', 'freelancers'];
+                } else {
+                    // Other tab clicked → switch to only that one
+                    return [id];
+                }
+            });
         } else {
-            // Standard toggle for other views (if needed)
+            // Standard toggle for other views
             setActiveTabs(prev => {
                 if (prev.includes(id)) {
                     if (prev.length === 1) return prev; // Don't clear last one
@@ -356,8 +370,8 @@ const Reports = ({ isSubComponent = false }) => {
                         'Close KM': r.punchOut?.km || 0,
                         'Total KM': (r.punchOut?.km && r.punchIn?.km) ? (r.punchOut.km - r.punchIn.km) : (r.totalKM || 0),
                         'Fuel (₹)': r.fuel?.amount || 0,
-                        'Liters': r.fuel?.liters || 0,
-                        'Avg': r.fuel?.avgMileage || 0,
+
+
                         'Parking (₹)': r.punchOut?.tollParkingAmount || 0,
                         'Salary (₹)': (Number(r.dailyWage) || 0) + Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0),
                         'Pick-up': r.pickUpLocation || '',
@@ -393,6 +407,7 @@ const Reports = ({ isSubComponent = false }) => {
 
     const staffDrivers = useMemo(() => staffDriversRaw, [staffDriversRaw]);
     const freelancerDrivers = useMemo(() => freelancerDriversRaw, [freelancerDriversRaw]);
+    const outsideCars = useMemo(() => (reportsData.outsideCars || []).map(r => ({ ...r, entryType: 'outsideCar' })), [reportsData.outsideCars]);
     const standaloneParking = useMemo(() => (reportsData.parking || []).map(r => ({ ...r, entryType: 'parking' })), [reportsData.parking]);
 
     const applySearch = (list) => {
@@ -423,13 +438,20 @@ const Reports = ({ isSubComponent = false }) => {
     };
 
     /* ── Attendance row renderer (shared for Staff + Freelancers + Outside) ── */
-    const ATT_HEADERS = ['Date', 'Driver & Vehicle', 'Punch In', 'Punch Out', 'Open KM', 'Close KM', 'Total KM', 'Fuel (₹)', 'Liters', 'Avg', 'Parking', 'Salary', 'Status', 'Action'];
-    const LOGBOOK_HEADERS = ['Date', 'Type', 'Driver & Vehicle', 'Punch In', 'Punch Out', 'Open KM', 'Close KM', 'Total KM', 'Fuel (₹)', 'Liters', 'Avg', 'Parking', 'Salary', 'Status', 'Action'];
+    const ATT_HEADERS = ['Date', 'Driver & Vehicle', 'Punch In', 'Punch Out', 'Open KM', 'Close KM', 'Total KM', 'Fuel (₹)', 'Parking', 'Salary', 'Status', 'Action'];
+    const LOGBOOK_HEADERS = ['Date', 'Type', 'Driver & Vehicle', 'Punch In', 'Punch Out', 'Open KM', 'Close KM', 'Total KM', 'Fuel (₹)', 'Parking', 'Salary', 'Status', 'Action'];
 
     /* ── Attendance row renderer ── */
     const AttRow = ({ r, idx, isLogbook = false }) => {
         const entryType = r.entryType || 'attendance';
         const isCompleted = r.status === 'completed';
+        const isOutside = entryType === 'outsideCar';
+
+        let displayDate = r.date;
+        if (isOutside && r.carNumber?.includes('#')) {
+            displayDate = r.carNumber.split('#')[1];
+        }
+
         const inTime = fmtTime(r.punchIn?.time);
         const outTime = fmtTime(r.punchOut?.time);
         const openKM = r.punchIn?.km ?? '--';
@@ -439,12 +461,11 @@ const Reports = ({ isSubComponent = false }) => {
         const wage = Number(r.dailyWage) || 0;
         const bonus = Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0);
         const parkAmt = (entryType === 'parking' ? Number(r.amount) : Number(r.punchOut?.tollParkingAmount)) || 0;
-        const reimbursableParkAmt = r.punchOut?.parkingPaidBy !== 'Office' ? parkAmt : 0;
         const parkBy = r.punchOut?.parkingPaidBy || (entryType === 'parking' ? 'Office' : 'Self');
         const fuelAmt = Number(r.fuel?.amount) || 0;
 
-        // Total to show in salary column (Wage + Bonus - exclude parking reimbursement to avoid double-showing)
-        const rowSalaryTotal = wage + bonus;
+        // Total to show in salary column (Wage + Bonus)
+        const rowSalaryTotal = isOutside ? (Number(r.dutyAmount) || 0) : (wage + bonus);
         const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
 
         let typeLabel = isFreelancer ? 'Freelancer' : 'Staff';
@@ -452,7 +473,12 @@ const Reports = ({ isSubComponent = false }) => {
         let typeBg = isFreelancer ? 'rgba(139,92,246,0.1)' : 'rgba(16,185,129,0.1)';
         let typeBorder = isFreelancer ? 'rgba(139,92,246,0.2)' : 'rgba(16,185,129,0.2)';
 
-        if (entryType === 'parking') {
+        if (isOutside) {
+            typeLabel = 'Partner';
+            typeColor = '#f472b6';
+            typeBg = 'rgba(236,72,153,0.1)';
+            typeBorder = 'rgba(236,72,153,0.2)';
+        } else if (entryType === 'parking') {
             typeLabel = 'Parking (Exp)';
             typeColor = '#818cf8';
             typeBg = 'rgba(129,140,248,0.1)';
@@ -464,7 +490,7 @@ const Reports = ({ isSubComponent = false }) => {
                 <TR idx={idx}>
                     <TD noWrap>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700', fontSize: '13px' }}>{fmt(r.date)}</span>
+                            <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700', fontSize: '13px' }}>{fmt(displayDate)}</span>
                         </div>
                     </TD>
                     {isLogbook && (
@@ -489,35 +515,35 @@ const Reports = ({ isSubComponent = false }) => {
                                 <UserIcon size={15} color="rgba(255,255,255,0.5)" />
                             </div>
                             <div>
-                                <div style={{ fontSize: '13px', fontWeight: '900', color: 'white' }}>{r.driver?.name || 'Unknown'}</div>
+                                <div style={{ fontSize: '13px', fontWeight: '900', color: 'white' }}>{isOutside ? (r.ownerName || 'Vendor') : (r.driver?.name || 'Unknown')}</div>
                                 <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
-                                    {r.vehicle?.carNumber || 'No Machine'}
+                                    {isOutside ? (r.carNumber?.split('#')[0]) : (r.vehicle?.carNumber || 'No Machine')}
                                 </div>
                             </div>
                         </div>
                     </TD>
-                    <TD noWrap>{entryType.includes('attendance') ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#10b981', fontWeight: '800', fontSize: '13px' }}><ArrowUpRight size={13} />{inTime}</div> : '--'}</TD>
+                    <TD noWrap>{entryType.includes('attendance') ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#10b981', fontWeight: '800', fontSize: '13px' }}><ArrowUpRight size={13} />{inTime}</div> : (isOutside ? <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>Partner Fleet</div> : '--')}</TD>
                     <TD noWrap>
                         {entryType.includes('attendance') ? (isCompleted
                             ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#f43f5e', fontWeight: '800', fontSize: '13px' }}><ArrowDownLeft size={13} />{outTime}</div>
-                            : <StatusBadge ok={false} badLabel="⏳ On Duty" />) : '--'}
+                            : <StatusBadge ok={false} badLabel="⏳ On Duty" />) : (isOutside ? <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.dutyType}</div> : '--')}
                     </TD>
                     <TD noWrap>
                         <div style={{ textAlign: 'center' }}>
                             <div style={{ color: entryType.includes('attendance') ? '#38bdf8' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{openKM}</div>
-                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>OPEN KM</div>
+                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>{isOutside ? 'FROM' : 'OPEN KM'}</div>
                         </div>
                     </TD>
                     <TD noWrap>
                         <div style={{ textAlign: 'center' }}>
-                            <div style={{ color: (entryType.includes('attendance') && isCompleted) ? '#f43f5e' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{closeKM}</div>
-                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>CLOSE KM</div>
+                            <div style={{ color: (entryType.includes('attendance') && isCompleted) ? '#f43f5e' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{isOutside ? '--' : closeKM}</div>
+                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>{isOutside ? 'TO' : 'CLOSE KM'}</div>
                         </div>
                     </TD>
                     <TD noWrap>
                         <div style={{ textAlign: 'center' }}>
-                            <div style={{ color: entryType.includes('attendance') ? 'white' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{totalKM !== '--' ? totalKM : '--'}</div>
-                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>KM RUN</div>
+                            <div style={{ color: entryType.includes('attendance') ? 'white' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{isOutside ? (r.model || '--') : (totalKM !== '--' ? totalKM : '--')}</div>
+                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>{isOutside ? 'MODEL' : 'KM RUN'}</div>
                         </div>
                     </TD>
                     <TD>
@@ -525,16 +551,7 @@ const Reports = ({ isSubComponent = false }) => {
                             ? <div><span style={{ color: '#f59e0b', fontWeight: '900', fontSize: '13px' }}>₹{fuelAmt}</span><div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)' }}>{(r.fuel?.entries?.length || 1)} fill</div></div>
                             : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
                     </TD>
-                    <TD>
-                        {r.fuel?.liters > 0
-                            ? <div style={{ color: '#38bdf8', fontWeight: '900', fontSize: '13px' }}>{r.fuel.liters}L</div>
-                            : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
-                    </TD>
-                    <TD>
-                        {r.fuel?.avgMileage > 0
-                            ? <div style={{ color: '#10b981', fontWeight: '900', fontSize: '13px' }}>{r.fuel.avgMileage}</div>
-                            : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
-                    </TD>
+
                     <TD>
                         {parkAmt > 0
                             ? <div>
@@ -543,20 +560,20 @@ const Reports = ({ isSubComponent = false }) => {
                             </div>
                             : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
                     </TD>
-                    <TD><div>{entryType.includes('attendance') ? <><span style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{rowSalaryTotal.toLocaleString()}</span>{bonus > 0 && <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>Base ₹{wage} + ₹{bonus} T/A</div>}</> : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '12px' }}>—</span>}</div></TD>
-                    <TD noWrap>{entryType.includes('attendance') ? <StatusBadge ok={isCompleted} okLabel="✓ Done" badLabel="⏳ Active" /> : <StatusBadge ok={true} okLabel="✓ Recorded" />}</TD>
+                    <TD><div><span style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{rowSalaryTotal.toLocaleString()}</span>{!isOutside && bonus > 0 && <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>Base ₹{wage} + ₹{bonus} T/A</div>}{isOutside && <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>{r.transactionType || 'Duty'}</div>}</div></TD>
+                    <TD noWrap>{isOutside ? <StatusBadge ok={true} okLabel="✓ Partner" /> : (entryType.includes('attendance') ? <StatusBadge ok={isCompleted} okLabel="✓ Done" badLabel="⏳ Active" /> : <StatusBadge ok={true} okLabel="✓ Recorded" />)}</TD>
                     <TD>
                         <ActionBtns
-                            onView={() => setSelectedItem({ ...r, entryType: entryType === 'parking' ? 'parking' : 'attendance', mode: 'view' })}
-                            onEdit={(isFreelancer && !isCompleted) ? null : (() => setEditingItem(r))}
-                            onDelete={() => handleDelete({ ...r, entryType: entryType === 'parking' ? 'parking' : 'attendance' })}
-                            onDeleteBonus={(isFreelancer && bonus > 0 && isCompleted) ? (() => handleDeleteBonus(r)) : null}
+                            onView={() => setSelectedItem({ ...r, entryType: isOutside ? 'outsideCar' : (entryType === 'parking' ? 'parking' : 'attendance'), mode: 'view' })}
+                            onEdit={(isOutside || (isFreelancer && !isCompleted)) ? null : (() => setEditingItem(r))}
+                            onDelete={() => handleDelete({ ...r, entryType: isOutside ? 'voucher' : (entryType === 'parking' ? 'parking' : 'attendance') })}
+                            onDeleteBonus={(!isOutside && isFreelancer && bonus > 0 && isCompleted) ? (() => handleDeleteBonus(r)) : null}
                         />
                     </TD>
                 </TR>
             </>
         );
-    };
+    };;
 
 
 
@@ -600,6 +617,18 @@ const Reports = ({ isSubComponent = false }) => {
                 );
             }
 
+            /* ── OUTSIDE CARS ── */
+            case 'outsideCars': {
+                const data = applySearch(outsideCars);
+                return (
+                    <TableSection tabId="outsideCars" fromDate={fromDate} toDate={toDate}
+                        headers={ATT_HEADERS}
+                        rows={data.map((r, i) => <AttRow key={r._id || `outside-${i}`} r={r} idx={i} isOutside={true} />)}
+                        empty="No partner duty records found."
+                    />
+                );
+            }
+
             default: return null;
         }
     };
@@ -614,10 +643,12 @@ const Reports = ({ isSubComponent = false }) => {
         );
 
         if (location.pathname.includes('log-book')) {
-            const rawData = [...staffDriversRaw, ...freelancerDriversRaw].filter(r => {
+            const rawData = [...staffDriversRaw, ...freelancerDriversRaw, ...outsideCars].filter(r => {
                 const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
-                if (isFreelancer) return activeTabs.includes('freelancers') || activeTabs.length > 1;
-                return activeTabs.includes('drivers') || activeTabs.length > 1;
+                const isOutside = r.entryType === 'outsideCar';
+                if (isFreelancer) return activeTabs.includes('freelancers') || activeTabs.length > 2;
+                if (isOutside) return activeTabs.includes('outsideCars') || activeTabs.length > 2;
+                return activeTabs.includes('drivers') || activeTabs.length > 2;
             });
 
             const data = rawData.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -780,18 +811,31 @@ const Reports = ({ isSubComponent = false }) => {
                     {/* Primary Tab Group */}
                     <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.06)', padding: '6px', display: 'flex', gap: '4px' }}>
                         {tabList.map(tab => {
-                            const isActive = activeTabs.includes(tab.id) && activeTabs.length === 1;
+                            const isLogbook = location.pathname.includes('log-book');
+                            const isBothActive = activeTabs.length > 1;
+                            const isSoloActive = activeTabs.includes(tab.id) && activeTabs.length === 1;
+
+                            // For logbook: highlight when solo active (only this tab shown)
+                            // For logbook when both active: show dimmed but visible (both running together)
+                            // For non-logbook: highlight only when solo
+                            const isActive = isLogbook ? isSoloActive : (activeTabs.includes(tab.id) && activeTabs.length === 1);
+                            const isBothRunning = isLogbook && isBothActive && activeTabs.includes(tab.id);
                             const Icon = tab.icon;
                             return (
                                 <button key={tab.id} onClick={() => toggleTab(tab.id)}
+                                    title={isLogbook && isBothActive ? `Click to show only ${tab.label}` : isLogbook && isSoloActive ? `Click to show both` : ''}
                                     style={{
                                         display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '14px', cursor: 'pointer', transition: '0.2s', fontSize: '12px', fontWeight: '900',
-                                        background: isActive ? tab.bg : 'transparent',
-                                        border: 'none',
-                                        color: isActive ? 'white' : 'rgba(255,255,255,0.3)',
+                                        background: isActive ? tab.bg : isBothRunning ? `${tab.bg}` : 'transparent',
+                                        border: isBothRunning && !isActive ? `1px solid ${tab.color}40` : 'none',
+                                        color: isActive ? 'white' : isBothRunning ? tab.color : 'rgba(255,255,255,0.3)',
+                                        opacity: isActive ? 1 : isBothRunning ? 0.75 : 1,
                                     }}
                                 >
-                                    <Icon size={14} color={isActive ? tab.color : 'rgba(255,255,255,0.3)'} />{tab.label}
+                                    <Icon size={14} color={isActive ? tab.color : isBothRunning ? tab.color : 'rgba(255,255,255,0.3)'} />{tab.label}
+                                    {isBothRunning && !isActive && (
+                                        <span style={{ fontSize: '8px', background: tab.color, color: '#000', borderRadius: '4px', padding: '1px 5px', fontWeight: '900', marginLeft: '2px' }}>ON</span>
+                                    )}
                                 </button>
                             );
                         })}

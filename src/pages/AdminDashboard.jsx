@@ -130,6 +130,9 @@ const AdminDashboard = () => {
 
     const formatDate = (dateStr) => formatDateIST(dateStr);
 
+    const userRole = user?.role?.toLowerCase() || '';
+    const isAdmin = userRole === 'admin' || userRole === 'executive' || userRole.includes('admin');
+
     const fetchStats = async () => {
         const userInfoRaw = localStorage.getItem('userInfo');
         if (!userInfoRaw || !selectedCompany) return;
@@ -313,7 +316,7 @@ const AdminDashboard = () => {
                     >
                         <div className="stats-grid">
                             {/* Drivers Service Related */}
-                            {(user?.role === 'Admin' || user?.permissions?.driversService) && (
+                            {(isAdmin || user?.permissions?.driversService) && (
                                 <>
                                     <StatCard icon={Users} label={t('total_driver_salary')} value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
                                     <StatCard icon={CreditCard} label={t('total_driver_advance')} value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
@@ -331,7 +334,7 @@ const AdminDashboard = () => {
                             )}
 
                             {/* Buy/Sell Related (Outside & Events) */}
-                            {(user?.role === 'Admin' || user?.permissions?.buySell) && (
+                            {(isAdmin || user?.permissions?.buySell) && (
                                 <>
                                     <StatCard
                                         icon={TrendingUp}
@@ -353,17 +356,25 @@ const AdminDashboard = () => {
                             )}
 
                             {/* Vehicles Maintenance Related */}
-                            {(user?.role === 'Admin' || user?.permissions?.vehiclesManagement) && (
+                            {(isAdmin || user?.permissions?.vehiclesManagement) && (
                                 <>
                                     <StatCard icon={Wrench} label={t('maintenance_monthly')} value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
                                     <StatCard icon={AlertTriangle} label={t('accident_cost_yearly')} value={`₹${(stats.yearlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
                                     <StatCard icon={ShieldCheck} label={t('warranty_cost_total')} value={`₹${(stats.totalWarrantyCost || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/warranties')} />
-                                    <StatCard icon={Car} label={t('fleet_size_label')} value={stats.totalVehicles} color="#8b5cf6" loading={loading} onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} />
+                                    <StatCard 
+                                        icon={Car} 
+                                        label={t('fleet_size_label')} 
+                                        value={stats.totalInternalVehicles || 0} 
+                                        subValue={`Database Total: ${stats.totalVehicles || 0}`}
+                                        color="#8b5cf6" 
+                                        loading={loading} 
+                                        onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} 
+                                    />
                                 </>
                             )}
 
                             {/* Fleet Operations Related */}
-                            {(user?.role === 'Admin' || user?.permissions?.fleetOperations) && (
+                            {(isAdmin || user?.permissions?.fleetOperations) && (
                                 <>
                                     <StatCard icon={IndianRupee} label={t('fastag_recharge_monthly')} value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/car-utility')} />
                                     <StatCard icon={Droplets} label={t('driver_services_monthly')} value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/car-utility')} />
