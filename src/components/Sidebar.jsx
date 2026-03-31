@@ -111,7 +111,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     const location = useLocation();
 
     const userRole = user?.role?.toLowerCase() || '';
-    const isAdmin = userRole === 'admin' || userRole === 'executive' || userRole.includes('admin');
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || (userRole.includes('admin') && userRole !== 'executive');
 
     // Group state
     const [openGroups, setOpenGroups] = useState({
@@ -299,7 +299,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <div style={{ height: '10px' }} />
 
                 {(isAdmin || user.permissions?.driversService) && <NavItem item={{ path: '/admin/staff', icon: Users, label: 'Staff Management', labelKey: 'staff_management' }} onClick={onClose} />}
-                {isAdmin && <NavItem item={{ path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins', labelKey: 'manage_admins' }} onClick={onClose} />}
+                {(isAdmin || user.permissions?.manageAdmins) && <NavItem item={{ path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins', labelKey: 'manage_admins' }} onClick={onClose} />}
             </nav>
 
             <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>

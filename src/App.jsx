@@ -160,7 +160,7 @@ const AdminLayout = ({ children }) => {
 const AdminRoutes = () => {
   const { user } = useAuth();
   const userRole = user?.role?.toLowerCase() || '';
-  const isAdmin = userRole === 'admin' || userRole === 'executive' || userRole === 'superadmin' || userRole.includes('admin');
+  const isAdmin = userRole === 'admin' || userRole === 'superadmin' || (userRole.includes('admin') && userRole !== 'executive');
   const p = user?.permissions || {};
 
   return (
@@ -180,6 +180,7 @@ const AdminRoutes = () => {
           <Route path="driver-duty" element={<Reports />} />
           <Route path="freelancer-duty" element={<Reports />} />
           <Route path="log-book" element={<Reports />} />
+          <Route path="parking" element={<Parking />} />
         </>
       )}
 
@@ -194,23 +195,22 @@ const AdminRoutes = () => {
       {/* Vehicles Maintenance Module */}
       {(isAdmin || p.vehiclesManagement) && (
         <>
-          <Route path="fuel" element={<Fuel />} />
-          <Route path="parking" element={<Parking />} />
+          <Route path="vehicles" element={<Vehicles />} />
           <Route path="maintenance" element={<Maintenance />} />
           <Route path="vehicle-month-details" element={<VehicleMonthlyDetails />} />
+          <Route path="accident-logs" element={<ActiveLogs />} />
+          <Route path="warranties" element={<Warranties />} />
         </>
       )}
 
       {/* Fleet Operations Module */}
       {(isAdmin || p.fleetOperations) && (
         <>
-          <Route path="vehicles" element={<Vehicles />} />
           <Route path="car-utility" element={<CarUtility />} />
           <Route path="driver-services" element={<DriverServices />} />
           <Route path="border-tax" element={<BorderTax />} />
           <Route path="fastag" element={<Fastag />} />
-          <Route path="accident-logs" element={<ActiveLogs />} />
-          <Route path="warranties" element={<Warranties />} />
+          <Route path="fuel" element={<Fuel />} />
         </>
       )}
 
@@ -229,6 +229,7 @@ const AdminRoutes = () => {
           <Route path="freelancers" element={<Navigate to="/admin" />} />
           <Route path="driver-duty" element={<Navigate to="/admin" />} />
           <Route path="freelancer-duty" element={<Navigate to="/admin" />} />
+          <Route path="parking" element={<Navigate to="/admin" />} />
         </>
       )}
       {!(isAdmin || p.buySell) && (
@@ -239,20 +240,19 @@ const AdminRoutes = () => {
       )}
       {!(isAdmin || p.vehiclesManagement) && (
         <>
-          <Route path="fuel" element={<Navigate to="/admin" />} />
-          <Route path="parking" element={<Navigate to="/admin" />} />
+          <Route path="vehicles" element={<Navigate to="/admin" />} />
           <Route path="maintenance" element={<Navigate to="/admin" />} />
           <Route path="vehicle-month-details" element={<Navigate to="/admin" />} />
+          <Route path="accident-logs" element={<Navigate to="/admin" />} />
+          <Route path="warranties" element={<Navigate to="/admin" />} />
         </>
       )}
       {!(isAdmin || p.fleetOperations) && (
         <>
-          <Route path="vehicles" element={<Navigate to="/admin" />} />
           <Route path="driver-services" element={<Navigate to="/admin" />} />
           <Route path="border-tax" element={<Navigate to="/admin" />} />
           <Route path="fastag" element={<Navigate to="/admin" />} />
-          <Route path="accident-logs" element={<Navigate to="/admin" />} />
-          <Route path="warranties" element={<Navigate to="/admin" />} />
+          <Route path="fuel" element={<Navigate to="/admin" />} />
         </>
       )}
     </Routes>

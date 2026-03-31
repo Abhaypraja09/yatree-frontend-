@@ -131,7 +131,7 @@ const AdminDashboard = () => {
     const formatDate = (dateStr) => formatDateIST(dateStr);
 
     const userRole = user?.role?.toLowerCase() || '';
-    const isAdmin = userRole === 'admin' || userRole === 'executive' || userRole.includes('admin');
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || (userRole.includes('admin') && userRole !== 'executive');
 
     const fetchStats = async () => {
         const userInfoRaw = localStorage.getItem('userInfo');
