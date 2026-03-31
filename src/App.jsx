@@ -215,9 +215,12 @@ const AdminRoutes = () => {
       )}
 
       {/* Admin Only */}
-      {isAdmin && <Route path="admins" element={<Admins />} /> }
-
-      <Route path="staff" element={<Staff />} />
+      {isAdmin && (
+        <>
+          <Route path="admins" element={<Admins />} />
+          <Route path="staff" element={<Staff />} />
+        </>
+      )}
 
       {/* Catch-all redirects for unauthorized module access */}
       {!(isAdmin || p.driversService) && (
@@ -240,7 +243,7 @@ const AdminRoutes = () => {
       )}
       {!(isAdmin || p.vehiclesManagement) && (
         <>
-          <Route path="vehicles" element={<Navigate to="/admin" />} />
+          {/* <Route path="vehicles" element={<Navigate to="/admin" />} /> */}
           <Route path="maintenance" element={<Navigate to="/admin" />} />
           <Route path="vehicle-month-details" element={<Navigate to="/admin" />} />
           <Route path="accident-logs" element={<Navigate to="/admin" />} />

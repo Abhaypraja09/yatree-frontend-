@@ -395,8 +395,8 @@ const FuelPage = () => {
             'Date': formatDateIST(e.date),
             'Vehicle': e.vehicle?.carNumber || 'N/A',
             'Fuel Type': e.fuelType,
-            'Quantity (L)': e.quantity,
-            'Rate (₹/L)': e.rate,
+            'Volume (L)': e.quantity,
+            'Rate (₹/Volume)': e.rate,
             'Amount (₹)': e.amount,
             'Odometer (KM)': e.odometer,
             'Distance (KM)': e.distance || 0,
@@ -632,7 +632,7 @@ const FuelPage = () => {
                         <Droplets size={24} />
                     </div>
                     <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Liters</p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Volume</p>
                         <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{totalLiters.toFixed(2)} L</h2>
                         <span style={{ fontSize: '10px', color: 'rgba(56, 189, 248, 0.6)', fontWeight: '800' }}>Overall Avg: {avgMileage} KM/L</span>
                     </div>
@@ -730,7 +730,7 @@ const FuelPage = () => {
                                                 <span style={{ fontSize: '13px', color: 'white', fontWeight: '600' }}>{e.quantity} L</span>
                                             </div>
                                             <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '4px' }}>
-                                                @ ₹{e.rate}/L • {e.stationName || 'Local Station'}
+                                                @ ₹{e.rate}/Volume • {e.stationName || 'Local Station'}
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
@@ -833,7 +833,7 @@ const FuelPage = () => {
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
                                         <div style={{ color: '#f59e0b', fontWeight: '900', fontSize: '18px' }}>₹{e.amount.toLocaleString()}</div>
-                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{e.quantity} L @ ₹{e.rate}/L</div>
+                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{e.quantity} L @ ₹{e.rate}/Volume</div>
                                     </div>
                                 </div>
 
@@ -958,7 +958,7 @@ const FuelPage = () => {
                                             <input type="number" className="input-field" placeholder="e.g. 5000" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
                                         </div>
                                         <div>
-                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Quantity (L) *</label>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Volume (L) *</label>
                                             <input type="number" step="0.01" className="input-field" placeholder="e.g. 50" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} required style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
                                         </div>
                                     </div>
@@ -966,7 +966,7 @@ const FuelPage = () => {
                                     {/* Operational Details */}
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '15px' }}>
                                         <div>
-                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Rate (₹/L)</label>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Rate (₹/Volume)</label>
                                             <input type="number" step="0.01" className="input-field" value={formData.rate} onChange={(e) => setFormData({ ...formData, rate: e.target.value })} placeholder="Auto-calculated" style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', color: 'rgba(255,255,255,0.5)', padding: '0 15px' }} />
                                         </div>
                                         <div>
@@ -1152,13 +1152,13 @@ const FuelPage = () => {
                                         <input type="number" className="input-field" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} style={{ background: 'rgba(255,255,255,0.05)' }} />
                                     </div>
                                     <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Quantity (L)</label>
+                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Volume (L)</label>
                                         <input type="number" step="0.01" className="input-field" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} />
                                     </div>
                                 </div>
                                 <div className="form-grid-2" style={{ marginTop: '15px' }}>
                                     <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Rate (₹/L)</label>
+                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Rate (₹/Volume)</label>
                                         <input type="number" step="0.01" className="input-field" value={formData.rate} onChange={(e) => setFormData({ ...formData, rate: e.target.value })} />
                                     </div>
                                     <div>

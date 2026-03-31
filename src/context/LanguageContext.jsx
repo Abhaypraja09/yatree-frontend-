@@ -140,6 +140,7 @@ export const translations = {
         wage: 'Wage',
         bonus: 'Bonus',
         amount: 'Amount',
+        quantity: 'Volume (L)',
         total: 'Total',
 
         // Admin Sidebar
@@ -412,6 +413,7 @@ export const translations = {
         wage: 'वेतन',
         bonus: 'बोनस',
         amount: 'राशि',
+        quantity: 'वॉल्यूम (L)',
         total: 'कुल'
     }
 };

@@ -327,7 +327,7 @@ const AttendanceModal = ({ item, onClose, onEdit, onDelete }) => {
                     <Stat label="Vehicle" value={item.vehicle?.carNumber?.split('#')[0] || '--'} color="#38bdf8" />
                     <Stat label="Driver" value={item.driver?.name || '--'} />
                     <Stat label="Fuel Type" value={item.fuelType || 'Diesel'} color="#22c55e" />
-                    <Stat label="Quantity" value={item.quantity ? `${item.quantity} L` : '--'} color="#f59e0b" />
+                    <Stat label="Volume" value={item.quantity ? `${item.quantity} L` : '--'} color="#f59e0b" />
                     <Stat label="Amount" value={`₹${item.amount || 0}`} color="#22c55e" />
                     <Stat label="Odometer" value={item.odometer ? `${item.odometer} KM` : '--'} />
                     <Stat label="Payment" value={item.paymentMethod || item.paymentSource || '--'} />

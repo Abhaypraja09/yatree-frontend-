@@ -105,7 +105,7 @@ const VehicleMonthlyDetails = () => {
             'Model': v.model,
             'Drivers': v.drivers?.join(', ') || 'Unassigned',
             'Total Distance (KM)': v.totalDistance || 0,
-            'Fuel Quantity (L)': (v.fuel?.totalQuantity || 0).toFixed(2),
+            'Fuel Volume (L)': (v.fuel?.totalQuantity || 0).toFixed(2),
             'Average KM/L': (v.fuel?.avgMileage || 0).toFixed(2),
             'Fuel Amount (₹)': v.fuel?.totalAmount || 0,
             'Parking (₹)': v.parking?.totalAmount || 0,

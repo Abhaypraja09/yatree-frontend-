@@ -1484,7 +1484,7 @@ const DriverPortal = () => {
                                                                 {entry.type === 'fuel' && (
                                                                     <>
                                                                         <div className="input-wrapper-full">
-                                                                            <label className="input-label" style={{ fontSize: '10px' }}>Rate (₹/L) - Optional</label>
+                                                                            <label className="input-label" style={{ fontSize: '10px' }}>Rate (₹/Volume) - Optional</label>
                                                                             <input
                                                                                 type="number"
                                                                                 className="input-field"
@@ -1504,7 +1504,7 @@ const DriverPortal = () => {
                                                                             />
                                                                         </div>
                                                                         <div className="input-wrapper-full">
-                                                                            <label className="input-label" style={{ fontSize: '10px' }}>Liters - Optional</label>
+                                                                            <label className="input-label" style={{ fontSize: '10px' }}>{t('quantity')} - Optional</label>
                                                                             <input
                                                                                 type="number"
                                                                                 className="input-field"

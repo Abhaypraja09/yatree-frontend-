@@ -2540,11 +2540,11 @@ const Freelancers = () => {
 
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                                 <Field label="Amount (₹) *" value={quickExpenseData.amount} onChange={v => setQuickExpenseData({ ...quickExpenseData, amount: v })} type="number" required placeholder="e.g. 5000" />
-                                                <Field label="Quantity (L) *" value={quickExpenseData.quantity} onChange={v => setQuickExpenseData({ ...quickExpenseData, quantity: v })} type="number" required placeholder="e.g. 50" />
+                                                <Field label="Volume (L) *" value={quickExpenseData.quantity} onChange={v => setQuickExpenseData({ ...quickExpenseData, quantity: v })} type="number" required placeholder="e.g. 50" />
                                             </div>
 
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                                <Field label="Rate (₹/L)" value={quickExpenseData.rate} onChange={v => setQuickExpenseData({ ...quickExpenseData, rate: v })} placeholder="Auto-calculated" readOnly />
+                                                <Field label="Rate (₹/Volume)" value={quickExpenseData.rate} onChange={v => setQuickExpenseData({ ...quickExpenseData, rate: v })} placeholder="Auto-calculated" readOnly />
                                                 <Field label="Date *" value={quickExpenseData.date} onChange={v => setQuickExpenseData({ ...quickExpenseData, date: v })} type="date" required />
                                             </div>
 

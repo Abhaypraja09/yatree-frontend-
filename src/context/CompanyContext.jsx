@@ -40,24 +40,28 @@ export const CompanyProvider = ({ children }) => {
             if (userInfo && userInfo.company) {
                 const userCompanyId = (typeof userInfo.company === 'string' ? userInfo.company : (userInfo.company._id || userInfo.company));
                 
-                // Find full company object from the fetched list to get the name/details
+                // Find full company object from the fetched list
                 const fullCompany = data.find(c => c._id === userCompanyId);
+                
                 if (fullCompany) {
+                    console.log('Syncing context to user company:', fullCompany.name);
                     setSelectedCompany(fullCompany);
+                    localStorage.setItem('selectedCompany', JSON.stringify(fullCompany));
                 } else {
-                    // Critical Fix: If user's company not in fetched list (maybe tenant changed), 
-                    // use the first available company from the list if any
+                    // Critical Fix: If user's company not in fetched list, force the first available
                     if (data.length > 0) {
                         setSelectedCompany(data[0]);
-                    } else {
-                        setSelectedCompany(typeof userInfo.company === 'string' ? { _id: userInfo.company, name: 'Loading...' } : userInfo.company);
+                        localStorage.setItem('selectedCompany', JSON.stringify(data[0]));
                     }
                 }
             } else if (data.length > 0) {
                 setSelectedCompany(data[0]);
+                localStorage.setItem('selectedCompany', JSON.stringify(data[0]));
             }
         } catch (err) {
             console.error('Error fetching companies', err);
+            // If fetching fails, clear stale data to force a re-fetch/re-login
+            localStorage.removeItem('selectedCompany');
         } finally {
             setLoading(false);
         }
