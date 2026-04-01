@@ -214,13 +214,9 @@ const AdminRoutes = () => {
         </>
       )}
 
-      {/* Admin Only */}
-      {isAdmin && (
-        <>
-          <Route path="admins" element={<Admins />} />
-          <Route path="staff" element={<Staff />} />
-        </>
-      )}
+      {/* Admin Protected Operations */}
+      <Route path="admins" element={isAdmin ? <Admins /> : <Navigate to="/admin" />} />
+      <Route path="staff" element={<Staff />} />
 
       {/* Catch-all redirects for unauthorized module access */}
       {!(isAdmin || p.driversService) && (

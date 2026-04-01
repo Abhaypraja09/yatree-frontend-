@@ -298,7 +298,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
                 <div style={{ height: '10px' }} />
 
-                {isAdmin && <NavItem item={{ path: '/admin/staff', icon: Users, label: 'Staff Management', labelKey: 'staff_management' }} onClick={onClose} />}
+                {(isAdmin || userRole === 'executive') && <NavItem item={{ path: '/admin/staff', icon: Users, label: 'Staff Management', labelKey: 'staff_management' }} onClick={onClose} />}
                 {(isAdmin || user.permissions?.manageAdmins) && <NavItem item={{ path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins', labelKey: 'manage_admins' }} onClick={onClose} />}
             </nav>
 
