@@ -11,6 +11,9 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
         endKm: item.punchOut?.km || 0,
         date: item.date || '',
         dailyWage: item.isSecondary ? 0 : (item.dailyWage || 0),
+        allowanceTA: item.punchOut?.allowanceTA || 0,
+        nightStayAmount: item.punchOut?.nightStayAmount || 0,
+        parkingAmount: item.punchOut?.tollParkingAmount || 0,
         punchInTime: toISTDateTimeString(item.punchIn?.time),
         punchOutTime: toISTDateTimeString(item.punchOut?.time)
     });
@@ -26,10 +29,10 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 className="glass-card modal-content"
-                style={{ width: '100%', maxWidth: '450px', maxHeight: '90vh', overflowY: 'auto', padding: '25px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px' }}
+                style={{ width: '100%', maxWidth: '450px', maxHeight: '95vh', overflowY: 'auto', padding: '25px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px' }}
             >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                    <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Edit Report</h2>
+                    <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Edit Log Entry</h2>
                     <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: 'none', padding: '8px', borderRadius: '50%', display: 'flex', cursor: 'pointer' }}>
                         <X size={18} />
                     </button>
@@ -38,6 +41,7 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                 <div style={{ marginBottom: '25px', padding: '12px 18px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '15px' }}>
                     <p style={{ margin: 0, fontSize: '9px', color: 'rgba(255,255,255,0.35)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver / Service Provider</p>
                     <p style={{ margin: '4px 0 0', color: '#fbbf24', fontSize: '15px', fontWeight: '800' }}>{item.driver?.name || 'Unknown Driver'}</p>
+                    <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'rgba(14,165,233,0.7)', fontWeight: '700' }}>{item.vehicle?.carNumber?.split('#')[0] || 'No Vehicle'}</p>
                 </div>
 
                 {item.outsideTrip?.tripType && (
@@ -105,6 +109,7 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                             />
                         </div>
                     </div>
+
                     <div className="form-group">
                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Daily Wage (Base Pay)</label>
                         <div style={{ position: 'relative' }}>
@@ -123,17 +128,54 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                             )}
                         </div>
                     </div>
+
+                    {/* Financial Adjustments Grid */}
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                        <div className="form-group">
+                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>T/A (₹)</label>
+                            <input
+                                type="number"
+                                className="input-field"
+                                value={formData.allowanceTA}
+                                onChange={(e) => setFormData({ ...formData, allowanceTA: e.target.value })}
+                                style={{ width: '100%', marginBottom: 0, height: '48px' }}
+                                placeholder="0"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Night Stay (₹)</label>
+                            <input
+                                type="number"
+                                className="input-field"
+                                value={formData.nightStayAmount}
+                                onChange={(e) => setFormData({ ...formData, nightStayAmount: e.target.value })}
+                                style={{ width: '100%', marginBottom: 0, height: '48px' }}
+                                placeholder="0"
+                            />
+                        </div>
+                    </div>
+
+                    <div className="form-group">
+                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Parking & Toll (₹)</label>
+                        <input
+                            type="number"
+                            className="input-field"
+                            value={formData.parkingAmount}
+                            onChange={(e) => setFormData({ ...formData, parkingAmount: e.target.value })}
+                            style={{ width: '100%', marginBottom: 0, height: '48px' }}
+                            placeholder="0"
+                        />
+                    </div>
+
                     <div className="form-group">
                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Duty Remarks / Destination</label>
                         <textarea
                             className="input-field"
                             value={formData.remarks}
                             onChange={(e) => setFormData({ ...formData, remarks: e.target.value })}
-                            style={{ width: '100%', minHeight: '100px', marginBottom: 0, paddingTop: '12px' }}
+                            style={{ width: '100%', minHeight: '80px', marginBottom: 0, paddingTop: '12px' }}
                         />
                     </div>
-
-
 
                     <button type="submit" className="btn-primary" style={{ height: '52px', fontWeight: '900', marginTop: '10px', fontSize: '14px' }}>
                         SAVE UPDATED DETAILS

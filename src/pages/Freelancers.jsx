@@ -893,6 +893,8 @@ const Freelancers = () => {
                 startKm: Number(editDutyForm.startKm) || 0,
                 endKm: Number(editDutyForm.endKm) || 0,
                 parkingAmount: Number(editDutyForm.parkingAmount) || 0,
+                allowanceTA: Number(editDutyForm.allowanceTA) || 0,
+                nightStayAmount: Number(editDutyForm.nightStayAmount) || 0,
                 dailyWage: Number(editDutyForm.dailyWage) || 0,
                 fuelAmount: Number(editDutyForm.fuelAmount) || 0
             };
@@ -950,6 +952,8 @@ const Freelancers = () => {
             fuelAmount: duty.fuel?.amount ?? 0,
             parkingAmount: duty.punchOut?.tollParkingAmount ?? 0,
             parkingPaidBy: duty.punchOut?.parkingPaidBy || 'Self',
+            allowanceTA: duty.punchOut?.allowanceTA ?? 0,
+            nightStayAmount: duty.punchOut?.nightStayAmount ?? 0,
             dailyWage: (duty.dailyWage !== undefined && duty.dailyWage !== null) ? duty.dailyWage : fallbackWage,
             remarks: duty.punchOut?.remarks || duty.punchOut?.otherRemarks || '',
             dutyType: duty.pickUpLocation || ''
@@ -1293,44 +1297,46 @@ const Freelancers = () => {
                         <div className="flex-resp" style={{ alignItems: 'center', gap: '12px', flex: 1, justifyContent: 'flex-end' }}>
 
                             {/* PREMIUM DAY NAV PILL (FROM OUTSIDE) */}
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                background: 'rgba(0,0,0,0.4)',
-                                padding: '4px',
-                                borderRadius: '20px',
-                                border: '1px solid rgba(255,255,255,0.06)'
-                            }}>
-                                <button onClick={() => shiftDays(-1)} style={{
-                                    width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}> <ChevronLeft size={16} /> </button>
+                            {activeTab !== 'accounts' && (
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    background: 'rgba(0,0,0,0.4)',
+                                    padding: '4px',
+                                    borderRadius: '20px',
+                                    border: '1px solid rgba(255,255,255,0.06)'
+                                }}>
+                                    <button onClick={() => shiftDays(-1)} style={{
+                                        width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}> <ChevronLeft size={16} /> </button>
 
-                                <div
-                                    onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                    style={{ height: '32px', minWidth: '110px', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.15)', borderRadius: '10px', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 4px' }}
-                                >
-                                    <span style={{ fontSize: '11px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
-                                        {selectedDay === 'All' ?
-                                            `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
-                                            formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)))).toUpperCase()}
-                                    </span>
-                                    <input
-                                        type="date"
-                                        value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
-                                        onChange={e => {
-                                            const d = new Date(e.target.value);
-                                            setSelectedYear(d.getFullYear());
-                                            setSelectedMonth(d.getMonth());
-                                            setSelectedDay(d.getDate().toString());
-                                        }}
-                                        style={{ position: 'absolute', inset: 0, opacity: 0 }}
-                                    />
+                                    <div
+                                        onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                        style={{ height: '32px', minWidth: '110px', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.15)', borderRadius: '10px', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 4px' }}
+                                    >
+                                        <span style={{ fontSize: '11px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                                            {selectedDay === 'All' ?
+                                                `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
+                                                formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)))).toUpperCase()}
+                                        </span>
+                                        <input
+                                            type="date"
+                                            value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                            onChange={e => {
+                                                const d = new Date(e.target.value);
+                                                setSelectedYear(d.getFullYear());
+                                                setSelectedMonth(d.getMonth());
+                                                setSelectedDay(d.getDate().toString());
+                                            }}
+                                            style={{ position: 'absolute', inset: 0, opacity: 0 }}
+                                        />
+                                    </div>
+
+                                    <button onClick={() => shiftDays(1)} style={{
+                                        width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                    }}> <ChevronRight size={16} /> </button>
                                 </div>
-
-                                <button onClick={() => shiftDays(1)} style={{
-                                    width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}> <ChevronRight size={16} /> </button>
-                            </div>
+                            )}
 
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 {selectedDay !== 'All' && (
@@ -2411,10 +2417,11 @@ const Freelancers = () => {
                                         <IndianRupee size={14} color="#10b981" />
                                         <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase' }}>Financial Adjustments</span>
                                     </div>
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '15px' }}>
                                         <Field label="Daily Wage (₹)" type="number" value={editDutyForm.dailyWage} onChange={v => setEditDutyForm({ ...editDutyForm, dailyWage: v })} />
                                         <Field label="Parking (₹)" type="number" value={editDutyForm.parkingAmount} onChange={v => setEditDutyForm({ ...editDutyForm, parkingAmount: v })} />
                                         <Field label="T/A Allowance" type="number" value={editDutyForm.allowanceTA} onChange={v => setEditDutyForm({ ...editDutyForm, allowanceTA: v })} />
+                                        <Field label="Night Stay (₹)" type="number" value={editDutyForm.nightStayAmount} onChange={v => setEditDutyForm({ ...editDutyForm, nightStayAmount: v })} />
                                     </div>
                                 </div>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Minus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, User as UserIcon, Users, Clock } from 'lucide-react';
+import { Plus, Minus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, User as UserIcon, Users, Clock, FileText, CheckCircle, XCircle, ExternalLink, Briefcase, IndianRupee } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
@@ -29,13 +29,37 @@ const Drivers = ({ isSubComponent = false }) => {
     const [password, setPassword] = useState('');
     const [licenseNumber, setLicenseNumber] = useState('');
     const [dailyWage, setDailyWage] = useState('');
-    const [nightStayBonus, setNightStayBonus] = useState('500');
-    const [sameDayReturnBonus, setSameDayReturnBonus] = useState('100');
+    const [nightStayBonus, setNightStayBonus] = useState('');
+    const [sameDayReturnBonus, setSameDayReturnBonus] = useState('');
     const [isFreelancer, setIsFreelancer] = useState(false);
+
+    // Documentation & Overtime States
+    const [docs, setDocs] = useState({
+        aadharCard: null,
+        drivingLicense: null,
+        offerLetter: null
+    });
+    const [overtime, setOvertime] = useState({
+        enabled: false,
+        threshold: 9,
+        rate: 0
+    });
 
     const [showEditModal, setShowEditModal] = useState(false);
     const [editingDriver, setEditingDriver] = useState(null);
-    const [editForm, setEditForm] = useState({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '', nightStayBonus: '', sameDayReturnBonus: '' });
+    const [editForm, setEditForm] = useState({
+        name: '',
+        mobile: '',
+        username: '',
+        password: '',
+        licenseNumber: '',
+        dailyWage: '',
+        nightStayBonus: '',
+        sameDayReturnBonus: '',
+        overtimeEnabled: false,
+        overtimeThreshold: 9,
+        overtimeRate: 0
+    });
     const [driverTypeFilter, setDriverTypeFilter] = useState('All');
     const [onlyOnDuty, setOnlyOnDuty] = useState(false);
     const [showCompletedOnly, setShowCompletedOnly] = useState(false);
@@ -219,20 +243,46 @@ const Drivers = ({ isSubComponent = false }) => {
 
     const handleCreateDriver = async (e) => {
         e.preventDefault();
+        setSubmitting(true);
         try {
-            await axios.post('/api/admin/drivers', {
-                name, mobile, username, password, licenseNumber, companyId: selectedCompany._id, isFreelancer, dailyWage, salary: dailyWage, nightStayBonus, sameDayReturnBonus
-            }, {
+            const formData = new FormData();
+            formData.append('name', name);
+            formData.append('mobile', mobile);
+            formData.append('username', username);
+            formData.append('password', password);
+            formData.append('licenseNumber', licenseNumber);
+            formData.append('companyId', selectedCompany._id);
+            formData.append('isFreelancer', isFreelancer);
+            formData.append('dailyWage', dailyWage);
+            formData.append('salary', dailyWage);
+            formData.append('nightStayBonus', nightStayBonus);
+            formData.append('sameDayReturnBonus', sameDayReturnBonus);
+
+            // Overtime
+            formData.append('overtimeEnabled', overtime.enabled);
+            formData.append('overtimeThreshold', overtime.threshold);
+            formData.append('overtimeRate', overtime.rate);
+
+            // Documents
+            if (docs.aadharCard) formData.append('aadharCard', docs.aadharCard);
+            if (docs.drivingLicense) formData.append('drivingLicense', docs.drivingLicense);
+            if (docs.offerLetter) formData.append('offerLetter', docs.offerLetter);
+
+            await axios.post('/api/admin/drivers', formData, {
                 headers: {
+                    'Content-Type': 'multipart/form-data',
                     Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}`
                 }
             });
             setShowModal(false);
-            setName(''); setMobile(''); setUsername(''); setPassword(''); setLicenseNumber(''); setIsFreelancer(false); setDailyWage(''); setNightStayBonus('500'); setSameDayReturnBonus('100');
+            setName(''); setMobile(''); setUsername(''); setPassword(''); setLicenseNumber(''); setIsFreelancer(false); setDailyWage(''); setNightStayBonus(''); setSameDayReturnBonus('');
+            setDocs({ aadharCard: null, drivingLicense: null, offerLetter: null });
+            setOvertime({ enabled: false, threshold: 9, rate: 0 });
             fetchDrivers();
+            alert('Driver registered successfully');
         } catch (err) {
             alert(err.response?.data?.message || 'Error creating driver');
-        }
+        } finally { setSubmitting(false); }
     };
 
     const toggleStatus = async (id, currentStatus) => {
@@ -259,33 +309,48 @@ const Drivers = ({ isSubComponent = false }) => {
 
     const handleUpdateDriver = async (e) => {
         e.preventDefault();
+        setSubmitting(true);
         try {
-            const updateData = {
-                name: editForm.name,
-                mobile: editForm.mobile,
-                username: editForm.username,
-                licenseNumber: editForm.licenseNumber,
-                dailyWage: editForm.dailyWage,
-                salary: editForm.dailyWage, // Keep in sync
-                nightStayBonus: editForm.nightStayBonus,
-                sameDayReturnBonus: editForm.sameDayReturnBonus,
-                isFreelancer: editForm.isFreelancer
-            };
+            const formData = new FormData();
+            formData.append('name', editForm.name);
+            formData.append('mobile', editForm.mobile);
+            formData.append('username', editForm.username);
+            formData.append('licenseNumber', editForm.licenseNumber);
+            formData.append('dailyWage', editForm.dailyWage);
+            formData.append('salary', editForm.dailyWage);
+            formData.append('nightStayBonus', editForm.nightStayBonus);
+            formData.append('sameDayReturnBonus', editForm.sameDayReturnBonus);
+            formData.append('isFreelancer', editForm.isFreelancer);
+
+            // Overtime
+            formData.append('overtimeEnabled', editForm.overtimeEnabled);
+            formData.append('overtimeThreshold', editForm.overtimeThreshold);
+            formData.append('overtimeRate', editForm.overtimeRate);
+
             if (editForm.password) {
-                updateData.password = editForm.password;
+                formData.append('password', editForm.password);
             }
 
-            await axios.put(`/api/admin/drivers/${editingDriver._id}`, updateData, {
-                headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}` }
+            // Documents
+            if (docs.aadharCard) formData.append('aadharCard', docs.aadharCard);
+            if (docs.drivingLicense) formData.append('drivingLicense', docs.drivingLicense);
+            if (docs.offerLetter) formData.append('offerLetter', docs.offerLetter);
+
+            await axios.put(`/api/admin/drivers/${editingDriver._id}`, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}`
+                }
             });
             setShowEditModal(false);
             setEditingDriver(null);
-            setEditForm({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '', nightStayBonus: '', sameDayReturnBonus: '', isFreelancer: false });
+            setEditForm({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '', nightStayBonus: '', sameDayReturnBonus: '', isFreelancer: false, overtimeEnabled: false, overtimeThreshold: 9, overtimeRate: 0 });
+            setDocs({ aadharCard: null, drivingLicense: null, offerLetter: null });
             fetchDrivers();
             alert('Driver updated successfully');
         } catch (err) {
             alert(err.response?.data?.message || 'Error updating driver');
-        }
+        } finally { setSubmitting(false); }
     };
 
     const openEditModal = (driver) => {
@@ -296,12 +361,29 @@ const Drivers = ({ isSubComponent = false }) => {
             username: driver.username || '',
             licenseNumber: driver.licenseNumber || '',
             dailyWage: driver.dailyWage || '',
-            nightStayBonus: driver.nightStayBonus !== undefined && driver.nightStayBonus !== null ? String(driver.nightStayBonus) : '500',
-            sameDayReturnBonus: driver.sameDayReturnBonus !== undefined && driver.sameDayReturnBonus !== null ? String(driver.sameDayReturnBonus) : '100',
+            nightStayBonus: driver.nightStayBonus !== undefined && driver.nightStayBonus !== null ? String(driver.nightStayBonus) : '',
+            sameDayReturnBonus: driver.sameDayReturnBonus !== undefined && driver.sameDayReturnBonus !== null ? String(driver.sameDayReturnBonus) : '',
             isFreelancer: driver.isFreelancer || false,
-            password: ''
+            password: '',
+            overtimeEnabled: driver.overtime?.enabled || false,
+            overtimeThreshold: driver.overtime?.thresholdHours || 9,
+            overtimeRate: driver.overtime?.ratePerHour || 0
         });
+        setDocs({ aadharCard: null, drivingLicense: null, offerLetter: null });
         setShowEditModal(true);
+    };
+
+    const handleVerifyDoc = async (driverId, docId, status) => {
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.patch(`/api/admin/drivers/${driverId}/documents/${docId}/verify`, { status }, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            fetchDrivers();
+            alert(`Document ${status} successfully`);
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error verifying document');
+        }
     };
 
 
@@ -331,82 +413,82 @@ const Drivers = ({ isSubComponent = false }) => {
 
             {/* Header Section */}
             {!isSubComponent && (
-            <header className="flex-resp" style={{
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '20px',
-                padding: '30px 0',
-                marginBottom: '10px'
-            }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{
-                        width: 'clamp(40px, 10vw, 50px)',
-                        height: 'clamp(40px, 10vw, 50px)',
-                        background: 'linear-gradient(135deg, white, #f8fafc)',
-                        borderRadius: '16px',
-                        padding: '8px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
-                    }}>
-                        <Users size={28} color="#fbbf24" />
-                    </div>
-                    <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
-                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Operations</span>
-                        </div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', cursor: 'pointer' }}>
-                            Staff <span className="text-gradient-yellow">Drivers</span>
-                        </h1>
-                    </div>
-                </div>
-                <div className="mobile-search-row" style={{ display: 'flex', gap: '10px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
-
-                    <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '100%', maxWidth: '380px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 auto' }}>
-                        <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
-                        <input
-                            type="text"
-                            placeholder="Search drivers..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{
-                                background: 'transparent',
-                                border: 'none',
-                                color: 'white',
-                                height: '52px',
-                                width: '100%',
-                                outline: 'none',
-                                fontSize: '14px',
-                                fontWeight: '500',
-                                minWidth: 0
-                            }}
-                        />
-                    </div>
-                    <button
-                        className="glass-card-hover-effect btn-primary"
-                        onClick={() => setShowModal(true)}
-                        style={{
+                <header className="flex-resp" style={{
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '20px',
+                    padding: '30px 0',
+                    marginBottom: '10px'
+                }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{
+                            width: 'clamp(40px, 10vw, 50px)',
+                            height: 'clamp(40px, 10vw, 50px)',
+                            background: 'linear-gradient(135deg, white, #f8fafc)',
+                            borderRadius: '16px',
+                            padding: '8px',
                             display: 'flex',
+                            justifyContent: 'center',
                             alignItems: 'center',
-                            gap: '10px',
-                            height: '52px',
-                            padding: '0 25px',
-                            borderRadius: '14px',
-                            fontWeight: '800',
-                            fontSize: '14px',
-                            cursor: 'pointer',
-                            whiteSpace: 'nowrap',
-                            flexShrink: 0
-                        }}
-                    >
-                        <Plus size={20} /> <span className="hide-mobile">Register</span><span className="show-mobile">Add</span>
-                    </button>
-                </div>
-            </header>
+                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                        }}>
+                            <Users size={28} color="#fbbf24" />
+                        </div>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Operations</span>
+                            </div>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', cursor: 'pointer' }}>
+                                Staff <span className="text-gradient-yellow">Drivers</span>
+                            </h1>
+                        </div>
+                    </div>
+                    <div className="mobile-search-row" style={{ display: 'flex', gap: '10px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+
+                        <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '100%', maxWidth: '380px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 auto' }}>
+                            <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                            <input
+                                type="text"
+                                placeholder="Search drivers..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white',
+                                    height: '52px',
+                                    width: '100%',
+                                    outline: 'none',
+                                    fontSize: '14px',
+                                    fontWeight: '500',
+                                    minWidth: 0
+                                }}
+                            />
+                        </div>
+                        <button
+                            className="glass-card-hover-effect btn-primary"
+                            onClick={() => setShowModal(true)}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                height: '52px',
+                                padding: '0 25px',
+                                borderRadius: '14px',
+                                fontWeight: '800',
+                                fontSize: '14px',
+                                cursor: 'pointer',
+                                whiteSpace: 'nowrap',
+                                flexShrink: 0
+                            }}
+                        >
+                            <Plus size={20} /> <span className="hide-mobile">Register</span><span className="show-mobile">Add</span>
+                        </button>
+                    </div>
+                </header>
             )}
-            
+
             {/* Sub-component quick header (Search and Add) */}
             {isSubComponent && (
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
@@ -415,7 +497,7 @@ const Drivers = ({ isSubComponent = false }) => {
                         <span style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', fontSize: '11px', fontWeight: '800' }}>{filteredDrivers.length} TOTAL</span>
                     </div>
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                         <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '220px', borderRadius: '10px', height: '40px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '220px', borderRadius: '10px', height: '40px', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <Search size={16} style={{ margin: '0 10px', color: 'rgba(255,255,255,0.4)' }} />
                             <input type="text" placeholder="Quick search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                                 style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', outline: 'none', width: '100%' }} />
@@ -790,10 +872,81 @@ const Drivers = ({ isSubComponent = false }) => {
                                     </div>
 
                                     <div>
-                                        <label className="input-label" style={{ marginBottom: '6px' }}>Driving License</label>
+                                        <label className="input-label" style={{ marginBottom: '6px' }}>Driving License Number</label>
                                         <input className="input-field" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="DL No. (Optional)" style={{ background: 'rgba(0,0,0,0.2)' }} />
                                     </div>
 
+                                    <div style={{ marginTop: '20px' }}>
+                                        <p style={{ color: '#8b5cf6', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <FileText size={14} /> Documentation (Uploads)
+                                        </p>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+                                            {[
+                                                { label: 'Aadhar Card', key: 'aadharCard' },
+                                                { label: 'License Copy', key: 'drivingLicense' },
+                                                { label: 'Offer Letter', key: 'offerLetter' }
+                                            ].map(item => (
+                                                <label key={item.key} style={{
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    padding: '12px',
+                                                    background: docs[item.key] ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255,255,255,0.03)',
+                                                    borderRadius: '12px',
+                                                    border: docs[item.key] ? '1px dashed #8b5cf6' : '1px dashed rgba(255,255,255,0.1)',
+                                                    cursor: 'pointer',
+                                                    transition: 'all 0.2s ease'
+                                                }}>
+                                                    <div style={{ color: docs[item.key] ? '#8b5cf6' : 'rgba(255,255,255,0.4)' }}>
+                                                        {docs[item.key] ? <CheckCircle size={20} /> : <Plus size={20} />}
+                                                    </div>
+                                                    <span style={{ fontSize: '10px', color: docs[item.key] ? '#8b5cf6' : 'white', fontWeight: '700', textAlign: 'center' }}>{docs[item.key] ? docs[item.key].name.substring(0, 15) + '...' : item.label}</span>
+                                                    <input type="file" hidden onChange={(e) => setDocs({ ...docs, [item.key]: e.target.files[0] })} />
+                                                </label>
+                                            ))}
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginTop: '25px', padding: '15px', background: 'rgba(244, 63, 94, 0.05)', borderRadius: '12px', border: '1px solid rgba(244, 63, 94, 0.1)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                            <p style={{ color: '#f43f5e', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Clock size={14} /> Overtime (O/T) Settings
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => setOvertime({ ...overtime, enabled: !overtime.enabled })}
+                                                style={{
+                                                    background: overtime.enabled ? '#f43f5e' : 'rgba(255,255,255,0.05)',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    padding: '4px 12px',
+                                                    borderRadius: '20px',
+                                                    fontSize: '10px',
+                                                    fontWeight: '800',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                {overtime.enabled ? 'ENABLED' : 'DISABLED'}
+                                            </button>
+                                        </div>
+
+                                        {overtime.enabled && (
+                                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="form-grid-2">
+                                                <div>
+                                                    <label className="input-label" style={{ fontSize: '10px' }}>Threshold (Hours)</label>
+                                                    <input type="number" className="input-field" value={overtime.threshold} onChange={(e) => setOvertime({ ...overtime, threshold: e.target.value })} placeholder="e.g. 9" style={{ background: 'rgba(0,0,0,0.2)', height: '36px', fontSize: '13px' }} />
+                                                </div>
+                                                <div>
+                                                    <label className="input-label" style={{ fontSize: '10px' }}>O/T Rate (Per Hour)</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>₹</span>
+                                                        <input type="number" className="input-field" value={overtime.rate} onChange={(e) => setOvertime({ ...overtime, rate: e.target.value })} placeholder="0" style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '24px', height: '36px', fontSize: '13px' }} />
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
+                                    </div>
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '15px' }}>
@@ -906,9 +1059,103 @@ const Drivers = ({ isSubComponent = false }) => {
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="input-label" style={{ marginBottom: '6px' }}>Driving License</label>
-                                        <input className="input-field" value={editForm.licenseNumber} onChange={(e) => setEditForm({ ...editForm, licenseNumber: e.target.value })} placeholder="DL No. (Optional)" style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                    <div style={{ marginTop: '20px' }}>
+                                        <p style={{ color: '#8b5cf6', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <FileText size={14} /> Documentation Status
+                                        </p>
+
+                                        <div style={{ background: 'rgba(0,0,0,0.2)', borderRadius: '12px', padding: '15px' }}>
+                                            {editingDriver.documents && editingDriver.documents.length > 0 ? (
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                    {editingDriver.documents.map(doc => (
+                                                        <div key={doc._id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                                <div style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', padding: '6px', borderRadius: '6px' }}><FileText size={14} /></div>
+                                                                <div>
+                                                                    <div style={{ fontSize: '12px', color: 'white', fontWeight: '700' }}>{doc.documentType}</div>
+                                                                    <div style={{ fontSize: '10px', color: doc.verificationStatus === 'Verified' ? '#10b981' : doc.verificationStatus === 'Rejected' ? '#f43f5e' : '#fbbf24', fontWeight: '800', textTransform: 'uppercase' }}>{doc.verificationStatus}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ display: 'flex', gap: '8px' }}>
+                                                                <a href={doc.imageUrl} target="_blank" rel="noopener noreferrer" style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}><ExternalLink size={14} /></a>
+                                                                {doc.verificationStatus !== 'Verified' && (
+                                                                    <button type="button" onClick={() => handleVerifyDoc(editingDriver._id, doc._id, 'Verified')} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}><CheckCircle size={14} /></button>
+                                                                )}
+                                                                {doc.verificationStatus !== 'Rejected' && (
+                                                                    <button type="button" onClick={() => handleVerifyDoc(editingDriver._id, doc._id, 'Rejected')} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}><XCircle size={14} /></button>
+                                                                )}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', textAlign: 'center', padding: '10px' }}>No documents uploaded yet.</div>
+                                            )}
+
+                                            <div style={{ marginTop: '15px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '15px' }}>
+                                                <label className="input-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', display: 'block' }}>Update Documents</label>
+                                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                    {[
+                                                        { label: '+ Aadhaar', key: 'aadharCard' },
+                                                        { label: '+ License', key: 'drivingLicense' }
+                                                    ].map(item => (
+                                                        <label key={item.key} style={{
+                                                            padding: '6px 12px',
+                                                            background: docs[item.key] ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.05)',
+                                                            borderRadius: '8px',
+                                                            border: '1px solid rgba(255,255,255,0.1)',
+                                                            fontSize: '10px',
+                                                            color: docs[item.key] ? '#a78bfa' : 'white',
+                                                            cursor: 'pointer',
+                                                            fontWeight: '700'
+                                                        }}>
+                                                            {docs[item.key] ? 'File Ready' : item.label}
+                                                            <input type="file" hidden onChange={(e) => setDocs({ ...docs, [item.key]: e.target.files[0] })} />
+                                                        </label>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginTop: '25px', padding: '15px', background: 'rgba(244, 63, 94, 0.05)', borderRadius: '12px', border: '1px solid rgba(244, 63, 94, 0.1)' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                            <p style={{ color: '#f43f5e', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Clock size={14} /> Overtime (O/T) Settings
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditForm({ ...editForm, overtimeEnabled: !editForm.overtimeEnabled })}
+                                                style={{
+                                                    background: editForm.overtimeEnabled ? '#f43f5e' : 'rgba(255,255,255,0.05)',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    padding: '4px 12px',
+                                                    borderRadius: '20px',
+                                                    fontSize: '10px',
+                                                    fontWeight: '800',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                {editForm.overtimeEnabled ? 'ENABLED' : 'DISABLED'}
+                                            </button>
+                                        </div>
+
+                                        {editForm.overtimeEnabled && (
+                                            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} className="form-grid-2">
+                                                <div>
+                                                    <label className="input-label" style={{ fontSize: '10px' }}>Threshold (Hours)</label>
+                                                    <input type="number" className="input-field" value={editForm.overtimeThreshold} onChange={(e) => setEditForm({ ...editForm, overtimeThreshold: e.target.value })} placeholder="e.g. 9" style={{ background: 'rgba(0,0,0,0.2)', height: '36px', fontSize: '13px' }} />
+                                                </div>
+                                                <div>
+                                                    <label className="input-label" style={{ fontSize: '10px' }}>O/T Rate (Per Hour)</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <span style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>₹</span>
+                                                        <input type="number" className="input-field" value={editForm.overtimeRate} onChange={(e) => setEditForm({ ...editForm, overtimeRate: e.target.value })} placeholder="0" style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '24px', height: '36px', fontSize: '13px' }} />
+                                                    </div>
+                                                </div>
+                                            </motion.div>
+                                        )}
                                     </div>
                                 </div>
 
