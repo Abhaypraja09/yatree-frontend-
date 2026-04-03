@@ -549,44 +549,44 @@ const EventManagement = () => {
                 alert("No event data available.");
                 return;
             }
-
-            const logo = await loadImage('/logos/yatree_logo.png').catch(() => null);
-            const signature = await loadImage('/logos/kavish_sign.png').catch(() => null);
+            // Load assets
+            const logo = await loadImage(selectedCompany?.logoUrl || '/logos/yatree_logo.png').catch(() => null);
+            const signature = await loadImage(selectedCompany?.ownerSignatureUrl || '/logos/kavish_sign.png').catch(() => null);
 
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.getWidth();
             const pageHeight = doc.internal.pageSize.getHeight();
 
-            // 1. PREMIUM HEADER
-            doc.setFillColor(15, 23, 42);
+            // 1. HEADER (STUNNING MODERN STYLE)
+            doc.setFillColor(15, 23, 42); // Slate 900
             doc.rect(0, 0, pageWidth, 50, 'F');
 
-            if (logo) doc.addImage(logo, 'PNG', 12, 8, 30, 30);
+            if (logo) {
+                doc.addImage(logo, 'PNG', 12, 8, 30, 30);
+            }
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text('YATREE DESTINATION', 45, 22);
+            doc.text(selectedCompany?.name || 'YATREE DESTINATION', 45, 22);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(200, 200, 200);
             doc.text('Premium Fleet Management & Travel Solutions', 45, 30);
             doc.setTextColor(251, 191, 36);
-            doc.text('www.yatreedestination.com', 45, 37);
+            doc.text(selectedCompany?.website || 'www.yatreedestination.com', 45, 37);
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);
             doc.setFont('helvetica', 'bold');
-            doc.text(mode === 'client' ? 'CLIENT MISSION REPORT' : 'INTERNAL OPS REPORT', pageWidth - 15, 22, { align: 'right' });
-            doc.setFontSize(9);
-            doc.setFont('helvetica', 'normal');
+            doc.text('EVENT SUMMARY', pageWidth - 15, 22, { align: 'right' });
+            doc.setFontSize(10);
+            doc.text((selectedEventDetails.event?.name || 'GENERIC MISSION').toUpperCase(), pageWidth - 15, 30, { align: 'right' });
+            doc.setFontSize(8);
             doc.setTextColor(150, 150, 150);
-            doc.text(`DATE GENERATED`, pageWidth - 15, 30, { align: 'right' });
-            doc.setTextColor(255, 255, 255);
-            doc.setFontSize(11);
-            doc.text(todayIST().toUpperCase(), pageWidth - 15, 36, { align: 'right' });
+            doc.text(`DATE: ${formatDateIST(new Date())}`, pageWidth - 15, 37, { align: 'right' });
 
-            // 2. MISSION INFORMATION
+            // 2. EVENT SPECIFICATIONS
             doc.setTextColor(15, 23, 42);
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
@@ -699,15 +699,17 @@ const EventManagement = () => {
             doc.text('This is a computer-generated operational report for missions logistical audit.', 15, footerY);
 
             const sigX = pageWidth - 75;
-            if (signature) doc.addImage(signature, 'PNG', sigX, footerY - 20, 55, 22);
+            if (signature) {
+                doc.addImage(signature, 'PNG', sigX, footerY - 20, 55, 22);
+            }
             doc.setDrawColor(15, 23, 42); doc.setLineWidth(0.6);
             doc.line(sigX - 5, footerY + 5, pageWidth - 15, footerY + 5);
-            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); doc.text('KAVISH JAIN', sigX - 2, footerY + 12);
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); doc.text((selectedCompany?.ownerName || 'AUTHORISED SIGNATORY').toUpperCase(), sigX - 2, footerY + 12);
             doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
-            doc.text('Founder & Director', sigX - 2, footerY + 17);
-            doc.text('Yatree Destination Pvt. Ltd.', sigX - 2, footerY + 21);
+            doc.text('Operations Controller', sigX - 2, footerY + 17);
+            doc.text(`${selectedCompany?.name || 'Fleet CRM'}`, sigX - 2, footerY + 21);
 
-            doc.save(`${mode === 'client' ? 'Client' : 'Internal'}_Report_${selectedEventDetails.event?.name.replace(/\s+/g, '_')}.pdf`);
+            doc.save(`${mode === 'client' ? 'Client' : 'Internal'}_Report_${(selectedEventDetails.event?.name || 'Report').replace(/\s+/g, '_')}.pdf`);
         } catch (error) {
             console.error(error);
             alert("Error generating mission PDF report: " + error.message);

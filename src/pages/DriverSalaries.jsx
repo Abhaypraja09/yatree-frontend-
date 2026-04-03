@@ -384,8 +384,11 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 return;
             }
 
-            const logo = await loadImage('/logos/yatree_logo.png').catch(() => null);
-            const signature = await loadImage('/logos/kavish_sign.png').catch(() => null);
+            const logoUrl = selectedCompany?.logoUrl || '/logos/yatree_logo.png';
+            const logo = await loadImage(logoUrl).catch(() => null);
+            
+            const sigUrl = selectedCompany?.ownerSignatureUrl || '/logos/kavish_sign.png';
+            const signature = await loadImage(sigUrl).catch(() => null); 
 
             const monthName = new Date(year, month - 1, 1).toLocaleString('default', { month: 'long' });
             const periodLabel = `${monthName} ${year}`;
@@ -405,13 +408,13 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text('YATREE DESTINATION', 45, 22);
+            doc.text((selectedCompany?.name || 'YATREE DESTINATION').toUpperCase(), 45, 22);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(200, 200, 200);
-            doc.text('Premium Fleet Management & Travel Solutions', 45, 30);
+            doc.text('Commercial Fleet Operations & Management', 45, 30);
             doc.setTextColor(14, 165, 233);
-            doc.text('www.yatreedestination.com', 45, 37);
+            doc.text(selectedCompany?.website || 'www.yatreedestination.com', 45, 37);
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);
@@ -514,9 +517,10 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             });
 
             // 4. ADVANCES TABLE
-            let nextY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 120) + 15;
-            if (nextY > pageHeight - 80) { doc.addPage(); nextY = 20; }
-            doc.text('ADVANCES', 15, nextY);
+            let currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 120) + 15;
+            if (currentY > pageHeight - 80) { doc.addPage(); currentY = 20; }
+            doc.setTextColor(15, 23, 42); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+            doc.text('ADVANCES', 15, currentY);
 
             const advRows = (data.advances || []).map(adv => [
                 formatDateIST(adv.date),
@@ -528,7 +532,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             autoTable(doc, {
                 head: [['DATE', 'PARTICULARS', 'AMOUNT (Rs.)', 'STATUS']],
                 body: advRows,
-                startY: nextY + 5,
+                startY: currentY + 5,
                 theme: 'striped',
                 headStyles: { fillColor: [244, 63, 94], fontSize: 8, halign: 'center' },
                 bodyStyles: { fontSize: 8, halign: 'center', textColor: [51, 65, 85] },
@@ -536,10 +540,10 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             });
 
             // 5. SPECIAL PAYMENTS (ALLOWANCES) TABLE 
-            let allowanceY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 15;
-            if (allowanceY > pageHeight - 80) { doc.addPage(); allowanceY = 20; }
+            currentY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : currentY) + 15;
+            if (currentY > pageHeight - 80) { doc.addPage(); currentY = 20; }
             doc.setTextColor(15, 23, 42); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-            doc.text('SPECIAL PAYMENTS (ALLOWANCES)', 15, allowanceY);
+            doc.text('SPECIAL PAYMENTS (ALLOWANCES)', 15, currentY);
 
             const allowRows = (data.allowances || []).map(al => [
                 formatDateIST(al.date),
@@ -552,22 +556,24 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 autoTable(doc, {
                     head: [['DATE', 'TYPE', 'REMARKS', 'AMOUNT (Rs.)']],
                     body: allowRows,
-                    startY: allowanceY + 5,
+                    startY: currentY + 5,
                     theme: 'striped',
                     headStyles: { fillColor: [16, 185, 129], fontSize: 8, halign: 'center' },
                     bodyStyles: { fontSize: 8, halign: 'center', textColor: [51, 65, 85] },
                     margin: { left: 15, right: 15 }
                 });
+                currentY = doc.lastAutoTable.finalY;
             } else {
                 doc.setFontSize(9); doc.setFont('helvetica', 'italic'); doc.setTextColor(150, 150, 150);
-                doc.text('No special payments recorded for this period.', 15, allowanceY + 10);
+                doc.text('No special payments recorded for this period.', 15, currentY + 10);
+                currentY += 15;
             }
 
             // 6. LOAN & EMI SECTION
-            let loanY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : allowanceY) + 15;
-            if (loanY > pageHeight - 80) { doc.addPage(); loanY = 20; }
+            currentY += 15;
+            if (currentY > pageHeight - 80) { doc.addPage(); currentY = 20; }
             doc.setTextColor(15, 23, 42); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
-            doc.text('LOANS & EMI PROGRESS', 15, loanY);
+            doc.text('LOANS & EMI PROGRESS', 15, currentY);
 
             const loanRows = (data.loans || []).map(loan => {
                 const sDate = new Date(loan.startDate);
@@ -575,7 +581,6 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 const selVal = (parseInt(year) * 12) + parseInt(month);
                 const monthIdx = (selVal - sVal) + 1;
 
-                // Smart fallback for tenure (Total / EMI)
                 const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
                 const isCompleted = loan.status === 'Completed';
 
@@ -604,34 +609,37 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 autoTable(doc, {
                     head: [['LOAN DATE', 'TOTAL AMOUNT', 'EMI AMOUNT', 'REMAINING', 'EMI PROGRESS', 'STATUS']],
                     body: loanRows,
-                    startY: loanY + 5,
+                    startY: currentY + 5,
                     theme: 'grid',
                     headStyles: { fillColor: [99, 102, 241], fontSize: 8, halign: 'center' },
                     bodyStyles: { fontSize: 8, halign: 'center', textColor: [51, 65, 85] },
                     margin: { left: 15, right: 15 }
                 });
+                currentY = doc.lastAutoTable.finalY;
             } else {
                 doc.setFontSize(9); doc.setFont('helvetica', 'italic'); doc.setTextColor(150, 150, 150);
-                doc.text('No active or historical loans recorded for this driver.', 15, loanY + 10);
+                doc.text('No active or historical loans recorded for this driver.', 15, currentY + 10);
+                currentY += 15;
             }
 
             // 6. SIGNATURE & FOOTER
-            let footerY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : loanY) + 35;
-            if (footerY > pageHeight - 60) { doc.addPage(); footerY = 30; }
+            currentY += 35;
+            if (currentY > pageHeight - 60) { doc.addPage(); currentY = 30; }
 
             doc.setFontSize(8);
             doc.setTextColor(148, 163, 184);
             doc.setFont('helvetica', 'italic');
-            doc.text('Note: This is an electronically generated statement. Any discrepancies must be reported to the accounts department within 48 hours for rectification.', 15, footerY, { maxWidth: pageWidth - 100 });
+            doc.text('Note: This is an electronically generated statement. Any discrepancies must be reported to the accounts department within 48 hours for rectification.', 15, currentY, { maxWidth: pageWidth - 100 });
 
             const sigX = pageWidth - 75;
-            if (signature) doc.addImage(signature, 'PNG', sigX, footerY - 20, 55, 22);
+            if (signature) doc.addImage(signature, 'PNG', sigX, currentY - 20, 55, 22);
             doc.setDrawColor(15, 23, 42); doc.setLineWidth(0.6);
-            doc.line(sigX - 5, footerY + 5, pageWidth - 15, footerY + 5);
-            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); doc.text('KAVISH JAIN', sigX - 2, footerY + 12);
+            doc.line(sigX - 5, currentY + 5, pageWidth - 15, currentY + 5);
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); 
+            doc.text((selectedCompany?.ownerName || 'KAVISH JAIN').toUpperCase(), sigX - 2, currentY + 12);
             doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
-            doc.text('Founder & Director', sigX - 2, footerY + 17);
-            doc.text('Yatree Destination Pvt. Ltd.', sigX - 2, footerY + 21);
+            doc.text('Authorized Signatory', sigX - 2, currentY + 17);
+            doc.text(`${selectedCompany?.name || 'Yatree Destination Pvt. Ltd.'}`, sigX - 2, currentY + 21);
 
             doc.setFontSize(7); doc.setTextColor(203, 213, 225);
             doc.text(`Generated on: ${formatDateTimeIST(new Date())}`, 15, pageHeight - 10);

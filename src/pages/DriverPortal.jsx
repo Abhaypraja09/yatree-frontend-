@@ -167,6 +167,8 @@ const DriverPortal = () => {
     const [nightStay, setNightStay] = useState(false);
     const [otherRemarks, setOtherRemarks] = useState('');
     const [remarks, setRemarks] = useState('');
+    const [specialPay, setSpecialPay] = useState('');
+    const [specialPayRemark, setSpecialPayRemark] = useState('');
 
     // Camera Modal states
     const [activeCamera, setActiveCamera] = useState(null);
@@ -259,7 +261,9 @@ const DriverPortal = () => {
         formData.append('selfie', selfie);
         formData.append('kmPhoto', kmPhoto);
         formData.append('carSelfie', carSelfie);
-        formData.append('latitude', 0);
+        formData.append('dutyCount', '1');
+        formData.append('specialPay', specialPay || '0');
+        formData.append('specialPayRemark', specialPayRemark || '');
         formData.append('longitude', 0);
         formData.append('address', 'Location Disabled');
 
@@ -404,8 +408,8 @@ const DriverPortal = () => {
             }
 
             // Load assets
-            const logo = await loadImage('/logos/yatree_logo.png').catch(() => null);
-            const signature = await loadImage('/logos/kavish_sign.png').catch(() => null);
+            const logo = await loadImage(user.company?.logoUrl || '/logos/yatree_logo.png').catch(() => null);
+            const signature = await loadImage(user.company?.ownerSignatureUrl || '/logos/kavish_sign.png').catch(() => null);
 
             const monthName = new Date(ledgerYear, ledgerMonth - 1, 1).toLocaleString('default', { month: 'long' });
             const periodLabel = `${monthName} ${ledgerYear}`;
@@ -419,21 +423,19 @@ const DriverPortal = () => {
             doc.rect(0, 0, pageWidth, 50, 'F');
 
             if (logo) {
-                // Add white circle behind logo for premium look if needed, 
-                // but usually logo on dark is fine if transparent
                 doc.addImage(logo, 'PNG', 12, 8, 30, 30);
             }
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text('YATREE DESTINATION', 45, 22);
+            doc.text(user.company?.name || 'YATREE DESTINATION', 45, 22);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(200, 200, 200);
             doc.text('Premium Fleet Management & Travel Solutions', 45, 30);
             doc.setTextColor(14, 165, 233); // Blue accent
-            doc.text('www.yatreedestination.com', 45, 37);
+            doc.text(user.company?.website || 'www.yatreedestination.com', 45, 37);
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);
@@ -464,7 +466,7 @@ const DriverPortal = () => {
 
             doc.setTextColor(15, 23, 42);
             doc.setFont('helvetica', 'bold');
-            doc.text(user.name.toUpperCase(), 45, 76);
+            doc.text(user.name?.toUpperCase() || 'N/A', 45, 76);
             doc.text(user.mobile || 'N/A', 45, 84);
             doc.text('PROFESSIONAL DRIVER', 45, 92);
 
@@ -476,9 +478,9 @@ const DriverPortal = () => {
             doc.setFont('helvetica', 'bold');
             doc.text('PAYMENT OVERVIEW', pageWidth / 2 + 5, 68);
             
-            const totalEarned = ledgerData.summary.totalEarned || 0;
-            const totalEMI = Number(ledgerData.summary.totalEMI) || 0;
-            const netPayable = ledgerData.summary.netPayable || (totalEarned - (ledgerData.summary.pendingAdvance || 0) - totalEMI);
+            const totalEarned = ledgerData.summary?.totalEarned || 0;
+            const totalEMI = Number(ledgerData.summary?.totalEMI) || 0;
+            const netPayable = ledgerData.summary?.netPayable || (totalEarned - (ledgerData.summary?.pendingAdvance || 0) - totalEMI);
 
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
@@ -490,7 +492,7 @@ const DriverPortal = () => {
             doc.setTextColor(15, 23, 42);
             doc.text(`Rs. ${totalEarned.toLocaleString('en-IN')}`, pageWidth - 20, 74, { align: 'right' });
             doc.setTextColor(244, 63, 94);
-            doc.text(`- Rs. ${(ledgerData.summary.pendingAdvance || 0).toLocaleString('en-IN')}`, pageWidth - 20, 78, { align: 'right' });
+            doc.text(`- Rs. ${(ledgerData.summary?.pendingAdvance || 0).toLocaleString('en-IN')}`, pageWidth - 20, 78, { align: 'right' });
             doc.text(`- Rs. ${totalEMI.toLocaleString('en-IN')}`, pageWidth - 20, 82, { align: 'right' });
             
             doc.setDrawColor(203, 213, 225);
@@ -514,12 +516,13 @@ const DriverPortal = () => {
                 `Rs. ${att.dailyWage || 0}`,
                 `Rs. ${att.sameDayReturn || 0}`,
                 `Rs. ${att.nightStay || 0}`,
+                `Rs. ${att.specialPay || 0}`,
                 `Rs. ${att.parking || 0}`,
                 `Rs. ${(att.dailyWage || 0) + (att.bonuses || 0) + (att.parking || 0)}`
             ]);
 
             autoTable(doc, {
-                head: [['DATE', 'VEHICLE NO.', 'WAGE', 'SAME DAY', 'NIGHT STAY', 'PARKING', 'TOTAL (Rs.)']],
+                head: [['DATE', 'VEHICLE NO.', 'WAGE', 'SAME DAY', 'NIGHT STAY', 'SPL. PAY', 'PARKING', 'TOTAL (Rs.)']],
                 body: dutyRows,
                 startY: 120,
                 theme: 'grid',
@@ -549,7 +552,7 @@ const DriverPortal = () => {
             doc.setTextColor(15, 23, 42);
             doc.text('ADVANCES', 15, nextY);
 
-            const advRows = ledgerData.advances.map(adv => {
+            const advRows = (ledgerData.advances || []).map(adv => {
                 const status = (adv.status || '').toLowerCase();
                 const displayStatus = status === 'pending' ? 'PAID' : (status === 'recovered' ? 'SETTLED' : (adv.status || '').toUpperCase());
                 return [
@@ -579,9 +582,38 @@ const DriverPortal = () => {
                 },
                 margin: { left: 15, right: 15 }
             });
+            
+            // 5. SPECIAL PAYOUTS (ALLOWANCES) TABLE 
+            let allowanceY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 15;
+            if (allowanceY > pageHeight - 80) { doc.addPage(); allowanceY = 20; }
+            
+            const specialPayouts = (ledgerData.allowances || []);
+            if (specialPayouts.length > 0) {
+                doc.setFontSize(12);
+                doc.setFont('helvetica', 'bold');
+                doc.setTextColor(15, 23, 42);
+                doc.text('SPECIAL PAYOUTS (BONUS)', 15, allowanceY);
 
-            // 5. LOAN & EMI SECTION
-            let loanY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 15;
+                const allowanceRows = specialPayouts.map(a => [
+                    formatDateIST(a.date),
+                    (a.remark || 'SPECIAL ALLOWANCE').toUpperCase(),
+                    `Rs. ${a.amount}`,
+                    (a.type || 'Other').toUpperCase()
+                ]);
+
+                autoTable(doc, {
+                    head: [['DATE', 'REMARK', 'AMOUNT (Rs.)', 'TYPE']],
+                    body: allowanceRows,
+                    startY: allowanceY + 5,
+                    theme: 'striped',
+                    headStyles: { fillColor: [16, 185, 129], textColor: [255, 255, 255], fontSize: 8, fontStyle: 'bold', halign: 'center' },
+                    bodyStyles: { fontSize: 8, halign: 'center', textColor: [51, 65, 85] },
+                    margin: { left: 15, right: 15 }
+                });
+            }
+
+            // 6. LOANS TABLE
+            let loanY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : allowanceY) + 15;
             if (loanY > pageHeight - 80) { doc.addPage(); loanY = 20; }
             doc.setTextColor(15, 23, 42); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
             doc.text('LOANS & EMI PROGRESS', 15, loanY);
@@ -644,7 +676,6 @@ const DriverPortal = () => {
             // Signature Placement
             const sigX = pageWidth - 75;
             if (signature) {
-                // Placing the signature with transparency and proper sizing
                 doc.addImage(signature, 'PNG', sigX, footerY - 20, 55, 22);
             }
             
@@ -657,13 +688,13 @@ const DriverPortal = () => {
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(15, 23, 42);
-            doc.text('KAVISH JAIN', sigX - 2, footerY + 12);
+            doc.text((user.company?.ownerName || 'AUTHORISED SIGNATORY').toUpperCase(), sigX - 2, footerY + 12);
             
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(100, 116, 139);
             doc.text('Founder & Director', sigX - 2, footerY + 17);
-            doc.text('Yatree Destination Pvt. Ltd.', sigX - 2, footerY + 21);
+            doc.text(`${user.company?.name || 'Fleet CRM'}`, sigX - 2, footerY + 21);
 
 
             // Generated at bottom
@@ -671,7 +702,7 @@ const DriverPortal = () => {
             doc.setTextColor(203, 213, 225);
             doc.text(`Generated on: ${formatDateTimeIST(new Date())}`, 15, pageHeight - 10);
 
-            const fileName = `Salary_Slip_${user.name.replace(/\s+/g, '_')}_${monthName}_${ledgerYear}.pdf`;
+            const fileName = `Salary_Slip_${user.name?.replace(/\s+/g, '_')}_${monthName}_${ledgerYear}.pdf`;
             doc.save(fileName);
         } catch (error) {
             console.error("PDF Export Error:", error);
@@ -784,6 +815,31 @@ const DriverPortal = () => {
                                     >
                                         <Car size={18} /> {t('parking')}
                                     </button>
+                                    <button
+                                        onClick={() => {
+                                            setExpenseEntries([{ type: 'special_pay', amount: '', quantity: '', km: '', fuelType: '', slip: null, preview: null }]);
+                                            setExpenseModalType('special_pay');
+                                            setShowExpenseModal(true);
+                                        }}
+                                        style={{
+                                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                                            color: 'white',
+                                            height: '42px',
+                                            padding: '0 14px',
+                                            borderRadius: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px',
+                                            border: 'none',
+                                            boxShadow: '0 6px 16px rgba(16, 185, 129, 0.25)',
+                                            cursor: 'pointer',
+                                            fontWeight: '700',
+                                            fontSize: '13px'
+                                        }}
+                                    >
+                                        <Wallet size={18} /> {t('specialPay')}
+                                    </button>
                                     {showPunchOut && !showPunchOutForm && (
                                         <button
                                             onClick={() => setShowPunchOutForm(true)}
@@ -866,22 +922,7 @@ const DriverPortal = () => {
                         </div>
                     </header>
 
-                    <div className="tab-navigation" style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <button
-                            onClick={() => setActiveTab('home')}
-                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'home' ? 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' : 'transparent', color: 'white', fontWeight: '800', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', transition: 'all 0.3s' }}
-                        >
-                            <LayoutDashboard size={18} /> {t('today')}
-                        </button>
-                        <button
-                            onClick={() => setActiveTab('ledger')}
-                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'ledger' ? 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' : 'transparent', color: 'white', fontWeight: '800', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', transition: 'all 0.3s' }}
-                        >
-                            <Wallet size={18} /> {t('ledger')}
-                        </button>
-                    </div>
-
-                    {/* Status Tracker Global - Moved per user request */}
+                    {/* Status Tracker Global - Moved above tabs per user request */}
                     <div className="glass-card" style={{
                         padding: 'clamp(20px, 4vw, 24px)',
                         background: 'linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.02) 100%)',
@@ -954,6 +995,21 @@ const DriverPortal = () => {
                                 </p>
                             </div>
                         </div>
+                    </div>
+
+                    <div className="tab-navigation" style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <button
+                            onClick={() => setActiveTab('home')}
+                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'home' ? 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' : 'transparent', color: 'white', fontWeight: '800', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', transition: 'all 0.3s' }}
+                        >
+                            <LayoutDashboard size={18} /> {t('today')}
+                        </button>
+                        <button
+                            onClick={() => setActiveTab('ledger')}
+                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'ledger' ? 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' : 'transparent', color: 'white', fontWeight: '800', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', transition: 'all 0.3s' }}
+                        >
+                            <Wallet size={18} /> {t('ledger')}
+                        </button>
                     </div>
 
                     {activeTab === 'home' && (
@@ -1139,17 +1195,6 @@ const DriverPortal = () => {
                                             </div>
 
 
-                                            <div className="input-wrapper-full" style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
-                                                <label className="input-label">{t('currentKm')}</label>
-                                                <input
-                                                    type="number"
-                                                    className="input-field"
-                                                    placeholder={t('enterKm')}
-                                                    value={km}
-                                                    onChange={(e) => setKm(e.target.value)}
-                                                />
-                                            </div>
-
                                             {/* Vehicle Selection (Punch-In only) */}
                                             {showPunchIn && (
                                                 <div className="input-wrapper-full" style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
@@ -1169,6 +1214,17 @@ const DriverPortal = () => {
                                                     </select>
                                                 </div>
                                             )}
+
+                                            <div className="input-wrapper-full" style={{ marginBottom: 'clamp(16px, 4vw, 20px)' }}>
+                                                <label className="input-label">{t('currentKm')}</label>
+                                                <input
+                                                    type="number"
+                                                    className="input-field"
+                                                    placeholder={t('enterKm')}
+                                                    value={km}
+                                                    onChange={(e) => setKm(e.target.value)}
+                                                />
+                                            </div>
 
                                             {/* Photo Captures */}
                                             <div className="photo-capture-grid" style={{ marginBottom: 'clamp(20px, 5vw, 28px)' }}>
@@ -1329,6 +1385,29 @@ const DriverPortal = () => {
                                                             style={{ fontSize: '14px', resize: 'vertical', minHeight: '60px' }}
                                                         />
                                                     </div>
+                                                    <div className="modal-grid-2" style={{ marginTop: '16px', gap: '16px' }}>
+                                                        <div className="input-wrapper-full">
+                                                            <label className="input-label" style={{ color: 'var(--primary)', fontWeight: '800' }}>{t('specialPay')}</label>
+                                                            <input
+                                                                type="number"
+                                                                className="input-field"
+                                                                placeholder="₹ 0.00"
+                                                                value={specialPay}
+                                                                onChange={(e) => setSpecialPay(e.target.value)}
+                                                                style={{ border: '1px solid rgba(14, 165, 233, 0.3)' }}
+                                                            />
+                                                        </div>
+                                                        <div className="input-wrapper-full">
+                                                            <label className="input-label">{t('specialPayRemark')}</label>
+                                                            <input
+                                                                type="text"
+                                                                className="input-field"
+                                                                placeholder="Reason for special pay"
+                                                                value={specialPayRemark}
+                                                                onChange={(e) => setSpecialPayRemark(e.target.value)}
+                                                            />
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             )}
 
@@ -1366,6 +1445,7 @@ const DriverPortal = () => {
                                                 <h3 className="modal-title">
                                                     {expenseModalType === 'fuel' ? t('logFuel') :
                                                         expenseModalType === 'parking' ? t('logParking') :
+                                                        expenseModalType === 'special_pay' ? t('specialPay') :
                                                             t('driverSeva')}
                                                 </h3>
                                                 <p className="section-subtitle">{t('logExpense').toUpperCase()}</p>
@@ -1404,6 +1484,15 @@ const DriverPortal = () => {
                                                                 style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '12px', background: 'var(--secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
                                                             >
                                                                 <Car size={20} /> {t('logParking')}
+                                                            </button>
+                                                        )}
+                                                        {expenseModalType === 'special_pay' && (
+                                                            <button
+                                                                onClick={() => setExpenseEntries([{ type: 'special_pay', amount: '', quantity: '', km: '', fuelType: '', slip: null, preview: null }])}
+                                                                className="btn-primary"
+                                                                style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '12px', background: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}
+                                                            >
+                                                                <Wallet size={20} /> {t('specialPay')}
                                                             </button>
                                                         )}
                                                         {expenseModalType === 'other' && (
@@ -1839,7 +1928,9 @@ const DriverPortal = () => {
                                                         <p style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>Rs. {(item.dailyWage || 0) + (item.bonuses || 0) + (item.parking || 0)}</p>
                                                         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>
                                                             Wage: {item.dailyWage || 0}
-                                                            {item.bonuses > 0 ? ` + Bonus: ${item.bonuses}` : ''}
+                                                            {item.sameDayReturn > 0 ? ` + SD: ${item.sameDayReturn}` : ''}
+                                                            {item.nightStay > 0 ? ` + NS: ${item.nightStay}` : ''}
+                                                            {item.specialPay > 0 ? ` + SP: ${item.specialPay}` : ''}
                                                             {item.parking > 0 ? ` + Parking: ${item.parking}` : ''}
                                                         </p>
                                                     </div>
@@ -1866,6 +1957,31 @@ const DriverPortal = () => {
                                                         <p style={{ color: '#f43f5e', fontWeight: '900', fontSize: '15px' }}>Rs. {item.amount}</p>
                                                         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>
                                                             { (item.status || '').toLowerCase() === 'recovered' ? 'SETTLED' : 'PAID' }
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+
+                                    {/* Special Payout History (Allowance) */}
+                                    <h4 style={{ color: 'white', marginTop: '32px', marginBottom: '16px', fontSize: '16px', fontWeight: '800' }}>{t('specialPayoutHistory')}</h4>
+                                    {(!ledgerData?.allowances || ledgerData.allowances.length === 0) ? (
+                                        <div className="glass-card" style={{ padding: '32px', textAlign: 'center', marginBottom: '40px' }}>
+                                            <p style={{ color: 'var(--text-muted)', fontSize: '13px', fontWeight: '600' }}>No special payouts for this month</p>
+                                        </div>
+                                    ) : (
+                                        <div style={{ display: 'grid', gap: '12px', marginBottom: '40px' }}>
+                                            {ledgerData?.allowances?.map(item => (
+                                                <div key={item._id} className="glass-card" style={{ padding: '16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderLeft: '4px solid #10b981' }}>
+                                                    <div>
+                                                        <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{formatDateIST(item.date)}</p>
+                                                        <p style={{ color: 'var(--text-muted)', fontSize: '12px' }}>{item.remark || item.type}</p>
+                                                    </div>
+                                                    <div style={{ textAlign: 'right' }}>
+                                                        <p style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>+ Rs. {item.amount}</p>
+                                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>
+                                                            { (item.type || 'BONUS').toUpperCase() }
                                                         </p>
                                                     </div>
                                                 </div>

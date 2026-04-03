@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Plus, Search, Trash2, Car, X, Save, ChevronLeft, ChevronRight, Calendar, Edit, MapPin, Briefcase, Layers, ShoppingCart, TrendingUp } from 'lucide-react';
+import { Plus, Search, Trash2, Car, X, Save, ChevronLeft, ChevronRight, Calendar, Edit, MapPin, Briefcase, Layers, ShoppingCart, TrendingUp, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST } from '../utils/istUtils';
@@ -92,6 +94,117 @@ const OutsideCars = () => {
             setVehicles(data.vehicles?.filter(v => v.isOutsideCar && !v.eventId) || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
+    };
+
+    const loadImage = (url) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = url;
+        });
+    };
+
+    const handleExportPDF = async () => {
+        try {
+            if (filtered.length === 0) {
+                alert("No data available to export.");
+                return;
+            }
+
+            // Load assets
+            const logo = await loadImage(selectedCompany?.logoUrl || '/logos/yatree_logo.png').catch(() => null);
+            const signature = await loadImage(selectedCompany?.ownerSignatureUrl || '/logos/kavish_sign.png').catch(() => null);
+
+            const doc = new jsPDF();
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const pageHeight = doc.internal.pageSize.getHeight();
+
+            // 1. HEADER
+            doc.setFillColor(15, 23, 42); // Navy Dark
+            doc.rect(0, 0, pageWidth, 50, 'F');
+
+            if (logo) {
+                doc.addImage(logo, 'PNG', 12, 8, 30, 30);
+            }
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(20);
+            doc.setFont('helvetica', 'bold');
+            doc.text(selectedCompany?.name || 'FLEET MANAGEMENT', 45, 22);
+            doc.setFontSize(10);
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(200, 200, 200);
+            doc.text('Premium Fleet Management & Travel Solutions', 45, 30);
+            doc.setTextColor(14, 165, 233);
+            doc.text(selectedCompany?.website || 'www.yatreedestination.com', 45, 37);
+
+            doc.setTextColor(255, 255, 255);
+            doc.setFontSize(16);
+            doc.setFont('helvetica', 'bold');
+            doc.text('OUTSIDE FLEET REPORT', pageWidth - 15, 22, { align: 'right' });
+            doc.setFontSize(9);
+            doc.text(`PERIOD: ${fromDate} TO ${toDate}`, pageWidth - 15, 30, { align: 'right' });
+
+            // 2. SUMMARY STATS
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(12);
+            doc.setFont('helvetica', 'bold');
+            doc.text('REPORT SUMMARY', 15, 65);
+            doc.setDrawColor(14, 165, 233);
+            doc.setLineWidth(0.5);
+            doc.line(15, 68, 50, 68);
+
+            const totalAmount = filtered.reduce((sum, v) => sum + (Number(v.dutyAmount) || 0), 0);
+
+            doc.setFontSize(10);
+            doc.setTextColor(100, 116, 139);
+            doc.text(`Total Duties: ${filtered.length}`, 15, 76);
+            doc.text(`Total Payable: Rs. ${totalAmount.toLocaleString('en-IN')}`, 15, 84);
+            doc.text(`Vendor: ${ownerFilter}`, 15, 92);
+
+            // 3. TABLE
+            const body = filtered.map(v => [
+                formatDateIST(v.carNumber?.split('#')[1] || v.createdAt),
+                v.ownerName,
+                `${v.model} - ${v.carNumber?.split('#')[0]}`,
+                v.property || 'Direct',
+                v.dutyType || 'Standard',
+                `Rs. ${Number(v.dutyAmount || 0).toLocaleString('en-IN')}`
+            ]);
+
+            autoTable(doc, {
+                head: [['DATE', 'VENDOR', 'VEHICLE', 'PROPERTY', 'DUTY TYPE', 'AMOUNT']],
+                body: body,
+                startY: 100,
+                theme: 'grid',
+                headStyles: { fillColor: [15, 23, 42], fontSize: 8, halign: 'center' },
+                bodyStyles: { fontSize: 8, halign: 'center' },
+                alternateRowStyles: { fillColor: [248, 250, 252] },
+                margin: { left: 15, right: 15 }
+            });
+
+            // 4. SIGNATURE
+            let footerY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 100) + 35;
+            if (footerY > pageHeight - 60) { doc.addPage(); footerY = 30; }
+
+            const sigX = pageWidth - 75;
+            if (signature) {
+                doc.addImage(signature, 'PNG', sigX, footerY - 20, 55, 22);
+            }
+            doc.setDrawColor(15, 23, 42); doc.setLineWidth(0.6);
+            doc.line(sigX - 5, footerY + 5, pageWidth - 15, footerY + 5);
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); doc.text((selectedCompany?.ownerName || 'AUTHORISED SIGNATORY').toUpperCase(), sigX - 2, footerY + 12);
+            doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
+            doc.text('Operations Controller', sigX - 2, footerY + 17);
+            doc.text(selectedCompany?.name || 'Fleet CRM', sigX - 2, footerY + 21);
+
+            doc.save(`Outside_Fleet_Report_${fromDate}_to_${toDate}.pdf`);
+        } catch (error) {
+            console.error(error);
+            alert("Error exporting PDF: " + error.message);
+        }
     };
 
     const handleOwnerChange = (val) => {
@@ -487,6 +600,26 @@ const OutsideCars = () => {
                                     }}
                                 >
                                     <Plus size={18} strokeWidth={3} /> Add Duty Entry
+                                </button>
+                                <button
+                                    onClick={handleExportPDF}
+                                    style={{
+                                        height: '50px',
+                                        padding: '0 16px',
+                                        background: 'rgba(239, 68, 68, 0.08)',
+                                        border: '1px solid rgba(239, 68, 68, 0.2)',
+                                        color: '#f87171',
+                                        fontWeight: '800',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '8px',
+                                        borderRadius: '14px',
+                                        fontSize: '11px',
+                                        cursor: 'pointer'
+                                    }}
+                                >
+                                    <FileText size={16} /> <span className="hide-mobile">Export PDF</span>
                                 </button>
                                 <button
                                     onClick={async () => {

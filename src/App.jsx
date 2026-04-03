@@ -31,7 +31,7 @@ const Reports = lazy(() => import('./pages/Reports'));
 const DriverServices = lazy(() => import('./pages/DriverServices'));
 const DriversPanel = lazy(() => import('./pages/DriversPanel'));
 import Sidebar from './components/Sidebar';
-import { CompanyProvider } from './context/CompanyContext';
+import { CompanyProvider, useCompany } from './context/CompanyContext';
 
 const LoadingFallback = () => (
   <div style={{
@@ -159,18 +159,27 @@ const AdminLayout = ({ children }) => {
 
 const AdminRoutes = () => {
   const { user } = useAuth();
+  const { selectedCompany } = useCompany();
   const userRole = user?.role?.toLowerCase() || '';
   const isAdmin = userRole === 'admin' || userRole === 'superadmin' || (userRole.includes('admin') && userRole !== 'executive');
+  const isYatree = selectedCompany?.name === 'YatreeDestination' || selectedCompany?.name === 'Yatree Destination';
   const p = user?.permissions || {};
+
+  // Helper to check if a module is accessible
+  const canAccess = (key) => {
+    if (isYatree) return true;
+    if (p[key] === true) return true;
+    return false;
+  };
 
   return (
     <Routes>
-      <Route index element={<AdminDashboard />} />
+      <Route index element={canAccess('dashboard') ? <AdminDashboard /> : <Navigate to="/login" />} />
 
       {/* Drivers Service Module */}
-      {(isAdmin || p.driversService) && (
+      {canAccess('driversService') && (
         <>
-          <Route path="live-feed" element={<LiveFeed />} />
+          <Route path="live-feed" element={canAccess('liveFeed') ? <LiveFeed /> : <Navigate to="/admin" />} />
           <Route path="drivers-panel" element={<DriversPanel />} />
           <Route path="drivers" element={<Drivers />} />
           <Route path="advances" element={<Advances />} />
@@ -179,13 +188,13 @@ const AdminRoutes = () => {
           <Route path="freelancers/:driverId" element={<FreelancerSalaryDetail />} />
           <Route path="driver-duty" element={<Reports />} />
           <Route path="freelancer-duty" element={<Reports />} />
-          <Route path="log-book" element={<Reports />} />
+          <Route path="log-book" element={canAccess('logBook') ? <Reports /> : <Navigate to="/admin" />} />
           <Route path="parking" element={<Parking />} />
         </>
       )}
 
       {/* Buy/Sell Module */}
-      {(isAdmin || p.buySell) && (
+      {canAccess('buySell') && (
         <>
           <Route path="outside-cars" element={<OutsideCars />} />
           <Route path="event-management" element={<EventManagement />} />
@@ -193,7 +202,7 @@ const AdminRoutes = () => {
       )}
 
       {/* Vehicles Maintenance Module */}
-      {(isAdmin || p.vehiclesManagement) && (
+      {canAccess('vehiclesManagement') && (
         <>
           <Route path="vehicles" element={<Vehicles />} />
           <Route path="maintenance" element={<Maintenance />} />
@@ -204,7 +213,7 @@ const AdminRoutes = () => {
       )}
 
       {/* Fleet Operations Module */}
-      {(isAdmin || p.fleetOperations) && (
+      {canAccess('fleetOperations') && (
         <>
           <Route path="car-utility" element={<CarUtility />} />
           <Route path="driver-services" element={<DriverServices />} />
@@ -215,45 +224,11 @@ const AdminRoutes = () => {
       )}
 
       {/* Admin Protected Operations */}
-      <Route path="admins" element={isAdmin ? <Admins /> : <Navigate to="/admin" />} />
-      <Route path="staff" element={<Staff />} />
+      <Route path="admins" element={canAccess('manageAdmins') ? <Admins /> : <Navigate to="/admin" />} />
+      <Route path="staff" element={canAccess('staffManagement') ? <Staff /> : <Navigate to="/admin" />} />
 
-      {/* Catch-all redirects for unauthorized module access */}
-      {!(isAdmin || p.driversService) && (
-        <>
-          <Route path="live-feed" element={<Navigate to="/admin" />} />
-          <Route path="drivers" element={<Navigate to="/admin" />} />
-          <Route path="advances" element={<Navigate to="/admin" />} />
-          <Route path="driver-salaries" element={<Navigate to="/admin" />} />
-          <Route path="freelancers" element={<Navigate to="/admin" />} />
-          <Route path="driver-duty" element={<Navigate to="/admin" />} />
-          <Route path="freelancer-duty" element={<Navigate to="/admin" />} />
-          <Route path="parking" element={<Navigate to="/admin" />} />
-        </>
-      )}
-      {!(isAdmin || p.buySell) && (
-        <>
-          <Route path="outside-cars" element={<Navigate to="/admin" />} />
-          <Route path="event-management" element={<Navigate to="/admin" />} />
-        </>
-      )}
-      {!(isAdmin || p.vehiclesManagement) && (
-        <>
-          {/* <Route path="vehicles" element={<Navigate to="/admin" />} /> */}
-          <Route path="maintenance" element={<Navigate to="/admin" />} />
-          <Route path="vehicle-month-details" element={<Navigate to="/admin" />} />
-          <Route path="accident-logs" element={<Navigate to="/admin" />} />
-          <Route path="warranties" element={<Navigate to="/admin" />} />
-        </>
-      )}
-      {!(isAdmin || p.fleetOperations) && (
-        <>
-          <Route path="driver-services" element={<Navigate to="/admin" />} />
-          <Route path="border-tax" element={<Navigate to="/admin" />} />
-          <Route path="fastag" element={<Navigate to="/admin" />} />
-          <Route path="fuel" element={<Navigate to="/admin" />} />
-        </>
-      )}
+      {/* Catch-all redirect for unauthorized module access */}
+      <Route path="*" element={<Navigate to="/admin" />} />
     </Routes>
   );
 };

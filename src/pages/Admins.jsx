@@ -19,6 +19,7 @@ const Admins = () => {
         buySell: false,
         vehiclesManagement: false,
         fleetOperations: false,
+        staffManagement: false,
         manageAdmins: false,
         reports: true
     });
@@ -79,6 +80,7 @@ const Admins = () => {
             buySell: false,
             vehiclesManagement: false,
             fleetOperations: false,
+            staffManagement: false,
             manageAdmins: false,
             reports: true
         });
@@ -89,7 +91,7 @@ const Admins = () => {
         setShowModal(false);
         setEditingAdmin(null);
         setName(''); setMobile(''); setUsername(''); setPassword('');
-        setPermissions({ driversService: false, buySell: false, vehiclesManagement: false, fleetOperations: false, manageAdmins: false, reports: true });
+        setPermissions({ driversService: false, buySell: false, vehiclesManagement: false, fleetOperations: false, staffManagement: false, manageAdmins: false, reports: true });
     };
 
     const handleDelete = async (id) => {
@@ -203,8 +205,9 @@ const Admins = () => {
                                             {admin.permissions?.buySell && <span style={{ background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(129, 140, 248, 0.15)', textTransform: 'uppercase' }}>Buy/Sell</span>}
                                             {admin.permissions?.vehiclesManagement && <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#fbbf24', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.15)', textTransform: 'uppercase' }}>Maintenance</span>}
                                             {admin.permissions?.fleetOperations && <span style={{ background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(236, 72, 153, 0.15)', textTransform: 'uppercase' }}>Operations</span>}
+                                            {admin.permissions?.staffManagement && <span style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(139, 92, 246, 0.15)', textTransform: 'uppercase' }}>Staff MGT</span>}
                                             {admin.permissions?.manageAdmins && <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.15)', textTransform: 'uppercase' }}>Admin MGT</span>}
-                                            {!admin.permissions?.driversService && !admin.permissions?.buySell && !admin.permissions?.vehiclesManagement && !admin.permissions?.fleetOperations && !admin.permissions?.manageAdmins && (
+                                            {!admin.permissions?.driversService && !admin.permissions?.buySell && !admin.permissions?.vehiclesManagement && !admin.permissions?.fleetOperations && !admin.permissions?.staffManagement && !admin.permissions?.manageAdmins && (
                                                 <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px', fontStyle: 'italic' }}>No modules assigned</span>
                                             )}
                                         </div>
@@ -287,6 +290,7 @@ const Admins = () => {
                                             { id: 'buySell', label: 'Outside Cars & Event MGT', desc: 'Outside Vehicle Logs, Transaction Reports', icon: Shield, color: '#818cf8' },
                                             { id: 'vehiclesManagement', label: 'Vehicles Maintenance (CRITICAL)', desc: 'Maintenance Logs, Car Monthly Logs, Vehicle Inventory, Warranties', icon: Wrench, color: '#f59e0b' },
                                             { id: 'fleetOperations', label: 'Fleet Operations (Fuel/Tax)', desc: 'Fuel Records, Fastag, Border Tax, Utility', icon: Activity, color: '#ec4899' },
+                                            { id: 'staffManagement', label: 'Staff Management', desc: 'Manage Staff Attendance, Permissions, Leave, Salaries', icon: Users, color: '#8b5cf6' },
                                             { id: 'manageAdmins', label: 'Full Admin Access (Manage Others)', desc: 'Create/Edit other Admins and their system rights', icon: Shield, color: '#10b981' }
                                         ].map(mod => (
                                             <div 

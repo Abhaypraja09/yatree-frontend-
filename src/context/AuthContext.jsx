@@ -8,11 +8,34 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const fetchLatestProfile = async (token) => {
+            try {
+                const { data } = await axios.get('/api/auth/profile', {
+                    headers: { Authorization: `Bearer ${token}` }
+                });
+                // Merge token with latest user data
+                const updatedInfo = { ...data, token };
+                localStorage.setItem('userInfo', JSON.stringify(updatedInfo));
+                setUser(updatedInfo);
+            } catch (err) {
+                console.error('Failed to sync permissions');
+            } finally {
+                setLoading(false);
+            }
+        };
+
         const storedUser = localStorage.getItem('userInfo');
         if (storedUser) {
-            setUser(JSON.parse(storedUser));
+            const parsed = JSON.parse(storedUser);
+            setUser(parsed);
+            if (parsed.token) {
+                fetchLatestProfile(parsed.token);
+            } else {
+                setLoading(false);
+            }
+        } else {
+            setLoading(false);
         }
-        setLoading(false);
     }, []);
 
     const login = async (mobile, password) => {

@@ -132,6 +132,7 @@ const AdminDashboard = () => {
 
     const userRole = user?.role?.toLowerCase() || '';
     const isAdmin = userRole === 'admin' || userRole === 'superadmin' || (userRole.includes('admin') && userRole !== 'executive');
+    const isYatree = selectedCompany?.name === 'YatreeDestination' || selectedCompany?.name === 'Yatree Destination';
 
     const fetchStats = async () => {
         const userInfoRaw = localStorage.getItem('userInfo');
@@ -316,7 +317,7 @@ const AdminDashboard = () => {
                     >
                         <div className="stats-grid">
                             {/* Drivers Service Related */}
-                            {(isAdmin || user?.permissions?.driversService) && (
+                            {(isYatree || user?.permissions?.driversService) && (
                                 <>
                                     <StatCard icon={Users} label={t('total_driver_salary')} value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
                                     <StatCard icon={CreditCard} label={t('total_driver_advance')} value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
@@ -334,7 +335,7 @@ const AdminDashboard = () => {
                             )}
 
                             {/* Buy/Sell Related (Outside & Events) */}
-                            {(isAdmin || user?.permissions?.buySell) && (
+                            {(isYatree || user?.permissions?.buySell) && (
                                 <>
                                     <StatCard
                                         icon={TrendingUp}
@@ -356,7 +357,7 @@ const AdminDashboard = () => {
                             )}
 
                             {/* Vehicles Maintenance Related */}
-                            {(isAdmin || user?.permissions?.vehiclesManagement) && (
+                            {(isYatree || user?.permissions?.vehiclesManagement) && (
                                 <>
                                     <StatCard icon={Wrench} label={t('maintenance_monthly')} value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
                                     <StatCard icon={AlertTriangle} label={t('accident_cost_yearly')} value={`₹${(stats.yearlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
@@ -374,7 +375,7 @@ const AdminDashboard = () => {
                             )}
 
                             {/* Fleet Operations Related */}
-                            {(isAdmin || user?.permissions?.fleetOperations) && (
+                            {(isYatree || user?.permissions?.fleetOperations) && (
                                 <>
                                     <StatCard icon={IndianRupee} label={t('fastag_recharge_monthly')} value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/car-utility')} />
                                     <StatCard icon={Droplets} label={t('driver_services_monthly')} value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/car-utility')} />

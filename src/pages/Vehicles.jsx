@@ -187,6 +187,22 @@ const Vehicles = () => {
         }
     };
 
+    const handleToggleStatus = async (vehicle) => {
+        const newStatus = vehicle.status === 'active' ? 'inactive' : 'active';
+        const confirmMsg = `Are you sure you want to ${newStatus === 'inactive' ? 'BLOCK' : 'UNBLOCK'} this vehicle? ${newStatus === 'inactive' ? 'It will not be available for selection by drivers.' : ''}`;
+        
+        if (!window.confirm(confirmMsg)) return;
+
+        try {
+            await axios.patch(`/api/admin/vehicles/${vehicle._id}/status`, { status: newStatus }, {
+                headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}` }
+            });
+            fetchVehicles();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error updating status');
+        }
+    };
+
 
     const deduplicatedVehicles = useMemo(() => {
         const map = new Map();
@@ -363,6 +379,14 @@ const Vehicles = () => {
                             />
                         </div>
                         <button className="btn-primary" onClick={() => { 
+                            const internalCount = vehicles.filter(v => !v.isOutsideCar).length;
+                            const limit = selectedCompany?.vehicleLimit || 10;
+                            const isYatree = selectedCompany?.name === 'YatreeDestination' || selectedCompany?.name === 'Yatree Destination';
+                            
+                            if (internalCount >= limit && !isYatree) {
+                                return alert(`PLAN LIMIT REACHED: You have already added ${internalCount} vehicles (Limit: ${limit}). Please contact Super Admin to upgrade your plan.`);
+                            }
+
                             setEditingId(null); setCarNumber(''); setModel(''); setCarType('SUV'); 
                             setFastagNumber(''); setFastagBalance(''); setFastagBank(''); 
                             setSeatingCapacity('4'); setRemarks('');
@@ -391,9 +415,19 @@ const Vehicles = () => {
                                     <Car size={24} />
                                 </div>
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                                    <div style={{ background: v.status === 'inactive' ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)', padding: '6px 12px', borderRadius: '30px', border: `1px solid ${v.status === 'inactive' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(16, 185, 129, 0.2)'}` }}>
+                                        <span style={{ fontSize: '10px', color: v.status === 'inactive' ? '#f43f5e' : '#10b981', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{v.status === 'inactive' ? 'Blocked' : 'Active'}</span>
+                                    </div>
                                     <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.08)' }}>
                                         <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{v.carType || 'SUV'}</span>
                                     </div>
+                                    <button
+                                        onClick={() => handleToggleStatus(v)}
+                                        style={{ background: v.status === 'inactive' ? 'rgba(16, 185, 129, 0.05)' : 'rgba(244, 63, 94, 0.05)', color: v.status === 'inactive' ? '#10b981' : '#f43f5e', padding: '8px', borderRadius: '10px', border: `1px solid ${v.status === 'inactive' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)'}`, transition: '0.2s', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                        title={v.status === 'inactive' ? 'Unblock Vehicle' : 'Block Vehicle'}
+                                    >
+                                        {v.status === 'inactive' ? <CheckCircle2 size={16} /> : <Shield size={16} />}
+                                    </button>
                                     <button
                                         onClick={() => {
                                             setEditingId(v._id);
@@ -482,7 +516,16 @@ const Vehicles = () => {
                         </div>
                         <h3 style={{ color: 'white', marginBottom: '10px', fontSize: '22px', fontWeight: '800' }}>No vehicles matched your search</h3>
                         <p style={{ color: 'var(--text-muted)', marginBottom: '30px', maxWidth: '400px', margin: '0 auto 30px', fontSize: '15px' }}>Check for typos or add a new vehicle if it's missing from the fleet.</p>
-                        <button className="btn-primary" onClick={() => setShowModal(true)} style={{ padding: '12px 30px' }}>Add New Fleet Vehicle</button>
+                        <button className="btn-primary" onClick={() => {
+                            const internalCount = vehicles.filter(v => !v.isOutsideCar).length;
+                            const limit = selectedCompany?.vehicleLimit || 10;
+                            const isYatree = selectedCompany?.name === 'YatreeDestination' || selectedCompany?.name === 'Yatree Destination';
+                            
+                            if (internalCount >= limit && !isYatree) {
+                                return alert(`PLAN LIMIT REACHED: You have already added ${internalCount} vehicles (Limit: ${limit}). Please contact Super Admin to upgrade your plan.`);
+                            }
+                            setShowModal(true);
+                        }} style={{ padding: '12px 30px' }}>Add New Fleet Vehicle</button>
                     </div>
                 )}
             </div>

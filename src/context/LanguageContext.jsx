@@ -142,6 +142,9 @@ export const translations = {
         amount: 'Amount',
         quantity: 'Volume (L)',
         total: 'Total',
+        specialPay: 'ADD. PAY (Special)',
+        specialPayRemark: 'REMARK FOR SPECIAL PAY',
+        specialPayoutHistory: 'SPECIAL PAYOUT (History)',
 
         // Admin Sidebar
         dashboard: 'Dashboard',
@@ -414,7 +417,10 @@ export const translations = {
         bonus: 'बोनस',
         amount: 'राशि',
         quantity: 'वॉल्यूम (L)',
-        total: 'कुल'
+        total: 'कुल',
+        specialPay: 'अतिरिक्त भुगतान (स्पेशल)',
+        specialPayRemark: 'स्पेशल पे के लिए टिप्पणी',
+        specialPayoutHistory: 'स्पेशल पेआउट (इतिहास)',
     }
 };
 
