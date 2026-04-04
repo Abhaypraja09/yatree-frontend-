@@ -32,6 +32,7 @@ const Reports = lazy(() => import('./pages/Reports'));
 const DriverServices = lazy(() => import('./pages/DriverServices'));
 const DriversPanel = lazy(() => import('./pages/DriversPanel'));
 import Sidebar from './components/Sidebar';
+import AIChatAgent from './components/AIChatAgent';
 import { CompanyProvider, useCompany } from './context/CompanyContext';
 
 const LoadingFallback = () => (
@@ -168,7 +169,7 @@ const AdminRoutes = () => {
 
   // Helper to check if a module is accessible
   const canAccess = (key) => {
-    if (isYatree) return true;
+    if (isAdmin) return true;
     if (p[key] === true) return true;
     return false;
   };
@@ -248,6 +249,7 @@ function App() {
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <LanguageProvider>
         <AuthProvider>
+          <AIChatAgent />
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
               <Route path="/login" element={<Login />} />

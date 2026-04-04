@@ -256,19 +256,19 @@ const Sidebar = ({ isOpen, onClose }) => {
             </div>
 
             <nav style={{ flex: 1, overflowY: 'auto', paddingRight: '5px' }} className="sidebar-nav-scroll">
-                {(isYatree || isAdmin || user.permissions?.dashboard !== false) && (
+                {(isAdmin || user.permissions?.dashboard !== false) && (
                     <NavItem item={{ path: '/admin', icon: LayoutDashboard, label: 'Dashboard', labelKey: 'dashboard' }} onClick={onClose} />
                 )}
                 
-                {(isYatree || user.permissions?.liveFeed) && (
+                {(isAdmin || user.permissions?.liveFeed) && (
                     <NavItem item={{ path: '/admin/live-feed', icon: Activity, label: 'Live Feed', labelKey: 'live_feed' }} onClick={onClose} />
                 )}
 
-                {(isYatree || user.permissions?.logBook) && (
+                {(isAdmin || user.permissions?.logBook) && (
                     <NavItem item={{ path: '/admin/log-book', icon: ClipboardList, label: 'Log Book', labelKey: 'log_book' }} onClick={onClose} />
                 )}
 
-                {(isYatree || user.permissions?.driversService) && (
+                {(isAdmin || user.permissions?.driversService) && (
                     <NavGroup title="Drivers Services" labelKey="drivers_services" icon={Users} isOpen={openGroups.drivers} onToggle={() => toggleGroup('drivers')}>
                         <NavItem item={{ path: '/admin/drivers-panel', label: 'Drivers', labelKey: 'drivers' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/freelancers', label: 'Freelancers', labelKey: 'freelancers' }} onClick={onClose} isSubItem />
@@ -276,21 +276,21 @@ const Sidebar = ({ isOpen, onClose }) => {
                     </NavGroup>
                 )}
 
-                {(isYatree || user.permissions?.fleetOperations) && (
+                {(isAdmin || user.permissions?.fleetOperations) && (
                     <NavGroup title="Fleet Operations" labelKey="fleet_operations" icon={Settings} isOpen={openGroups.vehicles} onToggle={() => toggleGroup('vehicles')}>
                         <NavItem item={{ path: '/admin/fuel', label: 'Fuel', labelKey: 'fuel' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility', labelKey: 'car_utility' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 
-                {(isYatree || user.permissions?.buySell) && (
+                {(isAdmin || user.permissions?.buySell) && (
                     <NavGroup title="Buy/Sell" labelKey="buy_sell" icon={Briefcase} isOpen={openGroups.buysell} onToggle={() => toggleGroup('buysell')}>
                         <NavItem item={{ path: '/admin/outside-cars', label: 'Outside Cars', labelKey: 'outside_cars' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/event-management', label: 'Event Management', labelKey: 'event_management' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
 
-                {(isYatree || user.permissions?.vehiclesManagement) && (
+                {(isAdmin || user.permissions?.vehiclesManagement) && (
                     <NavGroup title="Vehicles Maintenance" labelKey="vehicles_maintenance" icon={Wrench} isOpen={openGroups.maintenance} onToggle={() => toggleGroup('maintenance')}>
                         <NavItem item={{ path: '/admin/maintenance', label: 'Maintenance', labelKey: 'maintenance' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/vehicle-month-details', label: 'Car Logs', labelKey: 'car_logs' }} onClick={onClose} isSubItem />
