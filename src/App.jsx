@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Lazy load pages for better performance
 const Login = lazy(() => import('./pages/Login'));
+const Bridge = lazy(() => import('./pages/Bridge'));
 const AdminDashboard = lazy(() => import('./pages/AdminDashboard'));
 const DriverPortal = lazy(() => import('./pages/DriverPortal'));
 const Drivers = lazy(() => import('./pages/Drivers'));
@@ -250,6 +251,7 @@ function App() {
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
               <Route path="/login" element={<Login />} />
+              <Route path="/bridge" element={<Bridge />} />
 
               <Route path="/admin/*" element={
                 <ProtectedRoute role="Admin">

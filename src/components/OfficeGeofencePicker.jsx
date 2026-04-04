@@ -34,15 +34,20 @@ const OfficeGeofencePicker = ({ value, onChange }) => {
     const [loading, setLoading] = useState(false);
     const [showSuggestions, setShowSuggestions] = useState(false);
 
-    const initialLat = value?.latitude ? parseFloat(value.latitude) : 28.6139;
-    const initialLng = value?.longitude ? parseFloat(value.longitude) : 77.2090;
+    const getInitialCoordinate = (val, fallback) => {
+        if (!val || val === '' || isNaN(parseFloat(val))) return fallback;
+        return parseFloat(val);
+    };
+
+    const initialLat = getInitialCoordinate(value?.latitude, 28.6139);
+    const initialLng = getInitialCoordinate(value?.longitude, 77.2090);
     const [position, setPosition] = useState([initialLat, initialLng]);
-    const [radius, setRadius] = useState(value?.radius || 200);
+    const [radius, setRadius] = useState(Number(value?.radius) || 200);
 
     const debounceTimer = useRef(null);
 
-    const fetchSuggestions = async (query) => {
-        if (query.length < 3) {
+    const fetchSuggestions = async (query, autoSelect = false) => {
+        if (!query || query.length < 2) {
             setSuggestions([]);
             return;
         }
@@ -53,6 +58,11 @@ const OfficeGeofencePicker = ({ value, onChange }) => {
             );
             const data = await response.json();
             setSuggestions(data);
+            
+            // If autoSelect is requested and we have results, pick the first one
+            if (autoSelect && data.length > 0) {
+                handleSelectAddress(data[0]);
+            }
         } catch (error) {
             console.error('Error fetching suggestions:', error);
         } finally {
@@ -65,16 +75,28 @@ const OfficeGeofencePicker = ({ value, onChange }) => {
         setSearch(val);
         setShowSuggestions(true);
 
+        onChange({
+            ...value,
+            address: val
+        });
+
         if (debounceTimer.current) clearTimeout(debounceTimer.current);
         debounceTimer.current = setTimeout(() => {
             fetchSuggestions(val);
-        }, 500);
+        }, 800);
+    };
+
+    const handleSearchSubmit = () => {
+        if (search.length >= 2) {
+            fetchSuggestions(search, true);
+        }
     };
 
     const handleSelectAddress = (suggestion) => {
         const lat = parseFloat(suggestion.lat);
         const lon = parseFloat(suggestion.lon);
         const newPos = [lat, lon];
+        
         setPosition(newPos);
         setSearch(suggestion.display_name);
         setSuggestions([]);
@@ -94,7 +116,6 @@ const OfficeGeofencePicker = ({ value, onChange }) => {
         const newPos = [pos.lat, pos.lng];
         setPosition(newPos);
 
-        // Reverse geocode
         updateAddressFromCoords(pos.lat, pos.lng);
     };
 
@@ -132,20 +153,64 @@ const OfficeGeofencePicker = ({ value, onChange }) => {
         });
     };
 
+    const handleLocateMe = () => {
+        if ("geolocation" in navigator) {
+            setLoading(true);
+            navigator.geolocation.getCurrentPosition(async (pos) => {
+                const { latitude, longitude } = pos.coords;
+                const newPos = [latitude, longitude];
+                setPosition(newPos);
+                
+                try {
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+                    const data = await response.json();
+                    const addr = data.display_name || 'Current Location';
+                    setSearch(addr);
+                    onChange({
+                        latitude: latitude,
+                        longitude: longitude,
+                        address: addr,
+                        radius: radius
+                    });
+                } catch (error) {
+                    console.error('Reverse geocoding error:', error);
+                } finally {
+                    setLoading(false);
+                }
+            }, (error) => {
+                setLoading(false);
+                alert("Error getting location: " + error.message);
+            }, { enableHighAccuracy: true });
+        } else {
+            alert("Geolocation is not supported by your browser.");
+        }
+    };
+
     return (
         <div className="geofence-picker-wrapper" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Search Input Section */}
-            <div style={{ position: 'relative' }}>
-                <div style={{ position: 'relative' }}>
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div style={{ position: 'relative', flex: 1 }}>
                     <Search
                         size={18}
                         style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', zIndex: 10 }}
                     />
                     <input
                         type="text"
-                        placeholder="Type office address (e.g. Connaught Place, Delhi)..."
+                        placeholder="Search Office (e.g. Yatree Destination Udaipur)"
                         value={search}
                         onChange={handleSearchChange}
+                        onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                                e.preventDefault();
+                                if (suggestions.length > 0) {
+                                    handleSelectAddress(suggestions[0]);
+                                } else {
+                                    // If no suggestions, try a direct fetch
+                                    fetchSuggestions(search);
+                                }
+                            }
+                        }}
                         onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
                         style={{
                             width: '100%',
@@ -168,63 +233,86 @@ const OfficeGeofencePicker = ({ value, onChange }) => {
                     )}
                     {search && !loading && (
                         <button
+                            type="button"
                             onClick={() => { setSearch(''); setSuggestions([]); }}
                             style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer' }}
                         >
                             <X size={16} />
                         </button>
                     )}
+
+                    <AnimatePresence>
+                        {showSuggestions && suggestions.length > 0 && (
+                            <motion.div
+                                initial={{ opacity: 0, y: -10 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, y: -10 }}
+                                style={{
+                                    position: 'absolute',
+                                    top: '65px',
+                                    left: 0,
+                                    right: 0,
+                                    background: 'rgba(15, 23, 42, 0.98)',
+                                    backdropFilter: 'blur(20px)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    borderRadius: '16px',
+                                    zIndex: 1000,
+                                    overflow: 'hidden',
+                                    boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
+                                }}
+                            >
+                                {suggestions.map((suggestion, index) => (
+                                    <div
+                                        key={index}
+                                        onClick={() => handleSelectAddress(suggestion)}
+                                        style={{
+                                            padding: '14px 20px',
+                                            cursor: 'pointer',
+                                            borderBottom: index === suggestions.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '12px',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)'}
+                                        onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                    >
+                                        <MapPin size={16} color="#6366f1" style={{ flexShrink: 0 }} />
+                                        <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                            {suggestion.display_name}
+                                        </span>
+                                    </div>
+                                ))}
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
                 </div>
 
-                <style>{`
-                    @keyframes spin { from { transform: translateY(-50%) rotate(0deg); } to { transform: translateY(-50%) rotate(360deg); } }
-                `}</style>
-
-                <AnimatePresence>
-                    {showSuggestions && suggestions.length > 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, y: -10 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: -10 }}
-                            style={{
-                                position: 'absolute',
-                                top: '65px',
-                                left: 0,
-                                right: 0,
-                                background: 'rgba(15, 23, 42, 0.98)',
-                                backdropFilter: 'blur(20px)',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                borderRadius: '16px',
-                                zIndex: 1000,
-                                overflow: 'hidden',
-                                boxShadow: '0 20px 50px rgba(0,0,0,0.5)'
-                            }}
-                        >
-                            {suggestions.map((suggestion, index) => (
-                                <div
-                                    key={index}
-                                    onClick={() => handleSelectAddress(suggestion)}
-                                    style={{
-                                        padding: '14px 20px',
-                                        cursor: 'pointer',
-                                        borderBottom: index === suggestions.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '12px',
-                                        transition: 'all 0.2s ease'
-                                    }}
-                                    onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(99, 102, 241, 0.15)'}
-                                    onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                                >
-                                    <MapPin size={16} color="#6366f1" style={{ flexShrink: 0 }} />
-                                    <span style={{ color: 'rgba(255,255,255,0.85)', fontSize: '13px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                        {suggestion.display_name}
-                                    </span>
-                                </div>
-                            ))}
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                <button
+                    type="button"
+                    onClick={handleLocateMe}
+                    disabled={loading}
+                    style={{
+                        height: '56px',
+                        padding: '0 20px',
+                        borderRadius: '16px',
+                        background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                        border: 'none',
+                        color: 'white',
+                        fontWeight: '700',
+                        fontSize: '13px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        cursor: loading ? 'not-allowed' : 'pointer',
+                        boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)',
+                        transition: 'all 0.3s ease',
+                        whiteSpace: 'nowrap'
+                    }}
+                >
+                    <Target size={18} />
+                    <span className="hide-mobile">LOCATE ME</span>
+                </button>
             </div>
 
             {/* Map Preview Section */}

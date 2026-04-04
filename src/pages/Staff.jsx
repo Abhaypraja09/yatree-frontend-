@@ -207,36 +207,6 @@ const Staff = () => {
     };
 
 
-    const fetchCurrentLocation = () => {
-        if ("geolocation" in navigator) {
-            setLocationLoading(true);
-            navigator.geolocation.getCurrentPosition(
-                async (position) => {
-                    const { latitude: lat, longitude: lng } = position.coords;
-                    try {
-                        const { data } = await axios.get(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`);
-                        const address = data.display_name;
-                        setFormData(prev => ({
-                            ...prev,
-                            officeLocation: { ...prev.officeLocation, latitude: lat.toString(), longitude: lng.toString(), address: address || '' }
-                        }));
-                    } catch (error) {
-                        setFormData(prev => ({
-                            ...prev,
-                            officeLocation: { ...prev.officeLocation, latitude: lat.toString(), longitude: lng.toString() }
-                        }));
-                    }
-                    setLocationLoading(false);
-                },
-                (error) => {
-                    alert('Error getting location: ' + error.message);
-                    setLocationLoading(false);
-                }
-            );
-        } else {
-            alert("Geolocation is not supported by this browser.");
-        }
-    };
 
     const handleAddStaff = async (e) => {
         e.preventDefault();
@@ -261,10 +231,11 @@ const Staff = () => {
             setIsEditing(false);
             setEditingStaffId(null);
             fetchStaff();
+            const defaultOffice = staffList.find(s => s.officeLocation?.latitude)?.officeLocation || { latitude: '', longitude: '', address: '', radius: 200 };
             setFormData({
                 name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
                 email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
-                officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
+                officeLocation: defaultOffice,
                 joiningDate: todayIST(),
                 staffType: 'Company'
             });
@@ -582,10 +553,14 @@ const Staff = () => {
                             <button
                                 onClick={() => {
                                     setIsEditing(false);
+                                    
+                                    // Try to find a default office location from other staff
+                                    const defaultOffice = staffList.find(s => s.officeLocation?.latitude)?.officeLocation || { latitude: '', longitude: '', address: '', radius: 200 };
+
                                     setFormData({
                                         name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
                                         email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
-                                        officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
+                                        officeLocation: defaultOffice,
                                         joiningDate: todayIST(),
                                         staffType: 'Company'
                                     });

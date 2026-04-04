@@ -516,13 +516,12 @@ const DriverPortal = () => {
                 `Rs. ${att.dailyWage || 0}`,
                 `Rs. ${att.sameDayReturn || 0}`,
                 `Rs. ${att.nightStay || 0}`,
-                `Rs. ${att.specialPay || 0}`,
                 `Rs. ${att.parking || 0}`,
-                `Rs. ${(att.dailyWage || 0) + (att.bonuses || 0) + (att.parking || 0)}`
+                `Rs. ${(att.dailyWage || 0) + (att.sameDayReturn || 0) + (att.nightStay || 0) + (att.parking || 0)}`
             ]);
 
             autoTable(doc, {
-                head: [['DATE', 'VEHICLE NO.', 'WAGE', 'SAME DAY', 'NIGHT STAY', 'SPL. PAY', 'PARKING', 'TOTAL (Rs.)']],
+                head: [['DATE', 'VEHICLE NO.', 'WAGE', 'SAME DAY', 'NIGHT STAY', 'PARKING', 'TOTAL']],
                 body: dutyRows,
                 startY: 120,
                 theme: 'grid',
@@ -814,31 +813,6 @@ const DriverPortal = () => {
                                         }}
                                     >
                                         <Car size={18} /> {t('parking')}
-                                    </button>
-                                    <button
-                                        onClick={() => {
-                                            setExpenseEntries([{ type: 'special_pay', amount: '', quantity: '', km: '', fuelType: '', slip: null, preview: null }]);
-                                            setExpenseModalType('special_pay');
-                                            setShowExpenseModal(true);
-                                        }}
-                                        style={{
-                                            background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-                                            color: 'white',
-                                            height: '42px',
-                                            padding: '0 14px',
-                                            borderRadius: '12px',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            justifyContent: 'center',
-                                            gap: '6px',
-                                            border: 'none',
-                                            boxShadow: '0 6px 16px rgba(16, 185, 129, 0.25)',
-                                            cursor: 'pointer',
-                                            fontWeight: '700',
-                                            fontSize: '13px'
-                                        }}
-                                    >
-                                        <Wallet size={18} /> {t('specialPay')}
                                     </button>
                                     {showPunchOut && !showPunchOutForm && (
                                         <button

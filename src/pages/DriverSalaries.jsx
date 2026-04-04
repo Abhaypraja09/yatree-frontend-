@@ -386,9 +386,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
             const logoUrl = selectedCompany?.logoUrl || '/logos/yatree_logo.png';
             const logo = await loadImage(logoUrl).catch(() => null);
-            
+
             const sigUrl = selectedCompany?.ownerSignatureUrl || '/logos/kavish_sign.png';
-            const signature = await loadImage(sigUrl).catch(() => null); 
+            const signature = await loadImage(sigUrl).catch(() => null);
 
             const monthName = new Date(year, month - 1, 1).toLocaleString('default', { month: 'long' });
             const periodLabel = `${monthName} ${year}`;
@@ -497,7 +497,6 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
             const dutyRows = (data.breakdown || []).map(day => [
                 formatDateIST(day.date),
-                day.vehicle || 'N/A',
                 `Rs. ${(day.wage || 0).toLocaleString('en-IN')}`,
                 `Rs. ${(day.sameDayReturn || 0).toLocaleString('en-IN')}`,
                 `Rs. ${(day.nightStay || 0).toLocaleString('en-IN')}`,
@@ -506,7 +505,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             ]);
 
             autoTable(doc, {
-                head: [['DATE', 'VEHICLE NO.', 'WAGE', 'SAME DAY', 'NIGHT STAY', 'PARKING', 'TOTAL']],
+                head: [['DATE', 'WAGE', 'SAME DAY', 'NIGHT STAY', 'PARKING', 'TOTAL']],
                 body: dutyRows,
                 startY: 120,
                 theme: 'grid',
@@ -635,7 +634,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             if (signature) doc.addImage(signature, 'PNG', sigX, currentY - 20, 55, 22);
             doc.setDrawColor(15, 23, 42); doc.setLineWidth(0.6);
             doc.line(sigX - 5, currentY + 5, pageWidth - 15, currentY + 5);
-            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); 
+            doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42);
             doc.text((selectedCompany?.ownerName || 'KAVISH JAIN').toUpperCase(), sigX - 2, currentY + 12);
             doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
             doc.text('Authorized Signatory', sigX - 2, currentY + 17);
@@ -693,20 +692,30 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     const totalGrossEarnings = filteredSalaries.reduce((sum, s) => sum + (s.totalEarned || 0), 0);
     const totalNetPayout = filteredSalaries.reduce((sum, s) => sum + (s.netPayable || 0), 0);
 
-    // Summary from details
     const det = selectedDriverDetails;
     const driverName = det?.driver?.name || det?.driver?.[0]?.name || '';
+    const breakdown = det?.breakdown || [];
     const summary = det?.summary || {};
-    const totalWages = summary.totalWages || 0;
-    const totalOT = summary.totalOT || 0;
+
+    // Explicitly calculate totals from breakdown to ensure consistency with the table
+    const calcWages = breakdown.reduce((s, d) => s + (d.wage || 0), 0);
+    const calcSDR = breakdown.reduce((s, d) => s + (d.sameDayReturn || 0), 0);
+    const calcNight = breakdown.reduce((s, d) => s + (d.nightStay || 0), 0);
+    // Use backend-calculated parking total to avoid double counting across duties and standalone entries
+    const calcParking = summary.parkingTotal || 0;
+    const calcOT = summary.totalOT || 0;
+
+    // Combined Routine Earnings (Everything related to duties)
+    const routineEarningsTotal = calcWages + calcSDR + calcNight + calcOT;
+
+    // Other Adjustments
     const totalAllowances = summary.totalAllowances || 0;
-    const parkingTotal = summary.parkingTotal || 0;
     const totalAdvances = summary.totalAdvances || 0;
     const totalEMI = Number(summary.totalEMI) || 0;
-    
-    // grandTotal should include everything: Base Wages + OT/Bonuses + Parking + Special Allowances
-    const grandTotal = summary.grandTotal || (totalWages + totalOT + (summary.totalBonuses || 0) + parkingTotal + totalAllowances);
-    const netPayable = summary.netPayable || (grandTotal - totalAdvances - totalEMI);
+
+    // Final Combined Totals
+    const grossPayroll = routineEarningsTotal + totalAllowances + calcParking;
+    const netPayable = grossPayroll - totalAdvances - totalEMI;
 
     return (
         <div className={isSubComponent ? "sub-component" : "container-fluid"} style={{ paddingBottom: '40px' }}>
@@ -1314,13 +1323,24 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                     <>
                                         {/* ─── SUMMARY CARDS ─── */}
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '12px', marginBottom: '28px' }}>
+                                            {/* GROSS PAYROLL SUBTOTAL CARD */}
+                                            <div style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.2), rgba(30,41,59,0.5))', border: '2px solid #10b981', borderRadius: '12px', padding: '14px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
+                                                    <TrendingDown size={14} color="#10b981" style={{ transform: 'rotate(180deg)' }} />
+                                                    <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '900', textTransform: 'uppercase' }}>Gross Payroll</span>
+                                                </div>
+                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '22px' }}>₹{grossPayroll.toLocaleString()}</div>
+                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.6)', marginTop: '2px', fontWeight: '700' }}>TOTAL EARNINGS (MATCHED)</div>
+                                            </div>
                                             <div style={{ background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.2)', borderRadius: '12px', padding: '14px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
                                                     <Car size={14} color="#38bdf8" />
                                                     <span style={{ fontSize: '10px', color: '#38bdf8', fontWeight: '800', textTransform: 'uppercase' }}>Routine Earnings</span>
                                                 </div>
-                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{(totalWages + (summary.totalBonuses || 0) + totalOT).toLocaleString()}</div>
-                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Wages + Overtime + Duty Bonus</div>
+                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{routineEarningsTotal.toLocaleString()}</div>
+                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
+                                                    Wages: ₹{calcWages.toLocaleString()} + SDR/Night: ₹{(calcSDR + calcNight).toLocaleString()}
+                                                </div>
                                             </div>
 
                                             {/* Parking Reimbursements */}
@@ -1329,8 +1349,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                     <ParkingSquare size={14} color="#f59e0b" />
                                                     <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '800', textTransform: 'uppercase' }}>Parking</span>
                                                 </div>
-                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{parkingTotal.toLocaleString()}</div>
-                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>{det?.parkingEntries?.length || 0} entries</div>
+                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{calcParking.toLocaleString()}</div>
+                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Total Parking/Toll</div>
                                             </div>
 
                                             {/* Special Allowances Card */}
@@ -1340,8 +1360,10 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                     <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '800', textTransform: 'uppercase' }}>Special Pay</span>
                                                 </div>
                                                 <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{(summary.totalAllowances || 0).toLocaleString()}</div>
-                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Bonus & Adjustments</div>
+                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Office Work / Other Adjustments</div>
                                             </div>
+
+
 
                                             {/* Advances Card */}
                                             <div style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.2)', borderRadius: '12px', padding: '14px' }}>
@@ -1362,13 +1384,15 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{totalEMI.toLocaleString()}</div>
                                                 <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Loan Repayment</div>
                                             </div>
+
+
                                         </div>
 
                                         {/* NET PAYABLE BANNER */}
                                         <div style={{ background: netPayable >= 0 ? 'linear-gradient(135deg, rgba(16,185,129,0.15), rgba(16,185,129,0.05))' : 'linear-gradient(135deg, rgba(244,63,94,0.15), rgba(244,63,94,0.05))', border: `1px solid ${netPayable >= 0 ? 'rgba(16,185,129,0.3)' : 'rgba(244,63,94,0.3)'}`, borderRadius: '12px', padding: '16px 20px', marginBottom: '28px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                             <div>
-                                                <div style={{ fontSize: '11px', fontWeight: '800', color: netPayable >= 0 ? '#10b981' : '#f43f5e', textTransform: 'uppercase', marginBottom: '4px' }}>Total This Month</div>
-                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>₹{totalWages.toLocaleString()} wages + ₹{parkingTotal.toLocaleString()} parking + ₹{(summary.totalAllowances || 0).toLocaleString()} bonuses − ₹{totalAdvances.toLocaleString()} advances − ₹{totalEMI.toLocaleString()} EMI</div>
+                                                <div style={{ fontSize: '11px', fontWeight: '800', color: netPayable >= 0 ? '#10b981' : '#f43f5e', textTransform: 'uppercase', marginBottom: '4px' }}>Net Payout This Month</div>
+                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>₹{grossPayroll.toLocaleString()} Total Earnings − ₹{(totalAdvances + totalEMI).toLocaleString()} Total Deductions</div>
                                             </div>
                                             <div style={{ color: netPayable >= 0 ? '#10b981' : '#f43f5e', fontWeight: '900', fontSize: '26px' }}>₹{Math.abs(netPayable).toLocaleString()}</div>
                                         </div>
@@ -1381,11 +1405,10 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                     <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                                         <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Date</th>
                                                         <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>WAGES</th>
-                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Same Day Return</th>
-                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Parking</th>
+                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>SDR</th>
                                                         <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Night</th>
-                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Bonus</th>
-                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'white' }}>Total</th>
+                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Parking</th>
+                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'white' }}>Day Total</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody>
@@ -1398,9 +1421,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                             </td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.wage || 0}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#38bdf8', fontWeight: '600' }}>₹{day.sameDayReturn || 0}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{day.parking || 0}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '600' }}>₹{day.nightStay || 0}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.otherBonuses || 0}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{day.parking || 0}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{(day.total || 0).toLocaleString()}</td>
                                                         </tr>
                                                     ))}
@@ -1417,20 +1439,30 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                             </td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{p.amount || 0}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{(p.amount || 0).toLocaleString()}</td>
                                                         </tr>
                                                     ))}
                                                     {det?.breakdown?.length === 0 && (
                                                         <tr><td colSpan="7" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No completed duties found this month.</td></tr>
                                                     )}
+                                                    {/* Column Totals Row */}
+                                                    {breakdown.length > 0 && (
+                                                        <tr style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
+                                                            <td style={{ padding: '12px', fontWeight: '800', color: 'white' }}>COLUMN TOTALS</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: 'rgba(255,255,255,0.7)' }}>₹{calcWages.toLocaleString()}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: '#38bdf8' }}>₹{calcSDR.toLocaleString()}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: '#10b981' }}>₹{calcNight.toLocaleString()}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: '#f59e0b' }}>₹{calcParking.toLocaleString()}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: '900', color: '#10b981' }}>₹{(routineEarningsTotal + calcParking).toLocaleString()}</td>
+                                                        </tr>
+                                                    )}
                                                     {/* Wages Subtotal row */}
-                                                    {det?.breakdown?.length > 0 && (
+                                                    {breakdown.length > 0 && (
                                                         <tr style={{ background: 'rgba(16,185,129,0.05)', borderTop: '2px solid rgba(16,185,129,0.15)' }}>
-                                                            <td colSpan="6" style={{ padding: '15px 12px', color: '#10b981', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>Grand Total (Wages + Parking + Bonuses)</td>
-                                                            <td style={{ padding: '15px 12px', textAlign: 'right', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹{grandTotal.toLocaleString()}</td>
+                                                            <td colSpan="5" style={{ padding: '15px 12px', color: '#10b981', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>Grand Total (Exact Match w/ Summary)</td>
+                                                            <td style={{ padding: '15px 12px', textAlign: 'right', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹{grossPayroll.toLocaleString()}</td>
                                                         </tr>
                                                     )}
                                                 </tbody>
@@ -1462,7 +1494,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                             <td style={{ padding: '12px', textAlign: 'center' }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
                                                                     <button onClick={() => { setShowDetailModal(false); handleEditAllowance(al); }} style={{ background: 'transparent', border: 'none', color: '#38bdf8', cursor: 'pointer' }}><Edit2 size={13} /></button>
-                                                                    <button onClick={() => { if(window.confirm('Delete this payout?')) handleDeleteAllowance(al._id); }} style={{ background: 'transparent', border: 'none', color: '#f43f5e', cursor: 'pointer' }}><X size={14} /></button>
+                                                                    <button onClick={() => { if (window.confirm('Delete this payout?')) handleDeleteAllowance(al._id); }} style={{ background: 'transparent', border: 'none', color: '#f43f5e', cursor: 'pointer' }}><X size={14} /></button>
                                                                 </div>
                                                             </td>
                                                         </tr>
@@ -1514,8 +1546,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 )}
             </AnimatePresence>
 
-    {/* Loan Management Section */ }
-    <div style = {{ marginTop: '60px' }}>
+            {/* Loan Management Section */}
+            <div style={{ marginTop: '60px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
                     <div style={{ width: '4px', height: '24px', background: '#6366f1', borderRadius: '2px' }}></div>
                     <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Loan <span style={{ color: '#818cf8' }}>Management</span></h2>
@@ -1559,10 +1591,10 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                             const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
                                             const selVal = (parseInt(year) * 12) + parseInt(month);
                                             const monthIdx = (selVal - sVal) + 1;
-                                            
+
                                             // Smart fallback for tenure (Total / EMI)
                                             const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
-                                            
+
                                             return (
                                                 <div style={{ fontSize: '10px', color: '#818cf8', fontWeight: '900', marginTop: '4px', textTransform: 'uppercase' }}>
                                                     {monthIdx <= tenure ? `Month ${monthIdx} of ${tenure}` : `Extended (Past ${tenure}M)`}
@@ -1580,10 +1612,10 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         <div style={{ color: '#f43f5e', fontWeight: '800' }}>₹ {loan.remainingAmount?.toLocaleString()}</div>
                                     </td>
                                     <td style={{ padding: '20px 25px' }}>
-                                        <span style={{ 
-                                            padding: '4px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '800', 
-                                            background: loan.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)', 
-                                            color: loan.status === 'Active' ? '#10b981' : '#f43f5e' 
+                                        <span style={{
+                                            padding: '4px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '800',
+                                            background: loan.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
+                                            color: loan.status === 'Active' ? '#10b981' : '#f43f5e'
                                         }}>
                                             {loan.status?.toUpperCase()}
                                         </span>
@@ -1611,67 +1643,67 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 </div>
             </div>
 
-    {/* LOAN MODAL */ }
-    <AnimatePresence>
-    {showLoanModal && (
-        <div className="modal-overlay" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 11000, position: 'fixed', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-            <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
-                className="modal-container" style={{ width: '100%', maxWidth: '480px', padding: '30px', background: '#0f172a', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
+            {/* LOAN MODAL */}
+            <AnimatePresence>
+                {showLoanModal && (
+                    <div className="modal-overlay" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 11000, position: 'fixed', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
+                            className="modal-container" style={{ width: '100%', maxWidth: '480px', padding: '30px', background: '#0f172a', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
-                    <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>{editingLoanId ? 'Update Driver Loan' : 'Add Driver Loan'}</h2>
-                    <button onClick={() => setShowLoanModal(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
-                </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
+                                <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>{editingLoanId ? 'Update Driver Loan' : 'Add Driver Loan'}</h2>
+                                <button onClick={() => setShowLoanModal(false)} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
+                            </div>
 
-                <form onSubmit={handleRecordLoan} style={{ display: 'grid', gap: '20px' }}>
-                    <div>
-                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Select Driver</label>
-                        <select
-                            className="input-field"
-                            required
-                            disabled={editingLoanId}
-                            value={loanFormData.driverId}
-                            onChange={(e) => setLoanFormData({ ...loanFormData, driverId: e.target.value })}
-                            style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)', opacity: editingLoanId ? 0.6 : 1 }}
-                        >
-                            <option value="" style={{ background: '#1e293b', color: 'white' }}>Choose a driver...</option>
-                            {drivers.map(d => (
-                                <option key={d._id} value={d._id} style={{ background: '#1e293b', color: 'white' }}>
-                                    {d.name} ({d.mobile})
-                                </option>
-                            ))}
-                        </select>
-                    </div>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
-                        <div style={{ gridColumn: 'span 1' }}>
-                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Loan Date</label>
-                            <input type="date" className="input-field" required value={loanFormData.startDate} onChange={(e) => setLoanFormData({ ...loanFormData, startDate: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)' }} />
-                        </div>
-                        <div style={{ gridColumn: 'span 1' }}>
-                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Total Loan</label>
-                            <input type="number" className="input-field" required value={loanFormData.totalAmount} onChange={(e) => setLoanFormData({ ...loanFormData, totalAmount: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="₹ 0" />
-                        </div>
-                        <div style={{ gridColumn: 'span 1' }}>
-                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Months</label>
-                            <input type="number" className="input-field" required value={loanFormData.tenureMonths} onChange={(e) => setLoanFormData({ ...loanFormData, tenureMonths: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="E.g. 12" />
-                        </div>
-                        <div style={{ gridColumn: 'span 1' }}>
-                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>EMI</label>
-                            <input type="number" className="input-field" readOnly value={loanFormData.monthlyEMI} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.05)', color: '#fbbf24', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed', fontWeight: '800' }} placeholder="₹ 0" />
-                        </div>
-                    </div>
-                    <div>
-                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Remarks</label>
-                        <textarea className="input-field" value={loanFormData.remarks} onChange={(e) => setLoanFormData({ ...loanFormData, remarks: e.target.value })} style={{ width: '100%', padding: '15px', background: '#1e293b', color: 'white', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }} rows="2" placeholder="Loan purpose..." />
-                    </div>
+                            <form onSubmit={handleRecordLoan} style={{ display: 'grid', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Select Driver</label>
+                                    <select
+                                        className="input-field"
+                                        required
+                                        disabled={editingLoanId}
+                                        value={loanFormData.driverId}
+                                        onChange={(e) => setLoanFormData({ ...loanFormData, driverId: e.target.value })}
+                                        style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)', opacity: editingLoanId ? 0.6 : 1 }}
+                                    >
+                                        <option value="" style={{ background: '#1e293b', color: 'white' }}>Choose a driver...</option>
+                                        {drivers.map(d => (
+                                            <option key={d._id} value={d._id} style={{ background: '#1e293b', color: 'white' }}>
+                                                {d.name} ({d.mobile})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
+                                    <div style={{ gridColumn: 'span 1' }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Loan Date</label>
+                                        <input type="date" className="input-field" required value={loanFormData.startDate} onChange={(e) => setLoanFormData({ ...loanFormData, startDate: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                    </div>
+                                    <div style={{ gridColumn: 'span 1' }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Total Loan</label>
+                                        <input type="number" className="input-field" required value={loanFormData.totalAmount} onChange={(e) => setLoanFormData({ ...loanFormData, totalAmount: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="₹ 0" />
+                                    </div>
+                                    <div style={{ gridColumn: 'span 1' }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Months</label>
+                                        <input type="number" className="input-field" required value={loanFormData.tenureMonths} onChange={(e) => setLoanFormData({ ...loanFormData, tenureMonths: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="E.g. 12" />
+                                    </div>
+                                    <div style={{ gridColumn: 'span 1' }}>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>EMI</label>
+                                        <input type="number" className="input-field" readOnly value={loanFormData.monthlyEMI} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.05)', color: '#fbbf24', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed', fontWeight: '800' }} placeholder="₹ 0" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Remarks</label>
+                                    <textarea className="input-field" value={loanFormData.remarks} onChange={(e) => setLoanFormData({ ...loanFormData, remarks: e.target.value })} style={{ width: '100%', padding: '15px', background: '#1e293b', color: 'white', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }} rows="2" placeholder="Loan purpose..." />
+                                </div>
 
-                    <button type="submit" disabled={submittingLoan} className="btn-primary" style={{ height: '50px', fontWeight: '900', fontSize: '15px', background: '#6366f1', border: 'none', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s' }}>
-                        {submittingLoan ? 'SAVING...' : (editingLoanId ? 'UPDATE LOAN' : 'RECORD LOAN')}
-                    </button>
-                </form>
-            </motion.div>
-        </div>
-    )}
+                                <button type="submit" disabled={submittingLoan} className="btn-primary" style={{ height: '50px', fontWeight: '900', fontSize: '15px', background: '#6366f1', border: 'none', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                    {submittingLoan ? 'SAVING...' : (editingLoanId ? 'UPDATE LOAN' : 'RECORD LOAN')}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
             </AnimatePresence>
         </div>
     );

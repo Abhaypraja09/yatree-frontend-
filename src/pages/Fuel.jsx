@@ -171,6 +171,7 @@ const FuelPage = () => {
     const fetchEntries = async () => {
         if (!selectedCompany?._id) return;
         setLoading(true);
+        setEntries([]); // Clear stale data immediately to prevent wrong stats display
         try {
             const userInfoStr = localStorage.getItem('userInfo');
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
@@ -180,8 +181,12 @@ const FuelPage = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setEntries(data || []);
-        } catch (err) { console.error(err); }
-        finally { setLoading(false); }
+        } catch (err) { 
+            console.error(err);
+            setEntries([]); 
+        } finally { 
+            setLoading(false); 
+        }
     };
 
     const fetchVehicles = async () => {
@@ -622,8 +627,8 @@ const FuelPage = () => {
                     </div>
                     <div>
                         <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Fuel Cost</p>
-                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>₹{totalAmount.toLocaleString()}</h2>
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>P: ₹{petrolAmount.toLocaleString()} | D: ₹{dieselAmount.toLocaleString()}</span>
+                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>₹{loading ? '...' : totalAmount.toLocaleString()}</h2>
+                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>{loading ? 'Thinking...' : `P: ₹${petrolAmount.toLocaleString()} | D: ₹${dieselAmount.toLocaleString()}`}</span>
                     </div>
                 </motion.div>
 
@@ -633,8 +638,8 @@ const FuelPage = () => {
                     </div>
                     <div>
                         <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Volume</p>
-                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{totalLiters.toFixed(2)} L</h2>
-                        <span style={{ fontSize: '10px', color: 'rgba(56, 189, 248, 0.6)', fontWeight: '800' }}>Overall Avg: {avgMileage} KM/L</span>
+                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{loading ? '...' : `${totalLiters.toFixed(2)} L`}</h2>
+                        <span style={{ fontSize: '10px', color: 'rgba(56, 189, 248, 0.6)', fontWeight: '800' }}>{loading ? '...' : `Overall Avg: ${avgMileage} KM/L`}</span>
                     </div>
                 </motion.div>
 
@@ -644,7 +649,7 @@ const FuelPage = () => {
                     </div>
                     <div>
                         <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Distance</p>
-                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{totalDistance.toLocaleString()} KM</h2>
+                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{loading ? '...' : `${totalDistance.toLocaleString()} KM`}</h2>
                         <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>Total run</span>
                     </div>
                 </motion.div>
@@ -655,7 +660,7 @@ const FuelPage = () => {
                     </div>
                     <div>
                         <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Avg. Mileage</p>
-                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{avgMileage} KM/L</h2>
+                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{loading ? '...' : `${avgMileage} KM/L`}</h2>
                         <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>Overall efficiency</span>
                     </div>
                 </motion.div>
