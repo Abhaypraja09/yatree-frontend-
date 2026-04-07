@@ -164,12 +164,12 @@ const BorderTax = () => {
                 <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <ShieldAlert color="#fbbf24" size={20} />
+                            <ShieldAlert color="var(--primary)" size={20} />
                         </div>
                         <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(251, 191, 36, 0.8)', letterSpacing: '2px', textTransform: 'uppercase' }}>Permits & Taxes</span>
                     </div>
                     <h1 style={{ color: 'white', fontSize: 'clamp(28px, 6vw, 38px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
-                        Border <span style={{ color: '#fbbf24' }}>Tax Hub</span>
+                        Border <span style={{ color: 'var(--primary)' }}>Tax Hub</span>
                     </h1>
                 </div>
 
@@ -185,7 +185,7 @@ const BorderTax = () => {
                         minWidth: '150px'
                     }}>
                         <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>{months[selectedMonth]} Total</span>
-                        <span style={{ fontSize: '22px', fontWeight: '900', color: '#fbbf24' }}>₹ {totalMonthPaid.toLocaleString()}</span>
+                        <span style={{ fontSize: '22px', fontWeight: '900', color: 'var(--primary)' }}>₹ {totalMonthPaid.toLocaleString()}</span>
                     </div>
                 </div>
             </header>
@@ -427,7 +427,7 @@ const BorderTax = () => {
                                 boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
                             }}>
                                 <h4 style={{ color: 'white', fontSize: '14px', fontWeight: '900', marginBottom: '25px', textTransform: 'uppercase', letterSpacing: '1.5px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                                         <Plus size={18} color="black" />
                                     </div>
                                     New Tax Entry
@@ -463,7 +463,7 @@ const BorderTax = () => {
                                             placeholder="0"
                                             value={formData.amount}
                                             onChange={e => setFormData({...formData, amount: e.target.value})}
-                                            style={{ background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.2)', borderRadius: '14px', height: '52px', padding: '0 18px', color: '#fbbf24', fontWeight: '900', outline: 'none', fontSize: '20px' }}
+                                            style={{ background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.2)', borderRadius: '14px', height: '52px', padding: '0 18px', color: 'var(--primary)', fontWeight: '900', outline: 'none', fontSize: '20px' }}
                                         />
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -497,7 +497,7 @@ const BorderTax = () => {
                                             style={{ 
                                                 width: '100%', 
                                                 height: '52px', 
-                                                background: '#fbbf24', 
+                                                background: 'var(--primary)', 
                                                 color: 'black', 
                                                 border: 'none', 
                                                 borderRadius: '14px', 
@@ -522,7 +522,7 @@ const BorderTax = () => {
                             {/* History List Section */}
                             <div>
                                 <h4 style={{ color: 'white', margin: '0 0 25px 0', fontSize: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <CalendarIcon size={18} color="#fbbf24" style={{ filter: 'drop-shadow(0 0 5px rgba(251, 191, 36, 0.5))' }} /> 
+                                    <CalendarIcon size={18} color="var(--primary)" style={{ filter: 'drop-shadow(0 0 5px rgba(251, 191, 36, 0.5))' }} /> 
                                     Transaction History <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', marginLeft: '5px' }}>({months[selectedMonth]} {selectedYear})</span>
                                 </h4>
                                 <div className="scroll-x">
@@ -552,7 +552,7 @@ const BorderTax = () => {
                                                 <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '800' }}>
                                                     {formatDateIST(entry.date)}
                                                 </div>
-                                                <div style={{ color: '#fbbf24', fontSize: '18px', fontWeight: '950' }}>
+                                                <div style={{ color: 'var(--primary)', fontSize: '18px', fontWeight: '950' }}>
                                                     ₹ {entry.amount}
                                                 </div>
                                                 <div style={{ color: 'white', fontSize: '14px', fontWeight: '700' }}>

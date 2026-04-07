@@ -26,6 +26,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
+import { useTheme } from '../context/ThemeContext';
 
 const NavItem = ({ item, onClick, isSubItem = false }) => {
     const { t } = useLanguage();
@@ -42,10 +43,11 @@ const NavItem = ({ item, onClick, isSubItem = false }) => {
                 borderRadius: '12px',
                 marginBottom: '4px',
                 transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                background: isActive ? 'rgba(99, 102, 241, 0.15)' : 'transparent',
-                color: isActive ? '#a5b4fc' : '#64748b',
-                border: isActive ? '1px solid rgba(99, 102, 241, 0.25)' : '1px solid transparent',
+                background: isActive ? 'var(--primary)' : 'transparent',
+                color: isActive ? '#000' : '#64748b',
+                border: isActive ? '1px solid var(--primary)' : '1px solid transparent',
                 textDecoration: 'none',
+                boxShadow: isActive ? '0 4px 15px rgba(0,0,0,0.2)' : 'none',
             })}
         >
             {item.icon && <item.icon size={isSubItem ? 18 : 20} />}
@@ -108,6 +110,7 @@ const Sidebar = ({ isOpen, onClose }) => {
     const { logout, user } = useAuth();
     const { selectedCompany } = useCompany();
     const { language, setLanguage, t } = useLanguage();
+    const { theme } = useTheme();
     const location = useLocation();
 
     const userRole = user?.role?.toLowerCase() || '';
@@ -225,8 +228,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                             padding: '8px',
                             borderRadius: '8px',
                             border: 'none',
-                            background: language === 'en' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                            color: language === 'en' ? '#a5b4fc' : '#64748b',
+                            background: language === 'en' ? 'var(--primary)' : 'transparent',
+                            color: language === 'en' ? '#000' : '#64748b',
                             fontSize: '12px',
                             fontWeight: '700',
                             cursor: 'pointer',
@@ -242,8 +245,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                             padding: '8px',
                             borderRadius: '8px',
                             border: 'none',
-                            background: language === 'hi' ? 'rgba(99, 102, 241, 0.2)' : 'transparent',
-                            color: language === 'hi' ? '#a5b4fc' : '#64748b',
+                            background: language === 'hi' ? 'var(--primary)' : 'transparent',
+                            color: language === 'hi' ? '#000' : '#64748b',
                             fontSize: '12px',
                             fontWeight: '700',
                             cursor: 'pointer',
@@ -307,33 +310,45 @@ const Sidebar = ({ isOpen, onClose }) => {
             </nav>
 
             <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>
+                <div style={{ marginBottom: '10px', padding: '0 10px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '2px' }}>{t('current_profile')}</span>
+                </div>
                 <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '12px',
                     marginBottom: '20px',
-                    padding: '10px',
+                    padding: '12px',
                     background: 'rgba(255,255,255,0.03)',
-                    borderRadius: '16px'
+                    borderRadius: '20px',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    position: 'relative',
+                    overflow: 'hidden'
                 }}>
+                    {/* Add a subtle highlight */}
+                    <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: theme.primary }}></div>
+                    
                     <div style={{
-                        width: '42px',
-                        height: '42px',
-                        borderRadius: '12px',
-                        background: 'linear-gradient(135deg, #6366f1, #38bdf8)',
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '14px',
+                        background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`,
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        color: 'white',
-                        fontWeight: '800',
-                        fontSize: '18px',
-                        boxShadow: '0 4px 12px rgba(99, 102, 241, 0.35)'
+                        color: '#000',
+                        fontWeight: '1000',
+                        fontSize: '20px',
+                        boxShadow: `0 8px 16px ${theme.primary}20`
                     }}>
                         {user?.name?.charAt(0) || 'A'}
                     </div>
                     <div style={{ overflow: 'hidden' }}>
-                        <p style={{ fontSize: '15px', fontWeight: '700', color: 'white', margin: 0, whiteSpace: 'nowrap', textOverflow: 'ellipsis' }}>{user.name}</p>
-                        <p style={{ fontSize: '12px', color: '#64748b', fontWeight: '500', margin: 0 }}>{user.role}</p>
+                        <p style={{ fontSize: '16px', fontWeight: '900', color: 'white', margin: 0, whiteSpace: 'nowrap', textOverflow: 'ellipsis', letterSpacing: '-0.5px' }}>{user.name}</p>
+                        <p style={{ fontSize: '12px', color: theme.primary, fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary }}></span>
+                           {user.role}
+                        </p>
                     </div>
                 </div>
 

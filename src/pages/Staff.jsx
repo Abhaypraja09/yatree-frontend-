@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
+import { useTheme } from '../context/ThemeContext';
 import {
     Users, Plus, Search, Clock, MapPin, User, MoreVertical, IndianRupee, Calendar, Download, X,
     ChevronLeft, ChevronRight, UserPlus, Eye, Trash2, Filter, ArrowUpRight, ArrowDownLeft,
@@ -16,6 +17,7 @@ import OfficeGeofencePicker from '../components/OfficeGeofencePicker';
 import { todayIST, toISTDateString, formatDateIST, formatTimeIST, nowIST } from '../utils/istUtils';
 
 const Staff = () => {
+    const { theme } = useTheme();
     // Add global styles for animations and refinements
     useEffect(() => {
         const style = document.createElement('style');
@@ -522,17 +524,17 @@ const Staff = () => {
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                            boxShadow: `0 10px 25px ${theme.primary}30`
                         }}>
-                            <Users size={32} color="#3b82f6" />
+                            <Users size={32} color={theme.primary} />
                         </div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 8px #3b82f6' }}></div>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
                                 <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Human Resources</span>
                             </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
-                                Staff <span style={{ background: 'linear-gradient(to right, #3b82f6, #2563eb)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Command</span>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(26px, 5vw, 34px)', fontWeight: '1000', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
+                                Staff <span className="theme-gradient-text">Management</span>
                             </h1>
                             <p style={{ marginTop: '4px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
                                 Personnel Tracking: <b style={{ color: 'white' }}>{formatDateIST(todayIST())}</b>
@@ -542,7 +544,7 @@ const Staff = () => {
 
                     <div className="flex-resp" style={{ gap: '12px' }}>
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#3b82f6', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Active Staff</span>
+                            <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--primary)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Active Staff</span>
                             <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{staffList.filter(s => s.status !== 'blocked').length}</span>
                         </motion.div>
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
@@ -566,7 +568,13 @@ const Staff = () => {
                                     });
                                     setShowAddModal(true);
                                 }}
-                                style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', color: 'white', border: 'none', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 8px 15px rgba(59, 130, 246, 0.2)', cursor: 'pointer' }}
+                                style={{ 
+                                    display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', 
+                                    borderRadius: '14px', fontWeight: '800', 
+                                    background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary || theme.primary} 100%)`, 
+                                    color: 'black', border: 'none', whiteSpace: 'nowrap', flexShrink: 0, 
+                                    boxShadow: `0 8px 15px ${theme.primary}40`, cursor: 'pointer' 
+                                }}
                             >
                                 <Plus size={20} /> <span className="hide-mobile">Add Personnel</span><span className="show-mobile">Add</span>
                             </button>
@@ -601,9 +609,9 @@ const Staff = () => {
                     marginBottom: '30px'
                 }}>
                     {[
-                        { label: 'STAFF STRENGTH', value: staffList.length, icon: Users, color: '#3b82f6', sub: 'Total Personnel' },
+                        { label: 'STAFF STRENGTH', value: staffList.length, icon: Users, color: 'var(--primary)', sub: 'Total Personnel' },
                         { label: "TODAY'S ATTENDANCE", value: attendanceList.filter(r => r.date === todayIST()).length, icon: ShieldCheck, color: '#10b981', sub: 'On Duty' },
-                        { label: 'PENDING LEAVES', value: pendingLeaves.length, icon: CalendarX, color: '#f59e0b', sub: 'Awaiting Review' },
+                        { label: 'PENDING LEAVES', value: pendingLeaves.length, icon: CalendarX, color: 'var(--primary)', sub: 'Awaiting Review' },
                         { 
                             label: 'MONTHLY TARGET', 
                             value: attendanceList.filter(r => {
@@ -613,7 +621,7 @@ const Staff = () => {
                                 return r.date.startsWith(`${yearStr}-${monthStr}`);
                             }).length, 
                             icon: Target, 
-                            color: '#fbbf24', 
+                            color: 'var(--primary)', 
                             sub: `Goal: ${monthlyTarget} days`,
                             isTarget: true 
                         }
@@ -631,7 +639,7 @@ const Staff = () => {
                         }}>
                             {stat.isTarget && (
                                 <div style={{ 
-                                    position: 'absolute', bottom: 0, left: 0, height: '3px', background: '#fbbf24', 
+                                    position: 'absolute', bottom: 0, left: 0, height: '3px', background: 'var(--primary)', 
                                     width: `${Math.min((stat.value / (monthlyTarget || 1)) * 100, 100)}%`,
                                     transition: 'width 1s ease-out'
                                 }}></div>
@@ -692,8 +700,8 @@ const Staff = () => {
                                     alignItems: 'center',
                                     gap: '8px',
                                     transition: 'all 0.3s',
-                                    background: view === tab.id ? '#3b82f6' : 'transparent',
-                                    color: view === tab.id ? 'white' : 'rgba(255,255,255,0.4)',
+                                    background: view === tab.id ? theme.primary : 'transparent',
+                                    color: view === tab.id ? 'black' : 'rgba(255,255,255,0.4)',
                                     whiteSpace: 'nowrap'
                                 }}
                             >
@@ -726,13 +734,13 @@ const Staff = () => {
                     </div>
 
                     <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '14px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.05)', height: '48px' }}>
-                        <Target size={14} style={{ color: '#fbbf24', marginRight: '10px' }} />
+                        <Target size={14} style={{ color: 'var(--primary)', marginRight: '10px' }} />
                         <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginRight: '10px' }}>GOAL:</span>
                         <input 
                             type="number" 
                             value={monthlyTarget} 
                             onChange={e => handleTargetChange(e.target.value)} 
-                            style={{ width: '40px', background: 'transparent', border: 'none', color: '#fbbf24', fontWeight: '900', fontSize: '14px', textAlign: 'center', outline: 'none' }}
+                            style={{ width: '40px', background: 'transparent', border: 'none', color: 'var(--primary)', fontWeight: '900', fontSize: '14px', textAlign: 'center', outline: 'none' }}
                         />
                     </div>
 
@@ -820,8 +828,8 @@ const Staff = () => {
                                     position: 'relative', minWidth: '100px'
                                 }}
                             >
-                                {isRange && <span style={{ color: '#0ea5e9', fontSize: '11px', fontWeight: '900' }}>TO:</span>}
-                                {!isRange && <Calendar size={14} color="#0ea5e9" />}
+                                {isRange && <span style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '900' }}>TO:</span>}
+                                {!isRange && <Calendar size={14} color="var(--primary)" />}
                                 <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>
                                     {formatDateIST(toDate)}
                                 </span>
@@ -867,7 +875,7 @@ const Staff = () => {
                                 style={{
                                     marginLeft: '5px', padding: '0 10px', height: '36px',
                                     borderRadius: '10px', border: 'none', cursor: 'pointer',
-                                    background: isRange ? '#0ea5e9' : 'rgba(255,255,255,0.05)',
+                                    background: isRange ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
                                     color: isRange ? 'white' : 'rgba(255,255,255,0.4)',
                                     fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
                                 }}
@@ -950,7 +958,7 @@ const Staff = () => {
                                                 width: '56px',
                                                 height: '56px',
                                                 borderRadius: '16px',
-                                                background: staff.status === 'blocked' ? '#f43f5e' : 'linear-gradient(135deg, #3b82f6, #6366f1)',
+                                                background: staff.status === 'blocked' ? '#f43f5e' : 'linear-gradient(135deg, var(--primary), var(--primary))',
                                                 display: 'flex',
                                                 justifyContent: 'center',
                                                 alignItems: 'center',
@@ -969,7 +977,7 @@ const Staff = () => {
                                         <div style={{ display: 'flex', gap: '8px' }}>
                                             <button
                                                 onClick={(e) => { e.stopPropagation(); handleEditStaff(staff); }}
-                                                style={{ padding: '8px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: 'none', cursor: 'pointer' }}
+                                                style={{ padding: '8px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', border: 'none', cursor: 'pointer' }}
                                             >
                                                 <Edit2 size={14} />
                                             </button>
@@ -984,11 +992,11 @@ const Staff = () => {
 
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: '600' }}>
-                                            <Phone size={14} color="#3b82f6" />
+                                            <Phone size={14} color="var(--primary)" />
                                             <span>{staff.mobile}</span>
                                         </div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: '600' }}>
-                                            <Mail size={14} color="#3b82f6" />
+                                            <Mail size={14} color="var(--primary)" />
                                             <span style={{ fontSize: '12px', opacity: 0.8 }}>{staff.email || 'No Email'}</span>
                                         </div>
                                     </div>
@@ -1042,7 +1050,7 @@ const Staff = () => {
                                             <tr>
                                                 <td colSpan="5">
                                                     <div style={{ padding: '100px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.05)' }}>
-                                                        <History size={48} color="#0ea5e9" style={{ opacity: 0.2, marginBottom: '20px' }} />
+                                                        <History size={48} color="var(--primary)" style={{ opacity: 0.2, marginBottom: '20px' }} />
                                                         <p style={{ margin: 0, fontWeight: '800', fontSize: '18px', color: 'white' }}>No Attendance found</p>
                                                         <p style={{ margin: '8px 0 0 0', fontWeight: '500', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>There are no records for this date range.</p>
                                                     </div>
@@ -1063,19 +1071,19 @@ const Staff = () => {
                                             >
                                                 <td style={{ padding: '20px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#3b82f6', fontWeight: '900', fontSize: '18px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                                                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)', fontWeight: '900', fontSize: '18px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
                                                             {record.staff?.name?.charAt(0) || '?'}
                                                         </div>
                                                         <div>
                                                             <div style={{ fontWeight: '900', color: 'white', fontSize: '16px', letterSpacing: '-0.3px' }}>{record.staff?.name || 'Unknown Staff'}</div>
-                                                            <div style={{ fontSize: '11px', color: '#0ea5e9', marginTop: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>User: {record.staff?.username || 'SYSTEM'}</div>
+                                                            <div style={{ fontSize: '11px', color: 'var(--primary)', marginTop: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>User: {record.staff?.username || 'SYSTEM'}</div>
                                                         </div>
                                                     </div>
                                                 </td>
                                                 <td style={{ padding: '20px 25px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                                         {record.status === 'absent' ? (
-                                                            <div style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '900', letterSpacing: '1px', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
+                                                            <div style={{ background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '900', letterSpacing: '1px', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
                                                                 ON LEAVE / ABSENT
                                                             </div>
                                                         ) : (
@@ -1086,7 +1094,7 @@ const Staff = () => {
                                                                     </div>
                                                                     {record.punchIn?.time ? formatTimeIST(record.punchIn.time) : 'N/A'}
                                                                 </div>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: record.punchOut?.time ? '#f43f5e' : '#0ea5e9', fontSize: '13px', fontWeight: '900' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: record.punchOut?.time ? '#f43f5e' : 'var(--primary)', fontSize: '13px', fontWeight: '900' }}>
                                                                     <div style={{ width: '24px', height: '24px', borderRadius: '8px', background: record.punchOut?.time ? 'rgba(244, 63, 94, 0.1)' : 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                                                         <ArrowDownLeft size={14} />
                                                                     </div>
@@ -1121,7 +1129,7 @@ const Staff = () => {
                                                 <td style={{ padding: '20px 25px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                                         <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
-                                                            <MapPin size={20} color="#0ea5e9" />
+                                                            <MapPin size={20} color="var(--primary)" />
                                                         </div>
                                                         <div style={{ maxWidth: '240px' }}>
                                                             <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -1131,7 +1139,7 @@ const Staff = () => {
                                                                 <a
                                                                     href={`https://www.google.com/maps?q=${record.punchIn.location.latitude},${record.punchIn.location.longitude}`}
                                                                     target="_blank" rel="noreferrer"
-                                                                    style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px', display: 'inline-block', textDecoration: 'none', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px' }}
+                                                                    style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px', display: 'inline-block', textDecoration: 'none', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px' }}
                                                                 >
                                                                     OPEN MAP →
                                                                 </a>
@@ -1237,7 +1245,7 @@ const Staff = () => {
                                                                 {formatDateIST(leave.endDate, { day: '2-digit', month: 'short' })}
                                                             </div>
                                                         </div>
-                                                        <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '800', textTransform: 'uppercase', marginTop: '8px', letterSpacing: '1px', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px', display: 'inline-block' }}>{leave.type} LEAVE</div>
+                                                        <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', marginTop: '8px', letterSpacing: '1px', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px', display: 'inline-block' }}>{leave.type} LEAVE</div>
                                                     </td>
                                                     <td style={{ padding: '20px 25px' }}>
                                                         <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', maxWidth: '320px', lineHeight: '1.6', fontWeight: '500', background: 'rgba(255,255,255,0.02)', padding: '10px 15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
@@ -1318,15 +1326,15 @@ const Staff = () => {
                                 }}>
                                     <div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                                            <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#fbbf24', boxShadow: '0 0 15px #fbbf24', transform: 'rotate(45deg)' }}></div>
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: 'var(--primary)', boxShadow: '0 0 15px var(--primary)', transform: 'rotate(45deg)' }}></div>
                                             <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '2px' }}>Operational Expenditure</span>
                                         </div>
                                         <h2 style={{ fontSize: '34px', fontWeight: '900', color: 'white', margin: 0, letterSpacing: '-1.5px' }}>Payroll Intelligence</h2>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <p style={{ fontSize: '11px', color: '#fbbf24', margin: '0 0 5px 0', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>GROSS DISBURSEMENT</p>
+                                        <p style={{ fontSize: '11px', color: 'var(--primary)', margin: '0 0 5px 0', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>GROSS DISBURSEMENT</p>
                                         <h2 style={{ fontSize: '48px', fontWeight: '1000', color: 'white', margin: 0, letterSpacing: '-2px', textShadow: '0 0 40px rgba(251, 191, 36, 0.3)' }}>
-                                            <span style={{ color: '#fbbf24', fontSize: '24px', verticalAlign: 'top', marginRight: '8px', opacity: 0.8 }}>₹</span>{monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
+                                            <span style={{ color: 'var(--primary)', fontSize: '24px', verticalAlign: 'top', marginRight: '8px', opacity: 0.8 }}>₹</span>{monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
                                         </h2>
                                     </div>
                                 </div>
@@ -1334,7 +1342,7 @@ const Staff = () => {
                                 {monthlyReport.length === 0 ? (
                                     <div style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(15, 23, 42, 0.3)', borderRadius: '40px', border: '1px dashed rgba(255,255,255,0.1)' }}>
                                         <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(251, 191, 36, 0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 25px' }}>
-                                            <IndianRupee size={32} color="#fbbf24" style={{ opacity: 0.5 }} />
+                                            <IndianRupee size={32} color="var(--primary)" style={{ opacity: 0.5 }} />
                                         </div>
                                         <h3 style={{ color: 'white', margin: '0 0 10px 0', fontWeight: '700', fontSize: '20px' }}>No Payroll Records</h3>
                                         <p style={{ color: 'rgba(255,255,255,0.3)', margin: 0, fontWeight: '500', fontSize: '15px' }}>No records found for the selected month.</p>
@@ -1372,7 +1380,7 @@ const Staff = () => {
                                                         width: '64px',
                                                         height: '64px',
                                                         borderRadius: '20px',
-                                                        background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                                                        background: 'linear-gradient(135deg, var(--primary), #d97706)',
                                                         display: 'flex',
                                                         justifyContent: 'center',
                                                         alignItems: 'center',
@@ -1397,7 +1405,7 @@ const Staff = () => {
                                                 <div style={{ flex: '2 1 400px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', position: 'relative', zIndex: 2 }}>
                                                     <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#3b82f6', boxShadow: '0 0 10px #3b82f6' }}></div>
+                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></div>
                                                             <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>PRESENCE</p>
                                                         </div>
                                                         <div style={{ fontSize: '22px', fontWeight: '1000', color: 'white' }}>{item.presentDays || 0}<span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginLeft: '6px' }}>DAYS</span></div>
@@ -1411,10 +1419,10 @@ const Staff = () => {
                                                     </div>
                                                     <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#6366f1', boxShadow: '0 0 10px #6366f1' }}></div>
+                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></div>
                                                             <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>OVERTIME</p>
                                                         </div>
-                                                        <div style={{ fontSize: '22px', fontWeight: '1000', color: '#6366f1' }}>{item.sundaysWorked || 0}<span style={{ fontSize: '12px', opacity: 0.5, marginLeft: '6px' }}>SUN</span></div>
+                                                        <div style={{ fontSize: '22px', fontWeight: '1000', color: 'var(--primary)' }}>{item.sundaysWorked || 0}<span style={{ fontSize: '12px', opacity: 0.5, marginLeft: '6px' }}>SUN</span></div>
                                                     </div>
                                                 </div>
 
@@ -1422,9 +1430,9 @@ const Staff = () => {
                                                 <div style={{ flex: '1 1 200px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '25px', position: 'relative', zIndex: 2 }}>
                                                     <div style={{ textAlign: 'right' }}>
                                                         <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', letterSpacing: '1.5px' }}>NET PAYABLE</p>
-                                                        <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '1000', color: '#fbbf24', letterSpacing: '-1.5px', textShadow: '0 0 20px rgba(251, 191, 36, 0.2)' }}>₹{(item.finalSalary || 0).toLocaleString()}</h2>
+                                                        <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '1000', color: 'var(--primary)', letterSpacing: '-1.5px', textShadow: '0 0 20px rgba(251, 191, 36, 0.2)' }}>₹{(item.finalSalary || 0).toLocaleString()}</h2>
                                                     </div>
-                                                    <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fbbf24' }}>
+                                                    <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
                                                         <ChevronRight size={22} />
                                                     </div>
                                                 </div>
@@ -1461,13 +1469,13 @@ const Staff = () => {
                                     position: 'relative'
                                 }}
                             >
-                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, #0ea5e9, #6366f1, #fbbf24, #0ea5e9)', backgroundSize: '300% 100%', animation: 'gradientFlow 5s linear infinite' }}></div>
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, var(--primary), var(--primary), var(--primary), var(--primary))', backgroundSize: '300% 100%', animation: 'gradientFlow 5s linear infinite' }}></div>
 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
                                     <div>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0ea5e9' }}></div>
-                                            <span style={{ fontSize: '10px', fontWeight: '600', color: '#0ea5e9', textTransform: 'uppercase', letterSpacing: '2px' }}>Staff Records</span>
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)' }}></div>
+                                            <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>Staff Records</span>
                                         </div>
                                         <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '800', margin: 0, letterSpacing: '-1px' }}>
                                             {isEditing ? 'Edit Staff Details' : 'Add New Staff'}
@@ -1563,7 +1571,7 @@ const Staff = () => {
                                                 gap: '20px'
                                             }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <Clock size={16} color="#fbbf24" />
+                                                    <Clock size={16} color="var(--primary)" />
                                                     <h4 style={{ color: 'white', fontSize: '13px', fontWeight: '700', margin: 0, letterSpacing: '0.5px' }}>SHIFT TIMING</h4>
                                                 </div>
                                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
@@ -1589,7 +1597,7 @@ const Staff = () => {
                                             }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                     <div style={{ background: 'rgba(99, 102, 241, 0.2)', padding: '8px', borderRadius: '12px' }}>
-                                                        <MapPin size={18} color="#6366f1" />
+                                                        <MapPin size={18} color="var(--primary)" />
                                                     </div>
                                                     <div>
                                                         <h4 style={{ color: 'white', fontSize: '14px', fontWeight: '800', margin: 0, letterSpacing: '0.5px' }}>OFFICE GEOFENCING</h4>
@@ -1613,7 +1621,7 @@ const Staff = () => {
                                             style={{
                                                 width: '100%',
                                                 height: '64px',
-                                                background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                                                background: 'linear-gradient(135deg, var(--primary), var(--primary))',
                                                 color: 'white',
                                                 border: 'none',
                                                 borderRadius: '20px',
@@ -1673,12 +1681,12 @@ const Staff = () => {
                                     <div style={{ background: 'rgba(255,255,255,0.02)', borderRight: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', backdropFilter: 'blur(20px)', zIndex: 2, overflowY: 'auto' }}>
                                         <div style={{ padding: '30px 25px 20px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', flexShrink: 0 }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                                <div style={{ width: '54px', height: '54px', borderRadius: '18px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), transparent)', border: '1px solid rgba(251, 191, 36, 0.3)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '22px', fontWeight: '800', color: '#fbbf24', flexShrink: 0 }}>
+                                                <div style={{ width: '54px', height: '54px', borderRadius: '18px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), transparent)', border: '1px solid rgba(251, 191, 36, 0.3)', display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '22px', fontWeight: '800', color: 'var(--primary)', flexShrink: 0 }}>
                                                     {selectedStaffReport.name.charAt(0)}
                                                 </div>
                                                 <div>
                                                     <h3 style={{ fontSize: '18px', fontWeight: '800', color: 'white', margin: 0, letterSpacing: '-0.5px' }}>{selectedStaffReport.name}</h3>
-                                                    <p style={{ margin: '3px 0 0 0', fontSize: '10px', color: '#fbbf24', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedStaffReport.designation || 'Staff Member'}</p>
+                                                    <p style={{ margin: '3px 0 0 0', fontSize: '10px', color: 'var(--primary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px' }}>{selectedStaffReport.designation || 'Staff Member'}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -1696,9 +1704,9 @@ const Staff = () => {
                                             flexShrink: 0
                                         }}>
                                             <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 50%)', opacity: 0.5 }}></div>
-                                            <p style={{ margin: 0, fontSize: '9px', fontWeight: '700', color: '#fbbf24', textTransform: 'uppercase', letterSpacing: '2px' }}>NET PAYABLE THIS CYCLE</p>
+                                            <p style={{ margin: 0, fontSize: '9px', fontWeight: '700', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>NET PAYABLE THIS CYCLE</p>
                                             <h1 style={{ margin: '6px 0 0 0', fontSize: '40px', fontWeight: '900', color: 'white', letterSpacing: '-2px', textShadow: '0 0 30px rgba(251, 191, 36, 0.4)', position: 'relative' }}>
-                                                <span style={{ fontSize: '14px', verticalAlign: 'top', color: '#fbbf24', marginRight: '3px', fontWeight: '700' }}>₹</span>
+                                                <span style={{ fontSize: '14px', verticalAlign: 'top', color: 'var(--primary)', marginRight: '3px', fontWeight: '700' }}>₹</span>
                                                 {(selectedStaffReport.finalSalary || 0).toLocaleString()}
                                             </h1>
                                             {selectedStaffReport.cycleStart && (
@@ -1740,20 +1748,20 @@ const Staff = () => {
                                                 {/* Free Leaves Allowance */}
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(14,165,233,0.07)', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.14)' }}>
                                                     <div>
-                                                        <p style={{ margin: 0, fontSize: '10px', color: '#0ea5e9', fontWeight: '700' }}>🎫 FREE LEAVE USED</p>
+                                                        <p style={{ margin: 0, fontSize: '10px', color: 'var(--primary)', fontWeight: '700' }}>🎫 FREE LEAVE USED</p>
                                                         <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: 'rgba(14,165,233,0.5)', fontWeight: '500' }}>Allowance: {selectedStaffReport.allowance || 4}/cycle (paid absences)</p>
                                                     </div>
-                                                    <span style={{ fontWeight: '800', color: '#0ea5e9', fontSize: '13px' }}>{selectedStaffReport.paidLeavesUsed || 0} <small style={{ fontSize: '9px', opacity: 0.6 }}>days</small></span>
+                                                    <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '13px' }}>{selectedStaffReport.paidLeavesUsed || 0} <small style={{ fontSize: '9px', opacity: 0.6 }}>days</small></span>
                                                 </div>
 
                                                 {/* Sunday Holidays (Paid) */}
                                                 {(selectedStaffReport.sundaysPassed || 0) > 0 && (
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(251, 191, 36, 0.05)', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
                                                         <div>
-                                                            <p style={{ margin: 0, fontSize: '10px', color: '#fbbf24', fontWeight: '700' }}>⭐ SUNDAY HOLIDAYS</p>
+                                                            <p style={{ margin: 0, fontSize: '10px', color: 'var(--primary)', fontWeight: '700' }}>⭐ SUNDAY HOLIDAYS</p>
                                                             <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: 'rgba(251, 191, 36, 0.5)', fontWeight: '500' }}>Automatically paid rest days</p>
                                                         </div>
-                                                        <span style={{ fontWeight: '800', color: '#fbbf24', fontSize: '13px' }}>{selectedStaffReport.sundaysPassed} <small style={{ fontSize: '9px', opacity: 0.6 }}>days</small></span>
+                                                        <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '13px' }}>{selectedStaffReport.sundaysPassed} <small style={{ fontSize: '9px', opacity: 0.6 }}>days</small></span>
                                                     </div>
                                                 )}
 
@@ -1788,7 +1796,7 @@ const Staff = () => {
 
                                                 {/* Final calc box */}
                                                 <div style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(251,191,36,0.03))', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '14px', padding: '12px 14px', marginTop: '2px' }}>
-                                                    <p style={{ margin: 0, fontSize: '9px', color: '#fbbf24', fontWeight: '700', letterSpacing: '1px' }}>🧮 STEP-BY-STEP</p>
+                                                    <p style={{ margin: 0, fontSize: '9px', color: 'var(--primary)', fontWeight: '700', letterSpacing: '1px' }}>🧮 STEP-BY-STEP</p>
                                                     <p style={{ margin: '6px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.55)', fontWeight: '600', lineHeight: '1.7' }}>
                                                         ({selectedStaffReport.presentDays || 0} presents
                                                         {(selectedStaffReport.paidLeavesUsed || 0) > 0 ? ` + ${selectedStaffReport.paidLeavesUsed} leaves` : ''}
@@ -1796,7 +1804,7 @@ const Staff = () => {
                                                         {(selectedStaffReport.sundaysWorked || 0) > 0 ? ` + ${selectedStaffReport.sundaysWorked} extras` : ''})
                                                         {' × ₹'}{selectedStaffReport.perDaySalary || Math.round((selectedStaffReport.salary || 0) / 30)}
                                                     </p>
-                                                    <p style={{ margin: '5px 0 0 0', fontSize: '15px', fontWeight: '900', color: '#fbbf24' }}>= ₹{(selectedStaffReport.finalSalary || 0).toLocaleString()}</p>
+                                                    <p style={{ margin: '5px 0 0 0', fontSize: '15px', fontWeight: '900', color: 'var(--primary)' }}>= ₹{(selectedStaffReport.finalSalary || 0).toLocaleString()}</p>
                                                 </div>
                                             </div>
                                         </div>
@@ -1820,8 +1828,8 @@ const Staff = () => {
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#22c55e' }}>
                                                         <div style={{ width: '10px', height: '10px', background: '#22c55e', borderRadius: '50%', boxShadow: '0 0 10px rgba(34, 197, 94, 0.5)' }}></div> PRESENT
                                                     </div>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#0ea5e9' }}>
-                                                        <div style={{ width: '10px', height: '10px', background: '#0ea5e9', borderRadius: '50%', boxShadow: '0 0 10px rgba(14, 165, 233, 0.5)' }}></div> HALF DAY
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--primary)' }}>
+                                                        <div style={{ width: '10px', height: '10px', background: 'var(--primary)', borderRadius: '50%', boxShadow: '0 0 10px rgba(14, 165, 233, 0.5)' }}></div> HALF DAY
                                                     </div>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#ef4444' }}>
                                                         <div style={{ width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%', boxShadow: '0 0 10px rgba(239, 68, 68, 0.5)' }}></div> ABSENT
@@ -1863,17 +1871,17 @@ const Staff = () => {
                                                                 overflow: 'hidden'
                                                             }}
                                                         >
-                                                            {isSunday && <div style={{ position: 'absolute', top: '2px', right: '2px', width: '4px', height: '4px', background: '#fbbf24', borderRadius: '50%' }}></div>}
+                                                            {isSunday && <div style={{ position: 'absolute', top: '2px', right: '2px', width: '4px', height: '4px', background: 'var(--primary)', borderRadius: '50%' }}></div>}
                                                             <span style={{
                                                                 fontSize: '12px',
                                                                 fontWeight: '700',
-                                                                color: isPresent ? '#10b981' : isHalfDay ? '#0ea5e9' : isAbsent ? '#f43f5e' : 'rgba(255,255,255,0.3)'
+                                                                color: isPresent ? '#10b981' : isHalfDay ? 'var(--primary)' : isAbsent ? '#f43f5e' : 'rgba(255,255,255,0.3)'
                                                             }}>{attendanceRecord.day}</span>
 
                                                             {isPresent ? (
                                                                 <div style={{ width: '8px', height: '8px', background: '#10b981', borderRadius: '50%', boxShadow: '0 0 12px #10b981' }}></div>
                                                             ) : isHalfDay ? (
-                                                                <div style={{ width: '8px', height: '8px', background: '#0ea5e9', borderRadius: '50%', boxShadow: '0 0 12px #0ea5e9' }}></div>
+                                                                <div style={{ width: '8px', height: '8px', background: 'var(--primary)', borderRadius: '50%', boxShadow: '0 0 12px var(--primary)' }}></div>
                                                             ) : isAbsent ? (
                                                                 <div style={{ width: '8px', height: '8px', background: '#f43f5e', borderRadius: '50%', boxShadow: '0 0 12px #f43f5e' }}></div>
                                                             ) : null}
@@ -1896,13 +1904,13 @@ const Staff = () => {
                                             <div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                                                     <span style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>PAYROLL ACCRUAL</span>
-                                                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#fbbf24' }}>{Math.round((selectedStaffReport.finalSalary / (selectedStaffReport.salary || 1)) * 100)}%</span>
+                                                    <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--primary)' }}>{Math.round((selectedStaffReport.finalSalary / (selectedStaffReport.salary || 1)) * 100)}%</span>
                                                 </div>
                                                 <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
                                                     <motion.div
                                                         initial={{ width: 0 }}
                                                         animate={{ width: `${Math.min(100, (selectedStaffReport.finalSalary / (selectedStaffReport.salary || 1)) * 100)}%` }}
-                                                        style={{ height: '100%', background: 'linear-gradient(90deg, #fbbf24, #f59e0b)', boxShadow: '0 0 15px rgba(251, 191, 36, 0.3)' }}
+                                                        style={{ height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--primary))', boxShadow: '0 0 15px rgba(251, 191, 36, 0.3)' }}
                                                     />
                                                 </div>
                                             </div>
@@ -2003,16 +2011,16 @@ const Staff = () => {
                                 }}
                             >
                                 {/* Header Decorative element */}
-                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '6px', background: 'linear-gradient(90deg, #6366f1, #0ea5e9, #6366f1)', backgroundSize: '200% 100%', animation: 'gradientMove 3s infinite linear' }}></div>
+                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '6px', background: 'linear-gradient(90deg, var(--primary), var(--primary), var(--primary))', backgroundSize: '200% 100%', animation: 'gradientMove 3s infinite linear' }}></div>
 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
                                     <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
                                         <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'rgba(99, 102, 241, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                                            <ShieldCheck size={28} color="#6366f1" />
+                                            <ShieldCheck size={28} color="var(--primary)" />
                                         </div>
                                         <div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                                <span style={{ fontSize: '10px', fontWeight: '800', color: '#6366f1', textTransform: 'uppercase', letterSpacing: '2px' }}>Security Panel</span>
+                                                <span style={{ fontSize: '10px', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>Security Panel</span>
                                                 <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></div>
                                                 <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Admin Override</span>
                                             </div>
@@ -2036,10 +2044,10 @@ const Staff = () => {
                                         style={{ background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.2)', borderRadius: '20px', padding: '16px 20px', display: 'flex', alignItems: 'center', gap: '14px' }}
                                     >
                                         <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                            <AlertCircle size={18} color="#fbbf24" />
+                                            <AlertCircle size={18} color="var(--primary)" />
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontSize: '12px', color: '#fbbf24', fontWeight: '800', letterSpacing: '0.2px' }}>Attendance Policy</span>
+                                            <span style={{ fontSize: '12px', color: 'var(--primary)', fontWeight: '800', letterSpacing: '0.2px' }}>Attendance Policy</span>
                                             <span style={{ fontSize: '11px', color: 'rgba(251, 191, 36, 0.6)', fontWeight: '600' }}>Backdated entries are limited to the previous 60 days (2 Months).</span>
                                         </div>
                                     </motion.div>
@@ -2095,12 +2103,12 @@ const Staff = () => {
                                                     borderRadius: '18px',
                                                     paddingLeft: '20px',
                                                     fontSize: '15px',
-                                                    color: backdateForm.status === 'present' ? '#10b981' : backdateForm.status === 'half-day' ? '#0ea5e9' : '#f43f5e',
+                                                    color: backdateForm.status === 'present' ? '#10b981' : backdateForm.status === 'half-day' ? 'var(--primary)' : '#f43f5e',
                                                     fontWeight: '700'
                                                 }}
                                             >
                                                 <option value="present" style={{ background: '#0B1121', color: '#10b981' }}>PRESENT</option>
-                                                <option value="half-day" style={{ background: '#0B1121', color: '#0ea5e9' }}>HALF DAY</option>
+                                                <option value="half-day" style={{ background: '#0B1121', color: 'var(--primary)' }}>HALF DAY</option>
                                                 <option value="absent" style={{ background: '#0B1121', color: '#f43f5e' }}>ABSENT</option>
                                             </select>
                                         </div>
@@ -2146,7 +2154,7 @@ const Staff = () => {
                                             style={{
                                                 width: '100%',
                                                 height: '64px',
-                                                background: 'linear-gradient(135deg, #6366f1, #4f46e5, #0ea5e9)',
+                                                background: 'linear-gradient(135deg, var(--primary), #4f46e5, var(--primary))',
                                                 backgroundSize: '200% 200%',
                                                 color: 'white',
                                                 border: 'none',

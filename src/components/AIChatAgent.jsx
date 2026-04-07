@@ -97,7 +97,10 @@ const AIChatAgent = () => {
         }
     };
 
-    if (!user) return null; // Only show for logged in users
+    const userRole = user?.role?.toLowerCase() || '';
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole.includes('admin') || userRole === 'executive';
+
+    if (!user || !isAdmin) return null; // Only show for logged in admin/executive users
 
     return (
         <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 999 }}>

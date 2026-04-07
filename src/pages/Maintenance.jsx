@@ -23,10 +23,12 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
+import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
 
 const Maintenance = () => {
+    const { theme } = useTheme();
     const { selectedCompany } = useCompany();
     const [records, setRecords] = useState([]);
     const [vehicles, setVehicles] = useState([]);
@@ -394,18 +396,18 @@ const Maintenance = () => {
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                        boxShadow: `0 10px 25px ${theme.primary}30`,
                         flexShrink: 0
                     }}>
-                        <Wrench size={26} color="#fbbf24" />
+                        <Wrench size={26} color={theme.primary} />
                     </div>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
                             <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Health</span>
                         </div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
-                            Vehicle <span className="text-gradient-yellow">Maintenance</span>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
+                            Car <span className="theme-gradient-text">Maintenance</span>
                         </h1>
                     </div>
                 </div>
@@ -464,7 +466,7 @@ const Maintenance = () => {
                             </button>
                             <button
                                 onClick={() => { setEditingId(null); resetForm(); setShowModal(true); }}
-                                style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', border: 'none', color: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)' }}
+                                style={{ width: '48px', height: '48px', borderRadius: '12px', background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary || theme.primary} 100%)`, border: 'none', color: 'black', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: `0 8px 15px ${theme.primary}40` }}
                                 title="Add Record"
                             >
                                 <Plus size={20} />
@@ -488,7 +490,7 @@ const Maintenance = () => {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 className="glass-card"
-                                style={{ padding: '20px', borderLeft: '4px solid #fbbf24', background: 'rgba(251, 191, 36, 0.05)' }}
+                                style={{ padding: '20px', borderLeft: '4px solid var(--primary)', background: 'rgba(251, 191, 36, 0.05)' }}
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
                                     <div style={{ display: 'flex', gap: '12px' }}>
@@ -508,7 +510,7 @@ const Maintenance = () => {
                                             <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', margin: '4px 0 0' }}>{entry.driver || 'Driver'} • {entry.carNumber}</p>
                                         </div>
                                     </div>
-                                    <span style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', fontSize: '10px', padding: '4px 8px', borderRadius: '6px', fontWeight: '800', textTransform: 'uppercase' }}>{entry.fuelType || 'Service'}</span>
+                                    <span style={{ background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', fontSize: '10px', padding: '4px 8px', borderRadius: '6px', fontWeight: '800', textTransform: 'uppercase' }}>{entry.fuelType || 'Service'}</span>
                                 </div>
 
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', color: 'rgba(255,255,255,0.6)', marginBottom: '15px', background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '8px' }}>
@@ -539,7 +541,7 @@ const Maintenance = () => {
             {/* Summary Row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '30px' }}>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#0ea5e9' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
                         <CreditCard size={20} />
                     </div>
                     <div>
@@ -567,7 +569,7 @@ const Maintenance = () => {
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fbbf24' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: `${theme.primary}20`, display: 'flex', justifyContent: 'center', alignItems: 'center', color: theme.primary }}>
                         <Car size={20} />
                     </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
@@ -588,13 +590,13 @@ const Maintenance = () => {
             <div style={{ marginBottom: '30px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', paddingLeft: '4px' }}>
                     <h3 style={{ color: 'white', fontSize: '15px', fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Settings size={16} color="#fbbf24" /> Maintenance Categories
+                        <Settings size={16} color="var(--primary)" /> Maintenance Categories
                     </h3>
                     {activeCategory !== 'All' && (
                         <motion.span
                             initial={{ opacity: 0, x: -10 }}
                             animate={{ opacity: 1, x: 0 }}
-                            style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', padding: '2px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251, 191, 36, 0.2)' }}
+                            style={{ background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', padding: '2px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251, 191, 36, 0.2)' }}
                         >
                             {frequencyInSelectedPeriod} {frequencyInSelectedPeriod === 1 ? 'Service' : 'Services'} this {selectedMonth === 'All' ? 'Year' : 'Month'}
                         </motion.span>
@@ -619,7 +621,7 @@ const Maintenance = () => {
                             border: 'none',
                             borderRadius: '12px',
                             cursor: 'pointer',
-                            color: activeCategory === 'All' ? '#fbbf24' : 'rgba(255,255,255,0.4)',
+                            color: activeCategory === 'All' ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
                             fontSize: '11px',
                             fontWeight: '800',
                             transition: '0.2s',
@@ -739,7 +741,7 @@ const Maintenance = () => {
                                                     padding: '2px 8px',
                                                     borderRadius: '4px',
                                                     background: 'rgba(245, 158, 11, 0.1)',
-                                                    color: '#f59e0b',
+                                                    color: 'var(--primary)',
                                                     fontWeight: '800',
                                                     textTransform: 'uppercase'
                                                 }}>PENDING APPROVAL</span>
@@ -802,7 +804,7 @@ const Maintenance = () => {
                                                     <button
                                                         onClick={() => setSelectedBillPhoto(record.billPhoto)}
                                                         className="glass-card-hover-effect"
-                                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                                                         title="View Bill"
                                                     >
                                                         <FileText size={16} />
@@ -907,7 +909,7 @@ const Maintenance = () => {
                                         {record.billPhoto && (
                                             <button
                                                 onClick={() => setSelectedBillPhoto(record.billPhoto)}
-                                                style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: '1px solid rgba(14, 165, 233, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
+                                                style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', border: '1px solid rgba(14, 165, 233, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
                                             >
                                                 <FileText size={14} /> View Bill
                                             </button>
@@ -1072,7 +1074,7 @@ const Maintenance = () => {
                                                                     fontWeight: '700',
                                                                     border: isSelected ? '1px solid rgba(251, 191, 36, 0.3)' : '1px solid transparent',
                                                                     background: isSelected ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)',
-                                                                    color: isSelected ? '#fbbf24' : 'rgba(255,255,255,0.4)',
+                                                                    color: isSelected ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
                                                                     boxShadow: isSelected ? '0 0 15px rgba(251, 191, 36, 0.2)' : 'none',
                                                                     cursor: 'pointer',
                                                                     transition: 'all 0.2s ease'
@@ -1174,7 +1176,7 @@ const Maintenance = () => {
                                                 type="submit"
                                                 disabled={submitting}
                                                 className="btn-primary"
-                                                style={{ height: '54px', borderRadius: '12px', fontSize: '15px', fontWeight: '900', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black', border: 'none' }}
+                                                style={{ height: '54px', borderRadius: '12px', fontSize: '15px', fontWeight: '900', background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)', color: 'black', border: 'none' }}
                                             >
                                                 {submitting ? 'Saving...' : (editingId ? 'Update Record' : 'Save Record')}
                                             </button>

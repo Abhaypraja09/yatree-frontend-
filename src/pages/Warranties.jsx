@@ -243,11 +243,11 @@ const Warranties = () => {
                         alignItems: 'center',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
                     }}>
-                        <ShieldCheck size={28} color="#fbbf24" />
+                        <ShieldCheck size={28} color="var(--primary)" />
                     </div>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 8px var(--primary)' }}></div>
                             <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Asset Protection</span>
                         </div>
                         <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
@@ -259,7 +259,7 @@ const Warranties = () => {
                 <div className="flex-resp" style={{ gap: '15px' }}>
                     <button
                         onClick={() => setShowModal(true)}
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black', border: 'none', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)' }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)', color: 'black', border: 'none', whiteSpace: 'nowrap', flexShrink: 0, boxShadow: '0 8px 15px rgba(251, 191, 36, 0.2)' }}
                     >
                         <Plus size={20} /> <span className="hide-mobile">Add Warranty</span><span className="show-mobile">Add</span>
                     </button>
@@ -278,8 +278,8 @@ const Warranties = () => {
 
                 <div className="glass-card stat-card" style={{ background: 'linear-gradient(145deg, rgba(245, 158, 11, 0.1), rgba(245, 158, 11, 0.02))', borderColor: 'rgba(245, 158, 11, 0.2)' }}>
                     <div className="stat-card-header">
-                        <div className="stat-card-icon" style={{ background: 'rgba(245, 158, 11, 0.2)', color: '#f59e0b' }}><Clock size={18} /></div>
-                        <p className="stat-card-label" style={{ color: '#f59e0b' }}>Expiring Soon</p>
+                        <div className="stat-card-icon" style={{ background: 'rgba(245, 158, 11, 0.2)', color: 'var(--primary)' }}><Clock size={18} /></div>
+                        <p className="stat-card-label" style={{ color: 'var(--primary)' }}>Expiring Soon</p>
                     </div>
                     <h2 className="stat-card-value">{stats.expiringSoon}</h2>
                 </div>
@@ -384,7 +384,7 @@ const Warranties = () => {
                                             </td>
                                             <td style={{ padding: '15px' }}>
                                                 <div style={{
-                                                    color: expired ? '#f43f5e' : soon ? '#f59e0b' : '#10b981',
+                                                    color: expired ? '#f43f5e' : soon ? 'var(--primary)' : '#10b981',
                                                     fontWeight: '800',
                                                     fontSize: '14px',
                                                     display: 'flex',
@@ -394,7 +394,7 @@ const Warranties = () => {
                                                     {new Date(w.warrantyEndDate).toLocaleDateString('en-GB')}
                                                     {expired && <AlertTriangle size={14} />}
                                                 </div>
-                                                <div style={{ fontSize: '11px', fontWeight: '600', color: expired ? '#f43f5e' : soon ? '#f59e0b' : 'var(--text-muted)', marginTop: '2px' }}>{expired ? 'EXPIRED' : soon ? 'EXPIRING SOON' : 'VALID'}</div>
+                                                <div style={{ fontSize: '11px', fontWeight: '600', color: expired ? '#f43f5e' : soon ? 'var(--primary)' : 'var(--text-muted)', marginTop: '2px' }}>{expired ? 'EXPIRED' : soon ? 'EXPIRING SOON' : 'VALID'}</div>
                                             </td>
                                             <td style={{ padding: '15px' }}>
                                                 <div style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>₹{Number(w.cost || 0).toLocaleString()}</div>
@@ -573,7 +573,7 @@ const Warranties = () => {
                                     disabled={submitting}
                                     style={{
                                         height: '56px',
-                                        background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                                        background: 'linear-gradient(135deg, var(--primary), #d97706)',
                                         borderRadius: '16px',
                                         fontWeight: '900',
                                         fontSize: '16px',

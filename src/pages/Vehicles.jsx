@@ -3,10 +3,12 @@ import axios from '../api/axios';
 import { Plus, Car, AlertCircle, Trash2, Calendar, ExternalLink, Search, Wallet, Shield, MapPin, Clock, CheckCircle2, XCircle, Info, Wrench, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
+import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, formatDateIST } from '../utils/istUtils';
 
 const Vehicles = () => {
+    const { theme } = useTheme();
     const { selectedCompany } = useCompany();
     const [vehicles, setVehicles] = useState([]);
     const [drivers, setDrivers] = useState([]);
@@ -270,12 +272,12 @@ const Vehicles = () => {
                                                 background: isOverdue ? 'rgba(244, 63, 94, 0.2)' : 'rgba(251, 191, 36, 0.2)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center'
                                             }}>
-                                                <Icon size={18} color={isOverdue ? '#f43f5e' : '#fbbf24'} />
+                                                <Icon size={18} color={isOverdue ? '#f43f5e' : 'var(--primary)'} />
                                             </div>
                                             <span style={{ fontSize: '13px', color: 'white', fontWeight: '900', letterSpacing: '0.5px' }}>{alert.identifier}</span>
                                         </div>
                                         <div style={{ 
-                                            background: isOverdue ? '#f43f5e' : '#fbbf24', 
+                                            background: isOverdue ? '#f43f5e' : 'var(--primary)', 
                                             color: 'white', 
                                             padding: '4px 10px', 
                                             borderRadius: '8px', 
@@ -307,7 +309,7 @@ const Vehicles = () => {
                                                     <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>SCHEDULED AT</span>
                                                     <span style={{ fontSize: '10px', color: 'white', fontWeight: '900' }}>{Number(alert.targetKm).toLocaleString()} KM</span>
                                                 </div>
-                                                <div style={{ fontSize: '18px', color: isOverdue ? '#f43f5e' : '#fbbf24', fontWeight: '1000' }}>
+                                                <div style={{ fontSize: '18px', color: isOverdue ? '#f43f5e' : 'var(--primary)', fontWeight: '1000' }}>
                                                     {isOverdue ? (
                                                         <span>{Math.abs(alert.daysLeft).toLocaleString()} KM Overdue</span>
                                                     ) : (
@@ -321,7 +323,7 @@ const Vehicles = () => {
                                                     <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>EXPIRATION DATE</span>
                                                     <span style={{ fontSize: '10px', color: 'white', fontWeight: '900' }}>{formatDateIST(alert.expiryDate)}</span>
                                                 </div>
-                                                <div style={{ fontSize: '18px', color: isOverdue ? '#f43f5e' : '#fbbf24', fontWeight: '1000' }}>
+                                                <div style={{ fontSize: '18px', color: isOverdue ? '#f43f5e' : 'var(--primary)', fontWeight: '1000' }}>
                                                     {isOverdue ? (
                                                         <span>{Math.abs(alert.daysLeft)} days Overdue</span>
                                                     ) : (
@@ -350,18 +352,18 @@ const Vehicles = () => {
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            boxShadow: '0 8px 20px rgba(0,0,0,0.15)',
+                            boxShadow: `0 8px 20px ${theme.primary}30`,
                             border: '1px solid rgba(255,255,255,0.1)'
                         }}>
-                            <Car size={28} color="#fbbf24" />
+                            <Car size={28} color={theme.primary} />
                         </div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
                                 <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Asset Management</span>
                             </div>
                             <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', cursor: 'pointer' }}>
-                                Vehicle <span style={{ color: 'white' }}>Fleet</span>
+                                Vehicle <span className="theme-gradient-text">Fleet</span>
                             </h1>
                         </div>
                     </div>
@@ -490,7 +492,7 @@ const Vehicles = () => {
                                     onClick={() => setShowDocsModal(v)}
                                     style={{
                                         background: 'rgba(255,255,255,0.05)',
-                                        color: '#0ea5e9',
+                                        color: 'var(--primary)',
                                         border: '1px solid rgba(14, 165, 233, 0.2)',
                                         padding: '10px 24px',
                                         borderRadius: '12px',
@@ -552,7 +554,7 @@ const Vehicles = () => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '35px', position: 'relative' }}>
                             <div>
                                 <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
-                                    {editingId ? 'Edit Vehicle' : 'Add New'} <span style={{ color: '#6366f1' }}>Fleet Asset</span>
+                                    {editingId ? 'Edit Vehicle' : 'Add New'} <span style={{ color: 'var(--primary)' }}>Fleet Asset</span>
                                 </h2>
                                 <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '700', textTransform: 'uppercase', margin: '6px 0 0', letterSpacing: '1.5px' }}>Vehicle Information Management</p>
                             </div>
@@ -574,14 +576,14 @@ const Vehicles = () => {
                             {/* Section 1: Core Details */}
                             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#6366f1' }}></div>
+                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)' }}></div>
                                     <h3 style={{ color: 'white', fontSize: '14px', fontWeight: '800', textTransform: 'uppercase', margin: 0, letterSpacing: '1px' }}>Core Specifications</h3>
                                 </div>
                                 <div className="form-grid-2">
                                     <div className="form-group">
                                         <label>Car Number *</label>
                                         <div style={{ position: 'relative' }}>
-                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#6366f1' }}>
+                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)' }}>
                                                 <Car size={16} />
                                             </div>
                                             <input
@@ -597,7 +599,7 @@ const Vehicles = () => {
                                     <div className="form-group">
                                         <label>Model Name *</label>
                                         <div style={{ position: 'relative' }}>
-                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#6366f1' }}>
+                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)' }}>
                                                 <Info size={16} />
                                             </div>
                                             <input
@@ -616,7 +618,7 @@ const Vehicles = () => {
                                     <div className="form-group">
                                         <label>Permit Category</label>
                                         <div style={{ position: 'relative' }}>
-                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#6366f1' }}>
+                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)' }}>
                                                 <MapPin size={16} />
                                             </div>
                                             <select
@@ -634,7 +636,7 @@ const Vehicles = () => {
                                     <div className="form-group">
                                         <label>Car Segment</label>
                                         <div style={{ position: 'relative' }}>
-                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#6366f1' }}>
+                                            <div style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)' }}>
                                                 <Car size={16} />
                                             </div>
                                             <select
@@ -736,7 +738,7 @@ const Vehicles = () => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                                 <div style={{ width: '60px', height: '60px', borderRadius: '18px', background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <Shield size={32} color="#0ea5e9" />
+                                    <Shield size={32} color="var(--primary)" />
                                 </div>
                                 <div>
                                     <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '1000', margin: 0, letterSpacing: '-1px' }}>Document Vault</h2>
@@ -824,7 +826,7 @@ const Vehicles = () => {
 
                         <div style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.06)' }}>
                             <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '900', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <Plus size={20} color="#0ea5e9" /> Add / Update Document
+                                <Plus size={20} color="var(--primary)" /> Add / Update Document
                             </h3>
                             <div className="quick-upload-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '20px' }}>
                                 <div>

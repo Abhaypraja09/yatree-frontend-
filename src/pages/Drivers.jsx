@@ -3,7 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import axios from '../api/axios';
 import { Plus, Minus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, User as UserIcon, Users, Clock, FileText, CheckCircle, XCircle, ExternalLink, Briefcase, IndianRupee } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
+import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import {
     todayIST,
@@ -16,6 +18,7 @@ import {
 } from '../utils/istUtils';
 
 const Drivers = ({ isSubComponent = false }) => {
+    const { theme } = useTheme();
     const navigate = useNavigate();
     const { selectedCompany } = useCompany();
     const [drivers, setDrivers] = useState([]);
@@ -430,17 +433,17 @@ const Drivers = ({ isSubComponent = false }) => {
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                            boxShadow: `0 10px 25px ${theme.primary}30`
                         }}>
-                            <Users size={28} color="#fbbf24" />
+                            <Users size={28} color={theme.primary} />
                         </div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
                                 <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Operations</span>
                             </div>
                             <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', cursor: 'pointer' }}>
-                                Staff <span className="text-gradient-yellow">Drivers</span>
+                                Staff <span className="theme-gradient-text">Drivers</span>
                             </h1>
                         </div>
                     </div>
@@ -494,7 +497,7 @@ const Drivers = ({ isSubComponent = false }) => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Driver List</h2>
-                        <span style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', fontSize: '11px', fontWeight: '800' }}>{filteredDrivers.length} TOTAL</span>
+                        <span style={{ padding: '4px 8px', borderRadius: '6px', background: `${theme.primary}15`, color: theme.primary, fontSize: '11px', fontWeight: '800' }}>{filteredDrivers.length} TOTAL</span>
                     </div>
                     <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                         <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '220px', borderRadius: '10px', height: '40px', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -517,7 +520,7 @@ const Drivers = ({ isSubComponent = false }) => {
                 marginBottom: '30px'
             }}>
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: 'clamp(15px, 2.5vw, 20px)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.03)', cursor: 'default' }}>
-                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><UserIcon size={22} /></div>
+                    <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><UserIcon size={22} /></div>
                     <div>
                         <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: 0 }}>Total Workforce</p>
                         <h3 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: '4px 0 0' }}>{totalDrivers}</h3>
@@ -580,7 +583,7 @@ const Drivers = ({ isSubComponent = false }) => {
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                                 <div style={{
                                                     width: '40px', height: '40px', borderRadius: '10px',
-                                                    background: driver.isFreelancer ? 'linear-gradient(135deg, #8b5cf6, #d8b4fe)' : 'linear-gradient(135deg, #3b82f6, #93c5fd)',
+                                                    background: driver.isFreelancer ? 'linear-gradient(135deg, #8b5cf6, #d8b4fe)' : 'linear-gradient(135deg, var(--primary), #93c5fd)',
                                                     display: 'flex', justifyContent: 'center', alignItems: 'center',
                                                     color: 'white', fontWeight: '800', fontSize: '16px'
                                                 }}>
@@ -641,7 +644,7 @@ const Drivers = ({ isSubComponent = false }) => {
                                                     className="glass-card-hover-effect"
                                                     style={{
                                                         background: driver.status === 'active' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)',
-                                                        color: driver.status === 'active' ? '#f59e0b' : '#10b981',
+                                                        color: driver.status === 'active' ? 'var(--primary)' : '#10b981',
                                                         width: '36px', height: '36px',
                                                         borderRadius: '8px',
                                                         border: `1px solid ${driver.status === 'active' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
@@ -710,7 +713,7 @@ const Drivers = ({ isSubComponent = false }) => {
                                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                                             <div style={{
                                                 width: '40px', height: '40px', borderRadius: '10px',
-                                                background: driver.isFreelancer ? 'linear-gradient(135deg, #8b5cf6, #d8b4fe)' : 'linear-gradient(135deg, #3b82f6, #93c5fd)',
+                                                background: driver.isFreelancer ? 'linear-gradient(135deg, #8b5cf6, #d8b4fe)' : 'linear-gradient(135deg, var(--primary), #93c5fd)',
                                                 display: 'flex', justifyContent: 'center', alignItems: 'center',
                                                 color: 'white', fontWeight: '800', fontSize: '16px'
                                             }}>
@@ -762,7 +765,7 @@ const Drivers = ({ isSubComponent = false }) => {
                                         </button>
                                         <button
                                             onClick={() => toggleStatus(driver._id, driver.status)}
-                                            style={{ flex: 1, padding: '10px', borderRadius: '8px', background: driver.status === 'active' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: driver.status === 'active' ? '#f59e0b' : '#10b981', border: `1px solid ${driver.status === 'active' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`, fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
+                                            style={{ flex: 1, padding: '10px', borderRadius: '8px', background: driver.status === 'active' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: driver.status === 'active' ? 'var(--primary)' : '#10b981', border: `1px solid ${driver.status === 'active' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`, fontSize: '12px', fontWeight: '700', cursor: 'pointer' }}
                                         >
                                             {driver.status === 'active' ? 'Block' : 'Activate'}
                                         </button>
@@ -1073,7 +1076,7 @@ const Drivers = ({ isSubComponent = false }) => {
                                                                 <div style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', padding: '6px', borderRadius: '6px' }}><FileText size={14} /></div>
                                                                 <div>
                                                                     <div style={{ fontSize: '12px', color: 'white', fontWeight: '700' }}>{doc.documentType}</div>
-                                                                    <div style={{ fontSize: '10px', color: doc.verificationStatus === 'Verified' ? '#10b981' : doc.verificationStatus === 'Rejected' ? '#f43f5e' : '#fbbf24', fontWeight: '800', textTransform: 'uppercase' }}>{doc.verificationStatus}</div>
+                                                                    <div style={{ fontSize: '10px', color: doc.verificationStatus === 'Verified' ? '#10b981' : doc.verificationStatus === 'Rejected' ? '#f43f5e' : 'var(--primary)', fontWeight: '800', textTransform: 'uppercase' }}>{doc.verificationStatus}</div>
                                                                 </div>
                                                             </div>
                                                             <div style={{ display: 'flex', gap: '8px' }}>
@@ -1267,11 +1270,11 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 <div style={{ color: '#10b981', fontSize: '11px', fontWeight: '800' }}>+ ₹100</div>
                                             </div>
                                         </div>
-                                        <div style={{ padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', border: manualDutyForm.nightStayAmount ? '1px solid #f59e0b' : '1px solid transparent' }} onClick={() => setManualDutyForm({ ...manualDutyForm, nightStayAmount: !manualDutyForm.nightStayAmount })}>
+                                        <div style={{ padding: '15px', background: 'rgba(255,255,255,0.03)', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', border: manualDutyForm.nightStayAmount ? '1px solid var(--primary)' : '1px solid transparent' }} onClick={() => setManualDutyForm({ ...manualDutyForm, nightStayAmount: !manualDutyForm.nightStayAmount })}>
                                             <input type="checkbox" checked={manualDutyForm.nightStayAmount} readOnly style={{ width: '18px', height: '18px' }} />
                                             <div>
                                                 <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>Night Bonus</div>
-                                                <div style={{ color: '#f59e0b', fontSize: '11px', fontWeight: '800' }}>+ ₹500</div>
+                                                <div style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800' }}>+ ₹500</div>
                                             </div>
                                         </div>
                                     </div>
@@ -1279,7 +1282,7 @@ const Drivers = ({ isSubComponent = false }) => {
 
                                 <div style={{ display: 'flex', gap: '15px' }}>
                                     <button type="button" className="glass-card-hover-effect" style={{ flex: '1', padding: '14px', background: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: '700', borderRadius: '12px', border: 'none', cursor: 'pointer' }} onClick={() => setShowManualModal(false)}>Cancel</button>
-                                    <button type="submit" disabled={submitting} className="glass-card-hover-effect" style={{ flex: '2', padding: '14px', background: 'linear-gradient(135deg, #8b5cf6, #6366f1)', color: 'white', fontWeight: '800', borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)', cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1 }}>{submitting ? 'Saving Record...' : 'Save Duty Record'}</button>
+                                    <button type="submit" disabled={submitting} className="glass-card-hover-effect" style={{ flex: '2', padding: '14px', background: 'linear-gradient(135deg, #8b5cf6, var(--primary))', color: 'white', fontWeight: '800', borderRadius: '12px', border: 'none', boxShadow: '0 4px 15px rgba(99, 102, 241, 0.4)', cursor: submitting ? 'not-allowed' : 'pointer', opacity: submitting ? 0.7 : 1 }}>{submitting ? 'Saving Record...' : 'Save Duty Record'}</button>
                                 </div>
                             </form>
                         </motion.div>

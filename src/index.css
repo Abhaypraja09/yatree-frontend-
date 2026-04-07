@@ -2,11 +2,11 @@
 
 :root {
   /* 🏷️ THEME: Premium Amber — Warm Yellow + Gold */
-  --primary: #fbbf24;
+  --primary: var(--primary);
   /* Amber — premium feel */
   --primary-dark: #f59e0b;
   /* Darker Amber */
-  --secondary: #fbbf24;
+  --secondary: var(--primary);
   /* Amber */
   --accent: #fcd34d;
   /* Lighter Amber */
@@ -14,7 +14,7 @@
   /* Calm Emerald green */
   --danger: #f87171;
   /* Soft Red — not too harsh */
-  --warning: #fbbf24;
+  --warning: var(--primary);
   /* Warm Amber */
 
   /* Background — warm dark slate, much easier on eyes than pure black */
@@ -99,7 +99,7 @@ button {
 }
 
 .btn-primary {
-  background: #fbbf24;
+  background: var(--primary);
   color: #000;
   border: none;
   padding: 12px 24px;
@@ -113,7 +113,7 @@ button {
 .btn-primary:hover {
   transform: translateY(-2px);
   box-shadow: 0 6px 24px rgba(251, 191, 36, 0.45);
-  background: linear-gradient(135deg, #fcd34d, #fbbf24);
+  background: linear-gradient(135deg, var(--accent), var(--primary));
 }
 
 .input-field {
@@ -187,7 +187,7 @@ select.input-field option {
   width: 30px;
   height: 30px;
   border: 3px solid rgba(99, 102, 241, 0.15);
-  border-top-color: #fbbf24;
+  border-top-color: var(--primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -233,7 +233,7 @@ select.input-field option {
 .premium-compact-input:focus {
   outline: none;
   background: rgba(15, 23, 42, 0.9);
-  border-color: #0ea5e9;
+  border-color: var(--primary);
   box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1), 0 10px 20px -5px rgba(0, 0, 0, 0.3);
   transform: translateY(-1px);
 }
@@ -273,7 +273,7 @@ select.input-field option {
 }
 
 .text-gradient-yellow {
-  background: linear-gradient(135deg, #fcd34d 0%, #fbbf24 50%, #f59e0b 100%);
+  background: linear-gradient(135deg, #fcd34d 0%, var(--primary) 50%, #f59e0b 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -899,7 +899,7 @@ header.dashboard-header {
 }
 
 .date-selector-inner button:last-child {
-  background: linear-gradient(135deg, #fbbf24, #fbbf24);
+  background: linear-gradient(135deg, var(--primary), var(--primary));
   border: none;
   font-size: clamp(10px, 2.5vw, 11px);
   font-weight: 800;
@@ -1044,7 +1044,7 @@ header.dashboard-header {
 }
 
 .action-button {
-  color: #fbbf24;
+  color: var(--primary);
   font-weight: 700;
   font-size: clamp(11px, 2.8vw, 13px);
   background: rgba(14, 165, 233, 0.1);
@@ -1254,7 +1254,7 @@ header.dashboard-header {
 .entry-card-title {
   font-size: clamp(12px, 2.8vw, 13px);
   font-weight: 800;
-  color: #fbbf24;
+  color: var(--primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1307,7 +1307,7 @@ header.dashboard-header {
 
 .photo-capture-button:hover {
   background: rgba(255, 255, 255, 0.05);
-  border-color: #fbbf24;
+  border-color: var(--primary);
 }
 
 .photo-preview-container {
@@ -1424,8 +1424,8 @@ header.dashboard-header {
 .add-another-button {
   width: 100%;
   padding: clamp(10px, 2.5vw, 12px);
-  border: 1px dashed #fbbf24;
-  color: #fbbf24;
+  border: 1px dashed var(--primary);
+  color: var(--primary);
   background: rgba(14, 165, 233, 0.05);
   border-radius: 10px;
   font-size: clamp(11px, 2.8vw, 12px);
@@ -1561,6 +1561,14 @@ header.dashboard-header {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+.theme-gradient-text {
+  background: linear-gradient(to right, var(--primary), var(--primary));
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
 }
 
 .text-gradient-blue {
@@ -2100,7 +2108,7 @@ header.dashboard-header {
 
 .premium-compact-input:focus {
   outline: none;
-  border-color: #fbbf24 !important;
+  border-color: var(--primary) !important;
   background: rgba(0, 0, 0, 0.4) !important;
   box-shadow: 0 0 0 4px rgba(251, 191, 36, 0.1) !important;
 }
@@ -2120,7 +2128,7 @@ header.dashboard-header {
 .badge-duty {
   padding: 6px 12px;
   background: rgba(251, 191, 36, 0.08);
-  color: #fbbf24;
+  color: var(--primary);
   border: 1px solid rgba(251, 191, 36, 0.15);
   border-radius: 10px;
   font-size: 11px;
@@ -2141,7 +2149,7 @@ header.dashboard-header {
 
 /* Specialized Typography */
 .text-gradient-yellow {
-  background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, #d97706 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -2194,4 +2202,4 @@ header.dashboard-header {
 .sub-component {
   width: 100%;
   padding: 0;
-}
+}

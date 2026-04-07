@@ -5,10 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useCompany } from '../context/CompanyContext';
+import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST } from '../utils/istUtils';
 
 const OutsideCars = () => {
+    const { theme } = useTheme();
     const { selectedCompany } = useCompany();
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -483,7 +485,7 @@ const OutsideCars = () => {
                     stroke-linecap: round;
                     transition: stroke-dashoffset 1s ease-out;
                 }
-                .payout-glow { filter: drop-shadow(0 0 4px #fbbf24); }
+                .payout-glow { filter: drop-shadow(0 0 4px ${theme.primary}); }
                 .logs-glow { filter: drop-shadow(0 0 4px #10b981); }
             `}</style>
 
@@ -512,16 +514,16 @@ const OutsideCars = () => {
                             position: 'relative',
                             flexShrink: 0
                         }}>
-                            <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: 'radial-gradient(circle at 30% 30%, rgba(251, 191, 36, 0.2), transparent 70%)' }}></div>
-                            <Car size={28} color="#fbbf24" style={{ filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.4))' }} />
+                            <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: `radial-gradient(circle at 30% 30%, ${theme.primary}33, transparent 70%)` }}></div>
+                            <Car size={28} color={theme.primary} style={{ filter: `drop-shadow(0 0 10px ${theme.primary}66)` }} />
                         </div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2, repeat: Infinity }} style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 10px #fbbf24' }}></motion.div>
+                                <motion.div animate={{ opacity: [0.4, 1, 0.4] }} transition={{ duration: 2, repeat: Infinity }} style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 10px ${theme.primary}` }}></motion.div>
                                 <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Vendor Command</span>
                             </div>
                             <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1.1 }}>
-                                Outside <span className="text-gradient-yellow">Fleet</span>
+                                Outside <span className="theme-gradient-text">Fleet</span>
                             </h1>
                         </div>
                     </div>
@@ -541,13 +543,13 @@ const OutsideCars = () => {
                                     <motion.circle
                                         className="stat-circle-progress payout-glow"
                                         cx="50" cy="50" r="45"
-                                        stroke="#fbbf24"
+                                        stroke={theme.primary}
                                         initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }}
                                         animate={{ strokeDashoffset: 0 }}
                                         transition={{ duration: 1.5, ease: "easeOut" }}
                                     />
                                 </svg>
-                                <span style={{ fontSize: '7px', fontWeight: '950', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px', position: 'relative', zIndex: 1 }}>Payout</span>
+                                <span style={{ fontSize: '7px', fontWeight: '950', color: theme.primary, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px', position: 'relative', zIndex: 1 }}>Payout</span>
                                 <span style={{ color: 'white', fontSize: 'clamp(12px, 3vw, 15px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>₹{totalPayable.toLocaleString()}</span>
                             </motion.div>
 
@@ -590,13 +592,14 @@ const OutsideCars = () => {
                                         padding: '0 24px',
                                         borderRadius: '14px',
                                         fontWeight: '900',
-                                        background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                                        background: theme.primary,
                                         color: 'black',
                                         border: 'none',
                                         fontSize: '13px',
                                         cursor: 'pointer',
                                         flex: 1,
-                                        maxWidth: '240px'
+                                        maxWidth: '240px',
+                                        boxShadow: `0 8px 20px ${theme.primary}40`
                                     }}
                                 >
                                     <Plus size={18} strokeWidth={3} /> Add Duty Entry
@@ -822,7 +825,7 @@ const OutsideCars = () => {
                                                 borderRadius: '16px',
                                                 background: 'rgba(251, 191, 36, 0.1)',
                                                 border: '1px solid rgba(251, 191, 36, 0.2)',
-                                                color: '#fbbf24',
+                                                color: 'var(--primary)',
                                                 fontSize: '11px',
                                                 fontWeight: '950',
                                                 cursor: 'pointer',
@@ -895,12 +898,12 @@ const OutsideCars = () => {
                         <tbody>
                             {loading ? (
                                 <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px 0' }}>
-                                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '40px', height: '40px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: '#fbbf24', borderRadius: '50%', margin: '0 auto 16px' }}></motion.div>
+                                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '40px', height: '40px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: 'var(--primary)', borderRadius: '50%', margin: '0 auto 16px' }}></motion.div>
                                     <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>SYNCHRONIZING FLEET DATA...</p>
                                 </td></tr>
                             ) : filtered.length === 0 ? (
                                 <tr><td colSpan="6" style={{ textAlign: 'center', padding: '120px 0' }}>
-                                    <Car size={48} style={{ opacity: 0.1, color: '#fbbf24', marginBottom: '24px' }} />
+                                    <Car size={48} style={{ opacity: 0.1, color: 'var(--primary)', marginBottom: '24px' }} />
                                     <h3 style={{ color: 'white', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Registry Empty</h3>
                                     <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>No external duties match the current filter selection.</p>
                                 </td></tr>
@@ -915,7 +918,7 @@ const OutsideCars = () => {
                                 >
                                     <td style={{ padding: '20px 24px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>
+                                            <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--primary)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>
                                                 {(() => {
                                                     const parts = v.carNumber?.split('#');
                                                     if (parts && parts[1]) {
@@ -993,12 +996,12 @@ const OutsideCars = () => {
             <div className="show-mobile">
                 {loading ? (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', gap: '16px' }}>
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '32px', height: '32px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: '#fbbf24', borderRadius: '50%' }}></motion.div>
+                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '32px', height: '32px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: 'var(--primary)', borderRadius: '50%' }}></motion.div>
                         <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', letterSpacing: '2px' }}>LOADING FLEET...</span>
                     </div>
                 ) : filtered.length === 0 ? (
                     <div className="glass-card" style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed rgba(255,255,255,0.1)', background: 'transparent' }}>
-                        <Car size={32} style={{ opacity: 0.2, color: '#fbbf24', marginBottom: '16px' }} />
+                        <Car size={32} style={{ opacity: 0.2, color: 'var(--primary)', marginBottom: '16px' }} />
                         <h3 style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>No Data Available</h3>
                         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>Try adjusting your filters.</p>
                     </div>
@@ -1043,7 +1046,7 @@ const OutsideCars = () => {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
                                     <div>
                                         <label style={{ display: 'block', fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '2px' }}>Log Date</label>
-                                        <span style={{ fontSize: '12px', fontWeight: '800', color: '#fbbf24' }}>
+                                        <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--primary)' }}>
                                             {(() => {
                                                 const parts = v.carNumber?.split('#');
                                                 if (parts && parts[1]) {
@@ -1133,14 +1136,14 @@ const OutsideCars = () => {
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
                                     }}>
-                                        <Car size={26} color="#fbbf24" style={{ filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.3))' }} />
+                                        <Car size={26} color="var(--primary)" style={{ filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.3))' }} />
                                     </div>
                                     <div>
                                         <h3 style={{ fontSize: '24px', fontWeight: '950', color: 'white', margin: 0, letterSpacing: '-0.5px' }}>
                                             {editMode ? 'Edit Duty Log' : 'External Fleet Log'}
                                         </h3>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 8px var(--primary)' }}></div>
                                             <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Operational Registry</span>
                                         </div>
                                     </div>
@@ -1164,7 +1167,7 @@ const OutsideCars = () => {
                                         <div className="premium-input-group">
                                             <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', display: 'block' }}>LOG DATE *</label>
                                             <div style={{ position: 'relative' }}>
-                                                <Calendar size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', opacity: 0.6, zIndex: 2 }} />
+                                                <Calendar size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', opacity: 0.6, zIndex: 2 }} />
                                                 <input
                                                     type="date"
                                                     className="premium-compact-input"
@@ -1182,7 +1185,7 @@ const OutsideCars = () => {
                                         <div className="premium-input-group">
                                             <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', display: 'block' }}>CLIENT PROPERTY *</label>
                                             <div style={{ position: 'relative' }}>
-                                                <Plus size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', opacity: 0.6, zIndex: 2 }} />
+                                                <Plus size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', opacity: 0.6, zIndex: 2 }} />
                                                 <input
                                                     type="text" list="propList" className="premium-compact-input"
                                                     required value={formData.property}
@@ -1394,7 +1397,7 @@ const OutsideCars = () => {
                                 }}>Dismiss</button>
                                 <button onClick={handleSubmit} style={{
                                     flex: 2, height: '60px', borderRadius: '18px', border: 'none',
-                                    background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                                    background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)',
                                     color: 'black', fontWeight: '950', fontSize: '15px', textTransform: 'uppercase',
                                     letterSpacing: '1px', cursor: 'pointer', boxShadow: '0 10px 20px rgba(217, 119, 6, 0.3)',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px'

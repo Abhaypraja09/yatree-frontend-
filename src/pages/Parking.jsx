@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
+import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
 
@@ -88,6 +89,7 @@ const CameraModal = ({ onCapture, onClose }) => {
 };
 
 const ParkingPage = () => {
+    const { theme } = useTheme();
     const { selectedCompany } = useCompany();
     const getImageUrl = (path) => {
         if (!path) return '';
@@ -428,18 +430,19 @@ const ParkingPage = () => {
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                            boxShadow: `0 10px 25px ${theme.primary}30`
                         }}>
-                            <MapPin size={28} color="#fbbf24" />
+                            <MapPin size={28} color={theme.primary} />
                         </div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
                                 <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Logistics Hub</span>
                             </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
-                                Parking <span className="text-gradient-yellow">Manager</span>
-                            </h1>
+                          <h1 style={{ color: 'white', fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
+                            Parking <span className="theme-gradient-text">Management</span>
+                        </h1>
+
                         </div>
                     </div>
 
@@ -483,10 +486,10 @@ const ParkingPage = () => {
                                 padding: '0 24px',
                                 borderRadius: '12px',
                                 fontWeight: '800',
-                                background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                                background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary || theme.primary} 100%)`,
                                 color: 'black',
                                 border: 'none',
-                                boxShadow: '0 8px 20px -6px rgba(251, 191, 36, 0.5)',
+                                boxShadow: `0 8px 20px -6px ${theme.primary}80`,
                                 transition: 'all 0.3s ease',
                                 cursor: 'pointer',
                                 flex: '1 1 180px',
@@ -606,7 +609,7 @@ const ParkingPage = () => {
                                     borderRadius: '12px',
                                     background: 'rgba(251, 191, 36, 0.1)',
                                     border: '1px solid rgba(251, 191, 36, 0.2)',
-                                    color: '#fbbf24',
+                                    color: 'var(--primary)',
                                     fontSize: '11px',
                                     fontWeight: '950',
                                     cursor: 'pointer',
@@ -677,7 +680,7 @@ const ParkingPage = () => {
                 width: 'fit-content'
             }}>
                 {[
-                    { id: 'parking', label: 'Fleet Parking', icon: <Car size={18} />, count: pendingParking.length, color: '#fbbf24' },
+                    { id: 'parking', label: 'Fleet Parking', icon: <Car size={18} />, count: pendingParking.length, color: 'var(--primary)' },
                     { id: 'rejected', label: 'Review Hub', icon: <Shield size={18} />, count: rejectedEntries.filter(e => e.type === 'parking').length, color: '#f43f5e' }
                 ].map(tab => (
                     <button
@@ -738,7 +741,7 @@ const ParkingPage = () => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: '#fbbf24'
+                            color: 'var(--primary)'
                         }}>
                             <Shield size={20} />
                         </div>
@@ -778,7 +781,7 @@ const ParkingPage = () => {
                                                 onClick={() => { setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
                                                 style={{ width: '80px', height: '80px', borderRadius: '18px', objectFit: 'cover', cursor: 'pointer', border: '2px solid rgba(251, 191, 36, 0.3)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}
                                             />
-                                            <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#fbbf24', color: 'black', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '950', border: '3px solid #1a2233' }}>
+                                            <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--primary)', color: 'black', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '950', border: '3px solid #1a2233' }}>
                                                 <ImageIcon size={12} />
                                             </div>
                                         </div>
@@ -795,7 +798,7 @@ const ParkingPage = () => {
                                             <h4 style={{ color: 'white', fontWeight: '900', fontSize: '22px', margin: 0 }}>₹{entry.amount}</h4>
                                             <span style={{
                                                 background: 'rgba(251, 191, 36, 0.1)',
-                                                color: '#fbbf24',
+                                                color: 'var(--primary)',
                                                 fontSize: '9px',
                                                 padding: '3px 8px',
                                                 borderRadius: '6px',
@@ -807,7 +810,7 @@ const ParkingPage = () => {
                                         <span style={{
                                             display: 'inline-block',
                                             background: 'rgba(245, 158, 11, 0.1)',
-                                            color: '#f59e0b',
+                                            color: 'var(--primary)',
                                             fontSize: '10px',
                                             padding: '2px 10px',
                                             borderRadius: '6px',
@@ -824,7 +827,7 @@ const ParkingPage = () => {
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
                                             <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>{entry.carNumber}</span>
                                             {entry.date && (
-                                                <span style={{ background: 'rgba(251, 191, 36, 0.08)', color: '#fbbf24', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
+                                                <span style={{ background: 'rgba(251, 191, 36, 0.08)', color: 'var(--primary)', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
                                                  {formatDateTimeIST(entry.date)}
                                                  </span>
                                             )}
@@ -939,7 +942,7 @@ const ParkingPage = () => {
                                             }}
                                         >
                                             {/* Top accent stripe */}
-                                            <div style={{ height: '3px', background: 'linear-gradient(90deg, #f43f5e 0%, #f59e0b 50%, transparent 100%)' }} />
+                                            <div style={{ height: '3px', background: 'linear-gradient(90deg, #f43f5e 0%, var(--primary) 50%, transparent 100%)' }} />
 
                                             <div style={{ padding: '20px' }}>
                                                 {/* Header: Photo + Amount + Badges */}
@@ -1132,7 +1135,7 @@ const ParkingPage = () => {
                                 gap: '20px'
                             }}
                         >
-                            <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fbbf24', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                            <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
                                 <Shield size={28} />
                             </div>
                             <div>
@@ -1194,7 +1197,7 @@ const ParkingPage = () => {
                                                             padding: '4px 10px',
                                                             borderRadius: '20px',
                                                             background: e.source === 'Admin' ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)',
-                                                            color: e.source === 'Admin' ? '#fbbf24' : '#818cf8',
+                                                            color: e.source === 'Admin' ? 'var(--primary)' : '#818cf8',
                                                             fontWeight: '800',
                                                             border: `1px solid ${e.source === 'Admin' ? 'rgba(245,158,11,0.2)' : 'rgba(99,102,241,0.2)'}`,
                                                             textTransform: 'uppercase',
@@ -1294,7 +1297,7 @@ const ParkingPage = () => {
                                                 left: 0,
                                                 width: '4px',
                                                 height: '100%',
-                                                background: e.source === 'Admin' ? '#fbbf24' : '#818cf8',
+                                                background: e.source === 'Admin' ? 'var(--primary)' : '#818cf8',
                                                 opacity: 0.6
                                             }}></div>
 
@@ -1556,7 +1559,7 @@ const ParkingPage = () => {
                                                         borderRadius: '14px',
                                                         fontWeight: '900',
                                                         fontSize: '16px',
-                                                        background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                                                        background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)',
                                                         color: 'black',
                                                         border: 'none'
                                                     }}

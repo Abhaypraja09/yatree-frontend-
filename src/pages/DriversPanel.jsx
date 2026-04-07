@@ -50,7 +50,7 @@ const DriversPanel = () => {
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        color: '#fbbf24'
+                        color: 'var(--primary)'
                     }}>
                         <Users size={20} />
                     </div>
@@ -88,7 +88,7 @@ const DriversPanel = () => {
                             borderRadius: '12px',
                             border: 'none',
                             background: activeTab === item.id ? 'rgba(251, 191, 36, 0.12)' : 'transparent',
-                            color: activeTab === item.id ? '#fbbf24' : 'rgba(255, 255, 255, 0.4)',
+                            color: activeTab === item.id ? 'var(--primary)' : 'rgba(255, 255, 255, 0.4)',
                             cursor: 'pointer',
                             transition: 'all 0.2s ease',
                             fontWeight: '800',

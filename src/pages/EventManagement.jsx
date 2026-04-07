@@ -738,16 +738,16 @@ const EventManagement = () => {
                             flexShrink: 0
                         }}>
                             <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 5, repeat: Infinity }}>
-                                <Briefcase size={28} color="#fbbf24" strokeWidth={1.5} />
+                                <Briefcase size={28} color="var(--primary)" strokeWidth={1.5} />
                             </motion.div>
                         </div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
                                 <div className="pulse-dot" />
-                                <span style={{ fontSize: '10px', fontWeight: '900', color: '#fbbf24', letterSpacing: '2px', textTransform: 'uppercase' }}>Command Center</span>
+                                <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--primary)', letterSpacing: '2px', textTransform: 'uppercase' }}>Command Center</span>
                             </div>
                             <h1 style={{ color: 'white', fontSize: 'clamp(24px, 6vw, 42px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
-                                Event<span style={{ background: 'linear-gradient(90deg,#fbbf24,#f59e0b)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}> Logistics</span>
+                                Event<span style={{ background: 'linear-gradient(90deg,var(--primary),var(--primary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}> Logistics</span>
                             </h1>
 
                             {/* PREMIUM MONTH SELECTOR */}
@@ -784,7 +784,7 @@ const EventManagement = () => {
                     {/* Stats Grid - High Fidelity */}
                     <div className="stats-grid" style={{ flex: '1', maxWidth: '750px', width: '100%' }}>
                         {[
-                            { label: 'Total Duties', value: totalDuties, color: '#fbbf24', icon: <TruckIcon size={18} /> },
+                            { label: 'Total Duties', value: totalDuties, color: 'var(--primary)', icon: <TruckIcon size={18} /> },
                             { label: 'Total Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', icon: <Target size={18} /> },
                             { label: 'Fleet', value: fleetCount, color: '#38bdf8', icon: <Car size={18} /> },
                             { label: 'External', value: extCount, color: '#a855f7', icon: <Users size={18} /> },
@@ -827,7 +827,7 @@ const EventManagement = () => {
             }}>
                 {[
                     { id: 'Start', label: 'Upcoming', color: '#10b981', icon: <Navigation size={20} />, count: filteredMasterByDate.filter(e => e.visualStatus === 'Upcoming').length },
-                    { id: 'Running', label: 'Live Now', color: '#fbbf24', icon: <Target size={20} />, count: filteredMasterByDate.filter(e => e.visualStatus === 'Running').length },
+                    { id: 'Running', label: 'Live Now', color: 'var(--primary)', icon: <Target size={20} />, count: filteredMasterByDate.filter(e => e.visualStatus === 'Running').length },
                     { id: 'Close', label: 'Completed', color: '#f87171', icon: <FileSpreadsheet size={20} />, count: filteredMasterByDate.filter(e => e.visualStatus === 'Closed').length }
                 ].map((t) => (
                     <button
@@ -866,7 +866,7 @@ const EventManagement = () => {
                             {t.id === 'Running' && statusTab === 'Running' && (
                                 <div style={{
                                     position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px',
-                                    background: '#fbbf24', borderRadius: '50%', border: '2px solid #0a0f1d',
+                                    background: 'var(--primary)', borderRadius: '50%', border: '2px solid #0a0f1d',
                                     animation: 'pulse 1.5s infinite'
                                 }} />
                             )}
@@ -924,7 +924,7 @@ const EventManagement = () => {
                             className="primary-btn-premium"
                             style={{
                                 height: '60px', padding: '0 32px', borderRadius: '20px', border: 'none', cursor: 'pointer',
-                                background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)', color: 'black',
+                                background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)', color: 'black',
                                 fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '12px',
                                 boxShadow: '0 10px 30px rgba(251,191,36,0.25)', transition: '0.3s', letterSpacing: '0.5px'
                             }}
@@ -1009,7 +1009,7 @@ const EventManagement = () => {
                                 width: '80px', padding: '10px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)',
                                 border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center', flexShrink: 0
                             }}>
-                                <div style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '950', letterSpacing: '1px', textTransform: 'uppercase' }}>{new Date(ev.date).toLocaleDateString('en-IN', { month: 'short' })}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '950', letterSpacing: '1px', textTransform: 'uppercase' }}>{new Date(ev.date).toLocaleDateString('en-IN', { month: 'short' })}</div>
                                 <div style={{ fontSize: '22px', color: 'white', fontWeight: '950', lineHeight: 1 }}>{new Date(ev.date).getDate()}</div>
                                 <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{new Date(ev.date).getFullYear()}</div>
                             </div>
@@ -1020,7 +1020,7 @@ const EventManagement = () => {
                                 <div style={{
                                     padding: '4px 12px', borderRadius: '10px', fontSize: '9px', fontWeight: '900',
                                     background: ev.visualStatus === 'Running' ? 'rgba(251,191,36,0.1)' : ev.visualStatus === 'Upcoming' ? 'rgba(16,185,129,0.1)' : 'rgba(248,113,113,0.1)',
-                                    color: ev.visualStatus === 'Running' ? '#fbbf24' : ev.visualStatus === 'Upcoming' ? '#10b981' : '#f87171',
+                                    color: ev.visualStatus === 'Running' ? 'var(--primary)' : ev.visualStatus === 'Upcoming' ? '#10b981' : '#f87171',
                                     border: `1px solid ${ev.visualStatus === 'Running' ? 'rgba(251,191,36,0.2)' : ev.visualStatus === 'Upcoming' ? 'rgba(16,185,129,0.2)' : 'rgba(248,113,113,0.2)'}`,
                                     textTransform: 'uppercase', letterSpacing: '1px'
                                 }}>
@@ -1127,7 +1127,7 @@ const EventManagement = () => {
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                     <div style={{ width: 'clamp(32px, 8vw, 40px)', height: 'clamp(32px, 8vw, 40px)', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                                        <Briefcase size={20} color="#fbbf24" />
+                                        <Briefcase size={20} color="var(--primary)" />
                                     </div>
                                     <div>
                                         <h3 style={{ margin: 0, fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: '950', color: 'white', letterSpacing: '-0.8px', lineHeight: 1.1 }}>
@@ -1156,9 +1156,9 @@ const EventManagement = () => {
                                             {['Fleet', 'External'].map(src => (
                                                 <button key={src} type="button" onClick={() => setDutyFormData(prev => ({ ...prev, vehicleSource: src }))}
                                                     style={{
-                                                        flex: 1, height: '48px', borderRadius: '14px', border: `1px solid ${dutyFormData.vehicleSource === src ? (src === 'Fleet' ? '#10b98150' : '#f59e0b50') : 'rgba(255,255,255,0.06)'}`,
+                                                        flex: 1, height: '48px', borderRadius: '14px', border: `1px solid ${dutyFormData.vehicleSource === src ? (src === 'Fleet' ? '#10b98150' : 'var(--primary)50') : 'rgba(255,255,255,0.06)'}`,
                                                         background: dutyFormData.vehicleSource === src ? (src === 'Fleet' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)') : 'rgba(255,255,255,0.02)',
-                                                        color: dutyFormData.vehicleSource === src ? (src === 'Fleet' ? '#10b981' : '#f59e0b') : 'rgba(255,255,255,0.3)',
+                                                        color: dutyFormData.vehicleSource === src ? (src === 'Fleet' ? '#10b981' : 'var(--primary)') : 'rgba(255,255,255,0.3)',
                                                         fontWeight: '900', fontSize: '11px', letterSpacing: '1px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px'
                                                     }}>
                                                     {src === 'Fleet' ? <Building2 size={16} /> : <TruckIcon size={16} />}
@@ -1170,7 +1170,7 @@ const EventManagement = () => {
                                         <div className="form-grid-2">
                                             <div className="premium-input-group">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Target size={12} color="#fbbf24" style={{ opacity: 0.7 }} />
+                                                    <Target size={12} color="var(--primary)" style={{ opacity: 0.7 }} />
                                                     <label className="premium-label">Operational Event</label>
                                                 </div>
                                                 <select required value={dutyFormData.eventId} onChange={e => setDutyFormData({ ...dutyFormData, eventId: e.target.value })} className="premium-compact-input" style={{ appearance: 'none', height: '50px' }}>
@@ -1180,7 +1180,7 @@ const EventManagement = () => {
                                             </div>
                                             <div className="premium-input-group">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Calendar size={12} color="#fbbf24" style={{ opacity: 0.7 }} />
+                                                    <Calendar size={12} color="var(--primary)" style={{ opacity: 0.7 }} />
                                                     <label className="premium-label">Log Date</label>
                                                 </div>
                                                 <input type="date" required value={dutyFormData.date} onChange={e => setDutyFormData({ ...dutyFormData, date: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark', height: '50px' }} />
@@ -1245,7 +1245,7 @@ const EventManagement = () => {
                                     <div className="form-grid-2">
                                         <div className="premium-input-group">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <Briefcase size={12} color="#0ea5e9" />
+                                                <Briefcase size={12} color="var(--primary)" />
                                                 <label className="premium-label">Service Category</label>
                                             </div>
                                             <input type="text" list="eventDutyTypes" value={dutyFormData.dutyType} onChange={e => setDutyFormData({ ...dutyFormData, dutyType: e.target.value })} className="premium-compact-input" placeholder="e.g. Airport Transfer" style={{ height: '50px' }} />
@@ -1259,7 +1259,7 @@ const EventManagement = () => {
                                                             fontSize: '9px',
                                                             fontWeight: '900',
                                                             background: dutyFormData.dutyType === t ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255, 255, 255, 0.05)',
-                                                            color: dutyFormData.dutyType === t ? '#fbbf24' : 'rgba(255, 255, 255, 0.4)',
+                                                            color: dutyFormData.dutyType === t ? 'var(--primary)' : 'rgba(255, 255, 255, 0.4)',
                                                             padding: '4px 10px',
                                                             borderRadius: '6px',
                                                             border: `1px solid ${dutyFormData.dutyType === t ? 'rgba(251, 191, 36, 0.3)' : 'rgba(255, 255, 255, 0.1)'}`,
@@ -1278,10 +1278,10 @@ const EventManagement = () => {
                                         <div className="premium-input-group">
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Calendar size={12} color="#0ea5e9" />
+                                                    <Calendar size={12} color="var(--primary)" />
                                                     <label className="premium-label">Operation Time</label>
                                                 </div>
-                                                <button type="button" onClick={() => setDutyFormData(prev => ({ ...prev, dutyTime: currentTimeIST() }))} style={{ fontSize: '9px', fontWeight: '900', color: '#0ea5e9', background: 'rgba(14, 165, 233, 0.1)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(14, 165, 233, 0.2)', cursor: 'pointer' }}>SET NOW</button>
+                                                <button type="button" onClick={() => setDutyFormData(prev => ({ ...prev, dutyTime: currentTimeIST() }))} style={{ fontSize: '9px', fontWeight: '900', color: 'var(--primary)', background: 'rgba(14, 165, 233, 0.1)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(14, 165, 233, 0.2)', cursor: 'pointer' }}>SET NOW</button>
                                             </div>
                                             <input type="time" value={dutyFormData.dutyTime} onChange={e => setDutyFormData({ ...dutyFormData, dutyTime: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark', height: '50px' }} />
                                         </div>
@@ -1289,7 +1289,7 @@ const EventManagement = () => {
 
                                     <div className="premium-input-group" style={{ marginBottom: '10px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Navigation size={12} color="#0ea5e9" />
+                                            <Navigation size={12} color="var(--primary)" />
                                             <label className="premium-label">Operational Destination</label>
                                         </div>
                                         <input type="text" list="eventDropLocs" value={dutyFormData.dropLocation} onChange={e => setDutyFormData({ ...dutyFormData, dropLocation: e.target.value })} className="premium-compact-input" placeholder="Specific drop point or venue..." style={{ height: '50px' }} />
@@ -1299,7 +1299,7 @@ const EventManagement = () => {
                                     </div>
                                     <div className="premium-input-group" style={{ marginBottom: '10px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <FileText size={12} color="#fbbf24" style={{ opacity: 0.7 }} />
+                                            <FileText size={12} color="var(--primary)" style={{ opacity: 0.7 }} />
                                             <label className="premium-label">Operational Remarks / Guest Names</label>
                                         </div>
                                         <textarea rows="2" value={dutyFormData.remarks} onChange={e => setDutyFormData({ ...dutyFormData, remarks: e.target.value })} className="premium-compact-input" placeholder="Enter important mission notes here..." style={{ height: 'auto', padding: '12px', minHeight: '80px', resize: 'none' }} />
@@ -1319,7 +1319,7 @@ const EventManagement = () => {
                                         color: 'rgba(255,255,255,0.5)', fontWeight: '800', fontSize: '13px'
                                     }}>Cancel</button>
                                     <button type="submit" style={{
-                                        flex: 2, height: '50px', borderRadius: '14px', background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+                                        flex: 2, height: '50px', borderRadius: '14px', background: 'linear-gradient(to right, var(--primary), var(--primary))',
                                         color: 'black', fontWeight: '900', fontSize: '13px', border: 'none'
                                     }}>
                                         {isEditingDuty ? 'SAVE CHANGES' : 'GENERATE LOG'}
@@ -1363,8 +1363,8 @@ const EventManagement = () => {
                                             return (
                                                 <span style={{
                                                     padding: '6px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '950',
-                                                    background: vStat === 'Running' ? '#fbbf2433' : vStat === 'Closed' ? '#f8717133' : '#10b98133',
-                                                    color: vStat === 'Running' ? '#fbbf24' : vStat === 'Closed' ? '#f87171' : '#10b981',
+                                                    background: vStat === 'Running' ? 'var(--primary)33' : vStat === 'Closed' ? '#f8717133' : '#10b98133',
+                                                    color: vStat === 'Running' ? 'var(--primary)' : vStat === 'Closed' ? '#f87171' : '#10b981',
                                                     border: '1px solid rgba(255,255,255,0.05)'
                                                 }}>
                                                     {vStat}
@@ -1374,11 +1374,11 @@ const EventManagement = () => {
                                     </div>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '14px', fontWeight: '700' }}>
-                                            <Building2 size={16} color="#fbbf24" /> {selectedEventDetails.event.client}
+                                            <Building2 size={16} color="var(--primary)" /> {selectedEventDetails.event.client}
                                         </div>
                                         <div style={{ width: '1px', height: '14px', background: 'rgba(255,255,255,0.1)' }} />
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '14px', fontWeight: '700' }}>
-                                            <Calendar size={16} color="#fbbf24" /> {formatDateIST(selectedEventDetails.event.date)}
+                                            <Calendar size={16} color="var(--primary)" /> {formatDateIST(selectedEventDetails.event.date)}
                                         </div>
                                     </div>
                                 </div>
@@ -1424,7 +1424,7 @@ const EventManagement = () => {
                                         {
                                             label: 'Total Duties',
                                             value: (selectedEventDetails.fleetDuties.length + selectedEventDetails.externalDuties.length),
-                                            color: '#fbbf24',
+                                            color: 'var(--primary)',
                                             icon: <TruckIcon size={18} />,
                                             sub: 'All Resources'
                                         },
@@ -1487,7 +1487,7 @@ const EventManagement = () => {
                                     }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                             <div style={{ background: 'rgba(251,191,36,0.1)', padding: '8px', borderRadius: '10px' }}>
-                                                <Briefcase size={18} color="#fbbf24" />
+                                                <Briefcase size={18} color="var(--primary)" />
                                             </div>
                                             <h4 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '950', letterSpacing: '-0.5px' }}>OPERATIONAL LOGS</h4>
                                         </div>
@@ -1513,7 +1513,7 @@ const EventManagement = () => {
                                                             {/* TIMELINE */}
                                                             <td style={{ padding: '20px 24px' }}>
                                                                 <div style={{ color: 'white', fontWeight: '950', fontSize: '15px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
-                                                                <div style={{ color: '#fbbf24', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginTop: '2px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { weekday: 'short' })}</div>
+                                                                <div style={{ color: 'var(--primary)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginTop: '2px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { weekday: 'short' })}</div>
                                                             </td>
                                                             {/* RESOURCE */}
                                                             <td style={{ padding: '20px 24px' }}>
@@ -1543,12 +1543,12 @@ const EventManagement = () => {
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                                                     <div style={{
                                                                         padding: '4px 10px', borderRadius: '8px', background: 'rgba(251,191,36,0.1)',
-                                                                        color: '#fbbf24', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251,191,36,0.2)'
+                                                                        color: 'var(--primary)', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251,191,36,0.2)'
                                                                     }}>
                                                                         {d.dutyType || 'General Duty'}
                                                                     </div>
                                                                     {d.dutyTime && (
-                                                                        <div style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                                        <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}>
                                                                             <Calendar size={12} /> {d.dutyTime}
                                                                         </div>
                                                                     )}
@@ -1560,7 +1560,7 @@ const EventManagement = () => {
                                                                 )}
                                                                 <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', marginTop: '6px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
                                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                        <Navigation size={10} color="#0ea5e9" />
+                                                                        <Navigation size={10} color="var(--primary)" />
                                                                         <span>{d.pickUpLocation || 'HQ'}</span>
                                                                     </div>
                                                                     <ChevronRight size={10} style={{ opacity: 0.3 }} />
@@ -1659,7 +1659,7 @@ const EventManagement = () => {
                             }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                                     <div style={{ width: 'clamp(32px, 8vw, 40px)', height: 'clamp(32px, 8vw, 40px)', borderRadius: '10px', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <Target size={18} color="#fbbf24" />
+                                        <Target size={18} color="var(--primary)" />
                                     </div>
                                     <div>
                                         <h3 style={{ margin: 0, fontSize: 'clamp(18px, 4vw, 20px)', fontWeight: '950', color: 'white', letterSpacing: '-0.5px' }}>{isEditingEvent ? 'Update Event' : 'New Event'}</h3>
@@ -1680,14 +1680,14 @@ const EventManagement = () => {
                                 <div className="form-grid-2">
                                     <div className="premium-input-group">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Target size={12} color="#fbbf24" />
+                                            <Target size={12} color="var(--primary)" />
                                             <label className="premium-label">Event Name *</label>
                                         </div>
                                         <input type="text" required value={eventFormData.name} onChange={e => setEventFormData({ ...eventFormData, name: e.target.value })} className="premium-compact-input" placeholder="Event" style={{ height: '52px' }} />
                                     </div>
                                     <div className="premium-input-group">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Building2 size={12} color="#fbbf24" />
+                                            <Building2 size={12} color="var(--primary)" />
                                             <label className="premium-label">Client *</label>
                                         </div>
                                         <input type="text" required value={eventFormData.client} onChange={e => setEventFormData({ ...eventFormData, client: e.target.value })} className="premium-compact-input" placeholder="Client Name" style={{ height: '52px' }} />
@@ -1697,14 +1697,14 @@ const EventManagement = () => {
                                 <div className="form-grid-2">
                                     <div className="premium-input-group">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Calendar size={12} color="#fbbf24" />
+                                            <Calendar size={12} color="var(--primary)" />
                                             <label className="premium-label">Focus Date</label>
                                         </div>
                                         <input type="date" value={eventFormData.date} onChange={e => setEventFormData({ ...eventFormData, date: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark', height: '52px' }} />
                                     </div>
                                     <div className="premium-input-group">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <Target size={12} color="#fbbf24" />
+                                            <Target size={12} color="var(--primary)" />
                                             <label className="premium-label">Phase / Status</label>
                                         </div>
                                         <select value={eventFormData.status} onChange={e => setEventFormData({ ...eventFormData, status: e.target.value })} className="premium-compact-input" style={{ height: '52px' }}>
@@ -1721,7 +1721,7 @@ const EventManagement = () => {
                                         color: 'rgba(255,255,255,0.5)', fontWeight: '800', fontSize: '14px'
                                     }}>Cancel</button>
                                     <button type="submit" style={{
-                                        flex: 2, height: '56px', borderRadius: '16px', background: 'linear-gradient(to right, #fbbf24, #f59e0b)',
+                                        flex: 2, height: '56px', borderRadius: '16px', background: 'linear-gradient(to right, var(--primary), var(--primary))',
                                         color: 'black', fontWeight: '900', fontSize: '15px', letterSpacing: '1px', border: 'none'
                                     }}>{isEditingEvent ? 'UPDATE' : 'SUBMIT'}</button>
                                 </div>
@@ -1733,10 +1733,10 @@ const EventManagement = () => {
 
             <style>{`
                 .premium-icon-bg { width: clamp(40px,10vw,50px); height: clamp(40px,10vw,50px); background: linear-gradient(135deg, white, #f8fafc); border-radius: 16px; display: flex; justify-content: center; align-items: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); padding: 8px; }
-                .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: #fbbf24; box-shadow: 0 0 8px #fbbf24; animation: pulse 2s infinite; }
+                .pulse-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--primary); box-shadow: 0 0 8px var(--primary); animation: pulse 2s infinite; }
                 .label-text { font-size: clamp(9px,2.5vw,10px); font-weight: 800; color: rgba(255,255,255,0.5); letter-spacing: 1px; text-transform: uppercase; }
                 .main-title { color: white; font-size: clamp(24px, 5vw, 32px); font-weight: 900; margin: 0; letter-spacing: -1px; }
-                .text-gradient-yellow { background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+                .text-gradient-yellow { background: linear-gradient(135deg, var(--primary) 0%, #d97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
                 .subtitle-text { margin-top: 4px; font-size: 13px; color: rgba(255,255,255,0.6); margin: 0; }
                 .flex-resp { display: flex; flex-wrap: wrap; }
                 .stat-card { padding: 12px 20px; min-width: 150px; display: flex; flex-direction: column; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); }
@@ -1747,7 +1747,7 @@ const EventManagement = () => {
                 .filter-container { display: flex; flex-wrap: wrap; gap: 12px; padding: 20px; align-items: center; background: rgba(15, 23, 42, 0.4) !important; margin-bottom: 20px; }
                 .search-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.3); }
                 .search-input { width: 100%; height: 50px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; padding-left: 45px; color: white; outline: none; transition: 0.3s; }
-                .search-input:focus { border-color: #fbbf24; background: rgba(0,0,0,0.3); }
+                .search-input:focus { border-color: var(--primary); background: rgba(0,0,0,0.3); }
                 .select-field { flex: 1 1 140px; height: 50px; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); border-radius: 14px; color: white; padding: 0 15px; outline: none; cursor: pointer; }
                 .select-field option { background: #1e293b; color: white; }
                 
@@ -1763,14 +1763,14 @@ const EventManagement = () => {
                 .date-chip input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
                 
                 .toggle-btn-plus { width: 36px; height: 36px; border-radius: 10px; border: none; cursor: pointer; background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.4); display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-                .toggle-btn-plus.active { background: #fbbf24; color: black; }
+                .toggle-btn-plus.active { background: var(--primary); color: black; }
                 
                 .action-buttons-row { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-top: 15px; flex-wrap: wrap; }
-                .primary-btn { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 25px; border-radius: 14px; background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%); color: black; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 8px 15px rgba(251,191,36,0.2); transition: 0.2s; }
+                .primary-btn { display: flex; align-items: center; gap: 10px; height: 52px; padding: 0 25px; border-radius: 14px; background: linear-gradient(135deg, var(--primary) 0%, #d97706 100%); color: black; font-weight: 800; border: none; cursor: pointer; box-shadow: 0 8px 15px rgba(251,191,36,0.2); transition: 0.2s; }
                 .primary-btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
                 .secondary-btn { display: flex; align-items: center; gap: 8px; height: 52px; padding: 0 20px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); color: white; font-weight: 700; border-radius: 12px; cursor: pointer; transition: 0.2s; }
                 .secondary-btn:hover { background: rgba(255,255,255,0.08); }
-                .target-input-inline { width: 60px; background: transparent; border: none; border-bottom: 2px solid rgba(251,191,36,0.5); color: #fbbf24; font-weight: 900; font-size: 16px; outline: none; text-align: center; }
+                .target-input-inline { width: 60px; background: transparent; border: none; border-bottom: 2px solid rgba(251,191,36,0.5); color: var(--primary); font-weight: 900; font-size: 16px; outline: none; text-align: center; }
 
                 /* ===== TABLE ===== */
                 .main-table-container { padding: 0; border: 1px solid rgba(255,255,255,0.06); background: rgba(10, 16, 30, 0.6) !important; overflow: hidden; border-radius: 20px; }
@@ -1785,7 +1785,7 @@ const EventManagement = () => {
 
                 /* ===== DATE CELL ===== */
                 .date-cell { min-width: 80px; }
-                .date-cell .day-name { font-size: 8px; font-weight: 950; color: #fbbf24; letter-spacing: 1.5px; margin-bottom: 3px; text-transform: uppercase; }
+                .date-cell .day-name { font-size: 8px; font-weight: 950; color: var(--primary); letter-spacing: 1.5px; margin-bottom: 3px; text-transform: uppercase; }
                 .date-cell .date-val { color: white; font-weight: 800; font-size: 15px; line-height: 1.2; }
                 .date-cell .year-val { font-size: 10px; color: rgba(255,255,255,0.25); font-weight: 600; margin-top: 2px; }
 
@@ -1804,8 +1804,8 @@ const EventManagement = () => {
 
                 /* ===== BADGES ===== */
                 .badge-fleet { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
-                .badge-ext { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); }
-                .badge-duty { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: rgba(251,191,36,0.12); color: #fbbf24; border: 1px solid rgba(251,191,36,0.25); white-space: nowrap; }
+                .badge-ext { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; background: rgba(245,158,11,0.15); color: var(--primary); border: 1px solid rgba(245,158,11,0.3); }
+                .badge-duty { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: rgba(251,191,36,0.12); color: var(--primary); border: 1px solid rgba(251,191,36,0.25); white-space: nowrap; }
                 .badge-time { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.25); white-space: nowrap; }
                 .badge-loc { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.65); font-size: 12px; font-weight: 600; }
                 .badge-no-data { font-size: 11px; color: rgba(255,255,255,0.18); font-style: italic; }
@@ -1818,7 +1818,7 @@ const EventManagement = () => {
                 .action-cell { text-align: right; }
                 .action-group { display: flex; gap: 8px; justify-content: flex-end; }
                 .action-group button { width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-                .edit-btn:hover { background: rgba(251,191,36,0.15); color: #fbbf24; border-color: rgba(251,191,36,0.3); }
+                .edit-btn:hover { background: rgba(251,191,36,0.15); color: var(--primary); border-color: rgba(251,191,36,0.3); }
                 .delete-btn:hover { background: rgba(244,63,94,0.15); color: #f43f5e; border-color: rgba(244,63,94,0.3); }
                 
                 /* ===== MODAL BASE (GLOBAL OVERLAYS) ===== */

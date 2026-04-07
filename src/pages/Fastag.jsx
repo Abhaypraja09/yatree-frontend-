@@ -155,12 +155,12 @@ const Fastag = () => {
                 <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <Wallet color="#fbbf24" size={20} />
+                            <Wallet color="var(--primary)" size={20} />
                         </div>
                         <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(251, 191, 36, 0.8)', letterSpacing: '2px', textTransform: 'uppercase' }}>Fleet Wallet</span>
                     </div>
                     <h1 style={{ color: 'white', fontSize: 'clamp(28px, 6vw, 38px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
-                        Fastag <span style={{ color: '#fbbf24' }}>Manager</span>
+                        Fastag <span style={{ color: 'var(--primary)' }}>Manager</span>
                     </h1>
                 </div>
 
@@ -186,7 +186,7 @@ const Fastag = () => {
                                 minWidth: '160px'
                             }}>
                                 <span style={{ fontSize: '9px', color: 'rgba(251, 191, 36, 0.5)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '2px' }}>{months[selectedMonth]} Total Spent</span>
-                                <span style={{ fontSize: '22px', fontWeight: '900', color: '#fbbf24', textShadow: '0 0 20px rgba(251, 191, 36, 0.2)' }}>₹ {totalCompanyMonth.toLocaleString()}</span>
+                                <span style={{ fontSize: '22px', fontWeight: '900', color: 'var(--primary)', textShadow: '0 0 20px rgba(251, 191, 36, 0.2)' }}>₹ {totalCompanyMonth.toLocaleString()}</span>
                             </div>
                         );
                     })()}
@@ -195,7 +195,7 @@ const Fastag = () => {
                         onClick={() => { setSelectedVehicle(null); setIsEditing(false); setShowModal(true); }}
                         style={{
                             padding: '16px 28px',
-                            background: '#fbbf24',
+                            background: 'var(--primary)',
                             color: '#000',
                             border: 'none',
                             borderRadius: '18px',
@@ -352,7 +352,7 @@ const Fastag = () => {
 
                                     <div style={{ textAlign: 'right', flex: 1 }} className="hide-mobile">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', justifyContent: 'flex-end' }}>
-                                            <Zap size={12} color="#fbbf24" />
+                                            <Zap size={12} color="var(--primary)" />
                                             <span style={{ fontSize: '10px', color: 'rgba(251, 191, 36, 0.6)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>{months[selectedMonth]} Added</span>
                                         </div>
                                         <span style={{ fontSize: '24px', fontWeight: '950', color: monthUsage > 0 ? 'white' : 'rgba(255,255,255,0.05)' }}>
@@ -399,7 +399,7 @@ const Fastag = () => {
                                                         style={{
                                                             padding: '10px 20px',
                                                             background: 'rgba(251, 191, 36, 0.1)',
-                                                            color: '#fbbf24',
+                                                            color: 'var(--primary)',
                                                             border: '1px solid rgba(251, 191, 36, 0.2)',
                                                             borderRadius: '12px',
                                                             fontSize: '12px',
@@ -522,7 +522,7 @@ const Fastag = () => {
                                             border: '1px solid rgba(251, 191, 36, 0.15)',
                                             boxShadow: '0 0 30px rgba(251, 191, 36, 0.1)'
                                         }}>
-                                            {isEditing ? <Edit2 color="#fbbf24" size={24} /> : <Zap color="#fbbf24" size={28} style={{ filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.5))' }} />}
+                                            {isEditing ? <Edit2 color="var(--primary)" size={24} /> : <Zap color="var(--primary)" size={28} style={{ filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.5))' }} />}
                                         </div>
                                         <div>
                                             <h2 style={{ color: 'white', margin: 0, fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: '900', letterSpacing: '-1px' }}>{isEditing ? 'Correct Entry' : 'Manual Recharge'}</h2>
@@ -565,7 +565,7 @@ const Fastag = () => {
                                         <div>
                                             <label style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Top-up Amount</label>
                                             <div style={{ position: 'relative' }}>
-                                                <span style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', fontWeight: '900', fontSize: '20px' }}>₹</span>
+                                                <span style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', fontWeight: '900', fontSize: '20px' }}>₹</span>
                                                 <input
                                                     type="number"
                                                     required
@@ -635,7 +635,7 @@ const Fastag = () => {
                                     disabled={submitting}
                                     style={{ 
                                         width: '100%', 
-                                        background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', 
+                                        background: 'linear-gradient(135deg, var(--primary), var(--primary))', 
                                         color: '#000', 
                                         border: 'none', 
                                         borderRadius: '20px', 

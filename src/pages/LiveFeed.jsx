@@ -10,6 +10,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import {
     todayIST,
@@ -42,6 +43,7 @@ const styles = `
 `;
 
 const LiveFeed = () => {
+    const { theme } = useTheme();
     const { user } = useAuth();
     const navigate = useNavigate();
     const [searchParams] = useSearchParams();
@@ -205,8 +207,8 @@ const LiveFeed = () => {
                 padding: '12px 28px',
                 borderRadius: '16px',
                 border: 'none',
-                background: activeTab === id ? 'rgba(14, 165, 233, 0.1)' : 'transparent',
-                color: activeTab === id ? '#38bdf8' : 'rgba(255, 255, 255, 0.5)',
+                background: activeTab === id ? `${theme.primary}15` : 'transparent',
+                color: activeTab === id ? theme.primary : 'rgba(255, 255, 255, 0.5)',
                 fontWeight: '900',
                 cursor: 'pointer',
                 transition: 'all 0.4s ease',
@@ -217,21 +219,24 @@ const LiveFeed = () => {
             {activeTab === id && (
                 <motion.div
                     layoutId="activeTabGlow"
-                    style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.05), transparent)', zIndex: 0 }}
+                    style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${theme.primary}10, transparent)`, zIndex: 0 }}
                 />
             )}
             <Icon size={18} strokeWidth={activeTab === id ? 3 : 2} style={{ position: 'relative', zIndex: 1 }} />
             <span style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', position: 'relative', zIndex: 1 }}>{label}</span>
-            {count !== undefined && (
+            {typeof count === 'number' && (
                 <span style={{
-                    background: activeTab === id ? '#0ea5e9' : 'rgba(255,255,255,0.05)',
-                    color: activeTab === id ? 'white' : 'rgba(255,255,255,0.3)',
-                    padding: '2px 8px',
+                    background: activeTab === id ? theme.primary : 'rgba(255,255,255,0.08)',
+                    color: activeTab === id ? '#000000' : 'rgba(255,255,255,0.5)',
+                    padding: '2px 10px',
                     borderRadius: '8px',
-                    fontSize: '10px',
-                    fontWeight: '900',
+                    fontSize: '11px',
+                    fontWeight: '1000',
                     position: 'relative',
-                    zIndex: 1
+                    zIndex: 1,
+                    minWidth: '20px',
+                    textAlign: 'center',
+                    boxShadow: activeTab === id ? `0 2px 8px ${theme.primary}40` : 'none'
                 }}>
                     {count}
                 </span>
@@ -248,13 +253,13 @@ const LiveFeed = () => {
                 <div className="livefeed-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px', gap: '20px', flexWrap: 'wrap' }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                            <div style={{ width: '32px', height: '32px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
-                                <Activity size={18} color="#0ea5e9" className="pulse-animation" />
+                            <div style={{ width: '32px', height: '32px', background: `${theme.primary}20`, borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${theme.primary}40` }}>
+                                <Activity size={18} color={theme.primary} className="pulse-animation" />
                             </div>
                             <span style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '2px', textTransform: 'uppercase' }}>Fleet Operation Hub</span>
                         </div>
                         <h1 style={{ color: 'white', fontSize: 'clamp(28px, 5vw, 42px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
-                            Live <span style={{ background: 'linear-gradient(to right, #0ea5e9, #6366f1)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>Feed</span>
+                            Live <span className="theme-gradient-text">Feed</span>
                         </h1>
                     </div>
 
@@ -271,8 +276,8 @@ const LiveFeed = () => {
                             >
                                 <ChevronLeft size={20} />
                             </button>
-                            <div style={{ height: '40px', padding: '0 20px', borderRadius: '14px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', alignItems: 'center', gap: '10px', color: 'white', fontWeight: '800', fontSize: '14px', border: '1px solid rgba(14, 165, 233, 0.2)', position: 'relative' }}>
-                                <Calendar size={16} color="#0ea5e9" />
+                            <div style={{ height: '40px', padding: '0 20px', borderRadius: '14px', background: `${theme.primary}15`, display: 'flex', alignItems: 'center', gap: '10px', color: 'white', fontWeight: '800', fontSize: '14px', border: `1px solid ${theme.primary}30`, position: 'relative' }}>
+                                <Calendar size={16} color={theme.primary} />
                                 {formatDate(selectedDate)}
                                 <input
                                     type="date"
@@ -348,23 +353,23 @@ const LiveFeed = () => {
                                     <div style={{
                                         width: '48px',
                                         height: '48px',
-                                        background: 'rgba(14, 165, 233, 0.12)',
+                                        background: `${theme.primary}15`,
                                         borderRadius: '14px',
                                         display: 'flex',
                                         justifyContent: 'center',
                                         alignItems: 'center',
-                                        border: '1px solid #0ea5e930',
+                                        border: `1px solid ${theme.primary}30`,
                                         flexShrink: 0
                                     }}>
-                                        <Car size={20} color="#0ea5e9" />
+                                        <Car size={20} color={theme.primary} />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '24px', fontWeight: '950', color: '#0ea5e9', lineHeight: 1.1, marginBottom: '2px' }}>
+                                        <div style={{ fontSize: '24px', fontWeight: '950', color: theme.primary, lineHeight: 1.1, marginBottom: '2px' }}>
                                             {activeFleetCount}
                                         </div>
 
 
-                                        <div style={{ fontSize: '13px', color: '#0ea5e9', fontWeight: '700', marginTop: '2px' }}>
+                                        <div style={{ fontSize: '13px', color: theme.primary, fontWeight: '700', marginTop: '2px' }}>
                                             Active Fleets
                                         </div>
 
@@ -427,26 +432,26 @@ const LiveFeed = () => {
                                     onClick={() => navigate('/admin/fuel')}
                                     style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer' }}
                                 >
-                                    <div style={{ width: '45px', height: '45px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #f59e0b20', flexShrink: 0 }}>
-                                        <Fuel size={22} color="#f59e0b" />
+                                    <div style={{ width: '45px', height: '45px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid var(--primary)20', flexShrink: 0 }}>
+                                        <Fuel size={22} color="var(--primary)" />
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{fuelAmt.toLocaleString()}</div>
-                                        <div style={{ fontSize: '11px', color: '#f59e0b', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Fuel</div>
+                                        <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Fuel</div>
                                     </div>
                                 </motion.div>
 
                                 {/* 6. Grand Total */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                                    style={{ background: 'linear-gradient(135deg, rgba(56, 189, 248, 0.15), rgba(99, 102, 241, 0.15))', padding: '18px', borderRadius: '24px', border: '1px solid rgba(14, 165, 233, 0.2)', display: 'flex', alignItems: 'center', gap: '12px' }}
+                                    style={{ background: `linear-gradient(135deg, ${theme.primary}20, ${theme.secondary || theme.primary}20)`, padding: '18px', borderRadius: '24px', border: `1px solid ${theme.primary}40`, display: 'flex', alignItems: 'center', gap: '12px' }}
                                 >
-                                    <div style={{ width: '42px', height: '42px', background: 'rgba(14, 165, 233, 0.2)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid #0ea5e980', flexShrink: 0 }}>
-                                        <Activity size={20} color="#0ea5e9" />
+                                    <div style={{ width: '42px', height: '42px', background: `${theme.primary}30`, borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${theme.primary}50`, flexShrink: 0 }}>
+                                        <Activity size={20} color={theme.primary} />
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '18px', fontWeight: '1000', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{(grandTotal + fuelAmt).toLocaleString()}</div>
-                                        <div style={{ fontSize: '10px', color: '#38bdf8', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Running Expenses
+                                        <div style={{ fontSize: '10px', color: theme.primary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Running Expenses
                                         </div>
                                     </div>
                                 </motion.div>
@@ -483,7 +488,7 @@ const LiveFeed = () => {
                     </div>
 
                     <div style={{ position: 'relative', flex: 1, minWidth: '220px', maxWidth: '450px' }}>
-                        <div style={{ position: 'absolute', left: '22px', top: '50%', transform: 'translateY(-50%)', color: '#38bdf8', filter: 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.4))' }}>
+                        <div style={{ position: 'absolute', left: '22px', top: '50%', transform: 'translateY(-50%)', color: theme.primary, filter: `drop-shadow(0 0 8px ${theme.primary}40)` }}>
                             <Search size={20} strokeWidth={3} />
                         </div>
                         <input
@@ -495,7 +500,7 @@ const LiveFeed = () => {
                                 width: '100%',
                                 padding: '18px 24px 18px 64px',
                                 background: 'rgba(0,0,0,0.4)',
-                                border: '1px solid rgba(14, 165, 233, 0.2)',
+                                border: `1px solid ${theme.primary}40`,
                                 borderRadius: '22px',
                                 color: 'white',
                                 fontSize: '15px',
@@ -642,7 +647,7 @@ const LiveFeed = () => {
                                                                     alignItems: 'center',
                                                                     border: `1px solid ${isComp ? 'rgba(255,255,255,0.04)' : 'rgba(14, 165, 233, 0.2)'}`
                                                                 }}>
-                                                                    <Car size={18} color={isComp ? 'rgba(255,255,255,0.2)' : '#0ea5e9'} strokeWidth={2.5} />
+                                                                    <Car size={18} color={isComp ? 'rgba(255,255,255,0.2)' : 'var(--primary)'} strokeWidth={2.5} />
                                                                 </div>
                                                                 <div>
                                                                     <div style={{ fontSize: '15px', color: isComp ? 'rgba(255,255,255,0.7)' : 'white', fontWeight: '1000', letterSpacing: '0.4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -655,7 +660,7 @@ const LiveFeed = () => {
                                                                     </div>
                                                                     <div style={{
                                                                         fontSize: '9px',
-                                                                        color: isComp ? 'rgba(255,255,255,0.25)' : '#0ea5e9',
+                                                                        color: isComp ? 'rgba(255,255,255,0.25)' : 'var(--primary)',
                                                                         fontWeight: '900',
                                                                         textTransform: 'uppercase',
                                                                         letterSpacing: '1px',
@@ -664,7 +669,7 @@ const LiveFeed = () => {
                                                                         alignItems: 'center',
                                                                         gap: '4px'
                                                                     }}>
-                                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isComp ? 'rgba(255,255,255,0.1)' : '#0ea5e9' }} />
+                                                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: isComp ? 'rgba(255,255,255,0.1)' : 'var(--primary)' }} />
                                                                         {isComp ? 'Shift Ended' : 'Active Duty'}
                                                                     </div>
                                                                 </div>
@@ -762,7 +767,7 @@ const LiveFeed = () => {
                                                     alignItems: 'center',
                                                     border: '1px solid rgba(14, 165, 233, 0.2)'
                                                 }}>
-                                                    <Car size={28} color="#0ea5e9" strokeWidth={2.5} />
+                                                    <Car size={28} color="var(--primary)" strokeWidth={2.5} />
                                                 </div>
                                                 <div>
                                                     <h4 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '950', letterSpacing: '-0.5px' }}>{vehicle.carNumber.split('#')[0]}</h4>
@@ -770,7 +775,7 @@ const LiveFeed = () => {
                                                 </div>
                                             </div>
                                             {vehicle.fuelAmount > 0 && (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(245, 158, 11, 0.12)', padding: '6px 14px', borderRadius: '14px', color: '#f59e0b', border: '1px solid rgba(245, 158, 11, 0.25)', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.1)' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(245, 158, 11, 0.12)', padding: '6px 14px', borderRadius: '14px', color: 'var(--primary)', border: '1px solid rgba(245, 158, 11, 0.25)', boxShadow: '0 4px 12px rgba(245, 158, 11, 0.1)' }}>
                                                     <Fuel size={14} strokeWidth={3} />
                                                     <span style={{ fontSize: '13px', fontWeight: '1000' }}>₹{vehicle.fuelAmount.toLocaleString()}</span>
                                                 </div>
@@ -809,7 +814,7 @@ const LiveFeed = () => {
                                                                     </div>
                                                                     <div>
                                                                         <div style={{ fontSize: '13px', color: 'white', fontWeight: '800' }}>{att.driver?.name || 'Driver'}</div>
-                                                                        <div style={{ fontSize: '10px', color: isComp ? 'rgba(255,255,255,0.2)' : '#0ea5e9', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{isComp ? 'Exited' : 'On Duty'}</div>
+                                                                        <div style={{ fontSize: '10px', color: isComp ? 'rgba(255,255,255,0.2)' : 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{isComp ? 'Exited' : 'On Duty'}</div>
                                                                     </div>
                                                                 </div>
                                                                 <div style={{ textAlign: 'right' }}>
@@ -879,7 +884,7 @@ const LiveFeed = () => {
                                             right: '-20px',
                                             width: '100px',
                                             height: '100px',
-                                            background: '#f59e0b',
+                                            background: 'var(--primary)',
                                             filter: 'blur(60px)',
                                             opacity: 0.05,
                                             pointerEvents: 'none'
@@ -896,7 +901,7 @@ const LiveFeed = () => {
                                                     justifyContent: 'center',
                                                     alignItems: 'center',
                                                     border: '1px solid rgba(245, 158, 11, 0.25)',
-                                                    color: '#f59e0b',
+                                                    color: 'var(--primary)',
                                                     boxShadow: '0 8px 20px -5px rgba(245, 158, 11, 0.2)'
                                                 }}>
                                                     <Fuel size={26} strokeWidth={2.5} />
@@ -911,7 +916,7 @@ const LiveFeed = () => {
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
-                                                <div style={{ color: '#f59e0b', fontSize: '14px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                                                <div style={{ color: 'var(--primary)', fontSize: '14px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                                                     {fuelEntry.quantity ? `${fuelEntry.quantity}L ${fuelEntry.fuelType || ''}` : fuelEntry.fuelType || 'DIESEL'}
                                                 </div>
                                             </div>
@@ -929,21 +934,21 @@ const LiveFeed = () => {
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Driver</span>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '14px', fontWeight: '700' }}>
-                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#0ea5e9' }}></div>
+                                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)' }}></div>
                                                     {fuelEntry.driver || 'Unknown'}
                                                 </div>
                                             </div>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                 <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Vehicle</span>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', fontSize: '14px', fontWeight: '700' }}>
-                                                    <Car size={14} color="#0ea5e9" />
+                                                    <Car size={14} color="var(--primary)" />
                                                     {fuelEntry.vehicle?.carNumber?.split('#')[0] || 'N/A'}
                                                 </div>
                                             </div>
                                             {fuelEntry.odometer && (
                                                 <div style={{ gridColumn: 'span 2', display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '4px', paddingTop: '8px', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
                                                     <span style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.5)' }}>Odometer Reading</span>
-                                                    <span style={{ fontSize: '13px', fontWeight: '900', color: '#f59e0b' }}>{fuelEntry.odometer} KM</span>
+                                                    <span style={{ fontSize: '13px', fontWeight: '900', color: 'var(--primary)' }}>{fuelEntry.odometer} KM</span>
                                                 </div>
                                             )}
                                         </div>
@@ -958,7 +963,7 @@ const LiveFeed = () => {
                                                 fontWeight: '700',
                                                 padding: '0 4px'
                                             }}>
-                                                <MapPin size={14} color="#f59e0b" />
+                                                <MapPin size={14} color="var(--primary)" />
                                                 <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                                                     {fuelEntry.stationName || fuelEntry.source}
                                                 </span>
@@ -1017,7 +1022,7 @@ const LiveFeed = () => {
                                         width: '50px',
                                         height: '50px',
                                         borderRadius: '16px',
-                                        background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                                        background: 'linear-gradient(135deg, var(--primary), var(--primary))',
                                         display: 'flex',
                                         justifyContent: 'center',
                                         alignItems: 'center',
@@ -1058,11 +1063,11 @@ const LiveFeed = () => {
                                             }}>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                        <div style={{ padding: '6px 14px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '10px', color: '#0ea5e9', fontWeight: '900', fontSize: '13px' }}>
+                                                        <div style={{ padding: '6px 14px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '10px', color: 'var(--primary)', fontWeight: '900', fontSize: '13px' }}>
                                                             SHIFT #{idx + 1}
                                                         </div>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <Car size={16} color="#0ea5e9" />
+                                                            <Car size={16} color="var(--primary)" />
                                                             <span style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{att.vehicle?.carNumber || 'N/A'}</span>
                                                         </div>
                                                     </div>
@@ -1072,7 +1077,7 @@ const LiveFeed = () => {
                                                         fontSize: '11px',
                                                         fontWeight: '900',
                                                         background: att.status === 'completed' ? 'rgba(139, 92, 246, 0.1)' : 'rgba(14, 165, 233, 0.1)',
-                                                        color: att.status === 'completed' ? '#8b5cf6' : '#0ea5e9',
+                                                        color: att.status === 'completed' ? '#8b5cf6' : 'var(--primary)',
                                                         border: `1px solid ${att.status === 'completed' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(14, 165, 233, 0.2)'}`,
                                                         display: 'flex',
                                                         alignItems: 'center',
@@ -1197,12 +1202,12 @@ const LiveFeed = () => {
                                                             border: '1px solid rgba(245, 158, 11, 0.2)',
                                                             boxShadow: '0 2px 10px rgba(245, 158, 11, 0.05)'
                                                         }}>
-                                                            <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: '#f59e0b', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                            <div style={{ width: '24px', height: '24px', borderRadius: '6px', background: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                                                                 <Fuel size={14} color="white" />
                                                             </div>
                                                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                                 <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>₹{pf.amount}</span>
-                                                                <span style={{ color: '#f59e0b', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '3px' }}>
+                                                                <span style={{ color: 'var(--primary)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '3px' }}>
                                                                     Admin Approval Pending <Clock size={10} className="pulse-animation" />
                                                                 </span>
                                                             </div>
@@ -1292,8 +1297,8 @@ const LiveFeed = () => {
                                                             </>
                                                         ) : (
                                                             <div style={{ height: '100px', display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '8px' }}>
-                                                                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#0ea5e9', boxShadow: '0 0 15px #0ea5e9' }} />
-                                                                <div style={{ fontSize: '11px', color: '#0ea5e9', fontWeight: '900', letterSpacing: '1px' }}>IN PROGRESS</div>
+                                                                <motion.div animate={{ scale: [1, 1.1, 1] }} transition={{ repeat: Infinity, duration: 2 }} style={{ width: '12px', height: '12px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 15px var(--primary)' }} />
+                                                                <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '900', letterSpacing: '1px' }}>IN PROGRESS</div>
                                                             </div>
                                                         )}
                                                     </div>
@@ -1322,7 +1327,7 @@ const LiveFeed = () => {
                                                         {(Number(att.punchOut?.allowanceTA) > 0 || Number(att.punchOut?.nightStayAmount) > 0 || Number(att.outsideTrip?.bonusAmount) > 0) && (
                                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
                                                                 <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>BONUS / TA</span>
-                                                                <span style={{ color: '#fbbf24', fontWeight: '900', fontSize: '16px' }}>
+                                                                <span style={{ color: 'var(--primary)', fontWeight: '900', fontSize: '16px' }}>
                                                                     ₹{Math.max((Number(att.punchOut?.allowanceTA) || 0) + (Number(att.punchOut?.nightStayAmount) || 0), Number(att.outsideTrip?.bonusAmount) || 0)}
                                                                 </span>
                                                             </div>
@@ -1423,7 +1428,7 @@ const LiveFeed = () => {
                                                 }}>
                                                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
                                                         <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                            <Fuel size={20} color="#f59e0b" />
+                                                            <Fuel size={20} color="var(--primary)" />
                                                         </div>
                                                         <div>
                                                             <div style={{ color: 'white', fontSize: '16px', fontWeight: '900' }}>₹{fe.amount}</div>
@@ -1434,7 +1439,7 @@ const LiveFeed = () => {
                                                         </div>
                                                     </div>
                                                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '5px' }}>
-                                                        <span style={{ color: '#f59e0b', fontSize: '10px', fontWeight: '800', background: 'rgba(245, 158, 11, 0.1)', padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase' }}>
+                                                        <span style={{ color: 'var(--primary)', fontSize: '10px', fontWeight: '800', background: 'rgba(245, 158, 11, 0.1)', padding: '3px 8px', borderRadius: '6px', textTransform: 'uppercase' }}>
                                                             {fe.paymentMode || 'N/A'}
                                                         </span>
                                                         <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '700' }}>

@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useNavigate } from 'react-router-dom';
 import { Lock, Phone, AlertCircle, ChevronRight, Globe, Shield, User, Landmark, Activity } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 
@@ -12,6 +13,7 @@ const Login = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
 
+    const { theme } = useTheme();
     const { login } = useAuth();
     const { language, setLanguage, t } = useLanguage();
     const navigate = useNavigate();
@@ -67,10 +69,21 @@ const Login = () => {
                 }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                    <div style={{ width: '80px', height: '80px', background: 'rgba(56, 189, 248, 0.1)', borderRadius: '24px', display: 'inline-flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(56, 189, 248, 0.2)', marginBottom: '20px' }}>
-                        <Activity size={40} color="#0ea5e9" />
+                    <div style={{ 
+                        width: '80px', height: '80px', 
+                        background: `${theme.primary}20`, 
+                        borderRadius: '24px', 
+                        display: 'inline-flex', 
+                        justifyContent: 'center', 
+                        alignItems: 'center', 
+                        border: `1px solid ${theme.primary}40`, 
+                        marginBottom: '20px' 
+                    }}>
+                        <Activity size={40} color={theme.primary} />
                     </div>
-                    <h2 style={{ fontSize: '32px', fontWeight: '950', color: 'white', margin: '0 0 5px 0', letterSpacing: '-1px' }}>Fleet <span style={{ color: '#0ea5e9' }}>Console</span></h2>
+                    <h2 style={{ fontSize: '32px', fontWeight: '950', color: 'white', margin: '0 0 5px 0', letterSpacing: '-1px' }}>
+                        Fleet <span style={{ color: theme.primary }}>Console</span>
+                    </h2>
                     <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '700', fontSize: '14px' }}>Log in to access your secure dashboard</p>
                 </div>
 
@@ -141,11 +154,11 @@ const Login = () => {
                         style={{
                             width: '100%',
                             height: '52px',
-                            background: '#FFB82B',
+                            background: theme.primary,
                             color: '#000',
                             border: 'none',
                             borderRadius: '12px',
-                            fontWeight: '800',
+                            fontWeight: '1000',
                             fontSize: '16px',
                             cursor: 'pointer',
                             display: 'flex',
@@ -153,7 +166,7 @@ const Login = () => {
                             justifyContent: 'center',
                             gap: '10px',
                             transition: '0.3s',
-                            boxShadow: '0 10px 20px -10px rgba(255, 184, 43, 0.4)'
+                            boxShadow: `0 10px 20px -10px ${theme.primary}80`
                         }}
                     >
                         {isLoading ? <div className="spinner"></div> : 'Sign In'}
@@ -161,8 +174,8 @@ const Login = () => {
                 </form>
 
                 <div style={{ marginTop: '30px', display: 'flex', justifyContent: 'center', gap: '20px' }}>
-                    <button onClick={() => setLanguage('en')} style={{ background: 'none', border: 'none', color: language === 'en' ? '#FFB82B' : 'rgba(255,255,255,0.2)', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>English</button>
-                    <button onClick={() => setLanguage('hi')} style={{ background: 'none', border: 'none', color: language === 'hi' ? '#FFB82B' : 'rgba(255,255,255,0.2)', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>हिन्दी</button>
+                    <button onClick={() => setLanguage('en')} style={{ background: 'none', border: 'none', color: language === 'en' ? theme.primary : 'rgba(255,255,255,0.2)', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>English</button>
+                    <button onClick={() => setLanguage('hi')} style={{ background: 'none', border: 'none', color: language === 'hi' ? theme.primary : 'rgba(255,255,255,0.2)', cursor: 'pointer', fontSize: '12px', fontWeight: '700' }}>हिन्दी</button>
                 </div>
             </motion.div>
 

@@ -194,7 +194,7 @@ const ActiveLogs = () => {
             switch (status) {
                 case 'Resolved': return { bg: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: 'rgba(16, 185, 129, 0.2)' };
                 case 'In Repair': return { bg: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: 'rgba(56, 189, 248, 0.2)' };
-                default: return { bg: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', border: 'rgba(245, 158, 11, 0.2)' };
+                default: return { bg: 'rgba(245, 158, 11, 0.1)', color: 'var(--primary)', border: 'rgba(245, 158, 11, 0.2)' };
             }
         };
         const styles = getStyles();
@@ -233,7 +233,7 @@ const ActiveLogs = () => {
                             style={{
                                 width: '60px',
                                 height: '60px',
-                                background: 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+                                background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
                                 borderRadius: '18px',
                                 display: 'flex',
                                 justifyContent: 'center',
@@ -246,7 +246,7 @@ const ActiveLogs = () => {
                         </motion.div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 10px #fbbf24' }}></span>
+                                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></span>
                                 <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1.5px', textTransform: 'uppercase' }}>Safety & Compliance</span>
                             </div>
                             <h1 style={{ color: 'white', fontSize: 'clamp(28px, 5vw, 36px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
@@ -402,7 +402,7 @@ const ActiveLogs = () => {
                                             </td>
                                             <td style={{ padding: '20px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fbbf24', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>
+                                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: '800', fontSize: '13px', textTransform: 'uppercase' }}>
                                                         {log.driver?.name?.charAt(0) || 'U'}
                                                     </div>
                                                     <div>
@@ -490,7 +490,7 @@ const ActiveLogs = () => {
                                 >
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
                                         <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                            <div style={{ width: '40px', height: '40px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#fbbf24' }}>
+                                            <div style={{ width: '40px', height: '40px', background: 'rgba(251, 191, 36, 0.1)', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
                                                 <Car size={20} />
                                             </div>
                                             <div>
@@ -508,7 +508,7 @@ const ActiveLogs = () => {
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '10px' }}>
                                             <StatusBadge status={log.status} />
                                             <div style={{ width: '1px', height: '12px', background: 'rgba(255,255,255,0.1)', margin: '0 5px' }}></div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#fbbf24', fontWeight: '700' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: 'var(--primary)', fontWeight: '700' }}>
                                                 <MapPin size={12} /> {log.location || 'Unknown Loc'}
                                             </div>
                                         </div>
@@ -596,7 +596,7 @@ const ActiveLogs = () => {
                                         <div>
                                             <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Estimated Recovery Cost</label>
                                             <div style={{ position: 'relative' }}>
-                                                <span style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: '#fbbf24', fontWeight: '900', fontSize: '15px' }}>₹</span>
+                                                <span style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', fontWeight: '900', fontSize: '15px' }}>₹</span>
                                                 <input type="number" className="input-field" style={{ height: '54px', borderRadius: '15px', paddingLeft: '35px' }} value={formData.amount} onChange={e => setFormData({ ...formData, amount: e.target.value })} placeholder="0.00" />
                                             </div>
                                         </div>

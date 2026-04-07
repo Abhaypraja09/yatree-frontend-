@@ -589,7 +589,7 @@ const DriverServices = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '25px 30px', borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
-                                            <div style={{ display: 'inline-flex', padding: '6px 14px', borderRadius: '10px', background: r.category?.toLowerCase()?.includes('wash') ? 'rgba(16,185,129,0.1)' : r.category?.toLowerCase()?.includes('punc') ? 'rgba(244,63,94,0.1)' : 'rgba(99,102,241,0.1)', color: r.category?.toLowerCase()?.includes('wash') ? '#10b981' : r.category?.toLowerCase()?.includes('punc') ? '#f43f5e' : '#6366f1', fontSize: '11px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                            <div style={{ display: 'inline-flex', padding: '6px 14px', borderRadius: '10px', background: r.category?.toLowerCase()?.includes('wash') ? 'rgba(16,185,129,0.1)' : r.category?.toLowerCase()?.includes('punc') ? 'rgba(244,63,94,0.1)' : 'rgba(99,102,241,0.1)', color: r.category?.toLowerCase()?.includes('wash') ? '#10b981' : r.category?.toLowerCase()?.includes('punc') ? '#f43f5e' : 'var(--primary)', fontSize: '11px', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '1px' }}>
                                                 {r.category || 'Maintenance'}
                                             </div>
                                             {r.description && <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '600', maxWidth: '200px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.description}</p>}

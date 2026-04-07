@@ -157,12 +157,12 @@ const VehicleMonthlyDetails = () => {
             <header style={{ marginBottom: '40px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-                        <div style={{ width: '60px', height: '60px', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', borderRadius: '18px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 25px rgba(14, 165, 233, 0.3)' }}>
+                        <div style={{ width: '60px', height: '60px', background: 'linear-gradient(135deg, var(--primary), var(--primary))', borderRadius: '18px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 25px rgba(14, 165, 233, 0.3)' }}>
                             <Calendar size={30} color="white" />
                         </div>
                         <div>
                             <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px' }}>
-                                Fleet <span style={{ color: '#0ea5e9' }}>Car Logs</span>
+                                Fleet <span style={{ color: 'var(--primary)' }}>Car Logs</span>
                             </h1>
                             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: 0, fontWeight: '600' }}>Driver history and operational cost breakdown</p>
                         </div>
@@ -191,7 +191,7 @@ const VehicleMonthlyDetails = () => {
                         icon={Droplets} 
                         label="Monthly Fuel" 
                         value={totalFuelAmount} 
-                        color="#3b82f6" 
+                        color="var(--primary)" 
                         subValue={`${filteredData.reduce((sum, v) => sum + (v.fuel?.totalQuantity || 0), 0).toFixed(1)}L`}
                     />
                     <SummaryCard 
@@ -203,10 +203,10 @@ const VehicleMonthlyDetails = () => {
                     />
                     <SummaryCard icon={User} label="Driver Salaries" value={totalDriverSalary} color="#a855f7" />
                     <SummaryCard icon={MapPin} label="Total Parking" value={totalParkingAmount} color="#ec4899" />
-                    <SummaryCard icon={Wrench} label="Repairs & Maint." value={totalMaintAmount} color="#f59e0b" />
+                    <SummaryCard icon={Wrench} label="Repairs & Maint." value={totalMaintAmount} color="var(--primary)" />
                     
                     <div style={{
-                        background: 'linear-gradient(135deg, #0ea5e9, #6366f1)',
+                        background: 'linear-gradient(135deg, var(--primary), var(--primary))',
                         borderRadius: '20px',
                         padding: '20px',
                         display: 'flex',
@@ -353,7 +353,7 @@ const VehicleMonthlyDetails = () => {
                                             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(60px, auto) minmax(60px, auto)', gap: '10px', marginBottom: '10px' }}>
                                                 <div>
                                                     <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '2px' }}>Avg</div>
-                                                    <div style={{ color: '#0ea5e9', fontWeight: '950', fontSize: '12px' }}>{(v.fuel?.avgMileage || 0).toFixed(2)}<span style={{fontSize: '9px', opacity: 0.6}}> KM/L</span></div>
+                                                    <div style={{ color: 'var(--primary)', fontWeight: '950', fontSize: '12px' }}>{(v.fuel?.avgMileage || 0).toFixed(2)}<span style={{fontSize: '9px', opacity: 0.6}}> KM/L</span></div>
                                                 </div>
                                                 <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '10px' }}>
                                                     <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '2px' }}>Run</div>
@@ -392,7 +392,7 @@ const VehicleMonthlyDetails = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: '#f59e0b', fontWeight: '900', fontSize: '15px' }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</div>
+                                            <div style={{ color: 'var(--primary)', fontWeight: '900', fontSize: '15px' }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</div>
                                             <div style={{ marginTop: '8px' }}>
                                                 {v.maintenance?.records?.length > 0 ? (
                                                     <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '8px', color: '#fcd34d', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
@@ -435,9 +435,9 @@ const VehicleMonthlyDetails = () => {
                             style={{ width: '100%', maxWidth: '750px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '32px', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)', overflowX: 'hidden' }}>
                             <div style={{ padding: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', background: 'rgba(255,255,255,0.02)', position: 'sticky', top: 0, zIndex: 10, backdropFilter: 'blur(20px)' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                    <div style={{ width: '55px', height: '55px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', borderRadius: '18px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}><Info size={28} /></div>
+                                    <div style={{ width: '55px', height: '55px', background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', borderRadius: '18px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}><Info size={28} /></div>
                                     <div>
-                                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '950', margin: 0, letterSpacing: '-1px' }}>Vehicle Monthly <span style={{ color: '#0ea5e9' }}>Audit</span></h2>
+                                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '950', margin: 0, letterSpacing: '-1px' }}>Vehicle Monthly <span style={{ color: 'var(--primary)' }}>Audit</span></h2>
                                         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '14px', margin: 0, fontWeight: '700' }}>{selectedVehicle.carNumber} • {new Date(0, month - 1).toLocaleString('default', { month: 'long' })} {year}</p>
                                     </div>
                                 </div>
@@ -495,7 +495,7 @@ const VehicleMonthlyDetails = () => {
                                     {/* Column 2: Maintenance Entries */}
                                     <div>
                                         <h3 style={{ fontSize: '14px', color: 'white', fontWeight: '900', textTransform: 'uppercase', marginBottom: '20px', letterSpacing: '1px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                            <div style={{ width: '4px', height: '14px', background: '#0ea5e9', borderRadius: '2px' }}></div>
+                                            <div style={{ width: '4px', height: '14px', background: 'var(--primary)', borderRadius: '2px' }}></div>
                                             Recent Maintenance
                                         </h3>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -506,7 +506,7 @@ const VehicleMonthlyDetails = () => {
                                                     <div key={i} style={{ padding: '15px', background: 'rgba(255,255,255,0.02)', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '5px' }}>
                                                             <span style={{ fontSize: '12px', color: 'white', fontWeight: '800' }}>{r.category || 'General'}</span>
-                                                            <span style={{ fontSize: '13px', color: '#0ea5e9', fontWeight: '900' }}>₹{r.amount.toLocaleString()}</span>
+                                                            <span style={{ fontSize: '13px', color: 'var(--primary)', fontWeight: '900' }}>₹{r.amount.toLocaleString()}</span>
                                                         </div>
                                                         <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{formatDateIST(r.date)}</div>
                                                     </div>
@@ -529,7 +529,7 @@ const VehicleMonthlyDetails = () => {
                     transform: translateY(-2px);
                 }
                 .text-gradient-blue {
-                    background: linear-gradient(135deg, #0ea5e9, #6366f1);
+                    background: linear-gradient(135deg, var(--primary), var(--primary));
                     -webkit-background-clip: text;
                     -webkit-text-fill-color: transparent;
                 }

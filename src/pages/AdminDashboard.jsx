@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, formatDateIST, firstDayOfMonthIST, nowIST } from '../utils/istUtils';
 
@@ -118,6 +119,7 @@ const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick, su
 
 const AdminDashboard = () => {
     const { user } = useAuth();
+    const { theme } = useTheme();
     const navigate = useNavigate();
     const { t } = useLanguage();
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
@@ -218,17 +220,17 @@ const AdminDashboard = () => {
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
-                                boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                                boxShadow: `0 10px 25px ${theme.primary}30`
                             }}>
-                                <Shield size={28} color="#fbbf24" />
+                                <Shield size={28} color={theme.primary} />
                             </div>
                             <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                    <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
                                     <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>{t('fleet_control_center')}</span>
                                 </div>
                                 <h1 className="header-title" style={{ color: 'white', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
-                                    {t('executive_dashboard').split(' ')[0]} <span className="text-gradient-yellow">{t('executive_dashboard').split(' ')[1]}</span>
+                                    {t('executive_dashboard').split(' ')[0]} <span className="theme-gradient-text">{t('executive_dashboard').split(' ')[1]}</span>
                                 </h1>
                             </div>
                         </div>
@@ -319,18 +321,18 @@ const AdminDashboard = () => {
                             {/* Drivers Service Related */}
                             {(isAdmin || user?.permissions?.driversService) && (
                                 <>
-                                    <StatCard icon={Users} label={t('total_driver_salary')} value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
-                                    <StatCard icon={CreditCard} label={t('total_driver_advance')} value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
+                                    <StatCard icon={Users} label={t('total_driver_salary')} value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
+                                    <StatCard icon={CreditCard} label={t('total_driver_advance')} value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
                                     <StatCard 
                                          icon={Fuel} 
                                          label={t('fuel_monthly')} 
                                          value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} 
-                                         color="#0ea5e9" 
+                                         color={theme.primary} 
                                          loading={loading} 
                                          onClick={() => navigate('/admin/fuel')} 
                                      />
-                                    <StatCard icon={Users} label={t('freelancers_monthly')} value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/freelancers')} />
-                                    <StatCard icon={CreditCard} label={t('parking_monthly')} value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color="#f59e0b" loading={loading} onClick={() => navigate('/admin/parking')} />
+                                    <StatCard icon={Users} label={t('freelancers_monthly')} value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/freelancers')} />
+                                    <StatCard icon={CreditCard} label={t('parking_monthly')} value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/parking')} />
                                 </>
                             )}
 
@@ -377,8 +379,8 @@ const AdminDashboard = () => {
                             {/* Fleet Operations Related */}
                             {(isAdmin || user?.permissions?.fleetOperations) && (
                                 <>
-                                    <StatCard icon={IndianRupee} label={t('fastag_recharge_monthly')} value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color="#fbbf24" loading={loading} onClick={() => navigate('/admin/car-utility')} />
-                                    <StatCard icon={Droplets} label={t('driver_services_monthly')} value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color="#10b981" loading={loading} onClick={() => navigate('/admin/car-utility')} />
+                                    <StatCard icon={IndianRupee} label={t('fastag_recharge_monthly')} value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/car-utility')} />
+                                    <StatCard icon={Droplets} label={t('driver_services_monthly')} value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/car-utility')} />
                                 </>
                             )}
                         </div>
@@ -462,7 +464,7 @@ const AdminDashboard = () => {
                                                     borderRadius: '6px',
                                                     background: alert.daysLeft < 0
                                                         ? '#f43f5e'
-                                                        : (alert.daysLeft === 0 ? '#0ea5e9' : '#f59e0b'),
+                                                        : (alert.daysLeft === 0 ? 'var(--primary)' : 'var(--primary)'),
                                                     color: 'white',
                                                     fontWeight: '800',
                                                     flexShrink: 0,

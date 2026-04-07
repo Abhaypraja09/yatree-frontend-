@@ -28,12 +28,12 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { useLanguage } from '../context/LanguageContext';
 import SEO from '../components/SEO';
-import { 
-    todayIST, 
-    toISTDateString, 
-    formatDateIST, 
-    formatTimeIST, 
-    formatDateTimeIST 
+import {
+    todayIST,
+    toISTDateString,
+    formatDateIST,
+    formatTimeIST,
+    formatDateTimeIST
 } from '../utils/istUtils';
 
 
@@ -477,7 +477,7 @@ const DriverPortal = () => {
             doc.setFontSize(11);
             doc.setFont('helvetica', 'bold');
             doc.text('PAYMENT OVERVIEW', pageWidth / 2 + 5, 68);
-            
+
             const totalEarned = ledgerData.summary?.totalEarned || 0;
             const totalEMI = Number(ledgerData.summary?.totalEMI) || 0;
             const netPayable = ledgerData.summary?.netPayable || (totalEarned - (ledgerData.summary?.pendingAdvance || 0) - totalEMI);
@@ -494,10 +494,10 @@ const DriverPortal = () => {
             doc.setTextColor(244, 63, 94);
             doc.text(`- Rs. ${(ledgerData.summary?.pendingAdvance || 0).toLocaleString('en-IN')}`, pageWidth - 20, 78, { align: 'right' });
             doc.text(`- Rs. ${totalEMI.toLocaleString('en-IN')}`, pageWidth - 20, 82, { align: 'right' });
-            
+
             doc.setDrawColor(203, 213, 225);
             doc.line(pageWidth / 2 + 5, 86, pageWidth - 20, 86);
-            
+
             doc.setFontSize(14);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(16, 185, 129); // Green for net payable
@@ -525,16 +525,16 @@ const DriverPortal = () => {
                 body: dutyRows,
                 startY: 120,
                 theme: 'grid',
-                headStyles: { 
-                    fillColor: [15, 23, 42], 
-                    textColor: [255, 255, 255], 
-                    fontSize: 8, 
-                    fontStyle: 'bold', 
+                headStyles: {
+                    fillColor: [15, 23, 42],
+                    textColor: [255, 255, 255],
+                    fontSize: 8,
+                    fontStyle: 'bold',
                     halign: 'center',
                     valign: 'middle'
                 },
-                bodyStyles: { 
-                    fontSize: 8, 
+                bodyStyles: {
+                    fontSize: 8,
                     halign: 'center',
                     textColor: [51, 65, 85]
                 },
@@ -545,7 +545,7 @@ const DriverPortal = () => {
             // 4. ADVANCES TABLE
             let nextY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : 120) + 15;
             if (nextY > pageHeight - 80) { doc.addPage(); nextY = 20; }
-            
+
             doc.setFontSize(12);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(15, 23, 42);
@@ -567,25 +567,25 @@ const DriverPortal = () => {
                 body: advRows,
                 startY: nextY + 5,
                 theme: 'striped',
-                headStyles: { 
-                    fillColor: [244, 63, 94], 
-                    textColor: [255, 255, 255], 
-                    fontSize: 8, 
-                    fontStyle: 'bold', 
-                    halign: 'center' 
+                headStyles: {
+                    fillColor: [244, 63, 94],
+                    textColor: [255, 255, 255],
+                    fontSize: 8,
+                    fontStyle: 'bold',
+                    halign: 'center'
                 },
-                bodyStyles: { 
-                    fontSize: 8, 
+                bodyStyles: {
+                    fontSize: 8,
                     halign: 'center',
                     textColor: [51, 65, 85]
                 },
                 margin: { left: 15, right: 15 }
             });
-            
+
             // 5. SPECIAL PAYOUTS (ALLOWANCES) TABLE 
             let allowanceY = (doc.lastAutoTable ? doc.lastAutoTable.finalY : nextY) + 15;
             if (allowanceY > pageHeight - 80) { doc.addPage(); allowanceY = 20; }
-            
+
             const specialPayouts = (ledgerData.allowances || []);
             if (specialPayouts.length > 0) {
                 doc.setFontSize(12);
@@ -622,10 +622,10 @@ const DriverPortal = () => {
                 const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
                 const selVal = (parseInt(ledgerYear) * 12) + parseInt(ledgerMonth);
                 const monthIdx = (selVal - sVal) + 1;
-                
+
                 const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
                 const isCompleted = loan.status === 'Completed';
-                
+
                 let progress = '';
                 if (isCompleted) {
                     progress = 'Completed';
@@ -677,18 +677,18 @@ const DriverPortal = () => {
             if (signature) {
                 doc.addImage(signature, 'PNG', sigX, footerY - 20, 55, 22);
             }
-            
+
             // Signature Line
             doc.setDrawColor(15, 23, 42);
             doc.setLineWidth(0.6);
             doc.line(sigX - 5, footerY + 5, pageWidth - 15, footerY + 5);
-            
+
             // Signatory Details
             doc.setFontSize(10);
             doc.setFont('helvetica', 'bold');
             doc.setTextColor(15, 23, 42);
             doc.text((user.company?.ownerName || 'AUTHORISED SIGNATORY').toUpperCase(), sigX - 2, footerY + 12);
-            
+
             doc.setFontSize(8);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(100, 116, 139);
@@ -735,7 +735,7 @@ const DriverPortal = () => {
                                 }}
                             />
                             <div>
-                                <h1 className="header-title" style={{ fontSize: 'clamp(20px, 5vw, 26px)', fontWeight: '900', letterSpacing: '-0.5px', background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '4px' }}>
+                                <h1 className="header-title" style={{ fontSize: 'clamp(20px, 5vw, 26px)', fontWeight: '900', letterSpacing: '-0.5px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '4px' }}>
                                     {user.company?.name || "Fleet CRM"}
                                 </h1>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -755,7 +755,7 @@ const DriverPortal = () => {
                                             display: 'flex',
                                             alignItems: 'center',
                                             gap: '6px',
-                                            color: '#f59e0b',
+                                            color: 'var(--primary)',
                                             fontSize: '12px',
                                             fontWeight: '800',
                                             border: '1px solid rgba(245, 158, 11, 0.2)'
@@ -771,7 +771,7 @@ const DriverPortal = () => {
                                             setShowExpenseModal(true);
                                         }}
                                         style={{
-                                            background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)',
+                                            background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)',
                                             color: 'white',
                                             height: '42px',
                                             padding: '0 14px',
@@ -796,7 +796,7 @@ const DriverPortal = () => {
                                             setShowExpenseModal(true);
                                         }}
                                         style={{
-                                            background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+                                            background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)',
                                             color: 'white',
                                             height: '42px',
                                             padding: '0 14px',
@@ -853,7 +853,7 @@ const DriverPortal = () => {
                                         borderRadius: '9px',
                                         fontSize: '12px',
                                         fontWeight: '800',
-                                        background: language === 'en' ? 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' : 'transparent',
+                                        background: language === 'en' ? 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)' : 'transparent',
                                         color: 'white',
                                         transition: 'all 0.3s ease',
                                         boxShadow: language === 'en' ? '0 4px 12px rgba(14, 165, 233, 0.3)' : 'none'
@@ -868,7 +868,7 @@ const DriverPortal = () => {
                                         borderRadius: '9px',
                                         fontSize: '12px',
                                         fontWeight: '800',
-                                        background: language === 'hi' ? 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' : 'transparent',
+                                        background: language === 'hi' ? 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)' : 'transparent',
                                         color: 'white',
                                         transition: 'all 0.3s ease',
                                         boxShadow: language === 'hi' ? '0 4px 12px rgba(14, 165, 233, 0.3)' : 'none'
@@ -974,13 +974,13 @@ const DriverPortal = () => {
                     <div className="tab-navigation" style={{ display: 'flex', gap: '8px', marginBottom: '24px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                         <button
                             onClick={() => setActiveTab('home')}
-                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'home' ? 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' : 'transparent', color: 'white', fontWeight: '800', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', transition: 'all 0.3s' }}
+                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'home' ? 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)' : 'transparent', color: 'white', fontWeight: '800', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', transition: 'all 0.3s' }}
                         >
                             <LayoutDashboard size={18} /> {t('today')}
                         </button>
                         <button
                             onClick={() => setActiveTab('ledger')}
-                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'ledger' ? 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)' : 'transparent', color: 'white', fontWeight: '800', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', transition: 'all 0.3s' }}
+                            style={{ flex: 1, padding: '12px', borderRadius: '12px', background: activeTab === 'ledger' ? 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)' : 'transparent', color: 'white', fontWeight: '800', fontSize: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none', transition: 'all 0.3s' }}
                         >
                             <Wallet size={18} /> {t('ledger')}
                         </button>
@@ -990,7 +990,7 @@ const DriverPortal = () => {
                         <>
                             {(!dashboardData?.vehicle && !showPunchIn && tripStatus !== 'completed' && tripStatus !== 'pending_approval') ? (
                                 <div className="glass-card" style={{ padding: '40px', textAlign: 'center' }}>
-                                    <AlertTriangle size={48} color="#f59e0b" style={{ margin: '0 auto 16px' }} />
+                                    <AlertTriangle size={48} color="var(--primary)" style={{ margin: '0 auto 16px' }} />
                                     <h2 style={{ color: 'white', marginBottom: '8px' }}>{t('noVehicle')}</h2>
                                     <p style={{ color: 'var(--text-muted)' }}>{t('startDutyMessage')}</p>
                                 </div>
@@ -1089,7 +1089,7 @@ const DriverPortal = () => {
                                                 border: '2px solid rgba(14, 165, 233, 0.2)',
                                                 boxShadow: '0 8px 24px rgba(14, 165, 233, 0.2)'
                                             }}>
-                                                <RefreshCw size={40} color="#0ea5e9" className="spinner" />
+                                                <RefreshCw size={40} color="var(--primary)" className="spinner" />
                                             </div>
                                             <h2 style={{ color: 'white', fontSize: 'clamp(20px, 5vw, 24px)', marginBottom: '12px', fontWeight: '900', letterSpacing: '-0.5px' }}>{t('waitingAdmin')}</h2>
                                             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: 'clamp(14px, 3.5vw, 15px)', fontWeight: '600' }}>{t('reviewMessage')}</p>
@@ -1419,8 +1419,8 @@ const DriverPortal = () => {
                                                 <h3 className="modal-title">
                                                     {expenseModalType === 'fuel' ? t('logFuel') :
                                                         expenseModalType === 'parking' ? t('logParking') :
-                                                        expenseModalType === 'special_pay' ? t('specialPay') :
-                                                            t('driverSeva')}
+                                                            expenseModalType === 'special_pay' ? t('specialPay') :
+                                                                t('driverSeva')}
                                                 </h3>
                                                 <p className="section-subtitle">{t('logExpense').toUpperCase()}</p>
                                             </div>
@@ -1474,14 +1474,14 @@ const DriverPortal = () => {
                                                                 <button
                                                                     onClick={() => setExpenseEntries([{ type: 'wash', amount: '', quantity: '', km: '', fuelType: 'Wash', slip: null, preview: null }])}
                                                                     className="btn-primary"
-                                                                    style={{ padding: '12px 10px', fontSize: '13px', borderRadius: '12px', background: '#3b82f6', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
+                                                                    style={{ padding: '12px 10px', fontSize: '13px', borderRadius: '12px', background: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
                                                                 >
                                                                     <Droplets size={16} /> {t('carWash')}
                                                                 </button>
                                                                 <button
                                                                     onClick={() => setExpenseEntries([{ type: 'puncture', amount: '', quantity: '', km: '', fuelType: 'Puncture', slip: null, preview: null }])}
                                                                     className="btn-primary"
-                                                                    style={{ padding: '12px 10px', fontSize: '13px', borderRadius: '12px', background: '#f59e0b', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
+                                                                    style={{ padding: '12px 10px', fontSize: '13px', borderRadius: '12px', background: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
                                                                 >
                                                                     <AlertTriangle size={16} /> {t('puncture')}
                                                                 </button>
@@ -1495,7 +1495,7 @@ const DriverPortal = () => {
                                                                 <button
                                                                     onClick={() => setExpenseEntries([{ type: 'water', amount: '', quantity: '', km: '', fuelType: 'Water', slip: null, preview: null }])}
                                                                     className="btn-primary"
-                                                                    style={{ padding: '12px 10px', fontSize: '13px', borderRadius: '12px', background: '#0ea5e9', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
+                                                                    style={{ padding: '12px 10px', fontSize: '13px', borderRadius: '12px', background: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}
                                                                 >
                                                                     <Droplets size={16} /> {t('waterBottle')}
                                                                 </button>
@@ -1517,7 +1517,7 @@ const DriverPortal = () => {
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                                     <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: entry.type === 'fuel' ? 'rgba(14, 165, 233, 0.15)' : (entry.type === 'parking' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(244, 63, 94, 0.15)'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                        {entry.type === 'fuel' ? <Droplets size={16} color="#0ea5e9" /> : (entry.type === 'parking' ? <Car size={16} color="#f59e0b" /> : <Wrench size={16} color="#f43f5e" />)}
+                                                                        {entry.type === 'fuel' ? <Droplets size={16} color="var(--primary)" /> : (entry.type === 'parking' ? <Car size={16} color="var(--primary)" /> : <Wrench size={16} color="#f43f5e" />)}
                                                                     </div>
                                                                     <span style={{ fontWeight: '800', fontSize: '12px', color: 'white', textTransform: 'uppercase' }}>
                                                                         {entry.type === 'fuel' ? t('logFuel') : (entry.type === 'parking' ? t('logParking') : (t(entry.type) || t('driverSeva')))}
@@ -1547,27 +1547,7 @@ const DriverPortal = () => {
                                                                 {entry.type === 'fuel' && (
                                                                     <>
                                                                         <div className="input-wrapper-full">
-                                                                            <label className="input-label" style={{ fontSize: '10px' }}>Rate (₹/Volume) - Optional</label>
-                                                                            <input
-                                                                                type="number"
-                                                                                className="input-field"
-                                                                                placeholder="₹/L"
-                                                                                value={entry.rate || ''}
-                                                                                onChange={(e) => {
-                                                                                    const newEntries = [...expenseEntries];
-                                                                                    newEntries[index].rate = e.target.value;
-
-                                                                                    // Auto-calculate Liters if Amount and Rate are available
-                                                                                    if (newEntries[index].amount && e.target.value) {
-                                                                                        newEntries[index].quantity = (Number(newEntries[index].amount) / Number(e.target.value)).toFixed(2);
-                                                                                    }
-                                                                                    setExpenseEntries(newEntries);
-                                                                                }}
-                                                                                style={{ padding: '10px', fontSize: '14px', height: '45px' }}
-                                                                            />
-                                                                        </div>
-                                                                        <div className="input-wrapper-full">
-                                                                            <label className="input-label" style={{ fontSize: '10px' }}>{t('quantity')} - Optional</label>
+                                                                            <label className="input-label" style={{ fontSize: '10px' }}>Volume (L) - Optional</label>
                                                                             <input
                                                                                 type="number"
                                                                                 className="input-field"
@@ -1580,6 +1560,26 @@ const DriverPortal = () => {
                                                                                     // Auto-calculate Rate if Amount and Liters are available
                                                                                     if (newEntries[index].amount && e.target.value) {
                                                                                         newEntries[index].rate = (Number(newEntries[index].amount) / Number(e.target.value)).toFixed(2);
+                                                                                    }
+                                                                                    setExpenseEntries(newEntries);
+                                                                                }}
+                                                                                style={{ padding: '10px', fontSize: '14px', height: '45px' }}
+                                                                            />
+                                                                        </div>
+                                                                        <div className="input-wrapper-full">
+                                                                            <label className="input-label" style={{ fontSize: '10px' }}>Rate *</label>
+                                                                            <input
+                                                                                type="number"
+                                                                                className="input-field"
+                                                                                placeholder="₹/L"
+                                                                                value={entry.rate || ''}
+                                                                                onChange={(e) => {
+                                                                                    const newEntries = [...expenseEntries];
+                                                                                    newEntries[index].rate = e.target.value;
+
+                                                                                    // Auto-calculate Liters if Amount and Rate are available
+                                                                                    if (newEntries[index].amount && e.target.value) {
+                                                                                        newEntries[index].quantity = (Number(newEntries[index].amount) / Number(e.target.value)).toFixed(2);
                                                                                     }
                                                                                     setExpenseEntries(newEntries);
                                                                                 }}
@@ -1930,7 +1930,7 @@ const DriverPortal = () => {
                                                     <div style={{ textAlign: 'right' }}>
                                                         <p style={{ color: '#f43f5e', fontWeight: '900', fontSize: '15px' }}>Rs. {item.amount}</p>
                                                         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>
-                                                            { (item.status || '').toLowerCase() === 'recovered' ? 'SETTLED' : 'PAID' }
+                                                            {(item.status || '').toLowerCase() === 'recovered' ? 'SETTLED' : 'PAID'}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1955,7 +1955,7 @@ const DriverPortal = () => {
                                                     <div style={{ textAlign: 'right' }}>
                                                         <p style={{ color: '#10b981', fontWeight: '900', fontSize: '15px' }}>+ Rs. {item.amount}</p>
                                                         <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>
-                                                            { (item.type || 'BONUS').toUpperCase() }
+                                                            {(item.type || 'BONUS').toUpperCase()}
                                                         </p>
                                                     </div>
                                                 </div>
@@ -1980,7 +1980,7 @@ const DriverPortal = () => {
                                                 const isCompleted = item.status === 'Completed' || monthIdx > tenure;
 
                                                 return (
-                                                    <div key={item._id} className="glass-card" style={{ padding: '16px', borderLeft: '4px solid #6366f1' }}>
+                                                    <div key={item._id} className="glass-card" style={{ padding: '16px', borderLeft: '4px solid var(--primary)' }}>
                                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
                                                             <div>
                                                                 <p style={{ color: 'white', fontWeight: '800', fontSize: '14px', marginBottom: '2px' }}>{formatDateIST(item.startDate)}</p>
@@ -1989,11 +1989,11 @@ const DriverPortal = () => {
                                                                 </p>
                                                             </div>
                                                             <div style={{ textAlign: 'right' }}>
-                                                                <p style={{ color: '#fbbf24', fontWeight: '900', fontSize: '15px' }}>EMI: Rs. {item.monthlyEMI?.toLocaleString()}</p>
-                                                                <span style={{ 
-                                                                    padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '900', 
-                                                                    background: item.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', 
-                                                                    color: item.status === 'Active' ? '#10b981' : 'rgba(255,255,255,0.4)' 
+                                                                <p style={{ color: 'var(--primary)', fontWeight: '900', fontSize: '15px' }}>EMI: Rs. {item.monthlyEMI?.toLocaleString()}</p>
+                                                                <span style={{
+                                                                    padding: '2px 6px', borderRadius: '4px', fontSize: '9px', fontWeight: '900',
+                                                                    background: item.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)',
+                                                                    color: item.status === 'Active' ? '#10b981' : 'rgba(255,255,255,0.4)'
                                                                 }}>
                                                                     {item.status?.toUpperCase()}
                                                                 </span>

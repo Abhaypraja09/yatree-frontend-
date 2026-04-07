@@ -173,11 +173,11 @@ const CarUtility = () => {
             <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap:'wrap', gap:'20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{ width: '50px', height: '50px', background: 'linear-gradient(135deg, #0ea5e9, #6366f1)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>
+                        <div style={{ width: '50px', height: '50px', background: 'linear-gradient(135deg, var(--primary), var(--primary))', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>
                             <Wrench size={24} color="white" />
                         </div>
                         <div>
-                            <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900', letterSpacing: '-1px' }}>Fleet <span style={{color:'#0ea5e9'}}>Utility</span></h1>
+                            <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900', letterSpacing: '-1px' }}>Fleet <span style={{color:'var(--primary)'}}>Utility</span></h1>
                             <p style={{ margin: '2px 0 0', color: 'rgba(255,255,255,0.4)', fontWeight: '700', fontSize: '12px' }}>Operational Maintenance & Expense Hub</p>
                         </div>
                     </div>
@@ -195,7 +195,7 @@ const CarUtility = () => {
                         <button 
                             onClick={() => { setSelectedVehicleId(vehicles[0]?._id); setActiveUtility(null); }}
                             style={{ 
-                                height: '54px', padding: '0 30px', background: 'linear-gradient(135deg, #0ea5e9 0%, #6366f1 100%)', 
+                                height: '54px', padding: '0 30px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)', 
                                 border: 'none', borderRadius: '16px', color: 'white', fontWeight: '1000', fontSize: '14px', 
                                 display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer', boxShadow: '0 10px 25px rgba(99, 102, 241, 0.3)' 
                             }}
@@ -206,8 +206,8 @@ const CarUtility = () => {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '40px' }}>
-                    <SummaryStat label="Fastag Paid" val={globalStats.f} col="#0ea5e9" icon={Zap} />
-                    <SummaryStat label="Border Taxes" val={globalStats.b} col="#fbbf24" icon={Layers} />
+                    <SummaryStat label="Fastag Paid" val={globalStats.f} col="var(--primary)" icon={Zap} />
+                    <SummaryStat label="Border Taxes" val={globalStats.b} col="var(--primary)" icon={Layers} />
                     <SummaryStat label="Service Exp" val={globalStats.s} col="#a855f7" icon={Droplets} />
                     <SummaryStat label="Month Total" val={globalStats.t} col="#10b981" icon={TrendingUp} isDark />
                 </div>
@@ -244,11 +244,11 @@ const CarUtility = () => {
                                                 <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{v.model || 'Standard Fleet'}</div>
                                             </td>
                                             <td style={{ padding: '22px 30px', textAlign: 'right' }}>
-                                                <div style={{ fontSize: '18px', fontWeight: '900', color: isLow ? '#f43f5e' : '#0ea5e9' }}>₹{act.fastag.toLocaleString()}</div>
+                                                <div style={{ fontSize: '18px', fontWeight: '900', color: isLow ? '#f43f5e' : 'var(--primary)' }}>₹{act.fastag.toLocaleString()}</div>
                                                 <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>Bal: ₹{v.fastagBalance || 0}</div>
                                             </td>
                                             <td style={{ padding: '22px 30px', textAlign: 'right' }}>
-                                                <div style={{ fontSize: '18px', fontWeight: '900', color: '#fbbf24' }}>₹{act.border.toLocaleString()}</div>
+                                                <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--primary)' }}>₹{act.border.toLocaleString()}</div>
                                             </td>
                                             <td style={{ padding: '22px 30px', textAlign: 'right' }}>
                                                 <div style={{ fontSize: '18px', fontWeight: '900', color: '#a855f7' }}>₹{act.service.toLocaleString()}</div>
@@ -271,9 +271,9 @@ const CarUtility = () => {
                         <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }} style={{ width: '100%', maxWidth: '1100px', height: '94vh', background: '#0a101f', borderRadius: '35px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column' }}>
                             <div style={{ padding: '30px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)' }}>
                                 <div style={{ display:'flex', alignItems:'center', gap:'25px' }}>
-                                    <div style={{width:'50px', height:'50px', background:'linear-gradient(135deg, #0ea5e960, #6366f160)', color:'#fff', borderRadius:'15px', display:'flex', justifyContent:'center', alignItems:'center'}}><Zap size={26}/></div>
+                                    <div style={{width:'50px', height:'50px', background:'linear-gradient(135deg, var(--primary)60, var(--primary)60)', color:'#fff', borderRadius:'15px', display:'flex', justifyContent:'center', alignItems:'center'}}><Zap size={26}/></div>
                                     <div>
-                                        <h2 style={{ margin: 0, fontWeight: '950', fontSize: '26px', letterSpacing: '-0.5px' }}>Operational <span style={{color:'#6366f1'}}>Workflow</span></h2>
+                                        <h2 style={{ margin: 0, fontWeight: '950', fontSize: '26px', letterSpacing: '-0.5px' }}>Operational <span style={{color:'var(--primary)'}}>Workflow</span></h2>
                                         <p style={{ margin:'4px 0 0', color: 'rgba(255,255,255,0.3)', fontSize:'12px', fontWeight:'700' }}>Select vehicle and log utility expenses</p>
                                     </div>
                                 </div>
@@ -306,8 +306,8 @@ const CarUtility = () => {
 
                                 {!activeUtility ? (
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '25px' }}>
-                                        <HubCard n="Fastag Accounts" i={Zap} col="#0ea5e9" onClick={() => setActiveUtility('fastag')} v={getVehicleActivity(selectedVehicleId).fastag} m="Monthly Recharge Logs" />
-                                        <HubCard n="Border Permits" i={Layers} col="#fbbf24" onClick={() => setActiveUtility('border')} v={getVehicleActivity(selectedVehicleId).border} m="Taxes & State Permits" />
+                                        <HubCard n="Fastag Accounts" i={Zap} col="var(--primary)" onClick={() => setActiveUtility('fastag')} v={getVehicleActivity(selectedVehicleId).fastag} m="Monthly Recharge Logs" />
+                                        <HubCard n="Border Permits" i={Layers} col="var(--primary)" onClick={() => setActiveUtility('border')} v={getVehicleActivity(selectedVehicleId).border} m="Taxes & State Permits" />
                                         <HubCard n="Extra Services" i={Droplets} col="#a855f7" onClick={() => setActiveUtility('services')} v={getVehicleActivity(selectedVehicleId).service} m="Washes & Puctures" />
                                     </div>
                                 ) : (
@@ -315,7 +315,7 @@ const CarUtility = () => {
                                         <button onClick={() => setActiveUtility(null)} style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', padding: '10px 20px', borderRadius: '12px', border: 'none', cursor: 'pointer', marginBottom: '30px', fontWeight: '900', fontSize: '13px' }}>← BACK TO HUB</button>
                                         <ManagerHub 
                                             type={activeUtility} 
-                                            color={activeUtility==='fastag'?'#0ea5e9':activeUtility==='border'?'#fbbf24':'#a855f7'} 
+                                            color={activeUtility==='fastag'?'var(--primary)':activeUtility==='border'?'var(--primary)':'#a855f7'} 
                                             act={getVehicleActivity(selectedVehicleId)} 
                                             drivers={drivers} 
                                             getImageUrl={getImageUrl}

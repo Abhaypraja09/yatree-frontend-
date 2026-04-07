@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { Plus, Trash2, Shield, User as UserIcon, Lock, Phone, UserCheck, CheckSquare, Square, Settings, Activity, X, Users, Edit3, Wrench } from 'lucide-react';
+import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 
 const Admins = () => {
+    const { theme } = useTheme();
     const [executives, setExecutives] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -132,15 +134,15 @@ const Admins = () => {
                         alignItems: 'center',
                         boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
                     }}>
-                        <UserIcon size={28} color="#fbbf24" />
+                        <UserIcon size={28} color="var(--primary)" />
                     </div>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
                             <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>System Access</span>
                         </div>
                         <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
-                            Admin <span className="text-gradient-yellow">Console</span>
+                            Admin <span className="theme-gradient-text">Console</span>
                         </h1>
                     </div>
                 </div>
@@ -154,8 +156,12 @@ const Admins = () => {
                         height: '52px',
                         padding: '0 25px',
                         borderRadius: '14px',
-                        fontWeight: '800',
-                        cursor: 'pointer'
+                        fontWeight: '1000',
+                        cursor: 'pointer',
+                        background: theme.primary,
+                        border: 'none',
+                        color: 'black',
+                        boxShadow: `0 8px 15px ${theme.primary}40`
                     }}
                 >
                     <Plus size={20} /> Create New Access
@@ -185,7 +191,7 @@ const Admins = () => {
                                 <tr key={admin._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'all 0.2s ease' }} className="hover-row">
                                     <td style={{ padding: '18px 25px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                                            <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(14, 165, 233, 0.05))', color: '#0ea5e9', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.1)' }}>
+                                            <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.1), rgba(14, 165, 233, 0.05))', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.1)' }}>
                                                 <UserIcon size={20} />
                                             </div>
                                             <div>
@@ -196,14 +202,14 @@ const Admins = () => {
                                     </td>
                                     <td style={{ padding: '18px 25px' }}>
                                         <div style={{ background: 'rgba(0,0,0,0.2)', padding: '6px 12px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', display: 'inline-block' }}>
-                                            <span style={{ color: '#fbbf24', fontWeight: '900', fontSize: '13px' }}>@{admin.username}</span>
+                                            <span style={{ color: 'var(--primary)', fontWeight: '900', fontSize: '13px' }}>@{admin.username}</span>
                                         </div>
                                     </td>
                                     <td style={{ padding: '18px 25px' }}>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
                                             {admin.permissions?.driversService && <span style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.15)', textTransform: 'uppercase' }}>Drivers</span>}
                                             {admin.permissions?.buySell && <span style={{ background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(129, 140, 248, 0.15)', textTransform: 'uppercase' }}>Buy/Sell</span>}
-                                            {admin.permissions?.vehiclesManagement && <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: '#fbbf24', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.15)', textTransform: 'uppercase' }}>Maintenance</span>}
+                                            {admin.permissions?.vehiclesManagement && <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--primary)', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.15)', textTransform: 'uppercase' }}>Maintenance</span>}
                                             {admin.permissions?.fleetOperations && <span style={{ background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(236, 72, 153, 0.15)', textTransform: 'uppercase' }}>Operations</span>}
                                             {admin.permissions?.staffManagement && <span style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(139, 92, 246, 0.15)', textTransform: 'uppercase' }}>Staff MGT</span>}
                                             {admin.permissions?.manageAdmins && <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.15)', textTransform: 'uppercase' }}>Admin MGT</span>}
@@ -269,7 +275,7 @@ const Admins = () => {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
                                     <div>
                                         <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>System Username</label>
-                                        <input className="input-field" value={username} onChange={e => setUsername(e.target.value)} required placeholder="Unique ID" style={{ borderRadius: '12px', height: '48px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: '#fbbf24', fontWeight: '800' }} />
+                                        <input className="input-field" value={username} onChange={e => setUsername(e.target.value)} required placeholder="Unique ID" style={{ borderRadius: '12px', height: '48px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--primary)', fontWeight: '800' }} />
                                     </div>
                                     <div>
                                         <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>{editingAdmin ? 'New Password (Optional)' : 'Access Password'}</label>
@@ -288,7 +294,7 @@ const Admins = () => {
                                         {[
                                             { id: 'driversService', label: 'Drivers Services', desc: 'Drivers List, Freelancers, Salary Reports, Parking', icon: Users, color: '#38bdf8' },
                                             { id: 'buySell', label: 'Outside Cars & Event MGT', desc: 'Outside Vehicle Logs, Transaction Reports', icon: Shield, color: '#818cf8' },
-                                            { id: 'vehiclesManagement', label: 'Vehicles Maintenance (CRITICAL)', desc: 'Maintenance Logs, Car Monthly Logs, Vehicle Inventory, Warranties', icon: Wrench, color: '#f59e0b' },
+                                            { id: 'vehiclesManagement', label: 'Vehicles Maintenance (CRITICAL)', desc: 'Maintenance Logs, Car Monthly Logs, Vehicle Inventory, Warranties', icon: Wrench, color: 'var(--primary)' },
                                             { id: 'fleetOperations', label: 'Fleet Operations (Fuel/Tax)', desc: 'Fuel Records, Fastag, Border Tax, Utility', icon: Activity, color: '#ec4899' },
                                             { id: 'staffManagement', label: 'Staff Management', desc: 'Manage Staff Attendance, Permissions, Leave, Salaries', icon: Users, color: '#8b5cf6' },
                                             { id: 'manageAdmins', label: 'Full Admin Access (Manage Others)', desc: 'Create/Edit other Admins and their system rights', icon: Shield, color: '#10b981' }

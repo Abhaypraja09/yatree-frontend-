@@ -244,12 +244,15 @@ const Placeholder = ({ title }) => (
 
 import { LanguageProvider } from './context/LanguageContext';
 
+import ThemeSwitcher from './components/common/ThemeSwitcher';
+
 function App() {
   return (
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <LanguageProvider>
         <AuthProvider>
           <AIChatAgent />
+          <ThemeSwitcher />
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
               <Route path="/login" element={<Login />} />

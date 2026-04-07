@@ -190,7 +190,7 @@ const FreelancerSalaryDetail = () => {
                         {[
                             { icon: Car, color: '#38bdf8', borderColor: 'rgba(14,165,233,0.2)', bg: 'rgba(14,165,233,0.08)', label: 'WAGES', value: `₹${totalWages.toLocaleString()}`, sub: `${summary.workingDays || 0} duty days` },
                             { icon: IndianRupee, color: '#a855f7', borderColor: 'rgba(168,85,247,0.2)', bg: 'rgba(168,85,247,0.08)', label: 'BONUSES', value: `₹${totalBonuses.toLocaleString()}`, sub: `T/A + Night Stay` },
-                            { icon: ParkingSquare, color: '#f59e0b', borderColor: 'rgba(245,158,11,0.2)', bg: 'rgba(245,158,11,0.08)', label: 'PARKING', value: `₹${parkingTotal.toLocaleString()}`, sub: `${det?.parkingEntries?.length || 0} entries` },
+                            { icon: ParkingSquare, color: 'var(--primary)', borderColor: 'rgba(245,158,11,0.2)', bg: 'rgba(245,158,11,0.08)', label: 'PARKING', value: `₹${parkingTotal.toLocaleString()}`, sub: `${det?.parkingEntries?.length || 0} entries` },
                             { icon: Wallet, color: '#10b981', borderColor: 'rgba(16,185,129,0.2)', bg: 'rgba(16,185,129,0.08)', label: 'GROSS EARNED', value: `₹${grandTotal.toLocaleString()}`, sub: 'Wages + Bonuses + Parking' },
                             { icon: TrendingDown, color: '#f43f5e', borderColor: 'rgba(244,63,94,0.2)', bg: 'rgba(244,63,94,0.08)', label: 'PAID / ADVANCE', value: `₹${totalAdvances.toLocaleString()}`, sub: `${det?.advances?.length || 0} payments` },
                         ].map(({ icon: Icon, color, borderColor, bg, label, value, sub }) => (
@@ -247,9 +247,9 @@ const FreelancerSalaryDetail = () => {
                                             {day.remarks && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)', fontStyle: 'italic' }}>{day.remarks}</div>}
                                         </td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.wage || 0}</td>
-                                        <td style={{ padding: '14px 18px', textAlign: 'right', color: '#fbbf24', fontWeight: '600' }}>₹{day.sameDayReturn || 0}</td>
+                                        <td style={{ padding: '14px 18px', textAlign: 'right', color: 'var(--primary)', fontWeight: '600' }}>₹{day.sameDayReturn || 0}</td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: '#ca8a04', fontWeight: '600' }}>₹{day.nightStay || 0}</td>
-                                        <td style={{ padding: '14px 18px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{day.parking || 0}</td>
+                                        <td style={{ padding: '14px 18px', textAlign: 'right', color: 'var(--primary)', fontWeight: '800' }}>₹{day.parking || 0}</td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: '#10b981', fontWeight: '800' }}>₹{(day.total || 0).toLocaleString()}</td>
                                     </tr>
                                 ))}
@@ -261,12 +261,12 @@ const FreelancerSalaryDetail = () => {
                                     <tr key={`p-${idx}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: 'rgba(245,158,11,0.02)' }}>
                                         <td style={{ padding: '14px 18px', color: 'white' }}>
                                             {formatDateIST(p.date)}
-                                            <div style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '800', marginTop: '2px' }}>STANDALONE PARKING</div>
+                                            <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '800', marginTop: '2px' }}>STANDALONE PARKING</div>
                                         </td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: 'rgba(255,255,255,0.3)' }}>—</td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: 'rgba(255,255,255,0.3)' }}>—</td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: 'rgba(255,255,255,0.3)' }}>—</td>
-                                        <td style={{ padding: '14px 18px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{(p.amount || 0).toLocaleString()}</td>
+                                        <td style={{ padding: '14px 18px', textAlign: 'right', color: 'var(--primary)', fontWeight: '800' }}>₹{(p.amount || 0).toLocaleString()}</td>
                                         <td style={{ padding: '14px 18px', textAlign: 'right', color: '#10b981', fontWeight: '800' }}>₹{(p.amount || 0).toLocaleString()}</td>
                                     </tr>
                                 ))}

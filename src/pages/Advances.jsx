@@ -158,11 +158,11 @@ const Advances = () => {
                             alignItems: 'center',
                             boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
                         }}>
-                            <IndianRupee size={28} color="#fbbf24" />
+                            <IndianRupee size={28} color="var(--primary)" />
                         </div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 8px var(--primary)' }}></div>
                                 <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Financial Oversight</span>
                             </div>
                             <h1 style={{ color: 'white', fontSize: 'clamp(24px,5vw,32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
@@ -234,8 +234,8 @@ const Advances = () => {
             {/* Personnel Salary Ledger Section */}
             <section style={{ marginBottom: '60px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
-                    <div style={{ width: '4px', height: '24px', background: '#fbbf24', borderRadius: '2px' }}></div>
-                    <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Personnel <span style={{ color: '#fbbf24' }}>Salary Ledger</span></h2>
+                    <div style={{ width: '4px', height: '24px', background: 'var(--primary)', borderRadius: '2px' }}></div>
+                    <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Personnel <span style={{ color: 'var(--primary)' }}>Salary Ledger</span></h2>
                     <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', padding: '4px 12px', borderRadius: '20px', fontWeight: '800', marginLeft: 'auto', textTransform: 'uppercase', letterSpacing: '1px' }}>Real-time Duty Calculation</span>
                 </div>
 
@@ -290,8 +290,8 @@ const Advances = () => {
                                     <div style={{ color: 'white', fontSize: '20px', fontWeight: '900', marginTop: '6px' }}>₹{s.totalEarned.toLocaleString()}</div>
                                 </div>
                                 <div style={{ background: 'rgba(251, 191, 36, 0.04)', padding: '18px', borderRadius: '16px', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
-                                    <span style={{ fontSize: '10px', color: '#fbbf24', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Advance Balance</span>
-                                    <div style={{ color: '#fbbf24', fontSize: '20px', fontWeight: '900', marginTop: '6px' }}>₹{s.pendingAdvance.toLocaleString()}</div>
+                                    <span style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Advance Balance</span>
+                                    <div style={{ color: 'var(--primary)', fontSize: '20px', fontWeight: '900', marginTop: '6px' }}>₹{s.pendingAdvance.toLocaleString()}</div>
                                 </div>
                             </div>
 
@@ -337,7 +337,7 @@ const Advances = () => {
                             </td></tr>
                         ) : filtered.length === 0 ? (
                             <tr><td colSpan="5" style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(30, 41, 59, 0.2)', borderRadius: '30px', border: '2px dashed rgba(255,255,255,0.05)' }}>
-                                <IndianRupee size={60} style={{ margin: '0 auto 20px', opacity: 0.1, color: '#fbbf24' }} />
+                                <IndianRupee size={60} style={{ margin: '0 auto 20px', opacity: 0.1, color: 'var(--primary)' }} />
                                 <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>No Advance Records</h3>
                                 <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>Record a new advance to start tracking.</p>
                             </td></tr>
@@ -352,7 +352,7 @@ const Advances = () => {
                             >
                                 <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
+                                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
                                             {advance.driver?.name?.charAt(0)}
                                         </div>
                                         <div>
@@ -433,7 +433,7 @@ const Advances = () => {
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '14px' }}>
+                                        <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', fontSize: '14px' }}>
                                             {advance.driver?.name?.charAt(0)}
                                         </div>
                                         <div>
@@ -442,7 +442,7 @@ const Advances = () => {
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <div style={{ color: '#fbbf24', fontWeight: '800', fontSize: '16px' }}>₹{advance.amount?.toLocaleString()}</div>
+                                        <div style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '16px' }}>₹{advance.amount?.toLocaleString()}</div>
                                         <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>Amount</div>
                                     </div>
                                 </div>

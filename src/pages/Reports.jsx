@@ -10,6 +10,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
+import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import AttendanceModal from '../components/reports/AttendanceModal';
 import EditAttendanceModal from '../components/reports/EditAttendanceModal';
@@ -24,7 +25,7 @@ const TAB_CONFIG = {
     drivers: { label: 'Staff Duties', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: UserIcon },
     freelancers: { label: 'Freelancer Duties', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', icon: Users },
     parking: { label: 'Parking & Toll', color: '#818cf8', bg: 'rgba(129,140,248,0.12)', icon: ArrowUpRight },
-    logbook: { label: 'Overall Log Book', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', icon: FileText },
+    logbook: { label: 'Overall Log Book', color: 'var(--primary)', bg: 'rgba(251,191,36,0.12)', icon: FileText },
 };
 
 /* ─── Chip (summary stat) ─── */
@@ -64,7 +65,7 @@ const Th = ({ color, children }) => (
 
 /* ─── Status badge ─── */
 const StatusBadge = ({ ok, okLabel = '✓ Done', badLabel = '⏳ Active' }) => (
-    <span style={{ fontSize: '10px', fontWeight: '900', padding: '4px 10px', borderRadius: '8px', whiteSpace: 'nowrap', background: ok ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)', color: ok ? '#10b981' : '#f59e0b', border: `1px solid ${ok ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}` }}>
+    <span style={{ fontSize: '10px', fontWeight: '900', padding: '4px 10px', borderRadius: '8px', whiteSpace: 'nowrap', background: ok ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)', color: ok ? '#10b981' : 'var(--primary)', border: `1px solid ${ok ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}` }}>
         {ok ? okLabel : badLabel}
     </span>
 );
@@ -73,7 +74,7 @@ const StatusBadge = ({ ok, okLabel = '✓ Done', badLabel = '⏳ Active' }) => (
 const ActionBtns = ({ onView, onEdit, onDelete, onDeleteBonus }) => (
     <div style={{ display: 'flex', gap: '6px' }}>
         {onView && <button onClick={onView} title="View Details" style={{ background: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.2)', color: '#38bdf8', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '800', transition: 'all 0.2s' }} className="btn-hover-scale"><Eye size={14} /> View</button>}
-        {onEdit && <button onClick={onEdit} title="Edit" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: '#fbbf24', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '800', transition: 'all 0.2s' }} className="btn-hover-scale"><Edit2 size={14} /></button>}
+        {onEdit && <button onClick={onEdit} title="Edit" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'var(--primary)', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '800', transition: 'all 0.2s' }} className="btn-hover-scale"><Edit2 size={14} /></button>}
         {onDelete && <button onClick={onDelete} title="Delete" style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)', color: '#f43f5e', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }} className="btn-hover-scale"><Trash2 size={14} /></button>}
         {onDeleteBonus && <button onClick={onDeleteBonus} title="Delete Bonus Only" style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', fontSize: '11px', fontWeight: '950', transition: 'all 0.2s' }} className="btn-hover-scale">Bonus Delete</button>}
     </div>
@@ -145,6 +146,7 @@ const LoadingRow = ({ cols }) => (
 
 /* ═══════════════════════════════════════════════════════ MAIN COMPONENT */
 const Reports = ({ isSubComponent = false }) => {
+    const { theme } = useTheme();
     const { user } = useAuth();
     const { selectedCompany } = useCompany();
     const location = useLocation();
@@ -548,7 +550,7 @@ const Reports = ({ isSubComponent = false }) => {
                     </TD>
                     <TD>
                         {fuelAmt > 0
-                            ? <div><span style={{ color: '#f59e0b', fontWeight: '900', fontSize: '13px' }}>₹{fuelAmt}</span><div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)' }}>{(r.fuel?.entries?.length || 1)} fill</div></div>
+                            ? <div><span style={{ color: 'var(--primary)', fontWeight: '900', fontSize: '13px' }}>₹{fuelAmt}</span><div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)' }}>{(r.fuel?.entries?.length || 1)} fill</div></div>
                             : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
                     </TD>
 
@@ -674,14 +676,14 @@ const Reports = ({ isSubComponent = false }) => {
             {!isSubComponent && (
                 <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '28px 0 20px', flexWrap: 'wrap', gap: '16px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                        <div style={{ width: '48px', height: '48px', background: 'linear-gradient(135deg, #fbbf24, #f59e0b)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 8px 20px rgba(245,158,11,0.3)' }}>
-                            <FileText size={24} color="white" />
+                        <div style={{ width: '48px', height: '48px', background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`, borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: `0 8px 20px ${theme.primary}40` }}>
+                            <FileText size={24} color="black" />
                         </div>
                         <div>
                             <div style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Operational Insights</div>
                             <h1 style={{ color: 'white', fontSize: 'clamp(22px,5vw,30px)', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>
                                 {location.pathname.includes('driver-duty') ? 'Driver ' : (location.pathname.includes('freelancer-duty') ? 'Freelancer ' : (location.pathname.includes('log-book') ? 'Overall ' : 'Daily '))}
-                                <span className="text-gradient-yellow">{location.pathname.includes('log-book') ? 'Log Book' : 'Duty'}</span>
+                                <span className="theme-gradient-text">{location.pathname.includes('log-book') ? 'Log Book' : 'Duty'}</span>
                             </h1>
                         </div>
                     </div>
@@ -734,11 +736,11 @@ const Reports = ({ isSubComponent = false }) => {
                                     height: '50px',
                                     padding: '0 20px',
                                     borderRadius: '16px',
-                                    background: 'rgba(251, 191, 36, 0.1)',
-                                    border: '1px solid rgba(251, 191, 36, 0.2)',
-                                    color: '#fbbf24',
+                                    background: `${theme.primary}20`,
+                                    border: `1px solid ${theme.primary}40`,
+                                    color: theme.primary,
                                     fontSize: '11px',
-                                    fontWeight: '950',
+                                    fontWeight: '1000',
                                     cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',

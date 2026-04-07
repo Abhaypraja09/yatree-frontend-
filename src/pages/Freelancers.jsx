@@ -5,6 +5,7 @@ import axios from '../api/axios';
 import { Plus, Search, Trash2, User as UserIcon, Users, X, CheckCircle, AlertCircle, LogIn, LogOut, Car, Filter, Download, Phone, Edit2, IndianRupee, Calendar, ChevronLeft, ChevronRight, ChevronDown, ChevronUp, Camera, Image as ImageIcon, Eye, TrendingUp, History, Fuel, MapPin, FileText, RefreshCw, ZapOff, Save } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { useCompany } from '../context/CompanyContext';
+import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 import AttendanceModal from '../components/reports/AttendanceModal';
@@ -113,7 +114,7 @@ const PhotoUpload = ({ label, icon: Icon, onFileSelect, previewFile }) => {
                 overflow: 'hidden',
                 transition: 'all 0.3s'
             }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = '#fbbf24'}
+                onMouseEnter={e => e.currentTarget.style.borderColor = 'var(--primary)'}
                 onMouseLeave={e => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
             >
                 {preview ? (
@@ -140,6 +141,7 @@ const PhotoUpload = ({ label, icon: Icon, onFileSelect, previewFile }) => {
 
 
 const Freelancers = () => {
+    const { theme } = useTheme();
     const { selectedCompany } = useCompany();
     const [drivers, setDrivers] = useState([]);
     const [allDrivers, setAllDrivers] = useState([]); // Includes both regular and freelancers
@@ -1156,18 +1158,22 @@ const Freelancers = () => {
                                 display: 'flex',
                                 justifyContent: 'center',
                                 alignItems: 'center',
-                                boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                                boxShadow: `0 10px 25px ${theme.primary}30`,
                                 flexShrink: 0
                             }}>
-                                <Users size={24} color="#fbbf24" />
+                                <Users size={24} color={theme.primary} />
                             </div>
                             <div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                                    <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                    <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
                                     <span style={{ fontSize: '9px', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>External Workforce</span>
                                 </div>
                                 <h1 style={{ color: 'white', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', fontSize: 'clamp(20px, 5vw, 32px)' }}>
-                                    Freelancers <span className="text-gradient-yellow">Hub</span>
+                                    Freelancers <span style={{ 
+                                        background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`,
+                                        WebkitBackgroundClip: 'text',
+                                        WebkitTextFillColor: 'transparent'
+                                    }}>Hub</span>
                                 </h1>
                             </div>
                         </div>
@@ -1223,7 +1229,7 @@ const Freelancers = () => {
                                     style={{
                                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         padding: '0 20px', height: '42px', borderRadius: '14px',
-                                        background: 'linear-gradient(135deg, #fbbf24 0%, #d97706 100%)',
+                                        background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)',
                                         border: 'none', color: 'black',
                                         boxShadow: '0 8px 15px rgba(251, 191, 36, 0.25)',
                                         cursor: 'pointer', fontWeight: '950', fontSize: '12px',
@@ -1277,7 +1283,7 @@ const Freelancers = () => {
                                     borderRadius: '12px',
                                     border: 'none',
                                     background: activeTab === tab.id ? 'rgba(251, 191, 36, 0.15)' : 'transparent',
-                                    color: activeTab === tab.id ? '#fbbf24' : 'rgba(255,255,255,0.4)',
+                                    color: activeTab === tab.id ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
                                     cursor: 'pointer',
                                     fontSize: '11px',
                                     fontWeight: '900',
@@ -1348,7 +1354,7 @@ const Freelancers = () => {
                                             borderRadius: '12px',
                                             background: 'rgba(251, 191, 36, 0.1)',
                                             border: '1px solid rgba(251, 191, 36, 0.2)',
-                                            color: '#fbbf24',
+                                            color: 'var(--primary)',
                                             fontSize: '10px',
                                             fontWeight: '950',
                                             cursor: 'pointer',
@@ -1574,7 +1580,7 @@ const Freelancers = () => {
                         <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
                             <div style={{ marginBottom: '32px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
-                                    <div style={{ width: '4px', height: '24px', background: 'linear-gradient(to bottom, #6366f1, #a855f7)', borderRadius: '4px' }}></div>
+                                    <div style={{ width: '4px', height: '24px', background: 'linear-gradient(to bottom, var(--primary), #a855f7)', borderRadius: '4px' }}></div>
                                     <h4 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '900', letterSpacing: '-0.5px' }}>{viewMode === 'monthly' ? 'Monthly Settlement Summary' : 'Date Range Settlement'}</h4>
                                 </div>
 
@@ -1674,10 +1680,10 @@ const Freelancers = () => {
                                 <div className="premium-glass" style={{ padding: '18px 24px', borderRadius: '20px', border: '1px solid rgba(251, 191, 36, 0.15)', background: 'rgba(251, 191, 36, 0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div>
                                         <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Total Payout</div>
-                                        <div style={{ color: '#fbbf24', fontSize: '24px', fontWeight: '950' }}>₹{totalLogisticsAmount.toLocaleString()}</div>
+                                        <div style={{ color: 'var(--primary)', fontSize: '24px', fontWeight: '950' }}>₹{totalLogisticsAmount.toLocaleString()}</div>
                                     </div>
                                     <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                        <IndianRupee size={20} color="#fbbf24" />
+                                        <IndianRupee size={20} color="var(--primary)" />
                                     </div>
                                 </div>
                             </div>
@@ -1723,7 +1729,7 @@ const Freelancers = () => {
                                                                 <span style={{
                                                                     fontSize: '8px', padding: '2px 8px', borderRadius: '100px', fontWeight: '900', marginTop: '4px', display: 'inline-block',
                                                                     background: isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)',
-                                                                    color: isCompleted ? '#10b981' : '#f59e0b',
+                                                                    color: isCompleted ? '#10b981' : 'var(--primary)',
                                                                     border: `1px solid ${isCompleted ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'}`
                                                                 }}>
                                                                     {isCompleted ? 'COMPLETED' : 'ON DUTY'}
@@ -1731,7 +1737,7 @@ const Freelancers = () => {
                                                             </td>
                                                             <td style={{ padding: '15px 25px' }}>
                                                                 <div style={{ background: 'rgba(14,165,233,0.1)', padding: '5px 12px', borderRadius: '8px', display: 'inline-block' }}>
-                                                                    <span style={{ color: '#0ea5e9', fontSize: '12px', fontWeight: '900' }}>{a.vehicle?.carNumber?.split('#')[0] || 'N/A'}</span>
+                                                                    <span style={{ color: 'var(--primary)', fontSize: '12px', fontWeight: '900' }}>{a.vehicle?.carNumber?.split('#')[0] || 'N/A'}</span>
                                                                 </div>
                                                                 <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', marginTop: '4px' }}>{a.vehicle?.model?.split(' ').slice(0, 2).join(' ') || ''}</div>
                                                             </td>
@@ -1770,7 +1776,7 @@ const Freelancers = () => {
                                                                         </span>
                                                                     )}
                                                                     {Number(a.punchOut?.allowanceTA) > 0 && (
-                                                                        <span style={{ color: '#fbbf24', fontSize: '9px', fontWeight: '900' }}>
+                                                                        <span style={{ color: 'var(--primary)', fontSize: '9px', fontWeight: '900' }}>
                                                                             T/A: ₹{a.punchOut.allowanceTA}
                                                                         </span>
                                                                     )}
@@ -1785,7 +1791,7 @@ const Freelancers = () => {
                                                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'center' }}>
                                                                     <button
                                                                         onClick={() => setSelectedItem({ ...a, entryType: 'attendance' })}
-                                                                        style={{ background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: '#0ea5e9', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                                        style={{ background: 'rgba(14, 165, 233, 0.1)', border: '1px solid rgba(14, 165, 233, 0.2)', color: 'var(--primary)', borderRadius: '8px', padding: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                                                         title="View Proof"
                                                                     >
                                                                         <Eye size={14} />
@@ -1911,7 +1917,7 @@ const Freelancers = () => {
                                 <div style={{ position: 'relative' }}>
                                     <Field label="Starting KM *" type="number" value={punchInData.km} onChange={v => setPunchInData({ ...punchInData, km: v })} required />
                                     {punchInData.vehicleId && (
-                                        <div style={{ position: 'absolute', top: '0', right: '0', fontSize: '10px', color: '#fbbf24', fontWeight: '800' }}>
+                                        <div style={{ position: 'absolute', top: '0', right: '0', fontSize: '10px', color: 'var(--primary)', fontWeight: '800' }}>
                                             LAST: {vehicles.find(v => v._id === punchInData.vehicleId)?.lastOdometer || 0}
                                         </div>
                                     )}
@@ -2055,7 +2061,7 @@ const Freelancers = () => {
                                         disabled={submitting}
                                         style={{
                                             height: '56px',
-                                            background: 'linear-gradient(135deg, #fbbf24, #d97706)',
+                                            background: 'linear-gradient(135deg, var(--primary), #d97706)',
                                             borderRadius: '16px',
                                             fontWeight: '900',
                                             fontSize: '16px',
@@ -2138,13 +2144,13 @@ const Freelancers = () => {
                                 <div style={{ background: 'rgba(255,255,255,0.02)', borderRadius: '24px', padding: '24px', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <MapPin size={16} color="#fbbf24" />
-                                            <label style={{ color: '#fbbf24', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Parking & Tolls</label>
+                                            <MapPin size={16} color="var(--primary)" />
+                                            <label style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Parking & Tolls</label>
                                         </div>
                                         <button
                                             type="button"
                                             onClick={() => setPunchOutData(p => ({ ...p, parkings: [...p.parkings, { id: Date.now(), amount: '', photo: null }] }))}
-                                            style={{ background: 'rgba(251,191,36,0.1)', color: '#fbbf24', border: '1px solid rgba(251,191,36,0.2)', padding: '6px 14px', borderRadius: '10px', fontSize: '10px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
+                                            style={{ background: 'rgba(251,191,36,0.1)', color: 'var(--primary)', border: '1px solid rgba(251,191,36,0.2)', padding: '6px 14px', borderRadius: '10px', fontSize: '10px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '5px' }}
                                         >
                                             <Plus size={12} /> ADD RECEIPT
                                         </button>
@@ -2191,7 +2197,7 @@ const Freelancers = () => {
                                         return (
                                             <div style={{ marginTop: '18px', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', alignItems: 'baseline', gap: '8px' }}>
                                                 <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '800' }}>TOTAL PARKING:</span>
-                                                <span style={{ color: '#fbbf24', fontSize: '16px', fontWeight: '900' }}>₹{total.toLocaleString()}</span>
+                                                <span style={{ color: 'var(--primary)', fontSize: '16px', fontWeight: '900' }}>₹{total.toLocaleString()}</span>
                                             </div>
                                         );
                                     })()}
@@ -2252,7 +2258,7 @@ const Freelancers = () => {
                                     <Download size={32} style={{ color: '#10b981', transform: 'rotate(180deg)' }} />
                                 </div>
                                 <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: '0 0 5px 0' }}>Disburse Advance</h3>
-                                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: 0 }}>Processing payment for <span style={{ color: '#6366f1', fontWeight: '800' }}>{selectedDriver?.name?.split(' (F)')[0]}</span></p>
+                                <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: 0 }}>Processing payment for <span style={{ color: 'var(--primary)', fontWeight: '800' }}>{selectedDriver?.name?.split(' (F)')[0]}</span></p>
                             </div>
 
                             <form onSubmit={handleAddAdvance} style={{ display: 'grid', gap: '25px' }}>
@@ -2341,7 +2347,7 @@ const Freelancers = () => {
                                             <p style={{ color: 'white', fontWeight: '700', margin: 0 }}>{doc.documentType}</p>
                                             <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: 0 }}>{doc.expiryDate ? `Expires: ${new Date(doc.expiryDate).toLocaleDateString()}` : 'Lifetime'}</p>
                                         </div>
-                                        <a href={doc.imageUrl} target="_blank" rel="noreferrer" style={{ color: '#6366f1', fontSize: '11px', fontWeight: '800' }}>VIEW</a>
+                                        <a href={doc.imageUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800' }}>VIEW</a>
                                     </div>
                                 ))}
                                 <form onSubmit={handleUploadDocument} style={{ display: 'grid', gap: '15px', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '20px' }}>
@@ -2450,7 +2456,7 @@ const Freelancers = () => {
                                         disabled={submitting}
                                         style={{
                                             width: '100%', height: '60px', borderRadius: '18px',
-                                            background: 'linear-gradient(135deg, #6366f1, #4f46e5)',
+                                            background: 'linear-gradient(135deg, var(--primary), #4f46e5)',
                                             color: 'white', fontSize: '16px', fontWeight: '900',
                                             border: 'none', cursor: submitting ? 'not-allowed' : 'pointer',
                                             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px',
@@ -2533,7 +2539,7 @@ const Freelancers = () => {
                                                                     fontWeight: '800',
                                                                     cursor: 'pointer',
                                                                     transition: 'all 0.3s',
-                                                                    background: quickExpenseData.fuelType === t ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' : 'transparent',
+                                                                    background: quickExpenseData.fuelType === t ? 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)' : 'transparent',
                                                                     color: quickExpenseData.fuelType === t ? 'white' : 'rgba(255,255,255,0.4)',
                                                                     boxShadow: quickExpenseData.fuelType === t ? '0 4px 12px rgba(245, 158, 11, 0.2)' : 'none'
                                                                 }}

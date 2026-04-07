@@ -63,11 +63,11 @@ const Bridge = () => {
                         </div>
                         <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '10px' }}>Access Denied</h2>
                         <p style={{ color: 'rgba(255,255,255,0.6)', marginBottom: '20px' }}>{error}</p>
-                        <button onClick={() => navigate('/login')} style={{ padding: '12px 24px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>Back to Login</button>
+                        <button onClick={() => navigate('/login')} style={{ padding: '12px 24px', background: 'var(--primary)', color: 'white', border: 'none', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}>Back to Login</button>
                     </>
                 ) : (
                     <>
-                        <div className="spinner" style={{ width: '50px', height: '50px', border: '4px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', borderRadius: '50%', margin: '0 auto 24px' }}></div>
+                        <div className="spinner" style={{ width: '50px', height: '50px', border: '4px solid rgba(255,255,255,0.1)', borderTopColor: 'var(--primary)', borderRadius: '50%', margin: '0 auto 24px' }}></div>
                         <h2 style={{ fontSize: '24px', fontWeight: '800', marginBottom: '10px' }}>Authenticating Bridge...</h2>
                         <p style={{ color: 'rgba(255,255,255,0.6)' }}>Connecting you to the target company dashboard...</p>
                     </>

@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
+import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
 
@@ -84,6 +85,7 @@ const CameraModal = ({ onCapture, onClose }) => {
 };
 
 const FuelPage = () => {
+    const { theme } = useTheme();
     const { selectedCompany } = useCompany();
     const getImageUrl = (path) => {
         if (!path) return '';
@@ -181,11 +183,11 @@ const FuelPage = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setEntries(data || []);
-        } catch (err) { 
+        } catch (err) {
             console.error(err);
-            setEntries([]); 
-        } finally { 
-            setLoading(false); 
+            setEntries([]);
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -480,17 +482,21 @@ const FuelPage = () => {
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                        boxShadow: `0 10px 25px ${theme.primary}30`
                     }}>
-                        <Fuel size={28} color="#fbbf24" />
+                        <Fuel size={28} color={theme.primary} />
                     </div>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
                             <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fuel Consumption</span>
                         </div>
                         <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
-                            Fuel <span className="text-gradient-yellow">Management</span>
+                            Fuel <span style={{
+                                background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`,
+                                WebkitBackgroundClip: 'text',
+                                WebkitTextFillColor: 'transparent'
+                            }}>Management</span>
                         </h1>
                     </div>
                 </div>                <div className="flex-resp" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -543,7 +549,7 @@ const FuelPage = () => {
                     <button
                         className="btn-primary"
                         onClick={() => { resetForm(); setShowModal(true); }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', border: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)', border: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}
                     >
                         <Plus size={20} /> <span className="hide-mobile">Add Entry</span><span className="show-mobile">Add</span>
                     </button>
@@ -621,8 +627,8 @@ const FuelPage = () => {
 
             {/* Summary Row */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '30px' }}>
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', borderLeft: '4px solid #f59e0b' }}>
-                    <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#f59e0b' }}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', borderLeft: '4px solid var(--primary)' }}>
+                    <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
                         <Fuel size={24} />
                     </div>
                     <div>
@@ -632,8 +638,8 @@ const FuelPage = () => {
                     </div>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', borderLeft: '4px solid #0ea5e9' }}>
-                    <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#0ea5e9' }}>
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', borderLeft: '4px solid var(--primary)' }}>
+                    <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
                         <Droplets size={24} />
                     </div>
                     <div>
@@ -725,13 +731,13 @@ const FuelPage = () => {
                                                 {formatDateIST(e.date)}
                                             </div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                                                <Car size={12} style={{ color: '#f59e0b' }} />
+                                                <Car size={12} style={{ color: 'var(--primary)' }} />
                                                 <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontWeight: '700' }}>{e.vehicle?.carNumber}</span>
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: e.fuelType === 'Diesel' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(14, 165, 233, 0.1)', color: e.fuelType === 'Diesel' ? '#f59e0b' : '#0ea5e9', fontWeight: '800', textTransform: 'uppercase' }}>{e.fuelType}</span>
+                                                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: e.fuelType === 'Diesel' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(14, 165, 233, 0.1)', color: e.fuelType === 'Diesel' ? 'var(--primary)' : 'var(--primary)', fontWeight: '800', textTransform: 'uppercase' }}>{e.fuelType}</span>
                                                 <span style={{ fontSize: '13px', color: 'white', fontWeight: '600' }}>{e.quantity} L</span>
                                             </div>
                                             <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '4px' }}>
@@ -746,7 +752,7 @@ const FuelPage = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: e.mileage > 12 ? '#10b981' : '#f59e0b', fontWeight: '800', fontSize: '16px' }}>{e.mileage || 0} <span style={{ fontSize: '10px' }}>KM/L</span></div>
+                                            <div style={{ color: e.mileage > 12 ? '#10b981' : 'var(--primary)', fontWeight: '800', fontSize: '16px' }}>{e.mileage || 0} <span style={{ fontSize: '10px' }}>KM/L</span></div>
                                             <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
                                                 ₹{e.costPerKm || 0}/KM cost
                                             </div>
@@ -757,7 +763,7 @@ const FuelPage = () => {
                                         <td style={{ padding: '20px 25px' }}>
                                             <div style={{ color: 'white', fontWeight: '800', fontSize: '16px' }}>₹{e.amount.toLocaleString()}</div>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                                {e.source === 'Driver' ? <User size={10} color="#0ea5e9" /> : <Shield size={10} color="#f59e0b" />}
+                                                {e.source === 'Driver' ? <User size={10} color="var(--primary)" /> : <Shield size={10} color="var(--primary)" />}
                                                 {e.source === 'Driver' ? 'Driver App' : 'Administrator'}
                                             </div>
                                             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
@@ -789,7 +795,7 @@ const FuelPage = () => {
                                                 <button
                                                     onClick={() => handleEdit(e)}
                                                     className="glass-card-hover-effect"
-                                                    style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                    style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                                                 >
                                                     <Edit size={16} />
                                                 </button>
@@ -837,7 +843,7 @@ const FuelPage = () => {
                                         </div>
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
-                                        <div style={{ color: '#f59e0b', fontWeight: '900', fontSize: '18px' }}>₹{e.amount.toLocaleString()}</div>
+                                        <div style={{ color: 'var(--primary)', fontWeight: '900', fontSize: '18px' }}>₹{e.amount.toLocaleString()}</div>
                                         <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{e.quantity} L @ ₹{e.rate}/Volume</div>
                                     </div>
                                 </div>
@@ -849,13 +855,13 @@ const FuelPage = () => {
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>Efficiency</div>
-                                        <div style={{ color: e.mileage > 12 ? '#10b981' : '#f59e0b', fontSize: '13px', fontWeight: '700' }}>{e.mileage || 0} KM/L</div>
+                                        <div style={{ color: e.mileage > 12 ? '#10b981' : 'var(--primary)', fontSize: '13px', fontWeight: '700' }}>{e.mileage || 0} KM/L</div>
                                     </div>
                                 </div>
 
                                 <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: e.fuelType === 'Diesel' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(14, 165, 233, 0.1)', color: e.fuelType === 'Diesel' ? '#f59e0b' : '#0ea5e9', fontWeight: '800', textTransform: 'uppercase' }}>{e.fuelType}</span>
+                                        <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: e.fuelType === 'Diesel' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(14, 165, 233, 0.1)', color: e.fuelType === 'Diesel' ? 'var(--primary)' : 'var(--primary)', fontWeight: '800', textTransform: 'uppercase' }}>{e.fuelType}</span>
                                         <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>• {e.stationName || 'Local Station'}</span>
                                     </div>
                                 </div>
@@ -881,7 +887,7 @@ const FuelPage = () => {
                                         >
                                             <Eye size={14} style={{ opacity: e.slipPhoto ? 1 : 0.5 }} />
                                         </button>
-                                        <button onClick={() => handleEdit(e)} style={{ background: 'rgba(14, 165, 233, 0.1)', color: '#0ea5e9', padding: '8px', borderRadius: '8px', border: '1px solid rgba(14, 165, 233, 0.2)' }}><Edit size={14} /></button>
+                                        <button onClick={() => handleEdit(e)} style={{ background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', padding: '8px', borderRadius: '8px', border: '1px solid rgba(14, 165, 233, 0.2)' }}><Edit size={14} /></button>
                                         <button onClick={() => handleDelete(e._id)} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', padding: '8px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.2)' }}><Trash2 size={14} /></button>
                                     </div>
                                 </div>
@@ -937,7 +943,7 @@ const FuelPage = () => {
                                                             height: '100%',
                                                             borderRadius: '10px',
                                                             border: 'none',
-                                                            background: formData.fuelType === t ? (t === 'Diesel' ? '#f59e0b' : '#0ea5e9') : 'transparent',
+                                                            background: formData.fuelType === t ? (t === 'Diesel' ? 'var(--primary)' : 'var(--primary)') : 'transparent',
                                                             color: formData.fuelType === t ? 'black' : 'rgba(255,255,255,0.5)',
                                                             fontWeight: '800',
                                                             fontSize: '12px',
@@ -971,7 +977,7 @@ const FuelPage = () => {
                                     {/* Operational Details */}
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '15px' }}>
                                         <div>
-                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Rate (₹/Volume)</label>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Rate</label>
                                             <input type="number" step="0.01" className="input-field" value={formData.rate} onChange={(e) => setFormData({ ...formData, rate: e.target.value })} placeholder="Auto-calculated" style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.01)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', color: 'rgba(255,255,255,0.5)', padding: '0 15px' }} />
                                         </div>
                                         <div>
@@ -1062,7 +1068,7 @@ const FuelPage = () => {
                                             type="submit"
                                             disabled={submitting}
                                             className="btn-primary"
-                                            style={{ height: '56px', borderRadius: '14px', fontSize: '16px', fontWeight: '900', background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', border: 'none', color: 'black' }}
+                                            style={{ height: '56px', borderRadius: '14px', fontSize: '16px', fontWeight: '900', background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)', border: 'none', color: 'black' }}
                                         >
                                             {submitting ? 'Saving...' : (editingId ? 'Update Entry' : 'Save Fuel Entry')}
                                         </button>
@@ -1192,18 +1198,18 @@ const FuelPage = () => {
                                         ) : (
                                             <div style={{ display: 'flex', gap: '8px' }}>
                                                 <div onClick={() => setActiveCamera(true)} style={{ width: '100px', height: '100px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                                    <ImageIcon size={24} color="#f59e0b" />
+                                                    <ImageIcon size={24} color="var(--primary)" />
                                                     <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '6px', fontWeight: '700' }}>Camera</span>
                                                 </div>
                                                 <label style={{ width: '100px', height: '100px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                                    <Plus size={24} color="#0ea5e9" />
+                                                    <Plus size={24} color="var(--primary)" />
                                                     <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '6px', fontWeight: '700' }}>Upload</span>
                                                     <input type="file" accept="image/*" onChange={handleFileUpload} style={{ display: 'none' }} />
                                                 </label>
                                             </div>
                                         )}
                                         <div style={{ flex: 1 }}>
-                                            {!formData.slipPhoto && <p style={{ color: '#f59e0b', fontSize: '12px', margin: 0, fontWeight: '700' }}>⚠ No slip attached!</p>}
+                                            {!formData.slipPhoto && <p style={{ color: 'var(--primary)', fontSize: '12px', margin: 0, fontWeight: '700' }}>⚠ No slip attached!</p>}
                                             <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '12px', margin: '4px 0 0' }}>Upload the slip if it's missing or incorrect.</p>
                                         </div>
                                     </div>

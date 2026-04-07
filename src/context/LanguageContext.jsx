@@ -19,6 +19,7 @@ export const translations = {
         staff_portal: 'STAFF PORTAL',
         username_mobile: 'Username or Mobile',
         password_placeholder: '••••••••',
+        current_profile: 'Current Profile',
 
         // Dashboard/Status
         noVehicle: 'No Vehicle Active',
@@ -228,6 +229,7 @@ export const translations = {
         staff_portal: 'स्टाफ पोर्टल',
         username_mobile: 'यूजरनेम या मोबाइल',
         password_placeholder: '••••••••',
+        current_profile: 'वर्तमान प्रोफाइल',
 
         // Dashboard/Status
         noVehicle: 'कोई वाहन सक्रिय नहीं है',

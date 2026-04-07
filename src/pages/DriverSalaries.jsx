@@ -726,11 +726,11 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 <header className="flex-resp" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', padding: '30px 0', marginBottom: '10px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{ width: 'clamp(40px,10vw,50px)', height: 'clamp(40px,10vw,50px)', background: 'linear-gradient(135deg, white, #f8fafc)', borderRadius: '16px', padding: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
-                            <IndianRupee size={28} color="#fbbf24" />
+                            <IndianRupee size={28} color="var(--primary)" />
                         </div>
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 8px #fbbf24' }}></div>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 8px var(--primary)' }}></div>
                                 <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Payroll System</span>
                             </div>
                             <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
@@ -829,7 +829,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         </div>
                         <div style={{ textAlign: 'right' }}>
                             <p style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', marginBottom: '2px', textTransform: 'uppercase' }}>Net Payout</p>
-                            <p style={{ fontSize: '16px', fontWeight: '800', color: '#fbbf24', margin: 0 }}>₹ {totalNetPayout.toLocaleString()}</p>
+                            <p style={{ fontSize: '16px', fontWeight: '800', color: 'var(--primary)', margin: 0 }}>₹ {totalNetPayout.toLocaleString()}</p>
                         </div>
                     </div>
                 </div>
@@ -840,7 +840,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                     <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredSalaries.reduce((sum, s) => sum + (s.totalAdvances || 0), 0).toLocaleString()}</h3>
                 </div>
                 <div className="glass-card" style={{ flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.05) 100%)', border: '1px solid rgba(251,191,36,0.2)' }}>
-                    <p style={{ fontSize: '11px', fontWeight: '800', color: '#fbbf24', marginBottom: '4px', textTransform: 'uppercase' }}>
+                    <p style={{ fontSize: '11px', fontWeight: '800', color: 'var(--primary)', marginBottom: '4px', textTransform: 'uppercase' }}>
                         EMI Deductions
                     </p>
                     <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredSalaries.reduce((sum, s) => sum + (s.totalEMI || 0), 0).toLocaleString()}</h3>
@@ -877,7 +877,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         <td style={{ padding: '20px 20px', color: 'white', fontWeight: '800' }}>{s.workingDays || 0}</td>
                                         <td style={{ padding: '20px 20px' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                {s.nightStayCount > 0 && <span style={{ fontSize: '10px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', padding: '2px 6px', borderRadius: '4px', fontWeight: '800' }}>{s.nightStayCount} NIGHTS</span>}
+                                                {s.nightStayCount > 0 && <span style={{ fontSize: '10px', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--primary)', padding: '2px 6px', borderRadius: '4px', fontWeight: '800' }}>{s.nightStayCount} NIGHTS</span>}
                                                 {s.sameDayCount > 0 && <span style={{ fontSize: '10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 6px', borderRadius: '4px', fontWeight: '800' }}>{s.sameDayCount} DAY</span>}
                                                 {!(s.nightStayCount > 0 || s.sameDayCount > 0) && <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>-</span>}
                                             </div>
@@ -887,7 +887,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                             {s.totalAllowances > 0 ? `+ ₹ ${s.totalAllowances}` : '-'}
                                         </td>
                                         <td style={{ padding: '20px 20px', color: '#f43f5e', fontWeight: '700' }}>₹ {s.totalAdvances}</td>
-                                        <td style={{ padding: '20px 20px', color: '#fbbf24', fontWeight: '700' }}>₹ {s.totalEMI}</td>
+                                        <td style={{ padding: '20px 20px', color: 'var(--primary)', fontWeight: '700' }}>₹ {s.totalEMI}</td>
                                         <td style={{ padding: '20px 20px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {s.netPayable}</td>
                                         <td style={{ padding: '20px 20px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
                                             <button
@@ -935,7 +935,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                             {[
                                 ['DAILY WAGE', `₹ ${s.dailyWage}`, 'rgba(255,255,255,0.7)'],
                                 ['DUTY DAYS', s.workingDays, 'white'],
-                                ['NIGHTS', s.nightStayCount || 0, '#f59e0b'],
+                                ['NIGHTS', s.nightStayCount || 0, 'var(--primary)'],
                                 ['SAME DAY', s.sameDayCount || 0, '#10b981'],
                                 ['EARNINGS', `₹ ${s.totalEarned}`, 'white'],
                                 ['ADVANCES', `₹ ${s.totalAdvances}`, '#f43f5e']
@@ -953,8 +953,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             {/* Advance Payment History Section */}
             <div style={{ marginTop: '60px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
-                    <div style={{ width: '4px', height: '24px', background: '#fbbf24', borderRadius: '2px' }}></div>
-                    <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Advance <span style={{ color: '#fbbf24' }}>Payment History</span></h2>
+                    <div style={{ width: '4px', height: '24px', background: 'var(--primary)', borderRadius: '2px' }}></div>
+                    <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Advance <span style={{ color: 'var(--primary)' }}>Payment History</span></h2>
                 </div>
 
                 <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
@@ -971,7 +971,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         <tbody>
                             {filteredAdvances.length === 0 ? (
                                 <tr><td colSpan="5" style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(30, 41, 59, 0.2)', borderRadius: '30px', border: '2px dashed rgba(255,255,255,0.05)' }}>
-                                    <IndianRupee size={60} style={{ margin: '0 auto 20px', opacity: 0.1, color: '#fbbf24' }} />
+                                    <IndianRupee size={60} style={{ margin: '0 auto 20px', opacity: 0.1, color: 'var(--primary)' }} />
                                     <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>No Advance Records</h3>
                                     <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>Record a new advance to start tracking.</p>
                                 </td></tr>
@@ -986,7 +986,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                 >
                                     <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
+                                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
                                                 {advance.driver?.name?.charAt(0)}
                                             </div>
                                             <div>
@@ -1051,7 +1051,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         <div key={advance._id} className="glass-card" style={{ padding: '16px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '14px' }}>
                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
+                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
                                         {advance.driver?.name?.charAt(0)}
                                     </div>
                                     <div>
@@ -1060,7 +1060,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                     </div>
                                 </div>
                                 <div style={{ textAlign: 'right' }}>
-                                    <div style={{ color: '#fbbf24', fontWeight: '800' }}>₹{advance.amount}</div>
+                                    <div style={{ color: 'var(--primary)', fontWeight: '800' }}>₹{advance.amount}</div>
                                     <div style={{ display: 'flex', gap: '8px', marginTop: '4px', justifyContent: 'flex-end' }}>
                                         <button onClick={() => handleEditClick(advance)} style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '10px' }}>Edit</button>
                                         <button onClick={() => handleDeleteAdvance(advance._id)} style={{ background: 'transparent', border: 'none', color: '#f43f5e', fontSize: '10px' }}>Delete</button>
@@ -1298,7 +1298,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                             <div style={{ padding: '20px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(to right, rgba(255,255,255,0.02), transparent)', position: 'sticky', top: 0, backdropFilter: 'blur(10px)', zIndex: 10 }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                     <div>
-                                        <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Salary Breakdown {selectedDriverDetails?.vID && <span style={{ fontSize: '10px', color: '#fbbf24' }}>({selectedDriverDetails.vID})</span>}</h2>
+                                        <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Salary Breakdown {selectedDriverDetails?.vID && <span style={{ fontSize: '10px', color: 'var(--primary)' }}>({selectedDriverDetails.vID})</span>}</h2>
                                         {driverName && <p style={{ color: 'var(--primary)', fontSize: '13px', margin: '4px 0 0', fontWeight: '600' }}>{driverName}</p>}
                                     </div>
                                     {selectedDriverDetails && !detailLoading && (
@@ -1346,8 +1346,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                             {/* Parking Reimbursements */}
                                             <div style={{ background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: '12px', padding: '14px' }}>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                                                    <ParkingSquare size={14} color="#f59e0b" />
-                                                    <span style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '800', textTransform: 'uppercase' }}>Parking</span>
+                                                    <ParkingSquare size={14} color="var(--primary)" />
+                                                    <span style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase' }}>Parking</span>
                                                 </div>
                                                 <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{calcParking.toLocaleString()}</div>
                                                 <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>Total Parking/Toll</div>
@@ -1398,7 +1398,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         </div>
 
                                         {/* ─── DUTY BREAKDOWN TABLE ─── */}
-                                        <h3 style={{ fontSize: '14px', color: 'white', marginBottom: '15px', borderLeft: '3px solid #3b82f6', paddingLeft: '10px' }}>Duty Calendar (Earnings)</h3>
+                                        <h3 style={{ fontSize: '14px', color: 'white', marginBottom: '15px', borderLeft: '3px solid var(--primary)', paddingLeft: '10px' }}>Duty Calendar (Earnings)</h3>
                                         <div style={{ overflowX: 'auto', marginBottom: '30px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                                                 <thead>
@@ -1422,7 +1422,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                             <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.wage || 0}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#38bdf8', fontWeight: '600' }}>₹{day.sameDayReturn || 0}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '600' }}>₹{day.nightStay || 0}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{day.parking || 0}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'var(--primary)', fontWeight: '800' }}>₹{day.parking || 0}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{(day.total || 0).toLocaleString()}</td>
                                                         </tr>
                                                     ))}
@@ -1434,13 +1434,13 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                         <tr key={`p-${idx}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: 'rgba(245,158,11,0.02)' }}>
                                                             <td style={{ padding: '12px', color: 'white' }}>
                                                                 {formatDateIST(p.date)}
-                                                                <div style={{ fontSize: '10px', color: '#f59e0b', fontWeight: '800' }}>STANDALONE PARKING</div>
+                                                                <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '800' }}>STANDALONE PARKING</div>
                                                                 {p.remark && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{p.remark}</div>}
                                                             </td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#f59e0b', fontWeight: '800' }}>₹{p.amount || 0}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'var(--primary)', fontWeight: '800' }}>₹{p.amount || 0}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{(p.amount || 0).toLocaleString()}</td>
                                                         </tr>
                                                     ))}
@@ -1454,7 +1454,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                             <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: 'rgba(255,255,255,0.7)' }}>₹{calcWages.toLocaleString()}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: '#38bdf8' }}>₹{calcSDR.toLocaleString()}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: '#10b981' }}>₹{calcNight.toLocaleString()}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: '#f59e0b' }}>₹{calcParking.toLocaleString()}</td>
+                                                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: 'var(--primary)' }}>₹{calcParking.toLocaleString()}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', fontWeight: '900', color: '#10b981' }}>₹{(routineEarningsTotal + calcParking).toLocaleString()}</td>
                                                         </tr>
                                                     )}
@@ -1549,7 +1549,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             {/* Loan Management Section */}
             <div style={{ marginTop: '60px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
-                    <div style={{ width: '4px', height: '24px', background: '#6366f1', borderRadius: '2px' }}></div>
+                    <div style={{ width: '4px', height: '24px', background: 'var(--primary)', borderRadius: '2px' }}></div>
                     <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Loan <span style={{ color: '#818cf8' }}>Management</span></h2>
                 </div>
 
@@ -1569,7 +1569,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         <tbody>
                             {filteredLoans.length === 0 ? (
                                 <tr><td colSpan="7" style={{ textAlign: 'center', padding: '60px 0', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '20px' }}>
-                                    <Wallet size={40} style={{ opacity: 0.1, marginBottom: '10px', color: '#6366f1' }} />
+                                    <Wallet size={40} style={{ opacity: 0.1, marginBottom: '10px', color: 'var(--primary)' }} />
                                     <p style={{ color: 'var(--text-muted)', margin: 0 }}>No active loans found for this period.</p>
                                 </td></tr>
                             ) : filteredLoans.map((loan, idx) => (
@@ -1606,7 +1606,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         <div style={{ color: 'white', fontWeight: '800' }}>₹ {loan.totalAmount?.toLocaleString()}</div>
                                     </td>
                                     <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ color: '#fbbf24', fontWeight: '800' }}>₹ {loan.monthlyEMI?.toLocaleString()}</div>
+                                        <div style={{ color: 'var(--primary)', fontWeight: '800' }}>₹ {loan.monthlyEMI?.toLocaleString()}</div>
                                     </td>
                                     <td style={{ padding: '20px 25px' }}>
                                         <div style={{ color: '#f43f5e', fontWeight: '800' }}>₹ {loan.remainingAmount?.toLocaleString()}</div>
@@ -1689,7 +1689,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                     </div>
                                     <div style={{ gridColumn: 'span 1' }}>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>EMI</label>
-                                        <input type="number" className="input-field" readOnly value={loanFormData.monthlyEMI} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.05)', color: '#fbbf24', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed', fontWeight: '800' }} placeholder="₹ 0" />
+                                        <input type="number" className="input-field" readOnly value={loanFormData.monthlyEMI} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.05)', color: 'var(--primary)', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed', fontWeight: '800' }} placeholder="₹ 0" />
                                     </div>
                                 </div>
                                 <div>
@@ -1697,7 +1697,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                     <textarea className="input-field" value={loanFormData.remarks} onChange={(e) => setLoanFormData({ ...loanFormData, remarks: e.target.value })} style={{ width: '100%', padding: '15px', background: '#1e293b', color: 'white', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }} rows="2" placeholder="Loan purpose..." />
                                 </div>
 
-                                <button type="submit" disabled={submittingLoan} className="btn-primary" style={{ height: '50px', fontWeight: '900', fontSize: '15px', background: '#6366f1', border: 'none', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s' }}>
+                                <button type="submit" disabled={submittingLoan} className="btn-primary" style={{ height: '50px', fontWeight: '900', fontSize: '15px', background: 'var(--primary)', border: 'none', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s' }}>
                                     {submittingLoan ? 'SAVING...' : (editingLoanId ? 'UPDATE LOAN' : 'RECORD LOAN')}
                                 </button>
                             </form>

@@ -220,11 +220,11 @@ const StaffPortal = () => {
     };
 
     const themeColors = {
-        primary: '#0ea5e9',
-        secondary: '#6366f1',
+        primary: 'var(--primary)',
+        secondary: 'var(--primary)',
         success: '#10b981',
         danger: '#f43f5e',
-        warning: '#fbbf24',
+        warning: 'var(--primary)',
         bg: '#050a18',
         surface: 'rgba(15, 23, 42, 0.4)',
         glass: 'rgba(15, 23, 42, 0.7)'
@@ -603,7 +603,7 @@ const StaffPortal = () => {
                 .spinner {
                     border: 3px solid rgba(14, 165, 233, 0.1);
                     border-radius: 50%;
-                    border-top: 3px solid #0ea5e9;
+                    border-top: 3px solid var(--primary);
                     animation: spin 1s linear infinite;
                 }
                 @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
