@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
@@ -67,6 +68,7 @@ const Staff = () => {
     const { user } = useAuth();
     const { selectedCompany } = useCompany();
 
+    const location = useLocation();
     const [staffList, setStaffList] = useState([]);
     const [attendanceList, setAttendanceList] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -168,6 +170,13 @@ const Staff = () => {
             alert('Error deleting attendance record');
         }
     };
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('staff');
+        if (searchParam) setSearchTerm(searchParam);
+    }, [location.search]);
 
     const fetchStaff = async () => {
         if (!selectedCompany?._id) return;

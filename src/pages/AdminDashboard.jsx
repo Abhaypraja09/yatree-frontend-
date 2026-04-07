@@ -143,7 +143,8 @@ const AdminDashboard = () => {
         if (!stats && !loading) setLoading(true); // Only show spinner on initial load
         try {
             const userInfo = JSON.parse(userInfoRaw);
-            const params = `month=${selectedMonth}&year=${selectedYear}`;
+            const isInitial = !stats;
+            const params = `month=${selectedMonth}&year=${selectedYear}${isInitial ? '&bypassCache=true' : ''}`;
 
             const { data } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}?${params}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
@@ -496,7 +497,7 @@ const AdminDashboard = () => {
                                                     </span>
                                                 </div>
                                                 <a
-                                                    href={`https://wa.me/${selectedCompany?.whatsappNumber || '916367466426'}?text=${encodeURIComponent(`REMINDER: Vehicle document for ${alert.identifier} (${alert.documentType}) is expiring on ${formatDateIST(alert.expiryDate)}. Please renew it ASAP.`)}`}
+                                                    href={`https://wa.me/${(selectedCompany?.whatsappNumber || user?.mobile || '').replace(/[^0-9]/g, '').replace(/^(?!91)/, '91')}?text=${encodeURIComponent(`REMINDER: Vehicle document for ${alert.identifier} (${alert.documentType}) is expiring on ${formatDateIST(alert.expiryDate)}. Please renew it ASAP.`)}`}
                                                     target="_blank"
                                                     rel="noopener noreferrer"
                                                     style={{

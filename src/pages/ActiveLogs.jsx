@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import {
     AlertTriangle,
@@ -24,6 +25,7 @@ import { ChevronLeft, ChevronRight, ShoppingCart, TrendingUp } from 'lucide-reac
 
 const ActiveLogs = () => {
     const { selectedCompany } = useCompany();
+    const location = useLocation();
     const [logs, setLogs] = useState([]);
     const [vehicles, setVehicles] = useState([]);
     const [drivers, setDrivers] = useState([]);
@@ -58,6 +60,22 @@ const ActiveLogs = () => {
 
 
     const getLocalYYYYMMDD = () => todayIST();
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('log');
+        const vehicleParam = params.get('vehicle');
+        const driverParam = params.get('driver');
+        const monthParam = params.get('month');
+        const yearParam = params.get('year');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (vehicleParam) setFilterVehicle(vehicleParam);
+        if (driverParam) setFilterDriver(driverParam);
+        if (monthParam) setSelectedMonth(Number(monthParam) - 1); // 0-indexed
+        if (yearParam) setSelectedYear(parseInt(yearParam));
+    }, [location.search]);
 
     // Form State
     const [formData, setFormData] = useState({

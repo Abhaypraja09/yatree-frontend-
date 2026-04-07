@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import { Search, Plus, X, CheckCircle, AlertCircle, IndianRupee, Calendar, User, FileText, Filter } from 'lucide-react';
 import { useCompany } from '../context/CompanyContext';
@@ -14,6 +15,7 @@ import {
 
 const Advances = () => {
     const { selectedCompany } = useCompany();
+    const location = useLocation();
     const [advances, setAdvances] = useState([]);
     const [salarySummary, setSalarySummary] = useState([]);
     const [drivers, setDrivers] = useState([]);
@@ -36,6 +38,18 @@ const Advances = () => {
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
     const [editingId, setEditingId] = useState(null);
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('driver');
+        const monthParam = params.get('month');
+        const yearParam = params.get('year');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (monthParam) setSelectedMonth(Number(monthParam));
+        if (yearParam) setSelectedYear(Number(yearParam));
+    }, [location.search]);
 
     useEffect(() => {
         if (selectedCompany) {

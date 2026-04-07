@@ -172,6 +172,28 @@ const Reports = ({ isSubComponent = false }) => {
     const [editingItem, setEditingItem] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('driver');
+        const monthParam = params.get('month'); 
+        const yearParam = params.get('year');
+        const dayParam = params.get('day'); 
+        const fromParam = params.get('from');
+        const toParam = params.get('to');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (monthParam) {
+            setSelectedMonth(Number(monthParam) - 1);
+            setSelectedDay('All');
+        }
+        if (yearParam) setSelectedYear(Number(yearParam));
+        if (dayParam) setSelectedDay(dayParam);
+        
+        if (fromParam) setFromDate(fromParam);
+        if (toParam) setToDate(toParam);
+    }, [location.search]);
+
     const tabList = useMemo(() => {
         return Object.entries(TAB_CONFIG)
             .filter(([id]) => {

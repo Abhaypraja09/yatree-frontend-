@@ -277,6 +277,22 @@ const Freelancers = () => {
     // Date utility helpers removed in favor of istUtils.js
 
 
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('freelancer');
+        const tabParam = params.get('tab');
+        const monthParam = params.get('month');
+        const yearParam = params.get('year');
+        const dayParam = params.get('day');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (tabParam) setActiveTab(tabParam);
+        if (monthParam) setSelectedMonth(parseInt(monthParam) - 1); // 0-indexed
+        if (yearParam) setSelectedYear(parseInt(yearParam));
+        if (dayParam) setSelectedDay(dayParam);
+    }, [location.search]);
+
     // Unified date defaults handled in initial state.
     useEffect(() => {
     }, []);

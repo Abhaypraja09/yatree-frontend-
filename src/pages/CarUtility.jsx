@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import { 
     ShieldAlert, Wallet, Droplets, Car, Search, ChevronRight, ChevronLeft,
@@ -12,6 +13,7 @@ import { todayIST, formatDateIST, nowIST } from '../utils/istUtils';
 
 const CarUtility = () => {
     const { selectedCompany } = useCompany();
+    const location = useLocation();
     const [vehicles, setVehicles] = useState([]);
     const [allBorderEntries, setAllBorderEntries] = useState([]);
     const [allServiceRecords, setAllServiceRecords] = useState([]);
@@ -40,6 +42,22 @@ const CarUtility = () => {
     useEffect(() => {
         if (selectedCompany) fetchAllData();
     }, [selectedCompany]);
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('vehicle');
+        const utilityParam = params.get('utility') || params.get('type');
+        const monthParam = params.get('month');
+        const yearParam = params.get('year');
+        const vehicleIdParam = params.get('vehicleId');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (utilityParam) setActiveUtility(utilityParam);
+        if (monthParam) setSelectedMonth(parseInt(monthParam) - 1); // 0-indexed
+        if (yearParam) setSelectedYear(parseInt(yearParam));
+        if (vehicleIdParam) setSelectedVehicleId(vehicleIdParam);
+    }, [location.search]);
 
     const fetchAllData = async () => {
         setLoading(true);

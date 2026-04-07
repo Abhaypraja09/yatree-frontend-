@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import {
     Users, Clock, Fuel, X, Camera, LogIn, IndianRupee, Activity,
@@ -46,6 +46,7 @@ const LiveFeed = () => {
     const { theme } = useTheme();
     const { user } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
     const [searchParams] = useSearchParams();
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
@@ -139,6 +140,18 @@ const LiveFeed = () => {
             document.removeEventListener('visibilitychange', handleVisibility);
         };
     }, [selectedCompany, selectedDate]);
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('feed');
+        const tabParam = params.get('tab');
+        const dateParam = params.get('date');
+
+        if (searchParam) setSearchQuery(searchParam);
+        if (tabParam) setActiveTab(tabParam);
+        if (dateParam) setSelectedDate(dateParam);
+    }, [location.search]);
 
     const isToday = selectedDate === getTodayLocal();
     const isPastDate = selectedDate < getTodayLocal();

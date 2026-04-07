@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import { Plus, Minus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, User as UserIcon, Users, Clock, FileText, CheckCircle, XCircle, ExternalLink, Briefcase, IndianRupee } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -20,6 +20,7 @@ import {
 const Drivers = ({ isSubComponent = false }) => {
     const { theme } = useTheme();
     const navigate = useNavigate();
+    const location = useLocation();
     const { selectedCompany } = useCompany();
     const [drivers, setDrivers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -227,6 +228,13 @@ const Drivers = ({ isSubComponent = false }) => {
             fetchDrivers();
         }
     }, [selectedCompany]);
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('driver');
+        if (searchParam) setSearchTerm(searchParam);
+    }, [location.search]);
 
     const fetchDrivers = async () => {
         if (!selectedCompany?._id) return;

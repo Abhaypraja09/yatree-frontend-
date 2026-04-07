@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, Link, useNavigate } from 'react-router-dom';
 import {
     LayoutDashboard,
     Users,
@@ -313,44 +313,53 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <div style={{ marginBottom: '10px', padding: '0 10px' }}>
                     <span style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '2px' }}>{t('current_profile')}</span>
                 </div>
-                <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '12px',
-                    marginBottom: '20px',
-                    padding: '12px',
-                    background: 'rgba(255,255,255,0.03)',
-                    borderRadius: '20px',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    position: 'relative',
-                    overflow: 'hidden'
-                }}>
-                    {/* Add a subtle highlight */}
-                    <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: theme.primary }}></div>
-                    
-                    <div style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '14px',
-                        background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`,
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        color: '#000',
-                        fontWeight: '1000',
-                        fontSize: '20px',
-                        boxShadow: `0 8px 16px ${theme.primary}20`
-                    }}>
-                        {user?.name?.charAt(0) || 'A'}
-                    </div>
-                    <div style={{ overflow: 'hidden' }}>
-                        <p style={{ fontSize: '16px', fontWeight: '900', color: 'white', margin: 0, whiteSpace: 'nowrap', textOverflow: 'ellipsis', letterSpacing: '-0.5px' }}>{user.name}</p>
-                        <p style={{ fontSize: '12px', color: theme.primary, fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                           <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary }}></span>
-                           {user.role}
-                        </p>
-                    </div>
-                </div>
+                
+                <Link to="/admin/profile" style={{ textDecoration: 'none', display: 'block' }}>
+                    <motion.div 
+                        whileHover={{ scale: 1.02, background: 'rgba(255,255,255,0.06)' }}
+                        whileTap={{ scale: 0.98 }}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            marginBottom: '20px',
+                            padding: '12px',
+                            background: 'rgba(255,255,255,0.03)',
+                            borderRadius: '20px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            cursor: 'pointer',
+                            transition: 'background 0.3s ease'
+                        }}
+                    >
+                        {/* Add a subtle highlight */}
+                        <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: theme.primary }}></div>
+                        
+                        <div style={{
+                            width: '44px',
+                            height: '44px',
+                            borderRadius: '14px',
+                            background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`,
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            color: '#000',
+                            fontWeight: '1000',
+                            fontSize: '20px',
+                            boxShadow: `0 8px 16px ${theme.primary}20`
+                        }}>
+                            {user?.name?.charAt(0) || 'A'}
+                        </div>
+                        <div style={{ overflow: 'hidden' }}>
+                            <p style={{ fontSize: '16px', fontWeight: '900', color: 'white', margin: 0, whiteSpace: 'nowrap', textOverflow: 'ellipsis', letterSpacing: '-0.5px' }}>{user.name}</p>
+                            <p style={{ fontSize: '12px', color: theme.primary, fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary }}></span>
+                            {user.role}
+                            </p>
+                        </div>
+                    </motion.div>
+                </Link>
 
                 <button
                     onClick={logout}

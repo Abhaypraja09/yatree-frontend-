@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -22,6 +23,19 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     const { selectedCompany } = useCompany();
     const [salaries, setSalaries] = useState([]);
     const [loading, setLoading] = useState(true);
+    const location = useLocation();
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('driver');
+        const monthParam = params.get('month');
+        const yearParam = params.get('year');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (monthParam) setMonth(Number(monthParam));
+        if (yearParam) setYear(Number(yearParam));
+    }, [location.search]);
 
     const [month, setMonth] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCMonth() + 1);
     const [year, setYear] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCFullYear());

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
     Bot, 
     X, 
@@ -19,6 +20,7 @@ import { useLanguage } from '../context/LanguageContext';
 const AIChatAgent = () => {
     const { user } = useAuth();
     const { t } = useLanguage();
+    const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
     const [messages, setMessages] = useState([
         { role: 'ai', content: 'Hello! I am your Texi Fleet AI Assistant. How can I help you manage your fleet today? (You can type or use voice!)' }
@@ -69,12 +71,37 @@ const AIChatAgent = () => {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             const { data } = await axios.post('/api/ai/query', { 
                 question: userMessage,
-                history: messages.slice(-5) // Send some context history
+                history: messages.slice(-5) 
             }, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
 
-            setMessages(prev => [...prev, { role: 'ai', content: data.response }]);
+            let finalMessage = data.response;
+            const actionMatch = finalMessage.match(/\[ACTION:\s*({.*?})\]/);
+            
+            if (actionMatch) {
+                try {
+                    const action = JSON.parse(actionMatch[1]);
+                    finalMessage = finalMessage.replace(/\[ACTION:.*?\]/g, '').trim();
+                    
+                    if (action.type === 'navigate') {
+                        let url = action.path;
+                        if (action.filters) {
+                            const params = new URLSearchParams(action.filters).toString();
+                            url += `?${params}`;
+                        }
+                        
+                        // Execute navigation after short delay
+                        setTimeout(() => {
+                            navigate(url);
+                        }, 1000);
+                    }
+                } catch (e) {
+                    console.error("Action Parse Error", e);
+                }
+            }
+
+            setMessages(prev => [...prev, { role: 'ai', content: finalMessage }]);
         } catch (error) {
             setMessages(prev => [...prev, { role: 'ai', content: error.response?.data?.message || 'Sorry, I am having trouble connecting to my brain right now.' }]);
         } finally {

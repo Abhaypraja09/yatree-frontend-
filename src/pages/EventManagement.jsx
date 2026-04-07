@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import {
     Calendar, Plus, Search, Trash2, Edit, ChevronLeft, ChevronRight, Car, PlusCircle,
@@ -22,6 +23,7 @@ import {
 
 const EventManagement = () => {
     const { selectedCompany } = useCompany();
+    const location = useLocation();
     const [events, setEvents] = useState([]); // This will store ONLY events for CURRENT tab for easier usage in existing map
     const [allMasterEvents, setAllMasterEvents] = useState([]); // This will store ALL events for counts
     const [vehicles, setVehicles] = useState([]);
@@ -150,6 +152,24 @@ const EventManagement = () => {
             fetchMasterVehicles();
         }
     }, [selectedCompany, fromDate, toDate, statusTab]);
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('event');
+        const clientParam = params.get('client');
+        const monthParam = params.get('month');
+        const yearParam = params.get('year');
+        const dayParam = params.get('day');
+        const tabParam = params.get('tab') || params.get('status');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (clientParam) setClientFilter(clientParam);
+        if (monthParam) setSelectedMonth(parseInt(monthParam) - 1); // 0-indexed
+        if (yearParam) setSelectedYear(parseInt(yearParam));
+        if (dayParam) setSelectedDay(dayParam);
+        if (tabParam) setStatusTab(tabParam);
+    }, [location.search]);
 
     const fetchEvents = async () => {
         if (!selectedCompany?._id) return;

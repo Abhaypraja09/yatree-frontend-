@@ -4,6 +4,7 @@ import * as XLSX from 'xlsx';
 import {
     Fuel, Plus, Search, Trash2, Calendar, MapPin, Gauge, Droplets, CreditCard, History, Car, Filter, ChevronDown, User, ArrowUpRight, TrendingUp, Edit, Shield, FileSpreadsheet, Eye, X, Image as ImageIcon, Navigation, ChevronLeft, ChevronRight
 } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import { useTheme } from '../context/ThemeContext';
@@ -109,6 +110,29 @@ const FuelPage = () => {
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
+    const location = useLocation();
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('driver') || params.get('name');
+        const fuelTypeParam = params.get('fuelType');
+        const vehicleParam = params.get('vehicleId') || params.get('vehicle');
+        const monthParam = params.get('month');
+        const yearParam = params.get('year');
+        const dateParam = params.get('date');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (vehicleParam) setFilterVehicle(vehicleParam);
+        
+        if (monthParam) setSelectedMonth(Number(monthParam) - 1); // 0-indexed
+        if (yearParam) setSelectedYear(Number(yearParam));
+
+        if (dateParam === 'today') {
+            setSelectedMonth(new Date().getMonth());
+            setSelectedYear(new Date().getFullYear());
+        }
+    }, [location.search]);
 
     useEffect(() => {
         const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));

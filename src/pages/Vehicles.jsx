@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import { Plus, Car, AlertCircle, Trash2, Calendar, ExternalLink, Search, Wallet, Shield, MapPin, Clock, CheckCircle2, XCircle, Info, Wrench, Edit3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -10,6 +11,7 @@ import { todayIST, formatDateIST } from '../utils/istUtils';
 const Vehicles = () => {
     const { theme } = useTheme();
     const { selectedCompany } = useCompany();
+    const location = useLocation();
     const [vehicles, setVehicles] = useState([]);
     const [drivers, setDrivers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -39,6 +41,13 @@ const Vehicles = () => {
     const [docToUpload, setDocToUpload] = useState({ type: '', file: null, expiry: '' });
     const [uploadingDoc, setUploadingDoc] = useState(false);
     const [editingId, setEditingId] = useState(null);
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('driver') || params.get('vehicle') || params.get('plate');
+        if (searchParam) setSearchTerm(searchParam);
+    }, [location.search]);
 
 
 
@@ -803,7 +812,7 @@ const Vehicles = () => {
                                                         <div style={{ fontSize: '14px', color: isExpired ? '#f43f5e' : 'white', fontWeight: '900' }}>{formatDateIST(doc.expiryDate)}</div>
                                                     </div>
                                                     <a
-                                                        href={`https://wa.me/91${JSON.parse(localStorage.getItem('userInfo'))?.mobile || '9660953135'}?text=${encodeURIComponent(`ALERT: Vehicle ${showDocsModal.carNumber} document (${type}) is expiring on ${formatDateIST(doc.expiryDate)}. Please take action.`)}`}
+                                                        href={`https://wa.me/${(selectedCompany?.whatsappNumber || JSON.parse(localStorage.getItem('userInfo'))?.mobile || '').replace(/[^0-9]/g, '').replace(/^(?!91)/, '91')}?text=${encodeURIComponent(`ALERT: Vehicle ${showDocsModal.carNumber} document (${type}) is expiring on ${formatDateIST(doc.expiryDate)}. Please take action.`)}`}
                                                         target="_blank"
                                                         rel="noopener noreferrer"
                                                         style={{ background: 'rgba(37, 211, 102, 0.1)', color: '#10b981', padding: '10px', borderRadius: '12px', border: '1px solid rgba(37, 211, 102, 0.2)' }}

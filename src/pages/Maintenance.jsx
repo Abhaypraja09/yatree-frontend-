@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
@@ -30,6 +31,7 @@ import { todayIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/ist
 const Maintenance = () => {
     const { theme } = useTheme();
     const { selectedCompany } = useCompany();
+    const location = useLocation();
     const [records, setRecords] = useState([]);
     const [vehicles, setVehicles] = useState([]);
     const [drivers, setDrivers] = useState([]);
@@ -43,6 +45,20 @@ const Maintenance = () => {
     const [filterGarage, setFilterGarage] = useState('All');
     const [selectedBillPhoto, setSelectedBillPhoto] = useState(null);
     const [activeCategory, setActiveCategory] = useState('All');
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('driver') || params.get('vehicle');
+        const monthParam = params.get('month');
+        const yearParam = params.get('year');
+        const typeParam = params.get('type') || params.get('category');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (monthParam) setSelectedMonth(monthParam === 'All' ? 'All' : Number(monthParam));
+        if (yearParam) setSelectedYear(Number(yearParam));
+        if (typeParam) setFilterType(typeParam);
+    }, [location.search]);
 
     // Form State
     const [formData, setFormData] = useState({

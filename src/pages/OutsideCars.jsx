@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import { Plus, Search, Trash2, Car, X, Save, ChevronLeft, ChevronRight, Calendar, Edit, MapPin, Briefcase, Layers, ShoppingCart, TrendingUp, FileText } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -24,7 +25,21 @@ const OutsideCars = () => {
     const [propertyFilter, setPropertyFilter] = useState('All');
     const [transactionFilter, setTransactionFilter] = useState('Buy');
     const [viewMode, setViewMode] = useState('monthly'); // 'monthly' or 'range'
+    const location = useLocation();
 
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('vendor') || params.get('owner');
+        const monthParam = params.get('month');
+        const yearParam = params.get('year');
+        const dayParam = params.get('day');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (monthParam) setSelectedMonth(Number(monthParam) - 1); // 0-indexed month
+        if (yearParam) setSelectedYear(Number(yearParam));
+        if (dayParam) setSelectedDay(dayParam);
+    }, [location.search]);
     useEffect(() => {
         if (viewMode === 'monthly') {
             if (selectedDay === 'All') {

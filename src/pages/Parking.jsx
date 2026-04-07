@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
@@ -91,6 +92,7 @@ const CameraModal = ({ onCapture, onClose }) => {
 const ParkingPage = () => {
     const { theme } = useTheme();
     const { selectedCompany } = useCompany();
+    const location = useLocation();
     const getImageUrl = (path) => {
         if (!path) return '';
         if (path.startsWith('http')) return path;
@@ -140,6 +142,20 @@ const ParkingPage = () => {
     const [selectedImage, setSelectedImage] = useState('');
     const [showCamera, setShowCamera] = useState(false);
     const [lastSeenPendingParking, setLastSeenPendingParking] = useState(0);
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('name') || params.get('driver') || params.get('vehicle');
+        const monthParam = params.get('month');
+        const yearParam = params.get('year');
+        const dayParam = params.get('day');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (monthParam) setSelectedMonth(Number(monthParam) - 1); // 0-indexed month
+        if (yearParam) setSelectedYear(Number(yearParam));
+        if (dayParam) setSelectedDay(dayParam);
+    }, [location.search]);
 
     useEffect(() => {
         // Correctly set from/to based on selected month/year

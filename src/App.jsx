@@ -29,6 +29,7 @@ const VehicleMonthlyDetails = lazy(() => import('./pages/VehicleMonthlyDetails')
 const LiveFeed = lazy(() => import('./pages/LiveFeed'));
 const EventManagement = lazy(() => import('./pages/EventManagement'));
 const Reports = lazy(() => import('./pages/Reports'));
+const Profile = lazy(() => import('./pages/Profile'));
 const DriverServices = lazy(() => import('./pages/DriverServices'));
 const DriversPanel = lazy(() => import('./pages/DriversPanel'));
 import Sidebar from './components/Sidebar';
@@ -228,6 +229,7 @@ const AdminRoutes = () => {
       {/* Admin Protected Operations */}
       <Route path="admins" element={canAccess('manageAdmins') ? <Admins /> : <Navigate to="/admin" />} />
       <Route path="staff" element={canAccess('staffManagement') ? <Staff /> : <Navigate to="/admin" />} />
+      <Route path="profile" element={<Profile />} />
 
       {/* Catch-all redirect for unauthorized module access */}
       <Route path="*" element={<Navigate to="/admin" />} />

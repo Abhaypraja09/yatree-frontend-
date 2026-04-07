@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import {
     ShieldCheck,
@@ -29,6 +30,7 @@ import { todayIST } from '../utils/istUtils';
 
 const Warranties = () => {
     const { selectedCompany } = useCompany();
+    const location = useLocation();
     const [warranties, setWarranties] = useState([]);
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -65,6 +67,18 @@ const Warranties = () => {
     const [warrantyImage, setWarrantyImage] = useState(null);
     const [imagePreview, setImagePreview] = useState(null);
     const [submitting, setSubmitting] = useState(false);
+
+    // ── AI AGENT SEARCH INTEGRATION ──
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const searchParam = params.get('search') || params.get('part') || params.get('warranty');
+        const vehicleParam = params.get('vehicle');
+        const statusParam = params.get('status');
+
+        if (searchParam) setSearchTerm(searchParam);
+        if (vehicleParam) setFilterVehicle(vehicleParam);
+        if (statusParam) setFilterStatus(statusParam);
+    }, [location.search]);
 
     useEffect(() => {
         if (selectedCompany) {
