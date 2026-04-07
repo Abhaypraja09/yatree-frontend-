@@ -151,6 +151,7 @@ const Login = () => {
                     <button
                         type="submit"
                         disabled={isLoading}
+                        className="btn-primary"
                         style={{
                             width: '100%',
                             height: '52px',

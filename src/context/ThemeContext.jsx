@@ -43,8 +43,8 @@ export const ThemeProvider = ({ children }) => {
         --primary: ${theme.primary} !important;
         --primary-dark: ${theme.secondary || theme.primary} !important;
       }
-      /* Override any element using the old amber color in style prop */
-      [style*="#fbbf24"], [style*="rgb(251, 191, 36)"], [style*="#f59e0b"], [style*="#d97706"] {
+      /* Target specific color applications to avoid matching box-shadow/border in style strings */
+      [style*="color: #fbbf24"], [style*="color:#fbbf24"], [style*="color: #f59e0b"] {
         color: ${theme.primary} !important;
       }
       [style*="background: #fbbf24"], [style*="background:#fbbf24"], [style*="background-color: #fbbf24"],
