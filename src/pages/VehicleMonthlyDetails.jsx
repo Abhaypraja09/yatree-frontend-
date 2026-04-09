@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
 import * as XLSX from 'xlsx';
 import {
@@ -29,10 +30,12 @@ import {
 } from '../utils/istUtils';
 
 const VehicleMonthlyDetails = () => {
+    const location = useLocation();
     const { selectedCompany } = useCompany();
     const [month, setMonth] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCMonth() + 1);
     const [year, setYear] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCFullYear());
     const [data, setData] = useState([]);
+    const [summary, setSummary] = useState({ totalSalary: 0, staffSalary: 0, freelancerSalary: 0 });
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -46,6 +49,17 @@ const VehicleMonthlyDetails = () => {
         }
     }, [selectedCompany, month, year]);
 
+    useEffect(() => {
+        // Auto-Reset when navigating to this page
+        const now = new Date(Date.now() + 5.5 * 60 * 60 * 1000); // IST logic
+        setMonth(now.getUTCMonth() + 1);
+        setYear(now.getUTCFullYear());
+        setSearchQuery('');
+        setVehicleFilter('All');
+        setDriverFilter('All');
+        setSelectedVehicle(null);
+    }, [location.pathname, location.key]);
+
     const fetchData = async () => {
         setLoading(true);
         try {
@@ -53,11 +67,13 @@ const VehicleMonthlyDetails = () => {
             const { data: res } = await axios.get(`/api/admin/vehicle-monthly-details/${selectedCompany._id}?month=${month}&year=${year}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
-            setData(res || []);
+            const vData = res.vehicles || [];
+            setData(vData);
+            setSummary(res.summary || { totalSalary: 0, staffSalary: 0, freelancerSalary: 0 });
 
             // Extract unique drivers from all vehicles
             const allDriversList = new Set();
-            (res || []).forEach(v => {
+            vData.forEach(v => {
                 v.drivers?.forEach(d => allDriversList.add(d));
             });
             setDriverList(Array.from(allDriversList).sort());
@@ -91,13 +107,15 @@ const VehicleMonthlyDetails = () => {
 
     // Summary Calculations
     const totalFuelAmount = filteredData.reduce((sum, v) => sum + (v.fuel?.totalAmount || 0), 0);
-    const totalDriverSalary = filteredData.reduce((sum, v) => sum + (v.driverSalary || 0), 0);
+    const totalDriverSalary = summary.totalSalary; // Use the backend global summary total for the top card
     const totalServiceAmount = filteredData.reduce((sum, v) => sum + (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0), 0);
     const totalMaintAmount = filteredData.reduce((sum, v) => sum + (v.maintenance?.totalAmount || 0), 0);
     const totalParkingAmount = filteredData.reduce((sum, v) => sum + (v.parking?.totalAmount || 0), 0);
     const totalFastagAmount = filteredData.reduce((sum, v) => sum + (v.fastag?.totalAmount || 0), 0);
     const totalBorderTaxAmount = filteredData.reduce((sum, v) => sum + (v.borderTax?.totalAmount || 0), 0);
-    const grandTotal = totalFuelAmount + totalDriverSalary + totalServiceAmount + totalMaintAmount + totalParkingAmount + totalFastagAmount + totalBorderTaxAmount;
+    // grandTotal: include Driver Salary (which now has parking), and other costs. 
+    // We omit totalParkingAmount here because it's already accounted for in totalDriverSalary for staff/freelancers.
+    const grandTotal = totalFuelAmount + totalDriverSalary + totalServiceAmount + totalMaintAmount + totalFastagAmount + totalBorderTaxAmount;
 
     const downloadExcel = () => {
         const exportData = filteredData.map(v => ({
@@ -201,7 +219,13 @@ const VehicleMonthlyDetails = () => {
                         displayOverride={`${(filteredData.filter(v => v.fuel?.avgMileage > 0).reduce((sum, v) => sum + (v.fuel?.avgMileage || 0), 0) / (filteredData.filter(v => v.fuel?.avgMileage > 0).length || 1)).toFixed(2)} KM/L`}
                         subValue={`Overall efficiency`}
                     />
-                    <SummaryCard icon={User} label="Driver Salaries" value={totalDriverSalary} color="#a855f7" />
+                    <SummaryCard 
+                        icon={User} 
+                        label="Driver Salaries" 
+                        value={totalDriverSalary} 
+                        color="#a855f7" 
+                        subValue={`Staff: ₹${summary.staffSalary.toLocaleString()} | Free: ₹${summary.freelancerSalary.toLocaleString()}`}
+                    />
                     <SummaryCard icon={MapPin} label="Total Parking" value={totalParkingAmount} color="#ec4899" />
                     <SummaryCard icon={Wrench} label="Repairs & Maint." value={totalMaintAmount} color="var(--primary)" />
                     

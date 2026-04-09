@@ -293,6 +293,67 @@ const Freelancers = () => {
         if (dayParam) setSelectedDay(dayParam);
     }, [location.search]);
 
+    useEffect(() => {
+        setSearchTerm('');
+        setShowAddModal(false);
+        setShowEditModal(false);
+        setShowPunchInModal(false);
+        setShowPunchOutModal(false);
+        setShowAdvanceModal(false);
+        setShowManualModal(false);
+        setShowDocumentModal(false);
+        setShowQuickExpenseModal(false);
+        setFormData({ name: '', mobile: '', licenseNumber: '' });
+        setPunchInData({
+            vehicleId: '',
+            km: '',
+            dailyWage: '',
+            date: todayIST(),
+            time: nowISTDateTimeString(),
+            pickUpLocation: ''
+        });
+        setPunchOutData({ km: '', time: nowISTDateTimeString(), fuelAmount: '0', parkingAmount: '0', allowanceTA: '0', nightStayAmount: '0', parkingPaidBy: 'Self', review: '', dailyWage: '', dropLocation: '', parkingSlipPhoto: null, parkings: [{ id: Date.now(), amount: '', photo: null }] });
+        setManualData({
+            driverId: '',
+            vehicleId: '',
+            date: todayIST(),
+            punchInKM: '',
+            punchOutKM: '',
+            punchInTime: todayIST() + 'T08:00',
+            punchOutTime: todayIST() + 'T20:00',
+            pickUpLocation: '',
+            dropLocation: '',
+            fuelAmount: '0',
+            parkingAmount: '0',
+            allowanceTA: '0',
+            nightStayAmount: '0',
+            otherBonus: '0',
+            dailyWage: '',
+            review: '',
+            eventId: ''
+        });
+        setAdvanceData({ amount: '', remark: '', date: todayIST(), advanceType: 'Office', givenBy: 'Office' });
+        setQuickExpenseData({
+            amount: '',
+            date: todayIST(),
+            vehicleId: '',
+            location: '',
+            remark: '',
+            slipPhoto: '',
+            fuelType: 'Diesel',
+            quantity: '',
+            rate: '',
+            odometer: '',
+            stationName: '',
+            paymentMode: 'Cash',
+            paymentSource: 'Office'
+        });
+        const now = new Date();
+        setSelectedMonth(now.getMonth());
+        setSelectedYear(now.getFullYear());
+        setSelectedDay(now.getDate().toString());
+    }, [location.pathname, location.key]);
+
     // Unified date defaults handled in initial state.
     useEffect(() => {
     }, []);
@@ -1153,7 +1214,7 @@ const Freelancers = () => {
     };
 
     return (
-        <div className="container-fluid freelancer-root" style={{ paddingBottom: '40px' }}>
+        <div key={location.key} className="container-fluid freelancer-root" style={{ paddingBottom: '40px' }}>
             <SEO title="Freelancer Fleet Network" description="Onboard and manage freelance drivers for temporary duties and peak demand management." />
 
             {/* Header with Search and Stats */}

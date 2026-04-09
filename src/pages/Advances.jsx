@@ -24,7 +24,6 @@ const Advances = () => {
     const [filterStatus, setFilterStatus] = useState('All');
     const [selectedMonth, setSelectedMonth] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCFullYear());
-
     // Add Advance Modal State
     const [showModal, setShowModal] = useState(false);
     const getLocalYYYYMMDD = () => todayIST();
@@ -38,6 +37,31 @@ const Advances = () => {
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
     const [editingId, setEditingId] = useState(null);
+
+    // ── NAVIGATION RESET ──
+    useEffect(() => {
+        const resetAll = () => {
+            setSearchTerm('');
+            setFilterStatus('All');
+            const now = new Date(Date.now() + 5.5 * 60 * 60 * 1000); // Use IST
+            setSelectedMonth(now.getUTCMonth() + 1);
+            setSelectedYear(now.getUTCFullYear());
+            setShowModal(false);
+            setEditingId(null);
+            setMessage({ type: '', text: '' });
+            setFormData({
+                driverId: '',
+                amount: '',
+                date: todayIST(),
+                remark: ''
+            });
+        };
+
+        resetAll();
+        
+        // Cleanup function: Clear state when the component is about to unmount or path changes
+        return () => resetAll();
+    }, [location.pathname, location.key]);
 
     // ── AI AGENT SEARCH INTEGRATION ──
     useEffect(() => {
@@ -155,7 +179,7 @@ const Advances = () => {
     const pendingAmount = totalAdvanceAmount - recoveredAmount;
 
     return (
-        <div className="container-fluid" style={{ paddingBottom: '60px' }}>
+        <div key={location.key} className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Driver Advances" description="Manage and track advances given to drivers and their recovery status." />
 
             <header style={{ paddingBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>

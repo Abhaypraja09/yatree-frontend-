@@ -40,6 +40,27 @@ const OutsideCars = () => {
         if (yearParam) setSelectedYear(Number(yearParam));
         if (dayParam) setSelectedDay(dayParam);
     }, [location.search]);
+
+    useEffect(() => {
+        setSearchTerm('');
+        setShowModal(false);
+        setEditMode(false);
+        const now = new Date();
+        setSelectedMonth(now.getMonth());
+        setSelectedYear(now.getFullYear());
+        setSelectedDay('All');
+        setFormData({
+            carNumber: '',
+            model: '',
+            property: '',
+            dutyType: '',
+            ownerName: '',
+            dutyAmount: '',
+            dropLocation: '',
+            transactionType: 'Buy',
+            date: todayIST()
+        });
+    }, [location.pathname, location.key]);
     useEffect(() => {
         if (viewMode === 'monthly') {
             if (selectedDay === 'All') {
@@ -457,7 +478,7 @@ const OutsideCars = () => {
     };
 
     return (
-        <div className="container-fluid" style={{ paddingBottom: '60px' }}>
+        <div key={location.key} className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Outside Fleet Command" description="Manage external vehicles and freelancer drivers for specific duties." />
 
             <style>{`

@@ -178,6 +178,31 @@ const Staff = () => {
         if (searchParam) setSearchTerm(searchParam);
     }, [location.search]);
 
+    useEffect(() => {
+        const resetAll = () => {
+            setSearchTerm('');
+            setShowAddModal(false);
+            setShowBackdateModal(false);
+            setIsEditing(false);
+            const now = nowIST();
+            setSelectedMonth((now.getUTCMonth() + 1).toString());
+            setSelectedYear(now.getUTCFullYear().toString());
+            setFromDate(todayIST());
+            setToDate(todayIST());
+            setBackdateForm({ staffId: '', date: todayIST(), status: 'present', punchInTime: '', punchOutTime: '' });
+            setFormData({
+                name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
+                email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
+                officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
+                joiningDate: todayIST(),
+                staffType: 'Company'
+            });
+        };
+
+        resetAll();
+        return () => resetAll();
+    }, [location.pathname, location.key]);
+
     const fetchStaff = async () => {
         if (!selectedCompany?._id) return;
         try {
@@ -377,7 +402,7 @@ const Staff = () => {
     const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
 
     return (
-        <div className="livefeed-root" style={{ padding: 'clamp(15px, 4vw, 40px)', minHeight: '100vh', background: 'radial-gradient(circle at top right, #1e293b, #0f172a)', overflowX: 'hidden', fontFamily: "'Outfit', sans-serif" }}>
+        <div key={location.key} className="livefeed-root" style={{ padding: 'clamp(15px, 4vw, 40px)', minHeight: '100vh', background: 'radial-gradient(circle at top right, #1e293b, #0f172a)', overflowX: 'hidden', fontFamily: "'Outfit', sans-serif" }}>
             <style>
                 {`
                     @media (max-width: 768px) {

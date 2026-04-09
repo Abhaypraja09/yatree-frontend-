@@ -194,6 +194,20 @@ const Reports = ({ isSubComponent = false }) => {
         if (toParam) setToDate(toParam);
     }, [location.search]);
 
+    // ── AUTO-RESET ON NAVIGATION ──
+    // Every time the user clicks a menu item, we reset the search and date to 'Today'
+    useEffect(() => {
+        setSearchTerm('');
+        setSelectedItem(null);
+        setEditingItem(null);
+        
+        // Reset to current date as default on every fresh entry
+        const now = new Date();
+        setSelectedMonth(now.getMonth());
+        setSelectedYear(now.getFullYear());
+        setSelectedDay(now.getDate().toString());
+    }, [location.pathname, location.key]);
+
     const tabList = useMemo(() => {
         return Object.entries(TAB_CONFIG)
             .filter(([id]) => {
@@ -371,7 +385,9 @@ const Reports = ({ isSubComponent = false }) => {
 
     /* ── Smart Excel Export ── */
     const handleDownloadExcel = () => {
-        if (activeTabs.length === 0) return alert('No report categories selected.');
+        const isLogbookPage = location.pathname.includes('log-book');
+        const tabsToExport = isLogbookPage ? ['logbook', ...activeTabs] : activeTabs;
+        if (tabsToExport.length === 0) return alert('No report categories selected.');
 
         const wb = XLSX.utils.book_new();
         let sheetsAdded = 0;
@@ -385,6 +401,7 @@ const Reports = ({ isSubComponent = false }) => {
                     const raw = tabId === 'drivers' ? staffDrivers : freelancerDrivers;
                     data = applySearch(raw).map(r => ({
                         'Date': fmt(r.date),
+                        'Type': (r.isFreelancer || r.driver?.isFreelancer) ? 'Freelancer' : 'Staff',
                         'Driver': r.driver?.name || r.driverName || '---',
                         'Mobile': r.driver?.mobile || '---',
                         'Vehicle': r.vehicle?.carNumber?.split('#')[0] || '---',
@@ -394,8 +411,6 @@ const Reports = ({ isSubComponent = false }) => {
                         'Close KM': r.punchOut?.km || 0,
                         'Total KM': (r.punchOut?.km && r.punchIn?.km) ? (r.punchOut.km - r.punchIn.km) : (r.totalKM || 0),
                         'Fuel (₹)': r.fuel?.amount || 0,
-
-
                         'Parking (₹)': r.punchOut?.tollParkingAmount || 0,
                         'Salary (₹)': (Number(r.dailyWage) || 0) + Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0),
                         'Pick-up': r.pickUpLocation || '',
@@ -403,24 +418,62 @@ const Reports = ({ isSubComponent = false }) => {
                     }));
                     break;
                 }
+                case 'outsideCars': {
+                    data = applySearch(outsideCars).map(r => ({
+                        'Date': fmt(r.carNumber?.includes('#') ? r.carNumber.split('#')[1] : r.date),
+                        'Partner/Vendor': r.ownerName || '---',
+                        'Vehicle Number': r.carNumber?.split('#')[0] || '---',
+                        'Model': r.model || '---',
+                        'Duty Type': r.dutyType || '---',
+                        'Transaction': r.transactionType || '---',
+                        'Amount (₹)': r.dutyAmount || 0,
+                        'Status': 'Partner Duty'
+                    }));
+                    break;
+                }
+                case 'logbook': {
+                    const raw = [...staffDriversRaw, ...freelancerDriversRaw, ...outsideCars].sort((a, b) => new Date(b.date) - new Date(a.date));
+                    data = applySearch(raw).map(r => {
+                        const isOutside = r.entryType === 'outsideCar';
+                        const isFreelancer = r.isFreelancer || r.driver?.isFreelancer;
+                        return {
+                            'Date': fmt(isOutside && r.carNumber?.includes('#') ? r.carNumber.split('#')[1] : r.date),
+                            'Type': isOutside ? 'Partner' : (isFreelancer ? 'Freelancer' : 'Staff'),
+                            'Driver/Owner': isOutside ? (r.ownerName || 'Vendor') : (r.driver?.name || 'Unknown'),
+                            'Vehicle': isOutside ? (r.carNumber?.split('#')[0]) : (r.vehicle?.carNumber || '---'),
+                            'Duty/In-Time': isOutside ? r.dutyType : fmtTime(r.punchIn?.time),
+                            'Status/Out-Time': isOutside ? 'Partner' : fmtTime(r.punchOut?.time),
+                            'Open KM/From': r.punchIn?.km || '--',
+                            'Close KM/To': isOutside ? '--' : (r.punchOut?.km || '--'),
+                            'Total KM/Model': isOutside ? r.model : (r.totalKM || '--'),
+                            'Fuel (₹)': r.fuel?.amount || 0,
+                            'Parking (₹)': (isOutside ? 0 : r.punchOut?.tollParkingAmount) || 0,
+                            'Salary/Duty (₹)': isOutside ? (r.dutyAmount || 0) : ((Number(r.dailyWage) || 0) + Math.max((Number(r.punchOut?.allowanceTA) || 0) + (Number(r.punchOut?.nightStayAmount) || 0), Number(r.outsideTrip?.bonusAmount) || 0)),
+                        };
+                    });
+                    break;
+                }
                 default: break;
             }
-            return { data, name: cfg.label || tabId };
+            return { data, name: cfg.label || (tabId === 'logbook' ? 'Log Book' : tabId) };
         };
 
-        activeTabs.forEach(id => {
+        tabsToExport.forEach(id => {
             const { data, name } = getSheetData(id);
             if (data && data.length > 0) {
                 const sheetName = name.substring(0, 31).replace(/[\[\]\*\?\/\\]/g, '');
-                const ws = XLSX.utils.json_to_sheet(data);
-                XLSX.utils.book_append_sheet(wb, ws, sheetName);
-                sheetsAdded++;
+                // Avoid adding duplicate sheets (e.g. if logbook and drivers are both in list)
+                if (!wb.SheetNames.includes(sheetName)) {
+                    const ws = XLSX.utils.json_to_sheet(data);
+                    XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                    sheetsAdded++;
+                }
             }
         });
 
         if (sheetsAdded === 0) return alert('No data found for the selected categories.');
 
-        const dateSuffix = isRange ? `${fromDate}_to_${toDate}` : fromDate;
+        const dateSuffix = selectedDay === 'All' ? `${fromDate}_to_${toDate}` : fromDate;
         XLSX.writeFile(wb, `Reports_${dateSuffix}.xlsx`);
     };
 

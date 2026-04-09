@@ -262,7 +262,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 {(isAdmin || user.permissions?.dashboard !== false) && (
                     <NavItem item={{ path: '/admin', icon: LayoutDashboard, label: 'Dashboard', labelKey: 'dashboard' }} onClick={onClose} />
                 )}
-                
+
                 {(isAdmin || user.permissions?.liveFeed) && (
                     <NavItem item={{ path: '/admin/live-feed', icon: Activity, label: 'Live Feed', labelKey: 'live_feed' }} onClick={onClose} />
                 )}
@@ -285,14 +285,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                         <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility', labelKey: 'car_utility' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
-
-                {(isAdmin || user.permissions?.buySell) && (
-                    <NavGroup title="Buy/Sell" labelKey="buy_sell" icon={Briefcase} isOpen={openGroups.buysell} onToggle={() => toggleGroup('buysell')}>
-                        <NavItem item={{ path: '/admin/outside-cars', label: 'Outside Cars', labelKey: 'outside_cars' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/event-management', label: 'Event Management', labelKey: 'event_management' }} onClick={onClose} isSubItem />
-                    </NavGroup>
-                )}
-
                 {(isAdmin || user.permissions?.vehiclesManagement) && (
                     <NavGroup title="Vehicles Maintenance" labelKey="vehicles_maintenance" icon={Wrench} isOpen={openGroups.maintenance} onToggle={() => toggleGroup('maintenance')}>
                         <NavItem item={{ path: '/admin/maintenance', label: 'Maintenance', labelKey: 'maintenance' }} onClick={onClose} isSubItem />
@@ -302,6 +294,14 @@ const Sidebar = ({ isOpen, onClose }) => {
                         <NavItem item={{ path: '/admin/warranties', label: 'Parts Warranty', labelKey: 'parts_warranty' }} onClick={onClose} isSubItem />
                     </NavGroup>
                 )}
+                {(isAdmin || user.permissions?.buySell) && (
+                    <NavGroup title="Buy/Sell" labelKey="buy_sell" icon={Briefcase} isOpen={openGroups.buysell} onToggle={() => toggleGroup('buysell')}>
+                        <NavItem item={{ path: '/admin/outside-cars', label: 'Outside Cars', labelKey: 'outside_cars' }} onClick={onClose} isSubItem />
+                        <NavItem item={{ path: '/admin/event-management', label: 'Event Management', labelKey: 'event_management' }} onClick={onClose} isSubItem />
+                    </NavGroup>
+                )}
+
+
 
                 <div style={{ height: '10px' }} />
 
@@ -313,9 +313,9 @@ const Sidebar = ({ isOpen, onClose }) => {
                 <div style={{ marginBottom: '10px', padding: '0 10px' }}>
                     <span style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '2px' }}>{t('current_profile')}</span>
                 </div>
-                
+
                 <Link to="/admin/profile" style={{ textDecoration: 'none', display: 'block' }}>
-                    <motion.div 
+                    <motion.div
                         whileHover={{ scale: 1.02, background: 'rgba(255,255,255,0.06)' }}
                         whileTap={{ scale: 0.98 }}
                         style={{
@@ -335,7 +335,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     >
                         {/* Add a subtle highlight */}
                         <div style={{ position: 'absolute', top: 0, left: 0, width: '4px', height: '100%', background: theme.primary }}></div>
-                        
+
                         <div style={{
                             width: '44px',
                             height: '44px',
@@ -354,8 +354,8 @@ const Sidebar = ({ isOpen, onClose }) => {
                         <div style={{ overflow: 'hidden' }}>
                             <p style={{ fontSize: '16px', fontWeight: '900', color: 'white', margin: 0, whiteSpace: 'nowrap', textOverflow: 'ellipsis', letterSpacing: '-0.5px' }}>{user.name}</p>
                             <p style={{ fontSize: '12px', color: theme.primary, fontWeight: '800', margin: 0, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary }}></span>
-                            {user.role}
+                                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary }}></span>
+                                {user.role}
                             </p>
                         </div>
                     </motion.div>

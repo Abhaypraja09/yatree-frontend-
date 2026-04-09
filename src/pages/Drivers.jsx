@@ -236,6 +236,43 @@ const Drivers = ({ isSubComponent = false }) => {
         if (searchParam) setSearchTerm(searchParam);
     }, [location.search]);
 
+    useEffect(() => {
+        const resetAll = () => {
+            setSearchTerm('');
+            setShowModal(false);
+            setShowEditModal(false);
+            setShowManualModal(false);
+            setShowPunchInModal(false);
+            setShowPunchOutModal(false);
+            setName('');
+            setMobile('');
+            setUsername('');
+            setPassword('');
+            setLicenseNumber('');
+            setDailyWage('');
+            setNightStayBonus('');
+            setSameDayReturnBonus('');
+            setDocs({ aadharCard: null, drivingLicense: null, offerLetter: null });
+            setOvertime({ enabled: false, threshold: 9, rate: 0 });
+            setManualDutyForm({
+                date: todayIST(),
+                vehicleId: '',
+                punchInKM: '',
+                punchOutKM: '',
+                parkingAmount: '',
+                allowanceTA: false,
+                nightStayAmount: false,
+                otherBonus: '',
+                review: ''
+            });
+            setPunchInForm({ vehicleId: '', km: '', date: toISTDateTimeString(), pickUpLocation: 'Office' });
+            setPunchOutForm({ km: '', date: toISTDateTimeString(), fuelAmount: '', parkingAmount: '', review: '', dropLocation: 'Office', parkingPaidBy: 'Self' });
+        };
+
+        resetAll();
+        return () => resetAll();
+    }, [location.pathname, location.key]);
+
     const fetchDrivers = async () => {
         if (!selectedCompany?._id) return;
         setLoading(true);
@@ -419,7 +456,7 @@ const Drivers = ({ isSubComponent = false }) => {
     const blockedDrivers = backendStats.blocked || staffDriversList.filter(d => d.status === 'blocked').length;
 
     return (
-        <div className={isSubComponent ? "sub-component" : "container-fluid"} style={{ paddingBottom: '40px' }}>
+        <div key={location.key} className={isSubComponent ? "sub-component" : "container-fluid"} style={{ paddingBottom: '40px' }}>
             {!isSubComponent && <SEO title="Manage Drivers" description="View and manage all registered drivers in your fleet management system." />}
 
             {/* Header Section */}

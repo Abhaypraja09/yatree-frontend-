@@ -112,6 +112,30 @@ const FuelPage = () => {
     const [toDate, setToDate] = useState('');
     const location = useLocation();
 
+    useEffect(() => {
+        setSearchTerm('');
+        setFilterVehicle('All');
+        const now = new Date();
+        setSelectedMonth(now.getMonth());
+        setSelectedYear(now.getFullYear());
+        setShowModal(false);
+        setEditingId(null);
+        setFormData({
+            vehicleId: '',
+            fuelType: 'Diesel',
+            date: todayIST(),
+            amount: '',
+            quantity: '',
+            rate: '',
+            odometer: '',
+            stationName: '',
+            paymentMode: 'Cash',
+            paymentSource: 'Office',
+            driver: '',
+            slipPhoto: ''
+        });
+    }, [location.pathname, location.key]);
+
     // ── AI AGENT SEARCH INTEGRATION ──
     useEffect(() => {
         const params = new URLSearchParams(location.search);

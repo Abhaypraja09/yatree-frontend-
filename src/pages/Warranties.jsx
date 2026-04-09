@@ -81,6 +81,36 @@ const Warranties = () => {
     }, [location.search]);
 
     useEffect(() => {
+        setSearchTerm('');
+        setFilterVehicle('All');
+        setFilterStatus('All');
+        setShowModal(false);
+        setShowClaimModal(false);
+        setSelectedWarranty(null);
+        setFormData({
+            vehicleId: '',
+            partName: '',
+            brandName: '',
+            invoiceNumber: '',
+            purchaseDate: todayIST(),
+            warrantyStartDate: todayIST(),
+            warrantyEndDate: '',
+            warrantyPeriod: '',
+            supplierName: '',
+            cost: '',
+            status: 'Active'
+        });
+        setClaimFormData({
+            claimDate: todayIST(),
+            claimStatus: 'Pending',
+            replacementDate: '',
+            remarks: ''
+        });
+        setWarrantyImage(null);
+        setImagePreview(null);
+    }, [location.pathname, location.key]);
+
+    useEffect(() => {
         if (selectedCompany) {
             fetchData();
         }

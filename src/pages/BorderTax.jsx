@@ -3,11 +3,13 @@ import axios from '../api/axios';
 import { ShieldAlert, Upload, CheckCircle, AlertCircle, Calendar as CalendarIcon, Search, ChevronDown, ChevronRight, Car, Plus, Trash2, Wallet } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
+import { useLocation } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { todayIST, nowIST, formatDateIST } from '../utils/istUtils';
 
 const BorderTax = () => {
     const { selectedCompany } = useCompany();
+    const location = useLocation();
     const [vehicles, setVehicles] = useState([]);
     const [drivers, setDrivers] = useState([]);
     const [selectedVehicle, setSelectedVehicle] = useState(null);
@@ -31,6 +33,25 @@ const BorderTax = () => {
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
     const [viewingReceipt, setViewingReceipt] = useState(null); // For image modal
+
+    useEffect(() => {
+        setSearchTerm('');
+        setExpandedVehicle(null);
+        const now = new Date();
+        setSelectedMonth(now.getMonth());
+        setSelectedYear(now.getFullYear());
+        setFormData({
+            vehicleId: '',
+            borderName: '',
+            amount: '',
+            date: todayIST(),
+            remarks: '',
+            driverId: ''
+        });
+        setReceiptPhoto(null);
+        setPreview(null);
+        setMessage({ type: '', text: '' });
+    }, [location.pathname, location.key]);
 
     const months = [
         "January", "February", "March", "April", "May", "June",

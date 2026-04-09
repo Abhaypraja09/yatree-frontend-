@@ -59,6 +59,15 @@ const CarUtility = () => {
         if (vehicleIdParam) setSelectedVehicleId(vehicleIdParam);
     }, [location.search]);
 
+    useEffect(() => {
+        setSearchTerm('');
+        setSelectedVehicleId(null);
+        setActiveUtility(null);
+        const now = new Date();
+        setSelectedMonth(now.getUTCMonth());
+        setSelectedYear(now.getUTCFullYear());
+    }, [location.pathname, location.key]);
+
     const fetchAllData = async () => {
         setLoading(true);
         try {
@@ -185,7 +194,7 @@ const CarUtility = () => {
     };
 
     return (
-        <div style={{ minHeight: '100vh', background: '#0a101f', color: '#fff', padding: '40px' }}>
+        <div key={location.key} style={{ minHeight: '100vh', background: '#0a101f', color: '#fff', padding: '40px' }}>
             <SEO title="Car Utility" description="Fleet Accounts Hub" />
             
             <div style={{ maxWidth: '1440px', margin: '0 auto' }}>

@@ -143,6 +143,25 @@ const ParkingPage = () => {
     const [showCamera, setShowCamera] = useState(false);
     const [lastSeenPendingParking, setLastSeenPendingParking] = useState(0);
 
+    useEffect(() => {
+        setSearchTerm('');
+        setFilterDriver('All');
+        const now = new Date();
+        setSelectedMonth(now.getMonth());
+        setSelectedYear(now.getFullYear());
+        setSelectedDay(now.getDate().toString());
+        setShowModal(false);
+        setEditingId(null);
+        setFormData({
+            vehicleId: '',
+            driverId: '',
+            driver: '',
+            amount: '',
+            date: todayIST(),
+            receiptPhoto: ''
+        });
+    }, [location.pathname, location.key]);
+
     // ── AI AGENT SEARCH INTEGRATION ──
     useEffect(() => {
         const params = new URLSearchParams(location.search);

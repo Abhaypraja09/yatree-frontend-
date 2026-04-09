@@ -9,12 +9,25 @@ import { todayIST, formatDateIST, nowIST } from '../utils/istUtils';
 
 const Fastag = () => {
     const { selectedCompany } = useCompany();
+    const location = useLocation();
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [expandedVehicle, setExpandedVehicle] = useState(null);
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+    useEffect(() => {
+        setSearchTerm('');
+        const now = new Date();
+        setSelectedMonth(now.getMonth());
+        setSelectedYear(now.getFullYear());
+        setExpandedVehicle(null);
+        setShowModal(false);
+        setIsEditing(false);
+        setEditingEntryId(null);
+        setRechargeData({ amount: '', method: 'UPI', remarks: '', date: todayIST() });
+    }, [location.pathname, location.key]);
 
     const months = [
         "January", "February", "March", "April", "May", "June",

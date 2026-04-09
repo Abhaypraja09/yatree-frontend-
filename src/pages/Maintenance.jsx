@@ -46,6 +46,35 @@ const Maintenance = () => {
     const [selectedBillPhoto, setSelectedBillPhoto] = useState(null);
     const [activeCategory, setActiveCategory] = useState('All');
 
+    useEffect(() => {
+        setSearchTerm('');
+        setFilterType('All');
+        setFilterGarage('All');
+        setFilterVehicle('All');
+        setActiveCategory('All');
+        const now = new Date();
+        setSelectedMonth(now.getMonth() + 1);
+        setSelectedYear(now.getFullYear());
+        setShowModal(false);
+        setEditingId(null);
+        setFormData({
+            vehicleId: '',
+            driverId: '',
+            maintenanceType: '',
+            category: '',
+            partsChanged: [],
+            description: '',
+            garageName: '',
+            billNumber: '',
+            billDate: todayIST(),
+            amount: '',
+            paymentMode: 'Cash',
+            currentKm: '',
+            nextServiceKm: '',
+            status: 'Completed'
+        });
+    }, [location.pathname, location.key]);
+
     // ── AI AGENT SEARCH INTEGRATION ──
     useEffect(() => {
         const params = new URLSearchParams(location.search);
