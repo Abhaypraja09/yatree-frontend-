@@ -22,7 +22,9 @@ import {
     Wallet,
     ShieldCheck,
     Cpu,
-    ArrowUpRight
+    ArrowUpRight,
+    Lock,
+    ChevronDown
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -57,6 +59,9 @@ const StaffPortal = () => {
         reason: ''
     });
     const [submittingLeave, setSubmittingLeave] = useState(false);
+    const [showPasswordSection, setShowPasswordSection] = useState(false);
+    const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '' });
+    const [updatingPassword, setUpdatingPassword] = useState(false);
 
     useEffect(() => {
         const init = async () => {
@@ -97,6 +102,28 @@ const StaffPortal = () => {
             setLeaves(data);
         } catch (error) {
             console.error('Error fetching leaves:', error);
+        }
+    };
+
+    const handlePasswordUpdate = async (e) => {
+        e.preventDefault();
+        if (!passwordData.oldPassword || !passwordData.newPassword) {
+            alert('All password fields are required');
+            return;
+        }
+        setUpdatingPassword(true);
+        try {
+            await axios.put('/api/staff/update-password', {
+                oldPassword: passwordData.oldPassword,
+                newPassword: passwordData.newPassword
+            });
+            alert('Password updated successfully');
+            setPasswordData({ oldPassword: '', newPassword: '' });
+            setShowPasswordSection(false);
+        } catch (error) {
+            alert(error.response?.data?.message || 'Error updating password');
+        } finally {
+            setUpdatingPassword(false);
         }
     };
 
@@ -277,15 +304,79 @@ const StaffPortal = () => {
                         <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>{user?.designation || 'Staff'}</span>
                     </div>
                 </div>
-                <button onClick={logout} style={{ background: 'rgba(244, 63, 94, 0.1)', border: 'none', color: themeColors.danger, width: '38px', height: '38px', borderRadius: '10px', cursor: 'pointer' }}>
-                    <LogOut size={18} />
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                    <button 
+                        onClick={() => setShowPasswordSection(true)} 
+                        style={{ background: 'rgba(255, 255, 255, 0.05)', border: 'none', color: themeColors.primary, width: '38px', height: '38px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                    >
+                        <Lock size={18} />
+                    </button>
+                    <button onClick={logout} style={{ background: 'rgba(244, 63, 94, 0.1)', border: 'none', color: themeColors.danger, width: '38px', height: '38px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <LogOut size={18} />
+                    </button>
+                </div>
             </header>
 
             <main style={{ maxWidth: '1000px', margin: '0 auto', padding: '20px', position: 'relative', zIndex: 1 }}>
                 <AnimatePresence mode="wait">
                     {activeTab === 'dashboard' && (
                         <motion.div key="dashboard" initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -15 }}>
+                            {/* Secure Password Update Area - Priority Location */}
+
+                            {/* Security Modal */}
+                            {showPasswordSection && (
+                                <div className="modal-overlay" style={{ zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div className="modal-content glass-card" style={{ maxWidth: '400px', width: '90%', padding: '24px', position: 'relative', background: themeColors.glass }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{ padding: '10px', background: `${themeColors.primary}10`, borderRadius: '12px' }}>
+                                                    <Lock size={20} color={themeColors.primary} />
+                                                </div>
+                                                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white' }}>Security Settings</h3>
+                                            </div>
+                                            <button 
+                                                onClick={() => {
+                                                    setShowPasswordSection(false);
+                                                }} 
+                                                className="modal-close-btn"
+                                            >
+                                                <X size={20} />
+                                            </button>
+                                        </div>
+
+                                        <div style={{ display: 'grid', gap: '16px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <label style={{ fontSize: '9px', fontWeight: '800', opacity: 0.4, letterSpacing: '1px' }}>CURRENT PASSWORD</label>
+                                                <input 
+                                                    type="password" 
+                                                    required 
+                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: '14px', color: 'white', fontSize: '13px' }} 
+                                                    value={passwordData.oldPassword} 
+                                                    onChange={e => setPasswordData({...passwordData, oldPassword: e.target.value})} 
+                                                />
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                                                <label style={{ fontSize: '9px', fontWeight: '800', opacity: 0.4, letterSpacing: '1px' }}>NEW PASSWORD</label>
+                                                <input 
+                                                    type="password" 
+                                                    required 
+                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: '14px', color: 'white', fontSize: '13px' }} 
+                                                    value={passwordData.newPassword} 
+                                                    onChange={e => setPasswordData({...passwordData, newPassword: e.target.value})} 
+                                                />
+                                            </div>
+
+                                            <button 
+                                                disabled={updatingPassword}
+                                                onClick={handlePasswordUpdate}
+                                                style={{ background: `linear-gradient(135deg, ${themeColors.primary}, ${themeColors.secondary})`, border: 'none', padding: '16px', borderRadius: '16px', color: 'white', fontSize: '13px', fontWeight: '1000', letterSpacing: '1px', cursor: 'pointer', boxShadow: `0 8px 20px ${themeColors.primary}30`, marginTop: '10px' }}
+                                            >
+                                                {updatingPassword ? 'UPDATING...' : 'CONFIRM CHANGE'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
                             <section style={{ 
                                 background: 'rgba(15, 23, 42, 0.4)', 
                                 borderRadius: '40px', 

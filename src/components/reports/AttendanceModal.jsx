@@ -65,7 +65,13 @@ const AttendanceModal = ({ item, onClose, onEdit, onDelete }) => {
     const totalKM = item.totalKM ?? (typeof openKM === 'number' && typeof closeKM === 'number' ? Math.max(0, closeKM - openKM) : null);
 
     const salary = Number(item.dailyWage) || 0;
-    
+    const otAmt = isGroup 
+        ? (item.attendances || []).reduce((sum, a) => sum + (Number(a.otAmount) || 0), 0)
+        : (Number(item.otAmount) || 0);
+    const otHours = isGroup
+        ? (item.attendances || []).reduce((sum, a) => sum + (Number(a.otHours) || 0), 0)
+        : (Number(item.otHours) || 0);
+
     // For single attendance
     const allowanceTA = Number(item.punchOut?.allowanceTA) || 0;
     const nightStay = Number(item.punchOut?.nightStayAmount) || 0;
@@ -78,7 +84,7 @@ const AttendanceModal = ({ item, onClose, onEdit, onDelete }) => {
     const parkingBy = isGroup ? 'Mixed' : (item.punchOut?.parkingPaidBy || 'Self');
 
     const isCompleted = isGroup ? (item.status !== 'incomplete') : (item.status === 'completed');
-    const totalPayable = salary + bonus + (isGroup ? (item.parkAmt || 0) : (parkingBy !== 'Office' ? parkingAmt : 0));
+    const totalPayable = salary + bonus + otAmt + (isGroup ? (item.parkAmt || 0) : (parkingBy !== 'Office' ? parkingAmt : 0));
 
     /* render per entry-type */
     const renderBody = () => {
@@ -205,6 +211,8 @@ const AttendanceModal = ({ item, onClose, onEdit, onDelete }) => {
         const aIsCompleted = attItem.status === 'completed';
 
         const aSalary = Number(attItem.dailyWage) || 0;
+        const aOtAmt = Number(attItem.otAmount) || 0;
+        const aOtHours = Number(attItem.otHours) || 0;
         const aAllowanceTA = Number(attItem.punchOut?.allowanceTA) || 0;
         const aNightStay = Number(attItem.punchOut?.nightStayAmount) || 0;
         const aOutsideBonusTotal = Number(attItem.outsideTrip?.bonusAmount) || 0;
@@ -213,7 +221,7 @@ const AttendanceModal = ({ item, onClose, onEdit, onDelete }) => {
         const aFuelAmt = Number(attItem.fuel?.amount) || 0;
         const aParkingAmt = Number(attItem.punchOut?.tollParkingAmount) || 0;
         const aParkingBy = attItem.punchOut?.parkingPaidBy || 'Self';
-        const aTotalPayable = (isNested ? 0 : aSalary) + aBonus + (aParkingBy !== 'Office' ? aParkingAmt : 0);
+        const aTotalPayable = (isNested ? 0 : aSalary) + aBonus + aOtAmt + (aParkingBy !== 'Office' ? aParkingAmt : 0);
 
         return (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', padding: isNested ? '0' : '24px' }}>
@@ -305,6 +313,7 @@ const AttendanceModal = ({ item, onClose, onEdit, onDelete }) => {
                         <div style={{ background: 'rgba(16,185,129,0.06)', borderRadius: '18px', padding: '20px', border: '1px solid rgba(16,185,129,0.15)' }}>
                             <SH color="#10b981" icon={IndianRupee} title="Settlement" />
                             <Stat label="Daily Wage" value={`₹${aSalary}`} color="white" />
+                            {aOtAmt > 0 && <Stat label="Overtime (O/T)" value={`+₹${aOtAmt}`} color="#f87171" sub={`${aOtHours} hrs extra`} />}
                             {aBonus > 0 && <Stat label="Total Bonus" value={`+₹${aBonus}`} color="#22c55e" />}
                             {aParkingBy !== 'Office' && aParkingAmt > 0 && <Stat label="Parking (Reimburse)" value={`+₹${aParkingAmt}`} color="#818cf8" />}
                             <div style={{ borderTop: '1px solid rgba(16,185,129,0.2)', marginTop: '8px', paddingTop: '10px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>

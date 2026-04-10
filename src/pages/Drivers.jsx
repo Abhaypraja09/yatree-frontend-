@@ -56,6 +56,7 @@ const Drivers = ({ isSubComponent = false }) => {
         mobile: '',
         username: '',
         password: '',
+        confirmPassword: '',
         licenseNumber: '',
         dailyWage: '',
         nightStayBonus: '',
@@ -129,6 +130,23 @@ const Drivers = ({ isSubComponent = false }) => {
     useEffect(() => {
         if (showManualModal || showPunchInModal) fetchVehicles();
     }, [showManualModal, showPunchInModal]);
+
+    // Pre-populate Punch In form when modal opens and vehicles are loaded
+    useEffect(() => {
+        if (showPunchInModal && selectedDriverForManual && vehicles.length > 0) {
+            const assignedVId = selectedDriverForManual.assignedVehicle?._id || selectedDriverForManual.assignedVehicle;
+            if (assignedVId && !punchInForm.vehicleId) {
+                const v = vehicles.find(v => v._id === assignedVId.toString());
+                if (v) {
+                    setPunchInForm(prev => ({
+                        ...prev,
+                        vehicleId: v._id,
+                        km: v.lastOdometer || ''
+                    }));
+                }
+            }
+        }
+    }, [showPunchInModal, selectedDriverForManual, vehicles]);
 
     const handleManualDutySubmission = async (e) => {
         e.preventDefault();
@@ -265,8 +283,8 @@ const Drivers = ({ isSubComponent = false }) => {
                 otherBonus: '',
                 review: ''
             });
-            setPunchInForm({ vehicleId: '', km: '', date: toISTDateTimeString(), pickUpLocation: 'Office' });
-            setPunchOutForm({ km: '', date: toISTDateTimeString(), fuelAmount: '', parkingAmount: '', review: '', dropLocation: 'Office', parkingPaidBy: 'Self' });
+            setPunchInForm({ vehicleId: '', km: '', date: nowISTDateTimeString(), pickUpLocation: 'Office' });
+            setPunchOutForm({ km: '', date: nowISTDateTimeString(), fuelAmount: '', parkingAmount: '', review: '', dropLocation: 'Office', parkingPaidBy: 'Self' });
         };
 
         resetAll();
@@ -378,6 +396,9 @@ const Drivers = ({ isSubComponent = false }) => {
             if (editForm.password) {
                 formData.append('password', editForm.password);
             }
+            if (editForm.oldPassword) {
+                formData.append('oldPassword', editForm.oldPassword);
+            }
 
             // Documents
             if (docs.aadharCard) formData.append('aadharCard', docs.aadharCard);
@@ -413,6 +434,7 @@ const Drivers = ({ isSubComponent = false }) => {
             sameDayReturnBonus: driver.sameDayReturnBonus !== undefined && driver.sameDayReturnBonus !== null ? String(driver.sameDayReturnBonus) : '',
             isFreelancer: driver.isFreelancer || false,
             password: '',
+            oldPassword: '',
             overtimeEnabled: driver.overtime?.enabled || false,
             overtimeThreshold: driver.overtime?.thresholdHours || 9,
             overtimeRate: driver.overtime?.ratePerHour || 0
@@ -1061,15 +1083,13 @@ const Drivers = ({ isSubComponent = false }) => {
                                             <input className="input-field" value={editForm.mobile} onChange={(e) => setEditForm({ ...editForm, mobile: e.target.value })} required style={{ background: 'rgba(0,0,0,0.2)' }} />
                                         </div>
                                     </div>
-                                    <div className="form-grid-2">
-                                        <div>
-                                            <label className="input-label" style={{ marginBottom: '6px' }}>Username</label>
-                                            <input className="input-field" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)' }} />
-                                        </div>
-                                        <div>
-                                            <label className="input-label" style={{ marginBottom: '6px' }}>New Password</label>
-                                            <input type="password" className="input-field" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} placeholder="Leave blank to keep" style={{ background: 'rgba(0,0,0,0.2)' }} />
-                                        </div>
+                                    <div style={{ marginBottom: '15px' }}>
+                                        <label className="input-label" style={{ marginBottom: '6px' }}>Username</label>
+                                        <input className="input-field" value={editForm.username} onChange={(e) => setEditForm({ ...editForm, username: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                    </div>
+                                    <div style={{ marginBottom: '15px' }}>
+                                        <label className="input-label" style={{ marginBottom: '6px' }}>Password</label>
+                                        <input type="password" name="password" className="input-field" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} placeholder="Enter new password" style={{ background: 'rgba(0,0,0,0.2)' }} />
                                     </div>
                                 </div>
 
@@ -1366,7 +1386,17 @@ const Drivers = ({ isSubComponent = false }) => {
                                             style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600', transition: 'all 0.3s' }}
                                         >
                                             <option value="" style={{ background: '#0a0a0c' }}>Choose Vehicle</option>
-                                            {vehicles.filter(v => punchInForm.date?.split('T')[0] !== getToday() || !v.currentDriver).map(v => (
+                                            {vehicles.filter(v => {
+                                                const isToday = punchInForm.date?.split('T')[0] === getToday();
+                                                if (!isToday) return true;
+
+                                                // Allow if no driver assigned
+                                                if (!v.currentDriver) return true;
+
+                                                // Allow if the assigned driver is same as the one we are punching in
+                                                const currentDriverId = (v.currentDriver._id || v.currentDriver).toString();
+                                                return currentDriverId === selectedDriverForManual?._id.toString();
+                                            }).map(v => (
                                                 <option key={v._id} value={v._id} style={{ background: '#0a0a0c' }}>{v.carNumber} - {v.model}</option>
                                             ))}
                                         </select>

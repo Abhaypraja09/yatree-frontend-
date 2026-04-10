@@ -21,7 +21,9 @@ import {
     LayoutDashboard,
     Download,
     ClipboardList,
-    ArrowRight
+    ArrowRight,
+    Lock,
+    ShieldCheck
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -177,6 +179,8 @@ const DriverPortal = () => {
     const [showPunchOutForm, setShowPunchOutForm] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
     const [selectedVehicleId, setSelectedVehicleId] = useState('');
+    const [showPasswordSection, setShowPasswordSection] = useState(false);
+    const [passwordData, setPasswordData] = useState({ oldPassword: '', newPassword: '' });
 
     // Mid-Trip Expense states
     const [showExpenseModal, setShowExpenseModal] = useState(false);
@@ -229,6 +233,29 @@ const DriverPortal = () => {
         }
     };
 
+
+    const handlePasswordUpdate = async () => {
+        if (!passwordData.oldPassword || !passwordData.newPassword) {
+            setMessage({ type: 'error', text: 'All password fields are required' });
+            return;
+        }
+        setIsSubmitting(true);
+        try {
+            await axios.put('/api/driver/update-password', {
+                oldPassword: passwordData.oldPassword,
+                newPassword: passwordData.newPassword
+            }, {
+                headers: { Authorization: `Bearer ${user.token}` }
+            });
+            setMessage({ type: 'success', text: 'Password updated successfully' });
+            setPasswordData({ oldPassword: '', newPassword: '' });
+            setShowPasswordSection(false);
+        } catch (err) {
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Update failed' });
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
 
     const handlePunch = async (type) => {
         if (!km || !selfie || !kmPhoto || !carSelfie) {
@@ -838,6 +865,27 @@ const DriverPortal = () => {
                                     )}
                                 </>
                             )}
+                            <button 
+                                onClick={() => setShowPasswordSection(true)}
+                                style={{
+                                    background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
+                                    color: 'white',
+                                    padding: '10px 14px',
+                                    borderRadius: '12px',
+                                    fontWeight: '800',
+                                    fontSize: '11px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
+                                    transition: 'all 0.3s ease',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
+                                }}
+                            >
+                                <Lock size={14} color="var(--primary)" /> {t('security') || 'Security'}
+                            </button>
                             <div className="language-switcher" style={{
                                 background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
                                 borderRadius: '12px',
@@ -1025,8 +1073,81 @@ const DriverPortal = () => {
 
 
 
-                                    {/* Working Closed Screen */}
-                                    {tripStatus === 'completed' && (
+                            {/* Security Modal */}
+                            {showPasswordSection && (
+                                <div className="modal-overlay" style={{ zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                    <div className="modal-content glass-card" style={{ maxWidth: '400px', width: '90%', padding: '24px', position: 'relative' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                <div style={{ padding: '10px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '12px' }}>
+                                                    <Lock size={20} color="var(--primary)" />
+                                                </div>
+                                                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white' }}>{t('security') || 'Security Settings'}</h3>
+                                            </div>
+                                            <button 
+                                                onClick={() => {
+                                                    setShowPasswordSection(false);
+                                                    setMessage({ type: '', text: '' });
+                                                }} 
+                                                className="modal-close-btn"
+                                            >
+                                                <X size={20} />
+                                            </button>
+                                        </div>
+
+                                        <div style={{ display: 'grid', gap: '16px' }}>
+                                            <div className="input-wrapper-full">
+                                                <label className="input-label" style={{ fontSize: '11px', fontWeight: '800', opacity: 0.5, letterSpacing: '0.5px' }}>CURRENT PASSWORD</label>
+                                                <input 
+                                                    type="password" 
+                                                    className="input-field" 
+                                                    placeholder="Enter current password"
+                                                    value={passwordData.oldPassword}
+                                                    onChange={(e) => setPasswordData({...passwordData, oldPassword: e.target.value})}
+                                                    style={{ background: 'rgba(0,0,0,0.2)' }}
+                                                />
+                                            </div>
+                                            <div className="input-wrapper-full">
+                                                <label className="input-label" style={{ fontSize: '11px', fontWeight: '800', opacity: 0.5, letterSpacing: '0.5px' }}>NEW PASSWORD</label>
+                                                <input 
+                                                    type="password" 
+                                                    className="input-field" 
+                                                    placeholder="Enter new password"
+                                                    value={passwordData.newPassword}
+                                                    onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
+                                                    style={{ background: 'rgba(0,0,0,0.2)' }}
+                                                />
+                                            </div>
+
+                                            {message.text && (
+                                                <div style={{ 
+                                                    padding: '12px', 
+                                                    borderRadius: '12px', 
+                                                    fontSize: '13px', 
+                                                    fontWeight: '700',
+                                                    background: message.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+                                                    color: message.type === 'success' ? '#10b981' : '#f43f5e',
+                                                    border: `1px solid ${message.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 129, 0.2)'}`
+                                                }}>
+                                                    {message.text}
+                                                </div>
+                                            )}
+
+                                            <button 
+                                                className="btn-primary" 
+                                                disabled={isSubmitting}
+                                                onClick={handlePasswordUpdate}
+                                                style={{ height: '52px', borderRadius: '14px', fontSize: '14px', fontWeight: '1000', letterSpacing: '1px', marginTop: '10px' }}
+                                            >
+                                                {isSubmitting ? 'UPDATING...' : 'CONFIRM CHANGE'}
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            )}
+
+
+                            {tripStatus === 'completed' && (
                                         <div className="glass-card" style={{
                                             padding: 'clamp(32px, 8vw, 48px)',
                                             textAlign: 'center',

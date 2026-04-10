@@ -19,7 +19,6 @@ import { todayIST, toISTDateString, formatDateIST, formatTimeIST, nowIST } from 
 
 const Staff = () => {
     const { theme } = useTheme();
-    // Add global styles for animations and refinements
     useEffect(() => {
         const style = document.createElement('style');
         style.textContent = `
@@ -81,7 +80,7 @@ const Staff = () => {
     const [filterStaff, setFilterStaff] = useState('all');
 
     const [formData, setFormData] = useState({
-        name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
+        name: '', mobile: '', username: '', password: '', confirmPassword: '', oldPassword: '', salary: 0, monthlyLeaveAllowance: 4,
         email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
         officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
         joiningDate: todayIST(),
@@ -191,7 +190,7 @@ const Staff = () => {
             setToDate(todayIST());
             setBackdateForm({ staffId: '', date: todayIST(), status: 'present', punchInTime: '', punchOutTime: '' });
             setFormData({
-                name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
+                name: '', mobile: '', username: '', password: '', oldPassword: '', salary: 0, monthlyLeaveAllowance: 4,
                 email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
                 officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
                 joiningDate: todayIST(),
@@ -257,6 +256,8 @@ const Staff = () => {
                     radius: formData.officeLocation.radius ? Number(formData.officeLocation.radius) : 200
                 }
             };
+
+
             if (isEditing) {
                 await axios.put(`/api/admin/staff/${editingStaffId}`, payload);
                 alert('Staff updated successfully');
@@ -589,7 +590,7 @@ const Staff = () => {
                             <button
                                 onClick={() => {
                                     setIsEditing(false);
-                                    
+
                                     // Try to find a default office location from other staff
                                     const defaultOffice = staffList.find(s => s.officeLocation?.latitude)?.officeLocation || { latitude: '', longitude: '', address: '', radius: 200 };
 
@@ -602,12 +603,12 @@ const Staff = () => {
                                     });
                                     setShowAddModal(true);
                                 }}
-                                style={{ 
-                                    display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', 
-                                    borderRadius: '14px', fontWeight: '800', 
-                                    background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary || theme.primary} 100%)`, 
-                                    color: 'black', border: 'none', whiteSpace: 'nowrap', flexShrink: 0, 
-                                    boxShadow: `0 8px 15px ${theme.primary}40`, cursor: 'pointer' 
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px',
+                                    borderRadius: '14px', fontWeight: '800',
+                                    background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary || theme.primary} 100%)`,
+                                    color: 'black', border: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+                                    boxShadow: `0 8px 15px ${theme.primary}40`, cursor: 'pointer'
                                 }}
                             >
                                 <Plus size={20} /> <span className="hide-mobile">Add Personnel</span><span className="show-mobile">Add</span>
@@ -646,18 +647,18 @@ const Staff = () => {
                         { label: 'STAFF STRENGTH', value: staffList.length, icon: Users, color: 'var(--primary)', sub: 'Total Personnel' },
                         { label: "TODAY'S ATTENDANCE", value: attendanceList.filter(r => r.date === todayIST()).length, icon: ShieldCheck, color: '#10b981', sub: 'On Duty' },
                         { label: 'PENDING LEAVES', value: pendingLeaves.length, icon: CalendarX, color: 'var(--primary)', sub: 'Awaiting Review' },
-                        { 
-                            label: 'MONTHLY TARGET', 
+                        {
+                            label: 'MONTHLY TARGET',
                             value: attendanceList.filter(r => {
                                 const d = nowIST();
                                 const monthStr = (d.getUTCMonth() + 1).toString().padStart(2, '0');
                                 const yearStr = d.getUTCFullYear().toString();
                                 return r.date.startsWith(`${yearStr}-${monthStr}`);
-                            }).length, 
-                            icon: Target, 
-                            color: 'var(--primary)', 
+                            }).length,
+                            icon: Target,
+                            color: 'var(--primary)',
                             sub: `Goal: ${monthlyTarget} days`,
-                            isTarget: true 
+                            isTarget: true
                         }
                     ].map((stat, idx) => (
                         <div key={idx} className="glass-card" style={{
@@ -672,8 +673,8 @@ const Staff = () => {
                             overflow: 'hidden'
                         }}>
                             {stat.isTarget && (
-                                <div style={{ 
-                                    position: 'absolute', bottom: 0, left: 0, height: '3px', background: 'var(--primary)', 
+                                <div style={{
+                                    position: 'absolute', bottom: 0, left: 0, height: '3px', background: 'var(--primary)',
                                     width: `${Math.min((stat.value / (monthlyTarget || 1)) * 100, 100)}%`,
                                     transition: 'width 1s ease-out'
                                 }}></div>
@@ -770,10 +771,10 @@ const Staff = () => {
                     <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '14px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.05)', height: '48px' }}>
                         <Target size={14} style={{ color: 'var(--primary)', marginRight: '10px' }} />
                         <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginRight: '10px' }}>GOAL:</span>
-                        <input 
-                            type="number" 
-                            value={monthlyTarget} 
-                            onChange={e => handleTargetChange(e.target.value)} 
+                        <input
+                            type="number"
+                            value={monthlyTarget}
+                            onChange={e => handleTargetChange(e.target.value)}
                             style={{ width: '40px', background: 'transparent', border: 'none', color: 'var(--primary)', fontWeight: '900', fontSize: '14px', textAlign: 'center', outline: 'none' }}
                         />
                     </div>
@@ -1551,6 +1552,10 @@ const Staff = () => {
                                                         <label className="premium-label">DESIGNATION</label>
                                                         <input type="text" className="premium-compact-input" placeholder="e.g. Accountant" value={formData.designation} onChange={(e) => setFormData({ ...formData, designation: e.target.value })} />
                                                     </div>
+                                                    <div className="premium-input-group">
+                                                        <label className="premium-label">MOBILE NUMBER</label>
+                                                        <input required type="number" className="premium-compact-input" placeholder="e.g. 9876543210" value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} />
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -1559,24 +1564,17 @@ const Staff = () => {
                                                     <span style={{ width: '20px', height: '1px', background: 'currentColor' }}></span> 02. LOGIN DETAILS
                                                 </h4>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                                        <div className="premium-input-group">
-                                                            <label className="premium-label">USERNAME</label>
-                                                            <input required type="text" className="premium-compact-input" placeholder="e.g. john_doe" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
-                                                        </div>
-                                                        <div className="premium-input-group">
-                                                            <label className="premium-label">PASSWORD</label>
-                                                            <input required type="password" underline="none" className="premium-compact-input" placeholder="••••••••" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
-                                                        </div>
+                                                    <div className="premium-input-group">
+                                                        <label className="premium-label">USERNAME</label>
+                                                        <input required type="text" className="premium-compact-input" placeholder="e.g. john_doe" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
                                                     </div>
                                                     <div className="premium-input-group">
-                                                        <label className="premium-label">MOBILE NUMBER</label>
-                                                        <input required type="number" className="premium-compact-input" placeholder="Enter mobile number" value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} />
+                                                        <label className="premium-label">{isEditing ? 'RESET PASSWORD (OPTIONAL)' : 'PASSWORD'}</label>
+                                                        <input required={!isEditing} type="password" underline="none" className="premium-compact-input" placeholder="••••••••" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
-
                                         {/* Right Column: Financial & Geofencing */}
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
                                             <div>
