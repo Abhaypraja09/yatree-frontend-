@@ -1165,7 +1165,8 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                                     {[
                                                         { label: '+ Aadhaar', key: 'aadharCard' },
-                                                        { label: '+ License', key: 'drivingLicense' }
+                                                        { label: '+ License', key: 'drivingLicense' },
+                                                        { label: '+ Offer Letter', key: 'offerLetter' }
                                                     ].map(item => (
                                                         <label key={item.key} style={{
                                                             padding: '6px 12px',
