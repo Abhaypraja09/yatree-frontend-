@@ -423,7 +423,7 @@ const AttendanceModal = ({ item, onClose, onEdit, onDelete }) => {
         maintenance: 'Maintenance Record',
         borderTax: 'Border Tax Record',
         accidentLog: 'Accident Log',
-        partsWarranty: 'Parts Warranty',
+
         fastag: 'Fastag Recharge',
     };
 

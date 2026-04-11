@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { useTheme } from '../../context/ThemeContext';
+import { useAuth } from '../../context/AuthContext';
 import { Settings, X, RotateCcw, Check } from 'lucide-react';
 
 const ThemeSwitcher = () => {
   const [isOpen, setIsOpen] = useState(false);
   const { theme, updateTheme, resetTheme, defaultThemes } = useTheme();
+  const { user } = useAuth();
+  
+  // Only show for non-drivers (Admins/Staff)
+  if (user?.role === 'Driver') return null;
   
   // State for custom colors
   const [customPrimary, setCustomPrimary] = useState(theme.primary);

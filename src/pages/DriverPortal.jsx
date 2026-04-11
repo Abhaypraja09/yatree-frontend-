@@ -280,8 +280,25 @@ const DriverPortal = () => {
             }
         }
 
-        setIsSubmitting(true);
-        setMessage({ type: '', text: '' });
+        let longitude = 0;
+        let latitude = 0;
+        let address = 'Location Disabled (Permission Denied)';
+
+        try {
+            const pos = await new Promise((resolve, reject) => {
+                navigator.geolocation.getCurrentPosition(resolve, reject, { 
+                    enableHighAccuracy: true, 
+                    timeout: 5000 
+                });
+            });
+            latitude = pos.coords.latitude;
+            longitude = pos.coords.longitude;
+            const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`);
+            const data = await res.json();
+            address = data.display_name || `Tracked: ${latitude}, ${longitude}`;
+        } catch (err) {
+            console.error('Location acquisition failed:', err);
+        }
 
         const formData = new FormData();
         formData.append('km', km);
@@ -291,8 +308,9 @@ const DriverPortal = () => {
         formData.append('dutyCount', '1');
         formData.append('specialPay', specialPay || '0');
         formData.append('specialPayRemark', specialPayRemark || '');
-        formData.append('longitude', 0);
-        formData.append('address', 'Location Disabled');
+        formData.append('latitude', latitude);
+        formData.append('longitude', longitude);
+        formData.append('address', address);
 
         if (type === 'punch-in') {
             formData.append('vehicleId', selectedVehicleId);
@@ -1668,7 +1686,7 @@ const DriverPortal = () => {
                                                                 {entry.type === 'fuel' && (
                                                                     <>
                                                                         <div className="input-wrapper-full">
-                                                                            <label className="input-label" style={{ fontSize: '10px' }}>Volume (L) - Optional</label>
+                                                                            <label className="input-label" style={{ fontSize: '10px' }}>{t('volume_optional')}</label>
                                                                             <input
                                                                                 type="number"
                                                                                 className="input-field"
@@ -1688,7 +1706,7 @@ const DriverPortal = () => {
                                                                             />
                                                                         </div>
                                                                         <div className="input-wrapper-full">
-                                                                            <label className="input-label" style={{ fontSize: '10px' }}>Rate *</label>
+                                                                            <label className="input-label" style={{ fontSize: '10px' }}>{t('rate_per_l')} *</label>
                                                                             <input
                                                                                 type="number"
                                                                                 className="input-field"
@@ -1761,7 +1779,7 @@ const DriverPortal = () => {
                                                                     </div>
 
                                                                     <div className="input-wrapper-full" style={{ marginTop: '4px', marginBottom: '16px' }}>
-                                                                        <label className="input-label" style={{ fontSize: '10px', marginBottom: '6px' }}>{t('paymentSource') || 'Payment Source'}</label>
+                                                                        <label className="input-label" style={{ fontSize: '10px', marginBottom: '6px' }}>{t('payment_source')}</label>
                                                                         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                                                                             {['Office', 'Guest'].map((source) => (
                                                                                 <button
@@ -1784,7 +1802,7 @@ const DriverPortal = () => {
                                                                                         transition: 'all 0.2s ease'
                                                                                     }}
                                                                                 >
-                                                                                    {source}
+                                                                                    {t(source.toLowerCase())}
                                                                                 </button>
                                                                             ))}
                                                                         </div>
@@ -1835,7 +1853,7 @@ const DriverPortal = () => {
 
 
                                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '8px' }}>
-                                                                <label className="input-label" style={{ fontSize: '10px' }}>{t('receipt')} (Optional)</label>
+                                                                <label className="input-label" style={{ fontSize: '10px' }}>{t('receipt')} ({t('optional')})</label>
                                                                 {!entry.preview ? (
                                                                     <div
                                                                         onClick={() => {

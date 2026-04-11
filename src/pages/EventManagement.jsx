@@ -140,7 +140,7 @@ const EventManagement = () => {
     const [dutyFormData, setDutyFormData] = useState({
         carNumber: '', model: '', dropLocation: '', date: getToday(),
         eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet',
-        dutyType: '', dutyTime: '', remarks: '', guestCount: ''
+        dutyType: '', remarks: '', guestCount: ''
     });
 
     useEffect(() => {
@@ -239,7 +239,7 @@ const EventManagement = () => {
                     date: a.date,
                     isAttendance: true,
                     dutyType: a.dutyType || a.punchOut?.remarks || 'Fleet Duty',
-                    dutyTime: a.dutyTime || (a.punchIn?.time ? formatTimeIST(a.punchIn.time) : ''),
+                    dutyTime: a.dutyTime || '',
                     remarks: a.remarks || '',
                     guestCount: a.guestCount || ''
                 }));
@@ -521,7 +521,6 @@ const EventManagement = () => {
                 'Client': event?.client || 'N/A',
                 'Duty Type': v.dutyType || '',
                 'Drop Loc': v.dropLocation || '',
-                'Duty Time': v.dutyTime || '',
                 'Amount': v.dutyAmount || 0
             };
         });
@@ -542,7 +541,6 @@ const EventManagement = () => {
             'Source': v.vehicleSource || 'EXTERNAL',
             'Duty Type': v.dutyType || 'General Duty',
             'Location': v.dropLocation || 'BASE',
-            'Time': v.dutyTime || '-',
             'Amount': Number(v.dutyAmount || v.dailyWage || 0)
         }));
         const ws = XLSX.utils.json_to_sheet(data);
@@ -956,7 +954,7 @@ const EventManagement = () => {
                         <button onClick={() => {
                             setIsEditingDuty(false);
                             setDutyFormData({
-                                carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestCount: ''
+                                carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', remarks: '', guestCount: ''
                             });
                             setShowDutyModal(true);
                         }}
@@ -1249,17 +1247,7 @@ const EventManagement = () => {
                                             </div>
                                         </div>
 
-                                        <div className="premium-input-group">
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <Wallet size={12} color="#10b981" />
-                                                <label className="premium-label">Selling Amount (Revenue)</label>
-                                            </div>
-                                            <div style={{ position: 'relative' }}>
-                                                <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', fontWeight: '900', color: '#10b981' }}>₹</span>
-                                                <input type="number" required value={dutyFormData.dutyAmount} onChange={e => setDutyFormData({ ...dutyFormData, dutyAmount: e.target.value })} className="premium-compact-input" placeholder="0" style={{ paddingLeft: '35px', color: '#10b981', fontWeight: '800', height: '50px' }} />
-                                            </div>
                                         </div>
-                                    </div>
 
                                     {/* Section 3: Logistic Details */}
                                     <div className="form-grid-2">
@@ -1295,15 +1283,15 @@ const EventManagement = () => {
                                                 {dutyTypeSuggestions.map(t => <option key={t} value={t} />)}
                                             </datalist>
                                         </div>
-                                        <div className="premium-input-group">
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'space-between' }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Calendar size={12} color="var(--primary)" />
-                                                    <label className="premium-label">Operation Time</label>
-                                                </div>
-                                                <button type="button" onClick={() => setDutyFormData(prev => ({ ...prev, dutyTime: currentTimeIST() }))} style={{ fontSize: '9px', fontWeight: '900', color: 'var(--primary)', background: 'rgba(14, 165, 233, 0.1)', padding: '2px 8px', borderRadius: '4px', border: '1px solid rgba(14, 165, 233, 0.2)', cursor: 'pointer' }}>SET NOW</button>
+                                        <div style={{ flex: 1 }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <Wallet size={12} color="#10b981" />
+                                                <label className="premium-label">Revenue Amount (₹)</label>
                                             </div>
-                                            <input type="time" value={dutyFormData.dutyTime} onChange={e => setDutyFormData({ ...dutyFormData, dutyTime: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark', height: '50px' }} />
+                                            <div style={{ position: 'relative', marginTop: '8px' }}>
+                                                <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', fontWeight: '900', color: '#10b981' }}>₹</span>
+                                                <input type="number" required value={dutyFormData.dutyAmount} onChange={e => setDutyFormData({ ...dutyFormData, dutyAmount: e.target.value })} className="premium-compact-input" placeholder="0" style={{ paddingLeft: '35px', color: '#10b981', fontWeight: '800', height: '50px' }} />
+                                            </div>
                                         </div>
                                     </div>
 
@@ -1567,11 +1555,7 @@ const EventManagement = () => {
                                                                     }}>
                                                                         {d.dutyType || 'General Duty'}
                                                                     </div>
-                                                                    {d.dutyTime && (
-                                                                        <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                            <Calendar size={12} /> {d.dutyTime}
-                                                                        </div>
-                                                                    )}
+
                                                                 </div>
                                                                 {d.remarks && (
                                                                     <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', borderLeft: '2px solid rgba(251,191,36,0.3)', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600', fontStyle: 'italic' }}>

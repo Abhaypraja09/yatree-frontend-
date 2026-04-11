@@ -163,7 +163,7 @@ export const translations = {
         car_logs: 'Car Logs',
         vehicles_mgt: 'Vehicles MGT',
         active_logs: 'Active Logs',
-        parts_warranty: 'Parts Warranty',
+
         fleet_operations: 'Fleet Operations',
         car_utility: 'Car Utility',
         fuel: 'Fuel',
@@ -189,7 +189,7 @@ export const translations = {
         parking_monthly: 'PARKING (MONTHLY)',
         fastag_recharge_monthly: 'FASTAG RECHARGE (MONTHLY)',
         driver_services_monthly: 'DRIVER SERVICES (MONTHLY)',
-        warranty_cost_total: 'WARRANTY COST (TOTAL)',
+
         fleet_size_label: 'FLEET SIZE',
         expiry_alerts: 'Expiry Alerts',
         overdue: 'Overdue',
@@ -269,7 +269,7 @@ export const translations = {
         car_logs: 'गाड़ी लॉग',
         vehicles_mgt: 'वाहन प्रबंधन',
         active_logs: 'सक्रिय लॉग',
-        parts_warranty: 'पार्ट्स वारंटी',
+
         fleet_operations: 'फ्लीट ऑपरेशंस',
         car_utility: 'कार उपयोगिता',
         fuel: 'ईंधन',
@@ -295,7 +295,7 @@ export const translations = {
         parking_monthly: 'पार्किंग (मासिक)',
         fastag_recharge_monthly: 'फास्टैग रिचार्ज (मासिक)',
         driver_services_monthly: 'ड्राइवर सेवाएं (मासिक)',
-        warranty_cost_total: 'वारंटी लागत (कुल)',
+
         fleet_size_label: 'कुल गाड़ियाँ',
         expiry_alerts: 'समाप्ति अलर्ट',
         overdue: 'विलंबित',
@@ -423,6 +423,12 @@ export const translations = {
         specialPay: 'अतिरिक्त भुगतान (स्पेशल)',
         specialPayRemark: 'स्पेशल पे के लिए टिप्पणी',
         specialPayoutHistory: 'स्पेशल पेआउट (इतिहास)',
+        volume_optional: 'वॉल्यूम (L) - वैकल्पिक',
+        rate_per_l: 'रेट',
+        payment_source: 'भुगतान का स्रोत',
+        office: 'ऑफिस',
+        guest: 'गेस्ट',
+        optional: 'वैकल्पिक'
     }
 };
 

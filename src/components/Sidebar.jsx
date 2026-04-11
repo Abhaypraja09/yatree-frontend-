@@ -291,7 +291,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                         <NavItem item={{ path: '/admin/vehicle-month-details', label: 'Car Logs', labelKey: 'car_logs' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/vehicles', label: 'Vehicles MGT', labelKey: 'vehicles_mgt' }} onClick={onClose} isSubItem />
                         <NavItem item={{ path: '/admin/accident-logs', label: 'Active Logs', labelKey: 'active_logs' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/warranties', label: 'Parts Warranty', labelKey: 'parts_warranty' }} onClick={onClose} isSubItem />
+
                     </NavGroup>
                 )}
                 {(isAdmin || user.permissions?.buySell) && (

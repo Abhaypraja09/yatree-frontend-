@@ -28,6 +28,7 @@ const AIChatAgent = () => {
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [isListening, setIsListening] = useState(false);
+    const [hasGreeted, setHasGreeted] = useState(false);
     const messagesEndRef = useRef(null);
 
     // Speech Recognition setup
@@ -53,6 +54,29 @@ const AIChatAgent = () => {
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
+
+    useEffect(() => {
+        const fetchBriefing = async () => {
+            if (isOpen && !hasGreeted) {
+                setIsTyping(true);
+                try {
+                    const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+                    const { data } = await axios.get('/api/ai/briefing', {
+                        headers: { Authorization: `Bearer ${userInfo.token}` }
+                    });
+                    if (data.briefing) {
+                        setMessages(prev => [...prev, { role: 'ai', content: data.briefing }]);
+                        setHasGreeted(true);
+                    }
+                } catch (err) {
+                    console.error("Briefing failed", err);
+                } finally {
+                    setIsTyping(false);
+                }
+            }
+        };
+        fetchBriefing();
+    }, [isOpen, hasGreeted]);
 
     useEffect(() => {
         scrollToBottom();

@@ -364,7 +364,7 @@ const AdminDashboard = () => {
                                 <>
                                     <StatCard icon={Wrench} label={t('maintenance_monthly')} value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
                                     <StatCard icon={AlertTriangle} label={t('accident_cost_yearly')} value={`₹${(stats.yearlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
-                                    <StatCard icon={ShieldCheck} label={t('warranty_cost_total')} value={`₹${(stats.totalWarrantyCost || 0).toLocaleString()}`} color="#8b5cf6" loading={loading} onClick={() => navigate('/admin/warranties')} />
+
                                     <StatCard 
                                         icon={Car} 
                                         label={t('fleet_size_label')} 

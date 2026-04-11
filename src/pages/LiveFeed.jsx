@@ -688,7 +688,9 @@ const LiveFeed = () => {
                                                                 </div>
                                                             </div>
                                                             <div style={{ textAlign: 'right' }}>
-                                                                <div style={{ fontSize: '13px', color: isComp ? 'rgba(255,255,255,0.6)' : 'white', fontWeight: '900', fontFamily: 'monospace' }}>{formatTime(att.punchIn?.time)}</div>
+                                                                <div style={{ fontSize: '13px', color: isComp ? 'rgba(255,255,255,0.6)' : 'white', fontWeight: '900', fontFamily: 'monospace' }}>
+                                                                    {formatTime(att.punchIn?.time)} — {att.punchOut?.time ? formatTime(att.punchOut.time) : '--:--'}
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     );
@@ -1136,46 +1138,7 @@ const LiveFeed = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Event Assignment Selector */}
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                    <Briefcase size={14} color="rgba(255,255,255,0.4)" />
-                                                    <div style={{ position: 'relative', flex: 1 }}>
-                                                        <select
-                                                            value={att.eventId?._id || att.eventId || ''}
-                                                            onChange={(e) => handleAssignEvent(att._id, e.target.value)}
-                                                            disabled={assigningEventId === att._id}
-                                                            style={{
-                                                                width: '100%',
-                                                                background: 'rgba(255,255,255,0.05)',
-                                                                border: '1px solid rgba(255,255,255,0.1)',
-                                                                padding: '6px 12px',
-                                                                borderRadius: '10px',
-                                                                color: 'white',
-                                                                fontSize: '12px',
-                                                                fontWeight: '700',
-                                                                appearance: 'none',
-                                                                cursor: 'pointer',
-                                                                opacity: assigningEventId === att._id ? 0.5 : 1
-                                                            }}
-                                                        >
-                                                            <option value="" style={{ background: '#1e293b' }}>Assign to Event...</option>
-                                                            {events.map(ev => (
-                                                                <option key={ev._id} value={ev._id} style={{ background: '#1e293b' }}>
-                                                                    {ev.name} ({ev.client})
-                                                                </option>
-                                                            ))}
-                                                        </select>
-                                                        <div style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none', fontSize: '10px', color: 'rgba(255,255,255,0.3)' }}>▼</div>
-                                                    </div>
-                                                    {att.eventId && (
-                                                        <button
-                                                            onClick={() => handleAssignEvent(att._id, '')}
-                                                            style={{ background: 'transparent', border: 'none', color: '#f43f5e', fontSize: '10px', fontWeight: '800', cursor: 'pointer', textTransform: 'uppercase' }}
-                                                        >
-                                                            Clear
-                                                        </button>
-                                                    )}
-                                                </div>
+                                                {/* Removed Assign to Event */}
 
                                                 {/* Expenses & Fuel Badges in Modal */}
                                                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -1392,23 +1355,23 @@ const LiveFeed = () => {
                                                 </div>
 
                                                 {/* Locations if available */}
-                                                {(att.punchIn?.location?.address || att.punchOut?.location?.address) && (
+                                                {(att.punchIn?.location || att.punchOut?.location) && (
                                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                                        {att.punchIn?.location?.address && (
+                                                        {(att.punchIn?.location?.address || (typeof att.punchIn?.location === 'string' && att.punchIn.location !== 'Location Disabled')) && (
                                                             <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                                                                 <MapPin size={14} color="#10b981" style={{ marginTop: '2px' }} />
                                                                 <div>
                                                                     <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>START LOCATION</div>
-                                                                    <div style={{ fontSize: '12px', color: 'white', fontWeight: '600' }}>{att.punchIn.location.address}</div>
+                                                                    <div style={{ fontSize: '12px', color: 'white', fontWeight: '600' }}>{att.punchIn.location.address || att.punchIn.location}</div>
                                                                 </div>
                                                             </div>
                                                         )}
-                                                        {att.punchOut?.location?.address && (
+                                                        {(att.punchOut?.location?.address || (typeof att.punchOut?.location === 'string' && att.punchOut.location !== 'Location Disabled')) && (
                                                             <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
                                                                 <MapPin size={14} color="#f43f5e" style={{ marginTop: '2px' }} />
                                                                 <div>
                                                                     <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>END LOCATION</div>
-                                                                    <div style={{ fontSize: '12px', color: 'white', fontWeight: '600' }}>{att.punchOut.location.address}</div>
+                                                                    <div style={{ fontSize: '12px', color: 'white', fontWeight: '600' }}>{att.punchOut.location.address || att.punchOut.location}</div>
                                                                 </div>
                                                             </div>
                                                         )}

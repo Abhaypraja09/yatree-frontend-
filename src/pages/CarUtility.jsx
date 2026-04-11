@@ -101,35 +101,52 @@ const CarUtility = () => {
 
     const selectedVehicle = useMemo(() => vehicles.find(v => v._id === selectedVehicleId), [vehicles, selectedVehicleId]);
 
-    const handleRecharge = async (data) => {
+    const handleRecharge = async (vId, data) => {
+        const targetId = vId || selectedVehicleId;
+        if (!targetId || targetId === 'new') return alert('Please select a vehicle');
         setSubmitting(true);
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            await axios.post(`/api/admin/vehicles/${selectedVehicleId}/fastag-recharge`, data, { headers: { Authorization: `Bearer ${token}` } });
+            await axios.post(`/api/admin/vehicles/${targetId}/fastag-recharge`, data, { headers: { Authorization: `Bearer ${token}` } });
             setMessage({ type: 'success', text: 'Recharge Logged' });
             setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
+            setSelectedVehicleId(null);
         } catch (err) { setMessage({ type: 'error', text: 'Error' }); }
         finally { setSubmitting(false); }
     };
 
-    const handleAddTax = async (formData) => {
+    const handleAddTax = async (vId, formData) => {
+        const targetId = vId || selectedVehicleId;
+        if (!targetId || targetId === 'new') return alert('Please select a vehicle');
         setSubmitting(true);
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
+            // Ensure vehicleId is in the form data
+            if (formData instanceof FormData && !formData.get('vehicleId')) {
+                formData.append('vehicleId', targetId);
+            }
             await axios.post('/api/admin/border-tax', formData, { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } });
             setMessage({ type: 'success', text: 'Tax Recorded' });
             setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
+            setSelectedVehicleId(null);
         } catch (err) { setMessage({ type: 'error', text: 'Error' }); }
         finally { setSubmitting(false); }
     };
 
-    const handleAddService = async (formData) => {
+    const handleAddService = async (vId, formData) => {
+        const targetId = vId || selectedVehicleId;
+        if (!targetId || targetId === 'new') return alert('Please select a vehicle');
         setSubmitting(true);
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
+            // Ensure vehicleId is in the form data
+            if (formData instanceof FormData && !formData.get('vehicleId')) {
+                formData.append('vehicleId', targetId);
+            }
             await axios.post('/api/admin/maintenance', formData, { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } });
             setMessage({ type: 'success', text: 'Trans Recorded' });
             setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
+            setSelectedVehicleId(null);
         } catch (err) { setMessage({ type: 'error', text: 'Error' }); }
         finally { setSubmitting(false); }
     };
@@ -352,7 +369,6 @@ const CarUtility = () => {
                                                                                 style={{
                                                                                     padding: '12px 24px',
                                                                                     borderRadius: '12px',
-                                                                                    border: 'none',
                                                                                     background: activeUtility === tab.id ? 'rgba(255,255,255,0.08)' : 'transparent',
                                                                                     color: activeUtility === tab.id ? tab.color : 'rgba(255,255,255,0.4)',
                                                                                     fontSize: '13px',
@@ -505,13 +521,15 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
     }, [editingItem]);
     
     const handleSave = async () => {
+        const targetVehicleId = vehicle?._id || form.vehicleId;
+        if (!targetVehicleId) return alert('Please select a vehicle');
         if (!form.amount) return alert('Amount is required');
         
         let success = false;
         if (type === 'fastag') {
             const data = { amount: form.amount, remarks: form.remarks, method: 'UPI', date: form.date || todayIST() };
             if (editingItem) success = await onUpdate(editingItem._id, data);
-            else { await onAdd(data); success = true; }
+            else { await onAdd(targetVehicleId, data); success = true; }
         } else {
             const fd = new FormData(); 
             Object.keys(form).forEach(k => {
@@ -526,7 +544,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
             fd.append('billDate', finalDate);
 
             if (companyId) fd.append('companyId', companyId);
-            if (vehicle?._id) fd.append('vehicleId', vehicle._id);
+            fd.append('vehicleId', targetVehicleId);
             
             if (file) fd.append(type === 'border' ? 'receiptPhoto' : 'billPhoto', file);
             if (type === 'services') { 
@@ -534,11 +552,11 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
             }
             
             if (editingItem) success = await onUpdate(editingItem._id, fd);
-            else { await onAdd(fd); success = true; }
+            else { await onAdd(targetVehicleId, fd); success = true; }
         }
         
         if (success || !editingItem) {
-            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash' }); 
+            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '' }); 
             setFile(null);
             setEditingItem(null);
         }
