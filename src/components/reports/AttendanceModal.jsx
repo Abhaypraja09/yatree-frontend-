@@ -259,7 +259,9 @@ const AttendanceModal = ({ item, onClose, onEdit, onDelete }) => {
                                 <Stat label="Closing KM" value={aCloseKM != null ? `${aCloseKM} km` : '--'} color="#f43f5e" />
                                 <Stat label="Shift Run" value={aTotalKM != null ? `${aTotalKM} km` : '--'} color="white"
                                     sub={aOpenKM != null && aCloseKM != null ? `${aOpenKM} → ${aCloseKM}` : undefined} />
-                                {attItem.punchOut?.otherRemarks && <Stat label="Remarks" value={attItem.punchOut.otherRemarks} color="#f59e0b" />}
+                                {(attItem.remarks || attItem.punchOut?.remarks || attItem.punchIn?.remarks || attItem.punchOut?.otherRemarks) && (
+                                    <Stat label="Duty Remarks" value={(attItem.punchOut?.remarks && attItem.punchOut.remarks !== 'Manual Entry' ? attItem.punchOut.remarks : '') + (attItem.punchOut?.otherRemarks ? (attItem.punchOut.remarks && attItem.punchOut.remarks !== 'Manual Entry' ? ' | ' : '') + attItem.punchOut.otherRemarks : '') || attItem.remarks || attItem.punchIn?.remarks} color="#fbbf24" />
+                                )}
                             </div>
                         </>
                     ) : (

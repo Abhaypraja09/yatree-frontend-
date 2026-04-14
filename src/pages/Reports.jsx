@@ -170,6 +170,7 @@ const Reports = ({ isSubComponent = false }) => {
     const [loading, setLoading] = useState(true);
     const [selectedItem, setSelectedItem] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
+    const [remarkPopup, setRemarkPopup] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
 
     // ── AI AGENT SEARCH INTEGRATION ──
@@ -584,8 +585,15 @@ const Reports = ({ isSubComponent = false }) => {
                     )}
                     <TD>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                            <div style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}>
-                                <UserIcon size={15} color="rgba(255,255,255,0.5)" />
+                            <div 
+                                onClick={() => {
+                                    const remarks = (r.punchOut?.remarks && r.punchOut.remarks !== 'Manual Entry' ? r.punchOut.remarks : '') + (r.punchOut?.otherRemarks ? (r.punchOut.remarks && r.punchOut.remarks !== 'Manual Entry' ? ' | ' : '') + r.punchOut.otherRemarks : '') || r.remarks || 'No remarks recorded';
+                                    setRemarkPopup({ name: r.driver?.name || 'Driver', remarks });
+                                }}
+                                title={(r.punchOut?.remarks && r.punchOut.remarks !== 'Manual Entry' ? r.punchOut.remarks : '') + (r.punchOut?.otherRemarks ? (r.punchOut.remarks && r.punchOut.remarks !== 'Manual Entry' ? ' | ' : '') + r.punchOut.otherRemarks : '') || r.remarks || 'View Remarks'}
+                                style={{ width: '32px', height: '32px', borderRadius: '9px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0, cursor: 'pointer' }}
+                            >
+                                <UserIcon size={15} color={ (r.punchOut?.remarks || r.punchIn?.remarks || r.remarks) ? 'var(--primary)' : 'rgba(255,255,255,0.5)'} />
                             </div>
                             <div>
                                 <div style={{ fontSize: '13px', fontWeight: '900', color: 'white' }}>{isOutside ? (r.ownerName || 'Vendor') : (r.driver?.name || 'Unknown')}</div>
@@ -634,7 +642,24 @@ const Reports = ({ isSubComponent = false }) => {
                             : <span style={{ color: 'rgba(255,255,255,0.15)' }}>—</span>}
                     </TD>
                     <TD><div><span style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{rowSalaryTotal.toLocaleString()}</span>{!isOutside && bonus > 0 && <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>Base ₹{wage} + ₹{bonus} T/A</div>}{isOutside && <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>{r.transactionType || 'Duty'}</div>}</div></TD>
-                    <TD noWrap>{isOutside ? <StatusBadge ok={true} okLabel="✓ Partner" /> : (entryType.includes('attendance') ? <StatusBadge ok={isCompleted} okLabel="✓ Done" badLabel="⏳ Active" /> : <StatusBadge ok={true} okLabel="✓ Recorded" />)}</TD>
+                    <TD noWrap>
+                        {isLogbook ? (
+                            <span style={{ 
+                                fontSize: '10px', 
+                                fontWeight: '900', 
+                                padding: '4px 10px', 
+                                borderRadius: '8px', 
+                                background: r.outsideTrip?.occurred ? 'rgba(56, 189, 248, 0.12)' : (r.punchOut?.nightStayAmount > 0 ? 'rgba(139, 92, 246, 0.12)' : 'rgba(16, 185, 129, 0.12)'),
+                                color: r.outsideTrip?.occurred ? '#38bdf8' : (r.punchOut?.nightStayAmount > 0 ? '#a78bfa' : '#10b981'),
+                                border: `1px solid ${r.outsideTrip?.occurred ? 'rgba(56, 189, 248, 0.2)' : (r.punchOut?.nightStayAmount > 0 ? 'rgba(139, 92, 246, 0.2)' : 'rgba(16, 185, 129, 0.2)')}`,
+                                textTransform: 'uppercase'
+                            }}>
+                                {r.outsideTrip?.occurred ? 'SAME DAY' : (r.punchOut?.nightStayAmount > 0 ? 'NIGHT STAY' : 'CITY LOCAL')}
+                            </span>
+                        ) : (
+                            isOutside ? <StatusBadge ok={true} okLabel="✓ Partner" /> : (entryType.includes('attendance') ? <StatusBadge ok={isCompleted} okLabel="✓ Done" badLabel="⏳ Active" /> : <StatusBadge ok={true} okLabel="✓ Recorded" />)
+                        )}
+                    </TD>
                     <TD>
                         <ActionBtns
                             onView={() => setSelectedItem({ ...r, entryType: isOutside ? 'outsideCar' : (entryType === 'parking' ? 'parking' : 'attendance'), mode: 'view' })}
@@ -941,6 +966,41 @@ const Reports = ({ isSubComponent = false }) => {
                     />
                 )}
                 {editingItem && <EditAttendanceModal key="edit-modal" item={editingItem} onClose={() => setEditingItem(null)} onUpdate={handleUpdateAttendance} />}
+
+                {remarkPopup && (
+                    <div className="modal-overlay" style={{ position: 'fixed', inset: 0, zIndex: 11000, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }} onClick={() => setRemarkPopup(null)}>
+                        <motion.div 
+                            key="remark-popup"
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="glass-card" 
+                            style={{ width: '100%', maxWidth: '380px', padding: '30px', background: 'linear-gradient(145deg, #1e293b, #0f172a)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '24px', boxShadow: '0 25px 50px rgba(0,0,0,0.5)', position: 'relative' }}
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                    <UserIcon size={20} color="#38bdf8" />
+                                </div>
+                                <div>
+                                    <h3 style={{ margin: 0, color: 'white', fontSize: '16px', fontWeight: '900' }}>Duty Remarks</h3>
+                                    <p style={{ margin: 0, color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', textTransform: 'uppercase' }}>{remarkPopup.name}</p>
+                                </div>
+                            </div>
+                            
+                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', minHeight: '100px', display: 'flex', alignItems: 'center' }}>
+                                <p style={{ margin: 0, color: '#e2e8f0', fontSize: '14px', lineHeight: '1.6', fontWeight: '500' }}>{remarkPopup.remarks}</p>
+                            </div>
+
+                            <button 
+                                onClick={() => setRemarkPopup(null)}
+                                style={{ width: '100%', marginTop: '20px', padding: '12px', borderRadius: '12px', background: '#38bdf8', color: 'black', border: 'none', fontWeight: '900', fontSize: '13px', cursor: 'pointer', boxShadow: '0 10px 20px rgba(56, 189, 248, 0.2)' }}
+                            >
+                                CLOSE DETAILS
+                            </button>
+                        </motion.div>
+                    </div>
+                )}
             </AnimatePresence>
         </div>
     );

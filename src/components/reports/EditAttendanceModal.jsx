@@ -5,7 +5,7 @@ import { toISTDateTimeString } from '../../utils/istUtils';
 
 const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
     const [formData, setFormData] = useState({
-        remarks: item.punchOut?.remarks || '',
+        remarks: (item.punchOut?.remarks && item.punchOut.remarks !== 'Manual Entry' ? item.punchOut.remarks : '') + (item.punchOut?.otherRemarks ? (item.punchOut.remarks && item.punchOut.remarks !== 'Manual Entry' ? ' | ' : '') + item.punchOut.otherRemarks : '') || item.remarks || '',
         status: item.status || 'incomplete',
         startKm: item.punchIn?.km || 0,
         endKm: item.punchOut?.km || 0,
