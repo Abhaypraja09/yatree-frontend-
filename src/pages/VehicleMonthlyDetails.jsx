@@ -16,7 +16,8 @@ import {
     Info,
     History,
     Zap,
-    Layers
+    Layers,
+    CarFrontIcon
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -127,10 +128,7 @@ const VehicleMonthlyDetails = () => {
             'Average KM/L': (v.fuel?.avgMileage || 0).toFixed(2),
             'Fuel Amount (₹)': v.fuel?.totalAmount || 0,
             'Parking (₹)': v.parking?.totalAmount || 0,
-            'Wash Amount (₹)': v.services?.wash?.amount || 0,
-            'Puncture Amount (₹)': v.services?.puncture?.amount || 0,
-            'Fastag Recharge (₹)': v.fastag?.totalAmount || 0,
-            'Border Tax (₹)': v.borderTax?.totalAmount || 0,
+            'Wash / Fastag / Tax (₹)': (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0) + (v.fastag?.totalAmount || 0) + (v.borderTax?.totalAmount || 0),
             'Other Maintenance (₹)': v.maintenance?.totalAmount || 0,
             'Driver Salary (₹)': v.driverSalary || 0,
             'Total Month Expense (₹)': (v.fuel?.totalAmount || 0) + (v.maintenance?.totalAmount || 0) + (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0) + (v.driverSalary || 0) + (v.parking?.totalAmount || 0) + (v.fastag?.totalAmount || 0) + (v.borderTax?.totalAmount || 0)
@@ -205,30 +203,30 @@ const VehicleMonthlyDetails = () => {
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px', marginBottom: '30px' }}>
-                    <SummaryCard 
-                        icon={Droplets} 
-                        label="Monthly Fuel" 
-                        value={totalFuelAmount} 
-                        color="var(--primary)" 
+                    <SummaryCard
+                        icon={User}
+                        label="Driver Salaries"
+                        value={totalDriverSalary}
+                        color="#a855f7"
+                    />
+                    <SummaryCard
+                        icon={Droplets}
+                        label="Monthly Fuel"
+                        value={totalFuelAmount}
+                        color="var(--primary)"
                         subValue={`${filteredData.reduce((sum, v) => sum + (v.fuel?.totalQuantity || 0), 0).toFixed(1)}L`}
                     />
-                    <SummaryCard 
-                        icon={Zap} 
-                        label="Avg. Mileage" 
-                        color="#10b981" 
-                        displayOverride={`${(filteredData.filter(v => v.fuel?.avgMileage > 0).reduce((sum, v) => sum + (v.fuel?.avgMileage || 0), 0) / (filteredData.filter(v => v.fuel?.avgMileage > 0).length || 1)).toFixed(2)} KM/L`}
-                        subValue={`Overall efficiency`}
-                    />
-                    <SummaryCard 
-                        icon={User} 
-                        label="Driver Salaries" 
-                        value={totalDriverSalary} 
-                        color="#a855f7" 
-                        subValue={`Staff: ₹${summary.staffSalary.toLocaleString()} | Free: ₹${summary.freelancerSalary.toLocaleString()}`}
-                    />
+
                     <SummaryCard icon={MapPin} label="Total Parking" value={totalParkingAmount} color="#ec4899" />
                     <SummaryCard icon={Wrench} label="Repairs & Maint." value={totalMaintAmount} color="var(--primary)" />
-                    
+
+                    <SummaryCard
+                        icon={Layers}
+                        label="Wash / Fastag / Border"
+                        value={totalServiceAmount + totalFastagAmount + totalBorderTaxAmount}
+                        color="#12b886"
+                    />
+
                     <div style={{
                         background: 'linear-gradient(135deg, var(--primary), var(--primary))',
                         borderRadius: '20px',
@@ -236,9 +234,10 @@ const VehicleMonthlyDetails = () => {
                         display: 'flex',
                         flexDirection: 'column',
                         justifyContent: 'center',
-                        boxShadow: '0 15px 30px rgba(14, 165, 233, 0.2)'
+                        boxShadow: '0 15px 30px rgba(14, 165, 233, 0.2)',
+                        minWidth: '200px'
                     }}>
-                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Monthly Expense</div>
+                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Grand Total Expense</div>
                         <div style={{ fontSize: '24px', color: 'white', fontWeight: '950' }}>₹{grandTotal.toLocaleString()}</div>
                     </div>
                 </div>
@@ -377,11 +376,11 @@ const VehicleMonthlyDetails = () => {
                                             <div style={{ display: 'grid', gridTemplateColumns: 'minmax(60px, auto) minmax(60px, auto)', gap: '10px', marginBottom: '10px' }}>
                                                 <div>
                                                     <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '2px' }}>Avg</div>
-                                                    <div style={{ color: 'var(--primary)', fontWeight: '950', fontSize: '12px' }}>{(v.fuel?.avgMileage || 0).toFixed(2)}<span style={{fontSize: '9px', opacity: 0.6}}> KM/L</span></div>
+                                                    <div style={{ color: 'var(--primary)', fontWeight: '950', fontSize: '12px' }}>{(v.fuel?.avgMileage || 0).toFixed(2)}<span style={{ fontSize: '9px', opacity: 0.6 }}> KM/L</span></div>
                                                 </div>
                                                 <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '10px' }}>
                                                     <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '2px' }}>Run</div>
-                                                    <div style={{ color: 'white', opacity: 0.9, fontWeight: '950', fontSize: '12px' }}>{(v.totalDistance || 0).toLocaleString()}<span style={{fontSize: '9px', opacity: 0.6}}> KM</span></div>
+                                                    <div style={{ color: 'white', opacity: 0.9, fontWeight: '950', fontSize: '12px' }}>{(v.totalDistance || 0).toLocaleString()}<span style={{ fontSize: '9px', opacity: 0.6 }}> KM</span></div>
                                                 </div>
                                             </div>
                                             <div>

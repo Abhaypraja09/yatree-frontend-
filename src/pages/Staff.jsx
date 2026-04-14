@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
+import jsPDF from 'jspdf';
+import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import OfficeGeofencePicker from '../components/OfficeGeofencePicker';
 import { todayIST, toISTDateString, formatDateIST, formatTimeIST, nowIST } from '../utils/istUtils';
@@ -142,7 +144,13 @@ const Staff = () => {
     const fetchMonthlyReport = async () => {
         if (!selectedCompany?._id) return;
         try {
-            const { data } = await axios.get(`/api/admin/staff-attendance/${selectedCompany._id}?month=${selectedMonth}&year=${selectedYear}`);
+            let url = `/api/admin/staff-attendance/${selectedCompany._id}`;
+            if (isRange) {
+                url += `?from=${fromDate}&to=${toDate}`;
+            } else {
+                url += `?month=${selectedMonth}&year=${selectedYear}`;
+            }
+            const { data } = await axios.get(url);
             setMonthlyReport(data.report || []);
         } catch (error) {
             console.error('Error fetching monthly report:', error);
@@ -239,6 +247,103 @@ const Staff = () => {
         const wb = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(wb, ws, "Staff Attendance");
         XLSX.writeFile(wb, `Staff_Attendance_${isRange ? `${fromDate}_to_${toDate}` : toDate}.xlsx`);
+    };
+
+    const exportPayrollToExcel = () => {
+        if (!monthlyReport || monthlyReport.length === 0) {
+            alert('No payroll data available to export.');
+            return;
+        }
+
+        const dataToExport = monthlyReport.map(item => ({
+            'Staff Name': item.name,
+            'Designation': item.designation || 'Staff',
+            'Cycle Start': item.cycleStart,
+            'Cycle End': item.cycleEnd,
+            'Basic Salary': item.salary,
+            'Present Days': item.presentDays,
+            'Paid Leaves Used': item.paidLeavesUsed,
+            'Sundays Passed': item.sundaysPassed,
+            'Sundays Worked': item.sundaysWorked,
+            'Extra Leaves (Unpaid)': item.extraLeaves,
+            'Deduction': item.deduction,
+            'Sunday Bonus': item.sundayBonus,
+            'Final Salary': item.finalSalary
+        }));
+
+        const ws = XLSX.utils.json_to_sheet(dataToExport);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Payroll Summary");
+        XLSX.writeFile(wb, `Staff_Payroll_${selectedMonth}_${selectedYear}.xlsx`);
+    };
+
+    const downloadSalarySlip = (staff) => {
+        const doc = new jsPDF();
+
+        // Header
+        doc.setFontSize(22);
+        doc.setTextColor(40);
+        doc.text("SALARY SLIP", 105, 20, { align: "center" });
+
+        doc.setFontSize(14);
+        doc.text(`${selectedCompany?.name || 'Company CRM'}`, 105, 30, { align: "center" });
+        doc.line(20, 35, 190, 35);
+
+        // Staff Info
+        doc.setFontSize(11);
+        doc.setTextColor(60);
+        doc.text(`Staff Name: ${staff.name}`, 20, 50);
+        doc.text(`Designation: ${staff.designation || 'Staff'}`, 20, 57);
+        doc.text(`Month/Year: ${selectedMonth}/${selectedYear}`, 140, 50);
+        doc.text(`Date Generated: ${todayIST()}`, 140, 57);
+
+        if (staff.cycleStart && staff.cycleEnd) {
+            doc.text(`Salary Cycle: ${staff.cycleStart} to ${staff.cycleEnd}`, 20, 64);
+        }
+
+        // Salary Details Table
+        const tableBody = [
+            ["Monthly Base Salary", `Rs. ${staff.salary || 0}`],
+            ["Effective Present Days", `${staff.presentDays || 0} Days`],
+            ["Approved Paid Leaves", `${staff.paidLeavesUsed || 0} Days`],
+            ["Sunday Holidays (Paid)", `${staff.sundaysPassed || 0} Days`],
+            ["Sundays Worked (Bonus)", `${staff.sundaysWorked || 0} Days`],
+            ["Unpaid Absences / Extra Leaves", `${staff.extraLeaves || 0} Days`],
+            ["Total Deductions", `Rs. ${staff.deduction || 0}`],
+            ["Sunday Bonus Payout", `Rs. ${staff.sundayBonus || 0}`],
+            ["", ""],
+            ["NET PAYABLE AMOUNT", `Rs. ${staff.finalSalary || 0}`]
+        ];
+
+        doc.autoTable({
+            startY: 75,
+            head: [['Earnings & Deductions', 'Amount / Details']],
+            body: tableBody,
+            theme: 'grid',
+            headStyles: { fillColor: [59, 130, 246] },
+            bodyStyles: { fontSize: 10 },
+            columnStyles: {
+                1: { halign: 'right', fontStyle: 'bold' }
+            },
+            didParseCell: function (data) {
+                if (data.row.index === 9) {
+                    data.cell.styles.fillColor = [241, 191, 36];
+                    data.cell.styles.textColor = [0, 0, 0];
+                    data.cell.styles.fontSize = 12;
+                }
+            }
+        });
+
+        // Footer
+        const finalY = doc.lastAutoTable.finalY + 30;
+        doc.setFontSize(10);
+        doc.text("Authorized Signatory", 20, finalY);
+        doc.line(20, finalY - 5, 60, finalY - 5);
+
+        doc.text("Employee Signature", 140, finalY);
+        doc.line(140, finalY - 5, 180, finalY - 5);
+
+        doc.save(`${staff.name}_Salary_Slip_${selectedMonth}_${selectedYear}.pdf`);
     };
 
 
@@ -779,178 +884,133 @@ const Staff = () => {
                         />
                     </div>
 
-                    {view === 'attendance' && (
-                        <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '6px', borderRadius: '18px', gap: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <button
-                                onClick={() => setShowBackdateModal(true)}
-                                style={{
-                                    height: '36px', padding: '0 15px', borderRadius: '12px',
-                                    background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', fontWeight: '800',
-                                    border: '1px solid rgba(99, 102, 241, 0.3)', cursor: 'pointer', fontSize: '11px', textTransform: 'uppercase',
-                                    display: 'flex', alignItems: 'center', gap: '6px'
-                                }}
-                            >
-                                <History size={14} /> MANUAL ENTRY
-                            </button>
-
-                            <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 4px' }}></div>
-
-                            <button
-                                onClick={() => {
-                                    const d = nowIST(toDate);
-                                    d.setUTCDate(d.getUTCDate() - 1);
-                                    const newDate = d.toISOString().split('T')[0];
-                                    setToDate(newDate);
-                                    if (!isRange) setFromDate(newDate);
-                                }}
-                                style={{
-                                    width: '36px', height: '36px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)',
-                                    border: '1px solid rgba(255,255,255,0.05)', display: 'flex',
-                                    alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                                }}
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-
-                            {isRange && (
-                                <div
-                                    onClick={() => {
-                                        const el = document.getElementById('from-date-picker-staff');
-                                        if (el) {
-                                            if (typeof el.showPicker === 'function') el.showPicker();
-                                            else el.click();
-                                        }
-                                    }}
+                    {(view === 'summary' || view === 'list' || view === 'attendance') && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            {view === 'attendance' && (
+                                <button
+                                    onClick={() => setShowBackdateModal(true)}
                                     style={{
-                                        padding: '0 12px', height: '36px', display: 'flex',
-                                        alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                        background: 'rgba(99, 102, 241, 0.1)', borderRadius: '10px',
-                                        border: '1px solid rgba(99, 102, 241, 0.15)',
-                                        position: 'relative', minWidth: '100px'
+                                        height: '40px', padding: '0 15px', borderRadius: '12px',
+                                        background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', fontWeight: '800',
+                                        border: '1px solid rgba(99, 102, 241, 0.3)', cursor: 'pointer', fontSize: '11px', textTransform: 'uppercase',
+                                        display: 'flex', alignItems: 'center', gap: '6px'
                                     }}
                                 >
-                                    <span style={{ color: '#818cf8', fontSize: '11px', fontWeight: '900' }}>FROM:</span>
-                                    <span style={{ color: 'white', fontSize: '12px', fontWeight: '900' }}>
-                                        {formatDateIST(fromDate)}
-                                    </span>
-                                    <input
-                                        id="from-date-picker-staff"
-                                        type="date"
-                                        value={fromDate}
-                                        onChange={(e) => setFromDate(e.target.value)}
-                                        style={{
-                                            position: 'absolute', opacity: 0, width: '100%', height: '100%',
-                                            left: 0, top: 0, cursor: 'pointer', zIndex: 1
-                                        }}
-                                    />
-                                </div>
+                                    <History size={14} /> MANUAL ENTRY
+                                </button>
                             )}
-
-                            <div
-                                onClick={() => {
-                                    const el = document.getElementById('main-date-picker-staff');
-                                    if (el) {
-                                        if (typeof el.showPicker === 'function') el.showPicker();
-                                        else el.click();
-                                    }
-                                }}
-                                style={{
-                                    padding: '0 15px', height: '36px', display: 'flex',
-                                    alignItems: 'center', gap: '8px', cursor: 'pointer',
-                                    background: 'rgba(14, 165, 233, 0.1)', borderRadius: '10px',
-                                    border: '1px solid rgba(14, 165, 233, 0.15)',
-                                    position: 'relative', minWidth: '100px'
-                                }}
-                            >
-                                {isRange && <span style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '900' }}>TO:</span>}
-                                {!isRange && <Calendar size={14} color="var(--primary)" />}
-                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>
-                                    {formatDateIST(toDate)}
-                                </span>
-                                <input
-                                    id="main-date-picker-staff"
-                                    type="date"
-                                    value={toDate}
-                                    onChange={(e) => {
-                                        setToDate(e.target.value);
-                                        if (!isRange) setFromDate(e.target.value);
-                                    }}
+                            
+                            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <button
+                                    onClick={() => setIsRange(false)}
                                     style={{
-                                        position: 'absolute', opacity: 0, width: '100%', height: '100%',
-                                        left: 0, top: 0, cursor: 'pointer', zIndex: 1
+                                        padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                                        background: !isRange ? 'var(--primary)' : 'transparent',
+                                        color: !isRange ? 'white' : 'rgba(255,255,255,0.4)',
+                                        fontSize: '11px', fontWeight: '800', transition: '0.3s'
                                     }}
-                                />
+                                >
+                                    MONTHLY
+                                </button>
+                                <button
+                                    onClick={() => setIsRange(true)}
+                                    style={{
+                                        padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                                        background: isRange ? 'var(--primary)' : 'transparent',
+                                        color: isRange ? 'white' : 'rgba(255,255,255,0.4)',
+                                        fontSize: '11px', fontWeight: '800', transition: '0.3s'
+                                    }}
+                                >
+                                    RANGE
+                                </button>
                             </div>
 
-                            <button
-                                onClick={() => {
-                                    const d = nowIST(toDate);
-                                    d.setUTCDate(d.getUTCDate() + 1);
-                                    const newDate = d.toISOString().split('T')[0];
-                                    setToDate(newDate);
-                                    if (!isRange) setFromDate(newDate);
-                                }}
-                                style={{
-                                    width: '36px', height: '36px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)',
-                                    border: '1px solid rgba(255,255,255,0.05)', display: 'flex',
-                                    alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                                }}
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-
-                            <button
-                                onClick={() => {
-                                    const next = !isRange;
-                                    setIsRange(next);
-                                    if (!next) setFromDate(toDate);
-                                }}
-                                style={{
-                                    marginLeft: '5px', padding: '0 10px', height: '36px',
-                                    borderRadius: '10px', border: 'none', cursor: 'pointer',
-                                    background: isRange ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
-                                    color: isRange ? 'white' : 'rgba(255,255,255,0.4)',
-                                    fontSize: '10px', fontWeight: '900', textTransform: 'uppercase'
-                                }}
-                            >
-                                {isRange ? 'Range ON' : 'Single'}
-                            </button>
-                        </div>
-                    )}
-
-                    {(view === 'summary' || view === 'list') && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                            <select
-                                className="premium-compact-input"
-                                style={{ height: '48px', width: '130px', margin: 0 }}
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
-                            >
-                                <option value="1">January</option>
-                                <option value="2">February</option>
-                                <option value="3">March</option>
-                                <option value="4">April</option>
-                                <option value="5">May</option>
-                                <option value="6">June</option>
-                                <option value="7">July</option>
-                                <option value="8">August</option>
-                                <option value="9">September</option>
-                                <option value="10">October</option>
-                                <option value="11">November</option>
-                                <option value="12">December</option>
-                            </select>
-                            <select
-                                className="premium-compact-input"
-                                style={{ height: '48px', width: '100px', margin: 0 }}
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(e.target.value)}
-                            >
-                                {Array.from({ length: 5 }, (_, i) => nowIST().getUTCFullYear() - 2 + i).map(y => (
-                                    <option key={y} value={y}>{y}</option>
-                                ))}
-                            </select>
+                            {!isRange ? (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <button
+                                        onClick={() => {
+                                            const d = nowIST(toDate);
+                                            d.setUTCDate(d.getUTCDate() - 1);
+                                            const newDate = d.toISOString().split('T')[0];
+                                            setToDate(newDate);
+                                            setFromDate(newDate);
+                                        }}
+                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'white', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+                                    >
+                                        <ChevronLeft size={16} />
+                                    </button>
+                                    <select
+                                        className="premium-compact-input"
+                                        style={{ height: '40px', width: '120px', margin: 0, fontSize: '11px' }}
+                                        value={selectedMonth}
+                                        onChange={(e) => setSelectedMonth(e.target.value)}
+                                    >
+                                        <option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
+                                    </select>
+                                    <select
+                                        className="premium-compact-input"
+                                        style={{ height: '40px', width: '90px', margin: 0, fontSize: '11px' }}
+                                        value={selectedYear}
+                                        onChange={(e) => setSelectedYear(e.target.value)}
+                                    >
+                                        {Array.from({ length: 5 }, (_, i) => nowIST().getUTCFullYear() - 2 + i).map(y => (
+                                            <option key={y} value={y}>{y}</option>
+                                        ))}
+                                    </select>
+                                    <button
+                                        onClick={() => {
+                                            const d = nowIST(toDate);
+                                            d.setUTCDate(d.getUTCDate() + 1);
+                                            const newDate = d.toISOString().split('T')[0];
+                                            setToDate(newDate);
+                                            setFromDate(newDate);
+                                        }}
+                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'white', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
+                                    >
+                                        <ChevronRight size={16} />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <div
+                                        onClick={() => document.getElementById('range-from-picker').showPicker()}
+                                        style={{
+                                            padding: '0 12px', height: '40px', display: 'flex', alignItems: 'center', gap: '8px',
+                                            background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)',
+                                            cursor: 'pointer', position: 'relative'
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>FROM:</span>
+                                        <span style={{ color: 'white', fontSize: '12px', fontWeight: '700' }}>{formatDateIST(fromDate)}</span>
+                                        <input
+                                            id="range-from-picker"
+                                            type="date"
+                                            value={fromDate}
+                                            onChange={(e) => setFromDate(e.target.value)}
+                                            style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }}
+                                        />
+                                    </div>
+                                    <ChevronRight size={14} color="rgba(255,255,255,0.2)" />
+                                    <div
+                                        onClick={() => document.getElementById('range-to-picker').showPicker()}
+                                        style={{
+                                            padding: '0 12px', height: '40px', display: 'flex', alignItems: 'center', gap: '8px',
+                                            background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)',
+                                            cursor: 'pointer', position: 'relative'
+                                        }}
+                                    >
+                                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>TO:</span>
+                                        <span style={{ color: 'white', fontSize: '12px', fontWeight: '700' }}>{formatDateIST(toDate)}</span>
+                                        <input
+                                            id="range-to-picker"
+                                            type="date"
+                                            value={toDate}
+                                            onChange={(e) => setToDate(e.target.value)}
+                                            style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }}
+                                        />
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     )}
                 </div>
@@ -1366,11 +1426,26 @@ const Staff = () => {
                                         </div>
                                         <h2 style={{ fontSize: '34px', fontWeight: '900', color: 'white', margin: 0, letterSpacing: '-1.5px' }}>Payroll Intelligence</h2>
                                     </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <p style={{ fontSize: '11px', color: 'var(--primary)', margin: '0 0 5px 0', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>GROSS DISBURSEMENT</p>
-                                        <h2 style={{ fontSize: '48px', fontWeight: '1000', color: 'white', margin: 0, letterSpacing: '-2px', textShadow: '0 0 40px rgba(251, 191, 36, 0.3)' }}>
-                                            <span style={{ color: 'var(--primary)', fontSize: '24px', verticalAlign: 'top', marginRight: '8px', opacity: 0.8 }}>₹</span>{monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
-                                        </h2>
+                                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '15px' }}>
+                                        <div>
+                                            <p style={{ fontSize: '11px', color: 'var(--primary)', margin: '0 0 5px 0', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>GROSS DISBURSEMENT</p>
+                                            <h2 style={{ fontSize: '48px', fontWeight: '1000', color: 'white', margin: 0, letterSpacing: '-2px', textShadow: '0 0 40px rgba(251, 191, 36, 0.3)' }}>
+                                                <span style={{ color: 'var(--primary)', fontSize: '24px', verticalAlign: 'top', marginRight: '8px', opacity: 0.8 }}>₹</span>{monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
+                                            </h2>
+                                        </div>
+                                        <button
+                                            onClick={exportPayrollToExcel}
+                                            style={{
+                                                display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px',
+                                                borderRadius: '14px', background: 'rgba(255, 255, 255, 0.05)',
+                                                border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white',
+                                                fontSize: '11px', fontWeight: '800', cursor: 'pointer', transition: '0.3s'
+                                            }}
+                                            onMouseEnter={(e) => { e.target.style.background = 'rgba(255,255,255,0.1)'; e.target.style.borderColor = 'var(--primary)'; }}
+                                            onMouseLeave={(e) => { e.target.style.background = 'rgba(255,255,255,0.05)'; e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
+                                        >
+                                            <Download size={16} color="var(--primary)" /> DOWNLOAD PAYROLL REPORT
+                                        </button>
                                     </div>
                                 </div>
 
@@ -1746,6 +1821,19 @@ const Staff = () => {
                                                     📅 {formatDateIST(selectedStaffReport.cycleStart, { day: '2-digit', month: 'short' })} → {formatDateIST(selectedStaffReport.cycleEnd, { day: '2-digit', month: 'short', year: 'numeric' })}
                                                 </p>
                                             )}
+
+                                            <button
+                                                onClick={() => downloadSalarySlip(selectedStaffReport)}
+                                                style={{
+                                                    marginTop: '20px', width: '100%', padding: '12px',
+                                                    borderRadius: '12px', background: 'rgba(255,255,255,0.05)',
+                                                    border: '1px solid rgba(255,255,255,0.1)', color: 'white',
+                                                    fontSize: '11px', fontWeight: '800', cursor: 'pointer',
+                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                                }}
+                                            >
+                                                <FileText size={16} color="var(--primary)" /> DOWNLOAD SALARY SLIP
+                                            </button>
                                         </div>
 
                                         {/* Detailed Breakdown */}

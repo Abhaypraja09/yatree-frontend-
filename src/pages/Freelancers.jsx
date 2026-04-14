@@ -207,8 +207,8 @@ const Freelancers = () => {
     const [expandedLedger, setExpandedLedger] = useState(null);
 
     // Form States
-    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '' });
-    const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '' });
+    const [formData, setFormData] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '' });
+    const [editForm, setEditForm] = useState({ name: '', mobile: '', licenseNumber: '', dailyWage: '', nightStayBonus: '500', sameDayReturnBonus: '100', sameDayReturnEnabled: false });
     const [punchInData, setPunchInData] = useState({
         vehicleId: '',
         km: '',
@@ -303,7 +303,7 @@ const Freelancers = () => {
         setShowManualModal(false);
         setShowDocumentModal(false);
         setShowQuickExpenseModal(false);
-        setFormData({ name: '', mobile: '', licenseNumber: '' });
+        setFormData({ name: '', mobile: '', licenseNumber: '', dailyWage: '' });
         setPunchInData({
             vehicleId: '',
             km: '',
@@ -681,7 +681,7 @@ const Freelancers = () => {
             setMessage({ type: 'success', text: 'Freelancer added successfully!' });
             setTimeout(() => {
                 setShowAddModal(false);
-                setFormData({ name: '', mobile: '', licenseNumber: '', dailyWage: '', nightStayBonus: '0', sameDayReturnBonus: '0' });
+                setFormData({ name: '', mobile: '', licenseNumber: '', dailyWage: '' });
                 setMessage({ type: '', text: '' });
                 fetchFreelancers();
             }, 1000);
@@ -1067,8 +1067,9 @@ const Freelancers = () => {
             mobile: driver.mobile,
             licenseNumber: driver.licenseNumber || '',
             dailyWage: driver.dailyWage || '',
-            nightStayBonus: driver.nightStayBonus !== undefined && driver.nightStayBonus !== null ? String(driver.nightStayBonus) : '0',
-            sameDayReturnBonus: driver.sameDayReturnBonus !== undefined && driver.sameDayReturnBonus !== null ? String(driver.sameDayReturnBonus) : '0'
+            nightStayBonus: driver.nightStayBonus !== undefined && driver.nightStayBonus !== null ? String(driver.nightStayBonus) : '500',
+            sameDayReturnBonus: driver.sameDayReturnBonus !== undefined && driver.sameDayReturnBonus !== null ? String(driver.sameDayReturnBonus) : '100',
+            sameDayReturnEnabled: driver.sameDayReturnEnabled || false
         });
         setShowEditModal(true);
     };
@@ -1624,6 +1625,10 @@ const Freelancers = () => {
                                                                         <MapPin size={13} />
                                                                     </button>
 
+                                                                    <button onClick={() => openEditModal(d)} title="Edit Profile" style={{ width: '34px', height: '34px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}>
+                                                                        <Edit2 size={13} />
+                                                                    </button>
+
                                                                     <button onClick={() => {
                                                                         if (isOnDuty) {
                                                                             const activeDuty = dayAttendance.find(a => a.status === 'incomplete');
@@ -1926,8 +1931,9 @@ const Freelancers = () => {
                                 <Field label="Full Name *" value={formData.name} onChange={v => setFormData({ ...formData, name: v })} required />
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                     <Field label="Mobile Number *" value={formData.mobile} onChange={v => setFormData({ ...formData, mobile: v })} required />
-                                    <Field label="License Number" value={formData.licenseNumber} onChange={v => setFormData({ ...formData, licenseNumber: v })} />
+                                    <Field label="Daily Wage (Salary)" type="number" value={formData.dailyWage} onChange={v => setFormData({ ...formData, dailyWage: v })} />
                                 </div>
+                                <Field label="License Number" value={formData.licenseNumber} onChange={v => setFormData({ ...formData, licenseNumber: v })} />
 
                                 <SubmitButton disabled={submitting} text="Register Freelancer" message={message} />
                             </form>
@@ -1944,6 +1950,34 @@ const Freelancers = () => {
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
                                     <Field label="Mobile Number *" value={editForm.mobile} onChange={v => setEditForm({ ...editForm, mobile: v })} required />
                                     <Field label="License Number" value={editForm.licenseNumber} onChange={v => setEditForm({ ...editForm, licenseNumber: v })} />
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+                                    <Field label="Daily Wage" type="number" value={editForm.dailyWage} onChange={v => setEditForm({ ...editForm, dailyWage: v })} />
+                                    <Field label="Night Stay" type="number" value={editForm.nightStayBonus} onChange={v => setEditForm({ ...editForm, nightStayBonus: v })} />
+                                </div>
+                                <div style={{ background: 'rgba(59, 130, 246, 0.05)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(59, 130, 246, 0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div>
+                                        <div style={{ color: 'white', fontSize: '13px', fontWeight: '800' }}>Same Day Return</div>
+                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', marginTop: '2px' }}>Enable SDR bonus for this driver</div>
+                                    </div>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <input 
+                                            type="number" 
+                                            value={editForm.sameDayReturnBonus} 
+                                            onChange={e => setEditForm({...editForm, sameDayReturnBonus: e.target.value})}
+                                            style={{ width: '70px', height: '36px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'white', textAlign: 'center', fontSize: '12px' }}
+                                        />
+                                        <button
+                                            type="button"
+                                            onClick={() => setEditForm({ ...editForm, sameDayReturnEnabled: !editForm.sameDayReturnEnabled })}
+                                            style={{
+                                                background: editForm.sameDayReturnEnabled ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                                                color: 'white', border: 'none', padding: '6px 14px', borderRadius: '20px', fontSize: '10px', fontWeight: '900', cursor: 'pointer'
+                                            }}
+                                        >
+                                            {editForm.sameDayReturnEnabled ? 'ENABLED' : 'DISABLED'}
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <SubmitButton disabled={submitting} text="Update Freelancer" message={message} />

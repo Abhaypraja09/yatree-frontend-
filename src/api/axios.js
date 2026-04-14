@@ -4,11 +4,10 @@ const API_URL = import.meta.env.VITE_API_URL || '';
 
 const instance = axios.create({
     baseURL: API_URL,
-    timeout: 30000, // 30s timeout to prevent hanging requests
+    timeout: 30000, 
 });
 
-// --- IN-FLIGHT REQUEST DEDUPLICATION ---
-// Prevents the same GET request from firing multiple times simultaneously
+
 const pendingRequests = new Map();
 
 instance.interceptors.request.use(

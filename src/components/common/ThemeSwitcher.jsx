@@ -8,12 +8,12 @@ const ThemeSwitcher = () => {
   const { theme, updateTheme, resetTheme, defaultThemes } = useTheme();
   const { user } = useAuth();
   
-  // Only show for non-drivers (Admins/Staff)
-  if (user?.role === 'Driver') return null;
-  
   // State for custom colors
   const [customPrimary, setCustomPrimary] = useState(theme.primary);
   const [customSecondary, setCustomSecondary] = useState(theme.secondary || theme.primary);
+
+  // Only show for non-drivers (Admins/Staff)
+  if (user?.role === 'Driver') return null;
 
   const toggleOpen = () => setIsOpen(!isOpen);
 

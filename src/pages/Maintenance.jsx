@@ -14,13 +14,18 @@ import {
     CreditCard,
     AlertCircle,
     CheckCircle2,
+    Settings,
+    User,
+    Droplets,
+    Zap,
+    Layers,
+    ArrowRight,
     History,
-    Car,
+    FileSpreadsheet,
     Filter,
     ChevronDown,
     Upload,
-    FileSpreadsheet,
-    Settings
+    Car
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -39,12 +44,17 @@ const Maintenance = () => {
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('All');
-    const [selectedMonth, setSelectedMonth] = useState('All');
+    const [selectedMonth, setSelectedMonth] = useState(nowIST().getUTCMonth() + 1);
     const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear());
     const [pendingExpenses, setPendingExpenses] = useState([]);
     const [filterGarage, setFilterGarage] = useState('All');
     const [selectedBillPhoto, setSelectedBillPhoto] = useState(null);
     const [activeCategory, setActiveCategory] = useState('All');
+    const [viewMode, setViewMode] = useState('history'); // 'history' or 'super'
+    const [aggData, setAggData] = useState([]);
+    const [aggLoading, setAggLoading] = useState(false);
+    const [aggSummary, setAggSummary] = useState(null);
+    const [aggSearch, setAggSearch] = useState('');
 
     useEffect(() => {
         setSearchTerm('');
@@ -52,9 +62,9 @@ const Maintenance = () => {
         setFilterGarage('All');
         setFilterVehicle('All');
         setActiveCategory('All');
-        const now = new Date();
-        setSelectedMonth(now.getMonth() + 1);
-        setSelectedYear(now.getFullYear());
+        const istNow = nowIST();
+        setSelectedMonth(istNow.getUTCMonth() + 1);
+        setSelectedYear(istNow.getUTCFullYear());
         setShowModal(false);
         setEditingId(null);
         setFormData({
@@ -152,8 +162,26 @@ const Maintenance = () => {
             fetchPending();
             fetchVehicles();
             fetchDrivers();
+            if (viewMode === 'super') fetchAggregatedData();
         }
-    }, [selectedCompany, selectedMonth, selectedYear]);
+    }, [selectedCompany, selectedMonth, selectedYear, viewMode]);
+
+    const fetchAggregatedData = async () => {
+        if (!selectedCompany?._id) return;
+        setAggLoading(true);
+        try {
+            const userInfoStr = localStorage.getItem('userInfo');
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+            if (!userInfo?.token) return;
+
+            const { data: res } = await axios.get(`/api/admin/vehicle-monthly-details/${selectedCompany._id}?month=${selectedMonth}&year=${selectedYear}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setAggData(res.vehicles || []);
+            setAggSummary(res.summary || null);
+        } catch (err) { console.error(err); }
+        finally { setAggLoading(false); }
+    };
 
     const fetchRecords = async () => {
         if (!selectedCompany?._id) return;
@@ -390,7 +418,7 @@ const Maintenance = () => {
     const uniqueGarages = [...new Set(records.map(r => r.garageName || r.vendorName).filter(Boolean))].sort();
     const uniqueVehicles = [...new Set(vehicles.map(v => v.carNumber).filter(Boolean))].sort();
 
-    const filteredRecords = (records || []).filter(r => {
+    const baseFilteredRecords = (records || []).filter(r => {
         const matchesSearch = (r.vehicle?.carNumber?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
             r.maintenanceType?.toLowerCase()?.includes(searchTerm.toLowerCase()) ||
             r.garageName?.toLowerCase()?.includes(searchTerm.toLowerCase()));
@@ -404,13 +432,15 @@ const Maintenance = () => {
             serviceRegex.test(r.description || '') ||
             serviceRegex.test(r.maintenanceType || '');
 
-        const matchesCategory = activeCategory === 'All' || r.maintenanceType === activeCategory;
+        return matchesSearch && matchesType && matchesGarage && matchesVehicle && !isService;
+    });
 
-        return matchesSearch && matchesType && matchesGarage && matchesVehicle && matchesCategory && !isService;
+    const filteredRecords = baseFilteredRecords.filter(r => {
+        return activeCategory === 'All' || r.maintenanceType === activeCategory;
     });
 
     const categoryStats = maintenanceTypes.reduce((acc, type) => {
-        acc[type] = (records || []).filter(r => r.maintenanceType === type).length;
+        acc[type] = baseFilteredRecords.filter(r => r.maintenanceType === type).length;
         return acc;
     }, {});
 
@@ -488,19 +518,52 @@ const Maintenance = () => {
                         </select>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px', width: '100%' }}>
-                        <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', flex: 1, borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', background: 'rgba(0,0,0,0.2)' }}>
-                            <Search size={16} style={{ margin: '0 12px', color: 'rgba(255,255,255,0.3)' }} />
-                            <input
-                                type="text"
-                                placeholder="Search history..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
+                    <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
+                        <div style={{
+                            display: 'flex',
+                            background: 'rgba(0,0,0,0.3)',
+                            padding: '4px',
+                            borderRadius: '14px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            width: '100%',
+                            maxWidth: '400px'
+                        }}>
+                            <button
+                                onClick={() => setViewMode('history')}
                                 style={{
-                                    background: 'transparent', border: 'none', color: 'white', height: '48px', width: '100%', outline: 'none', fontSize: '13px'
+                                    flex: 1,
+                                    padding: '10px',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    background: viewMode === 'history' ? theme.primary : 'transparent',
+                                    color: viewMode === 'history' ? 'black' : 'rgba(255,255,255,0.4)',
+                                    fontSize: '12px',
+                                    fontWeight: '900',
+                                    cursor: 'pointer',
+                                    transition: '0.3s'
                                 }}
-                            />
+                            >
+                                <History size={14} style={{ marginRight: '6px' }} /> History Log
+                            </button>
+                            <button
+                                onClick={() => setViewMode('super')}
+                                style={{
+                                    flex: 1,
+                                    padding: '10px',
+                                    borderRadius: '10px',
+                                    border: 'none',
+                                    background: viewMode === 'super' ? theme.primary : 'transparent',
+                                    color: viewMode === 'super' ? 'black' : 'rgba(255,255,255,0.4)',
+                                    fontSize: '12px',
+                                    fontWeight: '900',
+                                    cursor: 'pointer',
+                                    transition: '0.3s'
+                                }}
+                            >
+                                <Zap size={14} style={{ marginRight: '6px' }} /> Super Maintenance
+                            </button>
                         </div>
+
                         <div style={{ display: 'flex', gap: '8px' }}>
                             <button
                                 onClick={downloadExcel}
@@ -591,7 +654,11 @@ const Maintenance = () => {
                     </div>
                     <div>
                         <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Spend (Filtered)</p>
-                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>₹{totalMaintenanceCost.toLocaleString()}</h2>
+                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>
+                            ₹{(viewMode === 'super' 
+                                ? (aggData?.reduce((s, v) => s + (v.maintenance?.totalAmount || 0), 0) || 0)
+                                : totalMaintenanceCost).toLocaleString()}
+                        </h2>
                     </div>
                 </motion.div>
 
@@ -704,7 +771,7 @@ const Maintenance = () => {
                             </span>
 
                             {/* Simple dynamic count bubble */}
-                            {records.filter(r => r.maintenanceType === type).length > 0 && (
+                            {categoryStats[type] > 0 && (
                                 <span style={{
                                     padding: '2px 7px',
                                     borderRadius: '6px',
@@ -713,7 +780,7 @@ const Maintenance = () => {
                                     fontSize: '9px',
                                     fontWeight: '950'
                                 }}>
-                                    {records.filter(r => r.maintenanceType === type).length}
+                                    {categoryStats[type]}
                                 </span>
                             )}
                         </motion.button>
@@ -721,7 +788,75 @@ const Maintenance = () => {
                 </div>
             </div>
 
-            {/* Desktop Table Content */}
+            {/* View Mode Switching Logic */}
+            {viewMode === 'super' ? (
+                <div className="glass-card" style={{ padding: '0', background: 'rgba(30,30,40,0.3)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                    <div style={{ overflowX: 'auto' }}>
+                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
+                            <thead>
+                                <tr style={{ textAlign: 'left', background: 'rgba(0,0,0,0.1)' }}>
+                                    <th style={{ padding: '20px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle Details</th>
+                                    <th style={{ padding: '20px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Maintenance Total</th>
+                                    <th style={{ padding: '20px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Fuel Cost</th>
+                                    <th style={{ padding: '20px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Avg Mileage</th>
+                                    <th style={{ padding: '20px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Distance & KM</th>
+                                    <th style={{ padding: '20px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {aggLoading ? (
+                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px', color: 'white', fontWeight: '800' }}>Aggregating Fleet Maintenance Reports...</td></tr>
+                                ) : aggData.length === 0 ? (
+                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>No consolidated records found.</td></tr>
+                                ) : aggData.filter(v => v.carNumber.toLowerCase().includes(aggSearch.toLowerCase()) || v.model.toLowerCase().includes(aggSearch.toLowerCase())).map((v, idx) => (
+                                    <motion.tr
+                                        key={v.vehicleId || idx}
+                                        initial={{ opacity: 0, x: -10 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        transition={{ delay: idx * 0.03 }}
+                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
+                                    >
+                                        <td style={{ padding: '20px 25px' }}>
+                                            <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>{v.carNumber}</div>
+                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '700' }}>{v.model}</div>
+                                        </td>
+                                        <td style={{ padding: '20px 25px' }}>
+                                            <div style={{ color: theme.primary, fontWeight: '950', fontSize: '16px' }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</div>
+                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{v.maintenance?.records?.length || 0} service jobs</div>
+                                        </td>
+                                        <td style={{ padding: '20px 25px' }}>
+                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>₹{(v.fuel?.totalAmount || 0).toLocaleString()}</div>
+                                            <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '850' }}>{(v.fuel?.totalQuantity || 0).toFixed(1)} Liters</div>
+                                        </td>
+                                        <td style={{ padding: '20px 25px' }}>
+                                            <div style={{ color: '#0ea5e9', fontWeight: '800', fontSize: '14px' }}>{(v.fuel?.avgMileage || 0).toFixed(2)}</div>
+                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>KM / LITER</div>
+                                        </td>
+                                        <td style={{ padding: '20px 25px' }}>
+                                            <div style={{ color: '#10b981', fontWeight: '950', fontSize: '15px' }}>{(v.totalDistance || 0).toLocaleString()} <span style={{ fontSize: '10px', fontWeight: '700' }}>KM (Dist)</span></div>
+                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Odo: {(v.lastOdometer || 0).toLocaleString()} KM</div>
+                                        </td>
+                                        <td style={{ padding: '20px 25px', textAlign: 'right' }}>
+                                            <button 
+                                                onClick={() => {
+                                                    setFilterVehicle(v.carNumber);
+                                                    setViewMode('history');
+                                                    setActiveCategory('All');
+                                                }}
+                                                style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: '10px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', transition: '0.3s' }}
+                                            >
+                                                View Jobs <ArrowRight size={12} style={{ marginLeft: '4px' }} />
+                                            </button>
+                                        </td>
+                                    </motion.tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            ) : (
+                <>
+                {/* Category Bar and History Table continue below... */}
             <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
                 {loading ? (
                     <div style={{ padding: '100px', textAlign: 'center' }}>
@@ -734,6 +869,7 @@ const Maintenance = () => {
                             <tr style={{ textAlign: 'left', background: 'rgba(255,255,255,0.02)' }}>
                                 <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Date & Vehicle</th>
                                 <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Service Details</th>
+                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>KM Reading</th>
                                 <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Garage / Vendor</th>
                                 <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Cost & Pay</th>
                                 <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
@@ -742,7 +878,7 @@ const Maintenance = () => {
                         <tbody>
                             {filteredRecords.length === 0 ? (
                                 <tr>
-                                    <td colSpan="5" style={{ padding: '100px', textAlign: 'center' }}>
+                                    <td colSpan="6" style={{ padding: '100px', textAlign: 'center' }}>
                                         <Wrench size={48} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
                                         <h3 style={{ color: 'white' }}>No history found</h3>
                                     </td>
@@ -806,10 +942,15 @@ const Maintenance = () => {
                                         <div style={{ color: 'white', fontSize: '13px', marginTop: '4px', fontWeight: '500' }}>
                                             {record.category || 'General Service'}
                                         </div>
-                                        {record.currentKm && (
-                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                                At {Number(record.currentKm).toLocaleString()} KM
+                                    </td>
+                                    <td style={{ padding: '20px 25px' }}>
+                                        {record.currentKm ? (
+                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>{Number(record.currentKm).toLocaleString()}</div>
+                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Kilometers</div>
                                             </div>
+                                        ) : (
+                                            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px' }}>N/A</span>
                                         )}
                                     </td>
                                     <td style={{ padding: '20px 25px' }}>
@@ -940,7 +1081,7 @@ const Maintenance = () => {
                                             }}>{record.maintenanceType}</span>
                                             {record.currentKm && (
                                                 <span style={{ fontSize: '10px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
-                                                    {Number(record.currentKm).toLocaleString()} KM
+                                                    Reading: {Number(record.currentKm).toLocaleString()} KM
                                                 </span>
                                             )}
                                         </div>
@@ -978,6 +1119,8 @@ const Maintenance = () => {
                     )}
                 </AnimatePresence>
             </div>
+            </>
+        )}
 
             {/* Add Record Modal */}
             <AnimatePresence>

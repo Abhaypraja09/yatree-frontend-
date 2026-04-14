@@ -1454,31 +1454,35 @@ const DriverPortal = () => {
 
                                                         {outsideTripOccurred && (
                                                             <div className="checkbox-group" style={{ marginTop: '12px' }}>
-                                                                <div className="checkbox-item">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        className="checkbox-input"
-                                                                        checked={outsideTripTypes.includes('Same Day')}
-                                                                        onChange={(e) => {
-                                                                            if (e.target.checked) setOutsideTripTypes([...outsideTripTypes, 'Same Day']);
-                                                                            else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Same Day'));
-                                                                        }}
-                                                                    />
-                                                                    <label className="checkbox-label">{t('sameDay')} (+₹{dashboardData?.driver?.sameDayReturnBonus || 100})</label>
-                                                                </div>
+                                                                {(dashboardData?.driver?.sameDayReturnBonus > 0) && (
+                                                                    <div className="checkbox-item">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            className="checkbox-input"
+                                                                            checked={outsideTripTypes.includes('Same Day')}
+                                                                            onChange={(e) => {
+                                                                                if (e.target.checked) setOutsideTripTypes([...outsideTripTypes, 'Same Day']);
+                                                                                else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Same Day'));
+                                                                            }}
+                                                                        />
+                                                                        <label className="checkbox-label">{t('sameDay')} (+₹{dashboardData?.driver?.sameDayReturnBonus})</label>
+                                                                    </div>
+                                                                )}
 
-                                                                <div className="checkbox-item">
-                                                                    <input
-                                                                        type="checkbox"
-                                                                        className="checkbox-input"
-                                                                        checked={outsideTripTypes.includes('Night Stay')}
-                                                                        onChange={(e) => {
-                                                                            if (e.target.checked) setOutsideTripTypes([...outsideTripTypes, 'Night Stay']);
-                                                                            else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Night Stay'));
-                                                                        }}
-                                                                    />
-                                                                    <label className="checkbox-label">{t('nightStay')} (+₹{dashboardData?.driver?.nightStayBonus || 500})</label>
-                                                                </div>
+                                                                {(dashboardData?.driver?.nightStayBonus > 0) && (
+                                                                    <div className="checkbox-item">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            className="checkbox-input"
+                                                                            checked={outsideTripTypes.includes('Night Stay')}
+                                                                            onChange={(e) => {
+                                                                                if (e.target.checked) setOutsideTripTypes([...outsideTripTypes, 'Night Stay']);
+                                                                                else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Night Stay'));
+                                                                            }}
+                                                                        />
+                                                                        <label className="checkbox-label">{t('nightStay')} (+₹{dashboardData?.driver?.nightStayBonus})</label>
+                                                                    </div>
+                                                                )}
                                                             </div>
                                                         )}
                                                     </div>

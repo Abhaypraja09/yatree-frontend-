@@ -35,6 +35,7 @@ const Drivers = ({ isSubComponent = false }) => {
     const [dailyWage, setDailyWage] = useState('');
     const [nightStayBonus, setNightStayBonus] = useState('');
     const [sameDayReturnBonus, setSameDayReturnBonus] = useState('');
+    const [sameDayReturnEnabled, setSameDayReturnEnabled] = useState(false);
     const [isFreelancer, setIsFreelancer] = useState(false);
 
     // Documentation & Overtime States
@@ -61,6 +62,7 @@ const Drivers = ({ isSubComponent = false }) => {
         dailyWage: '',
         nightStayBonus: '',
         sameDayReturnBonus: '',
+        sameDayReturnEnabled: false,
         overtimeEnabled: false,
         overtimeThreshold: 9,
         overtimeRate: 0
@@ -270,6 +272,7 @@ const Drivers = ({ isSubComponent = false }) => {
             setDailyWage('');
             setNightStayBonus('');
             setSameDayReturnBonus('');
+            setSameDayReturnEnabled(false);
             setDocs({ aadharCard: null, drivingLicense: null, offerLetter: null });
             setOvertime({ enabled: false, threshold: 9, rate: 0 });
             setManualDutyForm({
@@ -323,6 +326,7 @@ const Drivers = ({ isSubComponent = false }) => {
             formData.append('salary', dailyWage);
             formData.append('nightStayBonus', nightStayBonus);
             formData.append('sameDayReturnBonus', sameDayReturnBonus);
+            formData.append('sameDayReturnEnabled', sameDayReturnEnabled);
 
             // Overtime
             formData.append('overtimeEnabled', overtime.enabled);
@@ -386,6 +390,7 @@ const Drivers = ({ isSubComponent = false }) => {
             formData.append('salary', editForm.dailyWage);
             formData.append('nightStayBonus', editForm.nightStayBonus);
             formData.append('sameDayReturnBonus', editForm.sameDayReturnBonus);
+            formData.append('sameDayReturnEnabled', editForm.sameDayReturnEnabled);
             formData.append('isFreelancer', editForm.isFreelancer);
 
             // Overtime
@@ -413,7 +418,7 @@ const Drivers = ({ isSubComponent = false }) => {
             });
             setShowEditModal(false);
             setEditingDriver(null);
-            setEditForm({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '', nightStayBonus: '', sameDayReturnBonus: '', isFreelancer: false, overtimeEnabled: false, overtimeThreshold: 9, overtimeRate: 0 });
+            setEditForm({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '', nightStayBonus: '', sameDayReturnBonus: '', sameDayReturnEnabled: false, isFreelancer: false, overtimeEnabled: false, overtimeThreshold: 9, overtimeRate: 0 });
             setDocs({ aadharCard: null, drivingLicense: null, offerLetter: null });
             fetchDrivers();
             alert('Driver updated successfully');
@@ -432,6 +437,7 @@ const Drivers = ({ isSubComponent = false }) => {
             dailyWage: driver.dailyWage || '',
             nightStayBonus: driver.nightStayBonus !== undefined && driver.nightStayBonus !== null ? String(driver.nightStayBonus) : '',
             sameDayReturnBonus: driver.sameDayReturnBonus !== undefined && driver.sameDayReturnBonus !== null ? String(driver.sameDayReturnBonus) : '',
+            sameDayReturnEnabled: driver.sameDayReturnEnabled || false,
             isFreelancer: driver.isFreelancer || false,
             password: '',
             oldPassword: '',
@@ -918,9 +924,9 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 <input type="number" className="input-field" value={dailyWage} onChange={(e) => setDailyWage(e.target.value)} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
                                             </div>
                                         </div>
-                                        <div style={{ display: 'none' }}>
-                                            <input type="checkbox" id="freelancerCheck" checked={isFreelancer} onChange={(e) => setIsFreelancer(e.target.checked)} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
-                                            <label htmlFor="freelancerCheck" style={{ color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Set as Freelancer</label>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Driving License Number</label>
+                                            <input className="input-field" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="DL No. (Optional)" style={{ background: 'rgba(0,0,0,0.2)' }} />
                                         </div>
                                     </div>
 
@@ -941,9 +947,28 @@ const Drivers = ({ isSubComponent = false }) => {
                                         </div>
                                     </div>
 
-                                    <div>
-                                        <label className="input-label" style={{ marginBottom: '6px' }}>Driving License Number</label>
-                                        <input className="input-field" value={licenseNumber} onChange={(e) => setLicenseNumber(e.target.value)} placeholder="DL No. (Optional)" style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                    <div style={{ marginTop: '10px', padding: '15px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.1)', marginBottom: '20px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <p style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <IndianRupee size={14} /> Same Day Return Policy
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => setSameDayReturnEnabled(!sameDayReturnEnabled)}
+                                                style={{
+                                                    background: sameDayReturnEnabled ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    padding: '4px 12px',
+                                                    borderRadius: '20px',
+                                                    fontSize: '10px',
+                                                    fontWeight: '800',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                {sameDayReturnEnabled ? 'ENABLED' : 'DISABLED'}
+                                            </button>
+                                        </div>
                                     </div>
 
                                     <div style={{ marginTop: '20px' }}>
@@ -1104,9 +1129,9 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 <input type="number" className="input-field" value={editForm.dailyWage} onChange={(e) => setEditForm({ ...editForm, dailyWage: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
                                             </div>
                                         </div>
-                                        <div style={{ display: 'none' }}>
-                                            <input type="checkbox" id="editFreelancerCheck" checked={editForm.isFreelancer} onChange={(e) => setEditForm({ ...editForm, isFreelancer: e.target.checked })} style={{ width: '20px', height: '20px', cursor: 'pointer' }} />
-                                            <label htmlFor="editFreelancerCheck" style={{ color: 'white', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>Freelancer Profile</label>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>License Number</label>
+                                            <input className="input-field" value={editForm.licenseNumber} onChange={(e) => setEditForm({ ...editForm, licenseNumber: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)' }} />
                                         </div>
                                     </div>
 
@@ -1124,6 +1149,30 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>₹</span>
                                                 <input type="number" className="input-field" value={editForm.sameDayReturnBonus} onChange={(e) => setEditForm({ ...editForm, sameDayReturnBonus: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
                                             </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ marginTop: '10px', padding: '15px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.1)', marginBottom: '20px' }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <p style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <IndianRupee size={14} /> Same Day Return Policy
+                                            </p>
+                                            <button
+                                                type="button"
+                                                onClick={() => setEditForm({ ...editForm, sameDayReturnEnabled: !editForm.sameDayReturnEnabled })}
+                                                style={{
+                                                    background: editForm.sameDayReturnEnabled ? 'var(--primary)' : 'rgba(255,255,255,0.05)',
+                                                    color: 'white',
+                                                    border: 'none',
+                                                    padding: '4px 12px',
+                                                    borderRadius: '20px',
+                                                    fontSize: '10px',
+                                                    fontWeight: '800',
+                                                    cursor: 'pointer'
+                                                }}
+                                            >
+                                                {editForm.sameDayReturnEnabled ? 'ENABLED' : 'DISABLED'}
+                                            </button>
                                         </div>
                                     </div>
 

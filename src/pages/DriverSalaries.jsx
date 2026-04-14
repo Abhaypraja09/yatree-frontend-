@@ -509,17 +509,30 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             doc.setFont('helvetica', 'bold');
             doc.text('DUTY & TRIP DETAILS', 15, 115);
 
-            const dutyRows = (data.breakdown || []).map(day => [
-                formatDateIST(day.date),
-                `Rs. ${(day.wage || 0).toLocaleString('en-IN')}`,
-                `Rs. ${(day.sameDayReturn || 0).toLocaleString('en-IN')}`,
-                `Rs. ${(day.nightStay || 0).toLocaleString('en-IN')}`,
-                `Rs. ${(day.parking || 0).toLocaleString('en-IN')}`,
-                `Rs. ${(day.total || 0).toLocaleString('en-IN')}`
-            ]);
+            const showSDR = (driverInfo.sameDayReturnBonus > 0 || driverInfo.sameDayReturnEnabled);
+            const showNight = (driverInfo.nightStayBonus > 0);
+
+            const tableHeader = ['DATE', 'WAGE'];
+            if (showSDR) tableHeader.push('SAME DAY');
+            if (showNight) tableHeader.push('NIGHT STAY');
+            tableHeader.push('PARKING', 'TOTAL');
+
+            const dutyRows = (data.breakdown || []).map(day => {
+                const row = [
+                    formatDateIST(day.date),
+                    `Rs. ${(day.wage || 0).toLocaleString('en-IN')}`
+                ];
+                if (showSDR) row.push(`Rs. ${(day.sameDayReturn || 0).toLocaleString('en-IN')}`);
+                if (showNight) row.push(`Rs. ${(day.nightStay || 0).toLocaleString('en-IN')}`);
+                row.push(
+                    `Rs. ${(day.parking || 0).toLocaleString('en-IN')}`,
+                    `Rs. ${(day.total || 0).toLocaleString('en-IN')}`
+                );
+                return row;
+            });
 
             autoTable(doc, {
-                head: [['DATE', 'WAGE', 'SAME DAY', 'NIGHT STAY', 'PARKING', 'TOTAL']],
+                head: [tableHeader],
                 body: dutyRows,
                 startY: 120,
                 theme: 'grid',
@@ -707,7 +720,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     const totalNetPayout = filteredSalaries.reduce((sum, s) => sum + (s.netPayable || 0), 0);
 
     const det = selectedDriverDetails;
-    const driverName = det?.driver?.name || det?.driver?.[0]?.name || '';
+    const dInfo = det?.driver?.name ? det.driver : (det?.driver?.[0] || {});
+    const driverName = dInfo.name || '';
     const breakdown = det?.breakdown || [];
     const summary = det?.summary || {};
 
@@ -730,6 +744,10 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     // Final Combined Totals
     const grossPayroll = routineEarningsTotal + totalAllowances + calcParking;
     const netPayable = grossPayroll - totalAdvances - totalEMI;
+
+    // Visibility logic for Bonuses - Restore to visible by default for Drivers as requested
+    const showSDR = dInfo.role === 'Driver' || dInfo.sameDayReturnBonus > 0 || dInfo.sameDayReturnEnabled || calcSDR > 0;
+    const showNight = dInfo.role === 'Driver' || dInfo.nightStayBonus > 0 || calcNight > 0;
 
     return (
         <div className={isSubComponent ? "sub-component" : "container-fluid"} style={{ paddingBottom: '40px' }}>
@@ -1353,7 +1371,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 </div>
                                                 <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{routineEarningsTotal.toLocaleString()}</div>
                                                 <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                                    Wages: ₹{calcWages.toLocaleString()} + SDR/Night: ₹{(calcSDR + calcNight).toLocaleString()}
+                                                    Wages: ₹{calcWages.toLocaleString()} 
+                                                    {showSDR && ` + SDR: ₹${calcSDR.toLocaleString()}`}
+                                                    {showNight && ` + Night: ₹${calcNight.toLocaleString()}`}
                                                 </div>
                                             </div>
 
@@ -1419,8 +1439,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                     <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                                         <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Date</th>
                                                         <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>WAGES</th>
-                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>SDR</th>
-                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Night</th>
+                                                        {showSDR && <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>SDR</th>}
+                                                        {showNight && <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Night</th>}
                                                         <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Parking</th>
                                                         <th style={{ padding: '12px', textAlign: 'right', color: 'white' }}>Day Total</th>
                                                     </tr>
@@ -1434,8 +1454,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                                 {day.remarks && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{day.remarks}</div>}
                                                             </td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.7)' }}>₹{day.wage || 0}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#38bdf8', fontWeight: '600' }}>₹{day.sameDayReturn || 0}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '600' }}>₹{day.nightStay || 0}</td>
+                                                            {showSDR && <td style={{ padding: '12px', textAlign: 'right', color: '#38bdf8', fontWeight: '600' }}>₹{day.sameDayReturn || 0}</td>}
+                                                            {showNight && <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '600' }}>₹{day.nightStay || 0}</td>}
                                                             <td style={{ padding: '12px', textAlign: 'right', color: 'var(--primary)', fontWeight: '800' }}>₹{day.parking || 0}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{(day.total || 0).toLocaleString()}</td>
                                                         </tr>
@@ -1452,8 +1472,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                                 {p.remark && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.35)' }}>{p.remark}</div>}
                                                             </td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>
+                                                            {showSDR && <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>}
+                                                            {showNight && <td style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>-</td>}
                                                             <td style={{ padding: '12px', textAlign: 'right', color: 'var(--primary)', fontWeight: '800' }}>₹{p.amount || 0}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{(p.amount || 0).toLocaleString()}</td>
                                                         </tr>
@@ -1466,8 +1486,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                         <tr style={{ background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
                                                             <td style={{ padding: '12px', fontWeight: '800', color: 'white' }}>COLUMN TOTALS</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: 'rgba(255,255,255,0.7)' }}>₹{calcWages.toLocaleString()}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: '#38bdf8' }}>₹{calcSDR.toLocaleString()}</td>
-                                                            <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: '#10b981' }}>₹{calcNight.toLocaleString()}</td>
+                                                            {showSDR && <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: '#38bdf8' }}>₹{calcSDR.toLocaleString()}</td>}
+                                                            {showNight && <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: '#10b981' }}>₹{calcNight.toLocaleString()}</td>}
                                                             <td style={{ padding: '12px', textAlign: 'right', fontWeight: '800', color: 'var(--primary)' }}>₹{calcParking.toLocaleString()}</td>
                                                             <td style={{ padding: '12px', textAlign: 'right', fontWeight: '900', color: '#10b981' }}>₹{(routineEarningsTotal + calcParking).toLocaleString()}</td>
                                                         </tr>

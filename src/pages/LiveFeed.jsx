@@ -156,15 +156,24 @@ const LiveFeed = () => {
     const isToday = selectedDate === getTodayLocal();
     const isPastDate = selectedDate < getTodayLocal();
 
-    const filteredDrivers = stats?.liveDriversFeed?.filter(d =>
-        d.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        d.mobile.includes(searchQuery)
-    ) || [];
+    const filteredDrivers = stats?.liveDriversFeed?.filter(d => {
+        const name = d.name || '';
+        const mobile = d.mobile || '';
+        return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               mobile.toString().includes(searchQuery);
+    }) || [];
+
+    const filteredAbsentDrivers = stats?.absentDriversFeed?.filter(d => {
+        const name = d.name || '';
+        const mobile = d.mobile || '';
+        return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+               mobile.toString().includes(searchQuery);
+    }) || [];
 
     const filteredVehicles = (stats?.liveVehiclesFeed || [])
         .filter(v => {
-            const searchMatch = v.carNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                v.model.toLowerCase().includes(searchQuery.toLowerCase());
+            const searchMatch = (v.carNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (v.model || '').toLowerCase().includes(searchQuery.toLowerCase());
 
             if (!searchMatch) return false;
 
@@ -498,6 +507,7 @@ const LiveFeed = () => {
                         <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length} />
                         <TabButton id="vehicles" label="Fleet" icon={Car} count={isToday ? totalUsedVehicles : stats?.totalUsedVehiclesCount} />
                         <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length} />
+                        <TabButton id="absent" label="Absent" icon={Users} count={stats?.absentDriversCount} />
                     </div>
 
                     <div style={{ position: 'relative', flex: 1, minWidth: '220px', maxWidth: '450px' }}>
@@ -592,7 +602,7 @@ const LiveFeed = () => {
                                                     boxShadow: driver.status === 'Present' ? '0 12px 24px -6px rgba(16, 185, 129, 0.4)' : 'none',
                                                     position: 'relative'
                                                 }}>
-                                                    <span style={{ fontSize: '24px', fontWeight: '1000', color: driver.status === 'Present' ? 'white' : 'rgba(255,255,255,0.3)' }}>{driver.name.charAt(0)}</span>
+                                                    <span style={{ fontSize: '24px', fontWeight: '1000', color: driver.status === 'Present' ? 'white' : 'rgba(255,255,255,0.3)' }}>{(driver.name || 'D').charAt(0)}</span>
                                                     {driver.status === 'Present' && (
                                                         <div className="pulse-animation" style={{
                                                             position: 'absolute',
@@ -729,6 +739,7 @@ const LiveFeed = () => {
                                 ))}
                             </motion.div>
                         )}
+
 
                         {activeTab === 'vehicles' && (
                             <motion.div
@@ -988,6 +999,73 @@ const LiveFeed = () => {
                                 ))}
                             </motion.div>
                         )}
+
+                        {activeTab === 'absent' && (
+                            <motion.div
+                                key="absent"
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ duration: 0.4, ease: "easeOut" }}
+                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '25px' }}
+                            >
+                                {filteredAbsentDrivers.map((driver) => (
+                                    <motion.div
+                                        key={driver._id}
+                                        whileHover={{ y: -8, scale: 1.01 }}
+                                        style={{
+                                            padding: '24px',
+                                            background: 'rgba(255, 255, 255, 0.02)',
+                                            borderRadius: '32px',
+                                            border: '1px solid rgba(255,255,255,0.05)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '15px'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                            <div style={{ display: 'flex', gap: '18px', alignItems: 'center' }}>
+                                                <div style={{
+                                                    width: '50px',
+                                                    height: '50px',
+                                                    borderRadius: '18px',
+                                                    background: 'rgba(239, 68, 68, 0.1)',
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    border: '1px solid rgba(239, 68, 68, 0.2)'
+                                                }}>
+                                                    <span style={{ fontSize: '20px', fontWeight: '1000', color: '#ef4444' }}>{(driver.name || 'D').charAt(0)}</span>
+                                                </div>
+                                                <div>
+                                                    <h4 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '950' }}>{driver.name}</h4>
+                                                    <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '800' }}>{driver.mobile}</div>
+                                                </div>
+                                            </div>
+                                            <div style={{
+                                                fontSize: '10px',
+                                                fontWeight: '1000',
+                                                color: '#ef4444',
+                                                background: 'rgba(239, 68, 68, 0.1)',
+                                                padding: '5px 12px',
+                                                borderRadius: '10px',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '1px',
+                                                border: '1px solid rgba(239, 68, 68, 0.2)'
+                                            }}>
+                                                Absent
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                                {filteredAbsentDrivers.length === 0 && (
+                                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 0', color: 'rgba(255,255,255,0.2)', fontSize: '14px', fontWeight: '800', letterSpacing: '2px' }}>
+                                        NO ABSENT DRIVERS REPORTED
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+
                     </AnimatePresence>
                 </div>
             </div>

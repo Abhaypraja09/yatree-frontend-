@@ -1037,7 +1037,7 @@ const FuelPage = () => {
                                             <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Payment Source</label>
                                             <select className="input-field" value={formData.paymentSource} onChange={(e) => setFormData({ ...formData, paymentSource: e.target.value })} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }}>
                                                 <option value="Office" style={{ background: '#0f172a' }}>Office</option>
-                                                <option value="Guest / Client" style={{ background: '#0f172a' }}>Guest</option>
+                                                <option value="Guest" style={{ background: '#0f172a' }}>Guest</option>
                                             </select>
                                         </div>
                                     </div>
@@ -1236,7 +1236,7 @@ const FuelPage = () => {
                                         style={{ width: '100%', background: 'rgba(255,255,255,0.05)' }}
                                     >
                                         <option value="Office">Office</option>
-                                        <option value="Guest / Client">Guest</option>
+                                        <option value="Guest">Guest</option>
                                     </select>
                                 </div>
 
