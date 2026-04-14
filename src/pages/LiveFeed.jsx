@@ -170,6 +170,13 @@ const LiveFeed = () => {
                mobile.toString().includes(searchQuery);
     }) || [];
 
+    const filteredUnusedVehicles = (stats?.unusedVehiclesFeed || [])
+        .filter(v => {
+            const searchMatch = (v.carNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                (v.model || '').toLowerCase().includes(searchQuery.toLowerCase());
+            return searchMatch;
+        });
+
     const filteredVehicles = (stats?.liveVehiclesFeed || [])
         .filter(v => {
             const searchMatch = (v.carNumber || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -508,6 +515,7 @@ const LiveFeed = () => {
                         <TabButton id="vehicles" label="Fleet" icon={Car} count={isToday ? totalUsedVehicles : stats?.totalUsedVehiclesCount} />
                         <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length} />
                         <TabButton id="absent" label="Absent" icon={Users} count={stats?.absentDriversCount} />
+                        <TabButton id="unused" label="Stationary" icon={Car} count={stats?.unusedVehiclesCount} />
                     </div>
 
                     <div style={{ position: 'relative', flex: 1, minWidth: '220px', maxWidth: '450px' }}>
@@ -1061,6 +1069,73 @@ const LiveFeed = () => {
                                 {filteredAbsentDrivers.length === 0 && (
                                     <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 0', color: 'rgba(255,255,255,0.2)', fontSize: '14px', fontWeight: '800', letterSpacing: '2px' }}>
                                         NO ABSENT DRIVERS REPORTED
+                                    </div>
+                                )}
+                            </motion.div>
+                        )}
+    
+                        {activeTab === 'unused' && (
+                            <motion.div
+                                key="unused"
+                                initial={{ opacity: 0, y: 15 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                exit={{ opacity: 0, scale: 0.98 }}
+                                transition={{ duration: 0.4 }}
+                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '25px' }}
+                            >
+                                {filteredUnusedVehicles.map((vehicle) => (
+                                    <motion.div
+                                        key={vehicle._id}
+                                        whileHover={{ y: -8, scale: 1.02 }}
+                                        style={{
+                                            padding: '24px',
+                                            background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.6))',
+                                            borderRadius: '28px',
+                                            border: '1px solid rgba(255,255,255,0.06)',
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            gap: '20px',
+                                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)'
+                                        }}
+                                    >
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                                                <div style={{
+                                                    width: '56px',
+                                                    height: '56px',
+                                                    borderRadius: '20px',
+                                                    background: 'rgba(255, 255, 255, 0.03)',
+                                                    display: 'flex',
+                                                    justifyContent: 'center',
+                                                    alignItems: 'center',
+                                                    border: '1px solid rgba(255,255,255,0.05)'
+                                                }}>
+                                                    <Car size={28} color="rgba(255,255,255,0.2)" strokeWidth={2.5} />
+                                                </div>
+                                                <div>
+                                                    <h4 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '950', letterSpacing: '-0.5px' }}>{vehicle.carNumber.split('#')[0]}</h4>
+                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '12px', fontWeight: '700' }}>{vehicle.model}</div>
+                                                </div>
+                                            </div>
+                                            <div style={{
+                                                fontSize: '10px',
+                                                fontWeight: '1000',
+                                                color: 'rgba(255,255,255,0.3)',
+                                                background: 'rgba(255,255,255,0.03)',
+                                                padding: '5px 12px',
+                                                borderRadius: '10px',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '1px',
+                                                border: '1px solid rgba(255,255,255,0.05)'
+                                            }}>
+                                                Unused Today
+                                            </div>
+                                        </div>
+                                    </motion.div>
+                                ))}
+                                {filteredUnusedVehicles.length === 0 && (
+                                    <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px 0', color: 'rgba(255,255,255,0.2)', fontSize: '14px', fontWeight: '800', letterSpacing: '2px' }}>
+                                        ALL VEHICLES ARE IN USE OR HAVE BEEN UTILIZED
                                     </div>
                                 )}
                             </motion.div>
