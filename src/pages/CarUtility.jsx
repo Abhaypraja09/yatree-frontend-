@@ -147,7 +147,7 @@ const CarUtility = () => {
             setMessage({ type: 'success', text: 'Trans Recorded' });
             setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
             setSelectedVehicleId(null);
-        } catch (err) { setMessage({ type: 'error', text: 'Error' }); }
+        } catch (err) { console.error('Service add error:', err.response?.data || err.message); setMessage({ type: 'error', text: err.response?.data?.message || 'Error' }); }
         finally { setSubmitting(false); }
     };
 
@@ -172,7 +172,8 @@ const CarUtility = () => {
             setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
             return true;
         } catch (err) { 
-            setMessage({ type: 'error', text: 'Update Failed' }); 
+            console.error('Update failed:', err.response?.data || err.message);
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Update Failed' }); 
             return false;
         } finally { setSubmitting(false); }
     };
@@ -533,7 +534,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
         } else {
             const fd = new FormData(); 
             Object.keys(form).forEach(k => {
-                if (form[k] && !['date', 'billDate'].includes(k)) {
+                if (form[k] && !['date', 'billDate', 'vehicleId'].includes(k)) {
                     fd.append(k, form[k]);
                 }
             });
@@ -562,9 +563,11 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
         }
     };
 
+    const showForm = !hideForm || editingItem;
+
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: hideForm ? '1fr' : '1fr 1.5fr', gap: '40px' }}>
-            {!hideForm && (
+        <div style={{ display: 'grid', gridTemplateColumns: showForm ? '1fr 1.5fr' : '1fr', gap: '40px' }}>
+            {showForm && (
                 <div style={{ padding: '30px', background: 'rgba(255,255,255,0.02)', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.06)' }}>
                     <h4 style={{ margin: '0 0 30px 0', fontSize: '17px', fontWeight: '900' }}>{editingItem ? 'Edit Entry' : 'Create Entry'}</h4>
                     <div style={{ display: 'grid', gap: '22px' }}>
