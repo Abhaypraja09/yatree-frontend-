@@ -100,10 +100,10 @@ const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick, su
                     )}
                 </div>
                 {subValue && (
-                    <div style={{ 
-                        fontSize: '11px', 
-                        color: 'rgba(255,255,255,0.5)', 
-                        fontWeight: '800', 
+                    <div style={{
+                        fontSize: '11px',
+                        color: 'rgba(255,255,255,0.5)',
+                        fontWeight: '800',
                         marginTop: '8px',
                         display: 'flex',
                         alignItems: 'center',
@@ -324,14 +324,14 @@ const AdminDashboard = () => {
                                 <>
                                     <StatCard icon={Users} label={t('total_driver_salary')} value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
                                     <StatCard icon={CreditCard} label={t('total_driver_advance')} value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
-                                    <StatCard 
-                                         icon={Fuel} 
-                                         label={t('fuel_monthly')} 
-                                         value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`} 
-                                         color={theme.primary} 
-                                         loading={loading} 
-                                         onClick={() => navigate('/admin/fuel')} 
-                                     />
+                                    <StatCard
+                                        icon={Fuel}
+                                        label={t('fuel_monthly')}
+                                        value={`₹${stats.monthlyFuelAmount?.toLocaleString() || 0}`}
+                                        color={theme.primary}
+                                        loading={loading}
+                                        onClick={() => navigate('/admin/fuel')}
+                                    />
                                     <StatCard icon={Users} label={t('freelancers_monthly')} value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/freelancers')} />
                                     <StatCard icon={CreditCard} label={t('parking_monthly')} value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/parking')} />
                                 </>
@@ -365,14 +365,14 @@ const AdminDashboard = () => {
                                     <StatCard icon={Wrench} label={t('maintenance_monthly')} value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
                                     <StatCard icon={AlertTriangle} label={t('accident_cost_yearly')} value={`₹${(stats.yearlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
 
-                                    <StatCard 
-                                        icon={Car} 
-                                        label={t('fleet_size_label')} 
-                                        value={stats.totalInternalVehicles || 0} 
-                                        subValue={`Database Total: ${stats.totalVehicles || 0}`}
-                                        color="#8b5cf6" 
-                                        loading={loading} 
-                                        onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')} 
+                                    <StatCard
+                                        icon={Car}
+                                        label={t('fleet_size_label')}
+                                        value={stats.totalInternalVehicles || 0}
+
+                                        color="#8b5cf6"
+                                        loading={loading}
+                                        onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')}
                                     />
                                 </>
                             )}
@@ -397,132 +397,132 @@ const AdminDashboard = () => {
                             if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
                             return true;
                         }).length > 0 && (
-                            <div className="glass-card" style={{
-                                border: '1px solid rgba(244, 63, 114, 0.2)',
-                                background: 'linear-gradient(145deg, rgba(244, 63, 114, 0.05), rgba(15, 23, 42, 0.2))',
-                                marginBottom: 'clamp(20px, 4vw, 30px)',
-                                width: '100%',
-                                boxSizing: 'border-box'
-                            }}>
-                                <div style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '10px',
-                                    marginBottom: 'clamp(16px, 3.5vw, 20px)',
-                                    flexWrap: 'wrap'
+                                <div className="glass-card" style={{
+                                    border: '1px solid rgba(244, 63, 114, 0.2)',
+                                    background: 'linear-gradient(145deg, rgba(244, 63, 114, 0.05), rgba(15, 23, 42, 0.2))',
+                                    marginBottom: 'clamp(20px, 4vw, 30px)',
+                                    width: '100%',
+                                    boxSizing: 'border-box'
                                 }}>
-                                    <ShieldAlert color="#f43f5e" size={20} />
-                                    <h3 style={{
-                                        fontSize: 'clamp(13px, 3.2vw, 16px)',
-                                        fontWeight: '700',
-                                        color: 'white',
-                                        margin: 0,
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.5px'
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '10px',
+                                        marginBottom: 'clamp(16px, 3.5vw, 20px)',
+                                        flexWrap: 'wrap'
                                     }}>
-                                        {t('expiry_alerts')}
-                                    </h3>
-                                </div>
-                                <div className="expiry-alerts-grid">
-                                    {stats.expiringAlerts.filter(alert => {
-                            if (user?.role === 'Admin') return true;
-                            if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
-                            if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
-                            return true;
-                        }).map((alert, index) => (
-                                        <div
-                                            key={index}
-                                            className="alert-card glass-card-hover-effect"
-                                            style={{
-                                                background: alert.status === 'Expired'
-                                                    ? 'rgba(244, 63, 94, 0.1)'
-                                                    : 'rgba(245, 158, 11, 0.1)',
-                                                border: `1px solid ${alert.status === 'Expired'
-                                                    ? 'rgba(244, 63, 94, 0.2)'
-                                                    : 'rgba(245, 158, 11, 0.2)'}`,
-                                                position: 'relative',
-                                                overflow: 'hidden'
-                                            }}
-                                        >
-                                            <div style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'flex-start',
-                                                marginBottom: '10px',
-                                                gap: '8px'
-                                            }}>
-                                                <span className="alert-identifier" style={{
-                                                    color: 'rgba(255,255,255,0.9)',
-                                                    textTransform: 'uppercase',
-                                                    flex: 1,
-                                                    fontWeight: '700'
+                                        <ShieldAlert color="#f43f5e" size={20} />
+                                        <h3 style={{
+                                            fontSize: 'clamp(13px, 3.2vw, 16px)',
+                                            fontWeight: '700',
+                                            color: 'white',
+                                            margin: 0,
+                                            textTransform: 'uppercase',
+                                            letterSpacing: '0.5px'
+                                        }}>
+                                            {t('expiry_alerts')}
+                                        </h3>
+                                    </div>
+                                    <div className="expiry-alerts-grid">
+                                        {stats.expiringAlerts.filter(alert => {
+                                            if (user?.role === 'Admin') return true;
+                                            if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
+                                            if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
+                                            return true;
+                                        }).map((alert, index) => (
+                                            <div
+                                                key={index}
+                                                className="alert-card glass-card-hover-effect"
+                                                style={{
+                                                    background: alert.status === 'Expired'
+                                                        ? 'rgba(244, 63, 94, 0.1)'
+                                                        : 'rgba(245, 158, 11, 0.1)',
+                                                    border: `1px solid ${alert.status === 'Expired'
+                                                        ? 'rgba(244, 63, 94, 0.2)'
+                                                        : 'rgba(245, 158, 11, 0.2)'}`,
+                                                    position: 'relative',
+                                                    overflow: 'hidden'
+                                                }}
+                                            >
+                                                <div style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'flex-start',
+                                                    marginBottom: '10px',
+                                                    gap: '8px'
                                                 }}>
-                                                    {alert.identifier}
-                                                </span>
-                                                <span style={{
-                                                    fontSize: 'clamp(9px, 2vw, 10px)',
-                                                    padding: '4px 8px',
-                                                    borderRadius: '6px',
-                                                    background: alert.daysLeft < 0
-                                                        ? '#f43f5e'
-                                                        : (alert.daysLeft === 0 ? 'var(--primary)' : 'var(--primary)'),
-                                                    color: 'white',
-                                                    fontWeight: '800',
-                                                    flexShrink: 0,
-                                                    whiteSpace: 'nowrap',
-                                                    boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
-                                                }}>
-                                                    {alert.type === 'Service'
-                                                        ? (alert.daysLeft <= 0 ? `${Math.abs(alert.daysLeft)} ${t('km_overdue')}` : `${alert.daysLeft} ${t('km_due')}`)
-                                                        : (alert.daysLeft < 0 ? `${Math.abs(alert.daysLeft)}d ${t('overdue')}` : (alert.daysLeft === 0 ? t('today_label') : `${alert.daysLeft}d ${t('days_left_label')}`))}
-                                                </span>
-                                            </div>
-                                            <div className="alert-type" style={{ color: 'white', marginBottom: '8px' }}>
-                                                {alert.documentType}
-                                            </div>
-                                            <div style={{
-                                                display: 'flex',
-                                                justifyContent: 'space-between',
-                                                alignItems: 'flex-end',
-                                                flexWrap: 'wrap',
-                                                gap: '8px'
-                                            }}>
-                                                <div className="alert-date" style={{
-                                                    color: 'rgba(255,255,255,0.6)',
-                                                    fontWeight: '500',
-                                                    fontSize: 'clamp(10px, 2.5vw, 12px)'
-                                                }}>
-                                                    Exp: <span style={{ color: 'white', fontWeight: '700' }}>
-                                                        {formatDateIST(alert.expiryDate)}
+                                                    <span className="alert-identifier" style={{
+                                                        color: 'rgba(255,255,255,0.9)',
+                                                        textTransform: 'uppercase',
+                                                        flex: 1,
+                                                        fontWeight: '700'
+                                                    }}>
+                                                        {alert.identifier}
                                                     </span>
-                                                </div>
-                                                <a
-                                                    href={`https://wa.me/${(selectedCompany?.whatsappNumber || user?.mobile || '').replace(/[^0-9]/g, '').replace(/^(?!91)/, '91')}?text=${encodeURIComponent(`REMINDER: Vehicle document for ${alert.identifier} (${alert.documentType}) is expiring on ${formatDateIST(alert.expiryDate)}. Please renew it ASAP.`)}`}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    style={{
-                                                        background: 'rgba(37, 211, 102, 0.2)',
-                                                        color: '#25D366',
+                                                    <span style={{
+                                                        fontSize: 'clamp(9px, 2vw, 10px)',
                                                         padding: '4px 8px',
                                                         borderRadius: '6px',
-                                                        fontSize: 'clamp(9px, 2.2vw, 10px)',
+                                                        background: alert.daysLeft < 0
+                                                            ? '#f43f5e'
+                                                            : (alert.daysLeft === 0 ? 'var(--primary)' : 'var(--primary)'),
+                                                        color: 'white',
                                                         fontWeight: '800',
-                                                        display: 'flex',
-                                                        alignItems: 'center',
-                                                        gap: '4px',
-                                                        textDecoration: 'none',
-                                                        border: '1px solid rgba(37, 211, 102, 0.3)'
-                                                    }}
-                                                    title="Send WhatsApp Reminder"
-                                                >
-                                                    <span style={{ fontSize: '14px' }}>💬</span> WA
-                                                </a>
+                                                        flexShrink: 0,
+                                                        whiteSpace: 'nowrap',
+                                                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                                                    }}>
+                                                        {alert.type === 'Service'
+                                                            ? (alert.daysLeft <= 0 ? `${Math.abs(alert.daysLeft)} ${t('km_overdue')}` : `${alert.daysLeft} ${t('km_due')}`)
+                                                            : (alert.daysLeft < 0 ? `${Math.abs(alert.daysLeft)}d ${t('overdue')}` : (alert.daysLeft === 0 ? t('today_label') : `${alert.daysLeft}d ${t('days_left_label')}`))}
+                                                    </span>
+                                                </div>
+                                                <div className="alert-type" style={{ color: 'white', marginBottom: '8px' }}>
+                                                    {alert.documentType}
+                                                </div>
+                                                <div style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'flex-end',
+                                                    flexWrap: 'wrap',
+                                                    gap: '8px'
+                                                }}>
+                                                    <div className="alert-date" style={{
+                                                        color: 'rgba(255,255,255,0.6)',
+                                                        fontWeight: '500',
+                                                        fontSize: 'clamp(10px, 2.5vw, 12px)'
+                                                    }}>
+                                                        Exp: <span style={{ color: 'white', fontWeight: '700' }}>
+                                                            {formatDateIST(alert.expiryDate)}
+                                                        </span>
+                                                    </div>
+                                                    <a
+                                                        href={`https://wa.me/${(selectedCompany?.whatsappNumber || user?.mobile || '').replace(/[^0-9]/g, '').replace(/^(?!91)/, '91')}?text=${encodeURIComponent(`REMINDER: Vehicle document for ${alert.identifier} (${alert.documentType}) is expiring on ${formatDateIST(alert.expiryDate)}. Please renew it ASAP.`)}`}
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        style={{
+                                                            background: 'rgba(37, 211, 102, 0.2)',
+                                                            color: '#25D366',
+                                                            padding: '4px 8px',
+                                                            borderRadius: '6px',
+                                                            fontSize: 'clamp(9px, 2.2vw, 10px)',
+                                                            fontWeight: '800',
+                                                            display: 'flex',
+                                                            alignItems: 'center',
+                                                            gap: '4px',
+                                                            textDecoration: 'none',
+                                                            border: '1px solid rgba(37, 211, 102, 0.3)'
+                                                        }}
+                                                        title="Send WhatsApp Reminder"
+                                                    >
+                                                        <span style={{ fontSize: '14px' }}>💬</span> WA
+                                                    </a>
+                                                </div>
                                             </div>
-                                        </div>
-                                    ))}
+                                        ))}
+                                    </div>
                                 </div>
-                            </div>
-                        )}
+                            )}
                     </motion.div>
                 )}
             </div>

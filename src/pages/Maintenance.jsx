@@ -20,18 +20,38 @@ import {
     Zap,
     Layers,
     ArrowRight,
+    ArrowUpRight,
     History,
     FileSpreadsheet,
     Filter,
     ChevronDown,
     Upload,
-    Car
+    Car,
+    X
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
+
+const NEXT_SERVICE_TYPES = [
+    'Regular Service',
+    'Engine / Mechanical',
+    'Suspension',
+    'Steering',
+    'Fuel',
+    'Exhaust',
+    'Clutch / Transmission',
+    'Brake',
+    'Tyres / Wheels',
+    'Electrical / Battery',
+    'Sensors / Electronics',
+    'AC / Cooling',
+    'Body / Interior',
+    'Emergency Repairs',
+    'Other'
+];
 
 const Maintenance = () => {
     const { theme } = useTheme();
@@ -41,6 +61,8 @@ const Maintenance = () => {
     const [vehicles, setVehicles] = useState([]);
     const [drivers, setDrivers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [editingId, setEditingId] = useState(null);
+    const [sortConfig, setSortConfig] = useState({ key: 'total', direction: 'desc' }); // 'total' or category name
     const [showModal, setShowModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [filterType, setFilterType] = useState('All');
@@ -55,6 +77,8 @@ const Maintenance = () => {
     const [aggLoading, setAggLoading] = useState(false);
     const [aggSummary, setAggSummary] = useState(null);
     const [aggSearch, setAggSearch] = useState('');
+    const [showDrillModal, setShowDrillModal] = useState(false);
+    const [drillData, setDrillData] = useState({ vehicle: '', category: '', records: [] });
 
     useEffect(() => {
         setSearchTerm('');
@@ -119,40 +143,39 @@ const Maintenance = () => {
     const [billPhoto, setBillPhoto] = useState(null);
     const [submitting, setSubmitting] = useState(false);
     const [showNextService, setShowNextService] = useState(false);
-    const [editingId, setEditingId] = useState(null);
 
     const maintenanceTypes = [
         'Regular Service',
-        'Engine & Mechanical',
-        'Suspension System',
-        'Steering System',
-        'Fuel System',
-        'Exhaust System',
-        'Clutch & Transmission',
-        'Brake System',
-        'Tyres & Wheels',
-        'Electrical & Battery',
-        'Sensors & Electronics',
-        'AC & Cooling',
-        'Body & Interior',
+        'Engine / Mechanical',
+        'Suspension',
+        'Steering',
+        'Fuel',
+        'Exhaust',
+        'Clutch / Transmission',
+        'Brake',
+        'Tyres / Wheels',
+        'Electrical / Battery',
+        'Sensors / Electronics',
+        'AC / Cooling',
+        'Body / Interior',
         'Emergency Repairs',
         'Other'
     ];
 
     const subCategories = {
         'Regular Service': ['Engine oil change', 'Oil filter', 'Air filter', 'Fuel filter', 'General servicing'],
-        'Engine & Mechanical': ['Engine overhaul', 'Timing belt', 'Mountings', 'Valve adjustment', 'Gasket replacement'],
-        'Suspension System': ['Shock absorbers', 'Bushings', 'Struts', 'Springs', 'Link rods', 'Control arms'],
-        'Steering System': ['Power steering pump', 'Steering rack', 'Tie rod ends', 'Steering oil', 'Steering belt'],
-        'Fuel System': ['Fuel pump', 'Fuel lines', 'Fuel tank cleaning', 'Injectors'],
-        'Exhaust System': ['Silencer repair', 'Catalytic converter', 'Exhaust manifold', 'Muffler'],
-        'Clutch & Transmission': ['Clutch plate', 'Pressure plate', 'Release bearing', 'Gear oil', 'Gearbox repair', 'CV joints'],
-        'Tyres & Wheels': ['New tyre purchase', 'Tyre rotation', 'Alignment & Balancing', 'Wheel bearings'],
-        'Brake System': ['Brake pads', 'Brake shoe', 'Disc/Drum', 'Brake oil', 'Brake lines'],
-        'Electrical & Battery': ['Battery replacement', 'Alternator', 'Starter motor', 'Wiring', 'Lights', 'Fuses'],
-        'Sensors & Electronics': ['ECU repair', 'Oxygen sensor', 'ABS sensor', 'Parking sensors', 'Wiring harness'],
-        'AC & Cooling': ['AC gas refill', 'Compressor repair', 'Radiator service', 'Coolant top-up', 'Thermostat'],
-        'Body & Interior': ['Denting painting', 'Seat covers', 'Dashboard repair', 'Mirror/Glass', 'Wipers', 'Door locks'],
+        'Engine / Mechanical': ['Engine overhaul', 'Timing belt', 'Mountings', 'Valve adjustment', 'Gasket replacement'],
+        'Suspension': ['Shock absorbers', 'Bushings', 'Struts', 'Springs', 'Link rods', 'Control arms'],
+        'Steering': ['Power steering pump', 'Steering rack', 'Tie rod ends', 'Steering oil', 'Steering belt'],
+        'Fuel': ['Fuel pump', 'Fuel lines', 'Fuel tank cleaning', 'Injectors'],
+        'Exhaust': ['Silencer repair', 'Catalytic converter', 'Exhaust manifold', 'Muffler'],
+        'Clutch / Transmission': ['Clutch plate', 'Pressure plate', 'Release bearing', 'Gear oil', 'Gearbox repair', 'CV joints'],
+        'Tyres / Wheels': ['New tyre purchase', 'Tyre rotation', 'Alignment & Balancing', 'Wheel bearings'],
+        'Brake': ['Brake pads', 'Brake shoe', 'Disc/Drum', 'Brake oil', 'Brake lines'],
+        'Electrical / Battery': ['Battery replacement', 'Alternator', 'Starter motor', 'Wiring', 'Lights', 'Fuses'],
+        'Sensors / Electronics': ['ECU repair', 'Oxygen sensor', 'ABS sensor', 'Parking sensors', 'Wiring harness'],
+        'AC / Cooling': ['AC gas refill', 'Compressor repair', 'Radiator service', 'Coolant top-up', 'Thermostat'],
+        'Body / Interior': ['Denting painting', 'Seat covers', 'Dashboard repair', 'Mirror/Glass', 'Wipers', 'Door locks'],
         'Emergency Repairs': ['Breakdown towing', 'On-road repair', 'Jump start', 'Accident repair']
     };
 
@@ -174,7 +197,7 @@ const Maintenance = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            const { data: res } = await axios.get(`/api/admin/vehicle-monthly-details/${selectedCompany._id}?month=${selectedMonth}&year=${selectedYear}`, {
+            const { data: res } = await axios.get(`/api/admin/vehicle-monthly-details/${selectedCompany._id}?month=All&year=${selectedYear}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setAggData(res.vehicles || []);
@@ -331,21 +354,10 @@ const Maintenance = () => {
         setEditingId(null);
     };
 
-    const NEXT_SERVICE_TYPES = [
-        'Regular Service', 
-        'Suspension System', 
-        'Steering System', 
-        'Clutch & Transmission', 
-        'Brake System', 
-        'Tyres & Wheels', 
-        'Engine & Mechanical', 
-        'Fuel System', 
-        'Exhaust System'
-    ];
 
     const handleEdit = (record) => {
         const types = (record.maintenanceType || '').split(', ').filter(Boolean);
-        const isEligibleForReminder = types.some(t => NEXT_SERVICE_TYPES.includes(t));
+        const isEligibleForReminder = types.some(t => ['Regular Service', 'Tyres & Wheels'].includes(t));
         setFormData({
             vehicleId: record.vehicle?._id || record.vehicle || '',
             driverId: record.driver?._id || record.driver || '',
@@ -436,11 +448,22 @@ const Maintenance = () => {
     });
 
     const filteredRecords = baseFilteredRecords.filter(r => {
-        return activeCategory === 'All' || r.maintenanceType === activeCategory;
+        if (activeCategory === 'All') return true;
+        const searchStr = activeCategory.toLowerCase().replace(' system', '').trim();
+        const rType = (r.maintenanceType || '').toLowerCase();
+        const rCat = (r.category || '').toLowerCase();
+        const rDesc = (r.description || '').toLowerCase();
+        return rType.includes(searchStr) || rCat.includes(searchStr) || rDesc.includes(searchStr);
     });
 
     const categoryStats = maintenanceTypes.reduce((acc, type) => {
-        acc[type] = baseFilteredRecords.filter(r => r.maintenanceType === type).length;
+        const searchStr = type.toLowerCase().replace(' system', '').trim();
+        acc[type] = baseFilteredRecords.filter(r => {
+            const rType = (r.maintenanceType || '').toLowerCase();
+            const rCat = (r.category || '').toLowerCase();
+            const rDesc = (r.description || '').toLowerCase();
+            return rType.includes(searchStr) || rCat.includes(searchStr) || rDesc.includes(searchStr);
+        }).length;
         return acc;
     }, {});
 
@@ -448,6 +471,45 @@ const Maintenance = () => {
 
     const totalMaintenanceCost = filteredRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
+    const filteredAggData = (aggData || [])
+        .filter(v => 
+            v.carNumber?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+            v.model?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .map(v => {
+            // Pre-calculate category totals for sorting/filtering
+            const cats = {};
+            const allRecs = v.maintenance?.records || v.maintenance?.recs || [];
+            
+            NEXT_SERVICE_TYPES.forEach(cat => {
+                const searchStr = cat.toLowerCase().replace(' system', '').trim();
+                const recs = allRecs.filter(r => {
+                    const rType = (r.maintenanceType || '').toLowerCase();
+                    const rCat = (r.category || r.description || '').toLowerCase();
+                    return rType.includes(searchStr) || rCat.includes(searchStr);
+                });
+                cats[cat] = recs.reduce((sum, r) => sum + (r.amount || 0), 0);
+            });
+            return { ...v, cats };
+        })
+        .sort((a,b) => {
+            if (sortConfig.key === 'total') {
+                const valA = a.maintenance?.totalAmount || 0;
+                const valB = b.maintenance?.totalAmount || 0;
+                return sortConfig.direction === 'desc' ? valB - valA : valA - valB;
+            } else {
+                const valA = a.cats[sortConfig.key] || 0;
+                const valB = b.cats[sortConfig.key] || 0;
+                return sortConfig.direction === 'desc' ? valB - valA : valA - valB;
+            }
+        });
+
+    const handleSort = (key) => {
+        setSortConfig(prev => ({
+            key,
+            direction: prev.key === key && prev.direction === 'desc' ? 'asc' : 'desc'
+        }));
+    };
 
     return (
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
@@ -489,22 +551,24 @@ const Maintenance = () => {
 
                 <div className="mobile-stack" style={{ display: 'flex', gap: '12px', flex: '1', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
                     <div style={{ display: 'flex', gap: '8px' }}>
-                        <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(e.target.value)}
-                            className="input-field"
-                            style={{ height: '48px', width: '120px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
-                        >
-                            <option value="All" style={{ background: '#0f172a' }}>All Months</option>
-                            {[
-                                { n: 1, m: 'January' }, { n: 2, m: 'February' }, { n: 3, m: 'March' },
-                                { n: 4, m: 'April' }, { n: 5, m: 'May' }, { n: 6, m: 'June' },
-                                { n: 7, m: 'July' }, { n: 8, m: 'August' }, { n: 9, m: 'September' },
-                                { n: 10, m: 'October' }, { n: 11, m: 'November' }, { n: 12, m: 'December' }
-                            ].map(item => (
-                                <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
-                            ))}
-                        </select>
+                        {viewMode === 'history' && (
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value)}
+                                className="input-field"
+                                style={{ height: '48px', width: '120px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
+                            >
+                                <option value="All" style={{ background: '#0f172a' }}>All Months</option>
+                                {[
+                                    { n: 1, m: 'January' }, { n: 2, m: 'February' }, { n: 3, m: 'March' },
+                                    { n: 4, m: 'April' }, { n: 5, m: 'May' }, { n: 6, m: 'June' },
+                                    { n: 7, m: 'July' }, { n: 8, m: 'August' }, { n: 9, m: 'September' },
+                                    { n: 10, m: 'October' }, { n: 11, m: 'November' }, { n: 12, m: 'December' }
+                                ].map(item => (
+                                    <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
+                                ))}
+                            </select>
+                        )}
 
                         <select
                             value={selectedYear}
@@ -560,7 +624,7 @@ const Maintenance = () => {
                                     transition: '0.3s'
                                 }}
                             >
-                                <Zap size={14} style={{ marginRight: '6px' }} /> Super Maintenance
+                                <Zap size={14} style={{ marginRight: '6px' }} /> Master Data
                             </button>
                         </div>
 
@@ -655,7 +719,7 @@ const Maintenance = () => {
                     <div>
                         <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Spend (Filtered)</p>
                         <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>
-                            ₹{(viewMode === 'super' 
+                            ₹{(viewMode === 'super'
                                 ? (aggData?.reduce((s, v) => s + (v.maintenance?.totalAmount || 0), 0) || 0)
                                 : totalMaintenanceCost).toLocaleString()}
                         </h2>
@@ -698,429 +762,611 @@ const Maintenance = () => {
                 </motion.div>
             </div>
 
-            {/* Simplified & Compact Category Filter Bar */}
-            <div style={{ marginBottom: '30px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', paddingLeft: '4px' }}>
-                    <h3 style={{ color: 'white', fontSize: '15px', fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Settings size={16} color="var(--primary)" /> Maintenance Categories
-                    </h3>
-                    {activeCategory !== 'All' && (
-                        <motion.span
-                            initial={{ opacity: 0, x: -10 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            style={{ background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', padding: '2px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251, 191, 36, 0.2)' }}
-                        >
-                            {frequencyInSelectedPeriod} {frequencyInSelectedPeriod === 1 ? 'Service' : 'Services'} this {selectedMonth === 'All' ? 'Year' : 'Month'}
-                        </motion.span>
-                    )}
-                </div>
+            {/* Category Filter Bar - Only show in History mode */}
+            {viewMode === 'history' && (
+                <div style={{ marginBottom: '30px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', paddingLeft: '4px' }}>
+                        <h3 style={{ color: 'white', fontSize: '15px', fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Settings size={16} color="var(--primary)" /> Maintenance Categories
+                        </h3>
+                        {activeCategory !== 'All' && (
+                            <motion.span
+                                initial={{ opacity: 0, x: -10 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                style={{ background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', padding: '2px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251, 191, 36, 0.2)' }}
+                            >
+                                {frequencyInSelectedPeriod} {frequencyInSelectedPeriod === 1 ? 'Service' : 'Services'} this {selectedMonth === 'All' ? 'Year' : 'Month'}
+                            </motion.span>
+                        )}
+                    </div>
 
-                <div className="premium-scroll" style={{
-                    display: 'flex',
-                    gap: '6px',
-                    overflowX: 'auto',
-                    padding: '6px',
-                    background: 'rgba(15, 23, 42, 0.3)',
-                    borderRadius: '18px',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    scrollbarWidth: 'none'
-                }}>
-                    <button
-                        onClick={() => setActiveCategory('All')}
-                        style={{
-                            padding: '10px 20px',
-                            background: activeCategory === 'All' ? 'rgba(251, 191, 36, 0.15)' : 'transparent',
-                            border: 'none',
-                            borderRadius: '12px',
-                            cursor: 'pointer',
-                            color: activeCategory === 'All' ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
-                            fontSize: '11px',
-                            fontWeight: '800',
-                            transition: '0.2s',
-                            whiteSpace: 'nowrap'
-                        }}
-                    >
-                        All Types
-                    </button>
-
-                    {maintenanceTypes.map((type) => (
-                        <motion.button
-                            key={type}
-                            whileTap={{ scale: 0.96 }}
-                            onClick={() => setActiveCategory(type)}
+                    <div className="premium-scroll" style={{
+                        display: 'flex',
+                        gap: '6px',
+                        overflowX: 'auto',
+                        padding: '6px',
+                        background: 'rgba(15, 23, 42, 0.3)',
+                        borderRadius: '18px',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        scrollbarWidth: 'none'
+                    }}>
+                        <button
+                            onClick={() => setActiveCategory('All')}
                             style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
                                 padding: '10px 20px',
-                                background: activeCategory === type ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                                background: activeCategory === 'All' ? 'rgba(251, 191, 36, 0.15)' : 'transparent',
                                 border: 'none',
                                 borderRadius: '12px',
                                 cursor: 'pointer',
+                                color: activeCategory === 'All' ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
+                                fontSize: '11px',
+                                fontWeight: '800',
                                 transition: '0.2s',
                                 whiteSpace: 'nowrap'
                             }}
                         >
-                            <span style={{
-                                fontSize: '11px',
-                                fontWeight: '800',
-                                color: activeCategory === type ? '#38bdf8' : 'rgba(255,255,255,0.5)',
-                                letterSpacing: '0.3px'
-                            }}>
-                                {type}
-                            </span>
+                            All Types
+                        </button>
 
-                            {/* Simple dynamic count bubble */}
-                            {categoryStats[type] > 0 && (
+                        {maintenanceTypes.map((type) => (
+                            <motion.button
+                                key={type}
+                                whileTap={{ scale: 0.96 }}
+                                onClick={() => setActiveCategory(type)}
+                                style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '10px 20px',
+                                    background: activeCategory === type ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
+                                    border: 'none',
+                                    borderRadius: '12px',
+                                    cursor: 'pointer',
+                                    transition: '0.2s',
+                                    whiteSpace: 'nowrap'
+                                }}
+                            >
                                 <span style={{
-                                    padding: '2px 7px',
-                                    borderRadius: '6px',
-                                    background: activeCategory === type ? '#38bdf8' : 'rgba(255,255,255,0.06)',
-                                    color: activeCategory === type ? 'black' : 'rgba(255,255,255,0.3)',
-                                    fontSize: '9px',
-                                    fontWeight: '950'
+                                    fontSize: '11px',
+                                    fontWeight: '800',
+                                    color: activeCategory === type ? '#38bdf8' : 'rgba(255,255,255,0.5)',
+                                    letterSpacing: '0.3px'
                                 }}>
-                                    {categoryStats[type]}
+                                    {type}
                                 </span>
-                            )}
-                        </motion.button>
-                    ))}
+
+                                {categoryStats[type] > 0 && (
+                                    <span style={{
+                                        padding: '2px 7px',
+                                        borderRadius: '6px',
+                                        background: activeCategory === type ? '#38bdf8' : 'rgba(255,255,255,0.06)',
+                                        color: activeCategory === type ? 'black' : 'rgba(255,255,255,0.3)',
+                                        fontSize: '9px',
+                                        fontWeight: '950'
+                                    }}>
+                                        {categoryStats[type]}
+                                    </span>
+                                )}
+                            </motion.button>
+                        ))}
+                    </div>
                 </div>
-            </div>
+            )}
 
             {/* View Mode Switching Logic */}
             {viewMode === 'super' ? (
-                <div className="glass-card" style={{ padding: '0', background: 'rgba(30,30,40,0.3)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-                    <div style={{ overflowX: 'auto' }}>
-                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
-                            <thead>
-                                <tr style={{ textAlign: 'left', background: 'rgba(0,0,0,0.1)' }}>
-                                    <th style={{ padding: '20px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle Details</th>
-                                    <th style={{ padding: '20px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Maintenance Total</th>
-                                    <th style={{ padding: '20px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Fuel Cost</th>
-                                    <th style={{ padding: '20px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Avg Mileage</th>
-                                    <th style={{ padding: '20px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Distance & KM</th>
-                                    <th style={{ padding: '20px 25px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {aggLoading ? (
-                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px', color: 'white', fontWeight: '800' }}>Aggregating Fleet Maintenance Reports...</td></tr>
-                                ) : aggData.length === 0 ? (
-                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>No consolidated records found.</td></tr>
-                                ) : aggData.filter(v => v.carNumber.toLowerCase().includes(aggSearch.toLowerCase()) || v.model.toLowerCase().includes(aggSearch.toLowerCase())).map((v, idx) => (
-                                    <motion.tr
-                                        key={v.vehicleId || idx}
-                                        initial={{ opacity: 0, x: -10 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        transition={{ delay: idx * 0.03 }}
-                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
-                                    >
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>{v.carNumber}</div>
-                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '700' }}>{v.model}</div>
-                                        </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: theme.primary, fontWeight: '950', fontSize: '16px' }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</div>
-                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{v.maintenance?.records?.length || 0} service jobs</div>
-                                        </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>₹{(v.fuel?.totalAmount || 0).toLocaleString()}</div>
-                                            <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '850' }}>{(v.fuel?.totalQuantity || 0).toFixed(1)} Liters</div>
-                                        </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: '#0ea5e9', fontWeight: '800', fontSize: '14px' }}>{(v.fuel?.avgMileage || 0).toFixed(2)}</div>
-                                            <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>KM / LITER</div>
-                                        </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: '#10b981', fontWeight: '950', fontSize: '15px' }}>{(v.totalDistance || 0).toLocaleString()} <span style={{ fontSize: '10px', fontWeight: '700' }}>KM (Dist)</span></div>
-                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Odo: {(v.lastOdometer || 0).toLocaleString()} KM</div>
-                                        </td>
-                                        <td style={{ padding: '20px 25px', textAlign: 'right' }}>
-                                            <button 
-                                                onClick={() => {
-                                                    setFilterVehicle(v.carNumber);
-                                                    setViewMode('history');
-                                                    setActiveCategory('All');
-                                                }}
-                                                style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '8px 15px', borderRadius: '10px', fontSize: '11px', fontWeight: '800', cursor: 'pointer', transition: '0.3s' }}
-                                            >
-                                                View Jobs <ArrowRight size={12} style={{ marginLeft: '4px' }} />
-                                            </button>
-                                        </td>
-                                    </motion.tr>
-                                ))}
-                            </tbody>
-                        </table>
+                <>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px', marginBottom: '20px' }}>
+                        <div>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: theme.primary, marginBottom: '2px' }}>
+                                <div style={{ width: '4px', height: '16px', borderRadius: '2px', background: theme.primary, boxShadow: `0 0 10px ${theme.primary}50` }}></div>
+                                <span style={{ fontSize: '11px', fontWeight: '1000', textTransform: 'uppercase', letterSpacing: '2px' }}>Maintenance Analytics</span>
+                            </div>
+                            <h2 style={{ color: 'white', margin: 0, fontSize: '24px', fontWeight: '950', letterSpacing: '-0.5px' }}>Fleet Master Data <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: '500' }}>— {selectedYear}</span></h2>
+                        </div>
+                        <div style={{ display: 'flex', gap: '15px' }}>
+                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px 20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase' }}>VEHICLE COUNT</div>
+                                <div style={{ color: 'white', fontWeight: '1000', fontSize: '18px' }}>{filteredAggData.length}</div>
+                            </div>
+                            <div style={{ background: `linear-gradient(135deg, ${theme.primary}20 0%, transparent 100%)`, padding: '10px 20px', borderRadius: '16px', border: `1px solid ${theme.primary}30`, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
+                                <div style={{ fontSize: '9px', color: theme.primary, fontWeight: '1000', textTransform: 'uppercase' }}>ANNUAL SPEND</div>
+                                <div style={{ color: 'white', fontWeight: '1000', fontSize: '18px' }}>₹{filteredAggData.reduce((s,v) => s + (v.maintenance?.totalAmount || 0), 0).toLocaleString()}</div>
+                            </div>
+                        </div>
                     </div>
-                </div>
+
+                    <div className="glass-card" style={{ padding: '0', background: 'rgba(15,23,42,0.4)', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden', boxShadow: '0 30px 60px rgba(0,0,0,0.4)', backdropFilter: 'blur(20px)' }}>
+                        <style>{`
+                            .custom-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+                            .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
+                            .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
+                            .custom-scroll::-webkit-scrollbar-thumb:hover { background: ${theme.primary}60; }
+                            .row-hover:hover { background: rgba(255,255,255,0.02) !important; }
+                            .sticky-header { border-right: 1px solid rgba(255,255,255,0.1); box-shadow: 15px 0 20px -15px rgba(0,0,0,0.6); }
+                        `}</style>
+                        <div className="custom-scroll" style={{ overflowX: 'auto', maxHeight: '75vh' }}>
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
+                                <thead>
+                                    <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
+                                        <th className="sticky-header" style={{ padding: '25px 35px', textAlign: 'left', color: 'rgba(255,255,255,0.8)', fontSize: '12px', fontWeight: '1000', textTransform: 'uppercase', letterSpacing: '2px', position: 'sticky', left: 0, background: '#0e1526', zIndex: 20, borderBottom: '1px solid rgba(255,255,255,0.12)' }}>Vehicle Inventory</th>
+                                        {NEXT_SERVICE_TYPES.map((type, tIdx) => (
+                                            <th 
+                                                key={type} 
+                                                onClick={() => handleSort(type)}
+                                                style={{ 
+                                                    padding: '25px 15px', 
+                                                    textAlign: 'center', 
+                                                    color: sortConfig.key === type ? theme.primary : 'rgba(255,255,255,0.4)', 
+                                                    fontSize: '11px', 
+                                                    fontWeight: '1000', 
+                                                    textTransform: 'uppercase', 
+                                                    letterSpacing: '1.5px', 
+                                                    borderBottom: sortConfig.key === type ? `2px solid ${theme.primary}` : '1px solid rgba(255,255,255,0.12)', 
+                                                    minWidth: '170px', 
+                                                    background: tIdx % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent',
+                                                    cursor: 'pointer',
+                                                    transition: '0.2s'
+                                                }}
+                                            >
+                                                <div 
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        const searchStr = type.toLowerCase().replace(' system', '').trim();
+                                                        const allCategoryRecs = (aggData || []).flatMap(v => {
+                                                            const records = v.maintenance?.records || v.maintenance?.recs || [];
+                                                            return records.filter(r => {
+                                                                const rType = (r.maintenanceType || '').toLowerCase();
+                                                                const rCat = (r.category || r.description || '').toLowerCase();
+                                                                return rType.includes(searchStr) || rCat.includes(searchStr);
+                                                            }).map(r => ({ ...r, carNumber: v.carNumber }));
+                                                        });
+                                                        setDrillData({ vehicle: 'All Vehicles', category: type, records: allCategoryRecs });
+                                                        setShowDrillModal(true);
+                                                    }}
+                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
+                                                    title={`View all ${type} records across fleet`}
+                                                >
+                                                    {type.replace(' System', '').replace(' System', '').replace(' & ', ' / ')}
+                                                    <ArrowUpRight size={10} style={{ opacity: 0.5 }} />
+                                                    {sortConfig.key === type && (
+                                                        <span style={{ fontSize: '10px' }}>{sortConfig.direction === 'desc' ? '▼' : '▲'}</span>
+                                                    )}
+                                                </div>
+                                            </th>
+                                        ))}
+                                        <th 
+                                            onClick={() => handleSort('total')}
+                                            style={{ 
+                                                padding: '25px 35px', 
+                                                textAlign: 'right', 
+                                                color: sortConfig.key === 'total' ? 'white' : theme.primary, 
+                                                fontSize: '12px', 
+                                                fontWeight: '1000', 
+                                                textTransform: 'uppercase', 
+                                                letterSpacing: '2px', 
+                                                borderBottom: sortConfig.key === 'total' ? `2px solid white` : '1px solid rgba(255,255,255,0.12)', 
+                                                background: sortConfig.key === 'total' ? `${theme.primary}30` : `${theme.primary}10`, 
+                                                position: 'sticky', 
+                                                right: 0, 
+                                                zIndex: 30,
+                                                cursor: 'pointer',
+                                                transition: '0.2s'
+                                            }}
+                                        >
+                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
+                                                Yearly Total
+                                                {sortConfig.key === 'total' && (
+                                                    <span style={{ fontSize: '10px' }}>{sortConfig.direction === 'desc' ? '▼' : '▲'}</span>
+                                                )}
+                                            </div>
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredAggData.length === 0 ? (
+                                        <tr><td colSpan={NEXT_SERVICE_TYPES.length + 2} style={{ padding: '100px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '14px', fontWeight: '800' }}>No fleet analytics recorded for this period.</td></tr>
+                                    ) : (
+                                        filteredAggData.map((v, idx) => {
+                                            const catTotals = {};
+                                            NEXT_SERVICE_TYPES.forEach(cat => {
+                                                const searchStr = cat.toLowerCase().replace(' system', '').trim();
+                                                const catRecs = (v.maintenance?.records || v.maintenance?.recs || []).filter(r => {
+                                                    const rType = (r.type || r.maintenanceType || '').toLowerCase();
+                                                    const rCat = (r.category || '').toLowerCase();
+                                                    const rDesc = (r.description || '').toLowerCase();
+                                                    return rType.includes(searchStr) || rCat.includes(searchStr) || rDesc.includes(searchStr);
+                                                });
+                                                catTotals[cat] = {
+                                                    total: catRecs.reduce((sum, r) => sum + (r.amount || 0), 0),
+                                                    recs: catRecs
+                                                };
+                                            });
+
+                                            return (
+                                                <motion.tr
+                                                    key={v.vehicleId || idx}
+                                                    initial={{ opacity: 0, y: 15 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: idx * 0.02, duration: 0.5, ease: "easeOut" }}
+                                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', transition: '0.2s' }}
+                                                    className="row-hover"
+                                                >
+                                                    <td className="sticky-header" style={{ padding: '25px 35px', position: 'sticky', left: 0, background: 'linear-gradient(90deg, #0e1526 0%, #151f33 100%)', backdropFilter: 'blur(30px)', zIndex: 15 }}>
+                                                        <div style={{ color: 'white', fontWeight: '1000', fontSize: '16.5px', letterSpacing: '0.5px' }}>{v.carNumber}</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', marginTop: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>{v.model}</div>
+                                                    </td>
+                                                    
+                                                    {NEXT_SERVICE_TYPES.map((type, tIdx) => {
+                                                        const { total, recs } = catTotals[type];
+
+                                                        return (
+                                                            <td key={type} style={{ padding: '20px 12px', textAlign: 'center', background: tIdx % 2 === 0 ? 'rgba(255,255,255,0.005)' : 'transparent' }}>
+                                                                {total > 0 ? (
+                                                                    <motion.button 
+                                                                        whileHover={{ scale: 1.1, translateY: -5 }}
+                                                                        whileTap={{ scale: 0.95 }}
+                                                                        onClick={() => {
+                                                                            setDrillData({ vehicle: v.carNumber, category: type, records: recs });
+                                                                            setShowDrillModal(true);
+                                                                        }}
+                                                                        style={{ 
+                                                                            background: `linear-gradient(135deg, ${theme.primary}30 0%, ${theme.primary}10 100%)`, 
+                                                                            color: 'white', 
+                                                                            border: `1px solid ${theme.primary}50`, 
+                                                                            padding: '10px 15px', 
+                                                                            borderRadius: '16px', 
+                                                                            cursor: 'pointer',
+                                                                            width: '100%',
+                                                                            maxWidth: '140px',
+                                                                            boxShadow: `0 8px 16px ${theme.primary}15`,
+                                                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                            display: 'flex',
+                                                                            flexDirection: 'column',
+                                                                            alignItems: 'center',
+                                                                            gap: '2px'
+                                                                        }}
+                                                                        title={recs.map(r => `${formatDateIST(r.billDate || r.date)}: ₹${(r.amount || 0).toLocaleString()} - ${r.description || 'Service'}`).join('\n')}
+                                                                    >
+                                                                        <div style={{ fontSize: '13.5px', fontWeight: '1000', letterSpacing: '-0.2px' }}>₹{total.toLocaleString()}</div>
+                                                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{recs.length} {recs.length === 1 ? 'Record' : 'Records'}</div>
+                                                                    </motion.button>
+                                                                ) : (
+                                                                    <div style={{ color: 'rgba(255,255,255,0.03)', fontSize: '11px', fontWeight: '1000' }}>—</div>
+                                                                )}
+                                                            </td>
+                                                        );
+                                                    })}
+
+                                                    <td 
+                                                        onClick={() => {
+                                                            setDrillData({ vehicle: v.carNumber, category: 'All Categories', records: v.maintenance?.records || v.maintenance?.recs || [] });
+                                                            setShowDrillModal(true);
+                                                        }}
+                                                        style={{ 
+                                                            padding: '25px 35px', 
+                                                            textAlign: 'right', 
+                                                            background: `${theme.primary}05`, 
+                                                            position: 'sticky', 
+                                                            right: 0, 
+                                                            zIndex: 10, 
+                                                            backdropFilter: 'blur(10px)', 
+                                                            borderLeft: '1px solid rgba(255,255,255,0.05)',
+                                                            cursor: 'pointer',
+                                                            display: 'flex',
+                                                            flexDirection: 'column',
+                                                            alignItems: 'flex-end',
+                                                            justifyContent: 'center'
+                                                        }}
+                                                        className="total-cell-hover"
+                                                    >
+                                                        <style>{`.total-cell-hover:hover { background: ${theme.primary}15 !important; }`}</style>
+                                                        <div style={{ color: '#10b981', fontWeight: '1000', fontSize: '20px', letterSpacing: '-1px', textShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</div>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: '1000', marginTop: '4px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                            <span>{(v.maintenance?.records || v.maintenance?.recs || []).length} Events</span>
+                                                            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></div>
+                                                            <span style={{ color: 'white', opacity: 0.8 }}>View All</span>
+                                                        </div>
+                                                    </td>
+                                                </motion.tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </>
             ) : (
                 <>
-                {/* Category Bar and History Table continue below... */}
-            <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
-                {loading ? (
-                    <div style={{ padding: '100px', textAlign: 'center' }}>
-                        <div className="spinner" style={{ margin: '0 auto' }}></div>
-                        <p style={{ color: 'var(--text-muted)', marginTop: '20px' }}>Loading history...</p>
-                    </div>
-                ) : (
-                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
-                        <thead>
-                            <tr style={{ textAlign: 'left', background: 'rgba(255,255,255,0.02)' }}>
-                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Date & Vehicle</th>
-                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Service Details</th>
-                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>KM Reading</th>
-                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Garage / Vendor</th>
-                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Cost & Pay</th>
-                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredRecords.length === 0 ? (
-                                <tr>
-                                    <td colSpan="6" style={{ padding: '100px', textAlign: 'center' }}>
-                                        <Wrench size={48} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
-                                        <h3 style={{ color: 'white' }}>No history found</h3>
-                                    </td>
-                                </tr>
-                            ) : filteredRecords.map((record, idx) => (
-                                <motion.tr
-                                    key={record._id || idx}
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    transition={{ delay: idx * 0.05 }}
-                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
-                                >
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>
-                                            {record.billDate ? formatDateIST(record.billDate) : 'N/A'}
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                                            <Car size={12} style={{ color: 'var(--primary)' }} />
-                                            <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontWeight: '700' }}>{record.vehicle?.carNumber || 'N/A'}</span>
-                                        </div>
-                                        {record.driver && (
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Driver: {record.driver.name}</span>
-                                            </div>
-                                        )}
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <span style={{
-                                                fontSize: '10px',
-                                                padding: '2px 8px',
-                                                borderRadius: '4px',
-                                                background: 'rgba(99, 102, 241, 0.1)',
-                                                color: '#818cf8',
-                                                fontWeight: '800',
-                                                textTransform: 'uppercase'
-                                            }}>{record.maintenanceType}</span>
-                                            {record.status === 'pending' && (
-                                                <span style={{
-                                                    fontSize: '10px',
-                                                    padding: '2px 8px',
-                                                    borderRadius: '4px',
-                                                    background: 'rgba(245, 158, 11, 0.1)',
-                                                    color: 'var(--primary)',
-                                                    fontWeight: '800',
-                                                    textTransform: 'uppercase'
-                                                }}>PENDING APPROVAL</span>
-                                            )}
-                                            {record.source === 'Driver App' && (
-                                                <span style={{
-                                                    fontSize: '10px',
-                                                    padding: '2px 8px',
-                                                    borderRadius: '4px',
-                                                    background: 'rgba(16, 185, 129, 0.1)',
-                                                    color: '#10b981',
-                                                    fontWeight: '800',
-                                                    textTransform: 'uppercase'
-                                                }}>DRIVER APP</span>
-                                            )}
-                                        </div>
-                                        <div style={{ color: 'white', fontSize: '13px', marginTop: '4px', fontWeight: '500' }}>
-                                            {record.category || 'General Service'}
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        {record.currentKm ? (
-                                            <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>{Number(record.currentKm).toLocaleString()}</div>
-                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Kilometers</div>
-                                            </div>
-                                        ) : (
-                                            <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px' }}>N/A</span>
-                                        )}
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{record.garageName || record.vendorName || 'Self/Local'}</div>
-                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                            Bill: {record.billNumber || 'N/A' || record.description}
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ color: '#10b981', fontWeight: '800', fontSize: '16px' }}>₹{Number(record.amount || 0).toLocaleString()}</div>
-                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                            via {record.paymentMode}
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '20px 25px', textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                            {record.status === 'pending' ? (
-                                                <div style={{ display: 'flex', gap: '8px' }}>
-                                                    <button
-                                                        onClick={() => handleApprove(record.attendanceId, record._id)}
-                                                        className="glass-card-hover-effect"
-                                                        style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', cursor: 'pointer', fontSize: '11px', fontWeight: '800' }}
-                                                    >
-                                                        APPROVE
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleReject(record.attendanceId, record._id)}
-                                                        className="glass-card-hover-effect"
-                                                        style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', cursor: 'pointer', fontSize: '11px', fontWeight: '800' }}
-                                                    >
-                                                        REJECT
-                                                    </button>
+                    {/* Category Bar and History Table continue below... */}
+                    <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+                        {loading ? (
+                            <div style={{ padding: '100px', textAlign: 'center' }}>
+                                <div className="spinner" style={{ margin: '0 auto' }}></div>
+                                <p style={{ color: 'var(--text-muted)', marginTop: '20px' }}>Loading history...</p>
+                            </div>
+                        ) : (
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
+                                <thead>
+                                    <tr style={{ textAlign: 'left', background: 'rgba(255,255,255,0.02)' }}>
+                                        <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Date & Vehicle</th>
+                                        <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Service Details</th>
+                                        <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>KM Reading</th>
+                                        <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Garage / Vendor</th>
+                                        <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>Cost & Pay</th>
+                                        <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredRecords.length === 0 ? (
+                                        <tr>
+                                            <td colSpan="6" style={{ padding: '100px', textAlign: 'center' }}>
+                                                <Wrench size={48} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '20px' }} />
+                                                <h3 style={{ color: 'white' }}>No history found</h3>
+                                            </td>
+                                        </tr>
+                                    ) : filteredRecords.map((record, idx) => (
+                                        <motion.tr
+                                            key={record._id || idx}
+                                            initial={{ opacity: 0, x: -10 }}
+                                            animate={{ opacity: 1, x: 0 }}
+                                            transition={{ delay: idx * 0.05 }}
+                                            style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
+                                        >
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>
+                                                    {record.billDate ? formatDateIST(record.billDate) : 'N/A'}
                                                 </div>
-                                            ) : null}
-                                            <div style={{ display: 'flex', gap: '8px', marginLeft: '8px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                                    <Car size={12} style={{ color: 'var(--primary)' }} />
+                                                    <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontWeight: '700' }}>{record.vehicle?.carNumber || 'N/A'}</span>
+                                                </div>
+                                                {record.driver && (
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Driver: {record.driver.name}</span>
+                                                    </div>
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                {(() => {
+                                                    const currentTypes = (record.maintenanceType || '').split(', ').filter(Boolean);
+                                                    const displayTypes = activeCategory === 'All' 
+                                                        ? currentTypes 
+                                                        : currentTypes.filter(t => t === activeCategory);
+                                                    
+                                                    const currentCats = (record.category || '').split(', ').filter(Boolean);
+                                                    const categoryList = subCategories[activeCategory] || [];
+                                                    const displayCats = activeCategory === 'All'
+                                                        ? currentCats.join(', ')
+                                                        : currentCats.filter(c => 
+                                                            categoryList.some(item => c.toLowerCase().includes(item.toLowerCase())) ||
+                                                            c.toLowerCase().includes('labour') ||
+                                                            c.toLowerCase().includes('labor')
+                                                          ).join(', ') || record.category;
+
+                                                    return (
+                                                        <>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                                {displayTypes.map((t, i) => (
+                                                                    <span key={i} style={{
+                                                                        fontSize: '10px',
+                                                                        padding: '2px 8px',
+                                                                        borderRadius: '4px',
+                                                                        background: 'rgba(99, 102, 241, 0.1)',
+                                                                        color: '#818cf8',
+                                                                        fontWeight: '800',
+                                                                        textTransform: 'uppercase'
+                                                                    }}>{t}</span>
+                                                                ))}
+                                                                {record.status === 'pending' && (
+                                                                    <span style={{
+                                                                        fontSize: '10px',
+                                                                        padding: '2px 8px',
+                                                                        borderRadius: '4px',
+                                                                        background: 'rgba(245, 158, 11, 0.1)',
+                                                                        color: 'var(--primary)',
+                                                                        fontWeight: '800',
+                                                                        textTransform: 'uppercase'
+                                                                    }}>PENDING APPROVAL</span>
+                                                                )}
+                                                                {record.source === 'Driver App' && (
+                                                                    <span style={{
+                                                                        fontSize: '10px',
+                                                                        padding: '2px 8px',
+                                                                        borderRadius: '4px',
+                                                                        background: 'rgba(16, 185, 129, 0.1)',
+                                                                        color: '#10b981',
+                                                                        fontWeight: '800',
+                                                                        textTransform: 'uppercase'
+                                                                    }}>DRIVER APP</span>
+                                                                )}
+                                                            </div>
+                                                            <div style={{ color: 'white', fontSize: '13px', marginTop: '4px', fontWeight: '500' }}>
+                                                                {displayCats || 'General Service'}
+                                                            </div>
+                                                        </>
+                                                    );
+                                                })()}
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                {record.currentKm ? (
+                                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>{Number(record.currentKm).toLocaleString()}</div>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Kilometers</div>
+                                                    </div>
+                                                ) : (
+                                                    <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px' }}>N/A</span>
+                                                )}
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{record.garageName || record.vendorName || 'Self/Local'}</div>
+                                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
+                                                    Bill: {record.billNumber || 'N/A' || record.description}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ color: '#10b981', fontWeight: '800', fontSize: '16px' }}>₹{Number(record.amount || 0).toLocaleString()}</div>
+                                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
+                                                    via {record.paymentMode}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '20px 25px', textAlign: 'right' }}>
+                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                    {record.status === 'pending' ? (
+                                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                                            <button
+                                                                onClick={() => handleApprove(record.attendanceId, record._id)}
+                                                                className="glass-card-hover-effect"
+                                                                style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', cursor: 'pointer', fontSize: '11px', fontWeight: '800' }}
+                                                            >
+                                                                APPROVE
+                                                            </button>
+                                                            <button
+                                                                onClick={() => handleReject(record.attendanceId, record._id)}
+                                                                className="glass-card-hover-effect"
+                                                                style={{ padding: '8px 12px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', cursor: 'pointer', fontSize: '11px', fontWeight: '800' }}
+                                                            >
+                                                                REJECT
+                                                            </button>
+                                                        </div>
+                                                    ) : null}
+                                                    <div style={{ display: 'flex', gap: '8px', marginLeft: '8px' }}>
+                                                        {record.billPhoto && (
+                                                            <button
+                                                                onClick={() => setSelectedBillPhoto(record.billPhoto)}
+                                                                className="glass-card-hover-effect"
+                                                                style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                                title="View Bill"
+                                                            >
+                                                                <FileText size={16} />
+                                                            </button>
+                                                        )}
+                                                        <button
+                                                            onClick={() => handleEdit(record)}
+                                                            className="glass-card-hover-effect"
+                                                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                            title="Edit Entry"
+                                                        >
+                                                            <Wrench size={16} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDelete(record._id)}
+                                                            className="glass-card-hover-effect"
+                                                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                            title="Delete Entry"
+                                                        >
+                                                            <Trash2 size={16} />
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+
+
+
+                    {/* Mobile Card View */}
+                    <div className="show-mobile">
+                        <AnimatePresence>
+                            {loading ? (
+                                <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+                                    <div className="spinner" style={{ margin: '0 auto' }}></div>
+                                    <p style={{ color: 'var(--text-muted)', marginTop: '15px' }}>Loading...</p>
+                                </div>
+                            ) : filteredRecords.length === 0 ? (
+                                <div style={{ padding: '60px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
+                                    <Wrench size={32} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '15px' }} />
+                                    <h3 style={{ color: 'white', fontSize: '16px' }}>No records found</h3>
+                                </div>
+                            ) : (
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                    {filteredRecords.map((record, idx) => (
+                                        <motion.div
+                                            key={record._id || idx}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            className="glass-card"
+                                            style={{ padding: '16px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '14px' }}
+                                        >
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
+                                                <div>
+                                                    <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>
+                                                        {record.billDate ? formatDateIST(record.billDate) : 'N/A'}
+                                                    </div>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                                        <Car size={12} style={{ color: 'var(--primary)' }} />
+                                                        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', fontWeight: '700' }}>{record.vehicle?.carNumber || 'N/A'}</span>
+                                                    </div>
+                                                    {record.driver && (
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                                                            <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Driver: {record.driver.name}</span>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                                <div style={{ textAlign: 'right' }}>
+                                                    <div style={{ color: '#10b981', fontWeight: '800', fontSize: '16px' }}>₹{Number(record.amount || 0).toLocaleString()}</div>
+                                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{record.paymentMode}</div>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ marginBottom: '15px' }}>
+                                                <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
+                                                    <span style={{
+                                                        fontSize: '10px',
+                                                        padding: '2px 8px',
+                                                        borderRadius: '4px',
+                                                        background: 'rgba(99, 102, 241, 0.1)',
+                                                        color: '#818cf8',
+                                                        fontWeight: '800',
+                                                        textTransform: 'uppercase'
+                                                    }}>{record.maintenanceType}</span>
+                                                    {record.currentKm && (
+                                                        <span style={{ fontSize: '10px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                                                            Reading: {Number(record.currentKm).toLocaleString()} KM
+                                                        </span>
+                                                    )}
+                                                </div>
+                                                <div style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>{record.category || 'General Repair'}</div>
+                                                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
+                                                    Garage: <span style={{ color: 'white' }}>{record.garageName || record.vendorName || 'Self'}</span>
+                                                </div>
+                                            </div>
+
+                                            <div style={{ display: 'flex', gap: '10px' }}>
                                                 {record.billPhoto && (
                                                     <button
                                                         onClick={() => setSelectedBillPhoto(record.billPhoto)}
-                                                        className="glass-card-hover-effect"
-                                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                        title="View Bill"
+                                                        style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', border: '1px solid rgba(14, 165, 233, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
                                                     >
-                                                        <FileText size={16} />
+                                                        <FileText size={14} /> View Bill
                                                     </button>
                                                 )}
                                                 <button
                                                     onClick={() => handleEdit(record)}
-                                                    className="glass-card-hover-effect"
-                                                    style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                    title="Edit Entry"
+                                                    style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
                                                 >
-                                                    <Wrench size={16} />
+                                                    <Wrench size={14} /> Edit
                                                 </button>
                                                 <button
                                                     onClick={() => handleDelete(record._id)}
-                                                    className="glass-card-hover-effect"
-                                                    style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                    title="Delete Entry"
+                                                    style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
                                                 >
-                                                    <Trash2 size={16} />
+                                                    <Trash2 size={14} /> Delete
                                                 </button>
                                             </div>
-                                        </div>
-                                    </td>
-                                </motion.tr>
-                            ))}
-                        </tbody>
-                    </table>
-                )}
-            </div>
-
-
-
-            {/* Mobile Card View */}
-            <div className="show-mobile">
-                <AnimatePresence>
-                    {loading ? (
-                        <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-                            <div className="spinner" style={{ margin: '0 auto' }}></div>
-                            <p style={{ color: 'var(--text-muted)', marginTop: '15px' }}>Loading...</p>
-                        </div>
-                    ) : filteredRecords.length === 0 ? (
-                        <div style={{ padding: '60px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
-                            <Wrench size={32} style={{ color: 'rgba(255,255,255,0.1)', marginBottom: '15px' }} />
-                            <h3 style={{ color: 'white', fontSize: '16px' }}>No records found</h3>
-                        </div>
-                    ) : (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                            {filteredRecords.map((record, idx) => (
-                                <motion.div
-                                    key={record._id || idx}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    className="glass-card"
-                                    style={{ padding: '16px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '14px' }}
-                                >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.05)', paddingBottom: '12px' }}>
-                                        <div>
-                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>
-                                                {record.billDate ? formatDateIST(record.billDate) : 'N/A'}
-                                            </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                                                <Car size={12} style={{ color: 'var(--primary)' }} />
-                                                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.7)', fontWeight: '700' }}>{record.vehicle?.carNumber || 'N/A'}</span>
-                                            </div>
-                                            {record.driver && (
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
-                                                    <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '500' }}>Driver: {record.driver.name}</span>
-                                                </div>
-                                            )}
-                                        </div>
-                                        <div style={{ textAlign: 'right' }}>
-                                            <div style={{ color: '#10b981', fontWeight: '800', fontSize: '16px' }}>₹{Number(record.amount || 0).toLocaleString()}</div>
-                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{record.paymentMode}</div>
-                                        </div>
-                                    </div>
-
-                                    <div style={{ marginBottom: '15px' }}>
-                                        <div style={{ display: 'flex', gap: '8px', marginBottom: '6px' }}>
-                                            <span style={{
-                                                fontSize: '10px',
-                                                padding: '2px 8px',
-                                                borderRadius: '4px',
-                                                background: 'rgba(99, 102, 241, 0.1)',
-                                                color: '#818cf8',
-                                                fontWeight: '800',
-                                                textTransform: 'uppercase'
-                                            }}>{record.maintenanceType}</span>
-                                            {record.currentKm && (
-                                                <span style={{ fontSize: '10px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
-                                                    Reading: {Number(record.currentKm).toLocaleString()} KM
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>{record.category || 'General Repair'}</div>
-                                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
-                                            Garage: <span style={{ color: 'white' }}>{record.garageName || record.vendorName || 'Self'}</span>
-                                        </div>
-                                    </div>
-
-                                    <div style={{ display: 'flex', gap: '10px' }}>
-                                        {record.billPhoto && (
-                                            <button
-                                                onClick={() => setSelectedBillPhoto(record.billPhoto)}
-                                                style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(14, 165, 233, 0.1)', color: 'var(--primary)', border: '1px solid rgba(14, 165, 233, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
-                                            >
-                                                <FileText size={14} /> View Bill
-                                            </button>
-                                        )}
-                                        <button
-                                            onClick={() => handleEdit(record)}
-                                            style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.1)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
-                                        >
-                                            <Wrench size={14} /> Edit
-                                        </button>
-                                        <button
-                                            onClick={() => handleDelete(record._id)}
-                                            style={{ flex: 1, padding: '10px', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}
-                                        >
-                                            <Trash2 size={14} /> Delete
-                                        </button>
-                                    </div>
-                                </motion.div>
-                            ))}
-                        </div>
-                    )}
-                </AnimatePresence>
-            </div>
-            </>
-        )}
+                                        </motion.div>
+                                    ))}
+                                </div>
+                            )}
+                        </AnimatePresence>
+                    </div>
+                </>
+            )}
 
             {/* Add Record Modal */}
             <AnimatePresence>
@@ -1338,7 +1584,7 @@ const Maintenance = () => {
                                         {/* Next Service Reminder — only for Regular Service & Tyres & Wheels */}
                                         {(() => {
                                             const selectedTypes = formData.maintenanceType.split(', ').filter(Boolean);
-                                            const showReminderSection = selectedTypes.some(t => NEXT_SERVICE_TYPES.includes(t));
+                                            const showReminderSection = selectedTypes.some(t => ['Regular Service', 'Tyres & Wheels'].includes(t));
                                             if (!showReminderSection) return null;
                                             return (
                                                 <div style={{ padding: '20px', background: showNextService ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.02)', borderRadius: '16px', border: showNextService ? '1px solid rgba(16, 185, 129, 0.1)' : '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s ease' }}>
@@ -1398,6 +1644,130 @@ const Maintenance = () => {
                             <button onClick={() => setSelectedBillPhoto(null)} style={{ position: 'absolute', top: '15px', right: '15px', width: '40px', height: '40px', borderRadius: '50%', background: 'rgba(0,0,0,0.5)', color: 'white', border: '1px solid rgba(255,255,255,0.2)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', backdropFilter: 'blur(5px)' }}>
                                 <Plus size={24} style={{ transform: 'rotate(45deg)' }} />
                             </button>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* Drill Down Breakdown Modal */}
+            <AnimatePresence>
+                {showDrillModal && (
+                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(10px)', zIndex: 2000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
+                        <motion.div 
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            className="glass-card" 
+                            style={{ 
+                                width: '100%', 
+                                maxWidth: '800px', 
+                                maxHeight: '80vh', 
+                                padding: '40px', 
+                                border: '1px solid rgba(255,255,255,0.1)',
+                                overflow: 'hidden',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '30px'
+                            }} 
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '20px 30px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                    <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: `${theme.primary}15`, display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${theme.primary}30` }}>
+                                        <History size={24} color={theme.primary} />
+                                    </div>
+                                    <div>
+                                        <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '950', margin: 0, letterSpacing: '-0.5px' }}>
+                                            {drillData.vehicle} <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: '400' }}>/ {drillData.category}</span>
+                                        </h2>
+                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '700', marginTop: '4px' }}>Detailed maintenance log for the selected period.</p>
+                                    </div>
+                                </div>
+                                <div style={{ display: 'flex', gap: '15px' }}>
+                                    <div style={{ padding: '8px 18px', borderRadius: '14px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', textAlign: 'right' }}>
+                                        <div style={{ fontSize: '9px', color: 'rgba(16,185,129,0.6)', fontWeight: '900', textTransform: 'uppercase' }}>Total Spend</div>
+                                        <div style={{ color: '#10b981', fontWeight: '1000', fontSize: '18px' }}>₹{drillData.records.reduce((s, r) => s + (r.amount || 0), 0).toLocaleString()}</div>
+                                    </div>
+                                    <div style={{ padding: '8px 18px', borderRadius: '14px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', textAlign: 'right' }}>
+                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase' }}>Event Count</div>
+                                        <div style={{ color: 'white', fontWeight: '1000', fontSize: '18px' }}>{drillData.records.length}</div>
+                                    </div>
+                                    <button 
+                                        onClick={() => setShowDrillModal(false)} 
+                                        className="glass-card-hover-effect"
+                                        style={{ background: 'rgba(255,255,255,0.08)', border: 'none', color: 'white', width: '48px', height: '48px', borderRadius: '16px', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                    >
+                                        <X size={22} />
+                                    </button>
+                                </div>
+                             </div>
+
+                            <div style={{ flex: 1, overflowY: 'auto', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(0,0,0,0.2)' }} className="custom-scrollbar">
+                                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                    <thead style={{ position: 'sticky', top: 0, zIndex: 5, background: '#1e293b' }}>
+                                        <tr>
+                                            <th style={{ padding: '15px 20px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
+                                            {drillData.vehicle === 'All Vehicles' && (
+                                                <th style={{ padding: '15px 20px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
+                                            )}
+                                            <th style={{ padding: '15px 20px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Service Description</th>
+                                            <th style={{ padding: '15px 20px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Garage/Vendor</th>
+                                            <th style={{ padding: '15px 20px', textAlign: 'right', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {drillData.records.sort((a,b) => new Date(b.date || b.billDate) - new Date(a.date || a.billDate)).map((rec, i) => (
+                                            <tr key={i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
+                                                <td style={{ padding: '18px 20px', color: 'rgba(255,255,255,0.8)', fontWeight: '700', fontSize: '13px' }}>
+                                                    {formatDateIST(rec.date || rec.billDate)}
+                                                </td>
+                                                {drillData.vehicle === 'All Vehicles' && (
+                                                    <td style={{ padding: '18px 20px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <div style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                <Car size={16} color={theme.primary} />
+                                                            </div>
+                                                            <span style={{ color: 'white', fontWeight: '800', fontSize: '13px' }}>{rec.carNumber || rec.vehicle?.carNumber}</span>
+                                                        </div>
+                                                    </td>
+                                                )}
+                                                <td style={{ padding: '18px 20px' }}>
+                                                    {(() => {
+                                                        const currentCats = (rec.maintenanceType || '').split(', ').filter(Boolean);
+                                                        const currentSubCats = (rec.category || '').split(', ').filter(Boolean);
+                                                        const categoryList = subCategories[drillData.category] || [];
+                                                        
+                                                        const displayMainCat = drillData.category === 'Yearly Total' 
+                                                            ? (rec.maintenanceType || 'General')
+                                                            : drillData.category;
+
+                                                        const displayDetailedCats = drillData.category === 'Yearly Total'
+                                                            ? currentSubCats.join(', ')
+                                                            : currentSubCats.filter(c => 
+                                                                categoryList.some(item => c.toLowerCase().includes(item.toLowerCase())) ||
+                                                                c.toLowerCase().includes('labour') ||
+                                                                c.toLowerCase().includes('labor')
+                                                              ).join(', ') || rec.category;
+
+                                                        return (
+                                                            <>
+                                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '13px' }}>{displayMainCat}</div>
+                                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '2px', fontWeight: '600' }}>{displayDetailedCats || rec.description || 'No additional details'}</div>
+                                                            </>
+                                                        );
+                                                    })()}
+                                                </td>
+                                                <td style={{ padding: '18px 20px', color: 'rgba(255,255,255,0.5)', fontWeight: '700', fontSize: '12px' }}>
+                                                    {rec.garageName || rec.vendorName || 'Self/Local'}
+                                                </td>
+                                                <td style={{ padding: '18px 20px', textAlign: 'right' }}>
+                                                    <div style={{ color: '#10b981', fontWeight: '950', fontSize: '15px' }}>₹{(rec.amount || 0).toLocaleString()}</div>
+                                                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.25)', fontWeight: '800' }}>APPROVED</div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
                         </motion.div>
                     </div>
                 )}
