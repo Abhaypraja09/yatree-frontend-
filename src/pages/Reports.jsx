@@ -5,7 +5,7 @@ import * as XLSX from 'xlsx';
 import {
     Calendar, CalendarIcon, Search, Download, Eye, ArrowUpRight, ArrowDownLeft,
     User as UserIcon, Users, Car, FileText, ChevronLeft, ChevronRight, X,
-    Edit2, Trash2
+    Edit2, Trash2, MessageSquare
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -80,13 +80,13 @@ const ActionBtns = ({ onView, onEdit, onDelete, onDeleteBonus }) => (
     </div>
 );
 
-/* ─── TableWrapper ─── */
-const TableSection = ({ tabId, fromDate, toDate, chips, headers, rows, empty, colSummaries }) => {
-    const cfg = TAB_CONFIG[tabId] || {};
+/* ─── TableSection ─── */
+const TableSection = ({ tabId, rows, headers, chips, fromDate, toDate, colSummaries, empty }) => {
+    const cfg = TAB_CONFIG[tabId] || { label: tabId, color: '#fff', bg: 'rgba(255,255,255,0.05)', icon: FileText };
     return (
         <div style={{ background: 'rgba(15,23,42,0.8)', border: `1px solid ${cfg.color || '#fff'}20`, borderRadius: '20px', overflow: 'hidden', marginBottom: '28px' }}>
             <SectionBanner tabId={tabId} count={rows?.length || 0} chips={chips} fromDate={fromDate} toDate={toDate} />
-            <div style={{ overflowX: 'auto' }}>
+            <div className="table-responsive-wrapper">
                 <table style={{ width: '100%', borderCollapse: 'collapse', color: 'white', minWidth: '1000px' }}>
                     <thead>
                         {colSummaries && (
@@ -650,13 +650,13 @@ const Reports = ({ isSubComponent = false }) => {
                                 padding: '4px 10px',
                                 borderRadius: '8px',
                                 background: (r.punchOut?.nightStayAmount > 0 || String(r.outsideTrip?.tripType).toLowerCase().includes('night')) ? 'rgba(139, 92, 246, 0.12)' : (r.outsideTrip?.occurred ? 'rgba(56, 189, 248, 0.12)' : 'rgba(16, 185, 129, 0.12)'),
-                                color: (r.punchOut?.nightStayAmount > 0 || String(r.outsideTrip?.tripType).toLowerCase().includes('night')) ? '#a78bfa' : (r.outsideTrip?.occurred ? '#38bdf8' : '#10b981'),
+                                color: (r.punchOut?.nightStayAmount > 0 || String(r.outsideTrip?.tripType).toLowerCase().includes('night')) ? '#10b981' : (r.outsideTrip?.occurred ? '#10b981' : '#10b981'),
                                 border: `1px solid ${(r.punchOut?.nightStayAmount > 0 || String(r.outsideTrip?.tripType).toLowerCase().includes('night')) ? 'rgba(139, 92, 246, 0.2)' : (r.outsideTrip?.occurred ? 'rgba(56, 189, 248, 0.2)' : 'rgba(16, 185, 129, 0.2)')}`,
                                 textTransform: 'uppercase'
                             }}>
-                                { (r.punchOut?.nightStayAmount > 0 || String(r.outsideTrip?.tripType).toLowerCase().includes('night')) 
-                                    ? 'NIGHT' 
-                                    : (r.outsideTrip?.occurred ? 'SAME DAY' : 'CITY LOCAL') }
+                                {(r.punchOut?.nightStayAmount > 0 || String(r.outsideTrip?.tripType).toLowerCase().includes('night'))
+                                    ? 'NIGHT'
+                                    : (r.outsideTrip?.occurred ? 'SAME DAY' : 'CITY LOCAL')}
                             </span>
                         ) : (
                             isOutside ? <StatusBadge ok={true} okLabel="✓ Partner" /> : (entryType.includes('attendance') ? <StatusBadge ok={isCompleted} okLabel="✓ Done" badLabel="⏳ Active" /> : <StatusBadge ok={true} okLabel="✓ Recorded" />)
@@ -673,7 +673,7 @@ const Reports = ({ isSubComponent = false }) => {
                 </TR>
             </>
         );
-    };;
+    };
 
 
 
@@ -772,41 +772,54 @@ const Reports = ({ isSubComponent = false }) => {
 
             {/* ── Header ── */}
             {!isSubComponent && (
-                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '28px 0 20px', flexWrap: 'wrap', gap: '16px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-                        <div style={{ width: '48px', height: '48px', background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`, borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: `0 8px 20px ${theme.primary}40` }}>
-                            <FileText size={24} color="black" />
+                <header className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', padding: '0 4px', gap: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                        <div style={{
+                            width: '56px', height: '56px', borderRadius: '18px',
+                            background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.05))',
+                            display: 'flex', justifyContent: 'center', alignItems: 'center',
+                            border: '1px solid rgba(251, 191, 36, 0.2)',
+                            boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
+                        }}>
+                            <FileText size={28} color="var(--primary)" />
                         </div>
                         <div>
-                            <div style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Operational Insights</div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(22px,5vw,30px)', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>
+                            <div style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px' }}>Operational Insights</div>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(22px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
                                 {location.pathname.includes('driver-duty') ? 'Driver ' : (location.pathname.includes('freelancer-duty') ? 'Freelancer ' : (location.pathname.includes('log-book') ? 'Overall ' : 'Daily '))}
-                                <span className="theme-gradient-text">{location.pathname.includes('log-book') ? 'Log Book' : 'Duty'}</span>
+                                <span className="theme-gradient-text" style={{ background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{location.pathname.includes('log-book') ? 'Log Book' : 'Duty'}</span>
                             </h1>
                         </div>
                     </div>
 
-                    {/* Date Navigator */}
-                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {/* Controls Group */}
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        {/* 1. Date Navigator */}
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            background: 'rgba(0,0,0,0.4)',
-                            padding: '4px',
+                            background: 'rgba(15, 23, 42, 0.6)',
+                            padding: '6px',
                             borderRadius: '20px',
-                            border: '1px solid rgba(255,255,255,0.06)'
+                            border: '1px solid rgba(255,255,255,0.08)',
+                            backdropFilter: 'blur(10px)'
                         }}>
-                            <button onClick={() => shiftDays(-1)} style={{
-                                width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
-                            }}> <ChevronLeft size={18} /> </button>
+                            <motion.button
+                                whileHover={{ scale: 1.1, background: 'rgba(255,255,255,0.08)' }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => shiftDays(-1)}
+                                style={{ width: '40px', height: '40px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                            >
+                                <ChevronLeft size={20} />
+                            </motion.button>
 
                             <div
                                 onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                style={{ height: '42px', minWidth: '140px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '16px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
+                                style={{ height: '40px', minWidth: '130px', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.15)', borderRadius: '14px', padding: '0 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
                             >
-                                <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                                <span style={{ fontSize: '13px', fontWeight: '900', color: 'var(--primary)', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
                                     {selectedDay === 'All' ?
-                                        ` ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
+                                        `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
                                         fmt(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
                                 </span>
                                 <input
@@ -822,67 +835,69 @@ const Reports = ({ isSubComponent = false }) => {
                                 />
                             </div>
 
-                            <button onClick={() => shiftDays(1)} style={{
-                                width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
-                            }}> <ChevronRight size={18} /> </button>
+                            <motion.button
+                                whileHover={{ scale: 1.1, background: 'rgba(255,255,255,0.08)' }}
+                                whileTap={{ scale: 0.9 }}
+                                onClick={() => shiftDays(1)}
+                                style={{ width: '40px', height: '40px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                            >
+                                <ChevronRight size={20} />
+                            </motion.button>
                         </div>
 
-                        {selectedDay !== 'All' && (
-                            <button
-                                onClick={() => setSelectedDay('All')}
-                                style={{
-                                    height: '50px',
-                                    padding: '0 20px',
-                                    borderRadius: '16px',
-                                    background: `${theme.primary}20`,
-                                    border: `1px solid ${theme.primary}40`,
-                                    color: theme.primary,
-                                    fontSize: '11px',
-                                    fontWeight: '1000',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px'
-                                }}
+                        {/* 2. Quick Search & Selectors Group */}
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <div style={{ position: 'relative' }}>
+                                <Search size={14} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                                <input
+                                    type="text"
+                                    placeholder="Quick search..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="premium-compact-input"
+                                    style={{ height: '52px', paddingLeft: '42px', width: '200px', borderRadius: '18px' }}
+                                />
+                            </div>
+
+                            <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '18px', padding: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                <select
+                                    value={selectedMonth}
+                                    onChange={e => setSelectedMonth(parseInt(e.target.value))}
+                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '44px', padding: '0 12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', outline: 'none' }}
+                                >
+                                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => <option key={m} value={i} style={{ background: '#0f172a' }}>{m}</option>)}
+                                </select>
+                                <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}></div>
+                                <select
+                                    value={selectedYear}
+                                    onChange={e => setSelectedYear(parseInt(e.target.value))}
+                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '44px', padding: '0 12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', outline: 'none' }}
+                                >
+                                    {[2024, 2025, 2026].map(y => <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>)}
+                                </select>
+                            </div>
+                        </div>
+
+                        {/* 3. Actions */}
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            {selectedDay !== 'All' && (
+                                <motion.button
+                                    whileHover={{ y: -2 }}
+                                    onClick={() => setSelectedDay('All')}
+                                    style={{ height: '52px', padding: '0 20px', borderRadius: '18px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', color: 'var(--primary)', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}
+                                >
+                                    <Calendar size={14} /> Full Month
+                                </motion.button>
+                            )}
+                            <motion.button
+                                whileHover={{ y: -2, background: 'rgba(16, 185, 129, 0.2)' }}
+                                whileTap={{ scale: 0.98 }}
+                                onClick={handleDownloadExcel}
+                                style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 22px', height: '52px', borderRadius: '18px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', letterSpacing: '0.5px' }}
                             >
-                                <Calendar size={14} /> Full Month
-                            </button>
-                        )}
-
-                        <select
-                            value={selectedMonth}
-                            onChange={e => {
-                                setSelectedMonth(Number(e.target.value));
-                                setSelectedDay('All');
-                            }}
-                            style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px', outline: 'none' }}
-                        >
-                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
-                                <option key={m} value={idx} style={{ background: '#0f172a' }}>{m}</option>
-                            ))}
-                        </select>
-
-                        <select
-                            value={selectedYear}
-                            onChange={e => {
-                                setSelectedYear(Number(e.target.value));
-                                setSelectedDay('All');
-                            }}
-                            style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '80px', outline: 'none' }}
-                        >
-                            {[2024, 2025, 2026, 2027].map(y => (
-                                <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
-                            ))}
-                        </select>
-
-                        <button
-                            onClick={handleDownloadExcel}
-                            style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 20px', height: '50px', borderRadius: '16px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}
-                        >
-                            <Download size={14} /> EXCEL
-                        </button>
+                                <Download size={16} /> EXCEL
+                            </motion.button>
+                        </div>
                     </div>
                 </header>
             )}

@@ -455,7 +455,7 @@ const ParkingPage = () => {
                     gap: '20px',
                     marginBottom: '30px'
                 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div className="flex-resp" style={{ alignItems: 'center', gap: '15px' }}>
                         <div style={{
                             width: 'clamp(40px,10vw,50px)',
                             height: 'clamp(40px,10vw,50px)',
@@ -472,12 +472,11 @@ const ParkingPage = () => {
                         <div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                                 <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
-                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Logistics Hub</span>
+                                <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Logistics Hub</span>
                             </div>
-                          <h1 style={{ color: 'white', fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
+                          <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
                             Parking <span className="theme-gradient-text">Management</span>
                         </h1>
-
                         </div>
                     </div>
 
@@ -1105,6 +1104,39 @@ const ParkingPage = () => {
             {/* ══ PARKING TAB CONTENT ══ */}
             {activeTab === 'parking' && (
                 <>
+                    {/* Modal Standardization */}
+                    <AnimatePresence>
+                        {showModal && (
+                            <div className="modal-overlay">
+                                <motion.div
+                                    initial={{ scale: 0.9, opacity: 0, y: 10 }}
+                                    animate={{ scale: 1, opacity: 1, y: 0 }}
+                                    exit={{ scale: 0.9, opacity: 0, y: 10 }}
+                                    className="modal-content-wrapper"
+                                    style={{ maxWidth: '800px', padding: 'clamp(20px, 5vw, 40px)' }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                        <h1 style={{ fontSize: '24px', fontWeight: '900', color: 'white', margin: 0 }}>
+                                            {editingId ? 'Edit Entry' : 'Manual Parking Entry'}
+                                        </h1>
+                                        <button className="glass-card" onClick={() => setShowModal(false)} style={{ padding: '10px', borderRadius: '50%', color: 'white' }}>
+                                            <X size={20} />
+                                        </button>
+                                    </div>
+
+                                    <form onSubmit={handleCreate}>
+                                        <div className="modal-form-grid">
+                                            {/* Form fields would go here */}
+                                            <button className="btn-primary" type="submit" disabled={submitting} style={{ height: '56px', fontWeight: '900' }}>
+                                                {submitting ? 'Thinking...' : (editingId ? 'Update Entry' : 'Add Entry')}
+                                            </button>
+                                            <button className="glass-card" type="button" onClick={() => setShowModal(false)} style={{ height: '56px', fontWeight: '800' }}>Cancel</button>
+                                        </div>
+                                    </form>
+                                </motion.div>
+                            </div>
+                        )}
+                    </AnimatePresence>
 
                     {/* Stats Row */}
                     <div style={{
@@ -1180,8 +1212,8 @@ const ParkingPage = () => {
                         </motion.div>
                     </div>
 
-                    {/* Main List */}
-                    <div className="glass-card" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+                    {/* Entries List */}
+                    <div className="table-responsive-wrapper" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
                         {loading ? (
                             <div style={{ padding: '100px', textAlign: 'center' }}><div className="spinner" style={{ margin: '0 auto' }}></div></div>
                         ) : filteredEntries.length === 0 ? (

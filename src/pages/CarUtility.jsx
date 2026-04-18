@@ -230,53 +230,53 @@ const CarUtility = () => {
             <SEO title="Car Utility" description="Fleet Accounts Hub" />
             
             <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', flexWrap:'wrap', gap:'20px' }}>
+                <header className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', gap:'20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{ width: '50px', height: '50px', background: 'linear-gradient(135deg, var(--primary), var(--primary))', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>
+                        <div style={{ width: 'clamp(40px,10vw,50px)', height: 'clamp(40px,10vw,50px)', background: 'linear-gradient(135deg, var(--primary), var(--primary))', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>
                             <Wrench size={24} color="white" />
                         </div>
                         <div>
-                            <h1 style={{ margin: 0, fontSize: '32px', fontWeight: '900', letterSpacing: '-1px' }}>Fleet <span style={{color:'var(--primary)'}}>Utility</span></h1>
-                            <p style={{ margin: '2px 0 0', color: 'rgba(255,255,255,0.4)', fontWeight: '700', fontSize: '12px' }}>Operational Maintenance & Expense Hub</p>
+                            <h1 style={{ margin: 0, fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', letterSpacing: '-1px' }}>Fleet <span className="theme-gradient-text">Utility</span></h1>
+                            <p style={{ margin: '2px 0 0', color: 'rgba(255,255,255,0.4)', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase' }}>Operational Maintenance & Expense</p>
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div className="flex-resp" style={{ gap: '15px', alignItems: 'center' }}>
                         {/* Premium Monthly Navigator */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <button onClick={() => shiftMonth(-1)} style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronLeft size={20} /></button>
-                            <div style={{ padding: '0 24px', height: '42px', display: 'flex', alignItems: 'center', background: 'rgba(14, 165, 233, 0.05)', borderRadius: '14px', border: '1px solid rgba(14, 165, 233, 0.1)', cursor: 'pointer' }} onClick={() => setSelectedMonth(new Date().getUTCMonth())}>
-                                <span style={{ color: 'white', fontSize: '15px', fontWeight: '950', letterSpacing: '0.5px' }}>{new Date(Date.UTC(selectedYear, selectedMonth)).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' }).toUpperCase()}</span>
+                            <button onClick={() => shiftMonth(-1)} className="glass-card" style={{ width: '36px', height: '36px', borderRadius: '12px', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronLeft size={18} /></button>
+                            <div style={{ padding: '0 15px', height: '36px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer' }} onClick={() => setSelectedMonth(new Date().getUTCMonth())}>
+                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '950', letterSpacing: '0.5px' }}>{new Date(Date.UTC(selectedYear, selectedMonth)).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' }).toUpperCase()}</span>
                             </div>
-                            <button onClick={() => shiftMonth(1)} style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronRight size={20} /></button>
+                            <button onClick={() => shiftMonth(1)} className="glass-card" style={{ width: '36px', height: '36px', borderRadius: '12px', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronRight size={18} /></button>
                         </div>
 
                         <button 
                             onClick={() => { setSelectedVehicleId('new'); setActiveUtility(null); }} 
-                            style={{ background: 'var(--primary)', color: '#fff', padding: '15px 30px', borderRadius: '18px', border: 'none', fontWeight: '1000', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '10px', boxShadow: '0 10px 25px -10px var(--primary)' }}
+                            className="btn-primary"
+                            style={{ padding: '12px 24px', borderRadius: '15px', fontWeight: '1000' }}
                         >
-                            <Plus size={20} strokeWidth={3} />
-                            ADD UTILITY
+                            <Plus size={18} /> <span className="hide-mobile">ADD UTILITY</span><span className="show-mobile">ADD</span>
                         </button>
                     </div>
-                </div>
+                </header>
 
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '40px' }}>
+                <div className="grid-1-2-2-4" style={{ marginBottom: '40px' }}>
                     <SummaryStat label="Fastag Paid" val={globalStats.f} col="var(--primary)" icon={Zap} />
                     <SummaryStat label="Border Taxes" val={globalStats.b} col="var(--primary)" icon={Layers} />
                     <SummaryStat label="Service Exp" val={globalStats.s} col="#a855f7" icon={Droplets} />
                     <SummaryStat label="Month Total" val={globalStats.t} col="#10b981" icon={TrendingUp} isDark />
                 </div>
 
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
-                    <div style={{ position: 'relative', width: '400px' }}>
+                <div className="flex-resp" style={{ marginBottom: '30px', gap: '20px' }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
                         <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                        <input type="text" placeholder="Search by vehicle number or model..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="input-field" style={{ paddingLeft: '45px', borderRadius: '15px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', height:'50px', marginBottom:0 }} />
+                        <input type="text" placeholder="Search by vehicle number..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="input-field" style={{ paddingLeft: '45px', marginBottom: 0 }} />
                     </div>
                 </div>
 
                 <div style={{ background: 'rgba(255,255,255,0.01)', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-                    <div className="table-resp">
+                    <div className="table-responsive-wrapper">
                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                             <thead>
                                 <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
@@ -428,29 +428,40 @@ const CarUtility = () => {
                 </div>
             </div>
 
+            {/* Modal Standardization */}
             <AnimatePresence>
                 {selectedVehicleId && (selectedVehicleId === 'new' || selectedVehicle) && (
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, background: 'rgba(2, 6, 23, 0.97)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px' }}>
-                        <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 30 }} style={{ width: '100%', maxWidth: '1100px', height: '94vh', background: '#0a101f', borderRadius: '35px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column' }}>
-                            <div style={{ padding: '30px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                                <div style={{ display:'flex', alignItems:'center', gap:'25px' }}>
-                                    <div style={{width:'50px', height:'50px', background:'linear-gradient(135deg, var(--primary)60, var(--primary)60)', color:'#fff', borderRadius:'15px', display:'flex', justifyContent:'center', alignItems:'center'}}><Zap size={26}/></div>
+                    <div className="modal-overlay">
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0, y: 10 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 10 }}
+                            className="modal-content-wrapper"
+                            style={{ maxWidth: '1100px', height: '90vh', padding: '0' }}
+                        >
+                            <div style={{ padding: 'clamp(20px, 4vw, 30px) clamp(20px, 5vw, 40px)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)' }}>
+                                <div style={{ display:'flex', alignItems:'center', gap:'15px' }}>
+                                    <div style={{width:'40px', height:'40px', background:'var(--primary)', color:'#000', borderRadius:'12px', display:'flex', justifyContent:'center', alignItems:'center'}}><Zap size={20}/></div>
                                     <div>
-                                        <h2 style={{ margin: 0, fontWeight: '950', fontSize: '26px', letterSpacing: '-0.5px' }}>{selectedVehicleId === 'new' ? 'New Utility Entry' : 'Operational Workflow'}</h2>
-                                        <p style={{ margin:'4px 0 0', color: 'rgba(255,255,255,0.3)', fontSize:'12px', fontWeight:'700' }}>{selectedVehicleId === 'new' ? 'Log expense for any vehicle' : 'Select vehicle and log utility expenses'}</p>
+                                        <h2 style={{ margin: 0, fontWeight: '950', fontSize: 'clamp(18px, 4vw, 24px)', letterSpacing: '-0.5px' }}>
+                                            {selectedVehicleId === 'new' ? 'New Utility Entry' : 'Vehicle Utility'}
+                                        </h2>
+                                        {selectedVehicle && <p style={{ margin:0, color: 'var(--primary)', fontSize:'12px', fontWeight:'800' }}>{selectedVehicle.carNumber}</p>}
                                     </div>
                                 </div>
-                                <button onClick={() => { setSelectedVehicleId(null); setActiveUtility(null); }} style={{ background: 'rgba(255,255,255,0.05)', width: '40px', height: '40px', borderRadius: '50%', border:'1px solid rgba(255,255,255,0.1)', color:'white', display:'flex', alignItems:'center', justifyContent:'center', cursor:'pointer' }}><X size={22}/></button>
+                                <button className="glass-card" onClick={() => { setSelectedVehicleId(null); setActiveUtility(null); }} style={{ width: '40px', height: '40px', borderRadius: '50%', color:'white', display:'flex', alignItems:'center', justifyContent:'center' }}>
+                                    <X size={20}/>
+                                </button>
                             </div>
 
-                            <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+                            <div style={{ flex: 1, padding: 'clamp(20px, 5vw, 40px)', overflowY: 'auto' }}>
                                 {message.text && (
-                                    <div style={{ marginBottom: '25px', padding: '12px 20px', borderRadius: '15px', background: message.type==='success'?'#10b98115':'#f43f5e15', color: message.type==='success'?'#10b981':'#f43f5e', border: '1px solid currentColor', fontWeight: '900', fontSize:'14px' }}>{message.text}</div>
+                                    <div style={{ marginBottom: '20px', padding: '15px', borderRadius: '12px', background: message.type==='success'?'rgba(16,185,129,0.1)':'rgba(244,63,94,0.1)', color: message.type==='success'?'#10b981':'#f43f5e', border: '1px solid currentColor', fontWeight: '800', fontSize:'13px' }}>{message.text}</div>
                                 )}
 
-                                <div style={{ display: 'flex', gap: '8px', marginBottom: '30px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '16px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <div className="flex-resp" style={{ gap: '8px', marginBottom: '30px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '16px', width: 'fit-content' }}>
                                     {['fastag', 'border', 'services'].map(t => (
-                                        <button key={t} onClick={() => setActiveUtility(t)} style={{ padding: '12px 24px', borderRadius: '12px', border: 'none', background: (activeUtility === t || (!activeUtility && t === 'fastag')) ? 'rgba(255,255,255,0.08)' : 'transparent', color: (activeUtility === t || (!activeUtility && t === 'fastag')) ? 'var(--primary)' : 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '800', cursor: 'pointer' }}>
+                                        <button key={t} onClick={() => setActiveUtility(t)} className={`glass-card ${ (activeUtility === t || (!activeUtility && t === 'fastag')) ? 'active' : '' }`} style={{ padding: '10px 20px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', color: (activeUtility === t || (!activeUtility && t === 'fastag')) ? 'var(--primary)' : 'rgba(255,255,255,0.4)' }}>
                                             {t.toUpperCase()}
                                         </button>
                                     ))}
@@ -566,56 +577,75 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
     const showForm = !hideForm || editingItem;
 
     return (
-        <div style={{ display: 'grid', gridTemplateColumns: showForm ? '1fr 1.5fr' : '1fr', gap: '40px' }}>
+        <div className="flex-resp" style={{ gap: '30px', alignItems: 'flex-start' }}>
             {showForm && (
-                <div style={{ padding: '30px', background: 'rgba(255,255,255,0.02)', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <h4 style={{ margin: '0 0 30px 0', fontSize: '17px', fontWeight: '900' }}>{editingItem ? 'Edit Entry' : 'Create Entry'}</h4>
-                    <div style={{ display: 'grid', gap: '22px' }}>
+                <div style={{ flex: 1, padding: '25px', background: 'rgba(255,255,255,0.02)', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.06)', width: '100%' }}>
+                    <h4 style={{ margin: '0 0 25px 0', fontSize: '16px', fontWeight: '900' }}>{editingItem ? 'Edit Entry' : 'Log Expense'}</h4>
+                    <div className="modal-form-grid">
                         {!vehicle && (
-                            <div>
-                                <label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>SELECT VEHICLE</label>
+                            <div style={{ gridColumn: '1 / -1' }}>
+                                <label className="input-label">Vehicle</label>
                                 <select 
                                     value={form.vehicleId} 
                                     onChange={e => setForm({...form, vehicleId: e.target.value})} 
                                     className="input-field" 
-                                    style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)', fontWeight:'800'}}
                                 >
-                                    <option value="" style={{background:'#0a101f'}}>-- Choose Vehicle --</option>
+                                    <option value="">Choose vehicle...</option>
                                     {allVehicles.map(v => (
-                                        <option key={v._id} value={v._id} style={{background:'#0a101f'}}>{v.carNumber} ({v.model})</option>
+                                        <option key={v._id} value={v._id}>{v.carNumber}</option>
                                     ))}
                                 </select>
                             </div>
                         )}
-                        <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>AMOUNT (₹)</label><input type="number" value={form.amount} onChange={e=>setForm({...form, amount:e.target.value})} className="input-field" style={{height:'54px', borderRadius:'14px', background:'rgba(0,0,0,0.3)', fontSize:'18px', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                            <label className="input-label">Amount (₹)</label>
+                            <input type="number" value={form.amount} onChange={e=>setForm({...form, amount:e.target.value})} className="input-field" style={{ fontSize: '18px', fontWeight: '900' }} />
+                        </div>
+                        
                         {type === 'fastag' && (
                             <>
-                                <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>NOTE</label><input type="text" value={form.remarks} onChange={e=>setForm({...form, remarks:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
-                                <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>DATE</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', colorScheme:'dark', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
+                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Date</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" /></div>
+                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Remarks</label><input type="text" value={form.remarks} onChange={e=>setForm({...form, remarks:e.target.value})} className="input-field" /></div>
                             </>
                         )}
-                        {type === 'border' && <>
-                            <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>STATE/BORDER</label><input type="text" value={form.borderName} onChange={e=>setForm({...form, borderName:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
-                            <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>DATE</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', colorScheme:'dark', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
-                            <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>REMARKS / NOTES</label><input type="text" value={form.remarks} onChange={e=>setForm({...form, remarks:e.target.value})} className="input-field" placeholder="Enter border tax notes..." style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
-                        </>}
+                        {type === 'border' && (
+                            <>
+                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Border Name</label><input type="text" value={form.borderName} onChange={e=>setForm({...form, borderName:e.target.value})} className="input-field" /></div>
+                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Date</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" /></div>
+                            </>
+                        )}
                         {type === 'services' && (
                             <>
-                                <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>SERVICE TYPE</label><select value={form.category} onChange={e=>setForm({...form, category:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)', fontWeight:'800'}}><option style={{background:'#0a101f'}}>Car Wash</option><option style={{background:'#0a101f'}}>Puncture</option><option style={{background:'#0a101f'}}>Other</option></select></div>
-                                <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>DATE</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', colorScheme:'dark', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
-                                <div><label style={{fontSize:'12px', fontWeight:'800', color:'rgba(255,255,255,0.3)', marginBottom:'10px', display:'block'}}>REMARKS / NOTES</label><input type="text" value={form.remarks} onChange={e=>setForm({...form, remarks:e.target.value})} className="input-field" placeholder="Enter service description..." style={{height:'50px', borderRadius:'12px', background:'rgba(0,0,0,0.3)', border:'1px solid rgba(255,255,255,0.1)'}} /></div>
+                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Category</label><select value={form.category} onChange={e=>setForm({...form, category:e.target.value})} className="input-field"><option>Car Wash</option><option>Puncture</option><option>Other</option></select></div>
+                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Date</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" /></div>
                             </>
                         )}
-                        {(type === 'border' || type === 'services') && <div style={{background:'rgba(0,0,0,0.3)', padding:'20px', borderRadius:'15px', textAlign:'center', border:'1px dashed rgba(255,255,255,0.1)'}}><input type="file" id="sl-file" style={{display:'none'}} onChange={e=>setFile(e.target.files[0])}/><label htmlFor="sl-file" style={{cursor:'pointer', color:color, fontSize:'14px', fontWeight:'900'}}>{file ? file.name : (editingItem ? 'Change Bill/Slip' : 'Upload Bill/Slip')}</label></div>}
-                        <div style={{ display: 'flex', gap: '10px' }}>
-                            {editingItem && <button onClick={() => setEditingItem(null)} style={{ flex: 1, height:'60px', background:'rgba(255,255,255,0.05)', color:'#fff', border:'1px solid rgba(255,255,255,0.1)', borderRadius:'15px', fontWeight:'900', cursor:'pointer' }}>CANCEL</button>}
-                            <button onClick={handleSave} style={{ flex: editingItem ? 2 : 1, height:'60px', background:color, color:'#fff', border:'none', borderRadius:'15px', fontWeight:'1000', cursor:'pointer' }} disabled={submitting}>{editingItem ? 'UPDATE RECORD' : 'SAVE RECORD'}</button>
+                        
+                        {(type === 'border' || type === 'services') && (
+                            <div style={{ gridColumn: '1 / -1' }}>
+                                <label className="input-label">Bill Image</label>
+                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)', textAlign: 'center' }}>
+                                    <input type="file" id="sl-file" style={{display:'none'}} onChange={e=>setFile(e.target.files[0])}/>
+                                    <label htmlFor="sl-file" style={{cursor:'pointer', color:color, fontSize:'13px', fontWeight:'900'}}>{file ? file.name : 'Upload Reciept'}</label>
+                                </div>
+                            </div>
+                        )}
+                        
+                        <div className="modal-form-grid" style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
+                            <button onClick={handleSave} className="btn-primary" style={{ height: '56px' }} disabled={submitting}>
+                                {editingItem ? 'UPDATE' : 'SAVE'}
+                            </button>
+                            {editingItem && (
+                                <button onClick={() => setEditingItem(null)} className="glass-card" style={{ height: '56px' }}>
+                                    CANCEL
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
             )}
 
-            <div style={{ maxHeight: '650px', overflowY: 'auto' }} className="sidebar-nav-scroll">
+            <div style={{ flex: 1.5, maxHeight: '650px', overflowY: 'auto', width: '100%' }} className="sidebar-nav-scroll">
                 <div style={{ display: 'grid', gap: '15px' }}>
                     {hist.length === 0 ? (
                         <div style={{ textAlign: 'center', padding: '100px 40px', background: 'rgba(255,255,255,0.01)', borderRadius: '25px', border: '1px dashed rgba(255,255,255,0.05)' }}>

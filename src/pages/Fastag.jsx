@@ -165,14 +165,14 @@ const Fastag = () => {
                 alignItems: 'center', 
                 gap: '24px' 
             }}>
-                <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
+                <div className="flex-resp" style={{ gap: '15px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                             <Wallet color="var(--primary)" size={20} />
                         </div>
                         <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(251, 191, 36, 0.8)', letterSpacing: '2px', textTransform: 'uppercase' }}>Fleet Wallet</span>
                     </div>
-                    <h1 style={{ color: 'white', fontSize: 'clamp(28px, 6vw, 38px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
+                    <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
                         Fastag <span style={{ color: 'var(--primary)' }}>Manager</span>
                     </h1>
                 </div>
@@ -234,13 +234,14 @@ const Fastag = () => {
                 background: 'rgba(255,255,255,0.05)',
                 padding: '10px',
                 borderRadius: '22px',
-                border: '1px solid rgba(255,255,255,0.05)'
+                border: '1px solid rgba(255,255,255,0.05)',
+                gap: '10px'
             }}>
                 <div style={{ position: 'relative', flex: 1.5, minWidth: '220px' }}>
                     <Search size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                     <input
                         type="text"
-                        placeholder="Search by vehicle number..."
+                        placeholder="Search vehicle number..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{
@@ -257,51 +258,27 @@ const Fastag = () => {
                     />
                 </div>
 
-                <div className="flex-resp" style={{ gap: '10px', flex: 1, minWidth: '220px' }}>
+                <div className="modal-form-grid" style={{ gap: '10px', flex: 1, minWidth: '220px' }}>
                     <div style={{ position: 'relative', flex: 1 }}>
                         <select
                             value={selectedMonth}
                             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                            style={{
-                                width: '100%',
-                                height: '56px',
-                                background: 'rgba(255,255,255,0.03)',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                borderRadius: '16px',
-                                padding: '0 20px',
-                                color: 'white',
-                                fontSize: '15px',
-                                fontWeight: '700',
-                                outline: 'none',
-                                appearance: 'none'
-                            }}
+                            className="input-field"
+                            style={{ height: '56px', fontSize: '14px', padding: '0 15px' }}
                         >
                             {months.map((m, idx) => <option key={m} value={idx} style={{ background: '#111', color: 'white' }}>{m}</option>)}
                         </select>
-                        <ChevronDown size={16} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
                     </div>
 
-                    <div style={{ position: 'relative', flex: 0.8 }}>
+                    <div style={{ position: 'relative', flex: 1 }}>
                         <select
                             value={selectedYear}
                             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                            style={{
-                                width: '100%',
-                                height: '56px',
-                                background: 'rgba(255,255,255,0.03)',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                borderRadius: '16px',
-                                padding: '0 20px',
-                                color: 'white',
-                                fontSize: '15px',
-                                fontWeight: '700',
-                                outline: 'none',
-                                appearance: 'none'
-                            }}
+                            className="input-field"
+                            style={{ height: '56px', fontSize: '14px', padding: '0 15px' }}
                         >
                             {years.map(y => <option key={y} value={y} style={{ background: '#111', color: 'white' }}>{y}</option>)}
                         </select>
-                        <ChevronDown size={16} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
                     </div>
                 </div>
             </div>
@@ -501,169 +478,116 @@ const Fastag = () => {
                 )}
             </div>
 
-            {/* Premium Recharge Modal */}
+            {/* Modal Standardization */}
             <AnimatePresence>
                 {showModal && (
-                    <div style={{ position: 'fixed', inset: 0, zIndex: 1000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px', background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(20px)' }}>
+                    <div className="modal-overlay">
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            initial={{ scale: 0.9, opacity: 0, y: 10 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-                            style={{ 
-                                width: '100%', 
-                                maxWidth: '520px', 
-                                background: '#0a0a0c', 
-                                borderRadius: '32px', 
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                boxShadow: '0 50px 100px -25px rgba(0,0,0,1)',
-                                overflowY: 'auto',
-                                maxHeight: '90vh'
-                            }}
+                            exit={{ scale: 0.9, opacity: 0, y: 10 }}
+                            className="modal-content-wrapper"
+                            style={{ maxWidth: '520px', padding: 'clamp(20px, 5vw, 40px)' }}
                         >
-                            {/* Modal Header */}
-                            <div style={{ position: 'relative', padding: 'clamp(20px, 5vw, 40px)', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), transparent)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', gap: '20px', alignItems: 'center' }}>
-                                        <div className="hide-mobile" style={{ 
-                                            width: '60px', 
-                                            height: '60px', 
-                                            borderRadius: '18px', 
-                                            background: 'rgba(251, 191, 36, 0.1)', 
-                                            display: 'flex', 
-                                            alignItems: 'center', 
-                                            justifyContent: 'center',
-                                            border: '1px solid rgba(251, 191, 36, 0.15)',
-                                            boxShadow: '0 0 30px rgba(251, 191, 36, 0.1)'
-                                        }}>
-                                            {isEditing ? <Edit2 color="var(--primary)" size={24} /> : <Zap color="var(--primary)" size={28} style={{ filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.5))' }} />}
-                                        </div>
-                                        <div>
-                                            <h2 style={{ color: 'white', margin: 0, fontSize: 'clamp(20px, 4vw, 24px)', fontWeight: '900', letterSpacing: '-1px' }}>{isEditing ? 'Correct Entry' : 'Manual Recharge'}</h2>
-                                            <p style={{ margin: '4px 0 0', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                                                {selectedVehicle ? `Car: ${selectedVehicle.displayCarNumber}` : 'New Transaction'}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <button 
-                                        onClick={closeModal}
-                                        style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.3)', width: '36px', height: '36px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }}
-                                    >
-                                        <X size={20} />
-                                    </button>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                <div>
+                                    <h2 style={{ color: 'white', margin: 0, fontSize: '24px', fontWeight: '900' }}>
+                                        {isEditing ? 'Edit Recharge' : 'New Recharge'}
+                                    </h2>
+                                    {selectedVehicle && (
+                                        <p style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '12px', margin: '4px 0 0' }}>
+                                            {selectedVehicle.displayCarNumber}
+                                        </p>
+                                    )}
                                 </div>
+                                <button className="glass-card" onClick={closeModal} style={{ padding: '10px', borderRadius: '50%', color: 'white' }}>
+                                    <X size={20} />
+                                </button>
                             </div>
 
-                            <form onSubmit={handleRecharge} style={{ padding: 'clamp(20px, 5vw, 40px)' }}>
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                    
+                            <form onSubmit={handleRecharge}>
+                                <div className="modal-form-grid">
                                     {!selectedVehicle && (
-                                        <div>
-                                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Target Vehicle</label>
+                                        <div style={{ gridColumn: '1 / -1' }}>
+                                            <label className="input-label">Select Vehicle</label>
                                             <select
                                                 required
+                                                className="input-field"
                                                 value={selectedVehicle?._id || ''}
                                                 onChange={(e) => setSelectedVehicle(vehicles.find(v => v._id === e.target.value))}
-                                                className="input-field"
-                                                style={{ height: '58px', fontSize: '15px', fontWeight: '800' }}
                                             >
-                                                <option value="" style={{ background: '#0a0a0c' }}>Select vehicle...</option>
+                                                <option value="">Choose vehicle...</option>
                                                 {vehicles.map(v => (
-                                                    <option key={v._id} value={v._id} style={{ background: '#0a0a0c' }}>{v.displayCarNumber}</option>
+                                                    <option key={v._id} value={v._id}>{v.displayCarNumber}</option>
                                                 ))}
                                             </select>
                                         </div>
                                     )}
 
-                                    <div className="form-grid-2">
-                                        <div>
-                                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Top-up Amount</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <span style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', fontWeight: '900', fontSize: '20px' }}>₹</span>
-                                                <input
-                                                    type="number"
-                                                    required
-                                                    placeholder="0.00"
-                                                    value={rechargeData.amount}
-                                                    onChange={(e) => setRechargeData({ ...rechargeData, amount: e.target.value })}
-                                                    style={{ width: '100%', height: '58px', background: 'rgba(251, 191, 36, 0.03)', border: '1px solid rgba(251, 191, 36, 0.15)', borderRadius: '18px', padding: '0 20px 0 45px', color: 'white', fontSize: '22px', fontWeight: '950', outline: 'none' }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div>
-                                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Payment via</label>
-                                            <select
-                                                value={rechargeData.method}
-                                                onChange={(e) => setRechargeData({ ...rechargeData, method: e.target.value })}
-                                                className="input-field"
-                                                style={{ height: '58px', fontSize: '15px', fontWeight: '800' }}
-                                            >
-                                                <option value="UPI" style={{ background: '#0a0a0c' }}>Instant UPI</option>
-                                                <option value="Cash" style={{ background: '#0a0a0c' }}>Hand Cash</option>
-                                                <option value="Bank" style={{ background: '#0a0a0c' }}>Bank Transfer</option>
-                                                <option value="Card" style={{ background: '#0a0a0c' }}>Corporate Card</option>
-                                            </select>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Transaction Date</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <CalendarIcon size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                                            <input
-                                                type="date"
-                                                required
-                                                value={rechargeData.date}
-                                                onChange={(e) => setRechargeData({ ...rechargeData, date: e.target.value })}
-                                                style={{ width: '100%', height: '58px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '18px', padding: '0 20px 0 55px', color: 'white', fontSize: '15px', fontWeight: '800', outline: 'none', colorScheme: 'dark' }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', marginBottom: '10px', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Remarks (Optional)</label>
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label className="input-label">Recharge Amount (₹)</label>
                                         <input
-                                            type="text"
-                                            placeholder="e.g. Monthly top-up..."
-                                            value={rechargeData.remarks}
-                                            onChange={(e) => setRechargeData({ ...rechargeData, remarks: e.target.value })}
+                                            type="number"
+                                            required
                                             className="input-field"
-                                            style={{ height: '58px' }}
+                                            placeholder="0.00"
+                                            value={rechargeData.amount}
+                                            onChange={(e) => setRechargeData({ ...rechargeData, amount: e.target.value })}
+                                            style={{ fontSize: '20px', fontWeight: '900', color: 'var(--primary)' }}
                                         />
                                     </div>
 
-                                    {message.text && (
-                                        <motion.div 
-                                            initial={{ opacity: 0, height: 0 }}
-                                            animate={{ opacity: 1, height: 'auto' }}
-                                            style={{ padding: '15px 20px', borderRadius: '16px', fontSize: '13px', fontWeight: '800', background: message.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)', color: message.type === 'success' ? '#10b981' : '#f43f5e', border: '1px solid rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', gap: '12px' }}
+                                    <div>
+                                        <label className="input-label">Payment Method</label>
+                                        <select
+                                            className="input-field"
+                                            value={rechargeData.method}
+                                            onChange={(e) => setRechargeData({ ...rechargeData, method: e.target.value })}
                                         >
-                                            {message.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
-                                            {message.text}
-                                        </motion.div>
-                                    )}
+                                            <option value="UPI">UPI</option>
+                                            <option value="Cash">Cash</option>
+                                            <option value="Bank">Bank</option>
+                                            <option value="Card">Card</option>
+                                        </select>
+                                    </div>
+
+                                    <div>
+                                        <label className="input-label">Date</label>
+                                        <input
+                                            type="date"
+                                            required
+                                            className="input-field"
+                                            value={rechargeData.date}
+                                            onChange={(e) => setRechargeData({ ...rechargeData, date: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div style={{ gridColumn: '1 / -1' }}>
+                                        <label className="input-label">Remarks</label>
+                                        <input
+                                            type="text"
+                                            className="input-field"
+                                            placeholder="Optional note..."
+                                            value={rechargeData.remarks}
+                                            onChange={(e) => setRechargeData({ ...rechargeData, remarks: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
 
-                                <button
-                                    type="submit"
-                                    disabled={submitting}
-                                    style={{ 
-                                        width: '100%', 
-                                        background: 'linear-gradient(135deg, var(--primary), var(--primary))', 
-                                        color: '#000', 
-                                        border: 'none', 
-                                        borderRadius: '20px', 
-                                        height: '65px', 
-                                        marginTop: '30px', 
-                                        fontWeight: '950', 
-                                        fontSize: '16px', 
-                                        cursor: submitting ? 'not-allowed' : 'pointer', 
-                                        letterSpacing: '0.5px', 
-                                        boxShadow: '0 15px 35px -10px rgba(251, 191, 36, 0.5)',
-                                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                                    }}
-                                >
-                                    {submitting ? 'VALIDATING...' : (isEditing ? 'COMMIT UPDATES' : 'AUTHORIZE RECHARGE')}
-                                </button>
+                                {message.text && (
+                                    <div style={{ marginTop: '20px', padding: '15px', borderRadius: '12px', background: message.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)', color: message.type === 'success' ? '#10b981' : '#f43f5e', fontSize: '13px', fontWeight: '700' }}>
+                                        {message.text}
+                                    </div>
+                                )}
+
+                                <div className="modal-form-grid" style={{ marginTop: '30px' }}>
+                                    <button className="btn-primary" type="submit" disabled={submitting} style={{ height: '56px', fontWeight: '900' }}>
+                                        {submitting ? 'Processing...' : (isEditing ? 'Update Entry' : 'Confirm Recharge')}
+                                    </button>
+                                    <button className="glass-card" type="button" onClick={closeModal} style={{ height: '56px', fontWeight: '800' }}>
+                                        Cancel
+                                    </button>
+                                </div>
                             </form>
                         </motion.div>
                     </div>

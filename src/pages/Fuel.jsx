@@ -486,6 +486,11 @@ const FuelPage = () => {
             e.driver?.toLowerCase()?.includes(searchTerm.toLowerCase()));
         const matchesVehicle = filterVehicle === 'All' || e.vehicle?._id === filterVehicle;
         return matchesSearch && matchesVehicle;
+    }).sort((a, b) => {
+        const dateA = new Date(a.date).getTime();
+        const dateB = new Date(b.date).getTime();
+        if (dateB !== dateA) return dateB - dateA;
+        return (b.odometer || 0) - (a.odometer || 0);
     });
 
     // Summary Statistics - Calculate true average (Total Distance / Total Fuel Used)
@@ -540,7 +545,7 @@ const FuelPage = () => {
                             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
                             <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fuel Consumption</span>
                         </div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
                             Fuel <span style={{
                                 background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`,
                                 WebkitBackgroundClip: 'text',
@@ -548,59 +553,31 @@ const FuelPage = () => {
                             }}>Management</span>
                         </h1>
                     </div>
-                </div>                <div className="flex-resp" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', flexWrap: 'wrap', alignItems: 'center' }}>
-                    {/* Month Year Navigator From Outside Cars */}
+                </div>                <div className="flex-resp" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '6px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <button onClick={() => shiftMonth(-1)} style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronLeft size={20} /></button>
-                        <div style={{ padding: '0 24px', height: '42px', display: 'flex', alignItems: 'center', background: 'rgba(251,191,36,0.05)', borderRadius: '14px', border: '1px solid rgba(251,191,36,0.1)', cursor: 'pointer' }} onClick={() => setSelectedMonth(new Date().getMonth())}>
-                            <span style={{ color: 'white', fontSize: '15px', fontWeight: '950', letterSpacing: '0.5px' }}>{new Date(selectedYear, selectedMonth).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }).toUpperCase()}</span>
+                        <button onClick={() => shiftMonth(-1)} className="glass-card" style={{ width: '42px', height: '42px', padding: 0, background: 'rgba(255,255,255,0.03)', border: 'none' }}><ChevronLeft size={20} /></button>
+                        <div style={{ padding: '0 20px', height: '42px', display: 'flex', alignItems: 'center', background: 'rgba(251,191,36,0.05)', borderRadius: '14px', border: '1px solid rgba(251,191,36,0.1)' }}>
+                            <span style={{ color: 'white', fontSize: '13px', fontWeight: '950' }}>{new Date(selectedYear, selectedMonth).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }).toUpperCase()}</span>
                         </div>
-                        <button onClick={() => shiftMonth(1)} style={{ width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronRight size={20} /></button>
+                        <button onClick={() => shiftMonth(1)} className="glass-card" style={{ width: '42px', height: '42px', padding: 0, background: 'rgba(255,255,255,0.03)', border: 'none' }}><ChevronRight size={20} /></button>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                            style={{ height: '52px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px', fontWeight: '800', fontSize: '14px', cursor: 'pointer' }}
-                        >
-                            {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, i) => (
-                                <option key={m} value={i} style={{ background: '#1e293b' }}>{m}</option>
-                            ))}
-                        </select>
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                            style={{ height: '52px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '14px', color: 'white', padding: '0 15px', fontWeight: '800', fontSize: '14px', cursor: 'pointer' }}
-                        >
-                            {[2024, 2025, 2026, 2027].map(y => (
-                                <option key={y} value={y} style={{ background: '#1e293b' }}>{y}</option>
-                            ))}
-                        </select>
-                    </div>
-                    <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', maxWidth: '300px', width: '100%', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 200px' }}>
-                        <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)', flexShrink: 0 }} />
+                    <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', maxWidth: '300px', width: '100%', borderRadius: '14px', height: '52px' }}>
+                        <Search size={18} style={{ color: 'rgba(255,255,255,0.4)' }} />
                         <input
                             type="text"
-                            placeholder="Search fuel..."
+                            placeholder="Search..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ background: 'transparent', border: 'none', color: 'white', height: '50px', width: '100%', outline: 'none', fontSize: '14px', minWidth: 0 }}
+                            style={{ background: 'transparent', border: 'none', color: 'white', paddingLeft: '10px', height: '100%', width: '100%', outline: 'none' }}
                         />
                     </div>
                     <button
                         className="btn-primary"
-                        onClick={downloadExcel}
-                        style={{ display: 'flex', alignItems: 'center', gap: '8px', height: '52px', padding: '0 20px', borderRadius: '14px', fontWeight: '800', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', whiteSpace: 'nowrap', flexShrink: 0 }}
-                    >
-                        <FileSpreadsheet size={18} /> <span className="hide-mobile">Export Excel</span><span className="show-mobile">Excel</span>
-                    </button>
-                    <button
-                        className="btn-primary"
                         onClick={() => { resetForm(); setShowModal(true); }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)', border: 'none', whiteSpace: 'nowrap', flexShrink: 0 }}
+                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800' }}
                     >
-                        <Plus size={20} /> <span className="hide-mobile">Add Entry</span><span className="show-mobile">Add</span>
+                        <Plus size={20} /> <span>Add Entry</span>
                     </button>
                 </div>
             </header>
@@ -675,7 +652,7 @@ const FuelPage = () => {
             }
 
             {/* Summary Row */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '30px' }}>
+            <div className="grid-1-2-2-4" style={{ gap: '20px', marginBottom: '30px' }}>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', borderLeft: '4px solid var(--primary)' }}>
                     <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
                         <Fuel size={24} />
@@ -740,7 +717,7 @@ const FuelPage = () => {
             </div>
 
             {/* Entries List */}
-            <div className="glass-card" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div className="table-responsive-wrapper" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
                 {loading ? (
                     <div style={{ padding: '100px', textAlign: 'center' }}>
                         <div className="spinner" style={{ margin: '0 auto' }}></div>
@@ -949,18 +926,21 @@ const FuelPage = () => {
             {/* Add Record Modal */}
             <AnimatePresence>
                 {showModal && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+                    <div className="modal-overlay">
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }}
-                            className="glass-card"
-                            style={{ padding: '0', width: '100%', maxWidth: '700px', maxHeight: '90vh', overflowY: 'auto', background: '#0f172a', border: '1px solid rgba(255,255,255,0.1)' }}
+                            initial={{ scale: 0.9, opacity: 0, y: 10 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 10 }}
+                            className="modal-content-wrapper"
+                            style={{ maxWidth: '800px', padding: 'clamp(20px, 5vw, 40px)' }}
                         >
-                            <div style={{ padding: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '800', margin: 0 }}>{editingId ? 'Edit Fuel Entry' : 'Add Fuel Entry'}</h2>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '13px', margin: '4px 0 0' }}>Log petrol/diesel refill and calculate mileage.</p>
-                                </div>
-                                <button onClick={() => setShowModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '8px', borderRadius: '50%', cursor: 'pointer', border: 'none' }}><X size={20} /></button>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                <h1 style={{ fontSize: '24px', fontWeight: '900', color: 'white', margin: 0 }}>
+                                    {editingId ? 'Edit Entry' : 'Manual Fuel Entry'}
+                                </h1>
+                                <button className="glass-card" onClick={() => setShowModal(false)} style={{ padding: '10px', borderRadius: '50%', color: 'white' }}>
+                                    <X size={20} />
+                                </button>
                             </div>
 
                             <form onSubmit={handleCreate} style={{ padding: 'clamp(20px, 5vw, 30px)' }}>

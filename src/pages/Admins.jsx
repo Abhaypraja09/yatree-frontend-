@@ -120,7 +120,8 @@ const Admins = () => {
             <header className="flex-resp" style={{
                 justifyContent: 'space-between',
                 padding: '30px 0',
-                marginBottom: '10px'
+                alignItems: 'center',
+                gap: '20px'
             }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{
@@ -128,20 +129,20 @@ const Admins = () => {
                         height: 'clamp(40px,10vw,50px)',
                         background: 'linear-gradient(135deg, white, #f8fafc)',
                         borderRadius: '16px',
-                        padding: '8px',
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                        flexShrink: 0
                     }}>
                         <UserIcon size={28} color="var(--primary)" />
                     </div>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
-                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>System Access</span>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>System Access</span>
                         </div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
                             Admin <span className="theme-gradient-text">Console</span>
                         </h1>
                     </div>
@@ -168,7 +169,7 @@ const Admins = () => {
                 </button>
             </header>
 
-            <div className="glass-card" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(15, 23, 42, 0.3)' }}>
+            <div className="table-responsive-wrapper">
                 <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
                     <thead>
                         <tr style={{ textAlign: 'left', background: 'rgba(255,255,255,0.02)' }}>
@@ -245,41 +246,41 @@ const Admins = () => {
 
             <AnimatePresence>
                 {showModal && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(16px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+                    <div className="modal-overlay">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0, y: 20 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                            className="premium-glass"
-                            style={{ width: '100%', maxWidth: '580px', padding: '0', background: '#0f172a', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '28px', overflow: 'hidden' }}
+                            className="modal-content-wrapper"
+                            style={{ maxWidth: '650px', padding: 0 }}
                         >
                             <div style={{ padding: '25px 35px', background: 'linear-gradient(to right, #1e293b, #0f172a)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
                                     <h2 style={{ color: 'white', fontSize: '22px', margin: 0, fontWeight: '900' }}>{editingAdmin ? 'Update Admin Access' : 'Create New Access'}</h2>
                                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: '4px 0 0', letterSpacing: '1px' }}>Permissions & Credentials</p>
                                 </div>
-                                <button onClick={closeModal} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '50%', width: '36px', height: '36px', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Plus size={20} style={{ transform: 'rotate(45deg)' }} /></button>
+                                <button onClick={closeModal} className="glass-card" style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
                             </div>
 
                             <form onSubmit={handleSubmit} style={{ padding: '35px' }}>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>
-                                    <div>
-                                        <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>Full Name</label>
-                                        <input className="input-field" value={name} onChange={e => setName(e.target.value)} required placeholder="Admin Name" style={{ borderRadius: '12px', height: '48px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                                <div className="modal-form-grid" style={{ marginBottom: '20px' }}>
+                                    <div className="input-field-group">
+                                        <label className="input-label">Full Name</label>
+                                        <input className="input-field" value={name} onChange={e => setName(e.target.value)} required placeholder="Admin Name" />
                                     </div>
-                                    <div>
-                                        <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>Mobile Number</label>
-                                        <input className="input-field" value={mobile} onChange={e => setMobile(e.target.value)} required placeholder="10-digit #" style={{ borderRadius: '12px', height: '48px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                                    <div className="input-field-group">
+                                        <label className="input-label">Mobile Number</label>
+                                        <input className="input-field" value={mobile} onChange={e => setMobile(e.target.value)} required placeholder="10-digit #" />
                                     </div>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '30px' }}>
-                                    <div>
-                                        <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>System Username</label>
-                                        <input className="input-field" value={username} onChange={e => setUsername(e.target.value)} required placeholder="Unique ID" style={{ borderRadius: '12px', height: '48px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'var(--primary)', fontWeight: '800' }} />
+                                <div className="modal-form-grid" style={{ marginBottom: '30px' }}>
+                                    <div className="input-field-group">
+                                        <label className="input-label">System Username</label>
+                                        <input className="input-field" value={username} onChange={e => setUsername(e.target.value)} required placeholder="Unique ID" style={{ color: 'var(--primary)', fontWeight: '800' }} />
                                     </div>
-                                    <div>
-                                        <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '8px', display: 'block', letterSpacing: '0.5px' }}>{editingAdmin ? 'New Password (Optional)' : 'Access Password'}</label>
-                                        <input type="password" className="input-field" value={password} onChange={e => setPassword(e.target.value)} required={!editingAdmin} placeholder="••••••••" style={{ borderRadius: '12px', height: '48px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                                    <div className="input-field-group">
+                                        <label className="input-label">{editingAdmin ? 'New Password (Optional)' : 'Access Password'}</label>
+                                        <input type="password" className="input-field" value={password} onChange={e => setPassword(e.target.value)} required={!editingAdmin} placeholder="••••••••" />
                                     </div>
                                 </div>
 
@@ -290,7 +291,7 @@ const Admins = () => {
                                         <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
                                     </div>
                                     
-                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                                    <div className="modal-form-grid" style={{ gap: '12px' }}>
                                         {[
                                             { id: 'driversService', label: 'Drivers Services', desc: 'Drivers List, Freelancers, Salary Reports, Parking', icon: Users, color: '#38bdf8' },
                                             { id: 'buySell', label: 'Outside Cars & Event MGT', desc: 'Outside Vehicle Logs, Transaction Reports', icon: Shield, color: '#818cf8' },

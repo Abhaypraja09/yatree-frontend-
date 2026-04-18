@@ -182,88 +182,91 @@ const Advances = () => {
         <div key={location.key} className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Driver Advances" description="Manage and track advances given to drivers and their recovery status." />
 
-            <header style={{ paddingBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px' }}>
-                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{
-                            width: 'clamp(40px,10vw,50px)',
-                            height: 'clamp(40px,10vw,50px)',
-                            background: 'linear-gradient(135deg, white, #f8fafc)',
-                            borderRadius: '16px',
-                            padding: '8px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            boxShadow: '0 10px 25px rgba(0,0,0,0.2)'
-                        }}>
-                            <IndianRupee size={28} color="var(--primary)" />
-                        </div>
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 8px var(--primary)' }}></div>
-                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Financial Oversight</span>
-                            </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(24px,5vw,32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px', cursor: 'pointer' }}>
-                                Cash <span className="text-gradient-yellow">Advances</span>
-                            </h1>
-                        </div>
+            <header className="flex-resp" style={{ paddingBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{
+                        width: 'clamp(40px,10vw,50px)',
+                        height: 'clamp(40px,10vw,50px)',
+                        background: 'linear-gradient(135deg, white, #f8fafc)',
+                        borderRadius: '16px',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 10px 25px rgba(0,0,0,0.2)',
+                        flexShrink: 0
+                    }}>
+                        <IndianRupee size={28} color="var(--primary)" />
                     </div>
-
-                    <div className="flex-resp" style={{ gap: '12px' }}>
-                        <div className="glass-card" style={{ padding: '15px 25px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px' }}>
-                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Total</span>
-                            <span style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>₹{totalAdvanceAmount.toLocaleString()}</span>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 8px var(--primary)' }}></div>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Financial Oversight</span>
                         </div>
-                        <div className="glass-card" style={{ padding: '15px 25px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '140px' }}>
-                            <span style={{ fontSize: '10px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Advance Payment</span>
-                            <span style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>₹{pendingAmount.toLocaleString()}</span>
-                        </div>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px,5vw,32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
+                            Cash <span className="theme-gradient-text">Advances</span>
+                        </h1>
                     </div>
                 </div>
 
-                <div className="flex-resp" style={{ marginTop: '40px', gap: '15px' }}>
-                    <div style={{ position: 'relative', flex: '1', minWidth: 'min(100%, 300px)' }}>
+                <div className="flex-resp" style={{ gap: '12px' }}>
+                    <div className="glass-card" style={{ padding: '12px 20px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
+                        <span style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Total Issued</span>
+                        <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{totalAdvanceAmount.toLocaleString()}</span>
+                    </div>
+                    <div className="glass-card" style={{ padding: '12px 20px', background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
+                        <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase' }}>Current Balance</span>
+                        <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{pendingAmount.toLocaleString()}</span>
+                    </div>
+                </div>
+            </header>
+
+                <div className="flex-resp" style={{ gap: '15px', marginBottom: '30px' }}>
+                    <div style={{ position: 'relative', flex: '1' }}>
                         <Search size={20} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                         <input
                             type="text"
-                            placeholder="Search drivers or remarks..."
+                            placeholder="Search drivers..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             className="input-field"
-                            style={{ paddingLeft: '50px', height: '50px', borderRadius: '15px' }}
+                            style={{ paddingLeft: '50px', marginBottom: 0 }}
                         />
                     </div>
 
                     <div className="flex-resp" style={{ width: 'auto', gap: '10px' }}>
-                        <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                            className="input-field"
-                            style={{ height: '50px', width: '130px', borderRadius: '15px' }}
-                        >
-                            {Array.from({ length: 12 }, (_, i) => (
-                                <option key={i + 1} value={i + 1} style={{ background: '#0f172a' }}>
-                                    {new Date(2000, i).toLocaleString('default', { month: 'long' })}
-                                </option>
-                            ))}
-                        </select>
+                        <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                className="input-field"
+                                style={{ marginBottom: 0, flex: 1 }}
+                            >
+                                {Array.from({ length: 12 }, (_, i) => (
+                                    <option key={i + 1} value={i + 1} style={{ background: '#0f172a' }}>
+                                        {new Date(2000, i).toLocaleString('default', { month: 'short' })}
+                                    </option>
+                                ))}
+                            </select>
 
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            className="input-field"
-                            style={{ height: '50px', width: '110px', borderRadius: '15px' }}
-                        >
-                            {Array.from({ length: 5 }, (_, i) => {
-                                const year = new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCFullYear() - 2 + i;
-                                return <option key={year} value={year} style={{ background: '#0f172a' }}>{year}</option>;
-                            })}
-                        </select>                        <button
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                className="input-field"
+                                style={{ marginBottom: 0, flex: 0.8 }}
+                            >
+                                {Array.from({ length: 3 }, (_, i) => {
+                                    const year = new Date().getFullYear() - 1 + i;
+                                    return <option key={year} value={year} style={{ background: '#0f172a' }}>{year}</option>;
+                                })}
+                            </select>
+                        </div>
+
+                        <button
                             onClick={() => setShowModal(true)}
                             className="btn-primary"
-                            style={{ height: '50px', padding: '0 20px', borderRadius: '15px', display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', whiteSpace: 'nowrap' }}
+                            style={{ height: '50px', padding: '0 20px', borderRadius: '15px', fontWeight: '1000' }}
                         >
-                            <Plus size={20} /> <span className="hide-mobile">RECORD ADVANCE</span><span className="show-mobile">RECORD</span>
+                            <Plus size={20} /> <span className="hide-mobile">RECORD ADVANCE</span><span className="show-mobile">ADD</span>
                         </button>
                     </div>
                 </div>
@@ -277,11 +280,7 @@ const Advances = () => {
                     <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', padding: '4px 12px', borderRadius: '20px', fontWeight: '800', marginLeft: 'auto', textTransform: 'uppercase', letterSpacing: '1px' }}>Real-time Duty Calculation</span>
                 </div>
 
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))',
-                    gap: '20px'
-                }}>
+                <div className="grid-1-2-2-3">
                     {salarySummary.length === 0 ? (
                         <div style={{ gridColumn: '1/-1', padding: '60px', background: 'rgba(30, 41, 59, 0.2)', borderRadius: '30px', textAlign: 'center', border: '2px dashed rgba(255,255,255,0.05)' }}>
                             <IndianRupee size={40} style={{ margin: '0 auto 15px', opacity: 0.2, color: 'var(--text-muted)' }} />
@@ -350,12 +349,12 @@ const Advances = () => {
                 </div>
             </section>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px', marginTop: '40px' }}>
                 <div style={{ width: '4px', height: '24px', background: 'rgba(255,255,255,0.1)', borderRadius: '2px' }}></div>
-                <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Advance Payment History</h2>
+                <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Advance Payment Records</h2>
             </div>
 
-            <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+            <div className="table-responsive-wrapper hide-mobile">
                 <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
                     <thead>
                         <tr style={{ textAlign: 'left' }}>
@@ -539,34 +538,26 @@ const Advances = () => {
                 )}
             </div>
 
-            {/* Add Advance Modal */}
+            {/* Add/Edit Advance Modal */}
             <AnimatePresence>
                 {showModal && (
-                    <div style={{
-                        position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(16px)',
-                        zIndex: 1050, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px'
-                    }}>
+                    <div className="modal-overlay">
                         <motion.div
-                            initial={{ y: 50, opacity: 0 }}
-                            animate={{ y: 0, opacity: 1 }}
-                            exit={{ y: 50, opacity: 0 }}
-                            className="glass-card"
-                            style={{
-                                width: '100%', maxWidth: '480px', padding: '40px',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-                                boxShadow: '0 25px 50px -12px rgba(0,0,0,0.5)'
-                            }}
+                            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                            className="modal-content-wrapper"
+                            style={{ maxWidth: '500px' }}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '35px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
                                 <div>
-                                    <h2 style={{ color: 'white', fontSize: '24px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{editingId ? 'Edit Advance' : 'Record Advance'}</h2>
-                                    <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '6px' }}>{editingId ? 'Update this payment advance record.' : 'Issue a new payment advance to a driver.'}</p>
+                                    <h2 style={{ color: 'white', fontSize: 'clamp(20px, 5vw, 24px)', margin: 0, fontWeight: '950', letterSpacing: '-0.5px' }}>{editingId ? 'Edit Record' : 'Log Advance'}</h2>
+                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', marginTop: '4px', fontWeight: '700' }}>Manage driver financial assistance.</p>
                                 </div>
                                 <button
                                     onClick={() => { setShowModal(false); setEditingId(null); setFormData({ driverId: '', amount: '', date: todayIST(), remark: '' }); }}
-                                    className="glass-card-hover-effect"
-                                    style={{ color: 'white', background: 'rgba(255,255,255,0.05)', borderRadius: '10px', height: '36px', width: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                    className="glass-card"
+                                    style={{ width: '40px', height: '40px', borderRadius: '50%', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 ><X size={20} /></button>
                             </div>
 
@@ -627,19 +618,15 @@ const Advances = () => {
                                 </div>
 
                                 {message.text && (
-                                    <motion.div
-                                        initial={{ opacity: 0, scale: 0.95 }}
-                                        animate={{ opacity: 1, scale: 1 }}
-                                        style={{
-                                            padding: '16px', borderRadius: '12px', fontSize: '14px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '10px',
-                                            background: message.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-                                            color: message.type === 'success' ? '#10b981' : '#f43f5e',
-                                            border: `1px solid ${message.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)'}`
-                                        }}
-                                    >
+                                    <div style={{
+                                        padding: '15px', borderRadius: '12px', fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px',
+                                        background: message.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+                                        color: message.type === 'success' ? '#10b981' : '#f43f5e',
+                                        border: `1px solid ${message.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)'}`
+                                    }}>
                                         {message.type === 'success' ? <CheckCircle size={18} /> : <AlertCircle size={18} />}
                                         {message.text}
-                                    </motion.div>
+                                    </div>
                                 )}
 
                                 <button

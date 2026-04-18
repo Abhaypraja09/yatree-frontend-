@@ -177,116 +177,69 @@ const BorderTax = () => {
 
             {/* Premium Header */}
             <header className="flex-resp" style={{ 
-                padding: '40px 0', 
+                padding: '30px 0', 
                 justifyContent: 'space-between', 
                 alignItems: 'center', 
                 gap: '24px' 
             }}>
-                <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '12px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                            <ShieldAlert color="var(--primary)" size={20} />
-                        </div>
-                        <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(251, 191, 36, 0.8)', letterSpacing: '2px', textTransform: 'uppercase' }}>Permits & Taxes</span>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <ShieldAlert color="var(--primary)" size={24} />
                     </div>
-                    <h1 style={{ color: 'white', fontSize: 'clamp(28px, 6vw, 38px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px' }}>
-                        Border <span style={{ color: 'var(--primary)' }}>Tax Hub</span>
-                    </h1>
+                    <div>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
+                            Border <span style={{ color: 'var(--primary)' }}>Tax</span>
+                        </h1>
+                        <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase' }}>Permits & State Taxes</p>
+                    </div>
                 </div>
 
-                <div className="flex-resp" style={{ gap: '15px', alignItems: 'center' }}>
-                    <div style={{
-                        padding: '12px 24px',
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        borderRadius: '20px',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        textAlign: 'right',
-                        minWidth: '150px'
-                    }}>
-                        <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px' }}>{months[selectedMonth]} Total</span>
-                        <span style={{ fontSize: '22px', fontWeight: '900', color: 'var(--primary)' }}>₹ {totalMonthPaid.toLocaleString()}</span>
-                    </div>
+                <div style={{
+                    padding: '10px 20px',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                    borderRadius: '16px',
+                    textAlign: 'right',
+                    minWidth: '160px'
+                }}>
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', display: 'block' }}>{months[selectedMonth]} Total</span>
+                    <span style={{ fontSize: '20px', fontWeight: '950', color: 'var(--primary)' }}>₹ {totalMonthPaid.toLocaleString()}</span>
                 </div>
             </header>
 
             {/* Search & Filter Bar - Only in list view */}
+            {/* Search & Filter Bar */}
             {!expandedVehicle && (
-                <div className="flex-resp" style={{
-                    marginBottom: '30px',
-                    background: 'rgba(255,255,255,0.05)',
-                    padding: '10px',
-                    borderRadius: '22px',
-                    border: '1px solid rgba(255,255,255,0.05)'
-                }}>
-                    <div style={{ position: 'relative', flex: 1.5, minWidth: '220px' }}>
-                        <Search size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                <div className="flex-resp" style={{ marginBottom: '30px', gap: '15px' }}>
+                    <div style={{ position: 'relative', flex: 2 }}>
+                        <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                         <input
                             type="text"
                             placeholder="Search vehicle..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{
-                                width: '100%',
-                                height: '56px',
-                                background: 'transparent',
-                                border: 'none',
-                                paddingLeft: '55px',
-                                color: 'white',
-                                fontSize: '15px',
-                                fontWeight: '600',
-                                outline: 'none'
-                            }}
+                            className="input-field"
+                            style={{ paddingLeft: '45px', marginBottom: 0 }}
                         />
                     </div>
 
-                    <div className="flex-resp" style={{ gap: '10px', flex: 1, minWidth: '220px' }}>
-                        <div style={{ position: 'relative', flex: 1 }}>
-                            <select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                                style={{
-                                    width: '100%',
-                                    height: '56px',
-                                    background: 'rgba(255,255,255,0.03)',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    borderRadius: '16px',
-                                    padding: '0 20px',
-                                    color: 'white',
-                                    fontSize: '15px',
-                                    fontWeight: '700',
-                                    outline: 'none',
-                                    appearance: 'none'
-                                }}
-                            >
-                                {months.map((m, idx) => <option key={m} value={idx} style={{ background: '#111', color: 'white' }}>{m}</option>)}
-                            </select>
-                            <ChevronDown size={16} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                        </div>
-
-                        <div style={{ position: 'relative', flex: 0.8 }}>
-                            <select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                                style={{
-                                    width: '100%',
-                                    height: '56px',
-                                    background: 'rgba(255,255,255,0.03)',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    borderRadius: '16px',
-                                    padding: '0 20px',
-                                    color: 'white',
-                                    fontSize: '15px',
-                                    fontWeight: '700',
-                                    outline: 'none',
-                                    appearance: 'none'
-                                }}
-                            >
-                                {years.map(y => <option key={y} value={y} style={{ background: '#111', color: 'white' }}>{y}</option>)}
-                            </select>
-                            <ChevronDown size={16} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', pointerEvents: 'none' }} />
-                        </div>
+                    <div style={{ display: 'flex', gap: '10px', flex: 1.5 }}>
+                        <select
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                            className="input-field"
+                            style={{ flex: 1.2, marginBottom: 0 }}
+                        >
+                            {months.map((m, idx) => <option key={m} value={idx} style={{ background: '#111' }}>{m}</option>)}
+                        </select>
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                            className="input-field"
+                            style={{ flex: 0.8, marginBottom: 0 }}
+                        >
+                            {years.map(y => <option key={y} value={y} style={{ background: '#111' }}>{y}</option>)}
+                        </select>
                     </div>
                 </div>
             )}
@@ -542,18 +495,17 @@ const BorderTax = () => {
 
                             {/* History List Section */}
                             <div>
-                                <h4 style={{ color: 'white', margin: '0 0 25px 0', fontSize: '16px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <CalendarIcon size={18} color="var(--primary)" style={{ filter: 'drop-shadow(0 0 5px rgba(251, 191, 36, 0.5))' }} /> 
-                                    Transaction History <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '12px', marginLeft: '5px' }}>({months[selectedMonth]} {selectedYear})</span>
+                                <h4 style={{ color: 'white', margin: '0 0 25px 0', fontSize: '15px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                    <CalendarIcon size={18} color="var(--primary)" /> 
+                                    Recent Taxes
                                 </h4>
-                                <div className="scroll-x">
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: '700px' }}>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
                                     {entries.filter(e => {
                                         const d = nowIST(e.date);
                                         return e.vehicle?._id === expandedVehicle && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
                                     }).length === 0 ? (
-                                        <div style={{ padding: '60px 30px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '24px', minWidth: 'auto' }}>
-                                            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px', fontWeight: '600', margin: 0 }}>No records found for this period.</p>
+                                        <div style={{ padding: '60px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.08)', borderRadius: '24px' }}>
+                                            <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '13px', fontWeight: '700', margin: 0 }}>No records found for this period.</p>
                                         </div>
                                     ) : (
                                         entries.filter(e => {
@@ -561,53 +513,43 @@ const BorderTax = () => {
                                             return e.vehicle?._id === expandedVehicle && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
                                         }).map((entry, idx) => (
                                             <div key={idx} style={{
-                                                display: 'grid',
-                                                gridTemplateColumns: '120px 100px 1fr 120px 50px',
-                                                padding: '20px 25px',
+                                                padding: '20px',
                                                 background: 'rgba(255,255,255,0.03)',
                                                 border: '1px solid rgba(255,255,255,0.05)',
-                                                borderRadius: '18px',
+                                                borderRadius: '20px',
+                                                display: 'flex',
+                                                justifyContent: 'space-between',
                                                 alignItems: 'center',
-                                                gap: '20px'
-                                            }} onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'} onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}>
-                                                <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '800' }}>
-                                                    {formatDateIST(entry.date)}
+                                                gap: '15px',
+                                                flexWrap: 'wrap'
+                                            }}>
+                                                <div style={{ flex: 1, minWidth: '150px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+                                                        <span style={{ fontSize: '18px', fontWeight: '950', color: 'var(--primary)' }}>₹{entry.amount}</span>
+                                                        <span style={{ fontSize: '11px', fontWeight: '800', background: 'rgba(255,255,255,0.05)', padding: '2px 8px', borderRadius: '6px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{entry.borderName}</span>
+                                                    </div>
+                                                    <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>
+                                                        {formatDateIST(entry.date)} {entry.remarks && `• ${entry.remarks}`}
+                                                    </div>
                                                 </div>
-                                                <div style={{ color: 'var(--primary)', fontSize: '18px', fontWeight: '950' }}>
-                                                    ₹ {entry.amount}
-                                                </div>
-                                                <div style={{ color: 'white', fontSize: '14px', fontWeight: '700' }}>
-                                                    {entry.borderName}
-                                                    {entry.remarks && <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', fontWeight: '500' }}>{entry.remarks}</p>}
-                                                </div>
-                                                <div style={{ textAlign: 'right' }}>
+                                                
+                                                <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                                                     {entry.receiptPhoto && (
                                                         <button 
                                                             onClick={() => setViewingReceipt(entry.receiptPhoto)}
-                                                            style={{ 
-                                                                background: 'rgba(56, 189, 248, 0.1)', 
-                                                                color: '#38bdf8', 
-                                                                border: '1px solid rgba(56, 189, 248, 0.2)', 
-                                                                borderRadius: '8px', 
-                                                                padding: '6px 12px', 
-                                                                fontSize: '10px', 
-                                                                fontWeight: '900', 
-                                                                cursor: 'pointer',
-                                                                textTransform: 'uppercase',
-                                                                letterSpacing: '1px'
-                                                            }}
+                                                            className="glass-card"
+                                                            style={{ padding: '8px 15px', fontSize: '10px', fontWeight: '900', color: '#14b8a6', border: '1px solid rgba(20,184,166,0.2)' }}
                                                         >
                                                             RECEIPT
                                                         </button>
                                                     )}
-                                                </div>
-                                                <div style={{ textAlign: 'right' }}>
-                                                    <button onClick={() => handleDelete(entry._id)} style={{ background: 'none', border: 'none', color: 'rgba(244, 63, 94, 0.4)', cursor: 'pointer', transition: 'color 0.2s' }} onMouseEnter={e => e.currentTarget.style.color = '#f43f5e'} onMouseLeave={e => e.currentTarget.style.color = 'rgba(244, 63, 94, 0.4)'}><Trash2 size={16}/></button>
+                                                    <button onClick={() => handleDelete(entry._id)} style={{ color: '#f43f5e', padding: '10px', background: 'rgba(244,63,94,0.1)', borderRadius: '10px', border: 'none', cursor: 'pointer' }}>
+                                                        <Trash2 size={16}/>
+                                                    </button>
                                                 </div>
                                             </div>
                                         ))
                                     )}
-                                </div>
                                 </div>
                             </div>
                         </div>

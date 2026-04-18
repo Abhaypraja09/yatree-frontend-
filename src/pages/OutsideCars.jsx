@@ -909,7 +909,7 @@ const OutsideCars = () => {
             </header>
 
             {/* ═══ CLEAN PREMIUM DESKTOP TABLE ═══ */}
-            <div className="glass-card hide-mobile scroll-x" style={{
+            <div className="table-responsive-wrapper hide-mobile" style={{
                 padding: 0,
                 border: '1px solid rgba(255,255,255,0.08)',
                 background: 'rgba(8, 14, 26, 0.4)',
@@ -1128,25 +1128,13 @@ const OutsideCars = () => {
             {/* ═══ PREMIUM OUTSIDE FLEET LOG MODAL ═══ */}
             <AnimatePresence>
                 {showModal && (
-                    <div className="modal-overlay" style={{ backdropFilter: 'blur(8px)', background: 'rgba(0,0,0,0.7)' }}>
+                    <div className="modal-overlay">
                         <motion.div
-                            initial={{ scale: 0.95, opacity: 0, y: 10 }}
+                            initial={{ scale: 0.9, opacity: 0, y: 10 }}
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 10 }}
-                            className="modal-container"
-                            style={{
-                                background: 'linear-gradient(165deg, #0f172a 0%, #020617 100%)',
-                                border: '1px solid rgba(255,255,255,0.08)',
-                                boxShadow: '0 40px 100px -20px rgba(0,0,0,0.8), inset 0 1px 1px rgba(255,255,255,0.05)',
-                                borderRadius: '32px',
-                                display: 'flex',
-                                flexDirection: 'column',
-                                maxHeight: '92vh',
-                                width: '95%',
-                                maxWidth: '700px',
-                                overflow: 'hidden',
-                                position: 'relative'
-                            }}
+                            className="modal-content-wrapper"
+                            style={{ maxWidth: '800px', padding: 'clamp(20px, 5vw, 40px)' }}
                         >
                             {/* Decorative Background Elements */}
                             <div style={{ position: 'absolute', top: -100, right: -100, width: 300, height: 300, background: 'radial-gradient(circle, rgba(251, 191, 36, 0.05) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
@@ -1419,26 +1407,9 @@ const OutsideCars = () => {
                             </div>
 
                             {/* Modal Footer */}
-                            <div style={{
-                                padding: '32px 40px', background: 'rgba(0,0,0,0.4)',
-                                borderTop: '1px solid rgba(255,255,255,0.05)',
-                                display: 'flex', gap: '16px', position: 'relative', zIndex: 1
-                            }}>
-                                <button onClick={() => setShowModal(false)} style={{
-                                    flex: 1, height: '60px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.1)',
-                                    background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.6)',
-                                    fontWeight: '800', fontSize: '14px', cursor: 'pointer', transition: '0.2s'
-                                }}>Dismiss</button>
-                                <button onClick={handleSubmit} style={{
-                                    flex: 2, height: '60px', borderRadius: '18px', border: 'none',
-                                    background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)',
-                                    color: 'black', fontWeight: '950', fontSize: '15px', textTransform: 'uppercase',
-                                    letterSpacing: '1px', cursor: 'pointer', boxShadow: '0 10px 20px rgba(217, 119, 6, 0.3)',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px'
-                                }}>
-                                    <Save size={20} />
-                                    {editMode ? 'Synchronize Record' : 'Submit'}
-                                </button>
+                            <div className="modal-form-grid" style={{ marginTop: '20px' }}>
+                                <button className="glass-card" onClick={() => setShowModal(false)} style={{ height: '56px', fontWeight: '800' }}>Dismiss</button>
+                                <button className="btn-primary" onClick={handleSubmit} style={{ height: '56px', fontWeight: '950' }}>{editMode ? 'Synchronize Record' : 'Submit'}</button>
                             </div>
                         </motion.div>
                     </div>

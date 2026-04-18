@@ -13,13 +13,13 @@ import { todayIST, toISTDateString, formatDateIST, nowISTDateTimeString, toISTDa
 
 // Sub-components for cleaner code
 const Modal = ({ title, onClose, children }) => (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(5, 8, 15, 0.9)', zIndex: 10000, display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '20px', backdropFilter: 'blur(12px)' }}>
+    <div className="modal-overlay">
         <div
-            className="premium-glass"
-            style={{ width: '100%', maxWidth: '580px', padding: '35px', maxHeight: '90vh', overflowY: 'auto', borderRadius: '32px' }}
+            className="modal-content-wrapper"
+            style={{ maxWidth: '650px', padding: 'clamp(20px, 5vw, 35px)' }}
         >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                <h2 style={{ color: 'white', fontSize: '24px', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{title}</h2>
+                <h2 style={{ color: 'white', fontSize: 'clamp(20px, 4vw, 24px)', margin: 0, fontWeight: '900', letterSpacing: '-0.5px' }}>{title}</h2>
                 <button onClick={onClose} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', height: '40px', width: '40px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }}>
                     <X size={22} />
                 </button>
@@ -1497,8 +1497,8 @@ const Freelancers = () => {
                         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} style={{ animation: 'fadeIn 0.5s ease' }}>
                             {/* Driver Table View */}
                             <div style={{ borderRadius: '24px', overflow: 'hidden', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <div className="staff-attendance-table-wrapper" style={{ overflowX: 'auto' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '1000px' }}>
+                                <div className="table-responsive-wrapper" style={{ overflowX: 'auto' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px' }}>
                                         <thead>
                                             <tr style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                                                 <th style={{ padding: '18px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Freelancer</th>

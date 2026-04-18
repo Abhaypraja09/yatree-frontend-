@@ -79,6 +79,7 @@ const Maintenance = () => {
     const [aggSearch, setAggSearch] = useState('');
     const [showDrillModal, setShowDrillModal] = useState(false);
     const [drillData, setDrillData] = useState({ vehicle: '', category: '', records: [] });
+    const [expandedVehicle, setExpandedVehicle] = useState(null); // Added for Master Data Accordion
 
     useEffect(() => {
         setSearchTerm('');
@@ -541,9 +542,9 @@ const Maintenance = () => {
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
                             <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
-                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Health</span>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fleet Health</span>
                         </div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(26px, 5vw, 36px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
+                        <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
                             Car <span className="theme-gradient-text">Maintenance</span>
                         </h1>
                     </div>
@@ -856,231 +857,217 @@ const Maintenance = () => {
             {/* View Mode Switching Logic */}
             {viewMode === 'super' ? (
                 <>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px', marginBottom: '20px' }}>
+                    <div className="glass-card" style={{ 
+                        display: 'flex', 
+                        justifyContent: 'space-between', 
+                        alignItems: 'center', 
+                        padding: '25px 35px', 
+                        marginBottom: '30px',
+                        background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.4), rgba(15, 23, 42, 0.4))',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '24px'
+                    }}>
                         <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: theme.primary, marginBottom: '2px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: theme.primary, marginBottom: '6px' }}>
                                 <div style={{ width: '4px', height: '16px', borderRadius: '2px', background: theme.primary, boxShadow: `0 0 10px ${theme.primary}50` }}></div>
-                                <span style={{ fontSize: '11px', fontWeight: '1000', textTransform: 'uppercase', letterSpacing: '2px' }}>Maintenance Analytics</span>
+                                <span style={{ fontSize: '11px', fontWeight: '1000', textTransform: 'uppercase', letterSpacing: '2px' }}>Fleet Economics</span>
                             </div>
-                            <h2 style={{ color: 'white', margin: 0, fontSize: '24px', fontWeight: '950', letterSpacing: '-0.5px' }}>Fleet Master Data <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: '500' }}>— {selectedYear}</span></h2>
+                            <h2 style={{ color: 'white', margin: 0, fontSize: 'clamp(20px, 4vw, 26px)', fontWeight: '950', letterSpacing: '-1px' }}>
+                                Master Maintenance <span style={{ opacity: 0.3 }}>{selectedYear}</span>
+                            </h2>
                         </div>
-                        <div style={{ display: 'flex', gap: '15px' }}>
-                            <div style={{ background: 'rgba(255,255,255,0.03)', padding: '10px 20px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase' }}>VEHICLE COUNT</div>
-                                <div style={{ color: 'white', fontWeight: '1000', fontSize: '18px' }}>{filteredAggData.length}</div>
+                        <div style={{ display: 'flex', gap: '20px' }}>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>FLEET SIZE</div>
+                                <div style={{ color: 'white', fontWeight: '1000', fontSize: '22px' }}>{filteredAggData.length}</div>
                             </div>
-                            <div style={{ background: `linear-gradient(135deg, ${theme.primary}20 0%, transparent 100%)`, padding: '10px 20px', borderRadius: '16px', border: `1px solid ${theme.primary}30`, display: 'flex', flexDirection: 'column', alignItems: 'flex-end' }}>
-                                <div style={{ fontSize: '9px', color: theme.primary, fontWeight: '1000', textTransform: 'uppercase' }}>ANNUAL SPEND</div>
-                                <div style={{ color: 'white', fontWeight: '1000', fontSize: '18px' }}>₹{filteredAggData.reduce((s,v) => s + (v.maintenance?.totalAmount || 0), 0).toLocaleString()}</div>
+                            <div style={{ width: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '10px', color: theme.primary, fontWeight: '1000', textTransform: 'uppercase', marginBottom: '4px' }}>TOTAL COST</div>
+                                <div style={{ color: '#10b981', fontWeight: '1000', fontSize: '22px', textShadow: '0 0 20px rgba(16,185,129,0.2)' }}>
+                                    ₹{filteredAggData.reduce((s,v) => s + (v.maintenance?.totalAmount || 0), 0).toLocaleString()}
+                                </div>
                             </div>
                         </div>
                     </div>
 
-                    <div className="glass-card" style={{ padding: '0', background: 'rgba(15,23,42,0.4)', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden', boxShadow: '0 30px 60px rgba(0,0,0,0.4)', backdropFilter: 'blur(20px)' }}>
-                        <style>{`
-                            .custom-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
-                            .custom-scroll::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); }
-                            .custom-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
-                            .custom-scroll::-webkit-scrollbar-thumb:hover { background: ${theme.primary}60; }
-                            .row-hover:hover { background: rgba(255,255,255,0.02) !important; }
-                            .sticky-header { border-right: 1px solid rgba(255,255,255,0.1); box-shadow: 15px 0 20px -15px rgba(0,0,0,0.6); }
-                        `}</style>
-                        <div className="custom-scroll" style={{ overflowX: 'auto', maxHeight: '75vh' }}>
-                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
-                                <thead>
-                                    <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
-                                        <th className="sticky-header" style={{ padding: '25px 35px', textAlign: 'left', color: 'rgba(255,255,255,0.8)', fontSize: '12px', fontWeight: '1000', textTransform: 'uppercase', letterSpacing: '2px', position: 'sticky', left: 0, background: '#0e1526', zIndex: 20, borderBottom: '1px solid rgba(255,255,255,0.12)' }}>Vehicle Inventory</th>
-                                        {NEXT_SERVICE_TYPES.map((type, tIdx) => (
-                                            <th 
-                                                key={type} 
-                                                onClick={() => handleSort(type)}
-                                                style={{ 
-                                                    padding: '25px 15px', 
-                                                    textAlign: 'center', 
-                                                    color: sortConfig.key === type ? theme.primary : 'rgba(255,255,255,0.4)', 
-                                                    fontSize: '11px', 
-                                                    fontWeight: '1000', 
-                                                    textTransform: 'uppercase', 
-                                                    letterSpacing: '1.5px', 
-                                                    borderBottom: sortConfig.key === type ? `2px solid ${theme.primary}` : '1px solid rgba(255,255,255,0.12)', 
-                                                    minWidth: '170px', 
-                                                    background: tIdx % 2 === 0 ? 'rgba(255,255,255,0.01)' : 'transparent',
-                                                    cursor: 'pointer',
-                                                    transition: '0.2s'
-                                                }}
-                                            >
-                                                <div 
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        const searchStr = type.toLowerCase().replace(' system', '').trim();
-                                                        const allCategoryRecs = (aggData || []).flatMap(v => {
-                                                            const records = v.maintenance?.records || v.maintenance?.recs || [];
-                                                            return records.filter(r => {
-                                                                const rType = (r.maintenanceType || '').toLowerCase();
-                                                                const rCat = (r.category || r.description || '').toLowerCase();
-                                                                return rType.includes(searchStr) || rCat.includes(searchStr);
-                                                            }).map(r => ({ ...r, carNumber: v.carNumber }));
-                                                        });
-                                                        setDrillData({ vehicle: 'All Vehicles', category: type, records: allCategoryRecs });
-                                                        setShowDrillModal(true);
-                                                    }}
-                                                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', cursor: 'pointer' }}
-                                                    title={`View all ${type} records across fleet`}
-                                                >
-                                                    {type.replace(' System', '').replace(' System', '').replace(' & ', ' / ')}
-                                                    <ArrowUpRight size={10} style={{ opacity: 0.5 }} />
-                                                    {sortConfig.key === type && (
-                                                        <span style={{ fontSize: '10px' }}>{sortConfig.direction === 'desc' ? '▼' : '▲'}</span>
-                                                    )}
-                                                </div>
-                                            </th>
-                                        ))}
-                                        <th 
-                                            onClick={() => handleSort('total')}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '10px' }}>
+                        {filteredAggData.length === 0 ? (
+                            <div className="glass-card" style={{ padding: '80px', textAlign: 'center', background: 'rgba(255,255,255,0.02)' }}>
+                                <Wrench size={48} style={{ color: 'rgba(255,255,255,0.05)', marginBottom: '20px' }} />
+                                <h3 style={{ color: 'white', opacity: 0.5 }}>No fleet analytics recorded for {selectedYear}</h3>
+                            </div>
+                        ) : (
+                            filteredAggData.map((v, idx) => {
+                                const isExpanded = expandedVehicle === v.carNumber;
+                                const vehicleRecords = v.maintenance?.records || v.maintenance?.recs || [];
+                                
+                                return (
+                                    <motion.div
+                                        key={v.vehicleId || idx}
+                                        initial={{ opacity: 0, y: 20 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        transition={{ delay: idx * 0.05 }}
+                                        className="glass-card"
+                                        style={{ 
+                                            padding: '0', 
+                                            background: isExpanded ? 'rgba(15, 23, 42, 0.7)' : 'rgba(15, 23, 42, 0.3)',
+                                            border: isExpanded ? `1px solid ${theme.primary}30` : '1px solid rgba(255,255,255,0.05)',
+                                            borderRadius: '20px',
+                                            overflow: 'hidden',
+                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                                        }}
+                                    >
+                                        <div 
+                                            onClick={() => setExpandedVehicle(isExpanded ? null : v.carNumber)}
                                             style={{ 
-                                                padding: '25px 35px', 
-                                                textAlign: 'right', 
-                                                color: sortConfig.key === 'total' ? 'white' : theme.primary, 
-                                                fontSize: '12px', 
-                                                fontWeight: '1000', 
-                                                textTransform: 'uppercase', 
-                                                letterSpacing: '2px', 
-                                                borderBottom: sortConfig.key === 'total' ? `2px solid white` : '1px solid rgba(255,255,255,0.12)', 
-                                                background: sortConfig.key === 'total' ? `${theme.primary}30` : `${theme.primary}10`, 
-                                                position: 'sticky', 
-                                                right: 0, 
-                                                zIndex: 30,
-                                                cursor: 'pointer',
-                                                transition: '0.2s'
+                                                padding: '24px 30px', 
+                                                cursor: 'pointer', 
+                                                display: 'flex', 
+                                                justifyContent: 'space-between', 
+                                                alignItems: 'center',
+                                                background: isExpanded ? 'rgba(255,255,255,0.02)' : 'transparent'
                                             }}
                                         >
-                                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: '6px' }}>
-                                                Yearly Total
-                                                {sortConfig.key === 'total' && (
-                                                    <span style={{ fontSize: '10px' }}>{sortConfig.direction === 'desc' ? '▼' : '▲'}</span>
-                                                )}
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                                <div style={{ 
+                                                    width: '56px', 
+                                                    height: '56px', 
+                                                    borderRadius: '16px', 
+                                                    background: `linear-gradient(135deg, ${theme.primary}08 0%, ${theme.primary}15 100%)`, 
+                                                    display: 'flex', 
+                                                    justifyContent: 'center', 
+                                                    alignItems: 'center',
+                                                    border: `1px solid ${theme.primary}20`,
+                                                    boxShadow: isExpanded ? `0 0 20px ${theme.primary}20` : 'none'
+                                                }}>
+                                                    <Car size={26} color={theme.primary} />
+                                                </div>
+                                                <div>
+                                                    <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '950', margin: 0, letterSpacing: '-0.5px' }}>{v.carNumber}</h3>
+                                                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginTop: '4px', letterSpacing: '1px' }}>{v.model || 'Commercial'}</p>
+                                                </div>
                                             </div>
-                                        </th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {filteredAggData.length === 0 ? (
-                                        <tr><td colSpan={NEXT_SERVICE_TYPES.length + 2} style={{ padding: '100px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '14px', fontWeight: '800' }}>No fleet analytics recorded for this period.</td></tr>
-                                    ) : (
-                                        filteredAggData.map((v, idx) => {
-                                            const catTotals = {};
-                                            NEXT_SERVICE_TYPES.forEach(cat => {
-                                                const searchStr = cat.toLowerCase().replace(' system', '').trim();
-                                                const catRecs = (v.maintenance?.records || v.maintenance?.recs || []).filter(r => {
-                                                    const rType = (r.type || r.maintenanceType || '').toLowerCase();
-                                                    const rCat = (r.category || '').toLowerCase();
-                                                    const rDesc = (r.description || '').toLowerCase();
-                                                    return rType.includes(searchStr) || rCat.includes(searchStr) || rDesc.includes(searchStr);
-                                                });
-                                                catTotals[cat] = {
-                                                    total: catRecs.reduce((sum, r) => sum + (r.amount || 0), 0),
-                                                    recs: catRecs
-                                                };
-                                            });
 
-                                            return (
-                                                <motion.tr
-                                                    key={v.vehicleId || idx}
-                                                    initial={{ opacity: 0, y: 15 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    transition={{ delay: idx * 0.02, duration: 0.5, ease: "easeOut" }}
-                                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', transition: '0.2s' }}
-                                                    className="row-hover"
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
+                                                <div className="hide-mobile" style={{ textAlign: 'right' }}>
+                                                    <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Annual Frequency</p>
+                                                    <p style={{ color: 'white', fontSize: '15px', fontWeight: '800', margin: 0 }}>{vehicleRecords.length} Services</p>
+                                                </div>
+                                                <div style={{ textAlign: 'right' }}>
+                                                    <p style={{ color: theme.primary, fontSize: '9px', fontWeight: '1000', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '1px' }}>Annual Spend</p>
+                                                    <p style={{ color: '#10b981', fontSize: '22px', fontWeight: '1000', margin: 0 }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</p>
+                                                </div>
+                                                <motion.div 
+                                                    animate={{ rotate: isExpanded ? 180 : 0 }}
+                                                    style={{ color: isExpanded ? theme.primary : 'rgba(255,255,255,0.1)' }}
                                                 >
-                                                    <td className="sticky-header" style={{ padding: '25px 35px', position: 'sticky', left: 0, background: 'linear-gradient(90deg, #0e1526 0%, #151f33 100%)', backdropFilter: 'blur(30px)', zIndex: 15 }}>
-                                                        <div style={{ color: 'white', fontWeight: '1000', fontSize: '16.5px', letterSpacing: '0.5px' }}>{v.carNumber}</div>
-                                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', marginTop: '6px', textTransform: 'uppercase', letterSpacing: '1px' }}>{v.model}</div>
-                                                    </td>
-                                                    
-                                                    {NEXT_SERVICE_TYPES.map((type, tIdx) => {
-                                                        const { total, recs } = catTotals[type];
+                                                    <ChevronDown size={24} />
+                                                </motion.div>
+                                            </div>
+                                        </div>
 
-                                                        return (
-                                                            <td key={type} style={{ padding: '20px 12px', textAlign: 'center', background: tIdx % 2 === 0 ? 'rgba(255,255,255,0.005)' : 'transparent' }}>
-                                                                {total > 0 ? (
-                                                                    <motion.button 
-                                                                        whileHover={{ scale: 1.1, translateY: -5 }}
-                                                                        whileTap={{ scale: 0.95 }}
+                                        <AnimatePresence>
+                                            {isExpanded && (
+                                                <motion.div
+                                                    initial={{ height: 0, opacity: 0 }}
+                                                    animate={{ height: 'auto', opacity: 1 }}
+                                                    exit={{ height: 0, opacity: 0 }}
+                                                    style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+                                                >
+                                                    <div style={{ padding: '35px', background: 'rgba(0,0,0,0.2)' }}>
+                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '15px' }}>
+                                                            {NEXT_SERVICE_TYPES.map(type => {
+                                                                const searchStr = type.toLowerCase().replace(' system', '').trim();
+                                                                const catRecs = vehicleRecords.filter(r => {
+                                                                    const rType = (r.type || r.maintenanceType || '').toLowerCase();
+                                                                    const rCat = (r.category || '').toLowerCase();
+                                                                    const rDesc = (r.description || '').toLowerCase();
+                                                                    return rType.includes(searchStr) || rCat.includes(searchStr) || rDesc.includes(searchStr);
+                                                                });
+                                                                const catTotal = catRecs.reduce((sum, r) => sum + (r.amount || 0), 0);
+                                                                
+                                                                if (catTotal === 0) return null;
+
+                                                                return (
+                                                                    <motion.button
+                                                                        key={type}
+                                                                        whileHover={{ translateY: -4, background: 'rgba(255,255,255,0.05)' }}
+                                                                        whileTap={{ scale: 0.98 }}
                                                                         onClick={() => {
-                                                                            setDrillData({ vehicle: v.carNumber, category: type, records: recs });
+                                                                            setDrillData({ vehicle: v.carNumber, category: type, records: catRecs });
                                                                             setShowDrillModal(true);
                                                                         }}
                                                                         style={{ 
-                                                                            background: `linear-gradient(135deg, ${theme.primary}30 0%, ${theme.primary}10 100%)`, 
-                                                                            color: 'white', 
-                                                                            border: `1px solid ${theme.primary}50`, 
-                                                                            padding: '10px 15px', 
-                                                                            borderRadius: '16px', 
-                                                                            cursor: 'pointer',
-                                                                            width: '100%',
-                                                                            maxWidth: '140px',
-                                                                            boxShadow: `0 8px 16px ${theme.primary}15`,
-                                                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                                            padding: '20px', 
+                                                                            borderRadius: '20px', 
+                                                                            background: 'rgba(255,255,255,0.03)', 
+                                                                            border: '1px solid rgba(255,255,255,0.06)',
                                                                             display: 'flex',
                                                                             flexDirection: 'column',
-                                                                            alignItems: 'center',
-                                                                            gap: '2px'
+                                                                            alignItems: 'flex-start',
+                                                                            gap: '10px',
+                                                                            cursor: 'pointer',
+                                                                            textAlign: 'left',
+                                                                            transition: '0.2s'
                                                                         }}
-                                                                        title={recs.map(r => `${formatDateIST(r.billDate || r.date)}: ₹${(r.amount || 0).toLocaleString()} - ${r.description || 'Service'}`).join('\n')}
                                                                     >
-                                                                        <div style={{ fontSize: '13.5px', fontWeight: '1000', letterSpacing: '-0.2px' }}>₹{total.toLocaleString()}</div>
-                                                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{recs.length} {recs.length === 1 ? 'Record' : 'Records'}</div>
+                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
+                                                                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{type}</span>
+                                                                            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                                <Wrench size={12} color={theme.primary} />
+                                                                            </div>
+                                                                        </div>
+                                                                        <div>
+                                                                            <div style={{ color: 'white', fontSize: '18px', fontWeight: '1000' }}>₹{catTotal.toLocaleString()}</div>
+                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
+                                                                                <span style={{ fontSize: '10px', color: theme.primary, fontWeight: '800' }}>{catRecs.length} Services</span>
+                                                                                <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
+                                                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>Avg ₹{Math.round(catTotal/catRecs.length).toLocaleString()}</span>
+                                                                            </div>
+                                                                        </div>
                                                                     </motion.button>
-                                                                ) : (
-                                                                    <div style={{ color: 'rgba(255,255,255,0.03)', fontSize: '11px', fontWeight: '1000' }}>—</div>
-                                                                )}
-                                                            </td>
-                                                        );
-                                                    })}
-
-                                                    <td 
-                                                        onClick={() => {
-                                                            setDrillData({ vehicle: v.carNumber, category: 'All Categories', records: v.maintenance?.records || v.maintenance?.recs || [] });
-                                                            setShowDrillModal(true);
-                                                        }}
-                                                        style={{ 
-                                                            padding: '25px 35px', 
-                                                            textAlign: 'right', 
-                                                            background: `${theme.primary}05`, 
-                                                            position: 'sticky', 
-                                                            right: 0, 
-                                                            zIndex: 10, 
-                                                            backdropFilter: 'blur(10px)', 
-                                                            borderLeft: '1px solid rgba(255,255,255,0.05)',
-                                                            cursor: 'pointer',
-                                                            display: 'flex',
-                                                            flexDirection: 'column',
-                                                            alignItems: 'flex-end',
-                                                            justifyContent: 'center'
-                                                        }}
-                                                        className="total-cell-hover"
-                                                    >
-                                                        <style>{`.total-cell-hover:hover { background: ${theme.primary}15 !important; }`}</style>
-                                                        <div style={{ color: '#10b981', fontWeight: '1000', fontSize: '20px', letterSpacing: '-1px', textShadow: '0 4px 12px rgba(16,185,129,0.3)' }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</div>
-                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontWeight: '1000', marginTop: '4px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                            <span>{(v.maintenance?.records || v.maintenance?.recs || []).length} Events</span>
-                                                            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></div>
-                                                            <span style={{ color: 'white', opacity: 0.8 }}>View All</span>
+                                                                );
+                                                            })}
+                                                            
+                                                            <motion.button 
+                                                                whileHover={{ background: `${theme.primary}20`, translateY: -4 }}
+                                                                onClick={() => {
+                                                                    setDrillData({ vehicle: v.carNumber, category: 'Total Maintenance', records: vehicleRecords });
+                                                                    setShowDrillModal(true);
+                                                                }}
+                                                                style={{ 
+                                                                    padding: '20px', 
+                                                                    borderRadius: '20px', 
+                                                                    background: `${theme.primary}08`, 
+                                                                    border: `1px dashed ${theme.primary}30`,
+                                                                    display: 'flex',
+                                                                    flexDirection: 'column',
+                                                                    justifyContent: 'center',
+                                                                    alignItems: 'center',
+                                                                    gap: '8px',
+                                                                    cursor: 'pointer',
+                                                                    color: theme.primary,
+                                                                    transition: '0.2s'
+                                                                }}
+                                                            >
+                                                                <FileText size={20} />
+                                                                <span style={{ fontSize: '11px', fontWeight: '1000', textTransform: 'uppercase' }}>Full Analysis</span>
+                                                            </motion.button>
                                                         </div>
-                                                    </td>
-                                                </motion.tr>
-                                            );
-                                        })
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                                                    </div>
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </motion.div>
+                                );
+                            })
+                        )}
                     </div>
                 </>
             ) : (
                 <>
-                    {/* Category Bar and History Table continue below... */}
-                    <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+                    <div className="table-responsive-wrapper hide-mobile" style={{ borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', background: 'rgba(15, 23, 42, 0.4)' }}>
                         {loading ? (
                             <div style={{ padding: '100px', textAlign: 'center' }}>
                                 <div className="spinner" style={{ margin: '0 auto' }}></div>
@@ -1371,21 +1358,13 @@ const Maintenance = () => {
             {/* Add Record Modal */}
             <AnimatePresence>
                 {showModal && (
-                    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(10px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+                    <div className="modal-overlay">
                         <motion.div
-                            initial={{ scale: 0.9, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            exit={{ scale: 0.9, opacity: 0 }}
-                            className="glass-card"
-                            style={{
-                                padding: '0',
-                                width: '100%',
-                                maxWidth: '800px',
-                                maxHeight: '90vh',
-                                overflowY: 'auto',
-                                background: '#0f172a',
-                                border: '1px solid rgba(255,255,255,0.1)'
-                            }}
+                            initial={{ scale: 0.9, opacity: 0, y: 10 }}
+                            animate={{ scale: 1, opacity: 1, y: 0 }}
+                            exit={{ scale: 0.9, opacity: 0, y: 10 }}
+                            className="modal-content-wrapper"
+                            style={{ maxWidth: '850px', padding: 'clamp(20px, 5vw, 40px)' }}
                         >
                             <div style={{ padding: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
@@ -1605,23 +1584,14 @@ const Maintenance = () => {
                                                 </div>
                                             );
                                         })()}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                                            <button
-                                                type="submit"
-                                                disabled={submitting}
-                                                className="btn-primary"
-                                                style={{ height: '54px', borderRadius: '12px', fontSize: '15px', fontWeight: '900', background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)', color: 'black', border: 'none' }}
-                                            >
-                                                {submitting ? 'Saving...' : (editingId ? 'Update Record' : 'Save Record')}
-                                            </button>
-                                            <button
-                                                type="button"
-                                                onClick={() => setShowModal(false)}
-                                                style={{ height: '44px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontWeight: '700', cursor: 'pointer' }}
-                                            >
-                                                Discard
-                                            </button>
-                                        </div>
+                                    <div className="modal-form-grid" style={{ marginTop: '20px' }}>
+                                        <button className="btn-primary" type="submit" disabled={submitting} style={{ height: '56px', fontWeight: '950' }}>
+                                            {submitting ? 'Saving...' : (editingId ? 'Update Record' : 'Save Record')}
+                                        </button>
+                                        <button className="glass-card" type="button" onClick={() => setShowModal(false)} style={{ height: '56px', fontWeight: '800' }}>
+                                            Discard
+                                        </button>
+                                    </div>
                                     </div>
                                 </div>
                             </form>
