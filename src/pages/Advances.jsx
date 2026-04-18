@@ -5,12 +5,12 @@ import { Search, Plus, X, CheckCircle, AlertCircle, IndianRupee, Calendar, User,
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
-import { 
-    todayIST, 
-    toISTDateString, 
-    formatDateIST, 
-    formatTimeIST, 
-    formatDateTimeIST 
+import {
+    todayIST,
+    toISTDateString,
+    formatDateIST,
+    formatTimeIST,
+    formatDateTimeIST
 } from '../utils/istUtils';
 
 const Advances = () => {
@@ -58,7 +58,7 @@ const Advances = () => {
         };
 
         resetAll();
-        
+
         // Cleanup function: Clear state when the component is about to unmount or path changes
         return () => resetAll();
     }, [location.pathname, location.key]);
@@ -220,57 +220,56 @@ const Advances = () => {
                 </div>
             </header>
 
-                <div className="flex-resp" style={{ gap: '15px', marginBottom: '30px' }}>
-                    <div style={{ position: 'relative', flex: '1' }}>
-                        <Search size={20} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
-                        <input
-                            type="text"
-                            placeholder="Search drivers..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="input-field"
-                            style={{ paddingLeft: '50px', marginBottom: 0 }}
-                        />
-                    </div>
-
-                    <div className="flex-resp" style={{ width: 'auto', gap: '10px' }}>
-                        <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
-                            <select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                                className="input-field"
-                                style={{ marginBottom: 0, flex: 1 }}
-                            >
-                                {Array.from({ length: 12 }, (_, i) => (
-                                    <option key={i + 1} value={i + 1} style={{ background: '#0f172a' }}>
-                                        {new Date(2000, i).toLocaleString('default', { month: 'short' })}
-                                    </option>
-                                ))}
-                            </select>
-
-                            <select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                className="input-field"
-                                style={{ marginBottom: 0, flex: 0.8 }}
-                            >
-                                {Array.from({ length: 3 }, (_, i) => {
-                                    const year = new Date().getFullYear() - 1 + i;
-                                    return <option key={year} value={year} style={{ background: '#0f172a' }}>{year}</option>;
-                                })}
-                            </select>
-                        </div>
-
-                        <button
-                            onClick={() => setShowModal(true)}
-                            className="btn-primary"
-                            style={{ height: '50px', padding: '0 20px', borderRadius: '15px', fontWeight: '1000' }}
-                        >
-                            <Plus size={20} /> <span className="hide-mobile">RECORD ADVANCE</span><span className="show-mobile">ADD</span>
-                        </button>
-                    </div>
+            <div className="flex-resp" style={{ gap: '15px', marginBottom: '30px' }}>
+                <div style={{ position: 'relative', flex: '1' }}>
+                    <Search size={20} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                    <input
+                        type="text"
+                        placeholder="Search drivers..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="input-field"
+                        style={{ paddingLeft: '50px', marginBottom: 0 }}
+                    />
                 </div>
-            </header>
+
+                <div className="flex-resp" style={{ width: 'auto', gap: '10px' }}>
+                    <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
+                        <select
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                            className="input-field"
+                            style={{ marginBottom: 0, flex: 1 }}
+                        >
+                            {Array.from({ length: 12 }, (_, i) => (
+                                <option key={i + 1} value={i + 1} style={{ background: '#0f172a' }}>
+                                    {new Date(2000, i).toLocaleString('default', { month: 'short' })}
+                                </option>
+                            ))}
+                        </select>
+
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                            className="input-field"
+                            style={{ marginBottom: 0, flex: 0.8 }}
+                        >
+                            {Array.from({ length: 3 }, (_, i) => {
+                                const year = new Date().getFullYear() - 1 + i;
+                                return <option key={year} value={year} style={{ background: '#0f172a' }}>{year}</option>;
+                            })}
+                        </select>
+                    </div>
+
+                    <button
+                        onClick={() => setShowModal(true)}
+                        className="btn-primary"
+                        style={{ height: '50px', padding: '0 20px', borderRadius: '15px', fontWeight: '1000' }}
+                    >
+                        <Plus size={20} /> <span className="hide-mobile">RECORD ADVANCE</span><span className="show-mobile">ADD</span>
+                    </button>
+                </div>
+            </div>
 
             {/* Personnel Salary Ledger Section */}
             <section style={{ marginBottom: '60px' }}>
