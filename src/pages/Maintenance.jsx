@@ -25,6 +25,8 @@ import {
     FileSpreadsheet,
     Filter,
     ChevronDown,
+    ChevronLeft,
+    ChevronRight,
     Upload,
     Car,
     X
@@ -80,6 +82,15 @@ const Maintenance = () => {
     const [showDrillModal, setShowDrillModal] = useState(false);
     const [drillData, setDrillData] = useState({ vehicle: '', category: '', records: [] });
     const [expandedVehicle, setExpandedVehicle] = useState(null); // Added for Master Data Accordion
+
+    const shiftMonth = (amount) => {
+        let newMonth = selectedMonth + amount;
+        let newYear = selectedYear;
+        if (newMonth < 1) { newMonth = 12; newYear--; }
+        if (newMonth > 12) { newMonth = 1; newYear++; }
+        setSelectedMonth(newMonth);
+        setSelectedYear(newYear);
+    };
 
     useEffect(() => {
         setSearchTerm('');
@@ -440,7 +451,7 @@ const Maintenance = () => {
         const matchesVehicle = filterVehicle === 'All' || r.vehicle?.carNumber === filterVehicle;
 
         // Exclude Wash, Puncture, Tissues, Water, Cleaning, Masks, Sanitizers as they are in Driver Services
-        const serviceRegex = /wash|puncture|puncher|tissue|water|cleaning|mask|sanitizer/i;
+        const serviceRegex = /wash|puncture|puncher|other service|wiring|radiator|checkup|top-up|kapda|coolant|tissue|water|cleaning|mask|sanitizer/i;
         const isService = serviceRegex.test(r.category || '') ||
             serviceRegex.test(r.description || '') ||
             serviceRegex.test(r.maintenanceType || '');
@@ -473,14 +484,21 @@ const Maintenance = () => {
     const totalMaintenanceCost = filteredRecords.reduce((sum, r) => sum + (Number(r.amount) || 0), 0);
 
     const filteredAggData = (aggData || [])
-        .filter(v => 
-            v.carNumber?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-            v.model?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+        .filter(v => {
+            const matchesSearch = v.carNumber?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                                v.model?.toLowerCase().includes(searchTerm.toLowerCase());
+            const matchesVehicle = filterVehicle === 'All' || v.carNumber === filterVehicle;
+            return matchesSearch && matchesVehicle;
+        })
+        .sort((a,b) => (a.carNumber || '').localeCompare(b.carNumber || ''))
         .map(v => {
             // Pre-calculate category totals for sorting/filtering
             const cats = {};
-            const allRecs = v.maintenance?.records || v.maintenance?.recs || [];
+            const serviceRegex = /wash|puncture|puncher|other service|wiring|radiator|checkup|top-up|kapda|coolant|tissue|water|cleaning|mask|sanitizer/i;
+            const allRecs = (v.maintenance?.records || v.maintenance?.recs || []).filter(r => {
+                const searchStrRec = `${r.maintenanceType || ''} ${r.category || ''} ${r.description || ''}`.toLowerCase();
+                return !serviceRegex.test(searchStrRec);
+            });
             
             NEXT_SERVICE_TYPES.forEach(cat => {
                 const searchStr = cat.toLowerCase().replace(' system', '').trim();
@@ -548,40 +566,61 @@ const Maintenance = () => {
                             Car <span className="theme-gradient-text">Maintenance</span>
                         </h1>
                     </div>
-                </div>
+                                <div className="mobile-stack" style={{ display: 'flex', gap: '8px', flex: '1', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                        <button
+                            onClick={() => shiftMonth(-1)}
+                            style={{
+                                width: '40px', height: '40px', borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
+                                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                            }}
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+                        <div style={{ display: 'flex', gap: '8px' }}>
+                            {viewMode === 'history' && (
+                                <select
+                                    value={selectedMonth}
+                                    onChange={(e) => setSelectedMonth(e.target.value === 'All' ? 'All' : Number(e.target.value))}
+                                    className="input-field"
+                                    style={{ height: '48px', width: '120px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
+                                >
+                                    <option value="All" style={{ background: '#0f172a' }}>All Months</option>
+                                    {[
+                                        { n: 1, m: 'January' }, { n: 2, m: 'February' }, { n: 3, m: 'March' },
+                                        { n: 4, m: 'April' }, { n: 5, m: 'May' }, { n: 6, m: 'June' },
+                                        { n: 7, m: 'July' }, { n: 8, m: 'August' }, { n: 9, m: 'September' },
+                                        { n: 10, m: 'October' }, { n: 11, m: 'November' }, { n: 12, m: 'December' }
+                                    ].map(item => (
+                                        <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
+                                    ))}
+                                </select>
+                            )}
 
-                <div className="mobile-stack" style={{ display: 'flex', gap: '12px', flex: '1', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                        {viewMode === 'history' && (
                             <select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
                                 className="input-field"
-                                style={{ height: '48px', width: '120px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
+                                style={{ height: '48px', width: '100px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
                             >
-                                <option value="All" style={{ background: '#0f172a' }}>All Months</option>
-                                {[
-                                    { n: 1, m: 'January' }, { n: 2, m: 'February' }, { n: 3, m: 'March' },
-                                    { n: 4, m: 'April' }, { n: 5, m: 'May' }, { n: 6, m: 'June' },
-                                    { n: 7, m: 'July' }, { n: 8, m: 'August' }, { n: 9, m: 'September' },
-                                    { n: 10, m: 'October' }, { n: 11, m: 'November' }, { n: 12, m: 'December' }
-                                ].map(item => (
-                                    <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
+                                {[2024, 2025, 2026, 2027].map(y => (
+                                    <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
                                 ))}
                             </select>
-                        )}
-
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            className="input-field"
-                            style={{ height: '48px', width: '100px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
+                        </div>
+                        <button
+                            onClick={() => shiftMonth(1)}
+                            style={{
+                                width: '40px', height: '40px', borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
+                                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                            }}
                         >
-                            {[2024, 2025, 2026].map(y => (
-                                <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
-                            ))}
-                        </select>
+                            <ChevronRight size={18} />
+                        </button>
                     </div>
+  </div>
 
                     <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
                         <div style={{
@@ -721,7 +760,7 @@ const Maintenance = () => {
                         <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Spend (Filtered)</p>
                         <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>
                             ₹{(viewMode === 'super'
-                                ? (aggData?.reduce((s, v) => s + (v.maintenance?.totalAmount || 0), 0) || 0)
+                                ? (filteredAggData?.reduce((s, v) => s + (v.maintenance?.totalAmount || 0), 0) || 0)
                                 : totalMaintenanceCost).toLocaleString()}
                         </h2>
                     </div>
@@ -891,178 +930,127 @@ const Maintenance = () => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '10px' }}>
-                        {filteredAggData.length === 0 ? (
-                            <div className="glass-card" style={{ padding: '80px', textAlign: 'center', background: 'rgba(255,255,255,0.02)' }}>
-                                <Wrench size={48} style={{ color: 'rgba(255,255,255,0.05)', marginBottom: '20px' }} />
-                                <h3 style={{ color: 'white', opacity: 0.5 }}>No fleet analytics recorded for {selectedYear}</h3>
-                            </div>
-                        ) : (
-                            filteredAggData.map((v, idx) => {
-                                const isExpanded = expandedVehicle === v.carNumber;
-                                const vehicleRecords = v.maintenance?.records || v.maintenance?.recs || [];
-                                
-                                return (
-                                    <motion.div
-                                        key={v.vehicleId || idx}
-                                        initial={{ opacity: 0, y: 20 }}
-                                        animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.05 }}
-                                        className="glass-card"
-                                        style={{ 
-                                            padding: '0', 
-                                            background: isExpanded ? 'rgba(15, 23, 42, 0.7)' : 'rgba(15, 23, 42, 0.3)',
-                                            border: isExpanded ? `1px solid ${theme.primary}30` : '1px solid rgba(255,255,255,0.05)',
-                                            borderRadius: '20px',
-                                            overflow: 'hidden',
-                                            transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)'
-                                        }}
-                                    >
-                                        <div 
-                                            onClick={() => setExpandedVehicle(isExpanded ? null : v.carNumber)}
-                                            style={{ 
-                                                padding: '24px 30px', 
-                                                cursor: 'pointer', 
-                                                display: 'flex', 
-                                                justifyContent: 'space-between', 
-                                                alignItems: 'center',
-                                                background: isExpanded ? 'rgba(255,255,255,0.02)' : 'transparent'
-                                            }}
-                                        >
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                                <div style={{ 
-                                                    width: '56px', 
-                                                    height: '56px', 
-                                                    borderRadius: '16px', 
-                                                    background: `linear-gradient(135deg, ${theme.primary}08 0%, ${theme.primary}15 100%)`, 
-                                                    display: 'flex', 
-                                                    justifyContent: 'center', 
-                                                    alignItems: 'center',
-                                                    border: `1px solid ${theme.primary}20`,
-                                                    boxShadow: isExpanded ? `0 0 20px ${theme.primary}20` : 'none'
-                                                }}>
-                                                    <Car size={26} color={theme.primary} />
-                                                </div>
-                                                <div>
-                                                    <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '950', margin: 0, letterSpacing: '-0.5px' }}>{v.carNumber}</h3>
-                                                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginTop: '4px', letterSpacing: '1px' }}>{v.model || 'Commercial'}</p>
-                                                </div>
-                                            </div>
+                    <div className="glass-card" style={{ padding: '0', background: 'rgba(30,30,40,0.3)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', marginTop: '10px' }}>
+                        <div style={{ overflowX: 'auto' }}>
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
+                                <thead>
+                                    <tr style={{ textAlign: 'left', background: 'rgba(0,0,0,0.1)' }}>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Regular Service</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Engine & Mech</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Suspension & Steer</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Tyres & Brakes</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Electrical & AC</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Others</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Total Maint</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredAggData.length === 0 ? (
+                                        <tr><td colSpan="7" style={{ textAlign: 'center', padding: '100px', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>No fleet data identified for {selectedYear}.</td></tr>
+                                    ) : (
+                                        filteredAggData.map((v, idx) => {
+                                            const allRecs = (v.maintenance?.records || v.maintenance?.recs || []).filter(r => {
+                                                const serviceRegex = /wash|puncture|puncher|other service|wiring|radiator|checkup|top-up|kapda|coolant|tissue|water|cleaning|mask|sanitizer/i;
+                                                const searchStrRec = `${r.maintenanceType || r.type || ''} ${r.category || ''} ${r.description || ''}`.toLowerCase();
+                                                return !serviceRegex.test(searchStrRec);
+                                            });
 
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '30px' }}>
-                                                <div className="hide-mobile" style={{ textAlign: 'right' }}>
-                                                    <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Annual Frequency</p>
-                                                    <p style={{ color: 'white', fontSize: '15px', fontWeight: '800', margin: 0 }}>{vehicleRecords.length} Services</p>
-                                                </div>
-                                                <div style={{ textAlign: 'right' }}>
-                                                    <p style={{ color: theme.primary, fontSize: '9px', fontWeight: '1000', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '1px' }}>Annual Spend</p>
-                                                    <p style={{ color: '#10b981', fontSize: '22px', fontWeight: '1000', margin: 0 }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</p>
-                                                </div>
-                                                <motion.div 
-                                                    animate={{ rotate: isExpanded ? 180 : 0 }}
-                                                    style={{ color: isExpanded ? theme.primary : 'rgba(255,255,255,0.1)' }}
-                                                >
-                                                    <ChevronDown size={24} />
-                                                </motion.div>
-                                            </div>
-                                        </div>
+                                            const getGroupData = (types) => {
+                                                const matched = allRecs.filter(r => types.some(t => (r.maintenanceType || r.type || '').includes(t)));
+                                                const amount = matched.reduce((s, r) => s + (r.amount || 0), 0);
+                                                return { amount, records: matched };
+                                            };
 
-                                        <AnimatePresence>
-                                            {isExpanded && (
-                                                <motion.div
-                                                    initial={{ height: 0, opacity: 0 }}
-                                                    animate={{ height: 'auto', opacity: 1 }}
-                                                    exit={{ height: 0, opacity: 0 }}
-                                                    style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
-                                                >
-                                                    <div style={{ padding: '35px', background: 'rgba(0,0,0,0.2)' }}>
-                                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '15px' }}>
-                                                            {NEXT_SERVICE_TYPES.map(type => {
-                                                                const searchStr = type.toLowerCase().replace(' system', '').trim();
-                                                                const catRecs = vehicleRecords.filter(r => {
-                                                                    const rType = (r.type || r.maintenanceType || '').toLowerCase();
-                                                                    const rCat = (r.category || '').toLowerCase();
-                                                                    const rDesc = (r.description || '').toLowerCase();
-                                                                    return rType.includes(searchStr) || rCat.includes(searchStr) || rDesc.includes(searchStr);
-                                                                });
-                                                                const catTotal = catRecs.reduce((sum, r) => sum + (r.amount || 0), 0);
-                                                                
-                                                                if (catTotal === 0) return null;
+                                            const groups = {
+                                                regular: getGroupData(['Regular Service']),
+                                                engine: getGroupData(['Engine', 'Mechanical', 'Fuel', 'Exhaust', 'Transmission', 'Clutch']),
+                                                suspension: getGroupData(['Suspension', 'Steering']),
+                                                tyres: getGroupData(['Tyres', 'Wheels', 'Brake']),
+                                                electrical: getGroupData(['Electrical', 'Battery', 'Sensors', 'Electronics', 'AC', 'Cooling']),
+                                            };
 
-                                                                return (
-                                                                    <motion.button
-                                                                        key={type}
-                                                                        whileHover={{ translateY: -4, background: 'rgba(255,255,255,0.05)' }}
-                                                                        whileTap={{ scale: 0.98 }}
-                                                                        onClick={() => {
-                                                                            setDrillData({ vehicle: v.carNumber, category: type, records: catRecs });
-                                                                            setShowDrillModal(true);
-                                                                        }}
-                                                                        style={{ 
-                                                                            padding: '20px', 
-                                                                            borderRadius: '20px', 
-                                                                            background: 'rgba(255,255,255,0.03)', 
-                                                                            border: '1px solid rgba(255,255,255,0.06)',
-                                                                            display: 'flex',
-                                                                            flexDirection: 'column',
-                                                                            alignItems: 'flex-start',
-                                                                            gap: '10px',
-                                                                            cursor: 'pointer',
-                                                                            textAlign: 'left',
-                                                                            transition: '0.2s'
-                                                                        }}
-                                                                    >
-                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                                                                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{type}</span>
-                                                                            <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                                                <Wrench size={12} color={theme.primary} />
-                                                                            </div>
-                                                                        </div>
-                                                                        <div>
-                                                                            <div style={{ color: 'white', fontSize: '18px', fontWeight: '1000' }}>₹{catTotal.toLocaleString()}</div>
-                                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '4px' }}>
-                                                                                <span style={{ fontSize: '10px', color: theme.primary, fontWeight: '800' }}>{catRecs.length} Services</span>
-                                                                                <span style={{ color: 'rgba(255,255,255,0.2)' }}>•</span>
-                                                                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>Avg ₹{Math.round(catTotal/catRecs.length).toLocaleString()}</span>
-                                                                            </div>
-                                                                        </div>
-                                                                    </motion.button>
-                                                                );
-                                                            })}
-                                                            
-                                                            <motion.button 
-                                                                whileHover={{ background: `${theme.primary}20`, translateY: -4 }}
-                                                                onClick={() => {
-                                                                    setDrillData({ vehicle: v.carNumber, category: 'Total Maintenance', records: vehicleRecords });
-                                                                    setShowDrillModal(true);
-                                                                }}
+                                            const totalManual = Object.values(groups).reduce((s, g) => s + g.amount, 0);
+                                            const otherAmount = (v.maintenance?.totalAmount || 0) - totalManual;
+                                            const otherRecs = allRecs.filter(r => !Object.values(groups).some(g => g.records.includes(r)));
+
+                                            const Cell = ({ data, color = 'var(--primary)', label = 'Jobs' }) => (
+                                                <td style={{ padding: '20px 25px' }}>
+                                                    <div style={{ color: data.amount > 0 ? 'white' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '15px' }}>
+                                                        ₹{data.amount.toLocaleString()}
+                                                    </div>
+                                                    <div style={{ marginTop: '8px' }}>
+                                                        {data.records?.length > 0 ? (
+                                                            <select 
+                                                                value="" 
+                                                                onChange={(e) => {
+                                                                    const rec = data.records[e.target.value];
+                                                                    if (rec) {
+                                                                        setDrillData({ vehicle: v.carNumber, category: rec.maintenanceType || 'Repair', records: [rec] });
+                                                                        setShowDrillModal(true);
+                                                                    }
+                                                                }} 
+                                                                onClick={(e) => e.stopPropagation()} 
                                                                 style={{ 
-                                                                    padding: '20px', 
-                                                                    borderRadius: '20px', 
-                                                                    background: `${theme.primary}08`, 
-                                                                    border: `1px dashed ${theme.primary}30`,
-                                                                    display: 'flex',
-                                                                    flexDirection: 'column',
-                                                                    justifyContent: 'center',
-                                                                    alignItems: 'center',
-                                                                    gap: '8px',
-                                                                    cursor: 'pointer',
-                                                                    color: theme.primary,
-                                                                    transition: '0.2s'
+                                                                    width: '100%', 
+                                                                    maxWidth: '140px', 
+                                                                    padding: '4px 8px', 
+                                                                    background: `${color}15`, 
+                                                                    border: `1px solid ${color}30`, 
+                                                                    borderRadius: '8px', 
+                                                                    color: color, 
+                                                                    fontSize: '10px', 
+                                                                    fontWeight: '800', 
+                                                                    outline: 'none', 
+                                                                    cursor: 'pointer' 
                                                                 }}
                                                             >
-                                                                <FileText size={20} />
-                                                                <span style={{ fontSize: '11px', fontWeight: '1000', textTransform: 'uppercase' }}>Full Analysis</span>
-                                                            </motion.button>
-                                                        </div>
+                                                                <option value="" hidden>View {data.records.length} {label}</option>
+                                                                {data.records.map((m, i) => (
+                                                                    <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>
+                                                                        {formatDateIST(m.billDate || m.date)} - ₹{(m.amount || 0).toLocaleString()}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        ) : <span style={{ color: 'rgba(255,255,255,0.05)', fontSize: '10px', fontWeight: '700' }}>No Logs</span>}
                                                     </div>
-                                                </motion.div>
-                                            )}
-                                        </AnimatePresence>
-                                    </motion.div>
-                                );
-                            })
-                        )}
+                                                </td>
+                                            );
+
+                                            return (
+                                                <motion.tr
+                                                    key={v.vehicleId || idx}
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    transition={{ delay: idx * 0.03 }}
+                                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }}
+                                                    whileHover={{ background: 'rgba(255,255,255,0.02)' }}
+                                                    onClick={() => {
+                                                        setDrillData({ vehicle: v.carNumber, category: 'Complete History', records: allRecs });
+                                                        setShowDrillModal(true);
+                                                    }}
+                                                >
+                                                    <td style={{ padding: '20px 25px' }}>
+                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '16px', letterSpacing: '-0.5px' }}>{v.carNumber}</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '700' }}>{v.model || 'Fleet Unit'}</div>
+                                                    </td>
+                                                    <Cell data={groups.regular} color="#a855f7" />
+                                                    <Cell data={groups.engine} color="#3b82f6" />
+                                                    <Cell data={groups.suspension} color="#ec4899" />
+                                                    <Cell data={groups.tyres} color="#f59e0b" />
+                                                    <Cell data={groups.electrical} color="#06b6d4" />
+                                                    <Cell data={{ amount: otherAmount, records: otherRecs }} color="#94a3b8" label="Logs" />
+                                                    <td style={{ padding: '20px 25px', textAlign: 'right' }}>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Annual Cost</div>
+                                                        <div style={{ color: '#10b981', fontWeight: '950', fontSize: '18px', letterSpacing: '-0.5px' }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</div>
+                                                    </td>
+                                                </motion.tr>
+                                            );
+                                        })
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </>
             ) : (
@@ -1169,9 +1157,7 @@ const Maintenance = () => {
                                                                     }}>DRIVER APP</span>
                                                                 )}
                                                             </div>
-                                                            <div style={{ color: 'white', fontSize: '13px', marginTop: '4px', fontWeight: '500' }}>
-                                                                {displayCats || 'General Service'}
-                                                            </div>
+                                                            {/* Sub-categories/description removed for a cleaner dashboard view as requested */}
                                                         </>
                                                     );
                                                 })()}
@@ -1318,7 +1304,7 @@ const Maintenance = () => {
                                                         </span>
                                                     )}
                                                 </div>
-                                                <div style={{ color: 'white', fontSize: '14px', fontWeight: '600' }}>{record.category || 'General Repair'}</div>
+                                                {/* Category/description removed for a cleaner dashboard view as requested */}
                                                 <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', marginTop: '2px' }}>
                                                     Garage: <span style={{ color: 'white' }}>{record.garageName || record.vendorName || 'Self'}</span>
                                                 </div>
@@ -1721,7 +1707,7 @@ const Maintenance = () => {
                                                         return (
                                                             <>
                                                                 <div style={{ color: 'white', fontWeight: '800', fontSize: '13px' }}>{displayMainCat}</div>
-                                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '2px', fontWeight: '600' }}>{displayDetailedCats || rec.description || 'No additional details'}</div>
+                                                                {/* Detailed cats/description removed for a cleaner dashboard view as requested */}
                                                             </>
                                                         );
                                                     })()}

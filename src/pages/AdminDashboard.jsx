@@ -125,8 +125,22 @@ const AdminDashboard = () => {
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1);
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+    const [viewMode, setViewMode] = useState('monthly'); // 'monthly' or 'fy'
+
+    const shiftMonth = (amount) => {
+        if (viewMode === 'monthly') {
+            let newMonth = selectedMonth + amount;
+            let newYear = selectedYear;
+            if (newMonth < 1) { newMonth = 12; newYear--; }
+            if (newMonth > 12) { newMonth = 1; newYear++; }
+            setSelectedMonth(newMonth);
+            setSelectedYear(newYear);
+        } else {
+            setSelectedYear(prev => prev + amount);
+        }
+    };
 
     const getTodayLocal = () => todayIST();
 
@@ -144,7 +158,16 @@ const AdminDashboard = () => {
         try {
             const userInfo = JSON.parse(userInfoRaw);
             const isInitial = !stats;
-            const params = `month=${selectedMonth}&year=${selectedYear}${isInitial ? '&bypassCache=true' : ''}`;
+            
+            let params = `${isInitial ? 'bypassCache=true' : ''}`;
+            if (viewMode === 'monthly') {
+                params += `&month=${selectedMonth}&year=${selectedYear}`;
+            } else {
+                // Financial Year: April 1st to March 31st
+                const fromDate = `${selectedYear}-04-01`;
+                const toDate = `${selectedYear + 1}-03-31`;
+                params += `&from=${fromDate}&to=${toDate}`;
+            }
 
             const { data } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}?${params}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
@@ -175,7 +198,7 @@ const AdminDashboard = () => {
             clearInterval(interval);
             document.removeEventListener('visibilitychange', handleVisibility);
         };
-    }, [selectedCompany, selectedMonth, selectedYear]);
+    }, [selectedCompany, selectedMonth, selectedYear, viewMode]);
 
     return (
         <div className="admin-dashboard-container" style={{
@@ -237,7 +260,49 @@ const AdminDashboard = () => {
                         </div>
                     </div>
 
-                    <div className="date-selector-wrapper" style={{ flexShrink: 0 }}>
+                    <div className="date-selector-wrapper" style={{ flexShrink: 0, display: 'flex', gap: '10px', alignItems: 'center' }}>
+                        {/* VIEW MODE TOGGLE */}
+                        <div style={{
+                            display: 'flex',
+                            background: 'rgba(15, 23, 42, 0.6)',
+                            borderRadius: '12px',
+                            padding: '3px',
+                            border: '1px solid rgba(255,255,255,0.05)'
+                        }}>
+                            <button 
+                                onClick={() => setViewMode('monthly')}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '9px',
+                                    fontSize: '11px',
+                                    fontWeight: '900',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    background: viewMode === 'monthly' ? '#fbbf24' : 'transparent',
+                                    color: viewMode === 'monthly' ? '#000' : 'rgba(255,255,255,0.5)',
+                                    transition: 'all 0.3s'
+                                }}
+                            >
+                                MONTHLY
+                            </button>
+                            <button 
+                                onClick={() => setViewMode('fy')}
+                                style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '9px',
+                                    fontSize: '11px',
+                                    fontWeight: '900',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    background: viewMode === 'fy' ? '#fbbf24' : 'transparent',
+                                    color: viewMode === 'fy' ? '#000' : 'rgba(255,255,255,0.5)',
+                                    transition: 'all 0.3s'
+                                }}
+                            >
+                                FINANCIAL YEAR
+                            </button>
+                        </div>
+
                         <div style={{
                             background: 'rgba(15, 23, 42, 0.4)',
                             padding: '4px',
@@ -249,38 +314,81 @@ const AdminDashboard = () => {
                             boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
                             flexWrap: 'wrap'
                         }}>
-                            {/* MONTHLY Mode Selects (Now the only mode) */}
-                            <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '0 5px' }}>
-                                <select
-                                    value={selectedMonth}
-                                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                            {/* NAVIGATION ARROWS */}
+                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                                <button
+                                    onClick={() => shiftMonth(-1)}
                                     style={{
-                                        background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)',
-                                        color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px',
-                                        height: '40px', borderRadius: '14px', outline: 'none', cursor: 'pointer',
-                                        transition: 'all 0.2s'
+                                        width: '40px', height: '40px', borderRadius: '12px',
+                                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
+                                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
                                     }}
                                 >
-                                    {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                                        <option key={m} value={m} style={{ background: '#0f172a' }}>
-                                            {t('month_' + m)}
-                                        </option>
-                                    ))}
-                                </select>
-                                <select
-                                    value={selectedYear}
-                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                    <ChevronLeft size={18} />
+                                </button>
+                                
+                                {viewMode === 'monthly' ? (
+                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '0 5px' }}>
+                                        <select
+                                            value={selectedMonth}
+                                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                            style={{
+                                                background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)',
+                                                color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px',
+                                                height: '40px', borderRadius: '14px', outline: 'none', cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
+                                                <option key={m} value={m} style={{ background: '#0f172a' }}>
+                                                    {t('month_' + m)}
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <select
+                                            value={selectedYear}
+                                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                            style={{
+                                                background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)',
+                                                color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px',
+                                                height: '40px', borderRadius: '14px', outline: 'none', cursor: 'pointer',
+                                                transition: 'all 0.2s'
+                                            }}
+                                        >
+                                            {[2024, 2025, 2026, 2027].map(y => (
+                                                <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                ) : (
+                                    <div style={{ 
+                                        padding: '0 15px', 
+                                        color: '#fbbf24', 
+                                        fontWeight: '900', 
+                                        fontSize: '13px', 
+                                        background: 'rgba(251,191,36,0.1)',
+                                        height: '40px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        borderRadius: '14px',
+                                        border: '1px solid rgba(251,191,36,0.15)',
+                                        minWidth: '220px',
+                                        justifyContent: 'center'
+                                    }}>
+                                        1 April {selectedYear} - 31 March {selectedYear + 1}
+                                    </div>
+                                )}
+
+                                <button
+                                    onClick={() => shiftMonth(1)}
                                     style={{
-                                        background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)',
-                                        color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px',
-                                        height: '40px', borderRadius: '14px', outline: 'none', cursor: 'pointer',
-                                        transition: 'all 0.2s'
+                                        width: '40px', height: '40px', borderRadius: '12px',
+                                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
+                                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
                                     }}
                                 >
-                                    {[2024, 2025, 2026, 2027].map(y => (
-                                        <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
-                                    ))}
-                                </select>
+                                    <ChevronRight size={18} />
+                                </button>
                             </div>
                         </div>
                     </div>

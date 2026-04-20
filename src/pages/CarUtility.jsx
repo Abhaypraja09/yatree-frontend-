@@ -244,11 +244,57 @@ const CarUtility = () => {
                     <div className="flex-resp" style={{ gap: '15px', alignItems: 'center' }}>
                         {/* Premium Monthly Navigator */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <button onClick={() => shiftMonth(-1)} className="glass-card" style={{ width: '36px', height: '36px', borderRadius: '12px', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronLeft size={18} /></button>
-                            <div style={{ padding: '0 15px', height: '36px', display: 'flex', alignItems: 'center', borderRadius: '12px', cursor: 'pointer' }} onClick={() => setSelectedMonth(new Date().getUTCMonth())}>
-                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '950', letterSpacing: '0.5px' }}>{new Date(Date.UTC(selectedYear, selectedMonth)).toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'UTC' }).toUpperCase()}</span>
+                            <button
+                                onClick={() => shiftMonth(-1)}
+                                style={{
+                                    width: '36px', height: '36px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.05)', border: 'none',
+                                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                }}
+                            >
+                                <ChevronLeft size={18} />
+                            </button>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <select
+                                    value={selectedMonth}
+                                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                    style={{
+                                        background: 'transparent', border: 'none', color: 'white',
+                                        fontSize: '13px', fontWeight: '900', outline: 'none', cursor: 'pointer'
+                                    }}
+                                >
+                                    {[
+                                        { n: 0, m: 'Jan' }, { n: 1, m: 'Feb' }, { n: 2, m: 'Mar' },
+                                        { n: 3, m: 'Apr' }, { n: 4, m: 'May' }, { n: 5, m: 'Jun' },
+                                        { n: 6, m: 'Jul' }, { n: 7, m: 'Aug' }, { n: 8, m: 'Sep' },
+                                        { n: 9, m: 'Oct' }, { n: 10, m: 'Nov' }, { n: 11, m: 'Dec' }
+                                    ].map(item => (
+                                        <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
+                                    ))}
+                                </select>
+                                <select
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                    style={{
+                                        background: 'transparent', border: 'none', color: 'white',
+                                        fontSize: '13px', fontWeight: '900', outline: 'none', cursor: 'pointer'
+                                    }}
+                                >
+                                    {[2024, 2025, 2026, 2027].map(y => (
+                                        <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                                    ))}
+                                </select>
                             </div>
-                            <button onClick={() => shiftMonth(1)} className="glass-card" style={{ width: '36px', height: '36px', borderRadius: '12px', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronRight size={18} /></button>
+                            <button
+                                onClick={() => shiftMonth(1)}
+                                style={{
+                                    width: '36px', height: '36px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.05)', border: 'none',
+                                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                }}
+                            >
+                                <ChevronRight size={18} />
+                            </button>
                         </div>
 
                         <button 

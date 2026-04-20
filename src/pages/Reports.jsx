@@ -492,23 +492,22 @@ const Reports = ({ isSubComponent = false }) => {
 
     /* navigate dates */
     const shiftDays = (n) => {
-        let baseDate;
         if (selectedDay === 'All') {
-            const today = new Date();
-            // If the selected month/year is the current one, start navigation from TODAY
-            if (selectedMonth === today.getMonth() && selectedYear === today.getFullYear()) {
-                baseDate = today;
-            } else {
-                // Otherwise start from the 1st of that month
-                baseDate = new Date(selectedYear, selectedMonth, 1);
-            }
+            // Shift Month
+            let nm = selectedMonth + n;
+            let ny = selectedYear;
+            if (nm < 0) { nm = 11; ny--; }
+            if (nm > 11) { nm = 0; ny++; }
+            setSelectedMonth(nm);
+            setSelectedYear(ny);
         } else {
-            baseDate = new Date(selectedYear, selectedMonth, parseInt(selectedDay));
+            // Shift Day
+            const baseDate = new Date(selectedYear, selectedMonth, parseInt(selectedDay));
+            baseDate.setDate(baseDate.getDate() + n);
+            setSelectedYear(baseDate.getFullYear());
+            setSelectedMonth(baseDate.getMonth());
+            setSelectedDay(baseDate.getDate().toString());
         }
-        baseDate.setDate(baseDate.getDate() + n);
-        setSelectedYear(baseDate.getFullYear());
-        setSelectedMonth(baseDate.getMonth());
-        setSelectedDay(baseDate.getDate().toString());
     };
 
     /* ── Attendance row renderer (shared for Staff + Freelancers + Outside) ── */

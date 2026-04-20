@@ -502,16 +502,7 @@ const FuelPage = () => {
     const totalLiters = filteredEntries.reduce((sum, e) => sum + (Number(e.quantity) || 0), 0);
     const totalAmount = filteredEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
-    // Mileage efficiency calculation: distance / (quantity except last fill for each vehicle)
-    const efficiencyLiters = filteredEntries.reduce((sum, e, idx) => {
-        const hasNewerEntry = filteredEntries.slice(0, idx).some(newer => newer.vehicle?._id === e.vehicle?._id);
-        if (hasNewerEntry) {
-            return sum + (Number(e.quantity) || 0);
-        }
-        return sum;
-    }, 0);
-
-    const avgMileage = efficiencyLiters > 0 ? (totalDistance / efficiencyLiters).toFixed(2) : 0;
+    const avgMileage = totalLiters > 0 ? (totalDistance / totalLiters).toFixed(2) : 0;
 
     const petrolAmount = filteredEntries.filter(e => e.fuelType === 'Petrol').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
     const dieselAmount = filteredEntries.filter(e => e.fuelType === 'Diesel').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
@@ -553,13 +544,57 @@ const FuelPage = () => {
                             }}>Management</span>
                         </h1>
                     </div>
-                </div>                <div className="flex-resp" style={{ gap: '15px', flex: '1', justifyContent: 'flex-end', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '6px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <button onClick={() => shiftMonth(-1)} className="glass-card" style={{ width: '42px', height: '42px', padding: 0, background: 'rgba(255,255,255,0.03)', border: 'none' }}><ChevronLeft size={20} /></button>
-                        <div style={{ padding: '0 20px', height: '42px', display: 'flex', alignItems: 'center', background: 'rgba(251,191,36,0.05)', borderRadius: '14px', border: '1px solid rgba(251,191,36,0.1)' }}>
-                            <span style={{ color: 'white', fontSize: '13px', fontWeight: '950' }}>{new Date(selectedYear, selectedMonth).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' }).toUpperCase()}</span>
+                    <div className="mobile-stack" style={{ display: 'flex', gap: '8px', flex: '1', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                            <button
+                                onClick={() => shiftMonth(-1)}
+                                style={{
+                                    width: '40px', height: '40px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
+                                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                }}
+                            >
+                                <ChevronLeft size={18} />
+                            </button>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <select
+                                    value={selectedMonth}
+                                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                    className="input-field"
+                                    style={{ height: '48px', width: '120px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
+                                >
+                                    {[
+                                        { n: 0, m: 'January' }, { n: 1, m: 'February' }, { n: 2, m: 'March' },
+                                        { n: 3, m: 'April' }, { n: 4, m: 'May' }, { n: 5, m: 'June' },
+                                        { n: 6, m: 'July' }, { n: 7, m: 'August' }, { n: 8, m: 'September' },
+                                        { n: 9, m: 'October' }, { n: 10, m: 'November' }, { n: 11, m: 'December' }
+                                    ].map(item => (
+                                        <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
+                                    ))}
+                                </select>
+
+                                <select
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                    className="input-field"
+                                    style={{ height: '48px', width: '100px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
+                                >
+                                    {[2024, 2025, 2026, 2027].map(y => (
+                                        <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                                    ))}
+                                </select>
+                            </div>
+                            <button
+                                onClick={() => shiftMonth(1)}
+                                style={{
+                                    width: '40px', height: '40px', borderRadius: '12px',
+                                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
+                                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                }}
+                            >
+                                <ChevronRight size={18} />
+                            </button>
                         </div>
-                        <button onClick={() => shiftMonth(1)} className="glass-card" style={{ width: '42px', height: '42px', padding: 0, background: 'rgba(255,255,255,0.03)', border: 'none' }}><ChevronRight size={20} /></button>
                     </div>
 
                     <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', maxWidth: '300px', width: '100%', borderRadius: '14px', height: '52px' }}>

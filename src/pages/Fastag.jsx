@@ -29,6 +29,15 @@ const Fastag = () => {
         setRechargeData({ amount: '', method: 'UPI', remarks: '', date: todayIST() });
     }, [location.pathname, location.key]);
 
+    const shiftMonth = (amount) => {
+        let newMonth = selectedMonth + amount;
+        let newYear = selectedYear;
+        if (newMonth < 0) { newMonth = 11; newYear--; }
+        if (newMonth > 11) { newMonth = 0; newYear++; }
+        setSelectedMonth(newMonth);
+        setSelectedYear(newYear);
+    };
+
     const months = [
         "January", "February", "March", "April", "May", "June",
         "July", "August", "September", "October", "November", "December"
@@ -258,27 +267,38 @@ const Fastag = () => {
                     />
                 </div>
 
-                <div className="modal-form-grid" style={{ gap: '10px', flex: 1, minWidth: '220px' }}>
-                    <div style={{ position: 'relative', flex: 1 }}>
-                        <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                            className="input-field"
-                            style={{ height: '56px', fontSize: '14px', padding: '0 15px' }}
+                <div className="modal-form-grid" style={{ gap: '10px', flex: 1, minWidth: '380px', alignItems: 'center', justifyContent: 'flex-end', display: 'flex' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <button
+                            onClick={() => shiftMonth(-1)}
+                            style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
-                            {months.map((m, idx) => <option key={m} value={idx} style={{ background: '#111', color: 'white' }}>{m}</option>)}
-                        </select>
-                    </div>
-
-                    <div style={{ position: 'relative', flex: 1 }}>
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                            className="input-field"
-                            style={{ height: '56px', fontSize: '14px', padding: '0 15px' }}
+                            <ChevronLeft size={16} />
+                        </button>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                                className="input-field"
+                                style={{ height: '38px', fontSize: '12px', padding: '0 10px', width: '100px', background: 'transparent', border: 'none' }}
+                            >
+                                {months.map((m, idx) => <option key={m} value={idx} style={{ background: '#111', color: 'white' }}>{m}</option>)}
+                            </select>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                className="input-field"
+                                style={{ height: '38px', fontSize: '12px', padding: '0 10px', width: '80px', background: 'transparent', border: 'none' }}
+                            >
+                                {years.map(y => <option key={y} value={y} style={{ background: '#111', color: 'white' }}>{y}</option>)}
+                            </select>
+                        </div>
+                        <button
+                            onClick={() => shiftMonth(1)}
+                            style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
-                            {years.map(y => <option key={y} value={y} style={{ background: '#111', color: 'white' }}>{y}</option>)}
-                        </select>
+                            <ChevronRight size={16} />
+                        </button>
                     </div>
                 </div>
             </div>

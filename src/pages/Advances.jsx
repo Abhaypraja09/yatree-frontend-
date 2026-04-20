@@ -178,6 +178,15 @@ const Advances = () => {
     const recoveredAmount = advances.reduce((sum, a) => sum + (a.recoveredAmount || 0), 0);
     const pendingAmount = totalAdvanceAmount - recoveredAmount;
 
+    const shiftMonth = (amount) => {
+        let newMonth = selectedMonth + amount;
+        let newYear = selectedYear;
+        if (newMonth < 1) { newMonth = 12; newYear--; }
+        if (newMonth > 12) { newMonth = 1; newYear++; }
+        setSelectedMonth(newMonth);
+        setSelectedYear(newYear);
+    };
+
     return (
         <div key={location.key} className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Driver Advances" description="Manage and track advances given to drivers and their recovery status." />
@@ -233,32 +242,46 @@ const Advances = () => {
                     />
                 </div>
 
-                <div className="flex-resp" style={{ width: 'auto', gap: '10px' }}>
-                    <div style={{ display: 'flex', gap: '10px', flex: 1 }}>
-                        <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                            className="input-field"
-                            style={{ marginBottom: 0, flex: 1 }}
+                <div className="flex-resp" style={{ width: 'auto', gap: '10px', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <button
+                            onClick={() => shiftMonth(-1)}
+                            style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
-                            {Array.from({ length: 12 }, (_, i) => (
-                                <option key={i + 1} value={i + 1} style={{ background: '#0f172a' }}>
-                                    {new Date(2000, i).toLocaleString('default', { month: 'short' })}
-                                </option>
-                            ))}
-                        </select>
+                            <ChevronLeft size={16} />
+                        </button>
+                        <div style={{ display: 'flex', gap: '5px' }}>
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                className="input-field"
+                                style={{ height: '38px', fontSize: '12px', padding: '0 8px', width: '80px', background: 'transparent', border: 'none', marginBottom: 0 }}
+                            >
+                                {Array.from({ length: 12 }, (_, i) => (
+                                    <option key={i + 1} value={i + 1} style={{ background: '#0f172a' }}>
+                                        {new Date(2000, i).toLocaleString('default', { month: 'short' })}
+                                    </option>
+                                ))}
+                            </select>
 
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(Number(e.target.value))}
-                            className="input-field"
-                            style={{ marginBottom: 0, flex: 0.8 }}
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                className="input-field"
+                                style={{ height: '38px', fontSize: '12px', padding: '0 8px', width: '70px', background: 'transparent', border: 'none', marginBottom: 0 }}
+                            >
+                                {Array.from({ length: 5 }, (_, i) => {
+                                    const year = new Date().getFullYear() - 2 + i;
+                                    return <option key={year} value={year} style={{ background: '#0f172a' }}>{year}</option>;
+                                })}
+                            </select>
+                        </div>
+                        <button
+                            onClick={() => shiftMonth(1)}
+                            style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                         >
-                            {Array.from({ length: 3 }, (_, i) => {
-                                const year = new Date().getFullYear() - 1 + i;
-                                return <option key={year} value={year} style={{ background: '#0f172a' }}>{year}</option>;
-                            })}
-                        </select>
+                            <ChevronRight size={16} />
+                        </button>
                     </div>
 
                     <button

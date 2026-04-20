@@ -119,11 +119,22 @@ const ParkingPage = () => {
     const [toDate, setToDate] = useState(todayIST());
 
     const shiftDays = (n) => {
-        const d = new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay));
-        d.setDate(d.getDate() + n);
-        setSelectedYear(d.getFullYear());
-        setSelectedMonth(d.getMonth());
-        setSelectedDay(d.getDate().toString());
+        if (selectedDay === 'All') {
+            // Shift Month
+            let nm = selectedMonth + n;
+            let ny = selectedYear;
+            if (nm < 0) { nm = 11; ny--; }
+            if (nm > 11) { nm = 0; ny++; }
+            setSelectedMonth(nm);
+            setSelectedYear(ny);
+        } else {
+            // Shift Day
+            const baseDate = new Date(selectedYear, selectedMonth, parseInt(selectedDay));
+            baseDate.setDate(baseDate.getDate() + n);
+            setSelectedYear(baseDate.getFullYear());
+            setSelectedMonth(baseDate.getMonth());
+            setSelectedDay(baseDate.getDate().toString());
+        }
     };
 
     const isCurrentMonth = selectedMonth === new Date().getMonth() && selectedYear === new Date().getFullYear();

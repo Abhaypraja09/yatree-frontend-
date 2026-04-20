@@ -61,6 +61,15 @@ const BorderTax = () => {
     const currentYear = new Date().getFullYear();
     const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
+    const shiftMonth = (amount) => {
+        let newMonth = selectedMonth + amount;
+        let newYear = selectedYear;
+        if (newMonth < 0) { newMonth = 11; newYear--; }
+        if (newMonth > 11) { newMonth = 0; newYear++; }
+        setSelectedMonth(newMonth);
+        setSelectedYear(newYear);
+    };
+
     useEffect(() => {
         if (selectedCompany) {
             fetchData();
@@ -223,23 +232,39 @@ const BorderTax = () => {
                         />
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px', flex: 1.5 }}>
-                        <select
-                            value={selectedMonth}
-                            onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                            className="input-field"
-                            style={{ flex: 1.2, marginBottom: 0 }}
-                        >
-                            {months.map((m, idx) => <option key={m} value={idx} style={{ background: '#111' }}>{m}</option>)}
-                        </select>
-                        <select
-                            value={selectedYear}
-                            onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                            className="input-field"
-                            style={{ flex: 0.8, marginBottom: 0 }}
-                        >
-                            {years.map(y => <option key={y} value={y} style={{ background: '#111' }}>{y}</option>)}
-                        </select>
+                    <div className="modal-form-grid" style={{ gap: '10px', flex: 1.5, alignItems: 'center', justifyContent: 'flex-end', display: 'flex' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <button
+                                onClick={() => shiftMonth(-1)}
+                                style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                <ChevronLeft size={16} />
+                            </button>
+                            <div style={{ display: 'flex', gap: '5px' }}>
+                                <select
+                                    value={selectedMonth}
+                                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                                    className="input-field"
+                                    style={{ height: '38px', fontSize: '12px', padding: '0 10px', width: '100px', background: 'transparent', border: 'none', marginBottom: 0 }}
+                                >
+                                    {months.map((m, idx) => <option key={m} value={idx} style={{ background: '#111' }}>{m}</option>)}
+                                </select>
+                                <select
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                    className="input-field"
+                                    style={{ height: '38px', fontSize: '12px', padding: '0 10px', width: '80px', background: 'transparent', border: 'none', marginBottom: 0 }}
+                                >
+                                    {years.map(y => <option key={y} value={y} style={{ background: '#111' }}>{y}</option>)}
+                                </select>
+                            </div>
+                            <button
+                                onClick={() => shiftMonth(1)}
+                                style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                            >
+                                <ChevronRight size={16} />
+                            </button>
+                        </div>
                     </div>
                 </div>
             )}
