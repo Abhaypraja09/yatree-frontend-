@@ -30,6 +30,8 @@ const AIChatAgent = () => {
     const [isListening, setIsListening] = useState(false);
     const [hasGreeted, setHasGreeted] = useState(false);
     const messagesEndRef = useRef(null);
+    const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
+
 
     // Speech Recognition setup
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -54,6 +56,18 @@ const AIChatAgent = () => {
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
+    const playAlertSound = () => {
+        if (audioRef.current) {
+            audioRef.current.currentTime = 0;
+            audioRef.current.play().catch(e => console.log("Audio play blocked", e));
+            // Repeat for 3 seconds effect
+            const interval = setInterval(() => {
+                audioRef.current.currentTime = 0;
+                audioRef.current.play().catch(e => {});
+            }, 1000);
+            setTimeout(() => clearInterval(interval), 3000);
+        }
+    };
 
     useEffect(() => {
         const fetchBriefing = async () => {
@@ -67,7 +81,11 @@ const AIChatAgent = () => {
                     if (data.briefing) {
                         setMessages(prev => [...prev, { role: 'ai', content: data.briefing }]);
                         setHasGreeted(true);
+                        if (data.alertsDetected) {
+                            playAlertSound();
+                        }
                     }
+
                 } catch (err) {
                     console.error("Briefing failed", err);
                 } finally {
@@ -126,6 +144,10 @@ const AIChatAgent = () => {
             }
 
             setMessages(prev => [...prev, { role: 'ai', content: finalMessage }]);
+            if (data.alertsDetected) {
+                playAlertSound();
+            }
+
         } catch (error) {
             setMessages(prev => [...prev, { role: 'ai', content: error.response?.data?.message || 'Sorry, I am having trouble connecting to my brain right now.' }]);
         } finally {
