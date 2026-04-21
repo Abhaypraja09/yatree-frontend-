@@ -390,8 +390,14 @@ const AdminDashboard = () => {
                             {/* Drivers Service Related */}
                             {(isAdmin || user?.permissions?.driversService) && (
                                 <>
-                                    <StatCard icon={Users} label={t('total_driver_salary')} value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
-                                    <StatCard icon={CreditCard} label={t('total_driver_advance')} value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/driver-salaries')} />
+                                <StatCard 
+                                    icon={Users} 
+                                    label={t('special_pay')} 
+                                    value={`₹${(stats.monthlySpecialPayTotal || 0).toLocaleString()}`} 
+                                    color={theme.primary} 
+                                    loading={loading} 
+                                    onClick={() => navigate('/admin/driver-salaries?tab=special')} 
+                                />
                                     <StatCard
                                         icon={Fuel}
                                         label={t('fuel_monthly')}

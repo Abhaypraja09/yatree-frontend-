@@ -501,16 +501,33 @@ const FuelPage = () => {
         return (b.odometer || 0) - (a.odometer || 0);
     });
 
-    // Summary Statistics - Calculate true average (Total Distance / Total Fuel Used)
-    // For Trip Performance logic: Distance / Previous fill that powered it.
-    // Total distance is the sum of all trips that finished.
-    // Total Liter is the sum of all quantities EXCEPT the very latest one (which is still in the tank).
-    // Summary Statistics
+    // Summary Statistics - Calculate high-accuracy consumed average
     const totalDistance = filteredEntries.reduce((sum, e) => sum + (e.distance || 0), 0);
-    const totalLiters = filteredEntries.reduce((sum, e) => sum + (Number(e.quantity) || 0), 0);
     const totalAmount = filteredEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
-    const avgMileage = totalLiters > 0 ? (totalDistance / totalLiters).toFixed(2) : 0;
+    // Group by vehicle to exclude the latest fill quantity for each vehicle's trip range in this period
+    const vehicleLitersMap = {};
+    filteredEntries.forEach(e => {
+        const vId = e.vehicle?._id || 'unknown';
+        if (!vehicleLitersMap[vId]) vehicleLitersMap[vId] = [];
+        vehicleLitersMap[vId].push(Number(e.quantity) || 0);
+    });
+
+    let consumedLitersForAvg = 0;
+    Object.values(vehicleLitersMap).forEach(qtys => {
+        // Exclude the most recent fill quantity if we have multiple entries,
+        // because it hasn't contributed to a distance record yet.
+        if (qtys.length > 1) {
+            consumedLitersForAvg += qtys.slice(1).reduce((s, q) => s + q, 0);
+        } else {
+            // For single entries, we must include it if it's the only reference,
+            // though mileage will naturally be 0 until a second entry exists.
+            consumedLitersForAvg += qtys[0];
+        }
+    });
+
+    const totalLiters = filteredEntries.reduce((sum, e) => sum + (Number(e.quantity) || 0), 0);
+    const avgMileage = (consumedLitersForAvg > 0 && totalDistance > 0) ? (totalDistance / consumedLitersForAvg).toFixed(2) : 0;
 
     const petrolAmount = filteredEntries.filter(e => e.fuelType === 'Petrol').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
     const dieselAmount = filteredEntries.filter(e => e.fuelType === 'Diesel').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
@@ -520,120 +537,94 @@ const FuelPage = () => {
             <SEO title="Fuel Management" description="Track fuel entries, mileage, and costs for your entire fleet." />
 
             {/* Header Section */}
-            <header className="flex-resp" style={{
-                justifyContent: 'space-between',
-                padding: '40px 0',
-                gap: '24px'
-            }}>
+            <header className="flex-resp" style={{ justifyContent: 'space-between', padding: '30px 0', gap: '20px', alignItems: 'center' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{
-                        width: 'clamp(40px,10vw,50px)',
-                        height: 'clamp(40px,10vw,50px)',
-                        background: 'linear-gradient(135deg, white, #f8fafc)',
-                        borderRadius: '16px',
-                        padding: '8px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        boxShadow: `0 10px 25px ${theme.primary}30`
+                        width: '52px', height: '52px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', borderRadius: '14px',
+                        display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 8px 20px rgba(245, 158, 11, 0.3)'
                     }}>
-                        <Fuel size={28} color={theme.primary} />
+                        <Fuel size={26} color="white" />
                     </div>
                     <div>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
-                            <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Fuel Consumption</span>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#f59e0b', boxShadow: '0 0 8px #f59e0b' }}></div>
+                            <span style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', letterSpacing: '1.2px', textTransform: 'uppercase' }}>Fleet Operations</span>
                         </div>
-                        <h1 style={{ color: 'white', fontSize: 'clamp(20px, 5vw, 28px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
-                            Fuel <span style={{
-                                background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`,
-                                WebkitBackgroundClip: 'text',
-                                WebkitTextFillColor: 'transparent'
-                            }}>Management</span>
+                        <h1 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>
+                            Fuel <span style={{ color: '#f59e0b' }}>Logbook</span>
                         </h1>
                     </div>
-                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        {/* MONTH SELECTOR */}
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            background: 'rgba(15, 23, 42, 0.4)',
-                            borderRadius: '16px',
-                            padding: '4px 8px',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                            height: '48px'
-                        }}>
-                            <select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value === 'All' ? 'All' : Number(e.target.value))}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    color: 'white', fontWeight: '900', fontSize: '14px', padding: '0 10px',
-                                    height: '100%', outline: 'none', cursor: 'pointer'
-                                }}
-                            >
-                                <option value="All" style={{ background: '#0f172a' }}>Full Year</option>
-                                {[
-                                    { n: 3, m: 'Apr' }, { n: 4, m: 'May' }, { n: 5, m: 'Jun' },
-                                    { n: 6, m: 'Jul' }, { n: 7, m: 'Aug' }, { n: 8, m: 'Sep' },
-                                    { n: 9, m: 'Oct' }, { n: 10, m: 'Nov' }, { n: 11, m: 'Dec' },
-                                    { n: 0, m: 'Jan' }, { n: 1, m: 'Feb' }, { n: 2, m: 'Mar' }
-                                ].map(item => (
-                                    <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
-                                ))}
-                            </select>
-                        </div>
+                </div>
 
-                        {/* FINANCIAL YEAR SELECTOR */}
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            background: 'rgba(15, 23, 42, 0.4)',
-                            borderRadius: '16px',
-                            padding: '4px 15px',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                            height: '48px',
-                            gap: '8px'
-                        }}>
-                            <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>FY</span>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    {/* SEARCH & FILTERS MOVED TO HEADER */}
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(15, 23, 42, 0.6)', padding: '10 15px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.08)', height: '36px', position: 'relative' }}>
+                            <Car size={13} color="#f59e0b" style={{ opacity: 0.8 }} />
                             <select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    color: 'white', fontWeight: '900', fontSize: '14px',
-                                    outline: 'none', cursor: 'pointer'
-                                }}
+                                value={filterVehicle}
+                                onChange={(e) => setFilterVehicle(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '800', fontSize: '11px', outline: 'none', cursor: 'pointer', height: '100%', width: '100px', textTransform: 'uppercase', appearance: 'none', paddingRight: '20px' }}
                             >
-                                {[2023, 2024, 2025, 2026, 2027].map(y => (
-                                    <option key={y} value={y} style={{ background: '#0f172a' }}>
-                                        {y}-{String(y + 1).slice(-2)}
-                                    </option>
-                                ))}
+                                <option value="All" style={{ background: '#0f172a' }}>All Vehicles</option>
+                                {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber}</option>)}
                             </select>
+                            <ChevronDown size={14} color="rgba(255,255,255,0.4)" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
+                        </div>
+                        <div style={{ position: 'relative', width: '220px' }}>
+                            <Search size={14} style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                            <input
+                                type="text"
+                                placeholder="Search driver/station..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{ width: '100%', height: '36px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', paddingLeft: '32px', color: 'white', fontSize: '11px', fontWeight: '600', outline: 'none' }}
+                            />
                         </div>
                     </div>
 
-                    <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', maxWidth: '300px', width: '100%', borderRadius: '14px', height: '52px' }}>
-                        <Search size={18} style={{ color: 'rgba(255,255,255,0.4)' }} />
-                        <input
-                            type="text"
-                            placeholder="Search..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{ background: 'transparent', border: 'none', color: 'white', paddingLeft: '10px', height: '100%', width: '100%', outline: 'none' }}
-                        />
+                    <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', margin: '0 5px' }}></div>
+
+                    {/* FINANCIAL YEAR & MONTH */}
+                    <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.6)', padding: '3px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                        <select
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value === 'All' ? 'All' : Number(e.target.value))}
+                            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '800', fontSize: '11px', padding: '0 8px', outline: 'none', cursor: 'pointer', height: '30px', textTransform: 'uppercase' }}
+                        >
+                            <option value="All" style={{ background: '#0f172a' }}>Full Year</option>
+                            {[{ n: 3, m: 'Apr' }, { n: 4, m: 'May' }, { n: 5, m: 'Jun' }, { n: 6, m: 'Jul' }, { n: 7, m: 'Aug' }, { n: 8, m: 'Sep' }, { n: 9, m: 'Oct' }, { n: 10, m: 'Nov' }, { n: 11, m: 'Dec' }, { n: 0, m: 'Jan' }, { n: 1, m: 'Feb' }, { n: 2, m: 'Mar' }].map(item => (
+                                <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
+                            ))}
+                        </select>
+                        <div style={{ width: '1px', height: '15px', background: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}></div>
+                        <select
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                            style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '800', fontSize: '11px', padding: '0 8px', outline: 'none', cursor: 'pointer', height: '30px' }}
+                        >
+                            {[2024, 2025, 2026, 2027].map(y => (
+                                <option key={y} value={y} style={{ background: '#0f172a' }}>{y}-{String(y + 1).slice(-2)}</option>
+                            ))}
+                        </select>
                     </div>
+
+                    <button
+                        onClick={downloadExcel}
+                        className="btn-glass"
+                        style={{ height: '36px', padding: '0 12px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)' }}
+                    >
+                        <FileSpreadsheet size={16} />
+                        <span style={{ fontWeight: '800', fontSize: '11px' }}>Export</span>
+                    </button>
+
                     <button
                         className="btn-primary"
                         onClick={() => { resetForm(); setShowModal(true); }}
-                        style={{ display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px', borderRadius: '14px', fontWeight: '800' }}
+                        style={{ background: 'linear-gradient(135deg, #f59e0b, #d97706)', height: '36px', padding: '0 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '900', color: 'white', border: 'none', boxShadow: '0 4px 15px rgba(245, 158, 11, 0.2)' }}
                     >
-                        <Plus size={20} /> <span>Add Entry</span>
+                        <Plus size={18} strokeWidth={3} />
+                        <span style={{ fontSize: '12px' }}>New Entry</span>
                     </button>
                 </div>
             </header>
@@ -707,67 +698,43 @@ const FuelPage = () => {
                 )
             }
 
+
+
             {/* Summary Row */}
             <div className="grid-1-2-2-4" style={{ gap: '20px', marginBottom: '30px' }}>
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', borderLeft: '4px solid var(--primary)' }}>
-                    <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
-                        <Fuel size={24} />
-                    </div>
+                <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '24px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', background: 'rgba(15, 23, 42, 0.4)', display: 'flex', gap: '20px', alignItems: 'center' }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#8b5cf6' }}><CreditCard size={28} /></div>
                     <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Fuel Cost</p>
-                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>₹{loading ? '...' : totalAmount.toLocaleString()}</h2>
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>{loading ? 'Thinking...' : `P: ₹${petrolAmount.toLocaleString()} | D: ₹${dieselAmount.toLocaleString()}`}</span>
+                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Total Expense</p>
+                        <h2 style={{ color: 'white', fontSize: '30px', fontWeight: '950', margin: 0 }}>₹{loading ? '...' : totalAmount.toLocaleString()}</h2>
+                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', marginTop: '4px' }}>Diesel: ₹{dieselAmount.toLocaleString()}</div>
                     </div>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', borderLeft: '4px solid var(--primary)' }}>
-                    <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
-                        <Droplets size={24} />
-                    </div>
+                <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '24px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', background: 'linear-gradient(145deg, rgba(245, 158, 11, 0.08), rgba(15, 23, 42, 0.6))', display: 'flex', gap: '20px', alignItems: 'center' }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b' }}><TrendingUp size={28} /></div>
                     <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Volume</p>
-                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{loading ? '...' : `${totalLiters.toFixed(2)} L`}</h2>
-                        <span style={{ fontSize: '10px', color: 'rgba(56, 189, 248, 0.6)', fontWeight: '800' }}>{loading ? '...' : `Overall Avg: ${avgMileage} KM/L`}</span>
+                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Efficiency Score</p>
+                        <h2 style={{ color: 'white', fontSize: '30px', fontWeight: '950', margin: 0 }}>{loading ? '...' : `${avgMileage}`} <span style={{ fontSize: '14px', fontWeight: '700', color: '#10b981' }}>KM/L</span></h2>
+                        <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '800', marginTop: '4px' }}>Consumed Average</div>
                     </div>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', borderLeft: '4px solid #8b5cf6' }}>
-                    <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#8b5cf6' }}>
-                        <Navigation size={24} />
-                    </div>
+                <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="glass-card" style={{ padding: '24px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', background: 'rgba(15, 23, 42, 0.4)', display: 'flex', gap: '20px', alignItems: 'center' }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0ea5e9' }}><Navigation size={28} /></div>
                     <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Distance</p>
-                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{loading ? '...' : `${totalDistance.toLocaleString()} KM`}</h2>
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>Total run</span>
+                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Run Distance</p>
+                        <h2 style={{ color: 'white', fontSize: '30px', fontWeight: '950', margin: 0 }}>{loading ? '...' : totalDistance.toLocaleString()} <span style={{ fontSize: '14px', fontWeight: '700' }}>KM</span></h2>
+                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', marginTop: '4px' }}>Odometer Delta</div>
                     </div>
                 </motion.div>
 
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px', borderLeft: '4px solid #10b981' }}>
-                    <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#10b981' }}>
-                        <TrendingUp size={24} />
-                    </div>
+                <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="glass-card" style={{ padding: '24px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', background: 'rgba(15, 23, 42, 0.4)', display: 'flex', gap: '20px', alignItems: 'center' }}>
+                    <div style={{ width: '56px', height: '56px', borderRadius: '18px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#10b981' }}><Droplets size={28} /></div>
                     <div>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Avg. Mileage</p>
-                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>{loading ? '...' : `${avgMileage} KM/L`}</h2>
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>Overall efficiency</span>
-                    </div>
-                </motion.div>
-
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="glass-card" style={{ padding: '24px', display: 'flex', alignItems: 'center', gap: '20px' }}>
-                    <div style={{ width: '54px', height: '54px', borderRadius: '16px', background: 'rgba(255, 255, 255, 0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'rgba(255,255,255,0.6)' }}>
-                        <Filter size={24} />
-                    </div>
-                    <div style={{ flex: 1 }}>
-                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Vehicle Filter</p>
-                        <select
-                            className="input-field"
-                            style={{ background: 'transparent', border: 'none', color: 'white', padding: 0, height: 'auto', fontWeight: '700' }}
-                            value={filterVehicle}
-                            onChange={(e) => setFilterVehicle(e.target.value)}
-                        >
-                            <option value="All" style={{ background: '#1e293b' }}>Filter Vehicles</option>
-                            {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#1e293b' }}>{v.carNumber}</option>)}
-                        </select>
+                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '4px' }}>Fuel Volume</p>
+                        <h2 style={{ color: 'white', fontSize: '30px', fontWeight: '950', margin: 0 }}>{loading ? '...' : totalLiters.toFixed(1)} <span style={{ fontSize: '14px', fontWeight: '700' }}>L</span></h2>
+                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', marginTop: '4px' }}>Total Refills</div>
                     </div>
                 </motion.div>
             </div>
@@ -808,48 +775,60 @@ const FuelPage = () => {
                                         transition={{ delay: idx * 0.05 }}
                                         style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
                                     >
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>
+                                        <td style={{ padding: '15px 25px' }}>
+                                            <div style={{ color: 'white', fontWeight: '900', fontSize: '15px', letterSpacing: '0.2px' }}>
                                                 {formatDateIST(e.date)}
                                             </div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                                                <Car size={12} style={{ color: 'var(--primary)' }} />
-                                                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontWeight: '700' }}>{e.vehicle?.carNumber}</span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '6px' }}>
+                                                <Car size={13} color="#f59e0b" style={{ opacity: 0.8 }} />
+                                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: '800', textTransform: 'uppercase' }}>{e.vehicle?.carNumber}</span>
                                             </div>
                                         </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: e.fuelType === 'Diesel' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(14, 165, 233, 0.1)', color: e.fuelType === 'Diesel' ? 'var(--primary)' : 'var(--primary)', fontWeight: '800', textTransform: 'uppercase' }}>{e.fuelType}</span>
-                                                <span style={{ fontSize: '13px', color: 'white', fontWeight: '600' }}>{e.quantity} L</span>
+                                        <td style={{ padding: '15px 25px' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', fontWeight: '900', textTransform: 'uppercase', border: '1px solid rgba(245,158,11,0.1)' }}>{e.fuelType}</span>
+                                                <span style={{ fontSize: '15px', color: 'white', fontWeight: '810' }}>{e.quantity} <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>LITERS</span></span>
                                             </div>
-                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '4px' }}>
-                                                @ ₹{e.rate}/Volume • {e.stationName || 'Local Station'}
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{e.odometer.toLocaleString()} KM</div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', fontSize: '11px', color: '#10b981', marginTop: '4px', fontWeight: '600' }}>
-                                                <ArrowUpRight size={12} />
-                                                {e.distance || 0} KM Driven
+                                            <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', marginTop: '5px', fontWeight: '700' }}>
+                                                @ ₹{e.rate}/L • {e.stationName || 'Local Station'}
                                             </div>
                                         </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: e.mileage > 12 ? '#10b981' : 'var(--primary)', fontWeight: '800', fontSize: '16px' }}>{e.mileage || 0} <span style={{ fontSize: '10px' }}>KM/L</span></div>
-                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                                ₹{e.costPerKm || 0}/KM cost
+                                        <td style={{ padding: '15px 25px' }}>
+                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>{e.odometer.toLocaleString()} <span style={{ fontSize: '10px', opacity: 0.4 }}>KM</span></div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: '#10b981', marginTop: '5px', fontWeight: '800' }}>
+                                                <Navigation size={12} strokeWidth={3} />
+                                                {e.distance || 0} KM TRIP
                                             </div>
                                         </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{e.paymentSource || 'Office'}</div>
+                                        <td style={{ padding: '15px 25px' }}>
+                                            <div style={{
+                                                color: (e.distance / (e.quantity || 1)) > 12 ? '#10b981' : '#f59e0b',
+                                                fontWeight: '950',
+                                                fontSize: '18px',
+                                                display: 'flex',
+                                                alignItems: 'baseline',
+                                                gap: '4px'
+                                            }}>
+                                                {e.mileage || 0}
+                                                <span style={{ fontSize: '10px', fontWeight: '800', opacity: 0.5 }}>KM/L</span>
+                                            </div>
+                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '800' }}>
+                                                ₹{e.costPerKm || 0}/KM COST
+                                            </div>
                                         </td>
-                                        <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '16px' }}>₹{e.amount.toLocaleString()}</div>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                                {e.source === 'Driver' ? <User size={10} color="var(--primary)" /> : <Shield size={10} color="var(--primary)" />}
+                                        <td style={{ padding: '15px 25px' }}>
+                                            <div style={{
+                                                color: 'white', fontWeight: '900', fontSize: '12px', padding: '4px 12px', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', display: 'inline-block', textTransform: 'uppercase'
+                                            }}>
+                                                {e.paymentMode} • {e.paymentSource || 'Office'}
+                                            </div>
+                                        </td>
+                                        <td style={{ padding: '15px 25px' }}>
+                                            <div style={{ color: 'white', fontWeight: '950', fontSize: '18px' }}>₹{e.amount.toLocaleString()}</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '5px', fontWeight: '800', textTransform: 'uppercase' }}>
+                                                {e.source === 'Driver' ? <User size={10} color="#f59e0b" /> : <Shield size={10} color="#f59e0b" />}
                                                 {e.source === 'Driver' ? 'Driver App' : 'Administrator'}
-                                            </div>
-                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginTop: '2px' }}>
-                                                By: {e.driver}
+                                                <span style={{ opacity: 0.5 }}>• {e.driver}</span>
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px', textAlign: 'right' }}>

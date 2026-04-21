@@ -232,7 +232,7 @@ const Maintenance = () => {
                 // Full Financial Year: April 1st to March 31st
                 const fromDate = `${selectedYear}-04-01`;
                 const toDate = `${selectedYear + 1}-03-31`;
-                url = `/api/admin/maintenance/${selectedCompany._id}?from=${fromDate}&to=${toDate}`;
+                url = `/api/admin/maintenance/${selectedCompany._id}?startDate=${fromDate}&endDate=${toDate}`;
             } else {
                 // Financial Year Smart Mapping: Jan-Mar (1,2,3) are in the next calendar year
                 const calendarYear = (selectedMonth >= 1 && selectedMonth <= 3) ? selectedYear + 1 : selectedYear;
@@ -461,31 +461,44 @@ const Maintenance = () => {
         const matchesGarage = filterGarage === 'All' || (r.garageName || r.vendorName) === filterGarage;
         const matchesVehicle = filterVehicle === 'All' || r.vehicle?.carNumber === filterVehicle;
 
-        // Exclude Wash, Puncture, Tissues, Water, Cleaning, Masks, Sanitizers as they are in Driver Services
-        const serviceRegex = /wash|puncture|puncher|other service|wiring|radiator|checkup|top-up|kapda|coolant|tissue|water|cleaning|mask|sanitizer/i;
-        const isService = serviceRegex.test(r.category || '') ||
-            serviceRegex.test(r.description || '') ||
-            serviceRegex.test(r.maintenanceType || '');
+        // Exclude strictly non-maintenance driver services (Wash, Water, etc.)
+        const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda/i;
+        const isService = driverServiceRegex.test(r.category || '') ||
+            driverServiceRegex.test(r.description || '') ||
+            driverServiceRegex.test(r.maintenanceType || '');
 
         return matchesSearch && matchesType && matchesGarage && matchesVehicle && !isService;
     });
 
     const filteredRecords = baseFilteredRecords.filter(r => {
         if (activeCategory === 'All') return true;
-        const searchStr = activeCategory.toLowerCase().replace(' system', '').trim();
+        
+        // Use the same keyword logic as Master Data for perfect synchronization
+        const keywords = [
+            activeCategory,
+            ...(subCategories[activeCategory] || [])
+        ].map(s => s.toLowerCase().replace(' system', '').trim()).filter(Boolean);
+
         const rType = (r.maintenanceType || '').toLowerCase();
         const rCat = (r.category || '').toLowerCase();
         const rDesc = (r.description || '').toLowerCase();
-        return rType.includes(searchStr) || rCat.includes(searchStr) || rDesc.includes(searchStr);
+        const searchStr = `${rType} ${rCat} ${rDesc}`.toLowerCase();
+        
+        return keywords.some(kw => searchStr.includes(kw.toLowerCase()));
     });
 
     const categoryStats = maintenanceTypes.reduce((acc, type) => {
-        const searchStr = type.toLowerCase().replace(' system', '').trim();
+        const keywords = [
+            type,
+            ...(subCategories[type] || [])
+        ].map(s => s.toLowerCase().replace(' system', '').trim()).filter(Boolean);
+
         acc[type] = baseFilteredRecords.filter(r => {
             const rType = (r.maintenanceType || '').toLowerCase();
             const rCat = (r.category || '').toLowerCase();
             const rDesc = (r.description || '').toLowerCase();
-            return rType.includes(searchStr) || rCat.includes(searchStr) || rDesc.includes(searchStr);
+            const searchStr = `${rType} ${rCat} ${rDesc}`.toLowerCase();
+            return keywords.some(kw => searchStr.includes(kw.toLowerCase()));
         }).length;
         return acc;
     }, {});
@@ -503,29 +516,49 @@ const Maintenance = () => {
         })
         .sort((a,b) => (a.carNumber || '').localeCompare(b.carNumber || ''))
         .map(v => {
-            // Pre-calculate category totals for sorting/filtering
-            const cats = {};
-            const serviceRegex = /wash|puncture|puncher|other service|wiring|radiator|checkup|top-up|kapda|coolant|tissue|water|cleaning|mask|sanitizer/i;
+            // Pre-calculate category totals for sorting/filtering using accurate logic
             const allRecs = (v.maintenance?.records || v.maintenance?.recs || []).filter(r => {
-                const searchStrRec = `${r.maintenanceType || ''} ${r.category || ''} ${r.description || ''}`.toLowerCase();
-                return !serviceRegex.test(searchStrRec);
+                const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda/i;
+                const searchStrRec = `${r.maintenanceType || r.type || ''} ${r.category || ''} ${r.description || ''}`.toLowerCase();
+                return !driverServiceRegex.test(searchStrRec);
             });
-            
-            NEXT_SERVICE_TYPES.forEach(cat => {
-                const searchStr = cat.toLowerCase().replace(' system', '').trim();
-                const recs = allRecs.filter(r => {
-                    const rType = (r.maintenanceType || '').toLowerCase();
+
+            const assignments = new Set();
+            const cats = {};
+            const explicitCats = NEXT_SERVICE_TYPES.filter(c => c !== 'Other');
+
+            explicitCats.forEach(catName => {
+                // Get keywords from subCategories map + the category name itself
+                const keywords = [
+                    catName, 
+                    ...(subCategories[catName] || [])
+                ].map(s => s.toLowerCase().replace(' system', '').trim()).filter(Boolean);
+                
+                const matched = allRecs.filter(r => {
+                    if (assignments.has(r._id)) return false;
+                    const rType = (r.maintenanceType || r.type || '').toLowerCase();
                     const rCat = (r.category || r.description || '').toLowerCase();
-                    return rType.includes(searchStr) || rCat.includes(searchStr);
+                    const searchStr = `${rType} ${rCat}`.toLowerCase();
+                    
+                    const isMatch = keywords.some(kw => searchStr.includes(kw.toLowerCase()));
+                    return isMatch;
                 });
-                cats[cat] = recs.reduce((sum, r) => sum + (r.amount || 0), 0);
+                
+                matched.forEach(r => assignments.add(r._id));
+                cats[catName] = { amount: matched.reduce((s, r) => s + (r.amount || 0), 0), records: matched };
             });
-            return { ...v, cats };
+
+            const otherRecs = allRecs.filter(r => !assignments.has(r._id));
+            cats['Other'] = { amount: otherRecs.reduce((s, r) => s + (r.amount || 0), 0), records: otherRecs };
+            
+            const recalculatedTotal = NEXT_SERVICE_TYPES.reduce((s, cat) => s + (cats[cat]?.amount || 0), 0);
+
+            return { ...v, cats, recalculatedTotal };
         })
         .sort((a,b) => {
             if (sortConfig.key === 'total') {
-                const valA = a.maintenance?.totalAmount || 0;
-                const valB = b.maintenance?.totalAmount || 0;
+                const valA = a.recalculatedTotal || 0;
+                const valB = b.recalculatedTotal || 0;
                 return sortConfig.direction === 'desc' ? valB - valA : valA - valB;
             } else {
                 const valA = a.cats[sortConfig.key] || 0;
@@ -578,35 +611,37 @@ const Maintenance = () => {
                         </h1>
                     </div>
                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        {/* MONTH SELECTOR */}
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
-                            background: 'rgba(15, 23, 42, 0.4)',
-                            borderRadius: '16px',
-                            padding: '4px 8px',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
-                            height: '48px'
-                        }}>
-                            <select
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value === 'All' ? 'All' : Number(e.target.value))}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    color: 'white', fontWeight: '900', fontSize: '14px', padding: '0 10px',
-                                    height: '100%', outline: 'none', cursor: 'pointer'
-                                }}
-                            >
-                                <option value="All" style={{ background: '#0f172a' }}>Full Year</option>
-                                {[4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3].map(m => (
-                                    <option key={m} value={m} style={{ background: '#0f172a' }}>
-                                        {new Date(0, m - 1).toLocaleString('default', { month: 'short' })}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        {/* MONTH SELECTOR - Hidden in Master Data as it's a full-year summary */}
+                        {viewMode !== 'super' && (
+                            <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                background: 'rgba(15, 23, 42, 0.4)',
+                                borderRadius: '16px',
+                                padding: '4px 8px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                height: '48px'
+                            }}>
+                                <select
+                                    value={selectedMonth}
+                                    onChange={(e) => setSelectedMonth(e.target.value === 'All' ? 'All' : Number(e.target.value))}
+                                    style={{
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: 'white', fontWeight: '900', fontSize: '14px', padding: '0 10px',
+                                        height: '100%', outline: 'none', cursor: 'pointer'
+                                    }}
+                                >
+                                    <option value="All" style={{ background: '#0f172a' }}>Full Year</option>
+                                    {[4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3].map(m => (
+                                        <option key={m} value={m} style={{ background: '#0f172a' }}>
+                                            {new Date(0, m - 1).toLocaleString('default', { month: 'short' })}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
 
                         {/* FINANCIAL YEAR SELECTOR */}
                         <div style={{ 
@@ -668,7 +703,10 @@ const Maintenance = () => {
                                 <History size={14} style={{ marginRight: '6px' }} /> History Log
                             </button>
                             <button
-                                onClick={() => setViewMode('super')}
+                                onClick={() => {
+                                    setViewMode('super');
+                                    setSelectedMonth('All'); // Force Full Year for Master Data
+                                }}
                                 style={{
                                     flex: 1,
                                     padding: '10px',
@@ -778,7 +816,7 @@ const Maintenance = () => {
                         <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Total Spend (Filtered)</p>
                         <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>
                             ₹{(viewMode === 'super'
-                                ? (filteredAggData?.reduce((s, v) => s + (v.maintenance?.totalAmount || 0), 0) || 0)
+                                ? (filteredAggData?.reduce((s, v) => s + (v.recalculatedTotal || 0), 0) || 0)
                                 : totalMaintenanceCost).toLocaleString()}
                         </h2>
                     </div>
@@ -818,98 +856,30 @@ const Maintenance = () => {
                         </select>
                     </div>
                 </motion.div>
+
+                {viewMode === 'history' && (
+                    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }} className="glass-card" style={{ padding: '20px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#38bdf8' }}>
+                            <Settings size={20} />
+                        </div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{ color: 'var(--text-muted)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px' }}>Category Filter</p>
+                            <select
+                                value={activeCategory}
+                                onChange={(e) => setActiveCategory(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '700', fontSize: '14px', width: '100%', outline: 'none', cursor: 'pointer', textOverflow: 'ellipsis' }}
+                            >
+                                <option value="All" style={{ background: '#1e293b', color: 'white' }}>All Types</option>
+                                {maintenanceTypes.map(t => (
+                                    <option key={t} value={t} style={{ background: '#1e293b', color: 'white' }}>{t} ({categoryStats[t] || 0})</option>
+                                ))}
+                            </select>
+                        </div>
+                    </motion.div>
+                )}
             </div>
 
-            {/* Category Filter Bar - Only show in History mode */}
-            {viewMode === 'history' && (
-                <div style={{ marginBottom: '30px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', paddingLeft: '4px' }}>
-                        <h3 style={{ color: 'white', fontSize: '15px', fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <Settings size={16} color="var(--primary)" /> Maintenance Categories
-                        </h3>
-                        {activeCategory !== 'All' && (
-                            <motion.span
-                                initial={{ opacity: 0, x: -10 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                style={{ background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', padding: '2px 10px', borderRadius: '12px', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251, 191, 36, 0.2)' }}
-                            >
-                                {frequencyInSelectedPeriod} {frequencyInSelectedPeriod === 1 ? 'Service' : 'Services'} this {selectedMonth === 'All' ? 'Year' : 'Month'}
-                            </motion.span>
-                        )}
-                    </div>
 
-                    <div className="premium-scroll" style={{
-                        display: 'flex',
-                        gap: '6px',
-                        overflowX: 'auto',
-                        padding: '6px',
-                        background: 'rgba(15, 23, 42, 0.3)',
-                        borderRadius: '18px',
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        scrollbarWidth: 'none'
-                    }}>
-                        <button
-                            onClick={() => setActiveCategory('All')}
-                            style={{
-                                padding: '10px 20px',
-                                background: activeCategory === 'All' ? 'rgba(251, 191, 36, 0.15)' : 'transparent',
-                                border: 'none',
-                                borderRadius: '12px',
-                                cursor: 'pointer',
-                                color: activeCategory === 'All' ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
-                                fontSize: '11px',
-                                fontWeight: '800',
-                                transition: '0.2s',
-                                whiteSpace: 'nowrap'
-                            }}
-                        >
-                            All Types
-                        </button>
-
-                        {maintenanceTypes.map((type) => (
-                            <motion.button
-                                key={type}
-                                whileTap={{ scale: 0.96 }}
-                                onClick={() => setActiveCategory(type)}
-                                style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '10px 20px',
-                                    background: activeCategory === type ? 'rgba(56, 189, 248, 0.12)' : 'transparent',
-                                    border: 'none',
-                                    borderRadius: '12px',
-                                    cursor: 'pointer',
-                                    transition: '0.2s',
-                                    whiteSpace: 'nowrap'
-                                }}
-                            >
-                                <span style={{
-                                    fontSize: '11px',
-                                    fontWeight: '800',
-                                    color: activeCategory === type ? '#38bdf8' : 'rgba(255,255,255,0.5)',
-                                    letterSpacing: '0.3px'
-                                }}>
-                                    {type}
-                                </span>
-
-                                {categoryStats[type] > 0 && (
-                                    <span style={{
-                                        padding: '2px 7px',
-                                        borderRadius: '6px',
-                                        background: activeCategory === type ? '#38bdf8' : 'rgba(255,255,255,0.06)',
-                                        color: activeCategory === type ? 'black' : 'rgba(255,255,255,0.3)',
-                                        fontSize: '9px',
-                                        fontWeight: '950'
-                                    }}>
-                                        {categoryStats[type]}
-                                    </span>
-                                )}
-                            </motion.button>
-                        ))}
-                    </div>
-                </div>
-            )}
 
             {/* View Mode Switching Logic */}
             {viewMode === 'super' ? (
@@ -930,7 +900,7 @@ const Maintenance = () => {
                                 <span style={{ fontSize: '11px', fontWeight: '1000', textTransform: 'uppercase', letterSpacing: '2px' }}>Fleet Economics</span>
                             </div>
                             <h2 style={{ color: 'white', margin: 0, fontSize: 'clamp(20px, 4vw, 26px)', fontWeight: '950', letterSpacing: '-1px' }}>
-                                Master Maintenance <span style={{ opacity: 0.3 }}>{selectedYear}</span>
+                                Master Maintenance <span style={{ opacity: 0.3 }}>{selectedYear}-{String(selectedYear + 1).slice(-2)}</span>
                             </h2>
                         </div>
                         <div style={{ display: 'flex', gap: '20px' }}>
@@ -942,63 +912,36 @@ const Maintenance = () => {
                             <div style={{ textAlign: 'right' }}>
                                 <div style={{ fontSize: '10px', color: theme.primary, fontWeight: '1000', textTransform: 'uppercase', marginBottom: '4px' }}>TOTAL COST</div>
                                 <div style={{ color: '#10b981', fontWeight: '1000', fontSize: '22px', textShadow: '0 0 20px rgba(16,185,129,0.2)' }}>
-                                    ₹{filteredAggData.reduce((s,v) => s + (v.maintenance?.totalAmount || 0), 0).toLocaleString()}
+                                    ₹{filteredAggData.reduce((s,v) => s + (v.recalculatedTotal || 0), 0).toLocaleString()}
                                 </div>
                             </div>
                         </div>
                     </div>
 
                     <div className="glass-card" style={{ padding: '0', background: 'rgba(30,30,40,0.3)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', marginTop: '10px' }}>
-                        <div style={{ overflowX: 'auto' }}>
-                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
-                                <thead>
-                                    <tr style={{ textAlign: 'left', background: 'rgba(0,0,0,0.1)' }}>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Regular Service</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Engine & Mech</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Suspension & Steer</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Tyres & Brakes</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Electrical & AC</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Others</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Total Maint</th>
+                        <div style={{ overflowX: 'auto' }} className="custom-scrollbar">
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', minWidth: '1800px' }}>
+                                <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
+                                    <tr style={{ textAlign: 'left', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(10px)' }}>
+                                        <th style={{ position: 'sticky', left: 0, zIndex: 11, background: '#1e293b', padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', borderRight: '1px solid rgba(255,255,255,0.05)' }}>Vehicle</th>
+                                        {NEXT_SERVICE_TYPES.map(cat => (
+                                            <th key={cat} style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '150px' }}>{cat}</th>
+                                        ))}
+                                        <th style={{ position: 'sticky', right: 0, zIndex: 11, background: '#1e293b', padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>Total Maint</th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {filteredAggData.length === 0 ? (
-                                        <tr><td colSpan="7" style={{ textAlign: 'center', padding: '100px', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>No fleet data identified for {selectedYear}.</td></tr>
+                                        <tr><td colSpan={NEXT_SERVICE_TYPES.length + 2} style={{ textAlign: 'center', padding: '100px', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>No fleet data identified for {selectedYear}.</td></tr>
                                     ) : (
                                         filteredAggData.map((v, idx) => {
-                                            const allRecs = (v.maintenance?.records || v.maintenance?.recs || []).filter(r => {
-                                                const serviceRegex = /wash|puncture|puncher|other service|wiring|radiator|checkup|top-up|kapda|coolant|tissue|water|cleaning|mask|sanitizer/i;
-                                                const searchStrRec = `${r.maintenanceType || r.type || ''} ${r.category || ''} ${r.description || ''}`.toLowerCase();
-                                                return !serviceRegex.test(searchStrRec);
-                                            });
-
-                                            const getGroupData = (types) => {
-                                                const matched = allRecs.filter(r => types.some(t => (r.maintenanceType || r.type || '').includes(t)));
-                                                const amount = matched.reduce((s, r) => s + (r.amount || 0), 0);
-                                                return { amount, records: matched };
-                                            };
-
-                                            const groups = {
-                                                regular: getGroupData(['Regular Service']),
-                                                engine: getGroupData(['Engine', 'Mechanical', 'Fuel', 'Exhaust', 'Transmission', 'Clutch']),
-                                                suspension: getGroupData(['Suspension', 'Steering']),
-                                                tyres: getGroupData(['Tyres', 'Wheels', 'Brake']),
-                                                electrical: getGroupData(['Electrical', 'Battery', 'Sensors', 'Electronics', 'AC', 'Cooling']),
-                                            };
-
-                                            const totalManual = Object.values(groups).reduce((s, g) => s + g.amount, 0);
-                                            const otherAmount = (v.maintenance?.totalAmount || 0) - totalManual;
-                                            const otherRecs = allRecs.filter(r => !Object.values(groups).some(g => g.records.includes(r)));
-
                                             const Cell = ({ data, color = 'var(--primary)', label = 'Jobs' }) => (
                                                 <td style={{ padding: '20px 25px' }}>
-                                                    <div style={{ color: data.amount > 0 ? 'white' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '15px' }}>
-                                                        ₹{data.amount.toLocaleString()}
+                                                    <div style={{ color: data?.amount > 0 ? 'white' : 'rgba(255,255,255,0.05)', fontWeight: '900', fontSize: '15px' }}>
+                                                        {data?.amount > 0 ? `₹${data.amount.toLocaleString()}` : '₹0'}
                                                     </div>
                                                     <div style={{ marginTop: '8px' }}>
-                                                        {data.records?.length > 0 ? (
+                                                        {data?.records?.length > 0 ? (
                                                             <select 
                                                                 value="" 
                                                                 onChange={(e) => {
@@ -1011,12 +954,12 @@ const Maintenance = () => {
                                                                 onClick={(e) => e.stopPropagation()} 
                                                                 style={{ 
                                                                     width: '100%', 
-                                                                    maxWidth: '140px', 
+                                                                    maxWidth: '120px', 
                                                                     padding: '4px 8px', 
-                                                                    background: `${color}15`, 
-                                                                    border: `1px solid ${color}30`, 
+                                                                    background: 'rgba(255,255,255,0.05)', 
+                                                                    border: '1px solid rgba(255,255,255,0.1)', 
                                                                     borderRadius: '8px', 
-                                                                    color: color, 
+                                                                    color: 'rgba(255,255,255,0.6)', 
                                                                     fontSize: '10px', 
                                                                     fontWeight: '800', 
                                                                     outline: 'none', 
@@ -1030,7 +973,7 @@ const Maintenance = () => {
                                                                     </option>
                                                                 ))}
                                                             </select>
-                                                        ) : <span style={{ color: 'rgba(255,255,255,0.05)', fontSize: '10px', fontWeight: '700' }}>No Logs</span>}
+                                                        ) : null}
                                                     </div>
                                                 </td>
                                             );
@@ -1044,23 +987,21 @@ const Maintenance = () => {
                                                     style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }}
                                                     whileHover={{ background: 'rgba(255,255,255,0.02)' }}
                                                     onClick={() => {
+                                                        const allRecs = Object.values(v.cats).flatMap(c => c.records || []);
                                                         setDrillData({ vehicle: v.carNumber, category: 'Complete History', records: allRecs });
                                                         setShowDrillModal(true);
                                                     }}
                                                 >
-                                                    <td style={{ padding: '20px 25px' }}>
-                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '16px', letterSpacing: '-0.5px' }}>{v.carNumber}</div>
+                                                    <td style={{ position: 'sticky', left: 0, zIndex: 5, background: '#0f172a', padding: '20px 25px', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
+                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '15px', letterSpacing: '-0.5px' }}>{v.carNumber}</div>
                                                         <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '700' }}>{v.model || 'Fleet Unit'}</div>
                                                     </td>
-                                                    <Cell data={groups.regular} color="#a855f7" />
-                                                    <Cell data={groups.engine} color="#3b82f6" />
-                                                    <Cell data={groups.suspension} color="#ec4899" />
-                                                    <Cell data={groups.tyres} color="#f59e0b" />
-                                                    <Cell data={groups.electrical} color="#06b6d4" />
-                                                    <Cell data={{ amount: otherAmount, records: otherRecs }} color="#94a3b8" label="Logs" />
-                                                    <td style={{ padding: '20px 25px', textAlign: 'right' }}>
+                                                    {NEXT_SERVICE_TYPES.map(cat => (
+                                                        <Cell key={cat} data={v.cats[cat]} color="var(--primary)" />
+                                                    ))}
+                                                    <td style={{ position: 'sticky', right: 0, zIndex: 5, background: '#0f172a', padding: '20px 25px', textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
                                                         <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Annual Cost</div>
-                                                        <div style={{ color: '#10b981', fontWeight: '950', fontSize: '18px', letterSpacing: '-0.5px' }}>₹{(v.maintenance?.totalAmount || 0).toLocaleString()}</div>
+                                                        <div style={{ color: '#10b981', fontWeight: '950', fontSize: '18px', letterSpacing: '-0.5px' }}>₹{v.recalculatedTotal.toLocaleString()}</div>
                                                     </td>
                                                 </motion.tr>
                                             );

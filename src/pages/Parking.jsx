@@ -457,106 +457,83 @@ const ParkingPage = () => {
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
             <SEO title="Parking Management" description="Track parking expenses, driver payments, and office costs." />
 
-            <header style={{ padding: '30px 0 20px' }}>
+            <header style={{ padding: '30px 0 25px' }}>
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     flexWrap: 'wrap',
-                    gap: '15px'
+                    gap: '20px'
                 }}>
-                    <div className="flex-resp" style={{ alignItems: 'center', gap: '15px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{
-                            width: '45px',
-                            height: '45px',
-                            background: 'linear-gradient(135deg, #1e293b, #0f172a)',
-                            borderRadius: '14px',
+                            width: '50px',
+                            height: '50px',
+                            background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.05))',
+                            borderRadius: '16px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            border: '1px solid rgba(255,255,255,0.08)'
+                            border: '1px solid rgba(251, 191, 36, 0.2)',
+                            boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
                         }}>
-                            <MapPin size={22} color={theme.primary} />
+                            <MapPin size={24} color="var(--primary)" />
                         </div>
                         <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                                <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
-                                <span style={{ fontSize: '9px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', textTransform: 'uppercase' }}>Logistics Hub</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></div>
+                                <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: '1.2px', textTransform: 'uppercase' }}>Fleet Operations</span>
                             </div>
-                           <h1 style={{ color: 'white', fontSize: '26px', fontWeight: '950', margin: 0, letterSpacing: '-1.2px' }}>
-                            Parking <span className="theme-gradient-text" style={{ filter: 'brightness(1.2)' }}>Management</span>
-                        </h1>
+                            <h1 style={{ color: 'white', fontSize: '28px', fontWeight: '950', margin: 0, letterSpacing: '-1px' }}>
+                                Parking <span className="text-gradient-yellow">Management</span>
+                            </h1>
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginLeft: 'auto' }}>
+                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <button
                             onClick={downloadExcel}
                             style={{
-                                height: '38px', padding: '0 15px', borderRadius: '10px',
-                                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
-                                color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: '800', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '6px',
+                                height: '42px', padding: '0 18px', borderRadius: '12px',
+                                background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.08)',
+                                color: 'rgba(255,255,255,0.7)', fontSize: '12px', fontWeight: '800', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', gap: '8px',
                                 transition: 'all 0.3s'
                             }}
-                            onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
-                            onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
                         >
-                            <FileSpreadsheet size={15} /> EXPORT
+                            <FileSpreadsheet size={16} /> EXPORT
                         </button>
                         <button
                             onClick={() => { resetForm(); setShowModal(true); }}
+                            className="btn-primary"
                             style={{
-                                height: '38px', padding: '0 18px', borderRadius: '10px',
-                                background: theme.primary, color: 'black', border: 'none',
-                                fontSize: '11px', fontWeight: '900', cursor: 'pointer',
-                                display: 'flex', alignItems: 'center', gap: '6px',
-                                boxShadow: `0 4px 12px ${theme.primary}40`,
-                                transition: 'all 0.3s'
+                                height: '42px', padding: '0 20px', borderRadius: '12px',
+                                fontSize: '12px', fontWeight: '900', gap: '8px'
                             }}
-                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
-                            onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                         >
-                            <Plus size={16} /> NEW ENTRY
+                            <Plus size={18} /> NEW ENTRY
                         </button>
                     </div>
                 </div>
 
-                <div className="glass-card" style={{
-                    marginTop: '15px',
-                    padding: '8px 16px',
-                    borderRadius: '12px',
+                <div style={{
+                    marginTop: '20px',
+                    padding: '12px 20px',
+                    borderRadius: '20px',
                     background: 'rgba(15, 23, 42, 0.4)',
                     border: '1px solid rgba(255,255,255,0.05)',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'flex-start',
+                    justifyContent: 'space-between',
                     flexWrap: 'wrap',
-                    gap: '12px'
+                    gap: '15px'
                 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {/* Premium Modern Calendar UI */}
                         <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            background: 'rgba(0,0,0,0.3)',
-                            padding: '3px',
-                            borderRadius: '10px',
+                            display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px',
                             border: '1px solid rgba(255,255,255,0.06)'
                         }}>
-                            <button
-                                onClick={() => shiftDays(-1)}
-                                style={{
-                                    width: '32px', height: '32px', borderRadius: '8px',
-                                    background: 'rgba(255,255,255,0.02)', border: 'none',
-                                    color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}
-                            >
-                                <ChevronLeft size={16} />
-                            </button>
-
                             <div
                                 onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
                                 style={{ height: '32px', minWidth: '120px', background: 'rgba(251, 191, 36, 0.05)', borderRadius: '8px', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}
@@ -578,28 +555,16 @@ const ParkingPage = () => {
                                     style={{ position: 'absolute', inset: 0, opacity: 0 }}
                                 />
                             </div>
-
-                            <button
-                                onClick={() => shiftDays(1)}
-                                style={{
-                                    width: '32px', height: '32px', borderRadius: '8px',
-                                    background: 'rgba(255,255,255,0.02)', border: 'none',
-                                    color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                }}
-                            >
-                                <ChevronRight size={16} />
-                            </button>
                         </div>
 
-                        <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', padding: '3px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)' }}>
                             <select
                                 value={selectedMonth}
                                 onChange={e => {
                                     setSelectedMonth(Number(e.target.value));
                                     setSelectedDay('All');
                                 }}
-                                style={{ height: '32px', padding: '0 8px', fontSize: '11px', borderRadius: '6px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontWeight: '800', outline: 'none', cursor: 'pointer' }}
+                                style={{ height: '32px', padding: '0 8px', fontSize: '11px', borderRadius: '10px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.6)', fontWeight: '800', outline: 'none', cursor: 'pointer' }}
                             >
                                 {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
                                     <option key={m} value={idx} style={{ background: '#0f172a' }}>{m.toUpperCase()}</option>
@@ -611,7 +576,7 @@ const ParkingPage = () => {
                                     setSelectedYear(Number(e.target.value));
                                     setSelectedDay('All');
                                 }}
-                                style={{ height: '32px', padding: '0 8px', fontSize: '11px', borderRadius: '6px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontWeight: '800', outline: 'none', cursor: 'pointer' }}
+                                style={{ height: '32px', padding: '0 8px', fontSize: '11px', borderRadius: '10px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.6)', fontWeight: '800', outline: 'none', cursor: 'pointer' }}
                             >
                                 {[2024, 2025, 2026, 2027].map(y => (
                                     <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
@@ -620,79 +585,149 @@ const ParkingPage = () => {
                         </div>
                     </div>
 
-                    <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 8px' }}></div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '0 12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', minWidth: '180px' }}>
-                        <User size={14} style={{ color: theme.primary, opacity: 0.7 }} />
-                        <select
-                            value={filterDriver}
-                            onChange={(e) => setFilterDriver(e.target.value)}
-                            style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '700', cursor: 'pointer', width: '100%', height: '32px' }}
-                        >
-                            <option value="All" style={{ background: '#1e293b' }}>ALL DRIVERS</option>
-                            {drivers.map(d => (
-                                <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name.toUpperCase()}</option>
-                            ))}
-                        </select>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: '1', maxWidth: '400px' }}>
+                        <div style={{ position: 'relative', width: '100%' }}>
+                            <Search size={16} style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                            <input 
+                                type="text"
+                                placeholder="Search driver or car number..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{
+                                    width: '100%',
+                                    height: '40px',
+                                    borderRadius: '14px',
+                                    background: 'rgba(0,0,0,0.2)',
+                                    border: '1px solid rgba(255,255,255,0.08)',
+                                    paddingLeft: '42px',
+                                    color: 'white',
+                                    fontSize: '13px',
+                                    fontWeight: '600',
+                                    outline: 'none'
+                                }}
+                            />
+                        </div>
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '10px', 
+                            background: 'rgba(255,255,255,0.03)', 
+                            padding: '0 15px', 
+                            borderRadius: '14px', 
+                            border: '1px solid rgba(255,255,255,0.08)', 
+                            minWidth: '180px',
+                            height: '40px'
+                        }}>
+                            <User size={14} style={{ color: 'var(--primary)', opacity: 0.8 }} />
+                            <select
+                                value={filterDriver}
+                                onChange={(e) => setFilterDriver(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '11px', fontWeight: '900', cursor: 'pointer', width: '100%', height: '100%', textTransform: 'uppercase' }}
+                            >
+                                <option value="All" style={{ background: '#1e293b' }}>ALL DRIVERS</option>
+                                {drivers.map(d => (
+                                    <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
                 </div>
             </header>
 
-            {/* ══ Tab Switcher ══ */}
-            <div style={{
-                display: 'flex',
-                gap: '8px',
-                marginBottom: '32px',
-                background: 'rgba(255,255,255,0.03)',
-                padding: '6px',
-                borderRadius: '16px',
-                border: '1px solid rgba(255,255,255,0.06)',
-                width: 'fit-content'
-            }}>
-                {[
-                    { id: 'parking', label: 'Fleet Parking', icon: <Car size={18} />, count: pendingParking.length, color: 'var(--primary)' },
-                    { id: 'rejected', label: 'Review Hub', icon: <Shield size={18} />, count: rejectedEntries.filter(e => e.type === 'parking').length, color: '#f43f5e' }
-                ].map(tab => (
-                    <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id)}
-                        style={{
-                            padding: '10px 22px',
-                            borderRadius: '12px',
-                            fontWeight: '950',
-                            fontSize: '13px',
-                            border: 'none',
-                            background: activeTab === tab.id ? `${tab.color}20` : 'transparent',
-                            color: activeTab === tab.id ? tab.color : 'rgba(255,255,255,0.4)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
+            {/* SLEEK NAVIGATION & SUMMARY */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '25px', marginBottom: '30px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px' }}>
+                    <div 
+                        onClick={() => setActiveTab('parking')}
+                        className={`glass-card ${activeTab === 'parking' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
+                        style={{ 
+                            padding: '24px', 
                             cursor: 'pointer',
-                            transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                            position: 'relative'
+                            background: activeTab === 'parking' 
+                                ? 'linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(251, 191, 36, 0.05))' 
+                                : 'linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))',
+                            border: `1px solid ${activeTab === 'parking' ? 'rgba(251, 191, 36, 0.3)' : 'rgba(255,255,255,0.05)'}`,
+                            borderRadius: '24px'
                         }}
                     >
-                        {tab.icon}
-                        {tab.label}
-                        {tab.count > 0 && (
-                            <span style={{
-                                background: tab.color,
-                                color: tab.id === 'parking' ? 'black' : 'white',
-                                fontSize: '10px',
-                                padding: '2px 8px',
-                                borderRadius: '8px',
-                                fontWeight: '950',
-                                boxShadow: `0 4px 10px ${tab.color}40`,
-                                animation: tab.id === 'parking' ? 'pulse 1.5s infinite' : 'none'
-                            }}>
-                                {tab.count}
-                            </span>
-                        )}
-                        {activeTab === tab.id && (
-                            <motion.div layoutId="parking-tab-pill" style={{ position: 'absolute', bottom: '-4px', left: '20%', right: '20%', height: '3px', background: tab.color, borderRadius: '4px', boxShadow: `0 0 8px ${tab.color}60` }} />
-                        )}
-                    </button>
-                ))}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <div style={{ pading: '10px', borderRadius: '12px', background: activeTab === 'parking' ? 'rgba(251, 191, 36, 0.2)' : 'rgba(255,255,255,0.05)', color: 'var(--primary)', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Car size={20} />
+                            </div>
+                            <span style={{ fontSize: '10px', fontWeight: '900', color: activeTab === 'parking' ? 'var(--primary)' : 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fleet Logs</span>
+                        </div>
+                        <h2 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: '0 0 4px' }}>₹{totalAmount.toLocaleString()}</h2>
+                        <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: 0, fontWeight: '700' }}>TOTAL PARKING SETTLEMENTS</p>
+                    </div>
+
+                    <div 
+                        className="glass-card" 
+                        style={{ 
+                            padding: '24px', 
+                            background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.02))',
+                            border: '1px solid rgba(16, 185, 129, 0.15)',
+                            borderRadius: '24px'
+                        }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <div style={{ pading: '10px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', color: '#34d399', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <History size={20} />
+                            </div>
+                            <span style={{ fontSize: '10px', fontWeight: '900', color: '#10b981', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Driver App</span>
+                        </div>
+                        <h2 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: '0 0 4px' }}>₹{driverAmount.toLocaleString()}</h2>
+                        <p style={{ fontSize: '11px', color: 'rgba(16, 185, 129, 0.6)', margin: 0, fontWeight: '700' }}>SUBMITTED VIA MOBILE APP</p>
+                    </div>
+
+                    <div 
+                        className="glass-card" 
+                        style={{ 
+                            padding: '24px', 
+                            background: 'linear-gradient(135deg, rgba(129, 140, 248, 0.08), rgba(129, 140, 248, 0.02))',
+                            border: '1px solid rgba(129, 140, 248, 0.15)',
+                            borderRadius: '24px'
+                        }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <div style={{ pading: '10px', borderRadius: '12px', background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Edit size={20} />
+                            </div>
+                            <span style={{ fontSize: '10px', fontWeight: '900', color: '#818cf8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Office Manual</span>
+                        </div>
+                        <h2 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: '0 0 4px' }}>₹{officeAmount.toLocaleString()}</h2>
+                        <p style={{ fontSize: '11px', color: 'rgba(129, 140, 248, 0.6)', margin: 0, fontWeight: '700' }}>ADMIN PORTAL ENTRIES</p>
+                    </div>
+
+                    <div 
+                        onClick={() => setActiveTab('rejected')}
+                        className={`glass-card ${activeTab === 'rejected' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
+                        style={{ 
+                            padding: '24px', 
+                            cursor: 'pointer',
+                            background: activeTab === 'rejected' 
+                                ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.15), rgba(244, 63, 94, 0.05))' 
+                                : 'linear-gradient(135deg, rgba(244, 63, 94, 0.08), rgba(244, 63, 94, 0.03))',
+                            border: `1px solid ${activeTab === 'rejected' ? 'rgba(244, 63, 94, 0.3)' : 'rgba(244, 63, 94, 0.15)'}`,
+                            borderRadius: '24px'
+                        }}
+                    >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
+                            <div style={{ pading: '10px', borderRadius: '12px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <Shield size={20} />
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <span style={{ fontSize: '10px', fontWeight: '900', color: '#f43f5e', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Review Hub</span>
+                                {rejectedEntries.filter(e => e.type === 'parking').length > 0 && (
+                                    <div style={{ background: '#f43f5e', color: 'white', fontSize: '9px', fontWeight: '900', padding: '1px 6px', borderRadius: '6px', marginTop: '4px' }}>
+                                        {rejectedEntries.filter(e => e.type === 'parking').length} REJECTED
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                        <h2 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: '0 0 4px' }}>₹{rejectedEntries.filter(e => e.type === 'parking').reduce((s, e) => s + (Number(e.amount) || 0), 0).toLocaleString()}</h2>
+                        <p style={{ fontSize: '11px', color: 'rgba(244, 63, 94, 0.6)', margin: 0, fontWeight: '700' }}>REJECTED / ACTION NEEDED</p>
+                    </div>
+                </div>
             </div>
 
             {/* ══════════════════════════════════════════
@@ -738,9 +773,10 @@ const ParkingPage = () => {
                                 className="glass-card"
                                 style={{
                                     padding: '24px',
-                                    border: '1px solid rgba(251, 191, 36, 0.2)',
-                                    background: 'linear-gradient(145deg, rgba(251, 191, 36, 0.05), rgba(15, 23, 42, 0.4))',
-                                    borderRadius: '20px'
+                                    border: '1px solid rgba(251, 191, 36, 0.25)',
+                                    background: 'linear-gradient(145deg, rgba(251, 191, 36, 0.08), rgba(15, 23, 42, 0.6))',
+                                    borderRadius: '24px',
+                                    boxShadow: '0 12px 30px rgba(0,0,0,0.2)'
                                 }}
                             >
                                 <div style={{ display: 'flex', gap: '16px', marginBottom: '20px' }}>
@@ -793,9 +829,9 @@ const ParkingPage = () => {
                                         }}>
                                             PARKING
                                         </span>
-                                        <p style={{ color: 'white', fontSize: '13px', fontWeight: '700', margin: '4px 0 0' }}>{entry.driver}</p>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '4px', alignItems: 'center' }}>
-                                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>{entry.carNumber}</span>
+                                        <p style={{ color: 'white', fontSize: '16px', fontWeight: '900', margin: '4px 0 2px' }}>{entry.driver}</p>
+                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '6px', alignItems: 'center' }}>
+                                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '700' }}>#{entry.carNumber}</span>
                                             {entry.date && (
                                                 <span style={{ background: 'rgba(251, 191, 36, 0.08)', color: 'var(--primary)', padding: '2px 8px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
                                                  {formatDateTimeIST(entry.date)}
@@ -1074,79 +1110,9 @@ const ParkingPage = () => {
                         )}
                     </AnimatePresence>
 
-                    {/* Stats Row */}
-                    <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
-                        gap: '15px',
-                        marginBottom: '30px'
-                    }}>
-                        <motion.div
-                            whileHover={{ y: -4 }}
-                            className="glass-card"
-                            style={{
-                                padding: '16px 20px',
-                                background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(30, 41, 59, 0.4) 100%)',
-                                border: '1px solid rgba(99, 102, 241, 0.2)',
-                                borderRadius: '16px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '15px'
-                            }}
-                        >
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                                <IndianRupee size={22} />
-                            </div>
-                            <div>
-                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px', letterSpacing: '0.5px' }}>Total Expense</p>
-                                <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0 }}>₹{totalAmount.toLocaleString()}</h2>
-                            </div>
-                        </motion.div>
+                    {/* SECTION TITLE FOR PENDING IF NECESSARY OR SPACER */}
+                    {activeTab === 'parking' && pendingParking.length > 0 && <div style={{ height: '20px' }}></div>}
 
-                        <motion.div
-                            whileHover={{ y: -4 }}
-                            className="glass-card"
-                            style={{
-                                padding: '16px 20px',
-                                background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(30, 41, 59, 0.4) 100%)',
-                                border: '1px solid rgba(16, 185, 129, 0.2)',
-                                borderRadius: '16px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '15px'
-                            }}
-                        >
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                                <History size={22} />
-                            </div>
-                            <div>
-                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px', letterSpacing: '0.5px' }}>From Driver Apps</p>
-                                <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0 }}>₹{driverAmount.toLocaleString()}</h2>
-                            </div>
-                        </motion.div>
-
-                        <motion.div
-                            whileHover={{ y: -4 }}
-                            className="glass-card"
-                            style={{
-                                padding: '16px 20px',
-                                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(30, 41, 59, 0.4) 100%)',
-                                border: '1px solid rgba(245, 158, 11, 0.2)',
-                                borderRadius: '16px',
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '15px'
-                            }}
-                        >
-                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                                <Shield size={22} />
-                            </div>
-                            <div>
-                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px', letterSpacing: '0.5px' }}>Office Manual</p>
-                                <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0 }}>₹{officeAmount.toLocaleString()}</h2>
-                            </div>
-                        </motion.div>
-                    </div>
 
                     {/* Entries List */}
                     <div className="table-responsive-wrapper" style={{ padding: '0', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
@@ -1160,115 +1126,77 @@ const ParkingPage = () => {
                         ) : (
                             <>
                                 <div className="hide-mobile" style={{ overflowX: 'auto' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', minWidth: '900px' }}>
                                         <thead>
-                                            <tr style={{ textAlign: 'left', background: 'rgba(255,255,255,0.02)' }}>
-                                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
-                                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
-                                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
-                                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>Source</th>
-                                                <th style={{ padding: '20px 25px', color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', textAlign: 'right', letterSpacing: '1px' }}>Actions</th>
+                                            <tr style={{ textAlign: 'left' }}>
+                                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date & Timeline</th>
+                                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Car & Driver</th>
+                                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Parking Amount</th>
+                                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Origin</th>
+                                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', textAlign: 'right', letterSpacing: '1px' }}>Management</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {filteredEntries.map((e) => (
-                                                <tr key={e._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'all 0.2s ease' }} className="hover-row">
-                                                    <td style={{ padding: '18px 25px' }}>
-                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '14px', letterSpacing: '0.2px' }}>{formatDateIST(e.date)}</div>
+                                                <tr key={e._id} className="glass-card-hover-effect" style={{ background: 'rgba(30,41,59,0.3)', borderRadius: '12px' }}>
+                                                    <td style={{ padding: '15px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
+                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{formatDateIST(e.date)}</div>
+                                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', marginTop: '2px', fontWeight: '700' }}>SUCCESSFUL ENTRY</div>
                                                     </td>
-                                                    <td style={{ padding: '18px 25px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)' }}>
-                                                                <User size={16} />
+                                                    <td style={{ padding: '15px 25px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: '900' }}>
+                                                                {e.driver?.charAt(0)}
                                                             </div>
                                                             <div>
-                                                                <div style={{ color: 'white', fontWeight: '600' }}>{e.driver}</div>
+                                                                <div style={{ color: 'white', fontWeight: '800', fontSize: '14px' }}>{e.driver}</div>
                                                                 {e.vehicle && (
-                                                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                        <Car size={10} /> {e.vehicle.carNumber}
+                                                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '700', textTransform: 'uppercase' }}>
+                                                                        #{e.vehicle.carNumber}
                                                                     </div>
                                                                 )}
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '18px 25px' }}>
-                                                        <div style={{ color: '#34d399', fontWeight: '800', fontSize: '16px' }}>₹{e.amount}</div>
+                                                    <td style={{ padding: '15px 25px' }}>
+                                                        <div style={{ color: '#34d399', fontWeight: '950', fontSize: '18px' }}>₹{e.amount}</div>
                                                     </td>
-                                                    <td style={{ padding: '18px 25px' }}>
+                                                    <td style={{ padding: '15px 25px' }}>
                                                         <span style={{
                                                             fontSize: '9px',
                                                             padding: '4px 10px',
-                                                            borderRadius: '20px',
-                                                            background: e.source === 'Admin' ? 'rgba(245,158,11,0.1)' : 'rgba(99,102,241,0.1)',
-                                                            color: e.source === 'Admin' ? 'var(--primary)' : '#818cf8',
-                                                            fontWeight: '800',
-                                                            border: `1px solid ${e.source === 'Admin' ? 'rgba(245,158,11,0.2)' : 'rgba(99,102,241,0.2)'}`,
-                                                            textTransform: 'uppercase',
-                                                            letterSpacing: '0.5px'
+                                                            borderRadius: '8px',
+                                                            background: e.source === 'Admin' ? 'rgba(129, 140, 248, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                                                            color: e.source === 'Admin' ? '#818cf8' : '#10b981',
+                                                            fontWeight: '900',
+                                                            border: `1px solid ${e.source === 'Admin' ? 'rgba(129, 140, 248, 0.2)' : 'rgba(16, 185, 129, 0.2)'}`,
+                                                            textTransform: 'uppercase'
                                                         }}>
-                                                            {e.source}
+                                                            {e.source === 'Admin' ? 'OFFICE' : 'DRIVER APP'}
                                                         </span>
                                                     </td>
-                                                    <td style={{ padding: '18px 25px', textAlign: 'right' }}>
+                                                    <td style={{ padding: '15px 25px', textAlign: 'right', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
                                                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                             <button
                                                                 onClick={() => { setSelectedImage(e.receiptPhoto || ''); setShowImageModal(true); }}
-                                                                style={{
-                                                                    width: '36px',
-                                                                    height: '36px',
-                                                                    borderRadius: '10px',
-                                                                    background: e.receiptPhoto ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.05)',
-                                                                    color: e.receiptPhoto ? '#10b981' : '#f43f5e',
-                                                                    border: '1px solid rgba(16, 185, 129, 0.2)',
-                                                                    cursor: 'pointer',
-                                                                    display: 'inline-flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    transition: 'all 0.2s ease',
-                                                                    opacity: e.receiptPhoto ? 1 : 0.6
-                                                                }}
-                                                                title={e.receiptPhoto ? "View Photo" : "Photo Missing"}
+                                                                className="btn-glass"
+                                                                style={{ padding: '8px', borderRadius: '8px', background: e.receiptPhoto ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.03)' }}
                                                             >
-                                                                <Eye size={16} style={{ opacity: e.receiptPhoto ? 1 : 0.5 }} />
+                                                                <Eye size={16} color={e.receiptPhoto ? '#10b981' : 'rgba(255,255,255,0.2)'} />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleEdit(e)}
-                                                                style={{
-                                                                    width: '36px',
-                                                                    height: '36px',
-                                                                    borderRadius: '10px',
-                                                                    background: 'rgba(99, 102, 241, 0.1)',
-                                                                    color: '#818cf8',
-                                                                    border: '1px solid rgba(99, 102, 241, 0.2)',
-                                                                    cursor: 'pointer',
-                                                                    display: 'inline-flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    transition: 'all 0.2s ease'
-                                                                }}
-                                                                title="Edit Entry"
+                                                                className="btn-glass"
+                                                                style={{ padding: '8px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)' }}
                                                             >
-                                                                <Edit size={16} />
+                                                                <Edit size={16} color="#38bdf8" />
                                                             </button>
                                                             <button
                                                                 onClick={() => handleDelete(e._id)}
-                                                                style={{
-                                                                    width: '36px',
-                                                                    height: '36px',
-                                                                    borderRadius: '10px',
-                                                                    background: 'rgba(244,63,94,0.1)',
-                                                                    color: '#f43f5e',
-                                                                    border: '1px solid rgba(244,63,94,0.2)',
-                                                                    cursor: 'pointer',
-                                                                    display: 'inline-flex',
-                                                                    alignItems: 'center',
-                                                                    justifyContent: 'center',
-                                                                    transition: 'all 0.2s ease'
-                                                                }}
-                                                                onMouseOver={(e) => { e.currentTarget.style.background = '#f43f5e'; e.currentTarget.style.color = 'white'; }}
-                                                                onMouseOut={(e) => { e.currentTarget.style.background = 'rgba(244,63,94,0.1)'; e.currentTarget.style.color = '#f43f5e'; }}
+                                                                className="btn-glass"
+                                                                style={{ padding: '8px', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.1)' }}
                                                             >
-                                                                <Trash2 size={16} />
+                                                                <Trash2 size={16} color="#f43f5e" />
                                                             </button>
                                                         </div>
                                                     </td>
@@ -1298,37 +1226,37 @@ const ParkingPage = () => {
                                                 position: 'absolute',
                                                 top: 0,
                                                 left: 0,
-                                                width: '4px',
+                                                width: '6px',
                                                 height: '100%',
-                                                background: e.source === 'Admin' ? 'var(--primary)' : '#818cf8',
-                                                opacity: 0.6
+                                                background: e.source === 'Admin' ? '#818cf8' : '#34d399',
+                                                opacity: 0.8
                                             }}></div>
 
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                                    <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'rgba(255,255,255,0.5)' }}>
-                                                        <User size={20} />
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px' }}>
+                                                <div style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
+                                                    <div style={{ width: '44px', height: '44px', borderRadius: '14px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', fontWeight: '950', fontSize: '20px' }}>
+                                                        {e.driver?.charAt(0)}
                                                     </div>
                                                     <div>
-                                                        <div style={{ color: 'white', fontWeight: '800', fontSize: '16px', letterSpacing: '0.5px' }}>{e.driver}</div>
-                                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '17px', letterSpacing: '0.2px' }}>{e.driver}</div>
+                                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '6px', textTransform: 'uppercase' }}>
                                                             {formatDateIST(e.date)}
-                                                            {e.vehicle && <span style={{ opacity: 0.6 }}>• {e.vehicle.carNumber}</span>}
+                                                            {e.vehicle && <span style={{ color: 'var(--primary)', opacity: 0.8 }}>• #{e.vehicle.carNumber}</span>}
                                                         </div>
                                                     </div>
                                                 </div>
                                                 <div style={{ textAlign: 'right' }}>
-                                                    <div style={{ color: '#34d399', fontWeight: '900', fontSize: '20px' }}>₹{e.amount}</div>
+                                                    <div style={{ color: '#34d399', fontWeight: '950', fontSize: '22px' }}>₹{e.amount}</div>
                                                     <span style={{
-                                                        fontSize: '8px',
-                                                        padding: '2px 8px',
+                                                        fontSize: '9px',
+                                                        padding: '3px 10px',
                                                         borderRadius: '10px',
-                                                        background: 'rgba(255,255,255,0.05)',
-                                                        color: 'rgba(255,255,255,0.5)',
-                                                        fontWeight: '900',
+                                                        background: e.source === 'Admin' ? 'rgba(129, 140, 248, 0.1)' : 'rgba(16, 185, 129, 0.1)',
+                                                        color: e.source === 'Admin' ? '#818cf8' : '#10b981',
+                                                        fontWeight: '950',
                                                         textTransform: 'uppercase',
-                                                        border: '1px solid rgba(255,255,255,0.1)'
-                                                    }}>{e.source}</span>
+                                                        border: '1px solid rgba(255,255,255,0.05)'
+                                                    }}>{e.source === 'Admin' ? 'OFFICE' : 'MOBILE APP'}</span>
                                                 </div>
                                             </div>
 

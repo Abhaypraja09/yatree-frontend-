@@ -4,7 +4,7 @@ import axios from '../api/axios';
 import { 
     ShieldAlert, Wallet, Droplets, Car, Search, ChevronRight, ChevronLeft,
     X, Plus, CreditCard, Wrench, AlertCircle, CheckCircle2,
-    Calendar, Filter, TrendingUp, Zap, Layers, Trash2, Edit3
+    Calendar, Filter, TrendingUp, Zap, Layers, Trash2, Edit3, Eye, FileText, ExternalLink, ArrowRight, Image
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -19,9 +19,10 @@ const CarUtility = () => {
     const [allServiceRecords, setAllServiceRecords] = useState([]);
     const [drivers, setDrivers] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [viewMode, setViewMode] = useState('fleet'); // 'fleet' or 'detail'
+    const [detailVehicleId, setDetailVehicleId] = useState(null);
     const [selectedVehicleId, setSelectedVehicleId] = useState(null);
-    const [activeUtility, setActiveUtility] = useState(null); // 'fastag', 'border', 'services'
-    const [expandedVehicleId, setExpandedVehicleId] = useState(null);
+    const [activeUtility, setActiveUtility] = useState('fastag'); 
     const [searchTerm, setSearchTerm] = useState('');
     const [lowBalanceOnly, setLowBalanceOnly] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -59,14 +60,13 @@ const CarUtility = () => {
         if (yearParam) setSelectedYear(parseInt(yearParam));
         if (vehicleIdParam) {
             setSelectedVehicleId(vehicleIdParam);
-            setExpandedVehicleId(vehicleIdParam);
         }
     }, [location.search]);
 
     useEffect(() => {
         setSearchTerm('');
-        setSelectedVehicleId(null);
-        setExpandedVehicleId(null);
+        setDetailVehicleId(null);
+        setViewMode('fleet');
         setActiveUtility(null);
         const istNow = nowIST();
         setSelectedMonth(istNow.getUTCMonth());
@@ -107,7 +107,19 @@ const CarUtility = () => {
         setSubmitting(true);
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            await axios.post(`/api/admin/vehicles/${targetId}/fastag-recharge`, data, { headers: { Authorization: `Bearer ${token}` } });
+            const headers = { 
+                Authorization: `Bearer ${token}`,
+                companyid: selectedCompany._id
+            };
+            
+            let payload = data;
+            if (data instanceof FormData) {
+                if (!data.get('vehicleId')) data.append('vehicleId', targetId);
+            } else {
+                payload = { ...data, vehicleId: targetId };
+            }
+
+            await axios.post(`/api/admin/vehicles/${targetId}/fastag-recharge`, payload, { headers });
             setMessage({ type: 'success', text: 'Recharge Logged' });
             setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
             setSelectedVehicleId(null);
@@ -125,7 +137,12 @@ const CarUtility = () => {
             if (formData instanceof FormData && !formData.get('vehicleId')) {
                 formData.append('vehicleId', targetId);
             }
-            await axios.post('/api/admin/border-tax', formData, { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } });
+            await axios.post('/api/admin/border-tax', formData, { 
+                headers: { 
+                    Authorization: `Bearer ${token}`,
+                    companyid: selectedCompany._id
+                } 
+            });
             setMessage({ type: 'success', text: 'Tax Recorded' });
             setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
             setSelectedVehicleId(null);
@@ -143,7 +160,12 @@ const CarUtility = () => {
             if (formData instanceof FormData && !formData.get('vehicleId')) {
                 formData.append('vehicleId', targetId);
             }
-            await axios.post('/api/admin/maintenance', formData, { headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'multipart/form-data' } });
+            await axios.post('/api/admin/maintenance', formData, { 
+                headers: { 
+                    Authorization: `Bearer ${token}`,
+                    companyid: selectedCompany._id
+                } 
+            });
             setMessage({ type: 'success', text: 'Trans Recorded' });
             setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
             setSelectedVehicleId(null);
@@ -155,7 +177,11 @@ const CarUtility = () => {
         if (!window.confirm('Delete entry?')) return;
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            await axios.delete(`/api/admin/${endpoint}/${id}`, { headers: { Authorization: `Bearer ${token}` }});
+            const headers = { 
+                Authorization: `Bearer ${token}`,
+                companyid: selectedCompany._id
+            };
+            await axios.delete(`/api/admin/${endpoint}/${id}`, { headers });
             fetchAllData();
         } catch (err) { alert('Fail'); }
     };
@@ -164,8 +190,10 @@ const CarUtility = () => {
         setSubmitting(true);
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            const headers = { Authorization: `Bearer ${token}` };
-            if (data instanceof FormData) headers['Content-Type'] = 'multipart/form-data';
+            const headers = { 
+                Authorization: `Bearer ${token}`,
+                companyid: selectedCompany?._id
+            };
             
             await axios.put(`/api/admin/${endpoint}/${id}`, data, { headers });
             setMessage({ type: 'success', text: 'Entry Updated Successfully' });
@@ -225,308 +253,238 @@ const CarUtility = () => {
         return `${(import.meta.env.VITE_API_URL || '').replace(/\/+$/, '')}/${p.replace(/^\/+/, '')}`;
     };
 
+    const detailVehicle = useMemo(() => vehicles.find(v => v._id === detailVehicleId), [vehicles, detailVehicleId]);
+
     return (
         <div key={location.key} style={{ minHeight: '100vh', background: 'transparent', color: '#fff', padding: '40px' }}>
             <SEO title="Car Utility" description="Fleet Accounts Hub" />
             
             <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
-                <header className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', gap:'20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{ width: 'clamp(40px,10vw,50px)', height: 'clamp(40px,10vw,50px)', background: 'linear-gradient(135deg, var(--primary), var(--primary))', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>
-                            <Wrench size={24} color="white" />
-                        </div>
-                        <div>
-                            <h1 style={{ margin: 0, fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', letterSpacing: '-1px' }}>Fleet <span className="theme-gradient-text">Utility</span></h1>
-                            <p style={{ margin: '2px 0 0', color: 'rgba(255,255,255,0.4)', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase' }}>Operational Maintenance & Expense</p>
-                        </div>
-                    </div>
-
-                    <div className="flex-resp" style={{ gap: '15px', alignItems: 'center' }}>
-                        {/* Premium Monthly Navigator */}
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <button
-                                onClick={() => shiftMonth(-1)}
-                                style={{
-                                    width: '36px', height: '36px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.05)', border: 'none',
-                                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                                }}
-                            >
-                                <ChevronLeft size={18} />
-                            </button>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <select
-                                    value={selectedMonth}
-                                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                                    style={{
-                                        background: 'transparent', border: 'none', color: 'white',
-                                        fontSize: '13px', fontWeight: '900', outline: 'none', cursor: 'pointer'
-                                    }}
-                                >
-                                    {[
-                                        { n: 0, m: 'Jan' }, { n: 1, m: 'Feb' }, { n: 2, m: 'Mar' },
-                                        { n: 3, m: 'Apr' }, { n: 4, m: 'May' }, { n: 5, m: 'Jun' },
-                                        { n: 6, m: 'Jul' }, { n: 7, m: 'Aug' }, { n: 8, m: 'Sep' },
-                                        { n: 9, m: 'Oct' }, { n: 10, m: 'Nov' }, { n: 11, m: 'Dec' }
-                                    ].map(item => (
-                                        <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
-                                    ))}
-                                </select>
-                                <select
-                                    value={selectedYear}
-                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                    style={{
-                                        background: 'transparent', border: 'none', color: 'white',
-                                        fontSize: '13px', fontWeight: '900', outline: 'none', cursor: 'pointer'
-                                    }}
-                                >
-                                    {[2024, 2025, 2026, 2027].map(y => (
-                                        <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <button
-                                onClick={() => shiftMonth(1)}
-                                style={{
-                                    width: '36px', height: '36px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.05)', border: 'none',
-                                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                                }}
-                            >
-                                <ChevronRight size={18} />
-                            </button>
-                        </div>
-
-                        <button 
-                            onClick={() => { setSelectedVehicleId('new'); setActiveUtility(null); }} 
-                            className="btn-primary"
-                            style={{ padding: '12px 24px', borderRadius: '15px', fontWeight: '1000' }}
+                <AnimatePresence mode="wait">
+                    {viewMode === 'fleet' ? (
+                        <motion.div 
+                            key="fleet-list"
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: -20 }}
                         >
-                            <Plus size={18} /> <span className="hide-mobile">ADD UTILITY</span><span className="show-mobile">ADD</span>
-                        </button>
-                    </div>
-                </header>
-
-                <div className="grid-1-2-2-4" style={{ marginBottom: '40px' }}>
-                    <SummaryStat label="Fastag Paid" val={globalStats.f} col="var(--primary)" icon={Zap} />
-                    <SummaryStat label="Border Taxes" val={globalStats.b} col="var(--primary)" icon={Layers} />
-                    <SummaryStat label="Service Exp" val={globalStats.s} col="#a855f7" icon={Droplets} />
-                    <SummaryStat label="Month Total" val={globalStats.t} col="#10b981" icon={TrendingUp} isDark />
-                </div>
-
-                <div className="flex-resp" style={{ marginBottom: '30px', gap: '20px' }}>
-                    <div style={{ position: 'relative', flex: 1 }}>
-                        <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
-                        <input type="text" placeholder="Search by vehicle number..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="input-field" style={{ paddingLeft: '45px', marginBottom: 0 }} />
-                    </div>
-                </div>
-
-                <div style={{ background: 'rgba(255,255,255,0.01)', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-                    <div className="table-responsive-wrapper">
-                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                            <thead>
-                                <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                    <th style={{ padding: '20px 30px', textAlign: 'left', fontSize: '12px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Vehicle Details</th>
-                                    <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '12px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Fastag Paid</th>
-                                    <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '12px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Border Tax</th>
-                                    <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '12px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Services</th>
-                                    <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '12px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Current Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {loading ? (
-                                    <tr><td colSpan="6" style={{padding:'80px', textAlign:'center'}}><div className="spinner" style={{margin:'0 auto'}}></div></td></tr>
-                                ) : filteredVehicles.map(v => {
-                                    const act = getVehicleActivity(v._id);
-                                    const isLow = (v.fastagBalance || 0) < 500;
-                                    const isExpanded = expandedVehicleId === v._id;
-
-                                    return (
-                                        <React.Fragment key={v._id}>
-                                            <tr 
-                                                onClick={() => {
-                                                    const newExpandedId = isExpanded ? null : v._id;
-                                                    setExpandedVehicleId(newExpandedId);
-                                                    if (newExpandedId) setActiveUtility('fastag');
-                                                    else setActiveUtility(null);
-                                                }}
-                                                style={{ 
-                                                    borderBottom: '1px solid rgba(255,255,255,0.03)', 
-                                                    transition: '0.2s', 
-                                                    cursor: 'pointer',
-                                                    background: isExpanded ? 'rgba(14, 165, 233, 0.05)' : 'transparent'
-                                                }} 
-                                                className="table-row-hover"
-                                            >
-                                                <td style={{ padding: '22px 30px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                        <div style={{ color: isExpanded ? 'var(--primary)' : 'rgba(255,255,255,0.2)' }}>
-                                                            {isExpanded ? <ChevronLeft style={{ transform: 'rotate(-90deg)' }} size={20} /> : <ChevronRight size={20} />}
-                                                        </div>
-                                                        <div>
-                                                            <div style={{ fontWeight: '900', fontSize: '18px', color: '#fff' }}>{v.carNumber}</div>
-                                                            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{v.model || 'Standard Fleet'}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td style={{ padding: '22px 30px', textAlign: 'right' }}>
-                                                    <div style={{ fontSize: '18px', fontWeight: '900', color: isLow ? '#f43f5e' : 'var(--primary)' }}>₹{act.fastag.toLocaleString()}</div>
-                                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>Bal: ₹{v.fastagBalance || 0}</div>
-                                                </td>
-                                                <td style={{ padding: '22px 30px', textAlign: 'right' }}>
-                                                    <div style={{ fontSize: '18px', fontWeight: '900', color: 'var(--primary)' }}>₹{act.border.toLocaleString()}</div>
-                                                </td>
-                                                <td style={{ padding: '22px 30px', textAlign: 'right' }}>
-                                                    <div style={{ fontSize: '18px', fontWeight: '900', color: '#a855f7' }}>₹{act.service.toLocaleString()}</div>
-                                                </td>
-                                                <td style={{ padding: '22px 30px', textAlign: 'right' }}>
-                                                    <div style={{ fontSize: '20px', fontWeight: '1000', color: '#10b981' }}>₹{act.total.toLocaleString()}</div>
-                                                </td>
-                                            </tr>
-
-                                            <AnimatePresence>
-                                                {isExpanded && (
-                                                    <tr>
-                                                        <td colSpan="5" style={{ padding: '0', background: 'rgba(0,0,0,0.15)' }}>
-                                                            <motion.div 
-                                                                initial={{ height: 0, opacity: 0 }} 
-                                                                animate={{ height: 'auto', opacity: 1 }} 
-                                                                exit={{ height: 0, opacity: 0 }}
-                                                                style={{ overflow: 'hidden' }}
-                                                            >
-                                                                <div style={{ padding: '30px 40px' }}>
-                                                                    <div style={{ 
-                                                                        display: 'flex', 
-                                                                        gap: '8px', 
-                                                                        marginBottom: '30px', 
-                                                                        background: 'rgba(255,255,255,0.03)', 
-                                                                        padding: '6px', 
-                                                                        borderRadius: '16px', 
-                                                                        width: 'fit-content',
-                                                                        border: '1px solid rgba(255,255,255,0.05)'
-                                                                    }}>
-                                                                        {[
-                                                                            { id: 'fastag', label: 'Fastag Logs', val: act.fastag, color: 'var(--primary)' },
-                                                                            { id: 'border', label: 'Border Permits', val: act.border, color: '#0ea5e9' },
-                                                                            { id: 'services', label: 'Extra Services', val: act.service, color: '#a855f7' }
-                                                                        ].map(tab => (
-                                                                            <button
-                                                                                key={tab.id}
-                                                                                onClick={(e) => { e.stopPropagation(); setActiveUtility(tab.id); }}
-                                                                                style={{
-                                                                                    padding: '12px 24px',
-                                                                                    borderRadius: '12px',
-                                                                                    background: activeUtility === tab.id ? 'rgba(255,255,255,0.08)' : 'transparent',
-                                                                                    color: activeUtility === tab.id ? tab.color : 'rgba(255,255,255,0.4)',
-                                                                                    fontSize: '13px',
-                                                                                    fontWeight: '800',
-                                                                                    cursor: 'pointer',
-                                                                                    transition: '0.2s',
-                                                                                    display: 'flex',
-                                                                                    alignItems: 'center',
-                                                                                    gap: '8px',
-                                                                                    border: activeUtility === tab.id ? '1px solid rgba(255,255,255,0.1)' : '1px solid transparent'
-                                                                                }}
-                                                                            >
-                                                                                <span>{tab.label}</span>
-                                                                                <span style={{ 
-                                                                                    fontSize: '11px', 
-                                                                                    background: activeUtility === tab.id ? `${tab.color}20` : 'rgba(255,255,255,0.05)',
-                                                                                    padding: '2px 8px',
-                                                                                    borderRadius: '6px',
-                                                                                    fontWeight: '900'
-                                                                                }}>₹{tab.val.toLocaleString()}</span>
-                                                                            </button>
-                                                                        ))}
-                                                                    </div>
-
-                                                                    {activeUtility && (
-                                                                        <div style={{ animation: 'fadeIn 0.3s ease' }}>
-                                                                            <ManagerHub 
-                                                                                type={activeUtility} 
-                                                                                color={activeUtility==='fastag'?'var(--primary)':activeUtility==='border'?'#0ea5e9':'#a855f7'} 
-                                                                                act={act} 
-                                                                                drivers={drivers} 
-                                                                                getImageUrl={getImageUrl}
-                                                                                hideForm={true}
-                                                                                onAdd={(vId, data, file) => activeUtility==='fastag'?handleRecharge(vId, data, file):activeUtility==='border'?handleAddTax(vId, data, file):handleAddService(vId, data, file)} 
-                                                                                onUpdate={(id, data) => handleUpdateRecord(activeUtility==='fastag' ? `vehicles/${v._id}/fastag-recharge` : activeUtility==='border' ? 'border-tax' : 'maintenance', id, data)}
-                                                                                onDelete={id => handleDeleteRecord(activeUtility==='fastag' ? `vehicles/${v._id}/fastag-recharge` : activeUtility==='border' ? 'border-tax' : 'maintenance', id)} 
-                                                                                setViewingImage={setViewingImage} 
-                                                                                submitting={submitting} 
-                                                                                vehicle={v} 
-                                                                                companyId={selectedCompany?._id}
-                                                                            />
-                                                                        </div>
-                                                                    )}
-                                                                </div>
-                                                            </motion.div>
-                                                        </td>
-                                                    </tr>
-                                                )}
-                                            </AnimatePresence>
-                                        </React.Fragment>
-                                    );
-                                })}
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            {/* Modal Standardization */}
-            <AnimatePresence>
-                {selectedVehicleId && (selectedVehicleId === 'new' || selectedVehicle) && (
-                    <div className="modal-overlay">
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 10 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.9, opacity: 0, y: 10 }}
-                            className="modal-content-wrapper"
-                            style={{ maxWidth: '1100px', height: '90vh', padding: '0' }}
-                        >
-                            <div style={{ padding: 'clamp(20px, 4vw, 30px) clamp(20px, 5vw, 40px)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.2)' }}>
-                                <div style={{ display:'flex', alignItems:'center', gap:'15px' }}>
-                                    <div style={{width:'40px', height:'40px', background:'var(--primary)', color:'#000', borderRadius:'12px', display:'flex', justifyContent:'center', alignItems:'center'}}><Zap size={20}/></div>
+                            <header className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', gap:'20px' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                    <div style={{ width: 'clamp(40px,10vw,50px)', height: 'clamp(40px,10vw,50px)', background: 'var(--primary)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>
+                                        <Wrench size={24} color="white" />
+                                    </div>
                                     <div>
-                                        <h2 style={{ margin: 0, fontWeight: '950', fontSize: 'clamp(18px, 4vw, 24px)', letterSpacing: '-0.5px' }}>
-                                            {selectedVehicleId === 'new' ? 'New Utility Entry' : 'Vehicle Utility'}
-                                        </h2>
-                                        {selectedVehicle && <p style={{ margin:0, color: 'var(--primary)', fontSize:'12px', fontWeight:'800' }}>{selectedVehicle.carNumber}</p>}
+                                        <h1 style={{ margin: 0, fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', letterSpacing: '-1px' }}>Fleet <span className="theme-gradient-text">Utility</span></h1>
+                                        <p style={{ margin: '2px 0 0', color: 'rgba(255,255,255,0.4)', fontWeight: '700', fontSize: '11px', textTransform: 'uppercase' }}>Operational Maintenance & Expense</p>
                                     </div>
                                 </div>
-                                <button className="glass-card" onClick={() => { setSelectedVehicleId(null); setActiveUtility(null); }} style={{ width: '40px', height: '40px', borderRadius: '50%', color:'white', display:'flex', alignItems:'center', justifyContent:'center' }}>
-                                    <X size={20}/>
-                                </button>
+
+                                <div className="flex-resp" style={{ gap: '15px', alignItems: 'center' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '8px 16px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div style={{ display: 'flex', gap: '12px' }}>
+                                            <select value={selectedMonth} onChange={(e) => setSelectedMonth(Number(e.target.value))} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', outline: 'none', cursor: 'pointer' }}>
+                                                {[{n:0,m:'Jan'},{n:1,m:'Feb'},{n:2,m:'Mar'},{n:3,m:'Apr'},{n:4,m:'May'},{n:5,m:'Jun'},{n:6,m:'Jul'},{n:7,m:'Aug'},{n:8,m:'Sep'},{n:9,m:'Oct'},{n:10,m:'Nov'},{n:11,m:'Dec'}].map(item => (<option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>))}
+                                            </select>
+                                            <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', outline: 'none', cursor: 'pointer' }}>
+                                                {[2024, 2025, 2026, 2027].map(y => (<option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>))}
+                                            </select>
+                                        </div>
+                                    </div>
+
+                                    <button onClick={() => { setSelectedVehicleId('new'); setActiveUtility('fastag'); }} className="btn-primary" style={{ padding: '12px 24px', borderRadius: '15px', fontWeight: '1000' }}>
+                                        <Plus size={18} /> <span className="hide-mobile">QUICK ADD</span>
+                                    </button>
+                                </div>
+                            </header>
+
+                            <div className="grid-1-2-2-4" style={{ marginBottom: '40px' }}>
+                                <SummaryStat label="Fastag Paid" val={globalStats.f} col="var(--primary)" icon={Zap} />
+                                <SummaryStat label="Border Taxes" val={globalStats.b} col="var(--primary)" icon={Layers} />
+                                <SummaryStat label="Service Exp" val={globalStats.s} col="#a855f7" icon={Droplets} />
+                                <SummaryStat label="Month Total" val={globalStats.t} col="#10b981" icon={TrendingUp} isDark />
                             </div>
 
-                            <div style={{ flex: 1, padding: 'clamp(20px, 5vw, 40px)', overflowY: 'auto' }}>
-                                {message.text && (
-                                    <div style={{ marginBottom: '20px', padding: '15px', borderRadius: '12px', background: message.type==='success'?'rgba(16,185,129,0.1)':'rgba(244,63,94,0.1)', color: message.type==='success'?'#10b981':'#f43f5e', border: '1px solid currentColor', fontWeight: '800', fontSize:'13px' }}>{message.text}</div>
-                                )}
+                            <div style={{ position: 'relative', marginBottom: '30px' }}>
+                                <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
+                                <input type="text" placeholder="Search by vehicle number..." value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="input-field" style={{ paddingLeft: '45px', marginBottom: 0 }} />
+                            </div>
 
-                                <div className="flex-resp" style={{ gap: '8px', marginBottom: '30px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '16px', width: 'fit-content' }}>
-                                    {['fastag', 'border', 'services'].map(t => (
-                                        <button key={t} onClick={() => setActiveUtility(t)} className={`glass-card ${ (activeUtility === t || (!activeUtility && t === 'fastag')) ? 'active' : '' }`} style={{ padding: '10px 20px', borderRadius: '10px', fontSize: '12px', fontWeight: '900', color: (activeUtility === t || (!activeUtility && t === 'fastag')) ? 'var(--primary)' : 'rgba(255,255,255,0.4)' }}>
-                                            {t.toUpperCase()}
+                            <div style={{ background: 'rgba(255,255,255,0.01)', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                                <div className="table-responsive-wrapper">
+                                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                        <thead>
+                                            <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                                <th style={{ padding: '20px 30px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Vehicle</th>
+                                                <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Fastag Balance</th>
+                                                <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Month Total</th>
+                                                <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {loading ? (
+                                                <tr><td colSpan="4" style={{padding:'100px', textAlign:'center'}}><div className="spinner" style={{margin:'0 auto'}}></div></td></tr>
+                                            ) : filteredVehicles.map(v => {
+                                                const act = getVehicleActivity(v._id);
+                                                return (
+                                                    <tr key={v._id} 
+                                                        onClick={() => { setDetailVehicleId(v._id); setViewMode('detail'); setActiveUtility('fastag'); }}
+                                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }} 
+                                                        className="table-row-hover"
+                                                    >
+                                                        <td style={{ padding: '20px 30px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                                <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Car size={18} color="rgba(255,255,255,0.4)" /></div>
+                                                                <div>
+                                                                    <div style={{ fontWeight: '900', fontSize: '17px' }}>{v.carNumber}</div>
+                                                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{v.model}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: '20px 30px', textAlign: 'right' }}>
+                                                            <div style={{ fontSize: '16px', fontWeight: '900', color: (v.fastagBalance||0)<500 ? '#f43f5e' : '#fff' }}>₹{(v.fastagBalance||0).toLocaleString()}</div>
+                                                        </td>
+                                                        <td style={{ padding: '20px 30px', textAlign: 'right' }}>
+                                                            <div style={{ fontSize: '16px', fontWeight: '1000', color: '#10b981' }}>₹{act.total.toLocaleString()}</div>
+                                                        </td>
+                                                        <td style={{ padding: '20px 30px', textAlign: 'right' }}>
+                                                            <div style={{ display:'inline-flex', alignItems:'center', gap:'8px', color:'var(--primary)', fontWeight:'900', fontSize:'11px' }}>
+                                                                VIEW DETAILS <ArrowRight size={14} />
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                );
+                                            })}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </motion.div>
+                    ) : (
+                        <motion.div 
+                            key="vehicle-detail"
+                            initial={{ opacity: 0, x: 20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            exit={{ opacity: 0, x: 20 }}
+                        >
+                            <nav style={{ marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                <button onClick={() => setViewMode('fleet')} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: '#fff', padding: '10px 15px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '900' }}>
+                                    <ChevronLeft size={18} /> BACK TO FLEET
+                                </button>
+                            </nav>
+
+                            <div style={{ background: 'rgba(255, 255, 255, 0.02)', borderRadius: '35px', border: '1px solid rgba(255,255,255,0.05)', padding: '40px', marginBottom: '40px' }}>
+                                <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
+                                        <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 15px 35px rgba(14, 165, 233, 0.3)' }}><Car size={40} color="white" /></div>
+                                        <div>
+                                            <h2 style={{ margin: 0, fontSize: '36px', fontWeight: '1000' }}>{detailVehicle?.carNumber}</h2>
+                                            <div style={{ display: 'flex', gap: '15px', marginTop: '5px' }}>
+                                                <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>{detailVehicle?.model}</span>
+                                                <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
+                                                <span style={{ fontSize: '13px', color: (detailVehicle?.fastagBalance||0)<500?'#f43f5e':'var(--primary)', fontWeight: '900' }}>FASTAG BAL: ₹{detailVehicle?.fastagBalance||0}</span>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <button 
+                                        onClick={() => setSelectedVehicleId(detailVehicleId)} 
+                                        className="btn-primary" 
+                                        style={{ height: '50px', padding: '0 30px', borderRadius: '15px', fontWeight: '1000', gap: '10px' }}
+                                    >
+                                        <Plus size={18} /> ADD NEW LOG
+                                    </button>
+                                </header>
+
+                                <div className="grid-1-2-2-4" style={{ marginBottom: '40px' }}>
+                                    {detailVehicle && (
+                                        <>
+                                            <DetailStat label="Fastag Paid" val={getVehicleActivity(detailVehicleId).fastag} icon={Zap} col="var(--primary)" />
+                                            <DetailStat label="Border Permit" val={getVehicleActivity(detailVehicleId).border} icon={Layers} col="var(--primary)" />
+                                            <DetailStat label="Extra Service" val={getVehicleActivity(detailVehicleId).service} icon={Wrench} col="#a855f7" />
+                                            <DetailStat label="Total Current" val={getVehicleActivity(detailVehicleId).total} icon={TrendingUp} col="#10b981" isDark />
+                                        </>
+                                    )}
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '18px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                    {[
+                                        { id: 'fastag', label: 'Fastag Logs', icon: Zap },
+                                        { id: 'border', label: 'Border Permits', icon: Layers },
+                                        { id: 'services', label: 'Extra Services', icon: Wrench }
+                                    ].map(t => (
+                                        <button 
+                                            key={t.id} 
+                                            onClick={() => setActiveUtility(t.id)} 
+                                            style={{ 
+                                                padding: '12px 25px', borderRadius: '14px', border: 'none', cursor: 'pointer',
+                                                background: activeUtility === t.id ? 'rgba(255, 191, 36, 0.1)' : 'transparent',
+                                                color: activeUtility === t.id ? '#fbbf24' : 'rgba(255,255,255,0.4)',
+                                                fontSize: '12px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', transition: '0.2s', textTransform: 'uppercase'
+                                            }}
+                                        >
+                                            <t.icon size={14} /> {t.label}
                                         </button>
                                     ))}
                                 </div>
 
+                                {detailVehicle && (
+                                    <ManagerHub 
+                                        key={activeUtility}
+                                        type={activeUtility} 
+                                        color={activeUtility==='fastag'?'var(--primary)':activeUtility==='border'?'#0ea5e9':'#a855f7'} 
+                                        act={getVehicleActivity(detailVehicleId)} 
+                                        drivers={drivers} 
+                                        getImageUrl={getImageUrl}
+                                        hideForm={true}
+                                        onAdd={(vId, data, file) => activeUtility==='fastag'?handleRecharge(vId, data, file):activeUtility==='border'?handleAddTax(vId, data, file):handleAddService(vId, data, file)} 
+                                        onUpdate={(id, data) => handleUpdateRecord(activeUtility==='fastag' ? `vehicles/${detailVehicleId}/fastag-recharge` : activeUtility==='border' ? 'border-tax' : 'maintenance', id, data)}
+                                        onDelete={id => handleDeleteRecord(activeUtility==='fastag' ? `vehicles/${detailVehicleId}/fastag-recharge` : activeUtility==='border' ? 'border-tax' : 'maintenance', id)} 
+                                        setViewingImage={setViewingImage} 
+                                        submitting={submitting} 
+                                        vehicle={detailVehicle} 
+                                        companyId={selectedCompany?._id}
+                                    />
+                                )}
+                            </div>
+                        </motion.div>
+                    )}
+                </AnimatePresence>
+            </div>
+
+            <AnimatePresence>
+                {selectedVehicleId && (selectedVehicleId === 'new' || vehicles.find(v=>v._id===selectedVehicleId)) && (
+                    <div className="modal-overlay">
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0, y: 15 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 15 }}
+                            className="modal-content-wrapper" style={{ maxWidth: '1000px', height: '90vh', padding: '0' }}
+                        >
+                            <div style={{ padding: '30px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)' }}>
+                                <h3 style={{ margin: 0, fontWeight: '1000', fontSize: '22px', letterSpacing: '-0.5px' }}>
+                                    {selectedVehicleId === 'new' ? 'Quick Utility Entry' : 'Manual Utility Entry'}
+                                </h3>
+                                <button 
+                                    onClick={() => setSelectedVehicleId(null)} 
+                                    style={{ 
+                                        width: '40px', height: '40px', borderRadius: '14px', 
+                                        background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
+                                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                        cursor: 'pointer', transition: '0.2s'
+                                    }}
+                                    className="table-row-hover"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
+                            <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
                                 <ManagerHub 
-                                    type={activeUtility || 'fastag'} 
-                                    color="var(--primary)" 
+                                    key={activeUtility || 'fastag'}
+                                    type={activeUtility || 'fastag'} color="var(--primary)" 
                                     act={selectedVehicleId === 'new' ? { items: { fastag: [], border: [], service: [] } } : getVehicleActivity(selectedVehicleId)} 
-                                    drivers={drivers} 
-                                    getImageUrl={getImageUrl}
+                                    drivers={drivers} getImageUrl={getImageUrl}
                                     onAdd={(vId, data, file) => (activeUtility || 'fastag')==='fastag'?handleRecharge(vId, data, file):(activeUtility || 'fastag')==='border'?handleAddTax(vId, data, file):handleAddService(vId, data, file)} 
                                     onUpdate={(id, data) => handleUpdateRecord((activeUtility || 'fastag')==='fastag' ? `vehicles/${selectedVehicleId}/fastag-recharge` : (activeUtility || 'fastag')==='border' ? 'border-tax' : 'maintenance', id, data)}
                                     onDelete={id => handleDeleteRecord((activeUtility || 'fastag')==='fastag' ? `vehicles/${selectedVehicleId}/fastag-recharge` : (activeUtility || 'fastag')==='border' ? 'border-tax' : 'maintenance', id)} 
-                                    setViewingImage={setViewingImage} 
-                                    submitting={submitting} 
-                                    vehicle={selectedVehicleId === 'new' ? null : selectedVehicle} 
-                                    allVehicles={vehicles}
-                                    companyId={selectedCompany?._id}
+                                    setViewingImage={setViewingImage} submitting={submitting} vehicle={vehicles.find(v=>v._id===selectedVehicleId)} allVehicles={vehicles} companyId={selectedCompany?._id}
                                 />
                             </div>
                         </motion.div>
@@ -534,10 +492,20 @@ const CarUtility = () => {
                 )}
             </AnimatePresence>
 
-            <AnimatePresence>{viewingImage && (<div style={{ position: 'fixed', inset: 0, zIndex: 2000, background: 'rgba(0,0,0,0.95)', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setViewingImage(null)}><motion.img initial={{scale:0.9}} animate={{scale:1}} src={viewingImage} style={{ maxWidth: '95%', maxHeight: '95%', borderRadius: '20px' }} /></div>)}</AnimatePresence>
+            <AnimatePresence>{viewingImage && (<div style={{ position: 'fixed', inset: 0, zIndex: 2005, background: 'rgba(0,0,0,0.95)', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setViewingImage(null)}><motion.img initial={{scale:0.95}} animate={{scale:1}} src={viewingImage} style={{ maxWidth: '95%', maxHeight: '95%', borderRadius: '20px' }} /></div>)}</AnimatePresence>
         </div>
     );
 };
+
+const DetailStat = ({ label, val, icon: Icon, col, isDark }) => (
+    <div style={{ padding: '25px', background: isDark ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '25px', display: 'flex', alignItems: 'center', gap: '20px' }}>
+        <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: `${col}15`, color: col, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Icon size={22} /></div>
+        <div>
+            <div style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{label}</div>
+            <div style={{ fontSize: '22px', fontWeight: '1000', color: isDark ? col : '#fff' }}>₹{val.toLocaleString()}</div>
+        </div>
+    </div>
+);
 
 const SummaryStat = ({ label, val, col, icon: Icon, isDark }) => (
     <div style={{ padding: '24px', background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '22px', display: 'flex', alignItems: 'center', gap: '20px' }}>
@@ -573,10 +541,10 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                 category: editingItem.category || 'Car Wash'
             });
         } else {
-            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash' });
+            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '' });
             setFile(null);
         }
-    }, [editingItem]);
+    }, [editingItem, type, vehicle]);
     
     const handleSave = async () => {
         const targetVehicleId = vehicle?._id || form.vehicleId;
@@ -585,9 +553,15 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
         
         let success = false;
         if (type === 'fastag') {
-            const data = { amount: form.amount, remarks: form.remarks, method: 'UPI', date: form.date || todayIST() };
-            if (editingItem) success = await onUpdate(editingItem._id, data);
-            else { await onAdd(targetVehicleId, data); success = true; }
+            const formData = new FormData();
+            formData.append('amount', form.amount);
+            formData.append('method', 'UPI');
+            formData.append('remarks', form.remarks);
+            formData.append('date', form.date || todayIST());
+            if (file) formData.append('receiptPhoto', file);
+
+            if (editingItem) success = await onUpdate(editingItem._id, formData);
+            else { await onAdd(targetVehicleId, formData); success = true; }
         } else {
             const fd = new FormData(); 
             Object.keys(form).forEach(k => {
@@ -596,7 +570,6 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                 }
             });
             
-            // Send exactly one date value for both possible backend field names
             const finalDate = form.date || form.billDate || todayIST();
             fd.append('date', finalDate);
             fd.append('billDate', finalDate);
@@ -623,126 +596,137 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
     const showForm = !hideForm || editingItem;
 
     return (
-        <div className="flex-resp" style={{ gap: '30px', alignItems: 'flex-start' }}>
+        <div style={{ width: '100%' }}>
             {showForm && (
-                <div style={{ flex: 1, padding: '25px', background: 'rgba(255,255,255,0.02)', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.06)', width: '100%' }}>
-                    <h4 style={{ margin: '0 0 25px 0', fontSize: '16px', fontWeight: '900' }}>{editingItem ? 'Edit Entry' : 'Log Expense'}</h4>
+                <div style={{ padding: '30px', background: 'rgba(255,255,255,0.02)', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '30px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' }}>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: `${color}20`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{editingItem ? <Edit3 size={20}/> : <Plus size={20}/>}</div>
+                        <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '900' }}>{editingItem ? 'Edit Log Entry' : 'Add New Record'}</h4>
+                    </div>
                     <div className="modal-form-grid">
                         {!vehicle && (
                             <div style={{ gridColumn: '1 / -1' }}>
-                                <label className="input-label">Vehicle</label>
+                                <label className="input-label">Select Vehicle</label>
                                 <select 
                                     value={form.vehicleId} 
                                     onChange={e => setForm({...form, vehicleId: e.target.value})} 
                                     className="input-field" 
                                 >
-                                    <option value="">Choose vehicle...</option>
+                                    <option value="">Select a car...</option>
                                     {allVehicles.map(v => (
                                         <option key={v._id} value={v._id}>{v.carNumber}</option>
                                     ))}
                                 </select>
                             </div>
                         )}
-                        <div style={{ gridColumn: '1 / -1' }}>
+                        <div>
+                            <label className="input-label">Date</label>
+                            <input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" />
+                        </div>
+                        <div>
                             <label className="input-label">Amount (₹)</label>
-                            <input type="number" value={form.amount} onChange={e=>setForm({...form, amount:e.target.value})} className="input-field" style={{ fontSize: '18px', fontWeight: '900' }} />
+                            <input type="number" placeholder="0.00" value={form.amount} onChange={e=>setForm({...form, amount:e.target.value})} className="input-field" style={{ fontSize: '18px', fontWeight: '900' }} />
                         </div>
                         
                         {type === 'fastag' && (
-                            <>
-                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Date</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" /></div>
-                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Remarks</label><input type="text" value={form.remarks} onChange={e=>setForm({...form, remarks:e.target.value})} className="input-field" /></div>
-                            </>
+                            <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Recharge Remarks</label><input type="text" placeholder="e.g. ICICI Bank Recharge" value={form.remarks} onChange={e=>setForm({...form, remarks:e.target.value})} className="input-field" /></div>
                         )}
                         {type === 'border' && (
-                            <>
-                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Border Name</label><input type="text" value={form.borderName} onChange={e=>setForm({...form, borderName:e.target.value})} className="input-field" /></div>
-                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Date</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" /></div>
-                            </>
+                            <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Border Station / Permit Name</label><input type="text" placeholder="e.g. DL-HR Border" value={form.borderName} onChange={e=>setForm({...form, borderName:e.target.value})} className="input-field" /></div>
                         )}
                         {type === 'services' && (
-                            <>
-                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Category</label><select value={form.category} onChange={e=>setForm({...form, category:e.target.value})} className="input-field"><option>Car Wash</option><option>Puncture</option><option>Other</option></select></div>
-                                <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Date</label><input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" /></div>
-                            </>
-                        )}
-                        
-                        {(type === 'border' || type === 'services') && (
                             <div style={{ gridColumn: '1 / -1' }}>
-                                <label className="input-label">Bill Image</label>
-                                <div style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '12px', border: '1px dashed rgba(255,255,255,0.1)', textAlign: 'center' }}>
-                                    <input type="file" id="sl-file" style={{display:'none'}} onChange={e=>setFile(e.target.files[0])}/>
-                                    <label htmlFor="sl-file" style={{cursor:'pointer', color:color, fontSize:'13px', fontWeight:'900'}}>{file ? file.name : 'Upload Reciept'}</label>
-                                </div>
+                                <label className="input-label">Service Category</label>
+                                <select value={form.category} onChange={e=>setForm({...form, category:e.target.value})} className="input-field">
+                                    <option>Car Wash</option>
+                                    <option>Puncture / Tyre</option>
+                                    <option>Cleaning Supplies</option>
+                                    <option>Other Misc</option>
+                                </select>
                             </div>
                         )}
                         
-                        <div className="modal-form-grid" style={{ gridColumn: '1 / -1', marginTop: '10px' }}>
-                            <button onClick={handleSave} className="btn-primary" style={{ height: '56px' }} disabled={submitting}>
-                                {editingItem ? 'UPDATE' : 'SAVE'}
+                        <div style={{ gridColumn: '1 / -1' }}>
+                            <label className="input-label">Reciept / Bill Photo</label>
+                            <label style={{ 
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', 
+                                padding: '20px', borderRadius: '15px', border: '1px dashed rgba(255,255,255,0.1)', 
+                                background: 'rgba(255,255,255,0.02)', cursor: 'pointer', transition: '0.3s' 
+                            }} className="table-row-hover">
+                                <input type="file" style={{display:'none'}} onChange={e=>setFile(e.target.files[0])}/>
+                                <Image size={24} color="rgba(255,255,255,0.3)" />
+                                <span style={{ fontSize: '13px', fontWeight: '800', color: file ? color : 'rgba(255,255,255,0.4)' }}>{file ? file.name : 'Click to upload receipt photo'}</span>
+                            </label>
+                        </div>
+                        
+                        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '15px', marginTop: '10px' }}>
+                            <button onClick={handleSave} className="btn-primary" style={{ flex: 1, height: '52px', borderRadius: '14px', fontWeight: '950' }} disabled={submitting}>
+                                {submitting ? 'SAVING...' : (editingItem ? 'UPDATE RECORD' : 'SAVE LOG ENTRY')}
                             </button>
                             {editingItem && (
-                                <button onClick={() => setEditingItem(null)} className="glass-card" style={{ height: '56px' }}>
-                                    CANCEL
-                                </button>
+                                <button onClick={() => setEditingItem(null)} className="glass-card" style={{ padding: '0 25px', borderRadius: '14px', fontWeight: '900' }}>CANCEL</button>
                             )}
                         </div>
                     </div>
                 </div>
             )}
 
-            <div style={{ flex: 1.5, maxHeight: '650px', overflowY: 'auto', width: '100%' }} className="sidebar-nav-scroll">
-                <div style={{ display: 'grid', gap: '15px' }}>
-                    {hist.length === 0 ? (
-                        <div style={{ textAlign: 'center', padding: '100px 40px', background: 'rgba(255,255,255,0.01)', borderRadius: '25px', border: '1px dashed rgba(255,255,255,0.05)' }}>
-                            <div style={{ width: '60px', height: '60px', background: 'rgba(255,255,255,0.03)', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 20px' }}>
-                                <AlertCircle size={30} color="rgba(255,255,255,0.1)" />
-                            </div>
-                            <p style={{ color: 'rgba(255,255,255,0.3)', fontWeight: '800', margin: 0 }}>No records found for the selected period.</p>
-                        </div>
-                    ) : hist.sort((a,b)=>new Date(b.date||b.billDate)-new Date(a.date||a.billDate)).map((item, i) => (
-                        <div key={item._id || i} style={{ padding: '24px', background: 'rgba(255,255,255,0.02)', borderRadius: '22px', border:'1px solid rgba(255,255,255,0.04)', display:'flex', justifyContent:'space-between', alignItems:'center', transition: '0.3s', outline: editingItem?._id === item._id ? `2px solid ${color}` : 'none' }}>
-                            <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flex: 1 }}>
-                                {(item.receiptPhoto || item.billPhoto) ? (
-                                    <div style={{ position: 'relative', cursor: 'pointer' }} onClick={() => setViewingImage(getImageUrl(item.receiptPhoto || item.billPhoto))}>
-                                        <img src={getImageUrl(item.receiptPhoto || item.billPhoto)} style={{ width: '64px', height: '64px', borderRadius: '16px', objectFit: 'cover', border:'2px solid rgba(255,255,255,0.08)' }} />
-                                        <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.3)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', opacity: 0, transition: '0.2s', hover: { opacity: 1 } }}>
-                                            <Search size={16} color="white" />
-                                        </div>
+            <div style={{ background: 'rgba(255,255,255,0.01)', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
+                            <th style={{ padding: '15px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Date</th>
+                            <th style={{ padding: '15px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Details / Remark</th>
+                            <th style={{ padding: '15px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Amount</th>
+                            <th style={{ padding: '15px 25px', textAlign: 'center', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Reciept</th>
+                            <th style={{ padding: '15px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {hist.length === 0 ? (
+                            <tr><td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>No history records found...</td></tr>
+                        ) : hist.sort((a,b)=>new Date(b.date||b.billDate)-new Date(a.date||a.billDate)).map((item, i) => (
+                            <tr key={item._id || i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }} className="table-row-hover">
+                                <td style={{ padding: '18px 25px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <Calendar size={14} color="rgba(255,255,255,0.3)" />
+                                        <span style={{ fontSize: '13px', fontWeight: '850', color: 'rgba(255,255,255,0.8)' }}>{formatDateIST(item.date || item.billDate)}</span>
                                     </div>
-                                ) : (
-                                    <div style={{ width: '64px', height: '64px', borderRadius: '16px', background: `${color}10`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <Layers size={24} />
+                                </td>
+                                <td style={{ padding: '18px 25px' }}>
+                                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{item.borderName || item.category || 'Fastag Recharge'}</div>
+                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>{item.remarks || '--'}</div>
+                                </td>
+                                <td style={{ padding: '18px 25px', textAlign: 'right' }}>
+                                    <span style={{ fontSize: '15px', fontWeight: '1000', color: color }}>₹{(item.amount || 0).toLocaleString()}</span>
+                                </td>
+                                <td style={{ padding: '18px 25px', textAlign: 'center' }}>
+                                    {(item.receiptPhoto || item.billPhoto) ? (
+                                        <button 
+                                            onClick={() => setViewingImage(getImageUrl(item.receiptPhoto || item.billPhoto))}
+                                            style={{ 
+                                                width: '36px', height: '36px', borderRadius: '10px', 
+                                                background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
+                                                margin: '0 auto'
+                                            }}
+                                        >
+                                            <Eye size={18} color="#10b981" />
+                                        </button>
+                                    ) : (
+                                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.1)', fontWeight: '900' }}>N/A</span>
+                                    )}
+                                </td>
+                                <td style={{ padding: '18px 25px', textAlign: 'right' }}>
+                                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                        <button onClick={() => setEditingItem(item)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.2)', cursor: 'pointer' }}><Edit3 size={16}/></button>
+                                        <button onClick={() => onDelete(item._id)} style={{ background: 'transparent', border: 'none', color: 'rgba(244,63,94,0.4)', cursor: 'pointer' }}><Trash2 size={16}/></button>
                                     </div>
-                                )}
-                                
-                                <div style={{ flex: 1 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '6px' }}>
-                                        <span style={{ fontSize: '20px', fontWeight: '1000', color: '#fff' }}>₹{(item.amount || 0).toLocaleString()}</span>
-                                        <span style={{ padding: '4px 10px', borderRadius: '8px', background: `${color}15`, color: color, fontSize: '10px', fontWeight: '950', border: `1px solid ${color}30`, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                                            {item.borderName || item.category || 'RECHARGE'}
-                                        </span>
-                                    </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>
-                                            <Calendar size={13} />
-                                            {formatDateIST(item.date || item.billDate)}
-                                        </div>
-                                        {item.remarks && (
-                                            <div style={{ paddingLeft: '15px', borderLeft: '1px solid rgba(255,255,255,0.08)', fontSize: '12px', color: 'rgba(255,255,255,0.5)', fontWeight: '600', fontStyle: 'italic' }}>
-                                                "{item.remarks}"
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-                            </div>
-                            <div style={{ display: 'flex', gap: '15px' }}>
-                                <button onClick={() => setEditingItem(item)} style={{ width: '40px', height: '40px', borderRadius: '12px', color: 'rgba(255,255,255,0.3)', background: 'rgba(255,255,255,0.03)', border:'1px solid rgba(255,255,255,0.05)', cursor:'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}><Edit3 size={18}/></button>
-                                <button onClick={() => onDelete(item._id)} style={{ width: '40px', height: '40px', borderRadius: '12px', color: '#f43f5e', background: 'rgba(244,63,94,0.08)', border:'1px solid rgba(244,63,94,0.15)', cursor:'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s' }}><Trash2 size={18}/></button>
-                            </div>
-                        </div>
-                    )) }
-                </div>
+                                </td>
+                            </tr>
+                        )) }
+                    </tbody>
+                </table>
             </div>
         </div>
     );

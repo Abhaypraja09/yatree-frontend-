@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Minus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, User as UserIcon, Users, Clock, FileText, CheckCircle, XCircle, ExternalLink, Briefcase, IndianRupee } from 'lucide-react';
+import { Plus, Minus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, User as UserIcon, Users, Clock, FileText, CheckCircle, XCircle, Briefcase, IndianRupee, Eye, X, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
@@ -92,6 +92,10 @@ const Drivers = ({ isSubComponent = false }) => {
     // Admin Punch In/Out State
     const [showPunchInModal, setShowPunchInModal] = useState(false);
     const [showPunchOutModal, setShowPunchOutModal] = useState(false);
+    const [viewingDriver, setViewingDriver] = useState(null);
+    const [showViewModal, setShowViewModal] = useState(false);
+    const [viewingDocUrl, setViewingDocUrl] = useState(null);
+    const [showDocViewer, setShowDocViewer] = useState(false);
     const getLocalYYYYMMDDHHMM = (date = new Date()) => {
         return toISTDateTimeString(date);
     };
@@ -452,13 +456,18 @@ const Drivers = ({ isSubComponent = false }) => {
     const handleVerifyDoc = async (driverId, docId, status) => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            await axios.patch(`/api/admin/drivers/${driverId}/documents/${docId}/verify`, { status }, {
+            const response = await axios.patch(`/api/admin/drivers/${driverId}/documents/${docId}/verify`, { status }, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
+            
+            if (response.data.driver) {
+                setEditingDriver(response.data.driver);
+            }
+            
             fetchDrivers();
-            alert(`Document ${status} successfully`);
+            toast.success(`Document ${status} successfully`);
         } catch (err) {
-            alert(err.response?.data?.message || 'Error verifying document');
+            toast.error(err.response?.data?.message || 'Error verifying document');
         }
     };
 
@@ -824,7 +833,8 @@ const Drivers = ({ isSubComponent = false }) => {
                                         </div>
                                     </div>
 
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
+                                        <button onClick={() => { setViewingDriver(driver); setShowViewModal(true); }} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', fontSize: '11px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="View Profile"><Eye size={16} /></button>
                                         <button onClick={() => openEditModal(driver)} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>Edit</button>
                                         <button onClick={() => toggleStatus(driver._id, driver.status)} style={{ padding: '10px', borderRadius: '8px', background: driver.status === 'active' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: driver.status === 'active' ? '#f59e0b' : '#10b981', border: '1px solid rgba(255,255,255,0.1)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>{driver.status === 'active' ? 'Block' : 'Active'}</button>
                                         <button onClick={() => { setSelectedDriverForManual(driver); setShowPunchInModal(true); }} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>In</button>
@@ -894,10 +904,12 @@ const Drivers = ({ isSubComponent = false }) => {
                                             <label>Night Stay Bonus</label>
                                             <input type="number" className="input-field" value={nightStayBonus} onChange={(e) => setNightStayBonus(e.target.value)} />
                                         </div>
-                                        <div className="form-group">
-                                            <label>Same Day Return</label>
-                                            <input type="number" className="input-field" value={sameDayReturnBonus} onChange={(e) => setSameDayReturnBonus(e.target.value)} />
-                                        </div>
+                                        {sameDayReturnEnabled && (
+                                            <div className="form-group">
+                                                <label>Same Day Return Bonus (₹)</label>
+                                                <input type="number" className="input-field" value={sameDayReturnBonus} onChange={(e) => setSameDayReturnBonus(e.target.value)} placeholder="Enter amount" />
+                                            </div>
+                                        )}
                                     </div>
 
                                     <div style={{ marginTop: '10px', padding: '15px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.1)', marginBottom: '20px' }}>
@@ -1082,13 +1094,17 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 <input type="number" className="input-field" value={editForm.nightStayBonus} onChange={(e) => setEditForm({ ...editForm, nightStayBonus: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
                                             </div>
                                         </div>
-                                        <div>
-                                            <label className="input-label" style={{ marginBottom: '6px' }}>Same Day Return</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>₹</span>
-                                                <input type="number" className="input-field" value={editForm.sameDayReturnBonus} onChange={(e) => setEditForm({ ...editForm, sameDayReturnBonus: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
+                                    {editForm.sameDayReturnEnabled && (
+                                        <div className="form-grid-1" style={{ marginBottom: '15px' }}>
+                                            <div>
+                                                <label className="input-label" style={{ marginBottom: '6px' }}>Same Day Return Bonus</label>
+                                                <div style={{ position: 'relative' }}>
+                                                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>₹</span>
+                                                    <input type="number" className="input-field" value={editForm.sameDayReturnBonus} onChange={(e) => setEditForm({ ...editForm, sameDayReturnBonus: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
+                                                </div>
                                             </div>
                                         </div>
+                                    )}
                                     </div>
 
                                     <div style={{ marginTop: '10px', padding: '15px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.1)', marginBottom: '20px' }}>
@@ -1129,11 +1145,13 @@ const Drivers = ({ isSubComponent = false }) => {
                                                                 <div style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', padding: '6px', borderRadius: '6px' }}><FileText size={14} /></div>
                                                                 <div>
                                                                     <div style={{ fontSize: '12px', color: 'white', fontWeight: '700' }}>{doc.documentType}</div>
-                                                                    <div style={{ fontSize: '10px', color: doc.verificationStatus === 'Verified' ? '#10b981' : doc.verificationStatus === 'Rejected' ? '#f43f5e' : 'var(--primary)', fontWeight: '800', textTransform: 'uppercase' }}>{doc.verificationStatus}</div>
+                                                                    <div style={{ fontSize: '10px', color: doc.verificationStatus === 'Verified' ? '#10b981' : doc.verificationStatus === 'Rejected' ? '#f43f5e' : 'var(--primary)', fontWeight: '800', textTransform: 'uppercase' }}>
+                                                                        {doc.verificationStatus === 'Pending' ? 'UPLOADED (AWAITING VERIFICATION)' : doc.verificationStatus}
+                                                                    </div>
                                                                 </div>
                                                             </div>
                                                             <div style={{ display: 'flex', gap: '8px' }}>
-                                                                <a href={doc.imageUrl} target="_blank" rel="noopener noreferrer" style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}><ExternalLink size={14} /></a>
+                                                                <button type="button" onClick={() => { setViewingDocUrl(doc.imageUrl); setShowDocViewer(true); }} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '6px', borderRadius: '6px', cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center' }} title="View Document"><Eye size={14} /></button>
                                                                 {doc.verificationStatus !== 'Verified' && (
                                                                     <button type="button" onClick={() => handleVerifyDoc(editingDriver._id, doc._id, 'Verified')} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer' }}><CheckCircle size={14} /></button>
                                                                 )}
@@ -1542,6 +1560,168 @@ const Drivers = ({ isSubComponent = false }) => {
                                     {submitting ? 'PROCESSING...' : 'FINALIZE DUTY'}
                                 </button>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            <AnimatePresence>
+                {showViewModal && viewingDriver && (
+                    <div className="modal-overlay" style={{ backdropFilter: 'blur(20px)' }}>
+                        <motion.div
+                            initial={{ scale: 0.95, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.95, opacity: 0 }}
+                            className="modal-content-wrapper"
+                            style={{ maxWidth: '800px', background: '#0a0a0c', border: '1px solid rgba(255,255,255,0.08)', overflow: 'hidden' }}
+                        >
+                            {/* Header Section */}
+                            <div style={{ padding: '35px', background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), transparent)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                <div style={{ display: 'flex', gap: '25px', alignItems: 'center' }}>
+                                    <div style={{ width: '80px', height: '80px', borderRadius: '24px', background: 'linear-gradient(135deg, #6366f1, #a855f7)', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 10px 30px rgba(99, 102, 241, 0.3)' }}>
+                                        <User color="white" size={40} />
+                                    </div>
+                                    <div>
+                                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>{viewingDriver.name}</h2>
+                                        <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                                            <span style={{ padding: '4px 12px', background: viewingDriver.status === 'active' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(244, 63, 94, 0.15)', color: viewingDriver.status === 'active' ? '#10b981' : '#f43f5e', borderRadius: '100px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', border: '1px solid rgba(255,255,255,0.05)' }}>{viewingDriver.status}</span>
+                                            <span style={{ padding: '4px 12px', background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.6)', borderRadius: '100px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', border: '1px solid rgba(255,255,255,0.05)' }}>ID: {viewingDriver._id.slice(-6).toUpperCase()}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button onClick={() => setShowViewModal(false)} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '10px', borderRadius: '50%', cursor: 'pointer', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+                            </div>
+
+                            <div style={{ padding: '35px', maxHeight: '70vh', overflowY: 'auto' }}>
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '30px' }}>
+                                    {/* Column 1: Info */}
+                                    <div>
+                                        <div style={{ marginBottom: '25px' }}>
+                                            <p style={{ color: '#6366f1', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '15px' }}>Access Details</p>
+                                            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>Username</span>
+                                                    <span style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{viewingDriver.username || 'N/A'}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>Mobile</span>
+                                                    <span style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>{viewingDriver.mobile}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>License No.</span>
+                                                    <span style={{ color: 'white', fontWeight: '700', fontSize: '14px', fontFamily: 'monospace' }}>{viewingDriver.licenseNumber || 'N/A'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p style={{ color: '#10b981', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '15px' }}>Remuneration</p>
+                                            <div style={{ background: 'rgba(16, 185, 129, 0.03)', border: '1px solid rgba(16, 185, 129, 0.1)', borderRadius: '20px', padding: '20px', display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>Daily Wage</span>
+                                                    <span style={{ color: '#10b981', fontWeight: '900', fontSize: '18px' }}>₹{viewingDriver.dailyWage || 0}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>Night Bonus</span>
+                                                    <span style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>₹{viewingDriver.nightStayBonus || 0}</span>
+                                                </div>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>SD Return Policy</span>
+                                                    <span style={{ padding: '4px 10px', background: viewingDriver.sameDayReturnEnabled ? '#10b981' : 'rgba(255,255,255,0.05)', color: viewingDriver.sameDayReturnEnabled ? 'black' : 'rgba(255,255,255,0.4)', borderRadius: '8px', fontSize: '9px', fontWeight: '900' }}>{viewingDriver.sameDayReturnEnabled ? 'ENABLED' : 'DISABLED'}</span>
+                                                </div>
+                                                {viewingDriver.sameDayReturnEnabled && (
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>SD Bonus Amount</span>
+                                                        <span style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>₹{viewingDriver.sameDayReturnBonus || 0}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Column 2: Docs & Settings */}
+                                    <div>
+                                        <div style={{ marginBottom: '25px' }}>
+                                            <p style={{ color: '#a855f7', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '15px' }}>Compliance Documents</p>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                                                {viewingDriver.documents && viewingDriver.documents.length > 0 ? (
+                                                    viewingDriver.documents.map(doc => (
+                                                        <div key={doc._id} style={{ background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                <FileText size={18} color="#a855f7" />
+                                                                <div>
+                                                                    <div style={{ fontSize: '13px', color: 'white', fontWeight: '700' }}>{doc.documentType}</div>
+                                                                    <div style={{ fontSize: '10px', color: doc.verificationStatus === 'Verified' ? '#10b981' : '#f59e0b', fontWeight: '800' }}>{doc.verificationStatus.toUpperCase()}</div>
+                                                                </div>
+                                                            </div>
+                                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                                <button type="button" onClick={() => { setViewingDocUrl(doc.imageUrl); setShowDocViewer(true); }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center' }} title="Preview"><Eye size={16} /></button>
+                                                            </div>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div style={{ padding: '20px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '12px', border: '1px dashed rgba(255,255,255,0.1)', borderRadius: '15px' }}>No documents on file.</div>
+                                                )}
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <p style={{ color: '#f43f5e', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', marginBottom: '15px' }}>Operational Settings</p>
+                                            <div style={{ background: 'rgba(244, 63, 94, 0.03)', border: '1px solid rgba(244, 63, 94, 0.1)', borderRadius: '20px', padding: '20px' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                                                    <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>Overtime Calculation</span>
+                                                    <span style={{ padding: '4px 10px', background: viewingDriver.overtime?.enabled ? '#f43f5e' : 'rgba(255,255,255,0.05)', color: viewingDriver.overtime?.enabled ? 'white' : 'rgba(255,255,255,0.4)', borderRadius: '8px', fontSize: '9px', fontWeight: '900' }}>{viewingDriver.overtime?.enabled ? 'ACTIVE' : 'INACTIVE'}</span>
+                                                </div>
+                                                {viewingDriver.overtime?.enabled && (
+                                                    <>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>OT Threshold</span>
+                                                            <span style={{ color: 'white', fontWeight: '700' }}>{viewingDriver.overtime.thresholdHours} Hours</span>
+                                                        </div>
+                                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                            <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>OT Hourly Rate</span>
+                                                            <span style={{ color: 'white', fontWeight: '700' }}>₹{viewingDriver.overtime.ratePerHour}</span>
+                                                        </div>
+                                                    </>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style={{ padding: '25px 35px', background: 'rgba(255,255,255,0.02)', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', gap: '15px' }}>
+                                <button onClick={() => setShowViewModal(false)} style={{ flex: 1, padding: '14px', borderRadius: '15px', background: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: '800', border: 'none', cursor: 'pointer' }}>Back to Fleet</button>
+                                <button onClick={() => { setShowViewModal(false); openEditModal(viewingDriver); }} style={{ flex: 1, padding: '14px', borderRadius: '15px', background: 'linear-gradient(135deg, #6366f1, #a855f7)', color: 'white', fontWeight: '800', border: 'none', cursor: 'pointer', boxShadow: '0 10px 20px rgba(99, 102, 241, 0.2)' }}>Edit Profile</button>
+                            </div>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+            <AnimatePresence>
+                {showDocViewer && viewingDocUrl && (
+                    <div className="modal-overlay" style={{ zIndex: 3000, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(10px)' }} onClick={() => setShowDocViewer(false)}>
+                        <motion.div
+                            initial={{ scale: 0.9, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 1 }}
+                            exit={{ scale: 0.9, opacity: 0 }}
+                            style={{ position: 'relative', maxWidth: '90vw', maxHeight: '90vh' }}
+                            onClick={(e) => e.stopPropagation()}
+                        >
+                            <button 
+                                onClick={() => setShowDocViewer(false)}
+                                style={{ position: 'absolute', top: '-40px', right: '-40px', background: 'white', border: 'none', borderRadius: '50%', width: '32px', height: '32px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 0 20px rgba(0,0,0,0.5)' }}
+                            >
+                                <X size={20} color="black" />
+                            </button>
+                            <img 
+                                src={viewingDocUrl} 
+                                alt="Document Preview" 
+                                style={{ width: '100%', height: 'auto', maxHeight: '90vh', borderRadius: '12px', boxShadow: '0 20px 50px rgba(0,0,0,0.5)', border: '1px solid rgba(255,255,255,0.1)' }} 
+                            />
+                            <div style={{ marginTop: '15px', textAlign: 'center' }}>
+                                <a href={viewingDocUrl} download target="_blank" rel="noopener noreferrer" style={{ color: 'white', background: 'rgba(255,255,255,0.1)', padding: '8px 20px', borderRadius: '20px', textDecoration: 'none', fontSize: '12px', fontWeight: '700', border: '1px solid rgba(255,255,255,0.2)' }}>Download Original</a>
+                            </div>
                         </motion.div>
                     </div>
                 )}

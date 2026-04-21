@@ -1461,7 +1461,7 @@ const DriverPortal = () => {
                                                                             className="checkbox-input"
                                                                             checked={outsideTripTypes.includes('Same Day')}
                                                                             onChange={(e) => {
-                                                                                if (e.target.checked) setOutsideTripTypes([...outsideTripTypes, 'Same Day']);
+                                                                                if (e.target.checked) setOutsideTripTypes([...outsideTripTypes.filter(t => t !== 'Night Stay'), 'Same Day']);
                                                                                 else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Same Day'));
                                                                             }}
                                                                         />
@@ -1476,7 +1476,7 @@ const DriverPortal = () => {
                                                                             className="checkbox-input"
                                                                             checked={outsideTripTypes.includes('Night Stay')}
                                                                             onChange={(e) => {
-                                                                                if (e.target.checked) setOutsideTripTypes([...outsideTripTypes, 'Night Stay']);
+                                                                                if (e.target.checked) setOutsideTripTypes([...outsideTripTypes.filter(t => t !== 'Same Day'), 'Night Stay']);
                                                                                 else setOutsideTripTypes(outsideTripTypes.filter(t => t !== 'Night Stay'));
                                                                             }}
                                                                         />
@@ -1502,29 +1502,7 @@ const DriverPortal = () => {
                                                             style={{ fontSize: '14px', resize: 'vertical', minHeight: '60px' }}
                                                         />
                                                     </div>
-                                                    <div className="modal-grid-2" style={{ marginTop: '16px', gap: '16px' }}>
-                                                        <div className="input-wrapper-full">
-                                                            <label className="input-label" style={{ color: 'var(--primary)', fontWeight: '800' }}>{t('specialPay')}</label>
-                                                            <input
-                                                                type="number"
-                                                                className="input-field"
-                                                                placeholder="₹ 0.00"
-                                                                value={specialPay}
-                                                                onChange={(e) => setSpecialPay(e.target.value)}
-                                                                style={{ border: '1px solid rgba(14, 165, 233, 0.3)' }}
-                                                            />
-                                                        </div>
-                                                        <div className="input-wrapper-full">
-                                                            <label className="input-label">{t('specialPayRemark')}</label>
-                                                            <input
-                                                                type="text"
-                                                                className="input-field"
-                                                                placeholder="Reason for special pay"
-                                                                value={specialPayRemark}
-                                                                onChange={(e) => setSpecialPayRemark(e.target.value)}
-                                                            />
-                                                        </div>
-                                                    </div>
+
                                                 </div>
                                             )}
 

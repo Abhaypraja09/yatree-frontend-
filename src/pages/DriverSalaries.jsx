@@ -44,7 +44,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedDriverDetails, setSelectedDriverDetails] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState('payroll');
+    const [activeTab, setActiveTab] = useState('special');
 
     // Advances states
     const [advances, setAdvances] = useState([]);
@@ -754,6 +754,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
     const totalGrossEarnings = filteredSalaries.reduce((sum, s) => sum + (s.totalEarned || 0), 0);
     const totalNetPayout = filteredSalaries.reduce((sum, s) => sum + (s.netPayable || 0), 0);
+    const totalSpecialPay = filteredSalaries.reduce((sum, s) => sum + (s.totalAllowances || 0), 0);
+    const totalAdvancesTotal = filteredSalaries.reduce((sum, s) => sum + (s.totalAdvances || 0), 0);
+    const totalEMITotal = filteredSalaries.reduce((sum, s) => sum + (s.totalEMI || 0), 0);
 
     const det = selectedDriverDetails;
     const dInfo = det?.driver?.name ? det.driver : (det?.driver?.[0] || {});
@@ -992,98 +995,44 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 </div>
             )}
 
-            {/* SLEEK TAB NAVIGATION */}
-            <div style={{ 
-                display: 'flex', 
-                gap: '8px', 
-                marginBottom: '30px', 
-                padding: '6px', 
-                background: 'rgba(15, 23, 42, 0.4)', 
-                borderRadius: '20px', 
-                width: 'fit-content', 
-                border: '1px solid rgba(255,255,255,0.05)',
-                backdropFilter: 'blur(10px)',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
-                alignSelf: 'center',
-                overflowX: 'auto',
-                maxWidth: '100%'
-            }}>
-                {[
-                    { id: 'payroll', label: 'Payroll', icon: FileText, color: '#38bdf8' },
-                    { id: 'advances', label: 'Advance Ledger', icon: TrendingDown, color: '#f43f5e' },
-                    { id: 'loans', label: 'Loan Master', icon: Wallet, color: '#818cf8' },
-                    { id: 'special', label: 'Special Pay', icon: CheckCircle, color: '#10b981' }
-                ].map((t) => (
-                    <button
-                        key={t.id}
-                        onClick={() => setActiveTab(t.id)}
-                        style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '10px',
-                            padding: '12px 22px',
-                            borderRadius: '15px',
-                            border: 'none',
-                            cursor: 'pointer',
-                            background: activeTab === t.id ? t.color : 'transparent',
-                            color: activeTab === t.id ? 'white' : 'rgba(255,255,255,0.4)',
-                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                            fontSize: '12px',
-                            fontWeight: '900',
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.5px',
-                            whiteSpace: 'nowrap'
-                        }}
-                    >
-                        <t.icon size={16} />
-                        {t.label}
-                    </button>
-                ))}
+            {/* SUMMARY CARDS - ACTING AS NAVIGATION */}
+            <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
+                <div 
+                    onClick={() => setActiveTab('special')}
+                    className={`glass-card ${activeTab === 'special' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
+                    style={{ 
+                        flex: '1', 
+                        maxWidth: '400px', 
+                        padding: '24px', 
+                        cursor: 'pointer',
+                        background: activeTab === 'special' 
+                            ? 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%)' 
+                            : 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', 
+                        border: activeTab === 'special' 
+                            ? '2px solid #10b981' 
+                            : '1px solid rgba(16,185,129,0.2)',
+                        transition: 'all 0.3s ease',
+                        boxShadow: activeTab === 'special' ? '0 10px 25px rgba(16,185,129,0.2)' : 'none'
+                    }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <p style={{ fontSize: '12px', fontWeight: '800', color: '#10b981', marginBottom: '8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                Special Pay & Allowances <CheckCircle size={14} />
+                            </p>
+                            <h3 style={{ fontSize: '32px', fontWeight: '950', color: 'white', margin: 0 }}>₹ {totalSpecialPay.toLocaleString()}</h3>
+                        </div>
+                        <div style={{ width: '50px', height: '50px', borderRadius: '16px', background: 'rgba(16,185,129,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <IndianRupee size={24} color="#10b981" />
+                        </div>
+                    </div>
+                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: '15px 0 0', fontWeight: '600' }}>Click to manage additional payments →</p>
+                </div>
             </div>
 
             <AnimatePresence mode="wait">
                 {activeTab === 'payroll' && (
                     <motion.div key="payroll" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.3 }}>
-
-
-                <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
-                    <div className="glass-card" style={{ flex: '1.5', minWidth: '280px', padding: '20px', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <p style={{ fontSize: '11px', fontWeight: '800', color: '#10b981', marginBottom: '4px', textTransform: 'uppercase' }}>
-                                    Total Gross Earnings ({new Date(0, month - 1).toLocaleString('default', { month: 'short' })} {year})
-                                </p>
-                                <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white', margin: 0 }}>₹ {totalGrossEarnings.toLocaleString()}</h3>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <p style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', marginBottom: '2px', textTransform: 'uppercase' }}>Net Payout</p>
-                                <p style={{ fontSize: '16px', fontWeight: '800', color: 'var(--primary)', margin: 0 }}>₹ {totalNetPayout.toLocaleString()}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div 
-                        onClick={() => setActiveTab('advances')}
-                        className="glass-card glass-card-hover-effect" 
-                        style={{ cursor: 'pointer', flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(244,63,94,0.1) 0%, rgba(244,63,94,0.05) 100%)', border: '1px solid rgba(244,63,94,0.2)' }}
-                    >
-                        <p style={{ fontSize: '11px', fontWeight: '800', color: '#f43f5e', marginBottom: '4px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            Advances Taken <TrendingDown size={10} />
-                        </p>
-                        <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredSalaries.reduce((sum, s) => sum + (s.totalAdvances || 0), 0).toLocaleString()}</h3>
-                        <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>Click to view ledger →</p>
-                    </div>
-                    <div 
-                        onClick={() => setActiveTab('loans')}
-                        className="glass-card glass-card-hover-effect" 
-                        style={{ cursor: 'pointer', flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.05) 100%)', border: '1px solid rgba(251,191,36,0.2)' }}
-                    >
-                        <p style={{ fontSize: '11px', fontWeight: '800', color: 'var(--primary)', marginBottom: '4px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            EMI Deductions <Wallet size={10} />
-                        </p>
-                        <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredSalaries.reduce((sum, s) => sum + (s.totalEMI || 0), 0).toLocaleString()}</h3>
-                        <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>Click to view management →</p>
-                    </div>
-                </div>
 
             {/* Desktop Table */}
             <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
