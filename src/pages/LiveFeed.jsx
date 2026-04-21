@@ -4,7 +4,7 @@ import axios from '../api/axios';
 import {
     Users, Clock, Fuel, X, Camera, LogIn, IndianRupee, Activity,
     Calendar, ChevronLeft, ChevronRight, Car, Search, Filter,
-    CheckCircle2, AlertCircle, History, MapPin, Phone, Trash2, PieChart, Briefcase, RefreshCw, Landmark
+    CheckCircle2, AlertCircle, History, MapPin, Phone, Trash2, PieChart, Briefcase, RefreshCw, Landmark, Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -160,14 +160,14 @@ const LiveFeed = () => {
         const name = d.name || '';
         const mobile = d.mobile || '';
         return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               mobile.toString().includes(searchQuery);
+            mobile.toString().includes(searchQuery);
     }) || [];
 
     const filteredAbsentDrivers = stats?.absentDriversFeed?.filter(d => {
         const name = d.name || '';
         const mobile = d.mobile || '';
         return name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-               mobile.toString().includes(searchQuery);
+            mobile.toString().includes(searchQuery);
     }) || [];
 
     const filteredUnusedVehicles = (stats?.unusedVehiclesFeed || [])
@@ -515,7 +515,7 @@ const LiveFeed = () => {
                         <TabButton id="vehicles" label="Fleet" icon={Car} count={isToday ? totalUsedVehicles : stats?.totalUsedVehiclesCount} />
                         <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length} />
                         <TabButton id="absent" label="Absent" icon={Users} count={stats?.absentDriversCount} />
-                        <TabButton id="unused" label="Stationary" icon={Car} count={stats?.unusedVehiclesCount} />
+                        <TabButton id="unused" label="IDEL" icon={Car} count={stats?.unusedVehiclesCount} />
                     </div>
 
                     <div style={{ position: 'relative', flex: 1, minWidth: '220px', maxWidth: '450px' }}>
@@ -1073,7 +1073,7 @@ const LiveFeed = () => {
                                 )}
                             </motion.div>
                         )}
-    
+
                         {activeTab === 'unused' && (
                             <motion.div
                                 key="unused"
@@ -1104,13 +1104,13 @@ const LiveFeed = () => {
                                                     width: '56px',
                                                     height: '56px',
                                                     borderRadius: '20px',
-                                                    background: 'rgba(255, 255, 255, 0.03)',
+                                                    background: vehicle.dbStatus === 'inactive' ? 'rgba(244, 63, 94, 0.1)' : 'rgba(255, 255, 255, 0.03)',
                                                     display: 'flex',
                                                     justifyContent: 'center',
                                                     alignItems: 'center',
-                                                    border: '1px solid rgba(255,255,255,0.05)'
+                                                    border: `1px solid ${vehicle.dbStatus === 'inactive' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(255,255,255,0.05)'}`
                                                 }}>
-                                                    <Car size={28} color="rgba(255,255,255,0.2)" strokeWidth={2.5} />
+                                                    <Car size={28} color={vehicle.dbStatus === 'inactive' ? '#f43f5e' : 'rgba(255,255,255,0.2)'} strokeWidth={2.5} />
                                                 </div>
                                                 <div>
                                                     <h4 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '950', letterSpacing: '-0.5px' }}>{vehicle.carNumber.split('#')[0]}</h4>
@@ -1120,15 +1120,19 @@ const LiveFeed = () => {
                                             <div style={{
                                                 fontSize: '10px',
                                                 fontWeight: '1000',
-                                                color: 'rgba(255,255,255,0.3)',
-                                                background: 'rgba(255,255,255,0.03)',
+                                                color: vehicle.dbStatus === 'inactive' ? '#f43f5e' : 'rgba(255,255,255,0.3)',
+                                                background: vehicle.dbStatus === 'inactive' ? 'rgba(244, 63, 94, 0.1)' : 'rgba(255,255,255,0.03)',
                                                 padding: '5px 12px',
                                                 borderRadius: '10px',
                                                 textTransform: 'uppercase',
                                                 letterSpacing: '1px',
-                                                border: '1px solid rgba(255,255,255,0.05)'
+                                                border: `1px solid ${vehicle.dbStatus === 'inactive' ? 'rgba(244, 63, 94, 0.2)' : 'rgba(255,255,255,0.05)'}`,
+                                                display: 'flex',
+                                                alignItems: 'center',
+                                                gap: '5px'
                                             }}>
-                                                Unused Today
+                                                {vehicle.dbStatus === 'inactive' && <Shield size={10} />}
+                                                {vehicle.dbStatus === 'inactive' ? 'Blocked' : 'Unused Today'}
                                             </div>
                                         </div>
                                     </motion.div>

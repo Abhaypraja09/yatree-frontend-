@@ -159,10 +159,18 @@ const FuelPage = () => {
     }, [location.search]);
 
     useEffect(() => {
-        const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
-        const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
-        setFromDate(start);
-        setToDate(end);
+        if (selectedMonth === 'All') {
+            // Full Financial Year: April 1st of selectedYear to March 31st of next year
+            setFromDate(`${selectedYear}-04-01`);
+            setToDate(`${selectedYear + 1}-03-31`);
+        } else {
+            // Financial Year Smart Mapping: Jan-Mar (0,1,2) belong to internal state selectedYear + 1
+            const calendarYear = (selectedMonth >= 0 && selectedMonth <= 2) ? selectedYear + 1 : selectedYear;
+            const start = toISTDateString(new Date(calendarYear, selectedMonth, 1));
+            const end = toISTDateString(new Date(calendarYear, selectedMonth + 1, 0));
+            setFromDate(start);
+            setToDate(end);
+        }
     }, [selectedMonth, selectedYear]);
 
     const shiftMonth = (amount) => {
@@ -544,56 +552,69 @@ const FuelPage = () => {
                             }}>Management</span>
                         </h1>
                     </div>
-                    <div className="mobile-stack" style={{ display: 'flex', gap: '8px', flex: '1', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
-                        <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                            <button
-                                onClick={() => shiftMonth(-1)}
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        {/* MONTH SELECTOR */}
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            borderRadius: '16px',
+                            padding: '4px 8px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            height: '48px'
+                        }}>
+                            <select
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value === 'All' ? 'All' : Number(e.target.value))}
                                 style={{
-                                    width: '40px', height: '40px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-                                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white', fontWeight: '900', fontSize: '14px', padding: '0 10px',
+                                    height: '100%', outline: 'none', cursor: 'pointer'
                                 }}
                             >
-                                <ChevronLeft size={18} />
-                            </button>
-                            <div style={{ display: 'flex', gap: '8px' }}>
-                                <select
-                                    value={selectedMonth}
-                                    onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                                    className="input-field"
-                                    style={{ height: '48px', width: '120px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
-                                >
-                                    {[
-                                        { n: 0, m: 'January' }, { n: 1, m: 'February' }, { n: 2, m: 'March' },
-                                        { n: 3, m: 'April' }, { n: 4, m: 'May' }, { n: 5, m: 'June' },
-                                        { n: 6, m: 'July' }, { n: 7, m: 'August' }, { n: 8, m: 'September' },
-                                        { n: 9, m: 'October' }, { n: 10, m: 'November' }, { n: 11, m: 'December' }
-                                    ].map(item => (
-                                        <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
-                                    ))}
-                                </select>
+                                <option value="All" style={{ background: '#0f172a' }}>Full Year</option>
+                                {[
+                                    { n: 3, m: 'Apr' }, { n: 4, m: 'May' }, { n: 5, m: 'Jun' },
+                                    { n: 6, m: 'Jul' }, { n: 7, m: 'Aug' }, { n: 8, m: 'Sep' },
+                                    { n: 9, m: 'Oct' }, { n: 10, m: 'Nov' }, { n: 11, m: 'Dec' },
+                                    { n: 0, m: 'Jan' }, { n: 1, m: 'Feb' }, { n: 2, m: 'Mar' }
+                                ].map(item => (
+                                    <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
+                                ))}
+                            </select>
+                        </div>
 
-                                <select
-                                    value={selectedYear}
-                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                    className="input-field"
-                                    style={{ height: '48px', width: '100px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
-                                >
-                                    {[2024, 2025, 2026, 2027].map(y => (
-                                        <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
-                                    ))}
-                                </select>
-                            </div>
-                            <button
-                                onClick={() => shiftMonth(1)}
+                        {/* FINANCIAL YEAR SELECTOR */}
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            borderRadius: '16px',
+                            padding: '4px 15px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            height: '48px',
+                            gap: '8px'
+                        }}>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>FY</span>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
                                 style={{
-                                    width: '40px', height: '40px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-                                    color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white', fontWeight: '900', fontSize: '14px',
+                                    outline: 'none', cursor: 'pointer'
                                 }}
                             >
-                                <ChevronRight size={18} />
-                            </button>
+                                {[2023, 2024, 2025, 2026, 2027].map(y => (
+                                    <option key={y} value={y} style={{ background: '#0f172a' }}>
+                                        {y}-{String(y + 1).slice(-2)}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
                     </div>
 

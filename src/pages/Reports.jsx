@@ -57,8 +57,8 @@ const SectionBanner = ({ tabId, count, chips, fromDate, toDate }) => {
 };
 
 /* ─── Shared TH ─── */
-const Th = ({ color, children }) => (
-    <th style={{ padding: '12px 16px', color: color || 'rgba(255,255,255,0.35)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.02)' }}>
+const Th = ({ color, children, align, width, style }) => (
+    <th style={{ padding: '12px 16px', color: color || 'rgba(255,255,255,0.35)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', whiteSpace: 'nowrap', background: 'rgba(255,255,255,0.02)', textAlign: align || 'left', width, ...style }}>
         {children}
     </th>
 );
@@ -111,11 +111,16 @@ const TableSection = ({ tabId, rows, headers, chips, fromDate, toDate, colSummar
                                 ))}
                             </tr>
                         )}
-                        <tr>{headers.map((h, i) => <Th key={i} color={cfg.color}>{h}</Th>)}</tr>
+                        <tr>
+                            {headers.map((h, i) => {
+                                const isCenter = ['Type', 'Open KM', 'Close KM', 'Total KM', 'KM Run', 'Model'].includes(h);
+                                return <Th key={i} color={cfg.color} align={isCenter ? 'center' : 'left'}>{h}</Th>;
+                            })}
+                        </tr>
                     </thead>
                     <tbody>
                         {rows?.length === 0
-                            ? <tr><td colSpan={headers.length} style={{ padding: '50px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '13px' }}>{empty || 'No records found.'}</td></tr>
+                            ? <tr><td colSpan={headers.length} style={{ padding: '50px', textAlign: 'center', color: 'rgba(231, 25, 25, 0.2)', fontSize: '13px' }}>{empty || 'No records found.'}</td></tr>
                             : rows
                         }
                     </tbody>
@@ -131,7 +136,7 @@ const TR = ({ children, idx }) => (
         {children}
     </motion.tr>
 );
-const TD = ({ children, noWrap }) => <td style={{ padding: '13px 16px', whiteSpace: noWrap ? 'nowrap' : undefined }}>{children}</td>;
+const TD = ({ children, noWrap, align, style }) => <td style={{ padding: '20px 16px', whiteSpace: noWrap ? 'nowrap' : undefined, verticalAlign: 'top', textAlign: align || 'left', ...style }}>{children}</td>;
 
 /* ─── Loading skeleton ─── */
 const LoadingRow = ({ cols }) => (
@@ -511,7 +516,7 @@ const Reports = ({ isSubComponent = false }) => {
     };
 
     /* ── Attendance row renderer (shared for Staff + Freelancers + Outside) ── */
-    const ATT_HEADERS = ['Date', 'Driver & Vehicle', 'Punch In', 'Punch Out', 'Open KM', 'Close KM', 'Total KM', 'Fuel (₹)', 'Parking', 'Salary', 'Status', 'Action'];
+    const ATT_HEADERS = ['Date', 'Type', 'Driver & Vehicle', 'Punch In', 'Punch Out', 'Open KM', 'Close KM', 'Total KM', 'Fuel (₹)', 'Parking', 'Salary', 'Status', 'Action'];
     const LOGBOOK_HEADERS = ['Date', 'Type', 'Driver & Vehicle', 'Punch In', 'Punch Out', 'Open KM', 'Close KM', 'Total KM', 'Fuel (₹)', 'Parking', 'Salary', 'Status', 'Action'];
 
     /* ── Attendance row renderer ── */
@@ -566,22 +571,22 @@ const Reports = ({ isSubComponent = false }) => {
                             <span style={{ color: 'rgba(255,255,255,0.75)', fontWeight: '700', fontSize: '13px' }}>{fmt(displayDate)}</span>
                         </div>
                     </TD>
-                    {isLogbook && (
-                        <TD noWrap>
-                            <span style={{
-                                fontSize: '9px',
-                                fontWeight: '900',
-                                padding: '2px 8px',
-                                borderRadius: '6px',
-                                background: typeBg,
-                                color: typeColor,
-                                border: `1px solid ${typeBorder}`,
-                                textTransform: 'uppercase'
-                            }}>
-                                {typeLabel}
-                            </span>
-                        </TD>
-                    )}
+                    <TD noWrap align="center">
+                        <span style={{
+                            fontSize: '9px',
+                            fontWeight: '900',
+                            padding: '3px 8px',
+                            borderRadius: '6px',
+                            background: typeBg,
+                            color: typeColor,
+                            border: `1px solid ${typeBorder}`,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            display: 'inline-block'
+                        }}>
+                            {typeLabel}
+                        </span>
+                    </TD>
                     <TD>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
                             <div
@@ -608,23 +613,17 @@ const Reports = ({ isSubComponent = false }) => {
                             ? <div style={{ display: 'flex', alignItems: 'center', gap: '5px', color: '#f43f5e', fontWeight: '800', fontSize: '13px' }}><ArrowDownLeft size={13} />{outTime}</div>
                             : <StatusBadge ok={false} badLabel="⏳ On Duty" />) : (isOutside ? <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', maxWidth: '100px', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.dutyType}</div> : '--')}
                     </TD>
-                    <TD noWrap>
-                        <div style={{ textAlign: 'center' }}>
-                            <div style={{ color: entryType.includes('attendance') ? '#38bdf8' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{openKM}</div>
-                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>{isOutside ? 'FROM' : 'OPEN KM'}</div>
-                        </div>
+                    <TD noWrap align="center">
+                        <div style={{ color: entryType.includes('attendance') ? '#38bdf8' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{openKM}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>{isOutside ? 'FROM' : 'OPEN KM'}</div>
                     </TD>
-                    <TD noWrap>
-                        <div style={{ textAlign: 'center' }}>
-                            <div style={{ color: (entryType.includes('attendance') && isCompleted) ? '#f43f5e' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{isOutside ? '--' : closeKM}</div>
-                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>{isOutside ? 'TO' : 'CLOSE KM'}</div>
-                        </div>
+                    <TD noWrap align="center">
+                        <div style={{ color: (entryType.includes('attendance') && isCompleted) ? '#f43f5e' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{isOutside ? '--' : closeKM}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>{isOutside ? 'TO' : 'CLOSE KM'}</div>
                     </TD>
-                    <TD noWrap>
-                        <div style={{ textAlign: 'center' }}>
-                            <div style={{ color: entryType.includes('attendance') ? 'white' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{isOutside ? (r.model || '--') : (totalKM !== '--' ? totalKM : '--')}</div>
-                            <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>{isOutside ? 'MODEL' : 'KM RUN'}</div>
-                        </div>
+                    <TD noWrap align="center">
+                        <div style={{ color: entryType.includes('attendance') ? 'white' : 'rgba(255,255,255,0.1)', fontWeight: '900', fontSize: '14px' }}>{isOutside ? (r.model || '--') : (totalKM !== '--' ? totalKM : '--')}</div>
+                        <div style={{ color: 'rgba(255,255,255,0.25)', fontSize: '9px', fontWeight: '800' }}>{isOutside ? 'MODEL' : 'KM RUN'}</div>
                     </TD>
                     <TD>
                         {fuelAmt > 0

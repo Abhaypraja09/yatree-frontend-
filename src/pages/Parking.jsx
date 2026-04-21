@@ -457,167 +457,114 @@ const ParkingPage = () => {
         <div className="container-fluid" style={{ paddingBottom: '40px' }}>
             <SEO title="Parking Management" description="Track parking expenses, driver payments, and office costs." />
 
-            <header style={{ padding: 'clamp(20px, 4vw, 40px) 0' }}>
+            <header style={{ padding: '30px 0 20px' }}>
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     flexWrap: 'wrap',
-                    gap: '20px',
-                    marginBottom: '30px'
+                    gap: '15px'
                 }}>
                     <div className="flex-resp" style={{ alignItems: 'center', gap: '15px' }}>
                         <div style={{
-                            width: 'clamp(40px,10vw,50px)',
-                            height: 'clamp(40px,10vw,50px)',
-                            background: 'linear-gradient(135deg, white, #f8fafc)',
-                            borderRadius: '16px',
-                            padding: '8px',
+                            width: '45px',
+                            height: '45px',
+                            background: 'linear-gradient(135deg, #1e293b, #0f172a)',
+                            borderRadius: '14px',
                             display: 'flex',
                             justifyContent: 'center',
                             alignItems: 'center',
-                            boxShadow: `0 10px 25px ${theme.primary}30`
+                            border: '1px solid rgba(255,255,255,0.08)'
                         }}>
-                            <MapPin size={28} color={theme.primary} />
+                            <MapPin size={22} color={theme.primary} />
                         </div>
                         <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
-                                <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Logistics Hub</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                                <div style={{ width: '5px', height: '5px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
+                                <span style={{ fontSize: '9px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px', textTransform: 'uppercase' }}>Logistics Hub</span>
                             </div>
-                          <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
-                            Parking <span className="theme-gradient-text">Management</span>
+                           <h1 style={{ color: 'white', fontSize: '26px', fontWeight: '950', margin: 0, letterSpacing: '-1.2px' }}>
+                            Parking <span className="theme-gradient-text" style={{ filter: 'brightness(1.2)' }}>Management</span>
                         </h1>
                         </div>
                     </div>
 
-                    <div style={{
-                        display: 'flex',
-                        gap: '12px',
-                        flexWrap: 'wrap',
-                        width: 'auto',
-                        justifyContent: 'flex-start'
-                    }}>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginLeft: 'auto' }}>
                         <button
                             onClick={downloadExcel}
                             style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '8px',
-                                height: '48px',
-                                padding: '0 20px',
-                                borderRadius: '12px',
-                                fontWeight: '700',
-                                background: 'rgba(255,255,255,0.03)',
-                                color: 'white',
-                                border: '1px solid rgba(255,255,255,0.1)',
-                                transition: 'all 0.3s ease',
-                                cursor: 'pointer',
-                                flex: '1 1 auto'
+                                height: '38px', padding: '0 15px', borderRadius: '10px',
+                                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                                color: 'rgba(255,255,255,0.7)', fontSize: '11px', fontWeight: '800', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                transition: 'all 0.3s'
                             }}
                             onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.08)'}
                             onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.03)'}
                         >
-                            <FileSpreadsheet size={18} /> <span className="hide-mobile">Export Report</span>
-                            <span className="show-mobile">Export</span>
+                            <FileSpreadsheet size={15} /> EXPORT
                         </button>
                         <button
                             onClick={() => { resetForm(); setShowModal(true); }}
                             style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                gap: '10px',
-                                height: '48px',
-                                padding: '0 24px',
-                                borderRadius: '12px',
-                                fontWeight: '800',
-                                background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary || theme.primary} 100%)`,
-                                color: 'black',
-                                border: 'none',
-                                boxShadow: `0 8px 20px -6px ${theme.primary}80`,
-                                transition: 'all 0.3s ease',
-                                cursor: 'pointer',
-                                flex: '1 1 180px',
-                                justifyContent: 'center',
-                                whiteSpace: 'nowrap'
+                                height: '38px', padding: '0 18px', borderRadius: '10px',
+                                background: theme.primary, color: 'black', border: 'none',
+                                fontSize: '11px', fontWeight: '900', cursor: 'pointer',
+                                display: 'flex', alignItems: 'center', gap: '6px',
+                                boxShadow: `0 4px 12px ${theme.primary}40`,
+                                transition: 'all 0.3s'
                             }}
-                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
+                            onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-1px)'}
                             onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
                         >
-                            <Plus size={20} /> <span>New Entry</span>
+                            <Plus size={16} /> NEW ENTRY
                         </button>
                     </div>
                 </div>
 
                 <div className="glass-card" style={{
-                    padding: '12px',
-                    borderRadius: '16px',
+                    marginTop: '15px',
+                    padding: '8px 16px',
+                    borderRadius: '12px',
                     background: 'rgba(15, 23, 42, 0.4)',
                     border: '1px solid rgba(255,255,255,0.05)',
                     display: 'flex',
-                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'flex-start',
+                    flexWrap: 'wrap',
                     gap: '12px'
                 }}>
-                    <div style={{
-                        display: 'flex',
-                        flexWrap: 'wrap',
-                        gap: '12px',
-                        width: '100%'
-                    }}>
-                        <div style={{ position: 'relative', flex: '1 1 300px' }}>
-                            <Search size={18} style={{ position: 'absolute', left: '15px', top: '15px', color: 'rgba(255,255,255,0.3)' }} />
-                            <input
-                                type="text"
-                                placeholder="Search vehicle, driver or location..."
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{
-                                    height: '48px',
-                                    width: '100%',
-                                    background: 'rgba(0,0,0,0.2)',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    borderRadius: '12px',
-                                    padding: '0 15px 0 45px',
-                                    color: 'white',
-                                    fontSize: '14px',
-                                    outline: 'none',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            />
-                        </div>
-
-
-
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         {/* Premium Modern Calendar UI */}
                         <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '8px',
+                            gap: '4px',
                             background: 'rgba(0,0,0,0.3)',
-                            padding: '4px',
-                            borderRadius: '20px',
+                            padding: '3px',
+                            borderRadius: '10px',
                             border: '1px solid rgba(255,255,255,0.06)'
                         }}>
                             <button
                                 onClick={() => shiftDays(-1)}
                                 style={{
-                                    width: '38px', height: '38px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
-                                    color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                    width: '32px', height: '32px', borderRadius: '8px',
+                                    background: 'rgba(255,255,255,0.02)', border: 'none',
+                                    color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}
                             >
-                                <ChevronLeft size={18} />
+                                <ChevronLeft size={16} />
                             </button>
 
                             <div
                                 onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                style={{ height: '38px', minWidth: '130px', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.15)', borderRadius: '12px', padding: '0 15px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 4px' }}
+                                style={{ height: '32px', minWidth: '120px', background: 'rgba(251, 191, 36, 0.05)', borderRadius: '8px', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}
                             >
-                                <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                                <span style={{ fontSize: '12px', fontWeight: '900', color: 'white', letterSpacing: '0.4px' }}>
                                     {selectedDay === 'All' ?
                                         `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
-                                        formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)))).toUpperCase()}
+                                        formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
                                 </span>
                                 <input
                                     type="date"
@@ -635,80 +582,58 @@ const ParkingPage = () => {
                             <button
                                 onClick={() => shiftDays(1)}
                                 style={{
-                                    width: '38px', height: '38px', borderRadius: '12px',
-                                    background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)',
-                                    color: 'rgba(255,255,255,0.6)', cursor: 'pointer',
+                                    width: '32px', height: '32px', borderRadius: '8px',
+                                    background: 'rgba(255,255,255,0.02)', border: 'none',
+                                    color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center'
                                 }}
                             >
-                                <ChevronRight size={18} />
+                                <ChevronRight size={16} />
                             </button>
                         </div>
 
-                        {selectedDay !== 'All' && (
-                            <button
-                                onClick={() => setSelectedDay('All')}
-                                style={{
-                                    height: '48px',
-                                    padding: '0 20px',
-                                    borderRadius: '12px',
-                                    background: 'rgba(251, 191, 36, 0.1)',
-                                    border: '1px solid rgba(251, 191, 36, 0.2)',
-                                    color: 'var(--primary)',
-                                    fontSize: '11px',
-                                    fontWeight: '950',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px'
-                                }}
-                            >
-                                <Calendar size={14} /> Full Month
-                            </button>
-                        )}
-
-                        <select
-                            value={selectedMonth}
-                            onChange={e => {
-                                setSelectedMonth(Number(e.target.value));
-                                setSelectedDay('All');
-                            }}
-                            style={{ height: '48px', padding: '0 12px', fontSize: '12px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px', outline: 'none' }}
-                        >
-                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
-                                <option key={m} value={idx} style={{ background: '#0f172a' }}>{m.toUpperCase()}</option>
-                            ))}
-                        </select>
-
-                        <select
-                            value={selectedYear}
-                            onChange={e => {
-                                setSelectedYear(Number(e.target.value));
-                                setSelectedDay('All');
-                            }}
-                            style={{ height: '48px', padding: '0 12px', fontSize: '12px', borderRadius: '12px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px', outline: 'none' }}
-                        >
-                            {[2024, 2025, 2026, 2027].map(y => (
-                                <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
-                            ))}
-                        </select>
-
-                        <div className="glass-card" style={{ padding: '0 15px', display: 'flex', alignItems: 'center', height: '48px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.08)', flex: '1 1 200px', background: 'rgba(0,0,0,0.2)' }}>
-                            <User size={18} style={{ marginRight: '10px', color: 'var(--primary)' }} />
+                        <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', padding: '3px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <select
-                                value={filterDriver}
-                                onChange={(e) => setFilterDriver(e.target.value)}
-                                style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '700', cursor: 'pointer', width: '100%' }}
+                                value={selectedMonth}
+                                onChange={e => {
+                                    setSelectedMonth(Number(e.target.value));
+                                    setSelectedDay('All');
+                                }}
+                                style={{ height: '32px', padding: '0 8px', fontSize: '11px', borderRadius: '6px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontWeight: '800', outline: 'none', cursor: 'pointer' }}
                             >
-                                <option value="All" style={{ background: '#1e293b' }}>All Drivers</option>
-                                {drivers.map(d => (
-                                    <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name}</option>
+                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
+                                    <option key={m} value={idx} style={{ background: '#0f172a' }}>{m.toUpperCase()}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={selectedYear}
+                                onChange={e => {
+                                    setSelectedYear(Number(e.target.value));
+                                    setSelectedDay('All');
+                                }}
+                                style={{ height: '32px', padding: '0 8px', fontSize: '11px', borderRadius: '6px', background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.7)', fontWeight: '800', outline: 'none', cursor: 'pointer' }}
+                            >
+                                {[2024, 2025, 2026, 2027].map(y => (
+                                    <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
                                 ))}
                             </select>
                         </div>
+                    </div>
 
+                    <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', margin: '0 8px' }}></div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', background: 'rgba(255,255,255,0.03)', padding: '0 12px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.05)', minWidth: '180px' }}>
+                        <User size={14} style={{ color: theme.primary, opacity: 0.7 }} />
+                        <select
+                            value={filterDriver}
+                            onChange={(e) => setFilterDriver(e.target.value)}
+                            style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '13px', fontWeight: '700', cursor: 'pointer', width: '100%', height: '32px' }}
+                        >
+                            <option value="All" style={{ background: '#1e293b' }}>ALL DRIVERS</option>
+                            {drivers.map(d => (
+                                <option key={d._id} value={d._id} style={{ background: '#1e293b' }}>{d.name.toUpperCase()}</option>
+                            ))}
+                        </select>
                     </div>
                 </div>
             </header>
@@ -1152,73 +1077,73 @@ const ParkingPage = () => {
                     {/* Stats Row */}
                     <div style={{
                         display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 260px), 1fr))',
-                        gap: '20px',
-                        marginBottom: '40px'
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 240px), 1fr))',
+                        gap: '15px',
+                        marginBottom: '30px'
                     }}>
                         <motion.div
-                            whileHover={{ y: -5 }}
+                            whileHover={{ y: -4 }}
                             className="glass-card"
                             style={{
-                                padding: '24px',
+                                padding: '16px 20px',
                                 background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(30, 41, 59, 0.4) 100%)',
                                 border: '1px solid rgba(99, 102, 241, 0.2)',
-                                borderRadius: '20px',
+                                borderRadius: '16px',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '20px'
+                                gap: '15px'
                             }}
                         >
-                            <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                                <IndianRupee size={28} />
+                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#818cf8', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                                <IndianRupee size={22} />
                             </div>
                             <div>
-                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '1px' }}>Total Expense</p>
-                                <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>₹{totalAmount.toLocaleString()}</h2>
+                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px', letterSpacing: '0.5px' }}>Total Expense</p>
+                                <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0 }}>₹{totalAmount.toLocaleString()}</h2>
                             </div>
                         </motion.div>
 
                         <motion.div
-                            whileHover={{ y: -5 }}
+                            whileHover={{ y: -4 }}
                             className="glass-card"
                             style={{
-                                padding: '24px',
+                                padding: '16px 20px',
                                 background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(30, 41, 59, 0.4) 100%)',
                                 border: '1px solid rgba(16, 185, 129, 0.2)',
-                                borderRadius: '20px',
+                                borderRadius: '16px',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '20px'
+                                gap: '15px'
                             }}
                         >
-                            <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                                <History size={28} />
+                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#34d399', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                                <History size={22} />
                             </div>
                             <div>
-                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '1px' }}>From Driver Apps</p>
-                                <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>₹{driverAmount.toLocaleString()}</h2>
+                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px', letterSpacing: '0.5px' }}>From Driver Apps</p>
+                                <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0 }}>₹{driverAmount.toLocaleString()}</h2>
                             </div>
                         </motion.div>
 
                         <motion.div
-                            whileHover={{ y: -5 }}
+                            whileHover={{ y: -4 }}
                             className="glass-card"
                             style={{
-                                padding: '24px',
+                                padding: '16px 20px',
                                 background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(30, 41, 59, 0.4) 100%)',
                                 border: '1px solid rgba(245, 158, 11, 0.2)',
-                                borderRadius: '20px',
+                                borderRadius: '16px',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '20px'
+                                gap: '15px'
                             }}
                         >
-                            <div style={{ width: '56px', height: '56px', borderRadius: '16px', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
-                                <Shield size={28} />
+                            <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'rgba(245, 158, 11, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                                <Shield size={22} />
                             </div>
                             <div>
-                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '4px', letterSpacing: '1px' }}>Office Manual</p>
-                                <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0 }}>₹{officeAmount.toLocaleString()}</h2>
+                                <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '2px', letterSpacing: '0.5px' }}>Office Manual</p>
+                                <h2 style={{ color: 'white', fontSize: '24px', fontWeight: '900', margin: 0 }}>₹{officeAmount.toLocaleString()}</h2>
                             </div>
                         </motion.div>
                     </div>

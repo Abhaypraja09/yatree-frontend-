@@ -44,6 +44,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedDriverDetails, setSelectedDriverDetails] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
+    const [activeTab, setActiveTab] = useState('payroll');
 
     // Advances states
     const [advances, setAdvances] = useState([]);
@@ -109,7 +110,14 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         setLoading(true);
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/admin/salary-summary/${selectedCompany._id}?month=${month}&year=${year}`, {
+            let url = `/api/admin/salary-summary/${selectedCompany._id}`;
+            if (month === 'All') {
+                url += `?from=${year}-04-01&to=${year + 1}-03-31`;
+            } else {
+                const calendarYear = (month >= 1 && month <= 3) ? year + 1 : year;
+                url += `?month=${month}&year=${calendarYear}`;
+            }
+            const { data } = await axios.get(url, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setSalaries(data || []);
@@ -121,8 +129,16 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         if (!selectedCompany?._id) return;
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            let query = `isFreelancer=false`;
+            if (month === 'All') {
+                query += `&from=${year}-04-01&to=${year + 1}-03-31`;
+            } else {
+                const calendarYear = (month >= 1 && month <= 3) ? year + 1 : year;
+                query += `&month=${month}&year=${calendarYear}`;
+            }
+
             const [advRes, driversRes] = await Promise.all([
-                axios.get(`/api/admin/advances/${selectedCompany._id}?month=${month}&year=${year}&isFreelancer=false`, {
+                axios.get(`/api/admin/advances/${selectedCompany._id}?${query}`, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 }),
                 axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&isFreelancer=false`, {
@@ -154,7 +170,14 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         if (!selectedCompany?._id) return;
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/admin/allowances/${selectedCompany._id}?month=${month}&year=${year}`, {
+            let url = `/api/admin/allowances/${selectedCompany._id}`;
+            if (month === 'All') {
+                url += `?from=${year}-04-01&to=${year + 1}-03-31`;
+            } else {
+                const calendarYear = (month >= 1 && month <= 3) ? year + 1 : year;
+                url += `?month=${month}&year=${calendarYear}`;
+            }
+            const { data } = await axios.get(url, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setAllowances(data || []);
@@ -163,30 +186,43 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
     const filteredLoans = useMemo(() => {
         if (!loans) return [];
+        
+        if (month === 'All') {
+            const fyStartValue = (year * 12) + 4; // April of start year
+            const fyEndValue = ((year + 1) * 12) + 3; // March of end year
+            
+            return loans.filter(loan => {
+                if (!loan.startDate) return true;
+                const start = new Date(loan.startDate);
+                const loanStartValue = (start.getFullYear() * 12) + (start.getMonth() + 1);
+                
+                const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 12);
+                const loanEndValue = loanStartValue + tenure - 1;
+                
+                // Show if loan overlaps with this FY
+                const overlapsFY = (loanStartValue <= fyEndValue) && (loanEndValue >= fyStartValue);
+                return overlapsFY && (loan.status !== 'Completed');
+            });
+        }
+
         const currentMonthNum = Number(month);
-        const currentYearNum = Number(year);
-        // Correct total for comparisons (Year * 12 + Month)
+        const calendarYear = (currentMonthNum >= 1 && currentMonthNum <= 3) ? year + 1 : year;
+        const currentYearNum = Number(calendarYear);
         const selectedMonthValue = (currentYearNum * 12) + currentMonthNum;
 
         return loans.filter(loan => {
-            if (!loan.startDate) return true; // Show if no date to be safe
+            if (!loan.startDate) return true;
             const start = new Date(loan.startDate);
-            const startMonth = start.getMonth() + 1;
-            const startYear = start.getFullYear();
-            const loanStartValue = (startYear * 12) + startMonth;
+            const loanStartValue = (start.getFullYear() * 12) + (start.getMonth() + 1);
 
-            // 1. HIDDEN in Future: If loan starts AFTER the selected month
             if (loanStartValue > selectedMonthValue) return false;
 
-            // 2. STRICT TENURE FILTER: Only show during the planned months
-            // Fallback: If tenureMonths is missing, calculate from Total/EMI
             const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 12);
             const loanEndValue = loanStartValue + tenure - 1;
 
             const isDuringTenure = selectedMonthValue <= loanEndValue;
             const isActiveStatus = loan.status !== 'Completed';
 
-            // Show ONLY during the tenure period itself
             return isDuringTenure && isActiveStatus;
         });
     }, [loans, month, year]);
@@ -771,22 +807,73 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="glass-card"
-                            style={{ padding: '10px', border: '1px solid rgba(255,255,255,0.1)', color: 'white', background: '#0f172a', borderRadius: '10px' }}>
-                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                                <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'long' })}</option>
-                            ))}
-                        </select>
-                        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="glass-card"
-                            style={{ padding: '10px', border: '1px solid rgba(255,255,255,0.1)', color: 'white', background: '#0f172a', borderRadius: '10px' }}>
-                            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-                        </select>
-                        <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        {/* MONTH SELECTOR */}
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            borderRadius: '16px',
+                            padding: '4px 8px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            height: '48px'
+                        }}>
+                            <select
+                                value={month}
+                                onChange={(e) => setMonth(e.target.value === 'All' ? 'All' : Number(e.target.value))}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white', fontWeight: '900', fontSize: '14px', padding: '0 10px',
+                                    height: '100%', outline: 'none', cursor: 'pointer'
+                                }}
+                            >
+                                <option value="All" style={{ background: '#0f172a' }}>Full Year</option>
+                                {[4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3].map(m => (
+                                    <option key={m} value={m} style={{ background: '#0f172a' }}>
+                                        {new Date(0, m - 1).toLocaleString('default', { month: 'short' })}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {/* FINANCIAL YEAR SELECTOR */}
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            borderRadius: '16px',
+                            padding: '4px 15px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            height: '48px',
+                            gap: '8px'
+                        }}>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>FY</span>
+                            <select
+                                value={year}
+                                onChange={(e) => setYear(Number(e.target.value))}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white', fontWeight: '900', fontSize: '14px',
+                                    outline: 'none', cursor: 'pointer'
+                                }}
+                            >
+                                {[2023, 2024, 2025, 2026, 2027].map(y => (
+                                    <option key={y} value={y} style={{ background: '#0f172a' }}>
+                                        {y}-{String(y + 1).slice(-2)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', height: '48px', background: 'rgba(15, 23, 42, 0.4)' }}>
                             <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)' }} />
                             <input type="text" placeholder="Search..." value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ background: 'transparent', border: 'none', color: 'white', height: '45px', outline: 'none' }} />
+                                style={{ background: 'transparent', border: 'none', color: 'white', height: '100%', outline: 'none', width: '150px' }} />
                         </div>
                         <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '6px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
                             <button
@@ -816,33 +903,88 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             )}
 
             {isSubComponent && (
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '15px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px', flexWrap: 'wrap', gap: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <h2 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>Salaries & Settlements</h2>
-                        <span style={{ padding: '4px 8px', borderRadius: '6px', background: 'rgba(52, 211, 153, 0.1)', color: '#34d399', fontSize: '11px', fontWeight: '800' }}>MONTHLY REPORT</span>
+                        <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Salaries & Settlements</h2>
+                        <span style={{ padding: '4px 10px', borderRadius: '8px', background: 'rgba(52, 211, 153, 0.1)', color: '#34d399', fontSize: '10px', fontWeight: '900', letterSpacing: '0.5px' }}>MONTHLY REPORT</span>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
-                        <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', width: '200px', borderRadius: '10px', height: '40px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <Search size={14} style={{ margin: '0 10px', color: 'rgba(255,255,255,0.4)' }} />
-                            <input type="text" placeholder="Search..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', outline: 'none', width: '100%' }} />
+
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        {/* MONTH SELECTOR */}
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            borderRadius: '16px',
+                            padding: '4px 8px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            height: '48px'
+                        }}>
+                            <select
+                                value={month}
+                                onChange={(e) => setMonth(e.target.value === 'All' ? 'All' : Number(e.target.value))}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white', fontWeight: '900', fontSize: '14px', padding: '0 10px',
+                                    height: '100%', outline: 'none', cursor: 'pointer'
+                                }}
+                            >
+                                <option value="All" style={{ background: '#0f172a' }}>Full Year</option>
+                                {[4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3].map(m => (
+                                    <option key={m} value={m} style={{ background: '#0f172a' }}>
+                                        {new Date(0, m - 1).toLocaleString('default', { month: 'short' })}
+                                    </option>
+                                ))}
+                            </select>
                         </div>
-                        <select value={month} onChange={(e) => setMonth(Number(e.target.value))} className="glass-card" style={{ padding: '0 10px', height: '40px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', background: '#0f172a', color: 'white' }}>
-                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                                <option key={m} value={m}>{new Date(0, m - 1).toLocaleString('default', { month: 'short' })}</option>
-                            ))}
-                        </select>
-                        <select value={year} onChange={(e) => setYear(Number(e.target.value))} className="glass-card" style={{ padding: '0 10px', height: '40px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '10px', background: '#0f172a', color: 'white' }}>
-                            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
-                        </select>
-                        <div style={{ display: 'flex', gap: '6px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '10px' }}>
-                            <button onClick={() => setShowAdvanceModal(true)} className="btn-primary" style={{ height: '34px', padding: '0 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '800', gap: '4px', display: 'flex', alignItems: 'center', background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: 'none' }}>
+
+                        {/* FINANCIAL YEAR SELECTOR */}
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            borderRadius: '16px',
+                            padding: '4px 15px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            height: '48px',
+                            gap: '8px'
+                        }}>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>FY</span>
+                            <select
+                                value={year}
+                                onChange={(e) => setYear(Number(e.target.value))}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white', fontWeight: '900', fontSize: '14px',
+                                    outline: 'none', cursor: 'pointer'
+                                }}
+                            >
+                                {[2023, 2024, 2025, 2026, 2027].map(y => (
+                                    <option key={y} value={y} style={{ background: '#0f172a' }}>
+                                        {y}-{String(y + 1).slice(-2)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
+
+                        <div className="glass-card" style={{ padding: '0', display: 'flex', alignItems: 'center', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', height: '48px', background: 'rgba(15, 23, 42, 0.4)' }}>
+                            <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)' }} />
+                            <input type="text" placeholder="Search..." value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                style={{ background: 'transparent', border: 'none', color: 'white', height: '100%', outline: 'none', width: '120px', fontSize: '13px' }} />
+                        </div>
+                        <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '6px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                            <button onClick={() => setShowAdvanceModal(true)} className="btn-primary" style={{ height: '36px', padding: '0 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: 'none' }}>
                                 <TrendingDown size={14} /> ADVANCE
                             </button>
-                            <button onClick={() => { setEditingLoanId(null); setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', remarks: '' }); setShowLoanModal(true); }} className="btn-primary" style={{ height: '34px', padding: '0 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '800', gap: '4px', display: 'flex', alignItems: 'center', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', border: 'none' }}>
+                            <button onClick={() => { setEditingLoanId(null); setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', remarks: '' }); setShowLoanModal(true); }} className="btn-primary" style={{ height: '36px', padding: '0 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', border: 'none' }}>
                                 <Wallet size={14} /> LOAN
                             </button>
-                            <button onClick={() => { setEditingAllowanceId(null); setAllowanceFormData({ driverId: '', amount: '', date: todayIST(), remark: '', type: 'Other' }); setShowAllowanceModal(true); }} className="btn-primary" style={{ height: '34px', padding: '0 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '800', gap: '4px', display: 'flex', alignItems: 'center', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: 'none' }}>
+                            <button onClick={() => { setEditingAllowanceId(null); setAllowanceFormData({ driverId: '', amount: '', date: todayIST(), remark: '', type: 'Other' }); setShowAllowanceModal(true); }} className="btn-primary" style={{ height: '36px', padding: '0 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: 'none' }}>
                                 <Plus size={14} /> ADD. PAY
                             </button>
                         </div>
@@ -850,34 +992,98 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 </div>
             )}
 
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
-                <div className="glass-card" style={{ flex: '1.5', minWidth: '280px', padding: '20px', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid rgba(16,185,129,0.2)' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                        <div>
-                            <p style={{ fontSize: '11px', fontWeight: '800', color: '#10b981', marginBottom: '4px', textTransform: 'uppercase' }}>
-                                Total Gross Earnings ({new Date(0, month - 1).toLocaleString('default', { month: 'short' })} {year})
-                            </p>
-                            <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white', margin: 0 }}>₹ {totalGrossEarnings.toLocaleString()}</h3>
-                        </div>
-                        <div style={{ textAlign: 'right' }}>
-                            <p style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', marginBottom: '2px', textTransform: 'uppercase' }}>Net Payout</p>
-                            <p style={{ fontSize: '16px', fontWeight: '800', color: 'var(--primary)', margin: 0 }}>₹ {totalNetPayout.toLocaleString()}</p>
+            {/* SLEEK TAB NAVIGATION */}
+            <div style={{ 
+                display: 'flex', 
+                gap: '8px', 
+                marginBottom: '30px', 
+                padding: '6px', 
+                background: 'rgba(15, 23, 42, 0.4)', 
+                borderRadius: '20px', 
+                width: 'fit-content', 
+                border: '1px solid rgba(255,255,255,0.05)',
+                backdropFilter: 'blur(10px)',
+                boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+                alignSelf: 'center',
+                overflowX: 'auto',
+                maxWidth: '100%'
+            }}>
+                {[
+                    { id: 'payroll', label: 'Payroll', icon: FileText, color: '#38bdf8' },
+                    { id: 'advances', label: 'Advance Ledger', icon: TrendingDown, color: '#f43f5e' },
+                    { id: 'loans', label: 'Loan Master', icon: Wallet, color: '#818cf8' },
+                    { id: 'special', label: 'Special Pay', icon: CheckCircle, color: '#10b981' }
+                ].map((t) => (
+                    <button
+                        key={t.id}
+                        onClick={() => setActiveTab(t.id)}
+                        style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '10px',
+                            padding: '12px 22px',
+                            borderRadius: '15px',
+                            border: 'none',
+                            cursor: 'pointer',
+                            background: activeTab === t.id ? t.color : 'transparent',
+                            color: activeTab === t.id ? 'white' : 'rgba(255,255,255,0.4)',
+                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                            fontSize: '12px',
+                            fontWeight: '900',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.5px',
+                            whiteSpace: 'nowrap'
+                        }}
+                    >
+                        <t.icon size={16} />
+                        {t.label}
+                    </button>
+                ))}
+            </div>
+
+            <AnimatePresence mode="wait">
+                {activeTab === 'payroll' && (
+                    <motion.div key="payroll" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.3 }}>
+
+
+                <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
+                    <div className="glass-card" style={{ flex: '1.5', minWidth: '280px', padding: '20px', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', border: '1px solid rgba(16,185,129,0.2)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                                <p style={{ fontSize: '11px', fontWeight: '800', color: '#10b981', marginBottom: '4px', textTransform: 'uppercase' }}>
+                                    Total Gross Earnings ({new Date(0, month - 1).toLocaleString('default', { month: 'short' })} {year})
+                                </p>
+                                <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white', margin: 0 }}>₹ {totalGrossEarnings.toLocaleString()}</h3>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <p style={{ fontSize: '10px', fontWeight: '700', color: 'rgba(255,255,255,0.4)', marginBottom: '2px', textTransform: 'uppercase' }}>Net Payout</p>
+                                <p style={{ fontSize: '16px', fontWeight: '800', color: 'var(--primary)', margin: 0 }}>₹ {totalNetPayout.toLocaleString()}</p>
+                            </div>
                         </div>
                     </div>
+                    <div 
+                        onClick={() => setActiveTab('advances')}
+                        className="glass-card glass-card-hover-effect" 
+                        style={{ cursor: 'pointer', flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(244,63,94,0.1) 0%, rgba(244,63,94,0.05) 100%)', border: '1px solid rgba(244,63,94,0.2)' }}
+                    >
+                        <p style={{ fontSize: '11px', fontWeight: '800', color: '#f43f5e', marginBottom: '4px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            Advances Taken <TrendingDown size={10} />
+                        </p>
+                        <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredSalaries.reduce((sum, s) => sum + (s.totalAdvances || 0), 0).toLocaleString()}</h3>
+                        <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>Click to view ledger →</p>
+                    </div>
+                    <div 
+                        onClick={() => setActiveTab('loans')}
+                        className="glass-card glass-card-hover-effect" 
+                        style={{ cursor: 'pointer', flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.05) 100%)', border: '1px solid rgba(251,191,36,0.2)' }}
+                    >
+                        <p style={{ fontSize: '11px', fontWeight: '800', color: 'var(--primary)', marginBottom: '4px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            EMI Deductions <Wallet size={10} />
+                        </p>
+                        <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredSalaries.reduce((sum, s) => sum + (s.totalEMI || 0), 0).toLocaleString()}</h3>
+                        <p style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>Click to view management →</p>
+                    </div>
                 </div>
-                <div className="glass-card" style={{ flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(244,63,94,0.1) 0%, rgba(244,63,94,0.05) 100%)', border: '1px solid rgba(244,63,94,0.2)' }}>
-                    <p style={{ fontSize: '11px', fontWeight: '800', color: '#f43f5e', marginBottom: '4px', textTransform: 'uppercase' }}>
-                        Advances Taken
-                    </p>
-                    <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredSalaries.reduce((sum, s) => sum + (s.totalAdvances || 0), 0).toLocaleString()}</h3>
-                </div>
-                <div className="glass-card" style={{ flex: '1', minWidth: '200px', padding: '20px', background: 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.05) 100%)', border: '1px solid rgba(251,191,36,0.2)' }}>
-                    <p style={{ fontSize: '11px', fontWeight: '800', color: 'var(--primary)', marginBottom: '4px', textTransform: 'uppercase' }}>
-                        EMI Deductions
-                    </p>
-                    <h3 style={{ fontSize: '28px', fontWeight: '900', color: 'white' }}>₹ {filteredSalaries.reduce((sum, s) => sum + (s.totalEMI || 0), 0).toLocaleString()}</h3>
-                </div>
-            </div>
 
             {/* Desktop Table */}
             <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
@@ -982,12 +1188,15 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 ))}
             </div>
 
-            {/* Advance Payment History Section */}
-            <div style={{ marginTop: '60px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
-                    <div style={{ width: '4px', height: '24px', background: 'var(--primary)', borderRadius: '2px' }}></div>
-                    <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Advance <span style={{ color: 'var(--primary)' }}>Payment History</span></h2>
-                </div>
+                </motion.div>
+                )}
+
+                {activeTab === 'advances' && (
+                <motion.div key="advances" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ marginTop: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+                        <div style={{ width: '4px', height: '24px', background: '#f43f5e', borderRadius: '2px' }}></div>
+                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Advance <span style={{ color: '#f43f5e' }}>Ledger History</span></h2>
+                    </div>
 
                 <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
                     <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
@@ -1103,14 +1312,15 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         </div>
                     ))}
                 </div>
-            </div>
+            </motion.div>
+        )}
 
-            {/* Special Payout History (Allowances) Section */}
-            <div style={{ marginTop: '60px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
-                    <div style={{ width: '4px', height: '24px', background: '#10b981', borderRadius: '2px' }}></div>
-                    <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Special <span style={{ color: '#10b981' }}>Payout History</span></h2>
-                </div>
+                {activeTab === 'special' && (
+                <motion.div key="special" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ marginTop: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+                        <div style={{ width: '4px', height: '24px', background: '#10b981', borderRadius: '2px' }}></div>
+                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Special <span style={{ color: '#10b981' }}>Payout History</span></h2>
+                    </div>
 
                 <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
                     <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
@@ -1179,7 +1389,95 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         </div>
                     ))}
                 </div>
-            </div>
+            </motion.div>
+        )}
+
+                {activeTab === 'loans' && (
+                    <motion.div key="loans" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ marginTop: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+                            <div style={{ width: '4px', height: '24px', background: '#818cf8', borderRadius: '2px' }}></div>
+                            <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Loan <span style={{ color: '#818cf8' }}>Management Master</span></h2>
+                        </div>
+
+                        <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
+                                <thead>
+                                    <tr style={{ textAlign: 'left' }}>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Start Date</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Loan Amount</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Monthly EMI</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remaining</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredLoans.length === 0 ? (
+                                        <tr><td colSpan="7" style={{ textAlign: 'center', padding: '60px 0', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '20px' }}>
+                                            <Wallet size={40} style={{ opacity: 0.1, marginBottom: '10px', color: 'var(--primary)' }} />
+                                            <p style={{ color: 'var(--text-muted)', margin: 0 }}>No active loans found for this period.</p>
+                                        </td></tr>
+                                    ) : filteredLoans.map((loan, idx) => (
+                                        <motion.tr
+                                            key={loan._id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.03 }}
+                                            className="glass-card-hover-effect"
+                                            style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}
+                                        >
+                                            <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
+                                                <div style={{ color: 'white', fontWeight: '700' }}>{loan.driver?.name}</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{loan.driver?.mobile}</div>
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{loan.startDate ? formatDateIST(loan.startDate) : '—'}</div>
+                                                {(() => {
+                                                    const sDate = new Date(loan.startDate);
+                                                    const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
+                                                    const selVal = (parseInt(year) * 12) + parseInt(month);
+                                                    const monthIdx = (selVal - sVal) + 1;
+                                                    const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
+                                                    return (
+                                                        <div style={{ fontSize: '10px', color: '#818cf8', fontWeight: '900', marginTop: '4px', textTransform: 'uppercase' }}>
+                                                            {monthIdx <= tenure ? `Month ${monthIdx} of ${tenure}` : `Extended (Past ${tenure}M)`}
+                                                        </div>
+                                                    );
+                                                })()}
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ color: 'white', fontWeight: '800' }}>₹ {loan.totalAmount?.toLocaleString()}</div>
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ color: 'var(--primary)', fontWeight: '800' }}>₹ {loan.monthlyEMI?.toLocaleString()}</div>
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ color: '#f43f5e', fontWeight: '800' }}>₹ {loan.remainingAmount?.toLocaleString()}</div>
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <span style={{
+                                                    padding: '4px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '800',
+                                                    background: loan.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
+                                                    color: loan.status === 'Active' ? '#10b981' : '#f43f5e'
+                                                }}>
+                                                    {loan.status?.toUpperCase()}
+                                                </span>
+                                            </td>
+                                            <td style={{ padding: '20px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                                    <button onClick={() => handleEditLoan(loan)} style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Edit2 size={16} /></button>
+                                                    <button onClick={() => handleDeleteLoan(loan._id)} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Trash2 size={16} /></button>
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
 
             {/* RECORD ADVANCE MODAL */}
             <AnimatePresence>
@@ -1542,7 +1840,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
                                         {/* ─── ADVANCES TABLE ─── */}
                                         <h3 style={{ fontSize: '14px', color: 'white', marginBottom: '15px', borderLeft: '3px solid #f43f5e', paddingLeft: '10px' }}>Advances Taken (This Month)</h3>
-                                        <div style={{ overflowX: 'auto', marginBottom: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                        <div style={{ overflowX: 'auto', marginBottom: '30px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                                                 <thead>
                                                     <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
@@ -1572,6 +1870,48 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 </tbody>
                                             </table>
                                         </div>
+
+                                        {/* ─── LOAN & EMI REPAYMENT TABLE (LEDGER) ─── */}
+                                        <h3 style={{ fontSize: '14px', color: 'white', marginBottom: '15px', borderLeft: '3px solid #818cf8', paddingLeft: '10px' }}>Loan Ledger (Active Repayments)</h3>
+                                        <div style={{ overflowX: 'auto', marginBottom: '20px', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
+                                                <thead>
+                                                    <tr style={{ background: 'rgba(255,255,255,0.02)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+                                                        <th style={{ padding: '12px', textAlign: 'left', color: 'var(--text-muted)' }}>Loan Start</th>
+                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'var(--text-muted)' }}>Total Loan</th>
+                                                        <th style={{ padding: '12px', textAlign: 'right', color: 'white' }}>Monthly EMI</th>
+                                                        <th style={{ padding: '12px', textAlign: 'right', color: '#818cf8' }}>Remaining</th>
+                                                        <th style={{ padding: '12px', textAlign: 'center', color: 'white' }}>Progress</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {det?.loans?.map((loan, idx) => {
+                                                        const sDate = new Date(loan.startDate);
+                                                        const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
+                                                        const selVal = (parseInt(year) * 12) + parseInt(month);
+                                                        const monthIdx = (selVal - sVal) + 1;
+                                                        const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
+                                                        
+                                                        return (
+                                                            <tr key={loan._id || idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                                                <td style={{ padding: '12px', color: 'white' }}>{formatDateIST(loan.startDate)}</td>
+                                                                <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.6)' }}>₹{loan.totalAmount?.toLocaleString()}</td>
+                                                                <td style={{ padding: '12px', textAlign: 'right', color: 'white', fontWeight: '700' }}>₹{loan.monthlyEMI?.toLocaleString()}</td>
+                                                                <td style={{ padding: '12px', textAlign: 'right', color: '#f43f5e', fontWeight: '800' }}>₹{loan.remainingAmount?.toLocaleString()}</td>
+                                                                <td style={{ padding: '12px', textAlign: 'center' }}>
+                                                                    <span style={{ fontSize: '10px', background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', padding: '2px 8px', borderRadius: '4px', fontWeight: '900' }}>
+                                                                        {loan.status === 'Completed' ? 'DONE' : `MONTH ${monthIdx}/${tenure}`}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                    {(!det?.loans || det?.loans?.length === 0) && (
+                                                        <tr><td colSpan="5" style={{ padding: '20px', textAlign: 'center', color: 'var(--text-muted)' }}>No loan records found for this driver.</td></tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
                                     </>
                                 )}
                             </div>
@@ -1579,103 +1919,6 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                     </div>
                 )}
             </AnimatePresence>
-
-            {/* Loan Management Section */}
-            <div style={{ marginTop: '60px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
-                    <div style={{ width: '4px', height: '24px', background: 'var(--primary)', borderRadius: '2px' }}></div>
-                    <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Loan <span style={{ color: '#818cf8' }}>Management</span></h2>
-                </div>
-
-                <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
-                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
-                        <thead>
-                            <tr style={{ textAlign: 'left' }}>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Start Date</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Amount</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Monthly EMI</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remaining</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredLoans.length === 0 ? (
-                                <tr><td colSpan="7" style={{ textAlign: 'center', padding: '60px 0', border: '1px dashed rgba(255,255,255,0.05)', borderRadius: '20px' }}>
-                                    <Wallet size={40} style={{ opacity: 0.1, marginBottom: '10px', color: 'var(--primary)' }} />
-                                    <p style={{ color: 'var(--text-muted)', margin: 0 }}>No active loans found for this period.</p>
-                                </td></tr>
-                            ) : filteredLoans.map((loan, idx) => (
-                                <motion.tr
-                                    key={loan._id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.03 }}
-                                    style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}
-                                >
-                                    <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
-                                        <div style={{ color: 'white', fontWeight: '700' }}>{loan.driver?.name}</div>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{loan.driver?.mobile}</div>
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{loan.startDate ? formatDateIST(loan.startDate) : '—'}</div>
-                                        {(() => {
-                                            const sDate = new Date(loan.startDate);
-                                            const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
-                                            const selVal = (parseInt(year) * 12) + parseInt(month);
-                                            const monthIdx = (selVal - sVal) + 1;
-
-                                            // Smart fallback for tenure (Total / EMI)
-                                            const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
-
-                                            return (
-                                                <div style={{ fontSize: '10px', color: '#818cf8', fontWeight: '900', marginTop: '4px', textTransform: 'uppercase' }}>
-                                                    {monthIdx <= tenure ? `Month ${monthIdx} of ${tenure}` : `Extended (Past ${tenure}M)`}
-                                                </div>
-                                            );
-                                        })()}
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ color: 'white', fontWeight: '800' }}>₹ {loan.totalAmount?.toLocaleString()}</div>
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ color: 'var(--primary)', fontWeight: '800' }}>₹ {loan.monthlyEMI?.toLocaleString()}</div>
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ color: '#f43f5e', fontWeight: '800' }}>₹ {loan.remainingAmount?.toLocaleString()}</div>
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <span style={{
-                                            padding: '4px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '800',
-                                            background: loan.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
-                                            color: loan.status === 'Active' ? '#10b981' : '#f43f5e'
-                                        }}>
-                                            {loan.status?.toUpperCase()}
-                                        </span>
-                                    </td>
-                                    <td style={{ padding: '20px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
-                                        <div style={{ display: 'flex', gap: '10px' }}>
-                                            <button
-                                                onClick={() => handleEditLoan(loan)}
-                                                style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
-                                            <button
-                                                onClick={() => handleDeleteLoan(loan._id)}
-                                                style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}
-                                            >
-                                                <Trash2 size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </motion.tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-            </div>
 
             {/* LOAN MODAL */}
             <AnimatePresence>

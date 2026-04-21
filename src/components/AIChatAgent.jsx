@@ -11,7 +11,8 @@ import {
     MessageSquare,
     ChevronDown,
     Maximize2,
-    RotateCcw
+    RotateCcw,
+    AlertTriangle
 } from 'lucide-react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -22,6 +23,9 @@ const AIChatAgent = () => {
     const { t } = useLanguage();
     const navigate = useNavigate();
     const [isOpen, setIsOpen] = useState(false);
+    const [shouldBlink, setShouldBlink] = useState(false);
+    const [alerts, setAlerts] = useState([]);
+    const [isHovered, setIsHovered] = useState(false);
     const [messages, setMessages] = useState([
         { role: 'ai', content: 'Hello! I am your Texi Fleet AI Assistant. How can I help you manage your fleet today? (You can type or use voice!)' }
     ]);
@@ -59,15 +63,52 @@ const AIChatAgent = () => {
     const playAlertSound = () => {
         if (audioRef.current) {
             audioRef.current.currentTime = 0;
+            audioRef.current.volume = 0.4;
             audioRef.current.play().catch(e => console.log("Audio play blocked", e));
-            // Repeat for 3 seconds effect
-            const interval = setInterval(() => {
-                audioRef.current.currentTime = 0;
-                audioRef.current.play().catch(e => {});
-            }, 1000);
-            setTimeout(() => clearInterval(interval), 3000);
         }
     };
+
+    const speakText = (text) => {
+        if (!('speechSynthesis' in window)) return;
+        
+        // Cancel ongoing speech
+        window.speechSynthesis.cancel();
+        
+        const utterance = new SpeechSynthesisUtterance(text);
+        
+        // Find professional English voice
+        const voices = window.speechSynthesis.getVoices();
+        const enVoice = voices.find(v => (v.lang === 'en-US' || v.lang === 'en-GB') && v.name.includes('Google')) || 
+                        voices.find(v => v.lang.startsWith('en'));
+        
+        if (enVoice) utterance.voice = enVoice;
+        utterance.lang = 'en-US';
+        utterance.rate = 0.95;
+        window.speechSynthesis.speak(utterance);
+    };
+
+    useEffect(() => {
+        const checkAlerts = async () => {
+            if (!user) return;
+            try {
+                const userInfoRaw = localStorage.getItem('userInfo');
+                if (!userInfoRaw) return;
+                const userInfo = JSON.parse(userInfoRaw);
+                const { data } = await axios.get('/api/ai/alerts-check', {
+                    headers: { Authorization: `Bearer ${userInfo.token}` }
+                });
+                if (data.alertsDetected) {
+                    setAlerts(data.alerts || []);
+                    setShouldBlink(true);
+                    // Stop blinking after 5 cycles (5 cycles * 5 seconds = 25s)
+                    setTimeout(() => setShouldBlink(false), 25000);
+                }
+            } catch (err) {
+                console.error("Alerts check error:", err);
+            }
+        };
+        checkAlerts();
+    }, [user]);
 
     useEffect(() => {
         const fetchBriefing = async () => {
@@ -81,6 +122,12 @@ const AIChatAgent = () => {
                     if (data.briefing) {
                         setMessages(prev => [...prev, { role: 'ai', content: data.briefing }]);
                         setHasGreeted(true);
+                        
+                        // Speak the briefing - Disabled per user request
+                        // setTimeout(() => {
+                        //     speakText(data.briefing);
+                        // }, 500);
+
                         if (data.alertsDetected) {
                             playAlertSound();
                         }
@@ -144,6 +191,10 @@ const AIChatAgent = () => {
             }
 
             setMessages(prev => [...prev, { role: 'ai', content: finalMessage }]);
+            
+            // Speak response
+            speakText(finalMessage);
+
             if (data.alertsDetected) {
                 playAlertSound();
             }
@@ -347,11 +398,80 @@ const AIChatAgent = () => {
                 )}
             </AnimatePresence>
 
+            <AnimatePresence>
+                {isHovered && shouldBlink && alerts.length > 0 && (
+                    <motion.div
+                        initial={{ opacity: 0, scale: 0.9, y: 10, x: -20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 10, x: -20 }}
+                        style={{
+                            position: 'absolute',
+                            bottom: '80px',
+                            right: '20px',
+                            width: '280px',
+                            background: 'rgba(15, 23, 42, 0.95)',
+                            backdropFilter: 'blur(10px)',
+                            borderRadius: '20px',
+                            padding: '15px',
+                            border: '1px solid rgba(244, 63, 94, 0.3)',
+                            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                            zIndex: 100,
+                            pointerEvents: 'none'
+                        }}
+                    >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
+                            <AlertTriangle size={16} color="#f43f5e" />
+                            <span style={{ color: 'white', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Expiry Alerts</span>
+                        </div>
+                        <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                            {alerts.map((alert, idx) => (
+                                <div key={idx} style={{ 
+                                    background: 'rgba(255,255,255,0.05)', 
+                                    padding: '8px 12px', 
+                                    borderRadius: '12px',
+                                    border: '1px solid rgba(255,255,255,0.05)',
+                                    display: 'flex',
+                                    justifyContent: 'space-between',
+                                    alignItems: 'center'
+                                }}>
+                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                        <span style={{ color: 'white', fontSize: '11px', fontWeight: '800' }}>{alert.carNumber}</span>
+                                        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: '700' }}>{alert.type}</span>
+                                    </div>
+                                    <span style={{ color: '#f43f5e', fontSize: '10px', fontWeight: '800', background: 'rgba(244, 63, 94, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>
+                                        {new Date(alert.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
+                                    </span>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
+                )}
+            </AnimatePresence>
+
             {/* Launch Button */}
             <motion.button
                 whileHover={{ scale: 1.1, rotate: 5 }}
                 whileTap={{ scale: 0.9 }}
-                onClick={() => setIsOpen(!isOpen)}
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                animate={shouldBlink ? {
+                    background: ["rgba(99, 102, 241, 1)", "rgba(244, 63, 94, 1)", "rgba(99, 102, 241, 1)"],
+                    scale: [1, 1.05, 1],
+                    boxShadow: [
+                        '0 10px 40px -10px rgba(99, 102, 241, 0.6)',
+                        '0 10px 50px -5px rgba(244, 63, 94, 0.9)',
+                        '0 10px 40px -10px rgba(99, 102, 241, 0.6)'
+                    ]
+                } : {}}
+                transition={shouldBlink ? {
+                    duration: 5, // Even slower as requested
+                    repeat: 5,
+                    ease: "easeInOut"
+                } : {}}
+                onClick={() => {
+                    setIsOpen(!isOpen);
+                    setShouldBlink(false);
+                }}
                 style={{
                     width: '64px',
                     height: '64px',
@@ -374,11 +494,13 @@ const AIChatAgent = () => {
                     top: '-5px',
                     right: '-5px',
                     padding: '4px 8px',
-                    background: '#f43f5e',
+                    background: shouldBlink ? '#f43f5e' : '#6366f1',
                     borderRadius: '10px',
                     fontSize: '10px',
                     fontWeight: '900',
-                    border: '2px solid rgba(15, 23, 42, 1)'
+                    border: '2px solid rgba(15, 23, 42, 1)',
+                    transition: 'all 0.3s ease',
+                    boxShadow: shouldBlink ? '0 0 15px rgba(244, 63, 94, 0.8)' : 'none'
                 }}>
                     AI
                 </div>

@@ -209,6 +209,7 @@ const Maintenance = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
+            // Maintenance Master Data uses full-year context but start-year is anchor
             const { data: res } = await axios.get(`/api/admin/vehicle-monthly-details/${selectedCompany._id}?month=All&year=${selectedYear}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
@@ -226,7 +227,17 @@ const Maintenance = () => {
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            let url = `/api/admin/maintenance/${selectedCompany._id}?month=${selectedMonth}&year=${selectedYear}`;
+            let url = '';
+            if (selectedMonth === 'All') {
+                // Full Financial Year: April 1st to March 31st
+                const fromDate = `${selectedYear}-04-01`;
+                const toDate = `${selectedYear + 1}-03-31`;
+                url = `/api/admin/maintenance/${selectedCompany._id}?from=${fromDate}&to=${toDate}`;
+            } else {
+                // Financial Year Smart Mapping: Jan-Mar (1,2,3) are in the next calendar year
+                const calendarYear = (selectedMonth >= 1 && selectedMonth <= 3) ? selectedYear + 1 : selectedYear;
+                url = `/api/admin/maintenance/${selectedCompany._id}?month=${selectedMonth}&year=${calendarYear}`;
+            }
 
             const { data } = await axios.get(url, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
@@ -566,61 +577,68 @@ const Maintenance = () => {
                             Car <span className="theme-gradient-text">Maintenance</span>
                         </h1>
                     </div>
-                                <div className="mobile-stack" style={{ display: 'flex', gap: '8px', flex: '1', justifyContent: 'flex-end', width: '100%', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
-                        <button
-                            onClick={() => shiftMonth(-1)}
-                            style={{
-                                width: '40px', height: '40px', borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-                                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                            }}
-                        >
-                            <ChevronLeft size={18} />
-                        </button>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            {viewMode === 'history' && (
-                                <select
-                                    value={selectedMonth}
-                                    onChange={(e) => setSelectedMonth(e.target.value === 'All' ? 'All' : Number(e.target.value))}
-                                    className="input-field"
-                                    style={{ height: '48px', width: '120px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
-                                >
-                                    <option value="All" style={{ background: '#0f172a' }}>All Months</option>
-                                    {[
-                                        { n: 1, m: 'January' }, { n: 2, m: 'February' }, { n: 3, m: 'March' },
-                                        { n: 4, m: 'April' }, { n: 5, m: 'May' }, { n: 6, m: 'June' },
-                                        { n: 7, m: 'July' }, { n: 8, m: 'August' }, { n: 9, m: 'September' },
-                                        { n: 10, m: 'October' }, { n: 11, m: 'November' }, { n: 12, m: 'December' }
-                                    ].map(item => (
-                                        <option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>
-                                    ))}
-                                </select>
-                            )}
-
+                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        {/* MONTH SELECTOR */}
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            borderRadius: '16px',
+                            padding: '4px 8px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            height: '48px'
+                        }}>
                             <select
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                className="input-field"
-                                style={{ height: '48px', width: '100px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px' }}
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value === 'All' ? 'All' : Number(e.target.value))}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white', fontWeight: '900', fontSize: '14px', padding: '0 10px',
+                                    height: '100%', outline: 'none', cursor: 'pointer'
+                                }}
                             >
-                                {[2024, 2025, 2026, 2027].map(y => (
-                                    <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                                <option value="All" style={{ background: '#0f172a' }}>Full Year</option>
+                                {[4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3].map(m => (
+                                    <option key={m} value={m} style={{ background: '#0f172a' }}>
+                                        {new Date(0, m - 1).toLocaleString('default', { month: 'short' })}
+                                    </option>
                                 ))}
                             </select>
                         </div>
-                        <button
-                            onClick={() => shiftMonth(1)}
-                            style={{
-                                width: '40px', height: '40px', borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-                                color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
-                            }}
-                        >
-                            <ChevronRight size={18} />
-                        </button>
+
+                        {/* FINANCIAL YEAR SELECTOR */}
+                        <div style={{ 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            borderRadius: '16px',
+                            padding: '4px 15px',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            height: '48px',
+                            gap: '8px'
+                        }}>
+                            <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>FY</span>
+                            <select
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                style={{
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white', fontWeight: '900', fontSize: '14px',
+                                    outline: 'none', cursor: 'pointer'
+                                }}
+                            >
+                                {[2023, 2024, 2025, 2026, 2027].map(y => (
+                                    <option key={y} value={y} style={{ background: '#0f172a' }}>
+                                        {y}-{String(y + 1).slice(-2)}
+                                    </option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
-  </div>
 
                     <div style={{ display: 'flex', gap: '8px', flex: 1 }}>
                         <div style={{

@@ -14,7 +14,7 @@ import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
-import { todayIST, formatDateIST, firstDayOfMonthIST, nowIST } from '../utils/istUtils';
+import { todayIST, formatDateIST, firstDayOfMonthIST, nowIST, toISTDateString } from '../utils/istUtils';
 
 const StatCard = ({ icon: Icon, label, value, color, loading, trend, onClick, subValue }) => (
     <motion.div
@@ -127,7 +127,9 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [viewMode, setViewMode] = useState('monthly'); // 'monthly' or 'fy'
+    const [viewMode, setViewMode] = useState('monthly'); 
+    const spokenAlertsRef = useRef(new Set());
+    const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
 
     const shiftMonth = (amount) => {
         if (viewMode === 'monthly') {
@@ -142,28 +144,23 @@ const AdminDashboard = () => {
         }
     };
 
-    const getTodayLocal = () => todayIST();
-
-    const formatDate = (dateStr) => formatDateIST(dateStr);
-
-    const userRole = user?.role?.toLowerCase() || '';
-    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || (userRole.includes('admin') && userRole !== 'executive');
-    const isYatree = selectedCompany?.name === 'YatreeDestination' || selectedCompany?.name === 'Yatree Destination';
-
     const fetchStats = async () => {
         const userInfoRaw = localStorage.getItem('userInfo');
         if (!userInfoRaw || !selectedCompany) return;
 
-        if (!stats && !loading) setLoading(true); // Only show spinner on initial load
+        setLoading(true);
         try {
             const userInfo = JSON.parse(userInfoRaw);
-            const isInitial = !stats;
-            
-            let params = `${isInitial ? 'bypassCache=true' : ''}`;
-            if (viewMode === 'monthly') {
-                params += `&month=${selectedMonth}&year=${selectedYear}`;
+            let params = `companyId=${selectedCompany._id}`;
+
+            if (selectedMonth !== 'All') {
+                // Monthly View within Financial Year context
+                const calendarYear = (selectedMonth >= 1 && selectedMonth <= 3) ? selectedYear + 1 : selectedYear;
+                const fromDate = toISTDateString(new Date(calendarYear, selectedMonth - 1, 1));
+                const toDate = toISTDateString(new Date(calendarYear, selectedMonth, 0));
+                params += `&from=${fromDate}&to=${toDate}`;
             } else {
-                // Financial Year: April 1st to March 31st
+                // Full Financial Year View: April 1st to March 31st
                 const fromDate = `${selectedYear}-04-01`;
                 const toDate = `${selectedYear + 1}-03-31`;
                 params += `&from=${fromDate}&to=${toDate}`;
@@ -180,14 +177,16 @@ const AdminDashboard = () => {
         }
     };
 
+    const userRole = user?.role?.toLowerCase() || '';
+    const isAdmin = userRole === 'admin' || userRole === 'superadmin' || (userRole.includes('admin') && userRole !== 'executive');
+
     useEffect(() => {
         fetchStats();
         let interval = setInterval(fetchStats, 5 * 60 * 1000); // Refresh every 5 min
 
-        // Pause polling when tab is hidden, resume when visible
         const handleVisibility = () => {
             if (document.visibilityState === 'visible') {
-                fetchStats(); // Immediately refresh on return
+                fetchStats();
                 interval = setInterval(fetchStats, 5 * 60 * 1000);
             } else {
                 clearInterval(interval);
@@ -198,7 +197,34 @@ const AdminDashboard = () => {
             clearInterval(interval);
             document.removeEventListener('visibilitychange', handleVisibility);
         };
-    }, [selectedCompany, selectedMonth, selectedYear, viewMode]);
+    }, [selectedCompany, selectedMonth, selectedYear]);
+
+    useEffect(() => {
+        if (stats?.expiringAlerts && stats.expiringAlerts.length > 0) {
+            const currentAlerts = stats.expiringAlerts.filter(alert => {
+                if (user?.role === 'Admin') return true;
+                if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
+                if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
+                return true;
+            });
+
+            const newAlerts = currentAlerts.filter(alert => 
+                !spokenAlertsRef.current.has(`${alert.identifier}-${alert.documentType}-${alert.expiryDate}`)
+            );
+            
+            if (newAlerts.length > 0) {
+                if (audioRef.current) {
+                    audioRef.current.currentTime = 0;
+                    audioRef.current.volume = 0.4;
+                    audioRef.current.play().catch(e => console.log("Audio play blocked", e));
+                }
+
+                newAlerts.forEach(alert => 
+                    spokenAlertsRef.current.add(`${alert.identifier}-${alert.documentType}-${alert.expiryDate}`)
+                );
+            }
+        }
+    }, [stats?.expiringAlerts, user]);
 
     return (
         <div className="admin-dashboard-container" style={{
@@ -219,8 +245,6 @@ const AdminDashboard = () => {
                 .status-pill { border-radius: 20px; letter-spacing: 0.5px; }
                 .vehicle-badge { letter-spacing: 0.5px; }
             `}</style>
-
-
 
             <div className="glass-card dashboard-header" style={{
                 background: 'rgba(30, 41, 59, 0.4)',
@@ -261,134 +285,70 @@ const AdminDashboard = () => {
                     </div>
 
                     <div className="date-selector-wrapper" style={{ flexShrink: 0, display: 'flex', gap: '10px', alignItems: 'center' }}>
-                        {/* VIEW MODE TOGGLE */}
                         <div style={{
-                            display: 'flex',
-                            background: 'rgba(15, 23, 42, 0.6)',
-                            borderRadius: '12px',
-                            padding: '3px',
-                            border: '1px solid rgba(255,255,255,0.05)'
-                        }}>
-                            <button 
-                                onClick={() => setViewMode('monthly')}
-                                style={{
-                                    padding: '6px 12px',
-                                    borderRadius: '9px',
-                                    fontSize: '11px',
-                                    fontWeight: '900',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    background: viewMode === 'monthly' ? '#fbbf24' : 'transparent',
-                                    color: viewMode === 'monthly' ? '#000' : 'rgba(255,255,255,0.5)',
-                                    transition: 'all 0.3s'
-                                }}
-                            >
-                                MONTHLY
-                            </button>
-                            <button 
-                                onClick={() => setViewMode('fy')}
-                                style={{
-                                    padding: '6px 12px',
-                                    borderRadius: '9px',
-                                    fontSize: '11px',
-                                    fontWeight: '900',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    background: viewMode === 'fy' ? '#fbbf24' : 'transparent',
-                                    color: viewMode === 'fy' ? '#000' : 'rgba(255,255,255,0.5)',
-                                    transition: 'all 0.3s'
-                                }}
-                            >
-                                FINANCIAL YEAR
-                            </button>
-                        </div>
-
-                        <div style={{
-                            background: 'rgba(15, 23, 42, 0.4)',
-                            padding: '4px',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(255,255,255,0.05)',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '5px',
-                            boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                            gap: '12px',
                             flexWrap: 'wrap'
                         }}>
-                            {/* NAVIGATION ARROWS */}
-                            <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                <button
-                                    onClick={() => shiftMonth(-1)}
+                            <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                background: 'rgba(15, 23, 42, 0.4)',
+                                borderRadius: '16px',
+                                padding: '4px 8px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                height: '48px'
+                            }}>
+                                <select
+                                    value={selectedMonth}
+                                    onChange={(e) => setSelectedMonth(e.target.value === 'All' ? 'All' : Number(e.target.value))}
                                     style={{
-                                        width: '40px', height: '40px', borderRadius: '12px',
-                                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-                                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: 'white', fontWeight: '900', fontSize: '14px', padding: '0 10px',
+                                        height: '100%', outline: 'none', cursor: 'pointer'
                                     }}
                                 >
-                                    <ChevronLeft size={18} />
-                                </button>
-                                
-                                {viewMode === 'monthly' ? (
-                                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', padding: '0 5px' }}>
-                                        <select
-                                            value={selectedMonth}
-                                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                                            style={{
-                                                background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)',
-                                                color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px',
-                                                height: '40px', borderRadius: '14px', outline: 'none', cursor: 'pointer',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            {Array.from({ length: 12 }, (_, i) => i + 1).map(m => (
-                                                <option key={m} value={m} style={{ background: '#0f172a' }}>
-                                                    {t('month_' + m)}
-                                                </option>
-                                            ))}
-                                        </select>
-                                        <select
-                                            value={selectedYear}
-                                            onChange={(e) => setSelectedYear(Number(e.target.value))}
-                                            style={{
-                                                background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.15)',
-                                                color: 'white', fontWeight: '900', fontSize: '13px', padding: '0 12px',
-                                                height: '40px', borderRadius: '14px', outline: 'none', cursor: 'pointer',
-                                                transition: 'all 0.2s'
-                                            }}
-                                        >
-                                            {[2024, 2025, 2026, 2027].map(y => (
-                                                <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                ) : (
-                                    <div style={{ 
-                                        padding: '0 15px', 
-                                        color: '#fbbf24', 
-                                        fontWeight: '900', 
-                                        fontSize: '13px', 
-                                        background: 'rgba(251,191,36,0.1)',
-                                        height: '40px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        borderRadius: '14px',
-                                        border: '1px solid rgba(251,191,36,0.15)',
-                                        minWidth: '220px',
-                                        justifyContent: 'center'
-                                    }}>
-                                        1 April {selectedYear} - 31 March {selectedYear + 1}
-                                    </div>
-                                )}
+                                    <option value="All" style={{ background: '#0f172a' }}>Full Year</option>
+                                    {[4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3].map(m => (
+                                        <option key={m} value={m} style={{ background: '#0f172a' }}>
+                                            {t('month_' + m)}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                                <button
-                                    onClick={() => shiftMonth(1)}
+                            {/* FINANCIAL YEAR SELECTOR */}
+                            <div style={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                background: 'rgba(15, 23, 42, 0.4)',
+                                borderRadius: '16px',
+                                padding: '4px 15px',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                height: '48px',
+                                gap: '8px'
+                            }}>
+                                <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>FY</span>
+                                <select
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(Number(e.target.value))}
                                     style={{
-                                        width: '40px', height: '40px', borderRadius: '12px',
-                                        background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)',
-                                        color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer'
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: 'white', fontWeight: '900', fontSize: '14px',
+                                        outline: 'none', cursor: 'pointer'
                                     }}
                                 >
-                                    <ChevronRight size={18} />
-                                </button>
+                                    {[2023, 2024, 2025, 2026, 2027].map(y => (
+                                        <option key={y} value={y} style={{ background: '#0f172a' }}>
+                                            {y}-{y + 1}
+                                        </option>
+                                    ))}
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -537,7 +497,7 @@ const AdminDashboard = () => {
                                             if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
                                             if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
                                             return true;
-                                        }).map((alert, index) => (
+                                        }).sort((a, b) => new Date(a.expiryDate || a.date) - new Date(b.expiryDate || b.date)).slice(0, 3).map((alert, index) => (
                                             <div
                                                 key={index}
                                                 className="alert-card glass-card-hover-effect"
