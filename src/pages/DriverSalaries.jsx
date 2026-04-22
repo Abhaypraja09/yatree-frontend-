@@ -743,7 +743,14 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         setShowDetailModal(true);
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/admin/salary-details/${driverId}?month=${month}&year=${year}`, {
+            let url = `/api/admin/salary-details/${driverId}`;
+            if (month === 'All') {
+                url += `?from=${year}-04-01&to=${year + 1}-03-31`;
+            } else {
+                const calendarYear = (month >= 1 && month <= 3) ? year + 1 : year;
+                url += `?month=${month}&year=${calendarYear}`;
+            }
+            const { data } = await axios.get(url, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setSelectedDriverDetails(data);
@@ -1013,6 +1020,13 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                             <button onClick={() => { setEditingLoanId(null); setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', remarks: '' }); setShowLoanModal(true); }} className="btn-primary" style={{ height: '36px', padding: '0 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', border: 'none' }}>
                                 <Wallet size={14} /> LOAN
                             </button>
+                            <button
+                                onClick={() => { setEditingAllowanceId(null); setAllowanceFormData({ driverId: '', amount: '', date: todayIST(), remark: '', type: 'Other' }); setShowAllowanceModal(true); }}
+                                className="btn-primary"
+                                style={{ height: '36px', padding: '0 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: 'none' }}
+                            >
+                                <Plus size={14} /> PAY
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -1112,6 +1126,38 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         </div>
                         <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                             <Wallet size={20} color="var(--primary)" />
+                        </div>
+                    </div>
+                </div>
+
+                <div 
+                    onClick={() => setActiveTab('allowances')}
+                    className={`glass-card ${activeTab === 'allowances' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
+                    style={{ 
+                        flex: '1', 
+                        minWidth: '240px',
+                        maxWidth: '400px', 
+                        padding: '24px', 
+                        cursor: 'pointer',
+                        background: activeTab === 'allowances' 
+                            ? 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%)' 
+                            : 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', 
+                        border: activeTab === 'allowances' 
+                            ? '2px solid #10b981' 
+                            : '1px solid rgba(16,185,129,0.2)',
+                        transition: 'all 0.3s ease',
+                        boxShadow: activeTab === 'allowances' ? '0 10px 25px rgba(16,185,129,0.2)' : 'none'
+                    }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <p style={{ fontSize: '12px', fontWeight: '800', color: '#10b981', marginBottom: '8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                Special Payments {activeTab === 'allowances' && <CheckCircle size={14} />}
+                            </p>
+                            <h3 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: 0 }}>₹ {salaries.reduce((sum, s) => sum + (s.totalAllowances || 0), 0).toLocaleString()}</h3>
+                        </div>
+                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <Plus size={20} color="#10b981" />
                         </div>
                     </div>
                 </div>
@@ -1434,6 +1480,58 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         </div>
                     </motion.div>
                 )}
+
+                {activeTab === 'allowances' && (
+                <motion.div key="allowances" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ marginTop: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <Plus size={22} color="#10b981" />
+                        </div>
+                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Special Payments <span style={{ color: '#10b981' }}>(Allowances)</span></h2>
+                    </div>
+
+                    <div className="glass-card" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
+                            <thead>
+                                <tr style={{ textAlign: 'left' }}>
+                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
+                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
+                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Type</th>
+                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
+                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remarks</th>
+                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {filteredAllowances.length === 0 ? (
+                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-muted)' }}>No special payments found.</td></tr>
+                                ) : (
+                                    filteredAllowances.map((al, idx) => (
+                                        <motion.tr key={al._id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }}
+                                            style={{ background: 'rgba(30,41,59,0.4)', borderRadius: '12px' }}>
+                                            <td style={{ padding: '15px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
+                                                <div style={{ fontWeight: '700', color: 'white' }}>{al.driver?.name}</div>
+                                            </td>
+                                            <td style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.7)', fontWeight: '600' }}>{formatDateIST(al.date)}</td>
+                                            <td style={{ padding: '15px 25px' }}>
+                                                <span style={{ fontSize: '10px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(16,185,129,0.1)', color: '#10b981', fontWeight: '800' }}>{al.type?.toUpperCase()}</span>
+                                            </td>
+                                            <td style={{ padding: '15px 25px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {(al.amount || 0).toLocaleString()}</td>
+                                            <td style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>{al.remark || '-'}</td>
+                                            <td style={{ padding: '15px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                                    <button onClick={() => handleEditAllowance(al)} style={{ padding: '8px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer' }}><Edit2 size={14} /></button>
+                                                    <button onClick={() => handleDeleteAllowance(al._id)} style={{ padding: '8px', borderRadius: '8px', background: 'rgba(244,63,94,0.1)', border: 'none', color: '#f43f5e', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+                </motion.div>
+                )}
             </AnimatePresence>
 
             {/* RECORD ADVANCE MODAL */}
@@ -1489,6 +1587,81 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
                                 <button type="submit" disabled={submittingAdvance} className="btn-primary" style={{ height: '50px', fontWeight: '900', fontSize: '15px' }}>
                                     {submittingAdvance ? 'PROCESSING...' : (editingAdvanceId ? 'UPDATE ADVANCE' : 'CONFIRM ADVANCE')}
+                                </button>
+                            </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* RECORD ADDITIONAL PAYMENT (ALLOWANCE) MODAL */}
+            <AnimatePresence>
+                {showAllowanceModal && (
+                    <div className="modal-overlay" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1100, position: 'fixed', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
+                            className="modal-container" style={{ width: '100%', maxWidth: '480px', padding: '30px', background: '#0f172a', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.1)' }}>
+
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
+                                <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>{editingAllowanceId ? 'Edit Payment' : 'Record Special Payment'}</h2>
+                                <button onClick={() => { setShowAllowanceModal(false); setEditingAllowanceId(null); }} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
+                            </div>
+
+                            <form onSubmit={handleAddAllowance} style={{ display: 'grid', gap: '20px' }}>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Select Driver</label>
+                                    <select
+                                        className="input-field"
+                                        required
+                                        value={allowanceFormData.driverId}
+                                        onChange={(e) => setAllowanceFormData({ ...allowanceFormData, driverId: e.target.value })}
+                                        style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }}
+                                    >
+                                        <option value="" style={{ background: '#1e293b', color: 'white' }}>Choose a driver...</option>
+                                        {drivers.map(d => (
+                                            <option key={d._id} value={d._id} style={{ background: '#1e293b', color: 'white' }}>
+                                                {d.name} ({d.mobile})
+                                            </option>
+                                        ))}
+                                    </select>
+                                </div>
+                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                    <div>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Amount</label>
+                                        <input type="number" className="input-field" required value={allowanceFormData.amount} onChange={(e) => setAllowanceFormData({ ...allowanceFormData, amount: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="₹ 0" />
+                                    </div>
+                                    <div>
+                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Date</label>
+                                        <input type="date" className="input-field" required value={allowanceFormData.date} onChange={(e) => setAllowanceFormData({ ...allowanceFormData, date: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Payment Type</label>
+                                    <select
+                                        className="input-field"
+                                        value={allowanceFormData.type}
+                                        onChange={(e) => setAllowanceFormData({ ...allowanceFormData, type: e.target.value })}
+                                        style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }}
+                                    >
+                                        <option value="Bonus">Bonus</option>
+                                        <option value="Wedding">Wedding</option>
+                                        <option value="Office Work">Office Work</option>
+                                        <option value="Repair Help">Repair Help</option>
+                                        <option value="Other">Other Adjustment</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Remark</label>
+                                    <textarea className="input-field" value={allowanceFormData.remark} onChange={(e) => setAllowanceFormData({ ...allowanceFormData, remark: e.target.value })} style={{ width: '100%', padding: '15px', background: '#1e293b', color: 'white', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)' }} rows="2" placeholder="Ex: Special work bonus..." />
+                                </div>
+
+                                {allowanceMessage.text && (
+                                    <div style={{ padding: '12px', borderRadius: '10px', background: allowanceMessage.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)', color: allowanceMessage.type === 'success' ? '#10b981' : '#f43f5e', border: `1px solid ${allowanceMessage.type === 'success' ? 'rgba(16,185,129,0.2)' : 'rgba(244,63,94,0.2)'}`, fontSize: '13px', fontWeight: '700' }}>
+                                        {allowanceMessage.text}
+                                    </div>
+                                )}
+
+                                <button type="submit" disabled={submittingAllowance} className="btn-primary" style={{ height: '50px', fontWeight: '900', fontSize: '15px', background: '#10b981', border: 'none', borderRadius: '12px', color: 'white' }}>
+                                    {submittingAllowance ? 'PROCESSING...' : (editingAllowanceId ? 'UPDATE PAYMENT' : 'CONFIRM PAYMENT')}
                                 </button>
                             </form>
                         </motion.div>

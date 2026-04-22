@@ -802,14 +802,6 @@ const Reports = ({ isSubComponent = false }) => {
                             border: '1px solid rgba(255,255,255,0.08)',
                             backdropFilter: 'blur(10px)'
                         }}>
-                            <motion.button
-                                whileHover={{ scale: 1.1, background: 'rgba(255,255,255,0.08)' }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => shiftDays(-1)}
-                                style={{ width: '40px', height: '40px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                            >
-                                <ChevronLeft size={20} />
-                            </motion.button>
 
                             <div
                                 onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
@@ -833,14 +825,6 @@ const Reports = ({ isSubComponent = false }) => {
                                 />
                             </div>
 
-                            <motion.button
-                                whileHover={{ scale: 1.1, background: 'rgba(255,255,255,0.08)' }}
-                                whileTap={{ scale: 0.9 }}
-                                onClick={() => shiftDays(1)}
-                                style={{ width: '40px', height: '40px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                            >
-                                <ChevronRight size={20} />
-                            </motion.button>
                         </div>
 
                         {/* 2. Quick Search & Selectors Group */}

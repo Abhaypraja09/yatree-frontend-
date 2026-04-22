@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { 
     Bot, 
     X, 
@@ -22,9 +22,11 @@ const AIChatAgent = () => {
     const { user } = useAuth();
     const { t } = useLanguage();
     const navigate = useNavigate();
+    const location = useLocation();
     const [isOpen, setIsOpen] = useState(false);
     const [shouldBlink, setShouldBlink] = useState(false);
     const [alerts, setAlerts] = useState([]);
+    const [hasAlertsDetected, setHasAlertsDetected] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
     const [messages, setMessages] = useState([
         { role: 'ai', content: 'Hello! I am your Texi Fleet AI Assistant. How can I help you manage your fleet today? (You can type or use voice!)' }
@@ -99,9 +101,9 @@ const AIChatAgent = () => {
                 });
                 if (data.alertsDetected) {
                     setAlerts(data.alerts || []);
-                    setShouldBlink(true);
-                    // Stop blinking after 5 cycles (5 cycles * 5 seconds = 25s)
-                    setTimeout(() => setShouldBlink(false), 25000);
+                    setHasAlertsDetected(true);
+                } else {
+                    setHasAlertsDetected(false);
                 }
             } catch (err) {
                 console.error("Alerts check error:", err);
@@ -109,6 +111,19 @@ const AIChatAgent = () => {
         };
         checkAlerts();
     }, [user]);
+
+    // Handle blinking based on location and detected alerts
+    useEffect(() => {
+        const isDashboard = location.pathname === '/admin' || location.pathname === '/admin/';
+        if (isDashboard && hasAlertsDetected) {
+            setShouldBlink(true);
+            // Optional: still auto-stop after 25s if you want, or keep it till seen
+            const timer = setTimeout(() => setShouldBlink(false), 25000);
+            return () => clearTimeout(timer);
+        } else {
+            setShouldBlink(false);
+        }
+    }, [location.pathname, hasAlertsDetected]);
 
     useEffect(() => {
         const fetchBriefing = async () => {

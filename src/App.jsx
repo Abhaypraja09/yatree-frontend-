@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 
 // Lazy load pages for better performance
@@ -78,6 +78,7 @@ const ProtectedRoute = ({ children, role }) => {
 
 const AdminLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(false);
+  const location = useLocation();
 
   return (
     <div className="with-sidebar" style={{ display: 'flex', minHeight: '100vh', position: 'relative', maxWidth: '100vw', overflowX: 'hidden' }}>
