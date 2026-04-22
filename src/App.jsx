@@ -142,6 +142,7 @@ const AdminLayout = ({ children }) => {
           {children}
         </div>
       </main>
+      <AIChatAgent />
 
       <style>
         {`
@@ -253,7 +254,6 @@ function App() {
     <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <LanguageProvider>
         <AuthProvider>
-          <AIChatAgent />
           <ThemeSwitcher />
           <Suspense fallback={<LoadingFallback />}>
             <Routes>
