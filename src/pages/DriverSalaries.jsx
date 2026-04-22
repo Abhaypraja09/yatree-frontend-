@@ -32,9 +32,12 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         const monthParam = params.get('month');
         const yearParam = params.get('year');
 
+        const tabParam = params.get('tab');
+        
         if (searchParam) setSearchTerm(searchParam);
         if (monthParam) setMonth(Number(monthParam));
         if (yearParam) setYear(Number(yearParam));
+        if (tabParam) setActiveTab(tabParam);
     }, [location.search]);
 
     const [month, setMonth] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCMonth() + 1);
@@ -1010,9 +1013,6 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                             <button onClick={() => { setEditingLoanId(null); setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', remarks: '' }); setShowLoanModal(true); }} className="btn-primary" style={{ height: '36px', padding: '0 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', border: 'none' }}>
                                 <Wallet size={14} /> LOAN
                             </button>
-                            <button onClick={() => { setEditingAllowanceId(null); setAllowanceFormData({ driverId: '', amount: '', date: todayIST(), remark: '', type: 'Other' }); setShowAllowanceModal(true); }} className="btn-primary" style={{ height: '36px', padding: '0 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: 'none' }}>
-                                <Plus size={14} /> ADD. PAY
-                            </button>
                         </div>
                     </div>
                 </div>
@@ -1051,37 +1051,6 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                     </div>
                 </div>
 
-                <div 
-                    onClick={() => setActiveTab('special')}
-                    className={`glass-card ${activeTab === 'special' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
-                    style={{ 
-                        flex: '1', 
-                        minWidth: '240px',
-                        maxWidth: '400px', 
-                        padding: '24px', 
-                        cursor: 'pointer',
-                        background: activeTab === 'special' 
-                            ? 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%)' 
-                            : 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', 
-                        border: activeTab === 'special' 
-                            ? '2px solid #10b981' 
-                            : '1px solid rgba(16,185,129,0.2)',
-                        transition: 'all 0.3s ease',
-                        boxShadow: activeTab === 'special' ? '0 10px 25px rgba(16,185,129,0.2)' : 'none'
-                    }}
-                >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                        <div>
-                            <p style={{ fontSize: '12px', fontWeight: '800', color: '#10b981', marginBottom: '8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                Special Pay <CheckCircle size={14} />
-                            </p>
-                            <h3 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: 0 }}>₹ {allowances.reduce((sum, a) => sum + (a.amount || 0), 0).toLocaleString()}</h3>
-                        </div>
-                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <IndianRupee size={20} color="#10b981" />
-                        </div>
-                    </div>
-                </div>
 
                 <div 
                     onClick={() => setActiveTab('advances')}
@@ -1157,7 +1126,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
                     <thead>
                         <tr style={{ textAlign: 'left' }}>
-                            {['Driver', 'Daily Wage', 'Duty Days', 'Nights', 'Earnings', 'Special Pay', 'Advances', 'EMI', 'Total', 'Reports'].map(h => (
+                            {['Driver', 'Daily Wage', 'Duty Days', 'Nights', 'Earnings', 'Advances', 'EMI', 'Total', 'Reports'].map(h => (
                                 <th key={h} style={{ padding: '15px 20px', color: (h === 'Total' || h === 'Reports') ? '#10b981' : 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
                             ))}
                         </tr>
@@ -1188,9 +1157,6 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 20px', color: '#38bdf8', fontWeight: '700' }}>₹ {s.totalEarned - (s.totalAllowances || 0)}</td>
-                                        <td style={{ padding: '20px 20px', color: '#10b981', fontWeight: '800' }}>
-                                            {s.totalAllowances > 0 ? `+ ₹ ${s.totalAllowances}` : '-'}
-                                        </td>
                                         <td style={{ padding: '20px 20px', color: '#f43f5e', fontWeight: '700' }}>₹ {(s.totalAdvances || 0).toLocaleString()}</td>
                                         <td style={{ padding: '20px 20px', color: 'var(--primary)', fontWeight: '700' }}>₹ {s.totalEMI}</td>
                                         <td style={{ padding: '20px 20px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {s.netPayable}</td>
@@ -1223,7 +1189,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                             </div>
                             <div style={{ textAlign: 'right' }}>
                                 <p style={{ margin: '0 0 4px', color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>
-                                    Earnings: ₹{s.totalEarned - (s.totalAllowances || 0)} | <span style={{ color: '#10b981' }}>Special: +₹{s.totalAllowances || 0}</span>
+                                    Earnings: ₹{s.totalEarned - (s.totalAllowances || 0)}
                                 </p>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
                                     <h3 style={{ margin: 0, color: '#10b981', fontSize: '18px' }}>₹ {s.netPayable}</h3>
@@ -1382,82 +1348,6 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             </motion.div>
         )}
 
-                {activeTab === 'special' && (
-                <motion.div key="special" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ marginTop: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
-                        <div style={{ width: '4px', height: '24px', background: '#10b981', borderRadius: '2px' }}></div>
-                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Special <span style={{ color: '#10b981' }}>Payout History</span></h2>
-                    </div>
-
-                <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
-                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
-                        <thead>
-                            <tr style={{ textAlign: 'left' }}>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Type</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
-                                <th style={{ padding: '15px 10px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remarks</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredAllowances.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No special payouts recorded.</td></tr>
-                            ) : filteredAllowances.map((a, idx) => (
-                                <motion.tr key={a._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
-                                    style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}>
-                                    <td style={{ padding: '15px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
-                                        <div style={{ fontWeight: '800', color: 'white' }}>{a.driver?.name}</div>
-                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{a.driver?.mobile}</div>
-                                    </td>
-                                    <td style={{ padding: '15px 25px', color: 'white' }}>{formatDateIST(a.date)}</td>
-                                    <td style={{ padding: '15px 25px' }}>
-                                        <span style={{ fontSize: '10px', background: 'rgba(16,185,129,0.1)', color: '#10b981', padding: '4px 8px', borderRadius: '6px', fontWeight: '800' }}>{a.type?.toUpperCase()}</span>
-                                    </td>
-                                    <td style={{ padding: '15px 25px', color: '#10b981', fontWeight: '900', fontSize: '16px' }}>₹{a.amount}</td>
-                                    <td style={{ padding: '15px 10px' }}>
-                                        <div style={{ color: 'var(--text-muted)', fontSize: '12px', fontStyle: 'italic', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{a.remark || '-'}</div>
-                                    </td>
-                                    <td style={{ padding: '15px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button onClick={() => handleEditAllowance(a)} style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><Edit2 size={16} /></button>
-                                            <button onClick={() => handleDeleteAllowance(a._id)} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', padding: '8px', borderRadius: '8px', cursor: 'pointer' }}><X size={16} /></button>
-                                        </div>
-                                    </td>
-                                </motion.tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    {allowances.map(a => (
-                        <div key={a._id} className="glass-card" style={{ padding: '16px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '14px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
-                                        {a.driver?.name?.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <div style={{ fontWeight: '800', color: 'white' }}>{a.driver?.name}</div>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{formatDateIST(a.date)}</div>
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ color: '#10b981', fontWeight: '800' }}>₹{a.amount}</div>
-                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>{a.type}</div>
-                                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px', justifyContent: 'flex-end' }}>
-                                        <button onClick={() => handleEditAllowance(a)} style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '10px' }}>Edit</button>
-                                        <button onClick={() => handleDeleteAllowance(a._id)} style={{ background: 'transparent', border: 'none', color: '#f43f5e', fontSize: '10px' }}>Delete</button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </motion.div>
-        )}
 
                 {activeTab === 'loans' && (
                     <motion.div key="loans" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ marginTop: '20px' }}>
@@ -1606,83 +1496,6 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 )}
             </AnimatePresence>
 
-            {/* RECORD ADDITIONAL PAYMENT (ALLOWANCE) MODAL */}
-            <AnimatePresence>
-                {showAllowanceModal && (
-                    <div className="modal-overlay" style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)', zIndex: 1100 }}>
-                        <motion.div initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 50, opacity: 0 }}
-                            className="modal-container" style={{ width: '100%', maxWidth: '480px', padding: '30px' }}>
-
-                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '30px' }}>
-                                <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0 }}>
-                                    {editingAllowanceId ? 'Edit Payment' : 'Additional Payment'}
-                                </h2>
-                                <button onClick={() => { setShowAllowanceModal(false); setEditingAllowanceId(null); }} style={{ background: 'transparent', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
-                            </div>
-
-                            <form onSubmit={handleAddAllowance} style={{ display: 'grid', gap: '20px' }}>
-                                <div>
-                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Select Driver</label>
-                                    <select
-                                        className="input-field"
-                                        required
-                                        value={allowanceFormData.driverId}
-                                        onChange={(e) => setAllowanceFormData({ ...allowanceFormData, driverId: e.target.value })}
-                                        style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white' }}
-                                    >
-                                        <option value="" style={{ background: '#1e293b', color: 'white' }}>Choose a driver...</option>
-                                        {drivers.map(d => (
-                                            <option key={d._id} value={d._id} style={{ background: '#1e293b', color: 'white' }}>
-                                                {d.name} ({d.mobile})
-                                            </option>
-                                        ))}
-                                    </select>
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                    <div>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Amount</label>
-                                        <input type="number" className="input-field" required value={allowanceFormData.amount} onChange={(e) => setAllowanceFormData({ ...allowanceFormData, amount: e.target.value })} style={{ width: '100%', height: '50px' }} placeholder="₹ 0" />
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Type</label>
-                                        <select
-                                            className="input-field"
-                                            value={allowanceFormData.type}
-                                            onChange={(e) => setAllowanceFormData({ ...allowanceFormData, type: e.target.value })}
-                                            style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white' }}
-                                        >
-                                            <option value="Office Work">Office Work</option>
-                                            <option value="Wedding">Wedding</option>
-                                            <option value="Bonus">Bonus</option>
-                                            <option value="Other">Other Adjustment</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '15px' }}>
-                                    <div>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Date</label>
-                                        <input type="date" className="input-field" required value={allowanceFormData.date} onChange={(e) => setAllowanceFormData({ ...allowanceFormData, date: e.target.value })} style={{ width: '100%', height: '50px' }} />
-                                    </div>
-                                </div>
-                                <div>
-                                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Remark (Note)</label>
-                                    <textarea className="input-field" value={allowanceFormData.remark} onChange={(e) => setAllowanceFormData({ ...allowanceFormData, remark: e.target.value })} style={{ width: '100%', padding: '15px' }} rows="2" placeholder="Ex: Special duty for office wedding..." />
-                                </div>
-
-                                {allowanceMessage.text && (
-                                    <div style={{ padding: '12px', borderRadius: '10px', background: allowanceMessage.type === 'success' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)', color: allowanceMessage.type === 'success' ? '#10b981' : '#f43f5e', border: `1px solid ${allowanceMessage.type === 'success' ? 'rgba(16,185,129,0.2)' : 'rgba(244,63,94,0.2)'}`, fontSize: '13px', fontWeight: '700' }}>
-                                        {allowanceMessage.text}
-                                    </div>
-                                )}
-
-                                <button type="submit" disabled={submittingAllowance} className="btn-primary" style={{ height: '50px', fontWeight: '900', fontSize: '15px', background: '#10b981', border: 'none' }}>
-                                    {submittingAllowance ? 'PROCESSING...' : (editingAllowanceId ? 'UPDATE PAYMENT' : 'ADD TO SALARY')}
-                                </button>
-                            </form>
-                        </motion.div>
-                    </div>
-                )}
-            </AnimatePresence>
 
             {/* DETAIL MODAL */}
             <AnimatePresence>

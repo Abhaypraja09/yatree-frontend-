@@ -820,7 +820,7 @@ const FuelPage = () => {
                                             <div style={{
                                                 color: 'white', fontWeight: '900', fontSize: '12px', padding: '4px 12px', border: '1px solid rgba(255,255,255,0.06)', borderRadius: '10px', background: 'rgba(255,255,255,0.02)', display: 'inline-block', textTransform: 'uppercase'
                                             }}>
-                                                {e.paymentSource?.toLowerCase().includes('guest') ? 'Guest' : (e.paymentSource || 'Office')}
+                                                {e.paymentSource?.toLowerCase().includes('guest') ? 'Guest' : 'Office'}
                                             </div>
                                         </td>
                                         <td style={{ padding: '15px 25px' }}>

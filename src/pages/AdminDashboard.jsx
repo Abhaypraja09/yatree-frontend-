@@ -127,7 +127,7 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [viewMode, setViewMode] = useState('monthly'); 
+    const [viewMode, setViewMode] = useState('monthly');
     const spokenAlertsRef = useRef(new Set());
     const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
 
@@ -208,10 +208,10 @@ const AdminDashboard = () => {
                 return true;
             });
 
-            const newAlerts = currentAlerts.filter(alert => 
+            const newAlerts = currentAlerts.filter(alert =>
                 !spokenAlertsRef.current.has(`${alert.identifier}-${alert.documentType}-${alert.expiryDate}`)
             );
-            
+
             if (newAlerts.length > 0) {
                 if (audioRef.current) {
                     audioRef.current.currentTime = 0;
@@ -219,7 +219,7 @@ const AdminDashboard = () => {
                     audioRef.current.play().catch(e => console.log("Audio play blocked", e));
                 }
 
-                newAlerts.forEach(alert => 
+                newAlerts.forEach(alert =>
                     spokenAlertsRef.current.add(`${alert.identifier}-${alert.documentType}-${alert.expiryDate}`)
                 );
             }
@@ -291,9 +291,9 @@ const AdminDashboard = () => {
                             gap: '12px',
                             flexWrap: 'wrap'
                         }}>
-                            <div style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
                                 background: 'rgba(15, 23, 42, 0.4)',
                                 borderRadius: '16px',
                                 padding: '4px 8px',
@@ -321,9 +321,9 @@ const AdminDashboard = () => {
                             </div>
 
                             {/* FINANCIAL YEAR SELECTOR */}
-                            <div style={{ 
-                                display: 'flex', 
-                                alignItems: 'center', 
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
                                 background: 'rgba(15, 23, 42, 0.4)',
                                 borderRadius: '16px',
                                 padding: '4px 15px',
@@ -390,14 +390,24 @@ const AdminDashboard = () => {
                             {/* Drivers Service Related */}
                             {(isAdmin || user?.permissions?.driversService) && (
                                 <>
-                                <StatCard 
-                                    icon={Users} 
-                                    label={t('special_pay')} 
-                                    value={`₹${(stats.monthlySpecialPayTotal || 0).toLocaleString()}`} 
-                                    color={theme.primary} 
-                                    loading={loading} 
-                                    onClick={() => navigate('/admin/driver-salaries?tab=special')} 
-                                />
+                                    <StatCard
+                                        icon={Wallet}
+                                        label={t('total_driver_salary')}
+                                        value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`}
+                                        color={theme.primary}
+                                        loading={loading}
+                                        onClick={() => navigate('/admin/driver-salaries?tab=payroll')}
+                                    />
+                                    <StatCard
+                                        icon={IndianRupee}
+                                        label={t('total_driver_advance')}
+                                        value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`}
+                                        color={theme.primary}
+                                        loading={loading}
+                                        onClick={() => navigate('/admin/driver-salaries?tab=advances')}
+                                    />
+
+
                                     <StatCard
                                         icon={Fuel}
                                         label={t('fuel_monthly')}
