@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
-import { Search, Plus, X, CheckCircle, AlertCircle, IndianRupee, Calendar, User, FileText, Filter } from 'lucide-react';
+import { Search, Plus, X, CheckCircle, AlertCircle, IndianRupee, Calendar, User, FileText, Filter, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -32,7 +32,8 @@ const Advances = () => {
         driverId: '',
         amount: '',
         date: getLocalYYYYMMDD(),
-        remark: ''
+        remark: '',
+        givenBy: 'Office'
     });
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -53,7 +54,8 @@ const Advances = () => {
                 driverId: '',
                 amount: '',
                 date: todayIST(),
-                remark: ''
+                remark: '',
+                givenBy: 'Office'
             });
         };
 
@@ -94,7 +96,8 @@ const Advances = () => {
 
             setDrivers(driversRes.data.drivers || []);
             setAdvances(Array.isArray(advancesRes.data) ? advancesRes.data : []);
-            setSalarySummary(Array.isArray(salaryRes.data) ? salaryRes.data : []);
+            const summary = Array.isArray(salaryRes.data) ? salaryRes.data : [];
+            setSalarySummary(summary.sort((a, b) => (a.name || '').localeCompare(b.name || '')));
 
         } catch (err) {
             console.error('Error fetching data:', err);
@@ -131,7 +134,8 @@ const Advances = () => {
                     driverId: '',
                     amount: '',
                     date: getLocalYYYYMMDD(),
-                    remark: ''
+                    remark: '',
+                    givenBy: 'Office'
                 });
                 setMessage({ type: '', text: '' });
                 fetchData();
@@ -146,10 +150,11 @@ const Advances = () => {
     const handleEdit = (adv) => {
         setEditingId(adv._id);
         setFormData({
-            driverId: adv.driver?._id || '',
+            driverId: adv.driver?._id || adv.driver,
             amount: adv.amount || '',
             date: toISTDateString(adv.date),
-            remark: adv.remark || ''
+            remark: adv.remark || '',
+            givenBy: adv.givenBy || 'Office'
         });
         setShowModal(true);
     };
@@ -222,6 +227,10 @@ const Advances = () => {
                         <span style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Total Issued</span>
                         <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{totalAdvanceAmount.toLocaleString()}</span>
                     </div>
+                    <div className="glass-card" style={{ padding: '12px 20px', background: 'rgba(139, 92, 246, 0.05)', border: '1px solid rgba(139, 92, 246, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
+                        <span style={{ fontSize: '9px', fontWeight: '800', color: '#8b5cf6', textTransform: 'uppercase' }}>Recovered</span>
+                        <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{recoveredAmount.toLocaleString()}</span>
+                    </div>
                     <div className="glass-card" style={{ padding: '12px 20px', background: 'rgba(251, 191, 36, 0.05)', border: '1px solid rgba(251, 191, 36, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
                         <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase' }}>Current Balance</span>
                         <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{pendingAmount.toLocaleString()}</span>
@@ -230,16 +239,28 @@ const Advances = () => {
             </header>
 
             <div className="flex-resp" style={{ gap: '15px', marginBottom: '30px' }}>
-                <div style={{ position: 'relative', flex: '1' }}>
-                    <Search size={20} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
-                    <input
-                        type="text"
-                        placeholder="Search drivers..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
+                <div style={{ position: 'relative', flex: '1', display: 'flex', gap: '15px' }}>
+                    <div style={{ position: 'relative', flex: '1' }}>
+                        <Search size={20} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                        <input
+                            type="text"
+                            placeholder="Search drivers..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="input-field"
+                            style={{ paddingLeft: '50px', marginBottom: 0 }}
+                        />
+                    </div>
+                    <select
+                        value={filterStatus}
+                        onChange={(e) => setFilterStatus(e.target.value)}
                         className="input-field"
-                        style={{ paddingLeft: '50px', marginBottom: 0 }}
-                    />
+                        style={{ width: '150px', marginBottom: 0, height: '54px' }}
+                    >
+                        <option value="All" style={{ background: '#0f172a' }}>All Status</option>
+                        <option value="Pending" style={{ background: '#0f172a' }}>Pending</option>
+                        <option value="Settled" style={{ background: '#0f172a' }}>Settled</option>
+                    </select>
                 </div>
 
                 <div className="flex-resp" style={{ width: 'auto', gap: '10px', alignItems: 'center' }}>
@@ -343,14 +364,18 @@ const Advances = () => {
                                 </div>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Earned Salery</span>
-                                    <div style={{ color: 'white', fontSize: '20px', fontWeight: '900', marginTop: '6px' }}>₹{s.totalEarned.toLocaleString()}</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '15px' }}>
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Earned Salary</span>
+                                    <div style={{ color: 'white', fontSize: '16px', fontWeight: '900', marginTop: '4px' }}>₹{s.totalEarned.toLocaleString()}</div>
                                 </div>
-                                <div style={{ background: 'rgba(251, 191, 36, 0.04)', padding: '18px', borderRadius: '16px', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
-                                    <span style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Advance Balance</span>
-                                    <div style={{ color: 'var(--primary)', fontSize: '20px', fontWeight: '900', marginTop: '6px' }}>₹{s.pendingAdvance.toLocaleString()}</div>
+                                <div style={{ background: 'rgba(16, 185, 129, 0.04)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                                    <span style={{ fontSize: '9px', color: '#10b981', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Advance (Month)</span>
+                                    <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900', marginTop: '4px' }}>₹{(s.totalAdvances || 0).toLocaleString()}</div>
+                                </div>
+                                <div style={{ background: 'rgba(251, 191, 36, 0.04)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
+                                    <span style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Balance</span>
+                                    <div style={{ color: 'var(--primary)', fontSize: '16px', fontWeight: '900', marginTop: '4px' }}>₹{(s.advanceInfo?.pending || 0).toLocaleString()}</div>
                                 </div>
                             </div>
 
@@ -382,6 +407,7 @@ const Advances = () => {
                         <tr style={{ textAlign: 'left' }}>
                             <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
                             <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
+                            <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Source</th>
                             <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
                             <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Recovered</th>
                             <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remarks</th>
@@ -390,12 +416,12 @@ const Advances = () => {
                     </thead>
                     <tbody>
                         {loading ? (
-                            <tr><td colSpan="5" style={{ textAlign: 'center', padding: '80px 0' }}>
+                            <tr><td colSpan="7" style={{ textAlign: 'center', padding: '80px 0' }}>
                                 <div className="spinner" style={{ margin: '0 auto 20px' }}></div>
                                 <p style={{ color: 'var(--text-muted)', fontSize: '14px', fontWeight: '600' }}>LOADING TRANSACTIONS...</p>
                             </td></tr>
                         ) : filtered.length === 0 ? (
-                            <tr><td colSpan="5" style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(30, 41, 59, 0.2)', borderRadius: '30px', border: '2px dashed rgba(255,255,255,0.05)' }}>
+                            <tr><td colSpan="7" style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(30, 41, 59, 0.2)', borderRadius: '30px', border: '2px dashed rgba(255,255,255,0.05)' }}>
                                 <IndianRupee size={60} style={{ margin: '0 auto 20px', opacity: 0.1, color: 'var(--primary)' }} />
                                 <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>No Advance Records</h3>
                                 <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>Record a new advance to start tracking.</p>
@@ -426,12 +452,26 @@ const Advances = () => {
                                     </div>
                                 </td>
                                 <td style={{ padding: '20px 25px' }}>
+                                    <div style={{ 
+                                        color: advance.givenBy === 'Guest' ? '#fbbf24' : '#60a5fa', 
+                                        fontSize: '11px', 
+                                        fontWeight: '900', 
+                                        textTransform: 'uppercase',
+                                        background: advance.givenBy === 'Guest' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(96, 165, 250, 0.1)',
+                                        padding: '4px 10px',
+                                        borderRadius: '6px',
+                                        display: 'inline-block'
+                                    }}>
+                                        {advance.givenBy || 'Office'}
+                                    </div>
+                                </td>
+                                <td style={{ padding: '20px 25px' }}>
                                     <div style={{ color: 'white', fontWeight: '800' }}>₹ {advance.amount?.toLocaleString()}</div>
                                 </td>
                                 <td style={{ padding: '20px 25px' }}>
                                     <div style={{ color: '#10b981', fontWeight: '700' }}>₹ {advance.recoveredAmount?.toLocaleString() || 0}</div>
                                 </td>
-                                <td style={{ padding: '20px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                <td style={{ padding: '20px 25px' }}>
                                     <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                                         {advance.remark || '-'}
                                     </div>
@@ -449,7 +489,7 @@ const Advances = () => {
                                                 cursor: 'pointer'
                                             }}
                                         >
-                                            <Search size={16} /> {/* Using Search as edit icon for now or I can import Edit2 */}
+                                            <Search size={16} />
                                         </button>
                                         <button
                                             onClick={() => handleDelete(advance._id)}
@@ -510,6 +550,21 @@ const Advances = () => {
                                     <div>
                                         <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>Recovered</div>
                                         <div style={{ color: '#10b981', fontWeight: '700', fontSize: '14px' }}>₹{advance.recoveredAmount?.toLocaleString() || 0}</div>
+                                    </div>
+                                    <div style={{ textAlign: 'right' }}>
+                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800', marginBottom: '4px' }}>Source</div>
+                                        <div style={{ 
+                                            color: advance.givenBy === 'Guest' ? '#fbbf24' : '#60a5fa', 
+                                            fontSize: '10px', 
+                                            fontWeight: '900', 
+                                            textTransform: 'uppercase',
+                                            background: advance.givenBy === 'Guest' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(96, 165, 250, 0.1)',
+                                            padding: '3px 8px',
+                                            borderRadius: '5px',
+                                            display: 'inline-block'
+                                        }}>
+                                            {advance.givenBy || 'Office'}
+                                        </div>
                                     </div>
                                 </div>
 
@@ -577,7 +632,7 @@ const Advances = () => {
                                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', marginTop: '4px', fontWeight: '700' }}>Manage driver financial assistance.</p>
                                 </div>
                                 <button
-                                    onClick={() => { setShowModal(false); setEditingId(null); setFormData({ driverId: '', amount: '', date: todayIST(), remark: '' }); }}
+                                    onClick={() => { setShowModal(false); setEditingId(null); setFormData({ driverId: '', amount: '', date: todayIST(), remark: '', givenBy: 'Office' }); }}
                                     className="glass-card"
                                     style={{ width: '40px', height: '40px', borderRadius: '50%', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 ><X size={20} /></button>
@@ -625,6 +680,20 @@ const Advances = () => {
                                             style={{ height: '54px' }}
                                         />
                                     </div>
+                                </div>
+
+                                <div className="input-field-group">
+                                    <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><CheckCircle size={14} /> Given By</label>
+                                    <select
+                                        className="input-field"
+                                        required
+                                        value={formData.givenBy}
+                                        onChange={(e) => setFormData({ ...formData, givenBy: e.target.value })}
+                                        style={{ height: '54px' }}
+                                    >
+                                        <option value="Office" style={{ background: '#0f172a', color: 'white' }}>Office</option>
+                                        <option value="Guest" style={{ background: '#0f172a', color: 'white' }}>Guest</option>
+                                    </select>
                                 </div>
 
                                 <div className="input-field-group">

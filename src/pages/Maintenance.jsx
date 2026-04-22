@@ -148,6 +148,7 @@ const Maintenance = () => {
         billDate: todayIST(),
         amount: '',
         paymentMode: 'Cash',
+        paymentSource: 'Office',
         currentKm: '',
         nextServiceKm: '',
         status: 'Completed'
@@ -393,6 +394,7 @@ const Maintenance = () => {
             billDate: record.billDate ? nowIST(record.billDate).toISOString().split('T')[0] : '',
             amount: record.amount,
             paymentMode: record.paymentMode || 'Cash',
+            paymentSource: record.paymentSource || 'Office',
             currentKm: record.currentKm || '',
             nextServiceKm: record.nextServiceKm || '',
             status: record.status || 'Completed'
@@ -1139,8 +1141,13 @@ const Maintenance = () => {
                                             </td>
                                             <td style={{ padding: '20px 25px' }}>
                                                 <div style={{ color: '#10b981', fontWeight: '800', fontSize: '16px' }}>₹{Number(record.amount || 0).toLocaleString()}</div>
-                                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                                    via {record.paymentMode}
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                                                    <span style={{ 
+                                                        fontSize: '9px', padding: '2px 6px', borderRadius: '4px',
+                                                        background: record.paymentSource === 'Guest' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                                                        color: record.paymentSource === 'Guest' ? '#10b981' : '#818cf8',
+                                                        fontWeight: '900', textTransform: 'uppercase'
+                                                    }}>{record.paymentSource || 'Office'}</span>
                                                 </div>
                                             </td>
                                             <td style={{ padding: '20px 25px', textAlign: 'right' }}>
@@ -1242,7 +1249,12 @@ const Maintenance = () => {
                                                 </div>
                                                 <div style={{ textAlign: 'right' }}>
                                                     <div style={{ color: '#10b981', fontWeight: '800', fontSize: '16px' }}>₹{Number(record.amount || 0).toLocaleString()}</div>
-                                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>{record.paymentMode}</div>
+                                                    <span style={{ 
+                                                        fontSize: '9px', padding: '2px 6px', borderRadius: '4px',
+                                                        background: record.paymentSource === 'Guest' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.1)',
+                                                        color: record.paymentSource === 'Guest' ? '#10b981' : '#818cf8',
+                                                        fontWeight: '900', textTransform: 'uppercase'
+                                                    }}>{record.paymentSource || 'Office'}</span>
                                                 </div>
                                             </div>
 
@@ -1488,6 +1500,13 @@ const Maintenance = () => {
                                                 <input required type="number" className="input-field" style={{ borderRadius: '10px' }} placeholder="0.00" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} />
                                             </div>
                                             <div>
+                                                <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Payment Source</label>
+                                                <select className="input-field" style={{ borderRadius: '10px' }} value={formData.paymentSource} onChange={(e) => setFormData({ ...formData, paymentSource: e.target.value })}>
+                                                    <option value="Office" style={{ background: '#1e293b' }}>Office</option>
+                                                    <option value="Guest" style={{ background: '#1e293b' }}>Guest</option>
+                                                </select>
+                                            </div>
+                                            <div style={{ display: 'none' }}>
                                                 <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Payment Mode</label>
                                                 <select className="input-field" style={{ borderRadius: '10px' }} value={formData.paymentMode} onChange={(e) => setFormData({ ...formData, paymentMode: e.target.value })}>
                                                     <option value="Cash" style={{ background: '#1e293b' }}>Cash</option>

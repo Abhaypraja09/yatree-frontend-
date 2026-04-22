@@ -518,7 +518,7 @@ const SummaryStat = ({ label, val, col, icon: Icon, isDark }) => (
 );
 
 const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setViewingImage, submitting, vehicle, getImageUrl, companyId, hideForm = false, allVehicles = [] }) => {
-    const [form, setForm] = useState({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '' });
+    const [form, setForm] = useState({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office' });
     const [file, setFile] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
     
@@ -541,7 +541,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                 category: editingItem.category || 'Car Wash'
             });
         } else {
-            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '' });
+            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office' });
             setFile(null);
         }
     }, [editingItem, type, vehicle]);
@@ -587,7 +587,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
         }
         
         if (success || !editingItem) {
-            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '' }); 
+            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office' }); 
             setFile(null);
             setEditingItem(null);
         }
@@ -645,6 +645,28 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                                 </select>
                             </div>
                         )}
+
+                        <div style={{ gridColumn: '1 / -1' }}>
+                            <label className="input-label">Payment Source</label>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                {['Office', 'Guest'].map(s => (
+                                    <button
+                                        key={s}
+                                        type="button"
+                                        onClick={() => setForm({ ...form, paymentSource: s })}
+                                        style={{
+                                            flex: 1, height: '48px', borderRadius: '12px',
+                                            background: form.paymentSource === s ? 'rgba(14, 165, 233, 0.1)' : 'rgba(255,255,255,0.02)',
+                                            color: form.paymentSource === s ? '#0ea5e9' : 'rgba(255,255,255,0.4)',
+                                            border: form.paymentSource === s ? '1px solid rgba(14, 165, 233, 0.3)' : '1px solid rgba(255,255,255,0.08)',
+                                            fontWeight: '800', fontSize: '13px', cursor: 'pointer'
+                                        }}
+                                    >
+                                        {s.toUpperCase()}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                         
                         <div style={{ gridColumn: '1 / -1' }}>
                             <label className="input-label">Reciept / Bill Photo</label>
@@ -698,7 +720,13 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                                     <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>{item.remarks || '--'}</div>
                                 </td>
                                 <td style={{ padding: '18px 25px', textAlign: 'right' }}>
-                                    <span style={{ fontSize: '15px', fontWeight: '1000', color: color }}>₹{(item.amount || 0).toLocaleString()}</span>
+                                    <div style={{ color: color, fontWeight: '1000', fontSize: '15px' }}>₹{(item.amount || 0).toLocaleString()}</div>
+                                    <div style={{ 
+                                        fontSize: '8px', padding: '1px 4px', borderRadius: '3px', display: 'inline-block',
+                                        background: item.paymentSource === 'Guest' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(14, 165, 233, 0.1)',
+                                        color: item.paymentSource === 'Guest' ? '#10b981' : '#0ea5e9',
+                                        fontWeight: '900', textTransform: 'uppercase', marginTop: '2px'
+                                    }}>{item.paymentSource || 'Office'}</div>
                                 </td>
                                 <td style={{ padding: '18px 25px', textAlign: 'center' }}>
                                     {(item.receiptPhoto || item.billPhoto) ? (

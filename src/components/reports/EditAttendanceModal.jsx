@@ -15,8 +15,19 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
         nightStayAmount: item.punchOut?.nightStayAmount || 0,
         parkingAmount: item.punchOut?.tollParkingAmount || 0,
         punchInTime: toISTDateTimeString(item.punchIn?.time),
-        punchOutTime: toISTDateTimeString(item.punchOut?.time)
+        punchOutTime: toISTDateTimeString(item.punchOut?.time),
+        tripType: item.outsideTrip?.tripType || (item.outsideTrip?.occurred ? 'Same Day Return' : 'City Local'),
+        bonusAmount: item.outsideTrip?.bonusAmount || 0
     });
+
+    const handleTypeChange = (newType) => {
+        let ta = formData.allowanceTA;
+        if (newType === 'City Local') ta = 0;
+        else if (newType === 'Same Day Return') ta = 100;
+        else if (newType === 'Night Hold') ta = 500;
+        
+        setFormData({ ...formData, tripType: newType, allowanceTA: ta });
+    };
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -44,13 +55,20 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                     <p style={{ margin: '2px 0 0', fontSize: '10px', color: 'rgba(14,165,233,0.7)', fontWeight: '700' }}>{item.vehicle?.carNumber?.split('#')[0] || 'No Vehicle'}</p>
                 </div>
 
-                {item.outsideTrip?.tripType && (
-                    <div style={{ background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', padding: '12px', borderRadius: '12px', marginBottom: '20px' }}>
-                        <p style={{ margin: 0, fontSize: '10px', color: '#38bdf8', fontWeight: '800', textTransform: 'uppercase' }}>Driver's Selection</p>
-                        <p style={{ margin: '4px 0 0', color: 'white', fontSize: '14px', fontWeight: '700' }}>{item.outsideTrip.tripType}</p>
-                        <p style={{ margin: '4px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.5)', fontStyle: 'italic' }}>Please enter the amounts below based on this selection.</p>
-                    </div>
-                )}
+                <div style={{ marginBottom: '20px' }}>
+                    <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Duty Type (Selection)</label>
+                    <select 
+                        className="input-field"
+                        value={formData.tripType}
+                        onChange={(e) => handleTypeChange(e.target.value)}
+                        style={{ width: '100%', height: '48px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', color: 'white', fontWeight: '800' }}
+                    >
+                        <option value="City Local" style={{ background: '#0f172a' }}>City Local (Base Only)</option>
+                        <option value="Same Day Return" style={{ background: '#0f172a' }}>Same Day Return (+100 TA)</option>
+                        <option value="Night Hold" style={{ background: '#0f172a' }}>Night Hold (+500 TA)</option>
+                    </select>
+                    <p style={{ margin: '6px 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic' }}>Changing this will auto-adjust the T/A amount.</p>
+                </div>
 
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
                     <div className="form-group">
@@ -130,7 +148,7 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                     </div>
 
                     {/* Financial Adjustments Grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
                         <div className="form-group">
                             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>T/A (₹)</label>
                             <input
@@ -143,12 +161,23 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                             />
                         </div>
                         <div className="form-group">
-                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Night Stay (₹)</label>
+                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Night (₹)</label>
                             <input
                                 type="number"
                                 className="input-field"
                                 value={formData.nightStayAmount}
                                 onChange={(e) => setFormData({ ...formData, nightStayAmount: e.target.value })}
+                                style={{ width: '100%', marginBottom: 0, height: '48px' }}
+                                placeholder="0"
+                            />
+                        </div>
+                        <div className="form-group">
+                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Bonus (₹)</label>
+                            <input
+                                type="number"
+                                className="input-field"
+                                value={formData.bonusAmount}
+                                onChange={(e) => setFormData({ ...formData, bonusAmount: e.target.value })}
                                 style={{ width: '100%', marginBottom: 0, height: '48px' }}
                                 placeholder="0"
                             />

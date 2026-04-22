@@ -44,7 +44,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     const [showDetailModal, setShowDetailModal] = useState(false);
     const [selectedDriverDetails, setSelectedDriverDetails] = useState(null);
     const [detailLoading, setDetailLoading] = useState(false);
-    const [activeTab, setActiveTab] = useState('special');
+    const [activeTab, setActiveTab] = useState('payroll');
 
     // Advances states
     const [advances, setAdvances] = useState([]);
@@ -187,11 +187,13 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     const filteredLoans = useMemo(() => {
         if (!loans) return [];
         
+        let processedLoans = loans;
+
         if (month === 'All') {
             const fyStartValue = (year * 12) + 4; // April of start year
             const fyEndValue = ((year + 1) * 12) + 3; // March of end year
             
-            return loans.filter(loan => {
+            processedLoans = loans.filter(loan => {
                 if (!loan.startDate) return true;
                 const start = new Date(loan.startDate);
                 const loanStartValue = (start.getFullYear() * 12) + (start.getMonth() + 1);
@@ -203,29 +205,37 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 const overlapsFY = (loanStartValue <= fyEndValue) && (loanEndValue >= fyStartValue);
                 return overlapsFY && (loan.status !== 'Completed');
             });
+        } else {
+            const currentMonthNum = Number(month);
+            const calendarYear = (currentMonthNum >= 1 && currentMonthNum <= 3) ? year + 1 : year;
+            const currentYearNum = Number(calendarYear);
+            const selectedMonthValue = (currentYearNum * 12) + currentMonthNum;
+
+            processedLoans = loans.filter(loan => {
+                if (!loan.startDate) return true;
+                const start = new Date(loan.startDate);
+                const loanStartValue = (start.getFullYear() * 12) + (start.getMonth() + 1);
+
+                if (loanStartValue > selectedMonthValue) return false;
+
+                const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 12);
+                const loanEndValue = loanStartValue + tenure - 1;
+
+                const isDuringTenure = selectedMonthValue <= loanEndValue;
+                const isActiveStatus = loan.status !== 'Completed';
+
+                return isDuringTenure && isActiveStatus;
+            });
         }
 
-        const currentMonthNum = Number(month);
-        const calendarYear = (currentMonthNum >= 1 && currentMonthNum <= 3) ? year + 1 : year;
-        const currentYearNum = Number(calendarYear);
-        const selectedMonthValue = (currentYearNum * 12) + currentMonthNum;
-
-        return loans.filter(loan => {
-            if (!loan.startDate) return true;
-            const start = new Date(loan.startDate);
-            const loanStartValue = (start.getFullYear() * 12) + (start.getMonth() + 1);
-
-            if (loanStartValue > selectedMonthValue) return false;
-
-            const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 12);
-            const loanEndValue = loanStartValue + tenure - 1;
-
-            const isDuringTenure = selectedMonthValue <= loanEndValue;
-            const isActiveStatus = loan.status !== 'Completed';
-
-            return isDuringTenure && isActiveStatus;
-        });
-    }, [loans, month, year]);
+        // Apply Search Filter and Sort
+        return processedLoans
+            .filter(l => 
+                l.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                l.remarks?.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            .sort((a, b) => (a.driver?.name || '').localeCompare(b.driver?.name || ''));
+    }, [loans, month, year, searchTerm]);
 
     const handleRecordLoan = async (e) => {
         if (e) e.preventDefault();
@@ -742,15 +752,28 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         }
     };
 
-    const filteredSalaries = salaries.filter(s =>
-        s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        s.mobile?.includes(searchTerm)
-    );
+    const filteredSalaries = salaries
+        .filter(s =>
+            s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            s.mobile?.includes(searchTerm)
+        )
+        .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 
-    const filteredAdvances = advances.filter(a =>
-        a.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        a.remark?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredAdvances = advances
+        .filter(a =>
+            a.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            a.remark?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => (a.driver?.name || '').localeCompare(b.driver?.name || ''));
+
+
+
+    const filteredAllowances = (allowances || [])
+        .filter(a => 
+            a.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            a.remark?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => (a.driver?.name || '').localeCompare(b.driver?.name || ''));
 
     const totalGrossEarnings = filteredSalaries.reduce((sum, s) => sum + (s.totalEarned || 0), 0);
     const totalNetPayout = filteredSalaries.reduce((sum, s) => sum + (s.netPayable || 0), 0);
@@ -994,14 +1017,46 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                     </div>
                 </div>
             )}
-
             {/* SUMMARY CARDS - ACTING AS NAVIGATION */}
             <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
+                <div 
+                    onClick={() => setActiveTab('payroll')}
+                    className={`glass-card ${activeTab === 'payroll' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
+                    style={{ 
+                        flex: '1', 
+                        minWidth: '240px',
+                        maxWidth: '400px', 
+                        padding: '24px', 
+                        cursor: 'pointer',
+                        background: activeTab === 'payroll' 
+                            ? 'linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(56,189,248,0.1) 100%)' 
+                            : 'linear-gradient(135deg, rgba(56,189,248,0.1) 0%, rgba(56,189,248,0.05) 100%)', 
+                        border: activeTab === 'payroll' 
+                            ? '2px solid var(--primary)' 
+                            : '1px solid rgba(56,189,248,0.2)',
+                        transition: 'all 0.3s ease',
+                        boxShadow: activeTab === 'payroll' ? '0 10px 25px rgba(56,189,248,0.2)' : 'none'
+                    }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <p style={{ fontSize: '12px', fontWeight: '800', color: 'var(--primary)', marginBottom: '8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                Monthly Payroll <CheckCircle size={14} />
+                            </p>
+                            <h3 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: 0 }}>₹ {salaries.reduce((sum, s) => sum + (s.netPayable || 0), 0).toLocaleString()}</h3>
+                        </div>
+                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(56,189,248,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <IndianRupee size={20} color="var(--primary)" />
+                        </div>
+                    </div>
+                </div>
+
                 <div 
                     onClick={() => setActiveTab('special')}
                     className={`glass-card ${activeTab === 'special' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
                     style={{ 
                         flex: '1', 
+                        minWidth: '240px',
                         maxWidth: '400px', 
                         padding: '24px', 
                         cursor: 'pointer',
@@ -1018,15 +1073,78 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                             <p style={{ fontSize: '12px', fontWeight: '800', color: '#10b981', marginBottom: '8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                Special Pay & Allowances <CheckCircle size={14} />
+                                Special Pay <CheckCircle size={14} />
                             </p>
-                            <h3 style={{ fontSize: '32px', fontWeight: '950', color: 'white', margin: 0 }}>₹ {totalSpecialPay.toLocaleString()}</h3>
+                            <h3 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: 0 }}>₹ {allowances.reduce((sum, a) => sum + (a.amount || 0), 0).toLocaleString()}</h3>
                         </div>
-                        <div style={{ width: '50px', height: '50px', borderRadius: '16px', background: 'rgba(16,185,129,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <IndianRupee size={24} color="#10b981" />
+                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <IndianRupee size={20} color="#10b981" />
                         </div>
                     </div>
-                    <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', margin: '15px 0 0', fontWeight: '600' }}>Click to manage additional payments →</p>
+                </div>
+
+                <div 
+                    onClick={() => setActiveTab('advances')}
+                    className={`glass-card ${activeTab === 'advances' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
+                    style={{ 
+                        flex: '1', 
+                        minWidth: '240px',
+                        maxWidth: '400px', 
+                        padding: '24px', 
+                        cursor: 'pointer',
+                        background: activeTab === 'advances' 
+                            ? 'linear-gradient(135deg, rgba(244,63,94,0.2) 0%, rgba(244,63,94,0.1) 100%)' 
+                            : 'linear-gradient(135deg, rgba(244,63,94,0.1) 0%, rgba(244,63,94,0.05) 100%)', 
+                        border: activeTab === 'advances' 
+                            ? '2px solid #f43f5e' 
+                            : '1px solid rgba(244,63,94,0.2)',
+                        transition: 'all 0.3s ease',
+                        boxShadow: activeTab === 'advances' ? '0 10px 25px rgba(244,63,94,0.2)' : 'none'
+                    }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <p style={{ fontSize: '12px', fontWeight: '800', color: '#f43f5e', marginBottom: '8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                Monthly Advances {activeTab === 'advances' && <CheckCircle size={14} />}
+                            </p>
+                            <h3 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: 0 }}>₹ {salaries.reduce((sum, s) => sum + (s.totalAdvances || 0), 0).toLocaleString()}</h3>
+                        </div>
+                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(244,63,94,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <TrendingDown size={20} color="#f43f5e" />
+                        </div>
+                    </div>
+                </div>
+
+                <div 
+                    onClick={() => setActiveTab('loans')}
+                    className={`glass-card ${activeTab === 'loans' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
+                    style={{ 
+                        flex: '1', 
+                        minWidth: '240px',
+                        maxWidth: '400px', 
+                        padding: '24px', 
+                        cursor: 'pointer',
+                        background: activeTab === 'loans' 
+                            ? 'linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.1) 100%)' 
+                            : 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.05) 100%)', 
+                        border: activeTab === 'loans' 
+                            ? '2px solid var(--primary)' 
+                            : '1px solid rgba(251,191,36,0.2)',
+                        transition: 'all 0.3s ease',
+                        boxShadow: activeTab === 'loans' ? '0 10px 25px rgba(251,191,36,0.2)' : 'none'
+                    }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <p style={{ fontSize: '12px', fontWeight: '800', color: 'var(--primary)', marginBottom: '8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                Monthly EMI {activeTab === 'loans' && <CheckCircle size={14} />}
+                            </p>
+                            <h3 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: 0 }}>₹ {salaries.reduce((sum, s) => sum + (s.totalEMI || 0), 0).toLocaleString()}</h3>
+                        </div>
+                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(251,191,36,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <Wallet size={20} color="var(--primary)" />
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -1073,7 +1191,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         <td style={{ padding: '20px 20px', color: '#10b981', fontWeight: '800' }}>
                                             {s.totalAllowances > 0 ? `+ ₹ ${s.totalAllowances}` : '-'}
                                         </td>
-                                        <td style={{ padding: '20px 20px', color: '#f43f5e', fontWeight: '700' }}>₹ {s.totalAdvances}</td>
+                                        <td style={{ padding: '20px 20px', color: '#f43f5e', fontWeight: '700' }}>₹ {(s.totalAdvances || 0).toLocaleString()}</td>
                                         <td style={{ padding: '20px 20px', color: 'var(--primary)', fontWeight: '700' }}>₹ {s.totalEMI}</td>
                                         <td style={{ padding: '20px 20px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {s.netPayable}</td>
                                         <td style={{ padding: '20px 20px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
@@ -1124,8 +1242,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                 ['DUTY DAYS', s.workingDays, 'white'],
                                 ['NIGHTS', s.nightStayCount || 0, 'var(--primary)'],
                                 ['SAME DAY', s.sameDayCount || 0, '#10b981'],
-                                ['EARNINGS', `₹ ${s.totalEarned}`, 'white'],
-                                ['ADVANCES', `₹ ${s.totalAdvances}`, '#f43f5e']
+                                ['EARNINGS', `₹ ${s.totalEarned - (s.totalAllowances || 0)}`, 'white'],
+                                ['ADVANCES', `₹ ${(s.totalAdvances || 0).toLocaleString()}`, '#f43f5e']
                             ].map(([label, val, color]) => (
                                 <div key={label} style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '8px' }}>
                                     <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '10px' }}>{label}</p>
@@ -1284,9 +1402,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                             </tr>
                         </thead>
                         <tbody>
-                            {allowances.length === 0 ? (
+                            {filteredAllowances.length === 0 ? (
                                 <tr><td colSpan="6" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No special payouts recorded.</td></tr>
-                            ) : allowances.map((a, idx) => (
+                            ) : filteredAllowances.map((a, idx) => (
                                 <motion.tr key={a._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }}
                                     style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}>
                                     <td style={{ padding: '15px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
