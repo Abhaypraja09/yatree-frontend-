@@ -505,29 +505,8 @@ const FuelPage = () => {
     const totalDistance = filteredEntries.reduce((sum, e) => sum + (e.distance || 0), 0);
     const totalAmount = filteredEntries.reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
 
-    // Group by vehicle to exclude the latest fill quantity for each vehicle's trip range in this period
-    const vehicleLitersMap = {};
-    filteredEntries.forEach(e => {
-        const vId = e.vehicle?._id || 'unknown';
-        if (!vehicleLitersMap[vId]) vehicleLitersMap[vId] = [];
-        vehicleLitersMap[vId].push(Number(e.quantity) || 0);
-    });
-
-    let consumedLitersForAvg = 0;
-    Object.values(vehicleLitersMap).forEach(qtys => {
-        // Exclude the most recent fill quantity if we have multiple entries,
-        // because it hasn't contributed to a distance record yet.
-        if (qtys.length > 1) {
-            consumedLitersForAvg += qtys.slice(1).reduce((s, q) => s + q, 0);
-        } else {
-            // For single entries, we must include it if it's the only reference,
-            // though mileage will naturally be 0 until a second entry exists.
-            consumedLitersForAvg += qtys[0];
-        }
-    });
-
     const totalLiters = filteredEntries.reduce((sum, e) => sum + (Number(e.quantity) || 0), 0);
-    const avgMileage = (consumedLitersForAvg > 0 && totalDistance > 0) ? (totalDistance / consumedLitersForAvg).toFixed(2) : 0;
+    const avgMileage = (totalLiters > 0 && totalDistance > 0) ? (totalDistance / totalLiters).toFixed(2) : 0;
 
     const petrolAmount = filteredEntries.filter(e => e.fuelType === 'Petrol').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
     const dieselAmount = filteredEntries.filter(e => e.fuelType === 'Diesel').reduce((sum, e) => sum + (Number(e.amount) || 0), 0);
@@ -802,7 +781,7 @@ const FuelPage = () => {
                                         </td>
                                         <td style={{ padding: '15px 25px' }}>
                                             <div style={{
-                                                color: (e.distance / (e.quantity || 1)) > 12 ? '#10b981' : '#f59e0b',
+                                                color: e.mileage > 12 ? '#10b981' : '#f59e0b',
                                                 fontWeight: '950',
                                                 fontSize: '18px',
                                                 display: 'flex',
