@@ -12,7 +12,8 @@ import {
     ChevronDown,
     Maximize2,
     RotateCcw,
-    AlertTriangle
+    AlertTriangle,
+    VolumeX
 } from 'lucide-react';
 import axios from '../api/axios';
 import { useAuth } from '../context/AuthContext';
@@ -34,6 +35,7 @@ const AIChatAgent = () => {
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [isListening, setIsListening] = useState(false);
+    const [isSpeaking, setIsSpeaking] = useState(false);
     const [hasGreeted, setHasGreeted] = useState(false);
     const messagesEndRef = useRef(null);
     const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
@@ -62,6 +64,13 @@ const AIChatAgent = () => {
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
+    const stopSpeaking = () => {
+        if ('speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+            setIsSpeaking(false);
+        }
+    };
+
     const playAlertSound = () => {
         if (audioRef.current) {
             audioRef.current.currentTime = 0;
@@ -86,6 +95,11 @@ const AIChatAgent = () => {
         if (enVoice) utterance.voice = enVoice;
         utterance.lang = 'en-US';
         utterance.rate = 0.95;
+
+        utterance.onstart = () => setIsSpeaking(true);
+        utterance.onend = () => setIsSpeaking(false);
+        utterance.onerror = () => setIsSpeaking(false);
+
         window.speechSynthesis.speak(utterance);
     };
 
@@ -124,6 +138,13 @@ const AIChatAgent = () => {
             setShouldBlink(false);
         }
     }, [location.pathname, hasAlertsDetected]);
+
+    // Stop speaking when closed
+    useEffect(() => {
+        if (!isOpen) {
+            stopSpeaking();
+        }
+    }, [isOpen]);
 
     useEffect(() => {
         const fetchBriefing = async () => {
@@ -293,8 +314,35 @@ const AIChatAgent = () => {
                                     </div>
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                <button onClick={() => setMessages([{ role: 'ai', content: 'History cleared. How can I help you?' }])} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}><RotateCcw size={18} /></button>
+                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                                {isSpeaking && (
+                                    <motion.button
+                                        initial={{ scale: 0.5, opacity: 0 }}
+                                        animate={{ scale: 1, opacity: 1 }}
+                                        whileHover={{ scale: 1.1 }}
+                                        onClick={stopSpeaking}
+                                        style={{
+                                            background: 'rgba(244, 63, 94, 0.2)',
+                                            border: '1px solid rgba(244, 63, 94, 0.4)',
+                                            color: '#f43f5e',
+                                            padding: '6px 10px',
+                                            borderRadius: '10px',
+                                            fontSize: '10px',
+                                            fontWeight: '900',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '5px',
+                                            cursor: 'pointer',
+                                            textTransform: 'uppercase'
+                                        }}
+                                    >
+                                        <VolumeX size={14} /> Stop
+                                    </motion.button>
+                                )}
+                                <button onClick={() => {
+                                    setMessages([{ role: 'ai', content: 'History cleared. How can I help you?' }]);
+                                    stopSpeaking();
+                                }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }} title="Clear Chat"><RotateCcw size={18} /></button>
                                 <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
                             </div>
                         </div>
