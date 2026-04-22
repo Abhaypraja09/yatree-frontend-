@@ -406,8 +406,6 @@ const AdminDashboard = () => {
                                         loading={loading}
                                         onClick={() => navigate('/admin/driver-salaries?tab=advances')}
                                     />
-
-
                                     <StatCard
                                         icon={Fuel}
                                         label={t('fuel_monthly')}
