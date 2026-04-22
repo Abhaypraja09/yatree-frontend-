@@ -1407,10 +1407,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                 <thead>
                                     <tr style={{ textAlign: 'left' }}>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
-                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Start Date</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Loan Amount</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Monthly EMI</th>
-                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remaining</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Loan Period</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                                     </tr>
@@ -1435,36 +1434,26 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{loan.driver?.mobile}</div>
                                             </td>
                                             <td style={{ padding: '20px 25px' }}>
-                                                <div style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{loan.startDate ? formatDateIST(loan.startDate) : '—'}</div>
-                                                {(() => {
-                                                    const sDate = new Date(loan.startDate);
-                                                    const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
-                                                    const selVal = (parseInt(year) * 12) + parseInt(month);
-                                                    const monthIdx = (selVal - sVal) + 1;
-                                                    const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
-                                                    return (
-                                                        <div style={{ fontSize: '10px', color: '#818cf8', fontWeight: '900', marginTop: '4px', textTransform: 'uppercase' }}>
-                                                            {monthIdx <= tenure ? `Month ${monthIdx} of ${tenure}` : `Extended (Past ${tenure}M)`}
-                                                        </div>
-                                                    );
-                                                })()}
-                                            </td>
-                                            <td style={{ padding: '20px 25px' }}>
                                                 <div style={{ color: 'white', fontWeight: '800' }}>₹ {loan.totalAmount?.toLocaleString()}</div>
                                             </td>
                                             <td style={{ padding: '20px 25px' }}>
                                                 <div style={{ color: 'var(--primary)', fontWeight: '800' }}>₹ {loan.monthlyEMI?.toLocaleString()}</div>
                                             </td>
                                             <td style={{ padding: '20px 25px' }}>
-                                                <div style={{ color: '#f43f5e', fontWeight: '800' }}>₹ {loan.remainingAmount?.toLocaleString()}</div>
                                                 {(() => {
                                                     const sDate = new Date(loan.startDate);
                                                     const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
                                                     const eDate = new Date(sDate.getFullYear(), sDate.getMonth() + tenure - 1, 1);
+                                                    const startLabel = formatDateIST(loan.startDate);
                                                     const endLabel = eDate.toLocaleString('en-IN', { month: 'short', year: 'numeric' });
                                                     return (
-                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginTop: '4px' }}>
-                                                            ENDS: {endLabel.toUpperCase()}
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                            <div style={{ color: 'white', fontSize: '12px', fontWeight: '700' }}>
+                                                                <span style={{ color: 'var(--text-muted)', fontSize: '9px', marginRight: '4px' }}>START:</span> {startLabel}
+                                                            </div>
+                                                            <div style={{ color: '#818cf8', fontSize: '12px', fontWeight: '800' }}>
+                                                                <span style={{ color: 'var(--text-muted)', fontSize: '9px', marginRight: '4px' }}>CLOSE:</span> {endLabel.toUpperCase()}
+                                                            </div>
                                                         </div>
                                                     );
                                                 })()}
