@@ -1410,7 +1410,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Start Date</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Loan Amount</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Monthly EMI</th>
-                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remaining</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remaining Balance</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                                     </tr>
@@ -1442,9 +1442,19 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                     const selVal = (parseInt(year) * 12) + parseInt(month);
                                                     const monthIdx = (selVal - sVal) + 1;
                                                     const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
+                                                    
+                                                    const endDate = new Date(loan.startDate);
+                                                    endDate.setMonth(endDate.getMonth() + tenure - 1);
+                                                    const endStr = endDate.toLocaleDateString('en-IN', { month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' });
+
                                                     return (
-                                                        <div style={{ fontSize: '10px', color: '#818cf8', fontWeight: '900', marginTop: '4px', textTransform: 'uppercase' }}>
-                                                            {monthIdx <= tenure ? `Month ${monthIdx} of ${tenure}` : `Extended (Past ${tenure}M)`}
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
+                                                            <div style={{ fontSize: '10px', color: '#818cf8', fontWeight: '900', textTransform: 'uppercase' }}>
+                                                                {monthIdx <= tenure ? `Month ${monthIdx} of ${tenure}` : `Extended (Past ${tenure}M)`}
+                                                            </div>
+                                                            <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '900', textTransform: 'uppercase' }}>
+                                                                Ends: {endStr}
+                                                            </div>
                                                         </div>
                                                     );
                                                 })()}
@@ -1457,6 +1467,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                             </td>
                                             <td style={{ padding: '20px 25px' }}>
                                                 <div style={{ color: '#f43f5e', fontWeight: '800' }}>₹ {loan.remainingAmount?.toLocaleString()}</div>
+                                                <div style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '800', marginTop: '4px', textTransform: 'uppercase' }}>
+                                                    {Math.ceil((loan.remainingAmount || 0) / (loan.monthlyEMI || 1))} EMIs LEFT
+                                                </div>
                                             </td>
                                             <td style={{ padding: '20px 25px' }}>
                                                 <span style={{
