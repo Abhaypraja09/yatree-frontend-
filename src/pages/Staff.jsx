@@ -9,12 +9,12 @@ import {
     ChevronLeft, ChevronRight, UserPlus, Eye, Trash2, Filter, ArrowUpRight, ArrowDownLeft,
     ShieldCheck, Lock, Unlock, Settings, LayoutDashboard, AlertCircle, CheckCircle, Info,
     Camera, Printer, FileText, Phone, Edit2, TrendingUp, History, CheckCircle2, XCircle, Target,
-    CalendarX, Plane, Mail
+    CalendarX, Plane, Mail, ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import OfficeGeofencePicker from '../components/OfficeGeofencePicker';
 import { todayIST, toISTDateString, formatDateIST, formatTimeIST, nowIST } from '../utils/istUtils';
@@ -24,42 +24,78 @@ const Staff = () => {
     useEffect(() => {
         const style = document.createElement('style');
         style.textContent = `
-            @keyframes profilePulse {
-                0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
-                70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
-                100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+            :root {
+                --primary: #fbbf24;
+                --primary-glow: rgba(251, 191, 36, 0.3);
+                --bg-obsidian: #020617;
+                --glass-bg: rgba(255, 255, 255, 0.03);
+                --glass-border: rgba(255, 255, 255, 0.08);
+            }
+            @keyframes pulse {
+                0% { opacity: 0.6; transform: scale(1); }
+                50% { opacity: 1; transform: scale(1.1); }
+                100% { opacity: 0.6; transform: scale(1); }
+            }
+            @keyframes gradientFlow {
+                0% { background-position: 0% 50%; }
+                50% { background-position: 100% 50%; }
+                100% { background-position: 0% 50%; }
+            }
+            .premium-compact-input {
+                background: rgba(0, 0, 0, 0.2) !important;
+                border: 1px solid rgba(255, 255, 255, 0.08) !important;
+                border-radius: 14px !important;
+                color: white !important;
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+                outline: none !important;
             }
             .premium-compact-input:focus {
-                border-color: rgba(99, 102, 241, 0.5) !important;
-                box-shadow: 0 0 20px rgba(99, 102, 241, 0.2) !important;
-                background: rgba(255,255,255,0.08) !important;
+                border-color: var(--primary) !important;
+                box-shadow: 0 0 20px var(--primary-glow) !important;
+                background: rgba(255, 255, 255, 0.05) !important;
             }
             .glass-panel {
                 background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
                 backdrop-filter: blur(20px);
                 border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 24px;
             }
-            .staff-card-hover:hover {
-                transform: translateY(-8px) scale(1.01);
-                border-color: rgba(59, 130, 246, 0.4) !important;
-                box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5) !important;
-                background: linear-gradient(135deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.6) 100%) !important;
+            .premium-stat-card {
+                background: rgba(255, 255, 255, 0.02);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 28px;
+                padding: 24px;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                position: relative;
+                overflow: hidden;
             }
-            input[type="date"]::-webkit-calendar-picker-indicator {
-                filter: invert(1);
-                opacity: 0.5;
-                cursor: pointer;
+            .premium-stat-card:hover {
+                background: rgba(255, 255, 255, 0.04);
+                border-color: rgba(255, 255, 255, 0.1);
+                transform: translateY(-8px);
+                box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
             }
-            ::-webkit-scrollbar {
+            .premium-label {
+                font-size: 10px;
+                font-weight: 900;
+                color: rgba(255, 255, 255, 0.3);
+                text-transform: uppercase;
+                letter-spacing: 2px;
+            }
+            .custom-scrollbar::-webkit-scrollbar {
                 width: 6px;
                 height: 6px;
             }
-            ::-webkit-scrollbar-thumb {
-                background: rgba(255,255,255,0.1);
+            .custom-scrollbar::-webkit-scrollbar-thumb {
+                background: rgba(255, 255, 255, 0.1);
                 border-radius: 10px;
             }
-            ::-webkit-scrollbar-track {
-                background: transparent;
+            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+                background: var(--primary);
+            }
+            .staff-row-hover:hover {
+                background: rgba(255,255,255,0.02) !important;
+                transform: scale(1.002);
             }
         `;
         document.head.appendChild(style);
@@ -95,6 +131,7 @@ const Staff = () => {
     const [monthlyReport, setMonthlyReport] = useState([]);
     const [selectedMonth, setSelectedMonth] = useState((nowIST().getUTCMonth() + 1).toString());
     const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear().toString());
+    const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const [selectedStaffReport, setSelectedStaffReport] = useState(null);
     const [showBackdateModal, setShowBackdateModal] = useState(false);
     const [backdateForm, setBackdateForm] = useState({ staffId: '', date: todayIST(), status: 'present', punchInTime: '', punchOutTime: '' });
@@ -126,7 +163,6 @@ const Staff = () => {
             fetchStaff();
             fetchAttendance();
             fetchPendingLeaves();
-            // Pre-load summaries in background for instant modal opens
             fetchMonthlyReport();
         }
     }, [selectedCompany, fromDate, toDate, view, selectedMonth, selectedYear]);
@@ -231,6 +267,7 @@ const Staff = () => {
         }
     };
 
+
     const exportToExcel = () => {
         const dataToExport = filteredAttendance.map(record => ({
             'Date': record.date,
@@ -277,74 +314,251 @@ const Staff = () => {
         XLSX.writeFile(wb, `Staff_Payroll_${selectedMonth}_${selectedYear}.xlsx`);
     };
 
-    const downloadSalarySlip = (staff) => {
-        const doc = new jsPDF();
+    const loadImage = (url) => {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = 'Anonymous';
+            img.onload = () => resolve(img);
+            img.onerror = reject;
+            img.src = url;
+        });
+    };
 
-        // Header
+    const generateSalarySlipPage = async (doc, staff, isFirstPage = true) => {
+        const logoUrl = selectedCompany?.logoUrl || '/logos/yatree_logo.png';
+        const logo = await loadImage(logoUrl).catch(() => null);
+
+        const sigUrl = selectedCompany?.ownerSignatureUrl || '/logos/kavish_sign.png';
+        const signature = await loadImage(sigUrl).catch(() => null);
+
+        if (!isFirstPage) doc.addPage();
+
+        const pageWidth = doc.internal.pageSize.getWidth();
+        const pageHeight = doc.internal.pageSize.getHeight();
+
+        const monthName = new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1, 1).toLocaleString('default', { month: 'long' });
+        const periodLabel = isRange
+            ? `${formatDateIST(fromDate).toUpperCase()} - ${formatDateIST(toDate).toUpperCase()}`
+            : `${monthName} ${selectedYear}`.toUpperCase();
+
+        // 1. HEADER
+        doc.setFillColor(15, 23, 42);
+        doc.rect(0, 0, pageWidth, 50, 'F');
+
+        if (logo) doc.addImage(logo, 'PNG', 12, 8, 30, 30);
+
+        doc.setTextColor(255, 255, 255);
         doc.setFontSize(22);
-        doc.setTextColor(40);
-        doc.text("SALARY SLIP", 105, 20, { align: "center" });
+        doc.setFont('helvetica', 'bold');
+        doc.text((selectedCompany?.name || 'YATREE DESTINATION').toUpperCase(), 45, 22);
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(200, 200, 200);
+        doc.text('Commercial Fleet Operations & Management', 45, 30);
+        doc.setTextColor(14, 165, 233);
+        doc.text(selectedCompany?.website || 'www.yatreedestination.com', 45, 37);
+
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.text('STAFF SALARY SLIP', pageWidth - 15, 22, { align: 'right' });
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(150, 150, 150);
+        doc.text(`STATEMENT PERIOD`, pageWidth - 15, 30, { align: 'right' });
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(11);
+        doc.text(periodLabel.toUpperCase(), pageWidth - 15, 36, { align: 'right' });
+
+        // 2. INFORMATION SECTION
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('EMPLOYEE INFORMATION', 15, 65);
+        doc.setDrawColor(14, 165, 233);
+        doc.setLineWidth(0.5);
+        doc.line(15, 68, 50, 68);
+
+        doc.setFontSize(10);
+        doc.setTextColor(100, 116, 139);
+        doc.text('NAME', 15, 76);
+        doc.text('DESIGNATION', 15, 84);
+        doc.text(isRange ? 'REPORT PERIOD' : 'SALARY CYCLE', 15, 92);
+
+        doc.setTextColor(15, 23, 42);
+        doc.setFont('helvetica', 'bold');
+        doc.text((staff.name || 'N/A').toUpperCase(), 45, 76);
+        doc.text((staff.designation || 'STAFF').toUpperCase(), 45, 84);
+        const displayCycle = isRange
+            ? `${formatDateIST(fromDate)} - ${formatDateIST(toDate)}`
+            : `${formatDateIST(staff.cycleStart)} - ${formatDateIST(staff.cycleEnd)}`;
+        doc.text(displayCycle, 45, 92);
+
+        // Summary Box
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(pageWidth / 2, 60, pageWidth / 2 - 15, 45, 3, 3, 'F');
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.text('PAYMENT OVERVIEW', pageWidth / 2 + 5, 68);
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(100, 116, 139);
+        doc.text('Base Salary:', pageWidth / 2 + 5, 74);
+        doc.text('Sunday Bonus:', pageWidth / 2 + 5, 78);
+        doc.text('Deductions:', pageWidth / 2 + 5, 82);
+
+        doc.setTextColor(15, 23, 42);
+        doc.text(`Rs. ${(staff.salary || 0).toLocaleString('en-IN')}`, pageWidth - 20, 74, { align: 'right' });
+        doc.setTextColor(16, 185, 129);
+        doc.text(`+ Rs. ${(staff.sundayBonus || 0).toLocaleString('en-IN')}`, pageWidth - 20, 78, { align: 'right' });
+        doc.setTextColor(244, 63, 94);
+        doc.text(`- Rs. ${(staff.deduction || 0).toLocaleString('en-IN')}`, pageWidth - 20, 82, { align: 'right' });
+
+        doc.setDrawColor(203, 213, 225);
+        doc.line(pageWidth / 2 + 5, 86, pageWidth - 20, 86);
 
         doc.setFontSize(14);
-        doc.text(`${selectedCompany?.name || 'Company CRM'}`, 105, 30, { align: "center" });
-        doc.line(20, 35, 190, 35);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(16, 185, 129);
+        doc.text('NET PAYABLE:', pageWidth / 2 + 5, 96);
+        doc.text(`Rs. ${(staff.finalSalary || 0).toLocaleString('en-IN')}`, pageWidth - 20, 96, { align: 'right' });
 
-        // Staff Info
-        doc.setFontSize(11);
-        doc.setTextColor(60);
-        doc.text(`Staff Name: ${staff.name}`, 20, 50);
-        doc.text(`Designation: ${staff.designation || 'Staff'}`, 20, 57);
-        doc.text(`Month/Year: ${selectedMonth}/${selectedYear}`, 140, 50);
-        doc.text(`Date Generated: ${todayIST()}`, 140, 57);
+        // 3. ATTENDANCE TABLE
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('ATTENDANCE & DUTY LOGS', 15, 115);
 
-        if (staff.cycleStart && staff.cycleEnd) {
-            doc.text(`Salary Cycle: ${staff.cycleStart} to ${staff.cycleEnd}`, 20, 64);
-        }
+        const attendanceRows = (staff.attendanceData || []).map(log => [
+            formatDateIST(log.date),
+            formatDateIST(log.date, { weekday: 'long' }),
+            (log.status || 'ABSENT').toUpperCase(),
+            log.punchIn?.time ? formatTimeIST(log.punchIn.time) : '--',
+            log.punchOut?.time ? formatTimeIST(log.punchOut.time) : '--'
+        ]);
 
-        // Salary Details Table
-        const tableBody = [
-            ["Monthly Base Salary", `Rs. ${staff.salary || 0}`],
-            ["Effective Present Days", `${staff.presentDays || 0} Days`],
-            ["Approved Paid Leaves", `${staff.paidLeavesUsed || 0} Days`],
-            ["Sunday Holidays (Paid)", `${staff.sundaysPassed || 0} Days`],
-            ["Sundays Worked (Bonus)", `${staff.sundaysWorked || 0} Days`],
-            ["Unpaid Absences / Extra Leaves", `${staff.extraLeaves || 0} Days`],
-            ["Total Deductions", `Rs. ${staff.deduction || 0}`],
-            ["Sunday Bonus Payout", `Rs. ${staff.sundayBonus || 0}`],
-            ["", ""],
-            ["NET PAYABLE AMOUNT", `Rs. ${staff.finalSalary || 0}`]
+        autoTable(doc, {
+            head: [['DATE', 'DAY', 'STATUS', 'PUNCH IN', 'PUNCH OUT']],
+            body: attendanceRows,
+            startY: 120,
+            theme: 'grid',
+            headStyles: { fillColor: [15, 23, 42], fontSize: 8, halign: 'center' },
+            bodyStyles: { fontSize: 8, halign: 'center', textColor: [51, 65, 85] },
+            alternateRowStyles: { fillColor: [248, 250, 252] },
+            margin: { left: 15, right: 15 }
+        });
+
+        // 4. EARNINGS SUMMARY
+        let currentY = doc.lastAutoTable.finalY + 15;
+        if (currentY > pageHeight - 80) { doc.addPage(); currentY = 20; }
+
+        doc.setTextColor(15, 23, 42);
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.text('EARNINGS & LEAVES SUMMARY', 15, currentY);
+
+        const summaryRows = [
+            ['Total Days in Period', `${staff.totalDaysInCycle || 30} Days`],
+            ['Actual Days Present', `${staff.presentDays || 0} Days`],
+            ['Sundays (Paid Holidays)', `${staff.sundaysPassed || 0} Days`],
+            ['Sundays Worked (Extra Bonus)', `${staff.sundaysWorked || 0} Days`],
+            ['Total Absences', `${staff.leavesTaken || 0} Days`],
+            ['Unpaid Days (Deducted)', `${staff.extraLeaves || 0} Days`],
+            ['Net Salary Deduction', `Rs. ${(staff.deduction || 0).toLocaleString('en-IN')}`]
         ];
 
-        doc.autoTable({
-            startY: 75,
-            head: [['Earnings & Deductions', 'Amount / Details']],
-            body: tableBody,
-            theme: 'grid',
-            headStyles: { fillColor: [59, 130, 246] },
-            bodyStyles: { fontSize: 10 },
+        autoTable(doc, {
+            body: summaryRows,
+            startY: currentY + 5,
+            theme: 'striped',
+            bodyStyles: { fontSize: 9, textColor: [51, 65, 85] },
             columnStyles: {
                 1: { halign: 'right', fontStyle: 'bold' }
             },
-            didParseCell: function (data) {
-                if (data.row.index === 9) {
-                    data.cell.styles.fillColor = [241, 191, 36];
-                    data.cell.styles.textColor = [0, 0, 0];
-                    data.cell.styles.fontSize = 12;
+            didParseCell: (data) => {
+                if (data.row.index === 5 || data.row.index === 6) {
+                    data.cell.styles.textColor = [220, 38, 38]; // Red for deductions
                 }
-            }
+            },
+            margin: { left: 15, right: 15 }
         });
 
-        // Footer
-        const finalY = doc.lastAutoTable.finalY + 30;
-        doc.setFontSize(10);
-        doc.text("Authorized Signatory", 20, finalY);
-        doc.line(20, finalY - 5, 60, finalY - 5);
+        // 5. SIGNATURE & FOOTER
+        currentY = doc.lastAutoTable.finalY + 35;
+        if (currentY > pageHeight - 60) { doc.addPage(); currentY = 30; }
 
-        doc.text("Employee Signature", 140, finalY);
-        doc.line(140, finalY - 5, 180, finalY - 5);
+        doc.setFontSize(8);
+        doc.setTextColor(148, 163, 184);
+        doc.setFont('helvetica', 'italic');
+        doc.text('Note: This is an electronically generated statement. Any discrepancies must be reported within 48 hours.', 15, currentY, { maxWidth: pageWidth - 100 });
 
-        doc.save(`${staff.name}_Salary_Slip_${selectedMonth}_${selectedYear}.pdf`);
+        const sigX = pageWidth - 75;
+        if (signature) doc.addImage(signature, 'PNG', sigX, currentY - 20, 55, 22);
+        doc.setDrawColor(15, 23, 42); doc.setLineWidth(0.6);
+        doc.line(sigX - 5, currentY + 5, pageWidth - 15, currentY + 5);
+        doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42);
+        doc.text((selectedCompany?.ownerName || 'KAVISH JAIN').toUpperCase(), sigX - 2, currentY + 12);
+        doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
+        doc.text('Authorized Signatory', sigX - 2, currentY + 17);
+        doc.text(`${selectedCompany?.name || 'Yatree Destination Pvt. Ltd.'}`, sigX - 2, currentY + 21);
+
+        doc.setFontSize(7); doc.setTextColor(203, 213, 225);
+        doc.text(`Generated on: ${formatDateIST(todayIST())}`, 15, pageHeight - 10);
     };
+
+    const downloadSalarySlip = async (staff) => {
+        try {
+            setIsGeneratingPDF(true);
+            const doc = new jsPDF();
+            await generateSalarySlipPage(doc, staff, true);
+            const monthName = new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1, 1).toLocaleString('default', { month: 'long' });
+            doc.save(`${staff.name}_Salary_Slip_${monthName}_${selectedYear}.pdf`);
+        } catch (error) {
+            console.error('PDF Generation Error:', error);
+            alert("Error generating PDF: " + error.message);
+        } finally {
+            setIsGeneratingPDF(false);
+        }
+    };
+
+    const downloadAllSalarySlips = async () => {
+        const filteredReport = monthlyReport.filter(item =>
+            item.name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+
+        if (!filteredReport || filteredReport.length === 0) {
+            alert('No filtered payroll data available.');
+            return;
+        }
+
+        const confirm = window.confirm(`Generate merged PDF for ${filteredReport.length} filtered staff members?`);
+        if (!confirm) return;
+
+        try {
+            setIsGeneratingPDF(true);
+            const doc = new jsPDF();
+
+            for (let i = 0; i < filteredReport.length; i++) {
+                await generateSalarySlipPage(doc, filteredReport[i], i === 0);
+            }
+
+            const monthName = new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1, 1).toLocaleString('default', { month: 'long' });
+            const fileName = isRange
+                ? `Bulk_Staff_Slips_${fromDate}_to_${toDate}.pdf`
+                : `Bulk_Staff_Slips_${monthName}_${selectedYear}.pdf`;
+
+            doc.save(fileName);
+        } catch (error) {
+            console.error('Bulk PDF Error:', error);
+            alert("Error generating bulk PDF: " + error.message);
+        } finally {
+            setIsGeneratingPDF(false);
+        }
+    };
+
+
 
 
 
@@ -742,70 +956,70 @@ const Staff = () => {
             </header>
 
             <main style={{ padding: '0', maxWidth: '1600px', margin: '0 auto' }}>
-                <div className="staff-stats-grid" style={{
+                <div style={{
                     display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
                     gap: '20px',
                     marginBottom: '30px'
                 }}>
-                    {[
-                        { label: 'STAFF STRENGTH', value: staffList.length, icon: Users, color: 'var(--primary)', sub: 'Total Personnel' },
-                        { label: "TODAY'S ATTENDANCE", value: attendanceList.filter(r => r.date === todayIST()).length, icon: ShieldCheck, color: '#10b981', sub: 'On Duty' },
-                        { label: 'PENDING LEAVES', value: pendingLeaves.length, icon: CalendarX, color: 'var(--primary)', sub: 'Awaiting Review' },
-                        {
-                            label: 'MONTHLY TARGET',
-                            value: attendanceList.filter(r => {
-                                const d = nowIST();
-                                const monthStr = (d.getUTCMonth() + 1).toString().padStart(2, '0');
-                                const yearStr = d.getUTCFullYear().toString();
-                                return r.date.startsWith(`${yearStr}-${monthStr}`);
-                            }).length,
-                            icon: Target,
-                            color: 'var(--primary)',
-                            sub: `Goal: ${monthlyTarget} days`,
-                            isTarget: true
-                        }
-                    ].map((stat, idx) => (
-                        <div key={idx} className="glass-card" style={{
-                            padding: '24px',
-                            borderRadius: '24px',
-                            background: 'rgba(30, 41, 59, 0.4)',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            display: 'flex',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            position: 'relative',
-                            overflow: 'hidden'
-                        }}>
-                            {stat.isTarget && (
-                                <div style={{
-                                    position: 'absolute', bottom: 0, left: 0, height: '3px', background: 'var(--primary)',
-                                    width: `${Math.min((stat.value / (monthlyTarget || 1)) * 100, 100)}%`,
-                                    transition: 'width 1s ease-out'
-                                }}></div>
-                            )}
+                    <div className="premium-stat-card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '8px' }}>{stat.label}</div>
-                                <div style={{ color: 'white', fontSize: '32px', fontWeight: '900', letterSpacing: '-1px' }}>
-                                    {stat.value}
-                                    {stat.isTarget && <span style={{ fontSize: '14px', opacity: 0.3, marginLeft: '8px' }}>/ {monthlyTarget}</span>}
-                                </div>
-                                <div style={{ color: stat.color, fontSize: '11px', fontWeight: '700', marginTop: '4px' }}>{stat.sub}</div>
+                                <p className="premium-label">Staff Strength</p>
+                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: 'white' }}>{staffList.length}</h2>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Total Personnel</p>
                             </div>
-                            <div style={{
-                                width: '50px',
-                                height: '50px',
-                                borderRadius: '16px',
-                                background: `${stat.color}15`,
-                                display: 'flex',
-                                justifyContent: 'center',
-                                alignItems: 'center',
-                                border: `1px solid ${stat.color}20`
-                            }}>
-                                <stat.icon size={24} color={stat.color} />
+                            <div style={{ background: 'rgba(251, 191, 36, 0.1)', padding: '12px', borderRadius: '16px' }}>
+                                <Users color="var(--primary)" size={24} />
                             </div>
                         </div>
-                    ))}
+                    </div>
+
+                    <div className="premium-stat-card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                                <p className="premium-label">Today's Attendance</p>
+                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: '#10b981' }}>
+                                    {attendanceList.filter(a => a.date === todayIST() && a.status === 'present').length}
+                                </h2>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>On Duty</p>
+                            </div>
+                            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '16px' }}>
+                                <ShieldCheck color="#10b981" size={24} />
+                            </div>
+                        </div>
+                        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '4px', background: 'rgba(16, 185, 129, 0.1)' }}>
+                            <div style={{ width: `${(attendanceList.filter(a => a.date === todayIST() && a.status === 'present').length / (staffList.length || 1)) * 100}%`, height: '100%', background: '#10b981' }}></div>
+                        </div>
+                    </div>
+
+                    <div className="premium-stat-card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                                <p className="premium-label">Pending Leaves</p>
+                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: '#f59e0b' }}>{pendingLeaves.length}</h2>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Awaiting Review</p>
+                            </div>
+                            <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '16px' }}>
+                                <Calendar color="#f59e0b" size={24} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="premium-stat-card">
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                                <p className="premium-label">Monthly Target</p>
+                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: 'white' }}>
+                                    {monthlyTarget} <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>/26</span>
+                                </h2>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Goal: 26 days</p>
+                            </div>
+                            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '12px', borderRadius: '16px' }}>
+                                <Target color="white" size={24} style={{ opacity: 0.5 }} />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 {/* Control Bar */}
@@ -820,301 +1034,292 @@ const Staff = () => {
                     marginBottom: '25px',
                     gap: '20px'
                 }}>
-                    <div style={{ display: 'flex', gap: '8px', overflowX: 'auto' }} className="staff-tabs-row custom-scrollbar">
+                    {/* Unified Glass Tabs */}
+                    <div style={{ display: 'flex', gap: '8px', padding: '6px', background: 'rgba(0,0,0,0.2)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', scrollbarWidth: 'none' }} className="staff-tabs-row custom-scrollbar">
                         {[
-                            { id: 'list', label: 'STAFF LIST', icon: Users },
-                            { id: 'attendance', label: 'ATTENDANCE', icon: ShieldCheck },
-                            { id: 'leaves', label: 'LEAVE MGMT', icon: Plane }
-                        ].map(tab => (
+                            { id: 'list', label: 'PERSONNEL', icon: Users },
+                            { id: 'attendance', label: 'ATTENDANCE', icon: Clock },
+                            { id: 'leaves', label: 'LEAVES', icon: CalendarX, count: pendingLeaves.length },
+                            { id: 'summary', label: 'PAYROLL', icon: LayoutDashboard }
+                        ].map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setView(tab.id)}
                                 style={{
-                                    padding: '10px 20px',
-                                    borderRadius: '14px',
-                                    border: 'none',
-                                    fontSize: '11px',
-                                    fontWeight: '800',
-                                    cursor: 'pointer',
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: '8px',
-                                    transition: 'all 0.3s',
-                                    background: view === tab.id ? theme.primary : 'transparent',
+                                    padding: '10px 18px',
+                                    borderRadius: '14px',
+                                    border: 'none',
+                                    cursor: 'pointer',
+                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                                    background: view === tab.id ? 'var(--primary)' : 'transparent',
                                     color: view === tab.id ? 'black' : 'rgba(255,255,255,0.4)',
-                                    whiteSpace: 'nowrap'
+                                    whiteSpace: 'nowrap',
+                                    boxShadow: view === tab.id ? '0 10px 20px -5px var(--primary-glow)' : 'none'
                                 }}
                             >
                                 <tab.icon size={16} />
                                 {tab.label}
                             </button>
                         ))}
-                    </div>
-
-                    <div style={{ position: 'relative', flex: 1, maxWidth: '350px' }}>
-                        <Search style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
-                        <input
-                            type="text"
-                            placeholder="SEARCH BY NAME..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            style={{
-                                width: '100%',
-                                height: '48px',
-                                background: 'rgba(0,0,0,0.2)',
-                                border: '1px solid rgba(255,255,255,0.05)',
-                                borderRadius: '14px',
-                                padding: '0 15px 0 45px',
-                                color: 'white',
-                                fontSize: '11px',
-                                fontWeight: '800',
-                                letterSpacing: '0.5px'
-                            }}
-                        />
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '14px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.05)', height: '48px' }}>
-                        <Target size={14} style={{ color: 'var(--primary)', marginRight: '10px' }} />
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginRight: '10px' }}>GOAL:</span>
-                        <input
-                            type="number"
-                            value={monthlyTarget}
-                            onChange={e => handleTargetChange(e.target.value)}
-                            style={{ width: '40px', background: 'transparent', border: 'none', color: 'var(--primary)', fontWeight: '900', fontSize: '14px', textAlign: 'center', outline: 'none' }}
-                        />
-                    </div>
-
-                    {(view === 'summary' || view === 'list' || view === 'attendance') && (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                            {view === 'attendance' && (
-                                <button
-                                    onClick={() => setShowBackdateModal(true)}
-                                    style={{
-                                        height: '40px', padding: '0 15px', borderRadius: '12px',
-                                        background: 'rgba(99, 102, 241, 0.2)', color: '#818cf8', fontWeight: '800',
-                                        border: '1px solid rgba(99, 102, 241, 0.3)', cursor: 'pointer', fontSize: '11px', textTransform: 'uppercase',
-                                        display: 'flex', alignItems: 'center', gap: '6px'
-                                    }}
-                                >
-                                    <History size={14} /> MANUAL ENTRY
-                                </button>
-                            )}
-                            
-                            <div style={{ display: 'flex', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <button
-                                    onClick={() => setIsRange(false)}
-                                    style={{
-                                        padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                                        background: !isRange ? 'var(--primary)' : 'transparent',
-                                        color: !isRange ? 'white' : 'rgba(255,255,255,0.4)',
-                                        fontSize: '11px', fontWeight: '800', transition: '0.3s'
-                                    }}
-                                >
-                                    MONTHLY
-                                </button>
-                                <button
-                                    onClick={() => setIsRange(true)}
-                                    style={{
-                                        padding: '8px 16px', borderRadius: '8px', border: 'none', cursor: 'pointer',
-                                        background: isRange ? 'var(--primary)' : 'transparent',
-                                        color: isRange ? 'white' : 'rgba(255,255,255,0.4)',
-                                        fontSize: '11px', fontWeight: '800', transition: '0.3s'
-                                    }}
-                                >
-                                    RANGE
-                                </button>
-                            </div>
-
-                            {!isRange ? (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <button
-                                        onClick={() => {
-                                            const d = nowIST(toDate);
-                                            d.setUTCDate(d.getUTCDate() - 1);
-                                            const newDate = d.toISOString().split('T')[0];
-                                            setToDate(newDate);
-                                            setFromDate(newDate);
-                                        }}
-                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'white', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
-                                    >
-                                        <ChevronLeft size={16} />
-                                    </button>
-                                    <select
-                                        className="premium-compact-input"
-                                        style={{ height: '40px', width: '120px', margin: 0, fontSize: '11px' }}
-                                        value={selectedMonth}
-                                        onChange={(e) => setSelectedMonth(e.target.value)}
-                                    >
-                                        <option value="1">January</option><option value="2">February</option><option value="3">March</option><option value="4">April</option><option value="5">May</option><option value="6">June</option><option value="7">July</option><option value="8">August</option><option value="9">September</option><option value="10">October</option><option value="11">November</option><option value="12">December</option>
-                                    </select>
-                                    <select
-                                        className="premium-compact-input"
-                                        style={{ height: '40px', width: '90px', margin: 0, fontSize: '11px' }}
-                                        value={selectedYear}
-                                        onChange={(e) => setSelectedYear(e.target.value)}
-                                    >
-                                        {Array.from({ length: 5 }, (_, i) => nowIST().getUTCFullYear() - 2 + i).map(y => (
-                                            <option key={y} value={y}>{y}</option>
-                                        ))}
-                                    </select>
-                                    <button
-                                        onClick={() => {
-                                            const d = nowIST(toDate);
-                                            d.setUTCDate(d.getUTCDate() + 1);
-                                            const newDate = d.toISOString().split('T')[0];
-                                            setToDate(newDate);
-                                            setFromDate(newDate);
-                                        }}
-                                        style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'white', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer' }}
-                                    >
-                                        <ChevronRight size={16} />
-                                    </button>
-                                </div>
-                            ) : (
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div
-                                        onClick={() => document.getElementById('range-from-picker').showPicker()}
-                                        style={{
-                                            padding: '0 12px', height: '40px', display: 'flex', alignItems: 'center', gap: '8px',
-                                            background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)',
-                                            cursor: 'pointer', position: 'relative'
-                                        }}
-                                    >
-                                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>FROM:</span>
-                                        <span style={{ color: 'white', fontSize: '12px', fontWeight: '700' }}>{formatDateIST(fromDate)}</span>
-                                        <input
-                                            id="range-from-picker"
-                                            type="date"
-                                            value={fromDate}
-                                            onChange={(e) => setFromDate(e.target.value)}
-                                            style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }}
-                                        />
-                                    </div>
-                                    <ChevronRight size={14} color="rgba(255,255,255,0.2)" />
-                                    <div
-                                        onClick={() => document.getElementById('range-to-picker').showPicker()}
-                                        style={{
-                                            padding: '0 12px', height: '40px', display: 'flex', alignItems: 'center', gap: '8px',
-                                            background: 'rgba(255,255,255,0.03)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.1)',
-                                            cursor: 'pointer', position: 'relative'
-                                        }}
-                                    >
-                                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>TO:</span>
-                                        <span style={{ color: 'white', fontSize: '12px', fontWeight: '700' }}>{formatDateIST(toDate)}</span>
-                                        <input
-                                            id="range-to-picker"
-                                            type="date"
-                                            value={toDate}
-                                            onChange={(e) => setToDate(e.target.value)}
-                                            style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    )}
                 </div>
 
-                {/* Main Content Area */}
-                <div style={{ padding: '0 0 50px 0' }}>
-                    {view === 'list' && (
-                        <div className="livefeed-cards-grid" style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))',
-                            gap: '20px'
-                        }}>
-                            {filteredStaff.length === 0 ? (
-                                <div style={{ gridColumn: '1/-1', textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                    <Users size={40} color="rgba(255,255,255,0.2)" style={{ margin: '0 auto 15px' }} />
-                                    <h3 style={{ color: 'white', fontWeight: '800' }}>No Personnel Found</h3>
-                                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '14px' }}>Try adjusting your search or filters.</p>
-                                </div>
-                            ) : filteredStaff.map((staff) => (
-                                <motion.div
-                                    key={staff._id}
-                                    whileHover={{ y: -5, background: 'rgba(255,255,255,0.05)' }}
-                                    onClick={() => handleStaffClick(staff)}
-                                    style={{
-                                        padding: '24px',
-                                        background: 'rgba(255,255,255,0.02)',
-                                        borderRadius: '24px',
-                                        border: '1px solid rgba(255,255,255,0.05)',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s ease',
-                                        position: 'relative',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '20px'
-                                    }}
-                                >
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                            <div style={{
-                                                width: '56px',
-                                                height: '56px',
-                                                borderRadius: '16px',
-                                                background: staff.status === 'blocked' ? '#f43f5e' : 'linear-gradient(135deg, var(--primary), var(--primary))',
-                                                display: 'flex',
-                                                justifyContent: 'center',
-                                                alignItems: 'center',
-                                                fontSize: '22px',
-                                                fontWeight: '900',
-                                                color: 'white',
-                                                overflow: 'hidden'
-                                            }}>
-                                                {staff.profilePhoto ? <img src={staff.profilePhoto} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt="" /> : staff.name?.charAt(0)}
-                                            </div>
-                                            <div>
-                                                <h3 style={{ margin: 0, color: 'white', fontSize: '17px', fontWeight: '800' }}>{staff.name}</h3>
-                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', fontWeight: '600', marginTop: '2px' }}>{staff.designation || 'Staff Member'}</div>
-                                            </div>
-                                        </div>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleEditStaff(staff); }}
-                                                style={{ padding: '8px', borderRadius: '10px', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', border: 'none', cursor: 'pointer' }}
-                                            >
-                                                <Edit2 size={14} />
-                                            </button>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteStaff(staff._id); }}
-                                                style={{ padding: '8px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', cursor: 'pointer' }}
-                                            >
-                                                <Trash2 size={14} />
-                                            </button>
-                                        </div>
-                                    </div>
+                <div style={{ position: 'relative', flex: 1, maxWidth: '350px' }}>
+                    <Search style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
+                    <input
+                        type="text"
+                        placeholder="SEARCH PERSONNEL..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        style={{
+                            width: '100%',
+                            height: '48px',
+                            background: 'rgba(0,0,0,0.2)',
+                            border: '1px solid rgba(255,255,255,0.05)',
+                            borderRadius: '16px',
+                            padding: '0 15px 0 45px',
+                            color: 'white',
+                            fontSize: '12px',
+                            fontWeight: '700',
+                            letterSpacing: '0.5px'
+                        }}
+                    />
+                </div>
 
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: '600' }}>
-                                            <Phone size={14} color="var(--primary)" />
-                                            <span>{staff.mobile}</span>
-                                        </div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: '600' }}>
-                                            <Mail size={14} color="var(--primary)" />
-                                            <span style={{ fontSize: '12px', opacity: 0.8 }}>{staff.email || 'No Email'}</span>
-                                        </div>
-                                    </div>
+                <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.05)', height: '48px' }}>
+                    <Target size={14} style={{ color: 'var(--primary)', marginRight: '10px' }} />
+                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginRight: '10px' }}>GOAL:</span>
+                    <input
+                        type="number"
+                        value={monthlyTarget}
+                        onChange={e => handleTargetChange(e.target.value)}
+                        style={{ width: '40px', background: 'transparent', border: 'none', color: 'var(--primary)', fontWeight: '900', fontSize: '14px', textAlign: 'center', outline: 'none' }}
+                    />
+                </div>
 
-                                    <div style={{
-                                        padding: '12px',
-                                        background: 'rgba(0,0,0,0.2)',
-                                        borderRadius: '16px',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center',
-                                        border: '1px solid rgba(255,255,255,0.03)'
-                                    }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                            <IndianRupee size={12} color="#10b981" />
-                                            <span style={{ fontSize: '13px', color: 'white', fontWeight: '800' }}>₹{staff.salary?.toLocaleString()}</span>
-                                        </div>
-                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', textTransform: 'uppercase' }}>Basic Salary</div>
-                                    </div>
-                                </motion.div>
-                            ))}
+                {(view === 'summary' || view === 'attendance' || view === 'list') && (
+                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <button
+                            onClick={() => setIsRange(false)}
+                            style={{
+                                padding: '8px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+                                background: !isRange ? 'rgba(255,255,255,0.05)' : 'transparent',
+                                color: !isRange ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
+                                fontSize: '11px', fontWeight: '800', transition: '0.3s'
+                            }}
+                        >
+                            MONTHLY
+                        </button>
+                        <button
+                            onClick={() => setIsRange(true)}
+                            style={{
+                                padding: '8px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer',
+                                background: isRange ? 'rgba(255,255,255,0.05)' : 'transparent',
+                                color: isRange ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
+                                fontSize: '11px', fontWeight: '800', transition: '0.3s'
+                            }}
+                        >
+                            RANGE
+                        </button>
+                    </div>
+                )}
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    {!isRange ? (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                            <select
+                                className="premium-compact-input"
+                                style={{
+                                    height: '40px', border: 'none', background: 'transparent', width: '120px',
+                                    fontSize: '11px', fontWeight: '900', color: 'white', cursor: 'pointer',
+                                    textAlign: 'center', outline: 'none'
+                                }}
+                                value={selectedMonth}
+                                onChange={(e) => setSelectedMonth(e.target.value)}
+                            >
+                                <option value="1" style={{ background: '#0f172a', color: 'white' }}>JANUARY</option>
+                                <option value="2" style={{ background: '#0f172a', color: 'white' }}>FEBRUARY</option>
+                                <option value="3" style={{ background: '#0f172a', color: 'white' }}>MARCH</option>
+                                <option value="4" style={{ background: '#0f172a', color: 'white' }}>APRIL</option>
+                                <option value="5" style={{ background: '#0f172a', color: 'white' }}>MAY</option>
+                                <option value="6" style={{ background: '#0f172a', color: 'white' }}>JUNE</option>
+                                <option value="7" style={{ background: '#0f172a', color: 'white' }}>JULY</option>
+                                <option value="8" style={{ background: '#0f172a', color: 'white' }}>AUGUST</option>
+                                <option value="9" style={{ background: '#0f172a', color: 'white' }}>SEPTEMBER</option>
+                                <option value="10" style={{ background: '#0f172a', color: 'white' }}>OCTOBER</option>
+                                <option value="11" style={{ background: '#0f172a', color: 'white' }}>NOVEMBER</option>
+                                <option value="12" style={{ background: '#0f172a', color: 'white' }}>DECEMBER</option>
+                            </select>
+                            <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }}></div>
+                            <select
+                                className="premium-compact-input"
+                                style={{
+                                    height: '40px', border: 'none', background: 'transparent', width: '90px',
+                                    fontSize: '11px', fontWeight: '900', color: 'white', cursor: 'pointer',
+                                    textAlign: 'center', outline: 'none'
+                                }}
+                                value={selectedYear}
+                                onChange={(e) => setSelectedYear(e.target.value)}
+                            >
+                                {Array.from({ length: 5 }, (_, i) => nowIST().getUTCFullYear() - 2 + i).map(y => (
+                                    <option key={y} value={y} style={{ background: '#0f172a', color: 'white' }}>{y}</option>
+                                ))}
+                            </select>
+                        </div>
+                    ) : (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div
+                                onClick={() => document.getElementById('range-from-picker').showPicker()}
+                                style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', position: 'relative', minWidth: '120px' }}
+                            >
+                                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>FROM</span>
+                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{formatDateIST(fromDate)}</span>
+                                <input id="range-from-picker" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
+                            </div>
+                            <ArrowUpRight size={14} color="rgba(255,255,255,0.2)" />
+                            <div
+                                onClick={() => document.getElementById('range-to-picker').showPicker()}
+                                style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', position: 'relative', minWidth: '120px' }}
+                            >
+                                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TO</span>
+                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{formatDateIST(toDate)}</span>
+                                <input id="range-to-picker" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
+                            </div>
                         </div>
                     )}
+
+                    {view === 'attendance' && (
+                        <button
+                            onClick={() => setShowBackdateModal(true)}
+                            style={{
+                                height: '48px', padding: '0 20px', borderRadius: '16px',
+                                background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', fontWeight: '900',
+                                border: '1px solid rgba(251, 191, 36, 0.2)', cursor: 'pointer', fontSize: '12px',
+                                display: 'flex', alignItems: 'center', gap: '10px', transition: '0.3s'
+                            }}
+                        >
+                            <Plus size={18} /> NEW LOG
+                        </button>
+                    )}
+                </div>
+        </div>
+
+                {/* Main Content Area */ }
+                <div style={{ padding: '0 0 50px 0' }}>
+                    {view === 'list' && (
+                        <div style={{
+                            background: 'rgba(15, 23, 42, 0.4)',
+                            borderRadius: '28px',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            overflow: 'hidden',
+                            backdropFilter: 'blur(20px)',
+                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
+                        }}>
+                            <div style={{ overflowX: 'auto', padding: '10px' }}>
+                                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', color: 'white', minWidth: '1000px' }}>
+                                    <thead>
+                                        <tr style={{ textAlign: 'left' }}>
+                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>PERSONNEL</th>
+                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>DESIGNATION</th>
+                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>CONTACT INFO</th>
+                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>JOINING DATE</th>
+                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STATUS</th>
+                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>CONTROL</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filteredStaff.length === 0 ? (
+                                            <tr>
+                                                <td colSpan="6">
+                                                    <div style={{ textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.01)', borderRadius: '24px' }}>
+                                                        <Users size={48} color="rgba(255,255,255,0.1)" style={{ margin: '0 auto 20px' }} />
+                                                        <h3 style={{ color: 'white', fontWeight: '900' }}>No Personnel Records</h3>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : filteredStaff.map((staff) => (
+                                            <motion.tr
+                                                key={staff._id}
+                                                initial={{ opacity: 0, y: 10 }}
+                                                animate={{ opacity: 1, y: 0 }}
+                                                whileHover={{ 
+                                                    backgroundColor: 'rgba(255,255,255,0.04)',
+                                                    scale: 1.002,
+                                                    boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
+                                                }}
+                                                style={{
+                                                    background: 'rgba(255,255,255,0.02)',
+                                                    borderRadius: '20px',
+                                                    transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                                                    cursor: 'pointer'
+                                                }}
+                                                className="staff-row-hover"
+                                            >
+                                                <td style={{ padding: '12px 25px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                        <div style={{
+                                                            width: '44px', height: '44px', borderRadius: '12px',
+                                                            background: staff.status === 'blocked' ? '#f43f5e' : 'linear-gradient(135deg, var(--primary), #d97706)',
+                                                            display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '16px', fontWeight: '900', color: 'black'
+                                                        }}>
+                                                            {staff.profilePhoto ? <img src={staff.profilePhoto} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '12px' }} alt="" /> : staff.name?.charAt(0)}
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ fontWeight: '900', color: 'white', fontSize: '15px' }}>{staff.name}</div>
+                                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>@{staff.username}</div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: '12px 25px' }}>
+                                                    <div style={{ display: 'inline-flex', padding: '4px 12px', borderRadius: '8px', background: 'rgba(251, 191, 36, 0.08)', color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase' }}>
+                                                        {staff.designation || 'Staff'}
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: '12px 25px' }}>
+                                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                                        <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>{staff.mobile}</div>
+                                                        <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)' }}>{staff.staffType === 'Hotel' ? '7 Days Duty' : 'Mon-Sat Duty'}</div>
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: '12px 25px' }}>
+                                                    <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.6)' }}>
+                                                        {formatDateIST(staff.joiningDate)}
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: '12px 25px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: staff.status === 'blocked' ? '#f43f5e' : '#10b981', boxShadow: `0 0 10px ${staff.status === 'blocked' ? '#f43f5e' : '#10b981'}` }}></div>
+                                                        <span style={{ fontSize: '11px', fontWeight: '800', color: staff.status === 'blocked' ? '#f43f5e' : '#10b981', textTransform: 'uppercase' }}>
+                                                            {staff.status === 'blocked' ? 'Suspended' : 'Active'}
+                                                        </span>
+                                                    </div>
+                                                </td>
+                                                <td style={{ padding: '12px 25px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px', textAlign: 'right' }}>
+                                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                        <button
+                                                            onClick={() => handleEditStaff(staff)}
+                                                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                        >
+                                                            <Edit2 size={14} />
+                                                        </button>
+                                                        <button
+                                                            onClick={() => handleDeleteStaff(staff._id)}
+                                                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                        >
+                                                            <Trash2 size={14} />
+                                                        </button>
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    )}
+
 
 
 
@@ -1122,11 +1327,11 @@ const Staff = () => {
                     {/* Attendance Logs View */}
                     {view === 'attendance' && (
                         <div style={{
-                            background: 'rgba(15, 23, 42, 0.4)',
-                            borderRadius: '28px',
-                            border: '1px solid rgba(255,255,255,0.06)',
+                            background: 'rgba(30, 41, 59, 0.4)',
+                            borderRadius: '32px',
+                            border: '1px solid rgba(255, 255, 255, 0.05)',
                             overflow: 'hidden',
-                            backdropFilter: 'blur(10px)',
+                            backdropFilter: 'blur(20px)',
                             boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
                         }}>
                             <div style={{ overflowX: 'auto', padding: '10px' }}>
@@ -1401,345 +1606,352 @@ const Staff = () => {
                                     </table>
                                 </div>
                             </div>
-                        )
-                    }
-                    {
-                        view === 'summary' && (
-                            <div style={{ marginTop: '10px' }}>
-                                <div style={{
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center',
-                                    flexWrap: 'wrap',
-                                    gap: '20px',
-                                    marginBottom: '35px',
-                                    background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%)',
-                                    padding: '30px 40px',
-                                    borderRadius: '32px',
-                                    border: '1px solid rgba(255, 255, 255, 0.05)',
-                                    backdropFilter: 'blur(20px)'
-                                }}>
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                                            <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: 'var(--primary)', boxShadow: '0 0 15px var(--primary)', transform: 'rotate(45deg)' }}></div>
-                                            <span style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '2px' }}>Operational Expenditure</span>
-                                        </div>
-                                        <h2 style={{ fontSize: '34px', fontWeight: '900', color: 'white', margin: 0, letterSpacing: '-1.5px' }}>Payroll Intelligence</h2>
+                        )}
+                    {view === 'summary' && (
+                        <div style={{ marginTop: '10px' }}>
+                            {/* Premium Payroll Intelligence Header */}
+                            <div style={{
+                                background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%)',
+                                padding: '40px',
+                                borderRadius: '35px',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                backdropFilter: 'blur(30px)',
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                alignItems: 'center',
+                                flexWrap: 'wrap',
+                                gap: '30px',
+                                marginBottom: '35px',
+                                boxShadow: '0 30px 60px -15px rgba(0,0,0,0.6)',
+                                position: 'relative',
+                                overflow: 'hidden'
+                            }}>
+                                <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '200px', height: '200px', background: 'var(--primary-glow)', filter: 'blur(80px)', borderRadius: '50%', opacity: 0.3 }}></div>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '35px', position: 'relative', zIndex: 1 }}>
+                                    <div style={{
+                                        width: '80px', height: '80px', borderRadius: '24px',
+                                        background: 'linear-gradient(135deg, var(--primary), #d97706)',
+                                        display: 'flex', justifyContent: 'center', alignItems: 'center',
+                                        boxShadow: '0 15px 35px -10px var(--primary-glow)'
+                                    }}>
+                                        <IndianRupee size={36} color="black" strokeWidth={2.5} />
                                     </div>
-                                    <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '15px' }}>
-                                        <div>
-                                            <p style={{ fontSize: '11px', color: 'var(--primary)', margin: '0 0 5px 0', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>GROSS DISBURSEMENT</p>
-                                            <h2 style={{ fontSize: '48px', fontWeight: '1000', color: 'white', margin: 0, letterSpacing: '-2px', textShadow: '0 0 40px rgba(251, 191, 36, 0.3)' }}>
-                                                <span style={{ color: 'var(--primary)', fontSize: '24px', verticalAlign: 'top', marginRight: '8px', opacity: 0.8 }}>₹</span>{monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
-                                            </h2>
+                                    <div>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
+                                            <span style={{ fontSize: '11px', fontWeight: '1000', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '3px' }}>Gross Disbursement</span>
+                                            <div style={{ padding: '4px 12px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(16, 185, 129, 0.2)' }}>{monthlyReport.length} ACTIVE STAFF</div>
                                         </div>
-                                        <button
-                                            onClick={exportPayrollToExcel}
-                                            style={{
-                                                display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 20px',
-                                                borderRadius: '14px', background: 'rgba(255, 255, 255, 0.05)',
-                                                border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white',
-                                                fontSize: '11px', fontWeight: '800', cursor: 'pointer', transition: '0.3s'
-                                            }}
-                                            onMouseEnter={(e) => { e.target.style.background = 'rgba(255,255,255,0.1)'; e.target.style.borderColor = 'var(--primary)'; }}
-                                            onMouseLeave={(e) => { e.target.style.background = 'rgba(255,255,255,0.05)'; e.target.style.borderColor = 'rgba(255,255,255,0.1)'; }}
-                                        >
-                                            <Download size={16} color="var(--primary)" /> DOWNLOAD PAYROLL REPORT
-                                        </button>
+                                        <h2 style={{ fontSize: '48px', fontWeight: '1000', color: 'white', margin: 0, letterSpacing: '-2px' }}>
+                                            <span style={{ color: 'var(--primary)', fontSize: '24px', verticalAlign: 'top', marginRight: '8px', fontWeight: '800' }}>₹</span>
+                                            {monthlyReport.reduce((acc, curr) => acc + (curr.finalSalary || 0), 0).toLocaleString()}
+                                        </h2>
+                                        <p style={{ margin: '8px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
+                                            <CheckCircle size={12} style={{ marginRight: '5px', verticalAlign: 'middle' }} />
+                                            Includes all Sunday holidays and approved paid leaves.
+                                        </p>
                                     </div>
                                 </div>
 
-                                {monthlyReport.length === 0 ? (
-                                    <div style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(15, 23, 42, 0.3)', borderRadius: '40px', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                        <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'rgba(251, 191, 36, 0.05)', display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '0 auto 25px' }}>
-                                            <IndianRupee size={32} color="var(--primary)" style={{ opacity: 0.5 }} />
-                                        </div>
-                                        <h3 style={{ color: 'white', margin: '0 0 10px 0', fontWeight: '700', fontSize: '20px' }}>No Payroll Records</h3>
-                                        <p style={{ color: 'rgba(255,255,255,0.3)', margin: 0, fontWeight: '500', fontSize: '15px' }}>No records found for the selected month.</p>
-                                    </div>
-                                ) : (
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                        {monthlyReport.map((item, idx) => (
-                                            <motion.div
-                                                key={item.staffId}
-                                                initial={{ opacity: 0, y: 15 }}
-                                                animate={{ opacity: 1, y: 0 }}
-                                                transition={{ delay: idx * 0.05 }}
-                                                onClick={() => setSelectedStaffReport(item)}
-                                                whileHover={{ y: -5, background: 'rgba(30, 41, 59, 0.8)', borderColor: 'rgba(251, 191, 36, 0.3)' }}
-                                                style={{
-                                                    background: 'linear-gradient(135deg, rgba(15, 23, 42, 0.7) 0%, rgba(30, 41, 59, 0.4) 100%)',
-                                                    borderRadius: '28px',
-                                                    padding: '28px 35px',
-                                                    border: '1px solid rgba(255,255,255,0.06)',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                    position: 'relative',
-                                                    overflow: 'hidden',
-                                                    display: 'flex',
-                                                    alignItems: 'center',
-                                                    gap: '30px',
-                                                    flexWrap: 'wrap'
-                                                }}
-                                            >
-                                                <div style={{ position: 'absolute', top: 0, right: 0, width: '200px', height: '200px', background: 'radial-gradient(circle, rgba(251, 191, 36, 0.05) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }}></div>
-
-                                                {/* Identity Section */}
-                                                <div style={{ flex: '1 1 250px', display: 'flex', gap: '20px', alignItems: 'center', position: 'relative', zIndex: 2 }}>
-                                                    <div style={{
-                                                        width: '64px',
-                                                        height: '64px',
-                                                        borderRadius: '20px',
-                                                        background: 'linear-gradient(135deg, var(--primary), #d97706)',
-                                                        display: 'flex',
-                                                        justifyContent: 'center',
-                                                        alignItems: 'center',
-                                                        fontSize: '26px',
-                                                        fontWeight: '1000',
-                                                        color: '#1e293b',
-                                                        boxShadow: '0 8px 16px -4px rgba(217, 119, 6, 0.4)'
-                                                    }}>
-                                                        {item.name.charAt(0)}
-                                                    </div>
-                                                    <div>
-                                                        <h3 style={{ fontSize: '22px', fontWeight: '900', margin: 0, color: 'white', letterSpacing: '-0.8px' }}>{item.name}</h3>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '6px' }}>
-                                                            <p style={{ margin: 0, fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1.5px' }}>{item.designation || 'Specialist'}</p>
-                                                            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'rgba(255,255,255,0.2)' }}></div>
-                                                            <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '800' }}>VERIFIED</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Stats grid */}
-                                                <div style={{ flex: '2 1 400px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px', position: 'relative', zIndex: 2 }}>
-                                                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></div>
-                                                            <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>PRESENCE</p>
-                                                        </div>
-                                                        <div style={{ fontSize: '22px', fontWeight: '1000', color: 'white' }}>{item.presentDays || 0}<span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', marginLeft: '6px' }}>DAYS</span></div>
-                                                    </div>
-                                                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: item.extraLeaves > 0 ? '#f43f5e' : '#10b981', boxShadow: `0 0 10px ${item.extraLeaves > 0 ? '#f43f5e' : '#10b981'}` }}></div>
-                                                            <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>LEAVE STATUS</p>
-                                                        </div>
-                                                        <div style={{ fontSize: '22px', fontWeight: '1000', color: item.extraLeaves > 0 ? '#f43f5e' : '#10b981' }}>{item.leavesTaken || 0} <span style={{ fontSize: '12px', opacity: 0.3 }}>/ {item.allowance || 4}</span></div>
-                                                    </div>
-                                                    <div style={{ background: 'rgba(255,255,255,0.02)', padding: '18px', borderRadius: '22px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 10px var(--primary)' }}></div>
-                                                            <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', letterSpacing: '1px' }}>OVERTIME</p>
-                                                        </div>
-                                                        <div style={{ fontSize: '22px', fontWeight: '1000', color: 'var(--primary)' }}>{item.sundaysWorked || 0}<span style={{ fontSize: '12px', opacity: 0.5, marginLeft: '6px' }}>SUN</span></div>
-                                                    </div>
-                                                </div>
-
-                                                {/* Payout */}
-                                                <div style={{ flex: '1 1 200px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '25px', position: 'relative', zIndex: 2 }}>
-                                                    <div style={{ textAlign: 'right' }}>
-                                                        <p style={{ margin: 0, fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', letterSpacing: '1.5px' }}>NET PAYABLE</p>
-                                                        <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '1000', color: 'var(--primary)', letterSpacing: '-1.5px', textShadow: '0 0 20px rgba(251, 191, 36, 0.2)' }}>₹{(item.finalSalary || 0).toLocaleString()}</h2>
-                                                    </div>
-                                                    <div style={{ width: '48px', height: '48px', borderRadius: '16px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)' }}>
-                                                        <ChevronRight size={22} />
-                                                    </div>
-                                                </div>
-                                            </motion.div>
-                                        ))}
-                                    </div>
-                                )}
+                                <div style={{ display: 'flex', gap: '20px', position: 'relative', zIndex: 1 }}>
+                                    <motion.button
+                                        whileHover={{ scale: 1.05, y: -4, background: 'rgba(255,255,255,0.08)' }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={exportPayrollToExcel}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 28px', borderRadius: '18px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontSize: '13px', fontWeight: '900', cursor: 'pointer', transition: '0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                                    >
+                                        <Download size={18} color="var(--primary)" /> EXCEL DATA
+                                    </motion.button>
+                                    <motion.button
+                                        whileHover={{ scale: 1.05, y: -4, boxShadow: '0 20px 40px -10px var(--primary-glow)' }}
+                                        whileTap={{ scale: 0.95 }}
+                                        onClick={downloadAllSalarySlips}
+                                        disabled={isGeneratingPDF}
+                                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '16px 28px', borderRadius: '18px', background: 'linear-gradient(135deg, var(--primary), #d97706)', border: 'none', color: 'black', fontSize: '13px', fontWeight: '1000', cursor: isGeneratingPDF ? 'not-allowed' : 'pointer', transition: '0.4s cubic-bezier(0.4, 0, 0.2, 1)' }}
+                                    >
+                                        <FileText size={18} /> {isGeneratingPDF ? 'PROCESSING...' : 'GENERATE PDFS'}
+                                    </motion.button>
+                                </div>
                             </div>
-                        )
-                    }
+
+                            {/* Personnel Payroll Table */}
+                            <div style={{
+                                background: 'rgba(15, 23, 42, 0.4)',
+                                borderRadius: '32px',
+                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                overflow: 'hidden',
+                                backdropFilter: 'blur(20px)'
+                            }}>
+                                <div style={{ overflowX: 'auto', padding: '10px' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', color: 'white', minWidth: '1200px' }}>
+                                        <thead>
+                                            <tr style={{ textAlign: 'left' }}>
+                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
+                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>ATTENDANCE</th>
+                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>BASE SALARY</th>
+                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>SUNDAY BONUS</th>
+                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>DEDUCTIONS</th>
+                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>NET PAYABLE</th>
+                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STATUS</th>
+                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {monthlyReport.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="7">
+                                                        <div style={{ textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.01)', borderRadius: '24px' }}>
+                                                            <IndianRupee size={48} color="rgba(255,255,255,0.1)" style={{ margin: '0 auto 20px' }} />
+                                                            <h3 style={{ color: 'white', fontWeight: '900' }}>No Payroll Data</h3>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ) : monthlyReport.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase())).map((item) => (
+                                                <motion.tr
+                                                    key={item.staffId}
+                                                    initial={{ opacity: 0, y: 10 }}
+                                                    animate={{ opacity: 1, y: 0 }}
+                                                    style={{
+                                                        background: 'rgba(255,255,255,0.02)',
+                                                        borderRadius: '16px',
+                                                        transition: 'all 0.3s ease'
+                                                    }}
+                                                    className="staff-row-hover"
+                                                >
+                                                    <td style={{ padding: '12px 25px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                            <div style={{
+                                                                width: '44px', height: '44px', borderRadius: '12px',
+                                                                background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)',
+                                                                display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '16px', fontWeight: '900', color: 'var(--primary)'
+                                                            }}>
+                                                                {item.name.charAt(0)}
+                                                            </div>
+                                                            <div>
+                                                                <div style={{ fontWeight: '900', color: 'white', fontSize: '15px' }}>{item.name}</div>
+                                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase' }}>{item.designation || 'Specialist'}</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '12px 25px' }}>
+                                                        <div style={{ display: 'flex', gap: '12px' }}>
+                                                            <div>
+                                                                <div style={{ fontSize: '13px', fontWeight: '900', color: 'white' }}>{item.presentDays} <span style={{ opacity: 0.3, fontSize: '10px' }}>DAYS</span></div>
+                                                                <div style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Present</div>
+                                                            </div>
+                                                            <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)' }}></div>
+                                                            <div>
+                                                                <div style={{ fontSize: '13px', fontWeight: '900', color: '#f43f5e' }}>{item.leavesTaken} <span style={{ opacity: 0.3, fontSize: '10px' }}>ABS</span></div>
+                                                                <div style={{ fontSize: '9px', fontWeight: '800', color: '#f43f5e', textTransform: 'uppercase' }}>Leaves</div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '12px 25px' }}>
+                                                        <div style={{ fontSize: '14px', fontWeight: '800', color: 'rgba(255,255,255,0.8)' }}>₹{item.salary?.toLocaleString()}</div>
+                                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>MONTHLY BASE</div>
+                                                    </td>
+                                                    <td style={{ padding: '12px 25px' }}>
+                                                        <div style={{ fontSize: '14px', fontWeight: '800', color: '#fbbf24' }}>+ ₹{(item.sundayBonus || 0).toLocaleString()}</div>
+                                                        <div style={{ fontSize: '9px', color: '#fbbf24', fontWeight: '800', opacity: 0.6 }}>{item.sundaysWorked} SUN WORKED</div>
+                                                    </td>
+                                                    <td style={{ padding: '12px 25px' }}>
+                                                        <div style={{ fontSize: '14px', fontWeight: '800', color: '#f43f5e' }}>- ₹{(item.deduction || 0).toLocaleString()}</div>
+                                                        <div style={{ fontSize: '9px', color: '#f43f5e', fontWeight: '800', opacity: 0.6 }}>{item.extraLeaves} UNPAID DAYS</div>
+                                                    </td>
+                                                    <td style={{ padding: '12px 25px', textAlign: 'right' }}>
+                                                        <div style={{ fontSize: '20px', fontWeight: '1000', color: 'white' }}>₹{(item.finalSalary || 0).toLocaleString()}</div>
+                                                        <div style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Net Payable</div>
+                                                    </td>
+                                                    <td style={{ padding: '12px 25px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 10px rgba(251, 191, 36, 0.5)' }}></div>
+                                                            <span style={{ fontSize: '11px', fontWeight: '900', color: '#fbbf24' }}>DUE</span>
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '12px 25px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px', textAlign: 'right' }}>
+                                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                            <motion.button
+                                                                whileHover={{ scale: 1.1, background: 'rgba(251, 191, 36, 0.2)' }}
+                                                                whileTap={{ scale: 0.95 }}
+                                                                onClick={() => downloadSalarySlip(item)}
+                                                                style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.05)', color: 'var(--primary)', border: '1px solid rgba(251, 191, 36, 0.2)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                                title="Download Slip"
+                                                            >
+                                                                <FileText size={16} />
+                                                            </motion.button>
+                                                            <motion.button
+                                                                whileHover={{ scale: 1.1, background: 'rgba(255, 255, 255, 0.1)' }}
+                                                                whileTap={{ scale: 0.95 }}
+                                                                onClick={() => setSelectedStaffReport(item)}
+                                                                style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.03)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                            >
+                                                                <ChevronRight size={18} />
+                                                            </motion.button>
+                                                        </div>
+                                                    </td>
+                                                </motion.tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                 </div>
                 <AnimatePresence>
                     {showAddModal && (
                         <div style={{
                             position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
-                            background: 'rgba(2, 6, 23, 0.9)', backdropFilter: 'blur(15px)',
+                            background: 'rgba(2, 6, 23, 0.85)', backdropFilter: 'blur(20px)',
                             display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000,
                             padding: '20px'
                         }}>
+                            {/* Abstract Background Glows */}
+                            <div style={{ position: 'absolute', top: '10%', right: '10%', width: '400px', height: '400px', background: 'rgba(251, 191, 36, 0.05)', filter: 'blur(100px)', borderRadius: '50%', zIndex: -1 }}></div>
+
                             <motion.div
-                                initial={{ opacity: 0, y: 30, scale: 0.95 }}
-                                animate={{ opacity: 1, y: 0, scale: 1 }}
+                                initial={{ opacity: 0, scale: 0.95, y: 30 }}
+                                animate={{ opacity: 1, scale: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.95 }}
                                 style={{
-                                    maxWidth: '800px',
+                                    maxWidth: '850px',
                                     width: '100%',
-                                    background: '#0B1121',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    borderRadius: '32px',
+                                    background: 'rgba(15, 23, 42, 0.6)',
+                                    border: '1px solid rgba(255, 255, 255, 0.1)',
+                                    borderRadius: '40px',
                                     padding: '40px',
                                     maxHeight: '90vh',
                                     overflowY: 'auto',
-                                    boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.6)',
-                                    position: 'relative'
+                                    boxShadow: '0 50px 100px -20px rgba(0, 0, 0, 0.8), inset 0 0 20px rgba(255,255,255,0.02)',
+                                    position: 'relative',
+                                    backdropFilter: 'blur(40px)'
                                 }}
+                                className="custom-scrollbar"
                             >
-                                <div style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '4px', background: 'linear-gradient(90deg, var(--primary), var(--primary), var(--primary), var(--primary))', backgroundSize: '300% 100%', animation: 'gradientFlow 5s linear infinite' }}></div>
-
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '40px' }}>
-                                    <div>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)' }}></div>
-                                            <span style={{ fontSize: '10px', fontWeight: '600', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>Staff Records</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                        <div style={{ width: '64px', height: '64px', borderRadius: '20px', background: 'rgba(251, 191, 36, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
+                                            <UserPlus size={28} color="var(--primary)" />
                                         </div>
-                                        <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '800', margin: 0, letterSpacing: '-1px' }}>
-                                            {isEditing ? 'Edit Staff Details' : 'Add New Staff'}
-                                        </h2>
+                                        <div>
+                                            <h2 style={{ color: 'white', fontSize: '28px', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
+                                                {isEditing ? 'MODIFY PERSONNEL' : 'NEW ONBOARDING'}
+                                            </h2>
+                                            <p style={{ margin: '4px 0 0 0', color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                                                {isEditing ? 'Update existing staff record' : 'Register a new team member'}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <motion.button
-                                        whileHover={{ scale: 1.1, background: 'rgba(244, 63, 94, 0.2)', color: '#f43f5e' }}
+                                    <button
                                         onClick={() => setShowAddModal(false)}
-                                        style={{ background: 'rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.4)', border: 'none', width: '40px', height: '40px', borderRadius: '12px', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer', transition: '0.2s' }}
+                                        style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: 'none', width: '44px', height: '44px', borderRadius: '15px', cursor: 'pointer', transition: '0.3s' }}
                                     >
                                         <X size={20} />
-                                    </motion.button>
+                                    </button>
                                 </div>
 
-                                <form onSubmit={handleAddStaff} style={{ display: 'flex', flexDirection: 'column', gap: '40px' }}>
+                                <form onSubmit={handleAddStaff} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '40px' }}>
 
-                                    {/* Grid Layout for Form Sections */}
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '40px' }}>
-
-                                        {/* Left Column: Core & Security */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                                            <div>
-                                                <h4 style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ width: '20px', height: '1px', background: 'currentColor' }}></span> 01. BASIC INFO
-                                                </h4>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                                    <div className="premium-input-group">
-                                                        <label className="premium-label">FULL NAME</label>
-                                                        <input required type="text" className="premium-compact-input" placeholder="e.g. John Doe" value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
-                                                    </div>
-                                                    <div className="premium-input-group">
-                                                        <label className="premium-label">STAFF CATEGORY</label>
-                                                        <select className="premium-compact-input" value={formData.staffType} onChange={(e) => setFormData({ ...formData, staffType: e.target.value })}>
-                                                            <option value="Company">Regular (Mon-Sat)</option>
-                                                            <option value="Hotel">Full Time (7 Days)</option>
-                                                        </select>
-                                                    </div>
-                                                    <div className="premium-input-group">
-                                                        <label className="premium-label">DESIGNATION</label>
-                                                        <input type="text" className="premium-compact-input" placeholder="e.g. Accountant" value={formData.designation} onChange={(e) => setFormData({ ...formData, designation: e.target.value })} />
-                                                    </div>
-                                                    <div className="premium-input-group">
-                                                        <label className="premium-label">MOBILE NUMBER</label>
-                                                        <input required type="number" className="premium-compact-input" placeholder="e.g. 9876543210" value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} />
-                                                    </div>
+                                    {/* Column 1: Identity & Security */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                                        <section>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                                                <div style={{ width: '24px', height: '2px', background: 'var(--primary)' }}></div>
+                                                <span style={{ fontSize: '11px', fontWeight: '900', color: 'var(--primary)', letterSpacing: '1.5px' }}>IDENTITY</span>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Full Name</label>
+                                                    <input required type="text" className="premium-compact-input" placeholder="e.g. John Doe" style={{ height: '52px', padding: '0 20px', fontSize: '14px', fontWeight: '700' }} value={formData.name} onChange={(e) => setFormData({ ...formData, name: e.target.value })} />
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Mobile Number</label>
+                                                    <input required type="number" className="premium-compact-input" placeholder="e.g. 9876543210" style={{ height: '52px', padding: '0 20px', fontSize: '14px', fontWeight: '700' }} value={formData.mobile} onChange={(e) => setFormData({ ...formData, mobile: e.target.value })} />
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Designation</label>
+                                                    <input type="text" className="premium-compact-input" placeholder="e.g. Senior Accountant" style={{ height: '52px', padding: '0 20px', fontSize: '14px', fontWeight: '700' }} value={formData.designation} onChange={(e) => setFormData({ ...formData, designation: e.target.value })} />
                                                 </div>
                                             </div>
+                                        </section>
 
-                                            <div>
-                                                <h4 style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ width: '20px', height: '1px', background: 'currentColor' }}></span> 02. LOGIN DETAILS
-                                                </h4>
-                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                                                    <div className="premium-input-group">
-                                                        <label className="premium-label">USERNAME</label>
-                                                        <input required type="text" className="premium-compact-input" placeholder="e.g. john_doe" value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
-                                                    </div>
-                                                    <div className="premium-input-group">
-                                                        <label className="premium-label">{isEditing ? 'RESET PASSWORD (OPTIONAL)' : 'PASSWORD'}</label>
-                                                        <input required={!isEditing} type="password" underline="none" className="premium-compact-input" placeholder="••••••••" value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
-                                                    </div>
+                                        <section>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                                                <div style={{ width: '24px', height: '2px', background: 'var(--primary)' }}></div>
+                                                <span style={{ fontSize: '11px', fontWeight: '900', color: 'var(--primary)', letterSpacing: '1.5px' }}>CREDENTIALS</span>
+                                            </div>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Username</label>
+                                                    <input required type="text" className="premium-compact-input" placeholder="e.g. john_doe" style={{ height: '52px', padding: '0 20px', fontSize: '14px', fontWeight: '700' }} value={formData.username} onChange={(e) => setFormData({ ...formData, username: e.target.value })} />
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{isEditing ? 'New Password (Optional)' : 'Password'}</label>
+                                                    <input required={!isEditing} type="password" className="premium-compact-input" placeholder="••••••••" style={{ height: '52px', padding: '0 20px', fontSize: '14px', fontWeight: '700' }} value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
                                                 </div>
                                             </div>
-                                        </div>
-                                        {/* Right Column: Financial & Geofencing */}
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                                            <div>
-                                                <h4 style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '20px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <span style={{ width: '20px', height: '1px', background: 'currentColor' }}></span> 03. SALARY DETAILS
-                                                </h4>
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                                    <div className="premium-input-group">
-                                                        <label className="premium-label">MONTHLY SALARY</label>
-                                                        <input required type="number" className="premium-compact-input" placeholder="0.00" value={formData.salary} onChange={(e) => setFormData({ ...formData, salary: e.target.value })} />
-                                                    </div>
-                                                    <div className="premium-input-group">
-                                                        <label className="premium-label">JOINING DATE</label>
-                                                        <input required type="date" className="premium-compact-input" value={formData.joiningDate} onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })} />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div style={{
-                                                background: 'rgba(255, 255, 255, 0.02)',
-                                                border: '1px solid rgba(255, 255, 255, 0.05)',
-                                                borderRadius: '24px',
-                                                padding: '24px',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: '20px'
-                                            }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <Clock size={16} color="var(--primary)" />
-                                                    <h4 style={{ color: 'white', fontSize: '13px', fontWeight: '700', margin: 0, letterSpacing: '0.5px' }}>SHIFT TIMING</h4>
-                                                </div>
-                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                                    <div className="premium-input-group">
-                                                        <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px' }}>START TIME</label>
-                                                        <input type="time" className="premium-compact-input" style={{ height: '48px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }} value={formData.shiftTiming.start} onChange={(e) => setFormData({ ...formData, shiftTiming: { ...formData.shiftTiming, start: e.target.value } })} />
-                                                    </div>
-                                                    <div className="premium-input-group">
-                                                        <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px' }}>END TIME</label>
-                                                        <input type="time" className="premium-compact-input" style={{ height: '48px', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)' }} value={formData.shiftTiming.end} onChange={(e) => setFormData({ ...formData, shiftTiming: { ...formData.shiftTiming, end: e.target.value } })} />
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div style={{
-                                                background: 'rgba(99, 102, 241, 0.05)',
-                                                border: '1px solid rgba(99, 102, 241, 0.1)',
-                                                borderRadius: '24px',
-                                                padding: '24px',
-                                                display: 'flex',
-                                                flexDirection: 'column',
-                                                gap: '20px'
-                                            }}>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                    <div style={{ background: 'rgba(99, 102, 241, 0.2)', padding: '8px', borderRadius: '12px' }}>
-                                                        <MapPin size={18} color="var(--primary)" />
-                                                    </div>
-                                                    <div>
-                                                        <h4 style={{ color: 'white', fontSize: '14px', fontWeight: '800', margin: 0, letterSpacing: '0.5px' }}>OFFICE GEOFENCING</h4>
-                                                        <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>SET WORK LOCATION LIMITS</p>
-                                                    </div>
-                                                </div>
-
-                                                <OfficeGeofencePicker
-                                                    value={formData.officeLocation}
-                                                    onChange={(newLocation) => setFormData({ ...formData, officeLocation: newLocation })}
-                                                />
-                                            </div>
-                                        </div>
+                                        </section>
                                     </div>
 
-                                    <div style={{ marginTop: '20px' }}>
+                                    {/* Column 2: Financials & Location */}
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
+                                        <section>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
+                                                <div style={{ width: '24px', height: '2px', background: 'var(--primary)' }}></div>
+                                                <span style={{ fontSize: '11px', fontWeight: '900', color: 'var(--primary)', letterSpacing: '1.5px' }}>COMPENSATION</span>
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Staff Type</label>
+                                                    <select className="premium-compact-input" style={{ height: '52px', padding: '0 15px', fontSize: '13px', fontWeight: '700' }} value={formData.staffType} onChange={(e) => setFormData({ ...formData, staffType: e.target.value })}>
+                                                        <option value="Company">REGULAR (MON-SAT)</option>
+                                                        <option value="Hotel">FULL TIME (7 DAYS)</option>
+                                                    </select>
+                                                </div>
+                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                    <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Monthly Salary</label>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <span style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', fontWeight: '900' }}>₹</span>
+                                                        <input required type="number" className="premium-compact-input" placeholder="0.00" style={{ width: '100%', height: '52px', padding: '0 20px 0 35px', fontSize: '15px', fontWeight: '900' }} value={formData.salary} onChange={(e) => setFormData({ ...formData, salary: e.target.value })} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </section>
+
+                                        <section style={{ background: 'rgba(255,255,255,0.02)', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                                <MapPin size={18} color="var(--primary)" />
+                                                <span style={{ fontSize: '12px', fontWeight: '900', color: 'white', letterSpacing: '0.5px' }}>WORK GEOFENCING</span>
+                                            </div>
+                                            <OfficeGeofencePicker
+                                                value={formData.officeLocation}
+                                                onChange={(newLocation) => setFormData({ ...formData, officeLocation: newLocation })}
+                                            />
+                                        </section>
+
+                                        <section style={{ background: 'rgba(255,255,255,0.02)', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                                                <Clock size={18} color="var(--primary)" />
+                                                <span style={{ fontSize: '12px', fontWeight: '900', color: 'white', letterSpacing: '0.5px' }}>SHIFT TIMINGS</span>
+                                            </div>
+                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                                <input type="time" className="premium-compact-input" style={{ height: '48px', padding: '0 15px', fontSize: '13px', fontWeight: '700' }} value={formData.shiftTiming.start} onChange={(e) => setFormData({ ...formData, shiftTiming: { ...formData.shiftTiming, start: e.target.value } })} />
+                                                <input type="time" className="premium-compact-input" style={{ height: '48px', padding: '0 15px', fontSize: '13px', fontWeight: '700' }} value={formData.shiftTiming.end} onChange={(e) => setFormData({ ...formData, shiftTiming: { ...formData.shiftTiming, end: e.target.value } })} />
+                                            </div>
+                                        </section>
+                                    </div>
+
+                                    <div style={{ gridColumn: '1/-1', display: 'flex', gap: '20px', marginTop: '10px' }}>
                                         <motion.button
-                                            whileHover={{ scale: 1.02, y: -2 }}
-                                            whileTap={{ scale: 0.98 }}
+                                            whileHover={{ scale: 1.01, y: -2 }}
+                                            whileTap={{ scale: 0.99 }}
                                             type="submit"
                                             style={{
-                                                width: '100%',
-                                                height: '64px',
-                                                background: 'linear-gradient(135deg, var(--primary), var(--primary))',
-                                                color: 'white',
-                                                border: 'none',
-                                                borderRadius: '20px',
-                                                fontSize: '16px',
-                                                fontWeight: '950',
-                                                cursor: 'pointer',
-                                                boxShadow: '0 20px 40px -10px rgba(99, 102, 241, 0.4)',
-                                                letterSpacing: '1px'
+                                                flex: 1, height: '64px', background: 'var(--primary)', color: 'black',
+                                                border: 'none', borderRadius: '20px', fontSize: '16px', fontWeight: '1000',
+                                                cursor: 'pointer', boxShadow: '0 20px 40px -10px var(--primary-glow)', letterSpacing: '1px'
                                             }}
                                         >
-                                            {isEditing ? 'Save Changes' : 'Create Staff Member'}
+                                            {isEditing ? 'COMMIT CHANGES' : 'CREATE ACCOUNT'}
                                         </motion.button>
                                     </div>
                                 </form>
@@ -1821,18 +2033,33 @@ const Staff = () => {
                                                     📅 {formatDateIST(selectedStaffReport.cycleStart, { day: '2-digit', month: 'short' })} → {formatDateIST(selectedStaffReport.cycleEnd, { day: '2-digit', month: 'short', year: 'numeric' })}
                                                 </p>
                                             )}
-
                                             <button
                                                 onClick={() => downloadSalarySlip(selectedStaffReport)}
+                                                disabled={isGeneratingPDF}
                                                 style={{
-                                                    marginTop: '20px', width: '100%', padding: '12px',
-                                                    borderRadius: '12px', background: 'rgba(255,255,255,0.05)',
-                                                    border: '1px solid rgba(255,255,255,0.1)', color: 'white',
-                                                    fontSize: '11px', fontWeight: '800', cursor: 'pointer',
-                                                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px'
+                                                    width: '100%',
+                                                    padding: '16px',
+                                                    borderRadius: '18px',
+                                                    background: isGeneratingPDF ? 'rgba(255,255,255,0.05)' : 'rgba(251, 191, 36, 0.1)',
+                                                    border: '1px solid rgba(251, 191, 36, 0.3)',
+                                                    color: 'var(--primary)',
+                                                    fontSize: '12px',
+                                                    fontWeight: '900',
+                                                    letterSpacing: '1px',
+                                                    cursor: isGeneratingPDF ? 'not-allowed' : 'pointer',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    justifyContent: 'center',
+                                                    gap: '12px',
+                                                    transition: '0.3s'
                                                 }}
                                             >
-                                                <FileText size={16} color="var(--primary)" /> DOWNLOAD SALARY SLIP
+                                                {isGeneratingPDF ? 'GENERATING PDF...' : (
+                                                    <>
+                                                        <FileText size={18} />
+                                                        DOWNLOAD SALARY SLIP
+                                                    </>
+                                                )}
                                             </button>
                                         </div>
 
@@ -1842,7 +2069,7 @@ const Staff = () => {
                                             <div style={{ background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.18)', borderRadius: '14px', padding: '10px 12px', marginBottom: '10px' }}>
                                                 <p style={{ margin: 0, fontSize: '9px', color: '#818cf8', fontWeight: '700', letterSpacing: '0.5px' }}>📐 HOW IS SALARY CALCULATED?</p>
                                                 <p style={{ margin: '5px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.65)', fontWeight: '600', lineHeight: '1.5' }}>
-                                                    (Present + Paid Leaves + Sundays + Extras) × ₹{selectedStaffReport.perDaySalary || Math.round((selectedStaffReport.salary || 0) / 30)}/day
+                                                    (Present + Sundays + Extras) × ₹{selectedStaffReport.perDaySalary || Math.round((selectedStaffReport.salary || 0) / 30)}/day
                                                 </p>
                                             </div>
 
@@ -1868,10 +2095,10 @@ const Staff = () => {
                                                 {/* Free Leaves Allowance */}
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(14,165,233,0.07)', padding: '10px 12px', borderRadius: '12px', border: '1px solid rgba(14,165,233,0.14)' }}>
                                                     <div>
-                                                        <p style={{ margin: 0, fontSize: '10px', color: 'var(--primary)', fontWeight: '700' }}>🎫 FREE LEAVE USED</p>
-                                                        <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: 'rgba(14,165,233,0.5)', fontWeight: '500' }}>Allowance: {selectedStaffReport.allowance || 4}/cycle (paid absences)</p>
+                                                        <p style={{ margin: 0, fontSize: '10px', color: 'var(--primary)', fontWeight: '700' }}>🎫 TOTAL LEAVES TAKEN</p>
+                                                        <p style={{ margin: '2px 0 0 0', fontSize: '9px', color: 'rgba(14,165,233,0.5)', fontWeight: '500' }}>All leaves are unpaid as per policy</p>
                                                     </div>
-                                                    <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '13px' }}>{selectedStaffReport.paidLeavesUsed || 0} <small style={{ fontSize: '9px', opacity: 0.6 }}>days</small></span>
+                                                    <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '13px' }}>{selectedStaffReport.leavesTaken || 0} <small style={{ fontSize: '9px', opacity: 0.6 }}>days</small></span>
                                                 </div>
 
                                                 {/* Sunday Holidays (Paid) */}
@@ -1919,7 +2146,6 @@ const Staff = () => {
                                                     <p style={{ margin: 0, fontSize: '9px', color: 'var(--primary)', fontWeight: '700', letterSpacing: '1px' }}>🧮 STEP-BY-STEP</p>
                                                     <p style={{ margin: '6px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.55)', fontWeight: '600', lineHeight: '1.7' }}>
                                                         ({selectedStaffReport.presentDays || 0} presents
-                                                        {(selectedStaffReport.paidLeavesUsed || 0) > 0 ? ` + ${selectedStaffReport.paidLeavesUsed} leaves` : ''}
                                                         {(selectedStaffReport.sundaysPassed || 0) > 0 ? ` + ${selectedStaffReport.sundaysPassed} sundays` : ''}
                                                         {(selectedStaffReport.sundaysWorked || 0) > 0 ? ` + ${selectedStaffReport.sundaysWorked} extras` : ''})
                                                         {' × ₹'}{selectedStaffReport.perDaySalary || Math.round((selectedStaffReport.salary || 0) / 30)}

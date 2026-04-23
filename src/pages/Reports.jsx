@@ -770,7 +770,7 @@ const Reports = ({ isSubComponent = false }) => {
 
             {/* ── Header ── */}
             {!isSubComponent && (
-                <header className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', padding: '0 4px', gap: '20px' }}>
+                <header className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', padding: '0 4px', gap: '20px', marginTop: '30px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                         <div style={{
                             width: '56px', height: '56px', borderRadius: '18px',

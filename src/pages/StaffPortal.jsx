@@ -24,7 +24,8 @@ import {
     Cpu,
     ArrowUpRight,
     Lock,
-    ChevronDown
+    ChevronDown,
+    ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -305,8 +306,8 @@ const StaffPortal = () => {
                     </div>
                 </div>
                 <div style={{ display: 'flex', gap: '10px' }}>
-                    <button 
-                        onClick={() => setShowPasswordSection(true)} 
+                    <button
+                        onClick={() => setShowPasswordSection(true)}
                         style={{ background: 'rgba(255, 255, 255, 0.05)', border: 'none', color: themeColors.primary, width: '38px', height: '38px', borderRadius: '10px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                     >
                         <Lock size={18} />
@@ -334,10 +335,10 @@ const StaffPortal = () => {
                                                 </div>
                                                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white' }}>Security Settings</h3>
                                             </div>
-                                            <button 
+                                            <button
                                                 onClick={() => {
                                                     setShowPasswordSection(false);
-                                                }} 
+                                                }}
                                                 className="modal-close-btn"
                                             >
                                                 <X size={20} />
@@ -347,26 +348,26 @@ const StaffPortal = () => {
                                         <div style={{ display: 'grid', gap: '16px' }}>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                                 <label style={{ fontSize: '9px', fontWeight: '800', opacity: 0.4, letterSpacing: '1px' }}>CURRENT PASSWORD</label>
-                                                <input 
-                                                    type="password" 
-                                                    required 
-                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: '14px', color: 'white', fontSize: '13px' }} 
-                                                    value={passwordData.oldPassword} 
-                                                    onChange={e => setPasswordData({...passwordData, oldPassword: e.target.value})} 
+                                                <input
+                                                    type="password"
+                                                    required
+                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: '14px', color: 'white', fontSize: '13px' }}
+                                                    value={passwordData.oldPassword}
+                                                    onChange={e => setPasswordData({ ...passwordData, oldPassword: e.target.value })}
                                                 />
                                             </div>
                                             <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                                 <label style={{ fontSize: '9px', fontWeight: '800', opacity: 0.4, letterSpacing: '1px' }}>NEW PASSWORD</label>
-                                                <input 
-                                                    type="password" 
-                                                    required 
-                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: '14px', color: 'white', fontSize: '13px' }} 
-                                                    value={passwordData.newPassword} 
-                                                    onChange={e => setPasswordData({...passwordData, newPassword: e.target.value})} 
+                                                <input
+                                                    type="password"
+                                                    required
+                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '12px 16px', borderRadius: '14px', color: 'white', fontSize: '13px' }}
+                                                    value={passwordData.newPassword}
+                                                    onChange={e => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                                                 />
                                             </div>
 
-                                            <button 
+                                            <button
                                                 disabled={updatingPassword}
                                                 onClick={handlePasswordUpdate}
                                                 style={{ background: `linear-gradient(135deg, ${themeColors.primary}, ${themeColors.secondary})`, border: 'none', padding: '16px', borderRadius: '16px', color: 'white', fontSize: '13px', fontWeight: '1000', letterSpacing: '1px', cursor: 'pointer', boxShadow: `0 8px 20px ${themeColors.primary}30`, marginTop: '10px' }}
@@ -377,9 +378,9 @@ const StaffPortal = () => {
                                     </div>
                                 </div>
                             )}
-                            <section style={{ 
-                                background: 'rgba(15, 23, 42, 0.4)', 
-                                borderRadius: '40px', 
+                            <section style={{
+                                background: 'rgba(15, 23, 42, 0.4)',
+                                borderRadius: '40px',
                                 border: '1px solid rgba(255,255,255,0.06)',
                                 padding: '60px 20px',
                                 textAlign: 'center',
@@ -393,13 +394,13 @@ const StaffPortal = () => {
                                 <motion.div animate={{ rotate: 360 }} transition={{ duration: 15, repeat: Infinity, ease: 'linear' }} style={{ position: 'absolute', top: '50%', left: '50%', width: '360px', height: '360px', border: `1px solid ${themeColors.primary}10`, borderRadius: '50%', transform: 'translate(-50%, -50%)', borderTopColor: themeColors.primary, borderBottomColor: themeColors.secondary, zIndex: -1 }}></motion.div>
 
                                 <div style={{ fontSize: '11px', fontWeight: '1000', color: themeColors.primary, letterSpacing: '5px', textTransform: 'uppercase', marginBottom: '40px' }}>SECURE ACCESS TERMINAL</div>
-                                
+
                                 <div style={{ marginBottom: '40px' }}>
                                     {status?.onLeave ? (
                                         <div style={{ padding: '24px', background: 'rgba(251, 191, 36, 0.08)', borderRadius: '24px', border: '1px solid rgba(251, 191, 36, 0.2)', color: themeColors.warning, fontWeight: '1000', fontSize: '14px', letterSpacing: '2px' }}>AUTHORIZED ABSENCE</div>
                                     ) : !status?.attendance ? (
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-                                            <motion.button 
+                                            <motion.button
                                                 whileTap={{ scale: 0.9 }}
                                                 onClick={() => startCamera('in')}
                                                 style={{ width: '120px', height: '120px', borderRadius: '50%', background: `linear-gradient(135deg, ${themeColors.primary}, ${themeColors.secondary})`, border: 'none', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: `0 0 50px ${themeColors.primary}50`, cursor: 'pointer', position: 'relative' }}
@@ -418,7 +419,7 @@ const StaffPortal = () => {
                                         </div>
                                     ) : (
                                         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '20px' }}>
-                                            <motion.button 
+                                            <motion.button
                                                 whileTap={{ scale: 0.9 }}
                                                 onClick={() => startCamera('out')}
                                                 style={{ width: '120px', height: '120px', borderRadius: '50%', background: `linear-gradient(135deg, ${themeColors.danger}, #be123c)`, border: 'none', color: 'white', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: `0 0 50px ${themeColors.danger}50`, cursor: 'pointer', position: 'relative' }}
@@ -430,7 +431,7 @@ const StaffPortal = () => {
                                         </div>
                                     )}
                                 </div>
-                                
+
                                 <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '1px' }}>{currentTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' }).toUpperCase()}</p>
                             </section>
 
@@ -594,15 +595,27 @@ const StaffPortal = () => {
                             <div style={{ background: themeColors.glass, padding: '24px', borderRadius: '24px', display: 'grid', gap: '15px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
                                     <span style={{ opacity: 0.5 }}>Basic Salary</span>
-                                    <span style={{ fontWeight: '800' }}>₹{report?.salary || 0}</span>
+                                    <span style={{ fontWeight: '800' }}>₹{(report?.salary || 0).toLocaleString()}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                                    <span style={{ opacity: 0.5 }}>Present Days</span>
-                                    <span style={{ fontWeight: '800' }}>{report?.presentDays || 0}</span>
+                                    <span style={{ opacity: 0.5 }}>Duty Days (Presents)</span>
+                                    <span style={{ fontWeight: '800', color: themeColors.success }}>{report?.presentDays || 0} Days</span>
                                 </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: themeColors.success }}>
-                                    <span style={{ fontWeight: '800' }}>Incentives</span>
-                                    <span>+ ₹{report?.sundayBonus || 0}</span>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                    <span style={{ opacity: 0.5 }}>Sunday Holidays (Paid)</span>
+                                    <span style={{ fontWeight: '800', color: themeColors.primary }}>{report?.sundaysPassed || 0} Days</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                    <span style={{ opacity: 0.5 }}>Absences (Unpaid)</span>
+                                    <span style={{ fontWeight: '800', color: themeColors.danger }}>{report?.leavesTaken || 0} Days</span>
+                                </div>
+                                <div style={{ marginTop: '10px', padding: '15px', borderRadius: '15px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', lineHeight: '1.5' }}>
+                                    <ShieldAlert size={12} style={{ marginRight: '5px', verticalAlign: 'middle', color: themeColors.primary }} />
+                                    POLICY: Sundays are paid holidays. All other absences are unpaid as per company standards.
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: themeColors.primary }}>
+                                    <span style={{ fontWeight: '800' }}>Sunday Bonuses</span>
+                                    <span>+ ₹{(report?.sundayBonus || 0).toLocaleString()}</span>
                                 </div>
                             </div>
                         </motion.div>
