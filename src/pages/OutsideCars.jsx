@@ -80,6 +80,12 @@ const OutsideCars = () => {
     const [showModal, setShowModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
     const [selectedId, setSelectedId] = useState(null);
+    const [suggestions, setSuggestions] = useState([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const [propSuggestions, setPropSuggestions] = useState([]);
+    const [showPropSuggestions, setShowPropSuggestions] = useState(false);
+    const [catSuggestions, setCatSuggestions] = useState([]);
+    const [showCatSuggestions, setShowCatSuggestions] = useState(false);
     const [formData, setFormData] = useState({
         carNumber: '',
         model: '',
@@ -258,20 +264,53 @@ const OutsideCars = () => {
 
     const handleCarNumberChange = (val) => {
         const upVal = val.toUpperCase();
-        // Just find any existing vehicle with this number to auto-fill common fields
-        const overallExisting = vehicles.find(v => v.carNumber?.split('#')[0] === upVal);
+        setFormData(prev => ({ ...prev, carNumber: upVal }));
+        
+        if (upVal.length > 1) {
+            const matches = vehicles.filter(v => {
+                const plate = v.carNumber?.split('#')[0] || '';
+                return plate.toUpperCase().includes(upVal);
+            });
+            
+            // Remove duplicates (by plate number)
+            const uniqueMatches = [];
+            const seen = new Set();
+            matches.forEach(m => {
+                const plate = m.carNumber?.split('#')[0];
+                if (!seen.has(plate)) {
+                    seen.add(plate);
+                    uniqueMatches.push(m);
+                }
+            });
 
-        if (overallExisting) {
-            setFormData(prev => ({
-                ...prev,
-                carNumber: upVal,
-                model: overallExisting.model || prev.model,
-                ownerName: overallExisting.ownerName || prev.ownerName,
-                isDuplicateToday: false // Never block duplicates now
-            }));
+            setSuggestions(uniqueMatches.slice(0, 8)); // Limit to 8 suggestions
+            setShowSuggestions(true);
+
+            // Exact match auto-fill
+            const exactMatch = uniqueMatches.find(m => (m.carNumber?.split('#')[0] || '').toUpperCase() === upVal);
+            if (exactMatch) {
+                setFormData(prev => ({
+                    ...prev,
+                    model: exactMatch.model || prev.model,
+                    ownerName: exactMatch.ownerName || prev.ownerName
+                }));
+            }
         } else {
-            setFormData(prev => ({ ...prev, carNumber: upVal, isDuplicateToday: false }));
+            setSuggestions([]);
+            setShowSuggestions(false);
         }
+    };
+
+    const selectSuggestion = (v) => {
+        const plate = v.carNumber?.split('#')[0];
+        setFormData(prev => ({
+            ...prev,
+            carNumber: plate,
+            model: v.model || prev.model,
+            ownerName: v.ownerName || prev.ownerName
+        }));
+        setSuggestions([]);
+        setShowSuggestions(false);
     };
 
     const handleDelete = async (id) => {
@@ -1176,21 +1215,43 @@ const OutsideCars = () => {
                                         <div className="premium-input-group">
                                             <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', display: 'block' }}>CLIENT PROPERTY *</label>
                                             <div style={{ position: 'relative' }}>
-                                                <Plus size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', opacity: 0.6, zIndex: 2 }} />
                                                 <input
-                                                    type="text" list="propList" className="premium-compact-input"
+                                                    type="text" className="premium-compact-input"
                                                     required value={formData.property}
-                                                    onChange={e => setFormData({ ...formData, property: e.target.value })}
-                                                    placeholder="Select or Type..."
+                                                    onChange={e => {
+                                                        const val = e.target.value;
+                                                        setFormData({ ...formData, property: val });
+                                                        if(val.length > 0) {
+                                                            const matches = propertySuggestions.filter(p => p.toLowerCase().includes(val.toLowerCase()));
+                                                            setPropSuggestions(matches);
+                                                            setShowPropSuggestions(true);
+                                                        } else {
+                                                            setPropSuggestions(propertySuggestions);
+                                                            setShowPropSuggestions(true);
+                                                        }
+                                                    }}
+                                                    onFocus={() => { setPropSuggestions(propertySuggestions); setShowPropSuggestions(true); }}
+                                                    onBlur={() => setTimeout(() => setShowPropSuggestions(false), 200)}
+                                                    placeholder="Type Property Name..."
                                                     style={{
-                                                        background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
+                                                        background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(255,255,255,0.1)',
                                                         borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
                                                         fontSize: '14px', fontWeight: '700'
                                                     }}
                                                 />
-                                                <datalist id="propList">
-                                                    {propertySuggestions.map(p => <option key={p} value={p} />)}
-                                                </datalist>
+                                                {/* Property Suggestions */}
+                                                <AnimatePresence>
+                                                    {showPropSuggestions && propSuggestions.length > 0 && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
+                                                            style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', borderRadius: '16px', marginTop: '8px', border: '1px solid rgba(255,255,255,0.1)', overflowY: 'auto', maxHeight: '200px', zIndex: 100, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
+                                                        >
+                                                            {propSuggestions.map((p, i) => (
+                                                                <div key={i} onClick={() => setFormData({ ...formData, property: p })} style={{ padding: '12px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'white', fontSize: '13px', fontWeight: '700' }} className="suggestion-item-hover">{p}</div>
+                                                            ))}
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
                                             </div>
                                         </div>
                                     </div>
@@ -1207,21 +1268,54 @@ const OutsideCars = () => {
                                         <div className="premium-input-group">
                                             <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>VEHICLE PLATE *</label>
                                             <div style={{ position: 'relative' }}>
-                                                <Car size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#38bdf8', opacity: 0.6, zIndex: 2 }} />
+                                                <Car size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: theme.primary, opacity: 0.6, zIndex: 2 }} />
                                                 <input
-                                                    type="text" list="plateList" className="premium-compact-input"
+                                                    type="text" className="premium-compact-input"
                                                     required value={formData.carNumber}
                                                     onChange={e => handleCarNumberChange(e.target.value)}
+                                                    onFocus={() => { if(formData.carNumber.length > 1) setShowSuggestions(true); }}
+                                                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                                                     placeholder="RJ-XX-XX-XXXX"
                                                     style={{
-                                                        background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)',
+                                                        background: 'rgba(15, 23, 42, 0.6)', border: `1px solid ${theme.primary}33`,
                                                         borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
                                                         fontSize: '16px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px'
                                                     }}
                                                 />
-                                                <datalist id="plateList">
-                                                    {carNumberSuggestions.map(s => <option key={s} value={s} />)}
-                                                </datalist>
+                                                {/* Custom Suggestions Dropdown */}
+                                                <AnimatePresence>
+                                                    {showSuggestions && suggestions.length > 0 && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: -10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            exit={{ opacity: 0, y: -10 }}
+                                                            style={{
+                                                                position: 'absolute', top: '100%', left: 0, right: 0,
+                                                                background: '#1e293b', borderRadius: '16px', marginTop: '8px',
+                                                                border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden',
+                                                                zIndex: 100, boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
+                                                            }}
+                                                        >
+                                                            {suggestions.map((s, idx) => (
+                                                                <div
+                                                                    key={idx}
+                                                                    onClick={() => selectSuggestion(s)}
+                                                                    style={{
+                                                                        padding: '14px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)',
+                                                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s'
+                                                                    }}
+                                                                    className="suggestion-item-hover"
+                                                                >
+                                                                    <div>
+                                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{s.carNumber?.split('#')[0]}</div>
+                                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700' }}>{s.model}</div>
+                                                                    </div>
+                                                                    <div style={{ color: theme.primary, fontSize: '10px', fontWeight: '900' }}>{s.ownerName}</div>
+                                                                </div>
+                                                            ))}
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
                                             </div>
                                         </div>
                                         <div className="premium-input-group">
@@ -1243,17 +1337,20 @@ const OutsideCars = () => {
                                     <div className="form-grid-2" style={{ gap: '20px' }}>
                                         <div className="premium-input-group">
                                             <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>VENDOR NAME *</label>
-                                            <input
-                                                type="text" className="premium-compact-input"
-                                                required value={formData.ownerName}
-                                                onChange={e => setFormData({ ...formData, ownerName: e.target.value })}
-                                                placeholder="Proprietor Name"
-                                                style={{
-                                                    background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)',
-                                                    borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 20px',
-                                                    fontSize: '14px', fontWeight: '700'
-                                                }}
-                                            />
+                                            <div style={{ position: 'relative' }}>
+                                                <Briefcase size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', opacity: 0.6, zIndex: 2 }} />
+                                                <input
+                                                    type="text" className="premium-compact-input"
+                                                    required value={formData.ownerName}
+                                                    onChange={e => setFormData({ ...formData, ownerName: e.target.value })}
+                                                    placeholder="Type Vendor Name..."
+                                                    style={{
+                                                        background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.1)',
+                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
+                                                        fontSize: '14px', fontWeight: '700'
+                                                    }}
+                                                />
+                                            </div>
                                         </div>
                                         <div className="premium-input-group">
                                             <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>TRANSACTION MODE *</label>
@@ -1296,33 +1393,59 @@ const OutsideCars = () => {
                                                 <div style={{ position: 'relative' }}>
                                                     <Briefcase size={18} style={{ position: 'absolute', left: '16px', top: '28px', transform: 'translateY(-50%)', color: '#10b981', opacity: 0.6, zIndex: 2 }} />
                                                     <input
-                                                        type="text" list="catList" className="premium-compact-input"
+                                                        type="text" className="premium-compact-input"
                                                         value={formData.dutyType}
-                                                        onChange={e => setFormData({ ...formData, dutyType: e.target.value })}
+                                                        onChange={e => {
+                                                            const val = e.target.value;
+                                                            setFormData({ ...formData, dutyType: val });
+                                                            if(val.length > 0) {
+                                                                const matches = dutyTypeSuggestions.filter(s => s.toLowerCase().includes(val.toLowerCase()));
+                                                                setCatSuggestions(matches);
+                                                                setShowCatSuggestions(true);
+                                                            } else {
+                                                                setCatSuggestions(dutyTypeSuggestions);
+                                                                setShowCatSuggestions(true);
+                                                            }
+                                                        }}
+                                                        onFocus={() => { setCatSuggestions(dutyTypeSuggestions); setShowCatSuggestions(true); }}
+                                                        onBlur={() => setTimeout(() => setShowCatSuggestions(false), 200)}
                                                         placeholder="e.g. Airport Transfer"
                                                         style={{
-                                                            background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
+                                                            background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.1)',
                                                             borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
                                                             fontSize: '14px', fontWeight: '700', marginBottom: '12px'
                                                         }}
                                                     />
-                                                    <datalist id="catList">
-                                                        {dutyTypeSuggestions.map(s => <option key={s} value={s} />)}
-                                                    </datalist>
-                                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                                                    {/* Category Suggestions */}
+                                                    <AnimatePresence>
+                                                        {showCatSuggestions && catSuggestions.length > 0 && (
+                                                            <motion.div
+                                                                initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
+                                                                style={{ position: 'absolute', top: '56px', left: 0, right: 0, background: '#1e293b', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', overflowY: 'auto', maxHeight: '180px', zIndex: 100, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
+                                                            >
+                                                                {catSuggestions.map((s, i) => (
+                                                                    <div key={i} onClick={() => setFormData({ ...formData, dutyType: s })} style={{ padding: '12px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'white', fontSize: '13px', fontWeight: '700' }} className="suggestion-item-hover">{s}</div>
+                                                                ))}
+                                                            </motion.div>
+                                                        )}
+                                                    </AnimatePresence>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                                                         {['Airport PickUp', 'Airport Drop', 'Local Duty', 'Outstation'].map(t => (
-                                                            <button
+                                                            <motion.button
                                                                 key={t} type="button"
+                                                                whileHover={{ scale: 1.02 }}
+                                                                whileTap={{ scale: 0.98 }}
                                                                 onClick={() => setFormData({ ...formData, dutyType: t })}
                                                                 style={{
-                                                                    fontSize: '10px', fontWeight: '800', padding: '8px 14px', borderRadius: '10px', cursor: 'pointer', transition: '0.2s',
-                                                                    background: formData.dutyType === t ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)',
-                                                                    border: `1px solid ${formData.dutyType === t ? 'rgba(16, 185, 129, 0.3)' : 'rgba(255,255,255,0.06)'}`,
-                                                                    color: formData.dutyType === t ? '#10b981' : 'rgba(255,255,255,0.4)'
+                                                                    fontSize: '11px', fontWeight: '900', padding: '12px', borderRadius: '14px', cursor: 'pointer', transition: 'all 0.3s ease',
+                                                                    background: formData.dutyType === t ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1))' : 'rgba(255,255,255,0.03)',
+                                                                    border: `1px solid ${formData.dutyType === t ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255,255,255,0.06)'}`,
+                                                                    color: formData.dutyType === t ? '#10b981' : 'rgba(255,255,255,0.5)',
+                                                                    boxShadow: formData.dutyType === t ? '0 8px 16px rgba(16, 185, 129, 0.1)' : 'none'
                                                                 }}
                                                             >
                                                                 {t}
-                                                            </button>
+                                                            </motion.button>
                                                         ))}
                                                     </div>
                                                 </div>
@@ -1375,10 +1498,55 @@ const OutsideCars = () => {
                                 </div>
                             </div>
 
-                            {/* Modal Footer */}
-                            <div className="modal-form-grid" style={{ marginTop: '20px' }}>
-                                <button className="glass-card" onClick={() => setShowModal(false)} style={{ height: '56px', fontWeight: '800' }}>Dismiss</button>
-                                <button className="btn-primary" onClick={handleSubmit} style={{ height: '56px', fontWeight: '950' }}>{editMode ? 'Synchronize Record' : 'Submit'}</button>
+                             {/* Modal Footer */}
+                            <div style={{ 
+                                marginTop: '40px', 
+                                display: 'grid', 
+                                gridTemplateColumns: '1fr 2fr', 
+                                gap: '16px',
+                                padding: '0 40px 40px' 
+                            }}>
+                                <motion.button 
+                                    whileHover={{ background: 'rgba(255,255,255,0.08)' }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={() => setShowModal(false)} 
+                                    style={{ 
+                                        height: '64px', 
+                                        borderRadius: '20px',
+                                        background: 'rgba(255,255,255,0.03)',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        color: 'rgba(255,255,255,0.6)',
+                                        fontSize: '15px',
+                                        fontWeight: '800',
+                                        cursor: 'pointer',
+                                        transition: 'all 0.3s'
+                                    }}
+                                >
+                                    Dismiss
+                                </motion.button>
+                                <motion.button 
+                                    whileHover={{ y: -4, boxShadow: `0 20px 40px ${theme.primary}40` }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={handleSubmit} 
+                                    style={{ 
+                                        height: '64px', 
+                                        borderRadius: '20px',
+                                        background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primary}dd 100%)`,
+                                        border: 'none',
+                                        color: 'black',
+                                        fontSize: '16px',
+                                        fontWeight: '1000',
+                                        cursor: 'pointer',
+                                        boxShadow: `0 10px 25px ${theme.primary}30`,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        gap: '12px'
+                                    }}
+                                >
+                                    <Save size={20} strokeWidth={3} />
+                                    {editMode ? 'Update Record' : 'Submit Entry'}
+                                </motion.button>
                             </div>
                         </motion.div>
                     </div>
