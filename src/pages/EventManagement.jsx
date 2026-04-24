@@ -770,17 +770,7 @@ const EventManagement = () => {
 
                             {/* PREMIUM MONTH SELECTOR */}
                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '15px' }}>
-                                <div style={{
-                                    display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.4)', padding: '4px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)'
-                                }}>
-                                    <button onClick={() => shiftMonth(-1)} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}> <ChevronLeft size={16} /> </button>
-                                    <div style={{ minWidth: '95px', padding: '0 12px', textAlign: 'center' }}>
-                                        <span style={{ fontSize: '12px', fontWeight: '900', color: 'white', letterSpacing: '0.5px' }}>
-                                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} {selectedYear}
-                                        </span>
-                                    </div>
-                                    <button onClick={() => shiftMonth(1)} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}> <ChevronRight size={16} /> </button>
-                                </div>
+                                {/* Arrow-based month shifter removed as requested */}
                                 <select
                                     value={selectedMonth}
                                     onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
@@ -1247,7 +1237,7 @@ const EventManagement = () => {
                                             </div>
                                         </div>
 
-                                        </div>
+                                    </div>
 
                                     {/* Section 3: Logistic Details */}
                                     <div className="form-grid-2">

@@ -76,26 +76,6 @@ const OutsideCars = () => {
         }
     }, [selectedMonth, selectedYear, selectedDay, viewMode]);
 
-    /* navigate dates */
-    const shiftDays = (n) => {
-        if (selectedDay === 'All') {
-            // Shift Month
-            let nm = selectedMonth + n;
-            let ny = selectedYear;
-            if (nm < 0) { nm = 11; ny--; }
-            if (nm > 11) { nm = 0; ny++; }
-            setSelectedMonth(nm);
-            setSelectedYear(ny);
-        } else {
-            // Shift Day
-            const baseDate = new Date(selectedYear, selectedMonth, parseInt(selectedDay));
-            baseDate.setDate(baseDate.getDate() + n);
-            setSelectedYear(baseDate.getFullYear());
-            setSelectedMonth(baseDate.getMonth());
-            setSelectedDay(baseDate.getDate().toString());
-        }
-    };
-
     // Modal & Editing State
     const [showModal, setShowModal] = useState(false);
     const [editMode, setEditMode] = useState(false);
@@ -813,10 +793,6 @@ const OutsideCars = () => {
                                 borderRadius: '20px',
                                 border: '1px solid rgba(255,255,255,0.06)'
                             }}>
-                                <button onClick={() => shiftDays(-1)} style={{
-                                    width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
-                                }}> <ChevronLeft size={18} /> </button>
-
                                 <div
                                     onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
                                     style={{ height: '42px', minWidth: '140px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '16px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
@@ -838,10 +814,6 @@ const OutsideCars = () => {
                                         style={{ position: 'absolute', inset: 0, opacity: 0 }}
                                     />
                                 </div>
-
-                                <button onClick={() => shiftDays(1)} style={{
-                                    width: '42px', height: '42px', borderRadius: '16px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: '0.2s'
-                                }}> <ChevronRight size={18} /> </button>
                             </div>
 
                             {/* DYNAMIC "SHOW FULL MONTH" TAB */}

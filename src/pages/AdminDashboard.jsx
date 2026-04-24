@@ -180,6 +180,18 @@ const AdminDashboard = () => {
     const userRole = user?.role?.toLowerCase() || '';
     const isAdmin = userRole === 'admin' || userRole === 'superadmin' || (userRole.includes('admin') && userRole !== 'executive');
 
+    const canAccess = (module, subKey = null) => {
+        if (isAdmin) return true;
+        const perm = user?.permissions?.[module];
+        if (!perm) return false;
+        if (typeof perm === 'object') {
+            if (perm.all === true) return true;
+            if (subKey) return perm[subKey] === true;
+            return Object.values(perm).some(v => v === true);
+        }
+        return perm === true;
+    };
+
     useEffect(() => {
         fetchStats();
         let interval = setInterval(fetchStats, 5 * 60 * 1000); // Refresh every 5 min
@@ -387,25 +399,42 @@ const AdminDashboard = () => {
                         className="dashboard-main-container"
                     >
                         <div className="stats-grid">
-                            {/* Drivers Service Related */}
-                            {(isAdmin || user?.permissions?.driversService) && (
-                                <>
-                                    <StatCard
-                                        icon={Wallet}
-                                        label={t('total_driver_salary')}
-                                        value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`}
-                                        color={theme.primary}
-                                        loading={loading}
-                                        onClick={() => navigate('/admin/driver-salaries?tab=payroll')}
-                                    />
-                                    <StatCard
-                                        icon={IndianRupee}
-                                        label={t('total_driver_advance')}
-                                        value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`}
-                                        color={theme.primary}
-                                        loading={loading}
-                                        onClick={() => navigate('/admin/driver-salaries?tab=advances')}
-                                    />
+                        {/* Drivers Service Related */}
+                        {canAccess('driversService') && (
+                            <>
+                                {canAccess('driversService', 'payroll') && (
+                                    <>
+                                        <StatCard
+                                            icon={Wallet}
+                                            label={t('monthly_payroll')}
+                                            value={`₹${(stats.monthlyRegularSalaryTotal || 0).toLocaleString()}`}
+                                            color={theme.primary}
+                                            loading={loading}
+                                            onClick={() => navigate('/admin/driver-salaries?tab=payroll')}
+                                        />
+                                        <StatCard
+                                            icon={IndianRupee}
+                                            label={t('total_driver_advance')}
+                                            value={`₹${(stats.monthlyRegularAdvanceTotal || 0).toLocaleString()}`}
+                                            color={theme.primary}
+                                            loading={loading}
+                                            onClick={() => navigate('/admin/driver-salaries?tab=advances')}
+                                        />
+                                    </>
+                                )}
+                                {canAccess('driversService', 'freelancers') && (
+                                    <StatCard icon={Users} label={t('freelancers_monthly')} value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/freelancers')} />
+                                )}
+                                {canAccess('driversService', 'parking') && (
+                                    <StatCard icon={CreditCard} label={t('parking_monthly')} value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/parking')} />
+                                )}
+                            </>
+                        )}
+
+                        {/* Fleet Operations Related */}
+                        {canAccess('fleetOperations') && (
+                            <>
+                                {canAccess('fleetOperations', 'fuel') && (
                                     <StatCard
                                         icon={Fuel}
                                         label={t('fuel_monthly')}
@@ -414,14 +443,20 @@ const AdminDashboard = () => {
                                         loading={loading}
                                         onClick={() => navigate('/admin/fuel')}
                                     />
-                                    <StatCard icon={Users} label={t('freelancers_monthly')} value={`₹${(stats.monthlyFreelancerSalaryTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/freelancers')} />
-                                    <StatCard icon={CreditCard} label={t('parking_monthly')} value={`₹${stats.monthlyParkingAmount?.toLocaleString() || 0}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/parking')} />
-                                </>
-                            )}
+                                )}
+                                {canAccess('fleetOperations', 'carUtility') && (
+                                    <>
+                                        <StatCard icon={IndianRupee} label={t('fastag_recharge_monthly')} value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/car-utility')} />
+                                        <StatCard icon={Droplets} label={t('driver_services_monthly')} value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/car-utility')} />
+                                    </>
+                                )}
+                            </>
+                        )}
 
-                            {/* Buy/Sell Related (Outside & Events) */}
-                            {(isAdmin || user?.permissions?.buySell) && (
-                                <>
+                        {/* Buy/Sell Related (Outside & Events) */}
+                        {canAccess('buySell') && (
+                            <>
+                                {canAccess('buySell', 'outsideCars') && (
                                     <StatCard
                                         icon={TrendingUp}
                                         label={t('outside_cars_monthly')}
@@ -430,6 +465,8 @@ const AdminDashboard = () => {
                                         loading={loading}
                                         onClick={() => navigate('/admin/outside-cars')}
                                     />
+                                )}
+                                {canAccess('buySell', 'eventManagement') && (
                                     <StatCard
                                         icon={Calendar}
                                         label={t('event_management_m')}
@@ -438,35 +475,35 @@ const AdminDashboard = () => {
                                         loading={loading}
                                         onClick={() => navigate('/admin/event-management')}
                                     />
-                                </>
-                            )}
+                                )}
+                            </>
+                        )}
 
-                            {/* Vehicles Maintenance Related */}
-                            {(isAdmin || user?.permissions?.vehiclesManagement) && (
-                                <>
+                        {/* Vehicles Maintenance Related */}
+                        {canAccess('vehiclesManagement') && (
+                            <>
+                                {canAccess('vehiclesManagement', 'maintenance') && (
                                     <StatCard icon={Wrench} label={t('maintenance_monthly')} value={`₹${stats.monthlyMaintenanceAmount?.toLocaleString() || 0}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/maintenance')} />
+                                )}
+                                {canAccess('vehiclesManagement', 'accidentLogs') && (
                                     <StatCard icon={AlertTriangle} label={t('accident_cost_yearly')} value={`₹${(stats.yearlyAccidentAmount || 0).toLocaleString()}`} color="#f43f5e" loading={loading} onClick={() => navigate('/admin/accident-logs')} />
-
+                                )}
+                                {canAccess('vehiclesManagement', 'vehiclesMgt') && (
                                     <StatCard
                                         icon={Car}
                                         label={t('fleet_size_label')}
                                         value={stats.totalInternalVehicles || 0}
-
                                         color="#8b5cf6"
                                         loading={loading}
                                         onClick={() => navigate(user?.role === 'Executive' ? '/admin/outside-cars' : '/admin/vehicles')}
                                     />
-                                </>
-                            )}
+                                )}
+                            </>
+                        )}
+                    </div>
 
-                            {/* Fleet Operations Related */}
-                            {(isAdmin || user?.permissions?.fleetOperations) && (
-                                <>
-                                    <StatCard icon={IndianRupee} label={t('fastag_recharge_monthly')} value={`₹${(stats.monthlyFastagTotal || 0).toLocaleString()}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/car-utility')} />
-                                    <StatCard icon={Droplets} label={t('driver_services_monthly')} value={`₹${stats.monthlyDriverServicesAmount?.toLocaleString() || 0}`} color={theme.primary} loading={loading} onClick={() => navigate('/admin/car-utility')} />
-                                </>
-                            )}
-                        </div>
+
+
 
 
 

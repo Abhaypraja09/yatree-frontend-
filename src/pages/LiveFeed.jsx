@@ -121,17 +121,14 @@ const LiveFeed = () => {
     };
 
     useEffect(() => {
+        setLoading(true);
         fetchFeed();
         fetchEvents();
-        let interval = setInterval(() => fetchFeed(false), 3 * 60 * 1000); // 3 min refresh
+        const interval = setInterval(() => fetchFeed(false), 3 * 60 * 1000); // 3 min refresh
 
-        // Pause when tab is hidden, instantly refresh when user returns
         const handleVisibility = () => {
             if (document.visibilityState === 'visible') {
                 fetchFeed(false);
-                interval = setInterval(() => fetchFeed(false), 3 * 60 * 1000);
-            } else {
-                clearInterval(interval);
             }
         };
         document.addEventListener('visibilitychange', handleVisibility);
@@ -189,8 +186,8 @@ const LiveFeed = () => {
         });
 
     const inUseVehicles = stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use').length || 0;
-    const activeFleetCount = isToday ? inUseVehicles : (stats?.activeVehiclesCount || inUseVehicles);
-    const totalWorkingVehicles = stats?.liveVehiclesFeed?.filter(v => v.status === 'In Use' || v.status === 'Used').length || 0;
+    const activeFleetCount = isToday ? inUseVehicles : (stats?.totalUsedVehiclesCount || 0);
+    const totalWorkingVehicles = stats?.totalUsedVehiclesCount || 0;
     const totalUsedVehicles = totalWorkingVehicles;
 
     // History is filtered for the selectedDate and by searchQuery
@@ -365,10 +362,10 @@ const LiveFeed = () => {
                                     </div>
                                     <div>
                                         <div style={{ fontSize: '24px', fontWeight: '950', color: '#10b981', lineHeight: 1.1, marginBottom: '2px' }}>
-                                            {driversActive}
+                                            {isToday ? driversActive : (stats?.liveDriversFeed?.length || 0)}
                                         </div>
                                         <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', marginTop: '2px' }}>
-                                            Active Drivers
+                                            {isToday ? 'Active Drivers' : 'Worked Drivers'}
                                         </div>
 
                                     </div>
@@ -396,10 +393,13 @@ const LiveFeed = () => {
                                         <div style={{ fontSize: '24px', fontWeight: '950', color: theme.primary, lineHeight: 1.1, marginBottom: '2px' }}>
                                             {activeFleetCount}
                                         </div>
+                                        <div style={{ fontSize: '12px', color: theme.primary, fontWeight: '700', marginTop: '2px' }}>
+                                            {isToday ? 'Active Fleets' : 'Total Fleet Used'}
+                                        </div>
 
 
                                         <div style={{ fontSize: '13px', color: theme.primary, fontWeight: '700', marginTop: '2px' }}>
-                                            Active Fleets
+
                                         </div>
 
                                     </div>
@@ -511,11 +511,11 @@ const LiveFeed = () => {
                     flexWrap: 'wrap'
                 }}>
                     <div className="livefeed-tabs" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                        <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length} />
-                        <TabButton id="vehicles" label="Fleet" icon={Car} count={isToday ? totalUsedVehicles : stats?.totalUsedVehiclesCount} />
-                        <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length} />
-                        <TabButton id="absent" label="Absent" icon={Users} count={stats?.absentDriversCount} />
-                        <TabButton id="unused" label="IDEL" icon={Car} count={stats?.unusedVehiclesCount} />
+                        <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length || 0} />
+                        <TabButton id="vehicles" label="Fleet" icon={Car} count={stats?.totalUsedVehiclesCount || 0} />
+                        <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length || 0} />
+                        <TabButton id="absent" label="Absent" icon={Users} count={stats?.absentDriversCount || 0} />
+                        <TabButton id="unused" label="IDEL" icon={Car} count={stats?.unusedVehiclesCount || 0} />
                     </div>
 
                     <div style={{ position: 'relative', flex: 1, minWidth: '220px', maxWidth: '450px' }}>
@@ -547,11 +547,16 @@ const LiveFeed = () => {
                 </div>
 
                 {/* Content Area - Optimized Grid Layout */}
-                <div style={{ padding: '20px', minHeight: '65vh' }} className="custom-scrollbar">
+                <div style={{ padding: '20px', minHeight: '65vh', position: 'relative' }} className="custom-scrollbar">
+                    {loading && (
+                        <div style={{ position: 'absolute', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(15, 23, 42, 0.4)', zIndex: 10, backdropFilter: 'blur(4px)' }}>
+                             <div className="pulse-animation" style={{ color: theme.primary, fontWeight: '950', fontSize: '18px', letterSpacing: '2px' }}>FETCHING LIVE DATA...</div>
+                        </div>
+                    )}
                     <AnimatePresence mode="wait">
                         {activeTab === 'drivers' && (
                             <motion.div
-                                key="drivers"
+                                key={`drivers-${selectedDate}`}
                                 initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.98 }}
@@ -751,7 +756,7 @@ const LiveFeed = () => {
 
                         {activeTab === 'vehicles' && (
                             <motion.div
-                                key="vehicles"
+                                key={`vehicles-${selectedDate}`}
                                 initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.98 }}
@@ -884,7 +889,7 @@ const LiveFeed = () => {
 
                         {activeTab === 'fuel' && (
                             <motion.div
-                                key="fuel"
+                                key={`fuel-${selectedDate}`}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
@@ -1010,7 +1015,7 @@ const LiveFeed = () => {
 
                         {activeTab === 'absent' && (
                             <motion.div
-                                key="absent"
+                                key={`absent-${selectedDate}`}
                                 initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.98 }}
@@ -1076,7 +1081,7 @@ const LiveFeed = () => {
 
                         {activeTab === 'unused' && (
                             <motion.div
-                                key="unused"
+                                key={`unused-${selectedDate}`}
                                 initial={{ opacity: 0, y: 15 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.98 }}

@@ -715,6 +715,14 @@ const Drivers = ({ isSubComponent = false }) => {
                                             <td style={{ padding: '20px 25px', textAlign: 'right', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
                                                 <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                     <button
+                                                        onClick={() => navigate(`/admin/drivers-panel?tab=settlement&driver=${driver.name}`)}
+                                                        className="glass-card-hover-effect"
+                                                        style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', width: '36px', height: '36px', borderRadius: '8px', border: '1px solid rgba(251, 191, 36, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
+                                                        title="View Salary/Settlement"
+                                                    >
+                                                        <IndianRupee size={16} />
+                                                    </button>
+                                                    <button
                                                         onClick={() => openEditModal(driver)}
                                                         className="glass-card-hover-effect"
                                                         style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', width: '36px', height: '36px', borderRadius: '8px', border: '1px solid rgba(56, 189, 248, 0.2)', display: 'flex', justifyContent: 'center', alignItems: 'center', cursor: 'pointer' }}
@@ -835,6 +843,7 @@ const Drivers = ({ isSubComponent = false }) => {
 
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '8px' }}>
                                         <button onClick={() => { setViewingDriver(driver); setShowViewModal(true); }} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(255, 255, 255, 0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', fontSize: '11px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="View Profile"><Eye size={16} /></button>
+                                        <button onClick={() => navigate(`/admin/drivers-panel?tab=settlement&driver=${driver.name}`)} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24', border: '1px solid rgba(251, 191, 36, 0.2)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>Salary</button>
                                         <button onClick={() => openEditModal(driver)} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: '1px solid rgba(56, 189, 248, 0.2)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>Edit</button>
                                         <button onClick={() => toggleStatus(driver._id, driver.status)} style={{ padding: '10px', borderRadius: '8px', background: driver.status === 'active' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.1)', color: driver.status === 'active' ? '#f59e0b' : '#10b981', border: '1px solid rgba(255,255,255,0.1)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>{driver.status === 'active' ? 'Block' : 'Active'}</button>
                                         <button onClick={() => { setSelectedDriverForManual(driver); setShowPunchInModal(true); }} style={{ padding: '10px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', fontSize: '11px', fontWeight: '700', cursor: 'pointer' }}>In</button>

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
-import { 
+import {
     ShieldAlert, Wallet, Droplets, Car, Search, ChevronRight, ChevronLeft,
     X, Plus, CreditCard, Wrench, AlertCircle, CheckCircle2,
     Calendar, Filter, TrendingUp, Zap, Layers, Trash2, Edit3, Eye, FileText, ExternalLink, ArrowRight, Image
@@ -22,7 +22,7 @@ const CarUtility = () => {
     const [viewMode, setViewMode] = useState('fleet'); // 'fleet' or 'detail'
     const [detailVehicleId, setDetailVehicleId] = useState(null);
     const [selectedVehicleId, setSelectedVehicleId] = useState(null);
-    const [activeUtility, setActiveUtility] = useState('fastag'); 
+    const [activeUtility, setActiveUtility] = useState('fastag');
     const [searchTerm, setSearchTerm] = useState('');
     const [lowBalanceOnly, setLowBalanceOnly] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -84,13 +84,13 @@ const CarUtility = () => {
                 axios.get(`/api/admin/maintenance/${selectedCompany._id}?type=driver_services`, { headers }),
                 axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false`, { headers })
             ]);
-            
+
             const targetCompanyId = String(selectedCompany._id);
             const filteredVehs = (vehRes.data.vehicles || []).filter(v => {
                 const vCompId = String(v.company?._id || v.company || '');
                 return vCompId === targetCompanyId && v.isOutsideCar !== true && typeof v.carNumber === 'string' && !v.carNumber.includes('#');
             });
-            
+
             setVehicles(filteredVehs);
             setAllBorderEntries(borderRes.data || []);
             setAllServiceRecords(serviceRes.data || []);
@@ -107,11 +107,11 @@ const CarUtility = () => {
         setSubmitting(true);
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            const headers = { 
+            const headers = {
                 Authorization: `Bearer ${token}`,
                 companyid: selectedCompany._id
             };
-            
+
             let payload = data;
             if (data instanceof FormData) {
                 if (!data.get('vehicleId')) data.append('vehicleId', targetId);
@@ -137,11 +137,11 @@ const CarUtility = () => {
             if (formData instanceof FormData && !formData.get('vehicleId')) {
                 formData.append('vehicleId', targetId);
             }
-            await axios.post('/api/admin/border-tax', formData, { 
-                headers: { 
+            await axios.post('/api/admin/border-tax', formData, {
+                headers: {
                     Authorization: `Bearer ${token}`,
                     companyid: selectedCompany._id
-                } 
+                }
             });
             setMessage({ type: 'success', text: 'Tax Recorded' });
             setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
@@ -160,11 +160,11 @@ const CarUtility = () => {
             if (formData instanceof FormData && !formData.get('vehicleId')) {
                 formData.append('vehicleId', targetId);
             }
-            await axios.post('/api/admin/maintenance', formData, { 
-                headers: { 
+            await axios.post('/api/admin/maintenance', formData, {
+                headers: {
                     Authorization: `Bearer ${token}`,
                     companyid: selectedCompany._id
-                } 
+                }
             });
             setMessage({ type: 'success', text: 'Trans Recorded' });
             setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
@@ -177,7 +177,7 @@ const CarUtility = () => {
         if (!window.confirm('Delete entry?')) return;
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            const headers = { 
+            const headers = {
                 Authorization: `Bearer ${token}`,
                 companyid: selectedCompany._id
             };
@@ -190,18 +190,18 @@ const CarUtility = () => {
         setSubmitting(true);
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            const headers = { 
+            const headers = {
                 Authorization: `Bearer ${token}`,
                 companyid: selectedCompany?._id
             };
-            
+
             await axios.put(`/api/admin/${endpoint}/${id}`, data, { headers });
             setMessage({ type: 'success', text: 'Entry Updated Successfully' });
             setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
             return true;
-        } catch (err) { 
+        } catch (err) {
             console.error('Update failed:', err.response?.data || err.message);
-            setMessage({ type: 'error', text: err.response?.data?.message || 'Update Failed' }); 
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Update Failed' });
             return false;
         } finally { setSubmitting(false); }
     };
@@ -209,24 +209,24 @@ const CarUtility = () => {
     const getVehicleActivity = (vId) => {
         const v = vehicles.find(v => v._id === vId);
         const fHist = v ? (v.fastagHistory || []) : [];
-        
-        const fFilt = fHist.filter(h => { 
-            const d = nowIST(h.date || new Date()); 
-            return d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear; 
+
+        const fFilt = fHist.filter(h => {
+            const d = nowIST(h.date || new Date());
+            return d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
         });
-        const bFilt = allBorderEntries.filter(e => { 
-            const d = nowIST(e.date || new Date()); 
-            return (e.vehicle?._id === vId || e.vehicle === vId) && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear; 
+        const bFilt = allBorderEntries.filter(e => {
+            const d = nowIST(e.date || new Date());
+            return (e.vehicle?._id === vId || e.vehicle === vId) && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
         });
-        const sFilt = allServiceRecords.filter(r => { 
-            const d = nowIST(r.billDate || r.date || new Date()); 
-            return (r.vehicle?._id === vId || r.vehicle === vId) && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear; 
+        const sFilt = allServiceRecords.filter(r => {
+            const d = nowIST(r.billDate || r.date || new Date());
+            return (r.vehicle?._id === vId || r.vehicle === vId) && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
         });
-        
+
         const bAll = allBorderEntries.filter(e => (e.vehicle?._id === vId || e.vehicle === vId));
         const sAll = allServiceRecords.filter(r => (r.vehicle?._id === vId || r.vehicle === vId));
 
-        return { 
+        return {
             fastag: fFilt.reduce((s, h) => s + (Number(h.amount) || 0), 0),
             border: bFilt.reduce((s, e) => s + (Number(e.amount) || 0), 0),
             service: sFilt.reduce((s, r) => s + (Number(r.amount) || 0), 0),
@@ -245,7 +245,7 @@ const CarUtility = () => {
     }, [vehicles, allBorderEntries, allServiceRecords, selectedMonth, selectedYear]);
 
     const filteredVehicles = vehicles
-        .filter(v => (v.carNumber + (v.model||'')).toLowerCase().includes(searchTerm.toLowerCase()))
+        .filter(v => (v.carNumber + (v.model || '')).toLowerCase().includes(searchTerm.toLowerCase()))
         .filter(v => lowBalanceOnly ? (v.fastagBalance || 0) < 500 : true);
 
     const getImageUrl = (p) => {
@@ -258,17 +258,17 @@ const CarUtility = () => {
     return (
         <div key={location.key} style={{ minHeight: '100vh', background: 'transparent', color: '#fff', padding: '40px' }}>
             <SEO title="Car Utility" description="Fleet Accounts Hub" />
-            
+
             <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
                 <AnimatePresence mode="wait">
                     {viewMode === 'fleet' ? (
-                        <motion.div 
+                        <motion.div
                             key="fleet-list"
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
                         >
-                            <header className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', gap:'20px' }}>
+                            <header className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', gap: '20px' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                     <div style={{ width: 'clamp(40px,10vw,50px)', height: 'clamp(40px,10vw,50px)', background: 'var(--primary)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>
                                         <Wrench size={24} color="white" />
@@ -283,7 +283,7 @@ const CarUtility = () => {
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '8px 16px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                         <div style={{ display: 'flex', gap: '12px' }}>
                                             <select value={selectedMonth} onChange={(e) => setSelectedMonth(Number(e.target.value))} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', outline: 'none', cursor: 'pointer' }}>
-                                                {[{n:0,m:'Jan'},{n:1,m:'Feb'},{n:2,m:'Mar'},{n:3,m:'Apr'},{n:4,m:'May'},{n:5,m:'Jun'},{n:6,m:'Jul'},{n:7,m:'Aug'},{n:8,m:'Sep'},{n:9,m:'Oct'},{n:10,m:'Nov'},{n:11,m:'Dec'}].map(item => (<option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>))}
+                                                {[{ n: 0, m: 'Jan' }, { n: 1, m: 'Feb' }, { n: 2, m: 'Mar' }, { n: 3, m: 'Apr' }, { n: 4, m: 'May' }, { n: 5, m: 'Jun' }, { n: 6, m: 'Jul' }, { n: 7, m: 'Aug' }, { n: 8, m: 'Sep' }, { n: 9, m: 'Oct' }, { n: 10, m: 'Nov' }, { n: 11, m: 'Dec' }].map(item => (<option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>))}
                                             </select>
                                             <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', outline: 'none', cursor: 'pointer' }}>
                                                 {[2024, 2025, 2026, 2027].map(y => (<option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>))}
@@ -322,13 +322,13 @@ const CarUtility = () => {
                                         </thead>
                                         <tbody>
                                             {loading ? (
-                                                <tr><td colSpan="4" style={{padding:'100px', textAlign:'center'}}><div className="spinner" style={{margin:'0 auto'}}></div></td></tr>
+                                                <tr><td colSpan="4" style={{ padding: '100px', textAlign: 'center' }}><div className="spinner" style={{ margin: '0 auto' }}></div></td></tr>
                                             ) : filteredVehicles.map(v => {
                                                 const act = getVehicleActivity(v._id);
                                                 return (
-                                                    <tr key={v._id} 
+                                                    <tr key={v._id}
                                                         onClick={() => { setDetailVehicleId(v._id); setViewMode('detail'); setActiveUtility('fastag'); }}
-                                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }} 
+                                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }}
                                                         className="table-row-hover"
                                                     >
                                                         <td style={{ padding: '20px 30px' }}>
@@ -341,13 +341,13 @@ const CarUtility = () => {
                                                             </div>
                                                         </td>
                                                         <td style={{ padding: '20px 30px', textAlign: 'right' }}>
-                                                            <div style={{ fontSize: '16px', fontWeight: '900', color: (v.fastagBalance||0)<500 ? '#f43f5e' : '#fff' }}>₹{(v.fastagBalance||0).toLocaleString()}</div>
+                                                            <div style={{ fontSize: '16px', fontWeight: '900', color: (v.fastagBalance || 0) < 500 ? '#f43f5e' : '#fff' }}>₹{(v.fastagBalance || 0).toLocaleString()}</div>
                                                         </td>
                                                         <td style={{ padding: '20px 30px', textAlign: 'right' }}>
                                                             <div style={{ fontSize: '16px', fontWeight: '1000', color: '#10b981' }}>₹{act.total.toLocaleString()}</div>
                                                         </td>
                                                         <td style={{ padding: '20px 30px', textAlign: 'right' }}>
-                                                            <div style={{ display:'inline-flex', alignItems:'center', gap:'8px', color:'var(--primary)', fontWeight:'900', fontSize:'11px' }}>
+                                                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: '900', fontSize: '11px' }}>
                                                                 VIEW DETAILS <ArrowRight size={14} />
                                                             </div>
                                                         </td>
@@ -360,7 +360,7 @@ const CarUtility = () => {
                             </div>
                         </motion.div>
                     ) : (
-                        <motion.div 
+                        <motion.div
                             key="vehicle-detail"
                             initial={{ opacity: 0, x: 20 }}
                             animate={{ opacity: 1, x: 0 }}
@@ -381,14 +381,14 @@ const CarUtility = () => {
                                             <div style={{ display: 'flex', gap: '15px', marginTop: '5px' }}>
                                                 <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>{detailVehicle?.model}</span>
                                                 <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
-                                                <span style={{ fontSize: '13px', color: (detailVehicle?.fastagBalance||0)<500?'#f43f5e':'var(--primary)', fontWeight: '900' }}>FASTAG BAL: ₹{detailVehicle?.fastagBalance||0}</span>
+                                                <span style={{ fontSize: '13px', color: (detailVehicle?.fastagBalance || 0) < 500 ? '#f43f5e' : 'var(--primary)', fontWeight: '900' }}>FASTAG BAL: ₹{detailVehicle?.fastagBalance || 0}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    <button 
-                                        onClick={() => setSelectedVehicleId(detailVehicleId)} 
-                                        className="btn-primary" 
+                                    <button
+                                        onClick={() => setSelectedVehicleId(detailVehicleId)}
+                                        className="btn-primary"
                                         style={{ height: '50px', padding: '0 30px', borderRadius: '15px', fontWeight: '1000', gap: '10px' }}
                                     >
                                         <Plus size={18} /> ADD NEW LOG
@@ -412,10 +412,10 @@ const CarUtility = () => {
                                         { id: 'border', label: 'Border Permits', icon: Layers },
                                         { id: 'services', label: 'Extra Services', icon: Wrench }
                                     ].map(t => (
-                                        <button 
-                                            key={t.id} 
-                                            onClick={() => setActiveUtility(t.id)} 
-                                            style={{ 
+                                        <button
+                                            key={t.id}
+                                            onClick={() => setActiveUtility(t.id)}
+                                            style={{
                                                 padding: '12px 25px', borderRadius: '14px', border: 'none', cursor: 'pointer',
                                                 background: activeUtility === t.id ? 'rgba(255, 191, 36, 0.1)' : 'transparent',
                                                 color: activeUtility === t.id ? '#fbbf24' : 'rgba(255,255,255,0.4)',
@@ -428,20 +428,20 @@ const CarUtility = () => {
                                 </div>
 
                                 {detailVehicle && (
-                                    <ManagerHub 
+                                    <ManagerHub
                                         key={activeUtility}
-                                        type={activeUtility} 
-                                        color={activeUtility==='fastag'?'var(--primary)':activeUtility==='border'?'#0ea5e9':'#a855f7'} 
-                                        act={getVehicleActivity(detailVehicleId)} 
-                                        drivers={drivers} 
+                                        type={activeUtility}
+                                        color={activeUtility === 'fastag' ? 'var(--primary)' : activeUtility === 'border' ? '#0ea5e9' : '#a855f7'}
+                                        act={getVehicleActivity(detailVehicleId)}
+                                        drivers={drivers}
                                         getImageUrl={getImageUrl}
                                         hideForm={true}
-                                        onAdd={(vId, data, file) => activeUtility==='fastag'?handleRecharge(vId, data, file):activeUtility==='border'?handleAddTax(vId, data, file):handleAddService(vId, data, file)} 
-                                        onUpdate={(id, data) => handleUpdateRecord(activeUtility==='fastag' ? `vehicles/${detailVehicleId}/fastag-recharge` : activeUtility==='border' ? 'border-tax' : 'maintenance', id, data)}
-                                        onDelete={id => handleDeleteRecord(activeUtility==='fastag' ? `vehicles/${detailVehicleId}/fastag-recharge` : activeUtility==='border' ? 'border-tax' : 'maintenance', id)} 
-                                        setViewingImage={setViewingImage} 
-                                        submitting={submitting} 
-                                        vehicle={detailVehicle} 
+                                        onAdd={(vId, data, file) => activeUtility === 'fastag' ? handleRecharge(vId, data, file) : activeUtility === 'border' ? handleAddTax(vId, data, file) : handleAddService(vId, data, file)}
+                                        onUpdate={(id, data) => handleUpdateRecord(activeUtility === 'fastag' ? `vehicles/${detailVehicleId}/fastag-recharge` : activeUtility === 'border' ? 'border-tax' : 'maintenance', id, data)}
+                                        onDelete={id => handleDeleteRecord(activeUtility === 'fastag' ? `vehicles/${detailVehicleId}/fastag-recharge` : activeUtility === 'border' ? 'border-tax' : 'maintenance', id)}
+                                        setViewingImage={setViewingImage}
+                                        submitting={submitting}
+                                        vehicle={detailVehicle}
                                         companyId={selectedCompany?._id}
                                     />
                                 )}
@@ -452,7 +452,7 @@ const CarUtility = () => {
             </div>
 
             <AnimatePresence>
-                {selectedVehicleId && (selectedVehicleId === 'new' || vehicles.find(v=>v._id===selectedVehicleId)) && (
+                {selectedVehicleId && (selectedVehicleId === 'new' || vehicles.find(v => v._id === selectedVehicleId)) && (
                     <div className="modal-overlay">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0, y: 15 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 15 }}
@@ -462,10 +462,10 @@ const CarUtility = () => {
                                 <h3 style={{ margin: 0, fontWeight: '1000', fontSize: '22px', letterSpacing: '-0.5px' }}>
                                     {selectedVehicleId === 'new' ? 'Quick Utility Entry' : 'Manual Utility Entry'}
                                 </h3>
-                                <button 
-                                    onClick={() => setSelectedVehicleId(null)} 
-                                    style={{ 
-                                        width: '40px', height: '40px', borderRadius: '14px', 
+                                <button
+                                    onClick={() => setSelectedVehicleId(null)}
+                                    style={{
+                                        width: '40px', height: '40px', borderRadius: '14px',
                                         background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)',
                                         color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
                                         cursor: 'pointer', transition: '0.2s'
@@ -476,15 +476,15 @@ const CarUtility = () => {
                                 </button>
                             </div>
                             <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
-                                <ManagerHub 
+                                <ManagerHub
                                     key={activeUtility || 'fastag'}
-                                    type={activeUtility || 'fastag'} color="var(--primary)" 
-                                    act={selectedVehicleId === 'new' ? { items: { fastag: [], border: [], service: [] } } : getVehicleActivity(selectedVehicleId)} 
+                                    type={activeUtility || 'fastag'} color="var(--primary)"
+                                    act={selectedVehicleId === 'new' ? { items: { fastag: [], border: [], service: [] } } : getVehicleActivity(selectedVehicleId)}
                                     drivers={drivers} getImageUrl={getImageUrl}
-                                    onAdd={(vId, data, file) => (activeUtility || 'fastag')==='fastag'?handleRecharge(vId, data, file):(activeUtility || 'fastag')==='border'?handleAddTax(vId, data, file):handleAddService(vId, data, file)} 
-                                    onUpdate={(id, data) => handleUpdateRecord((activeUtility || 'fastag')==='fastag' ? `vehicles/${selectedVehicleId}/fastag-recharge` : (activeUtility || 'fastag')==='border' ? 'border-tax' : 'maintenance', id, data)}
-                                    onDelete={id => handleDeleteRecord((activeUtility || 'fastag')==='fastag' ? `vehicles/${selectedVehicleId}/fastag-recharge` : (activeUtility || 'fastag')==='border' ? 'border-tax' : 'maintenance', id)} 
-                                    setViewingImage={setViewingImage} submitting={submitting} vehicle={vehicles.find(v=>v._id===selectedVehicleId)} allVehicles={vehicles} companyId={selectedCompany?._id}
+                                    onAdd={(vId, data, file) => (activeUtility || 'fastag') === 'fastag' ? handleRecharge(vId, data, file) : (activeUtility || 'fastag') === 'border' ? handleAddTax(vId, data, file) : handleAddService(vId, data, file)}
+                                    onUpdate={(id, data) => handleUpdateRecord((activeUtility || 'fastag') === 'fastag' ? `vehicles/${selectedVehicleId}/fastag-recharge` : (activeUtility || 'fastag') === 'border' ? 'border-tax' : 'maintenance', id, data)}
+                                    onDelete={id => handleDeleteRecord((activeUtility || 'fastag') === 'fastag' ? `vehicles/${selectedVehicleId}/fastag-recharge` : (activeUtility || 'fastag') === 'border' ? 'border-tax' : 'maintenance', id)}
+                                    setViewingImage={setViewingImage} submitting={submitting} vehicle={vehicles.find(v => v._id === selectedVehicleId)} allVehicles={vehicles} companyId={selectedCompany?._id}
                                 />
                             </div>
                         </motion.div>
@@ -492,7 +492,7 @@ const CarUtility = () => {
                 )}
             </AnimatePresence>
 
-            <AnimatePresence>{viewingImage && (<div style={{ position: 'fixed', inset: 0, zIndex: 2005, background: 'rgba(0,0,0,0.95)', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setViewingImage(null)}><motion.img initial={{scale:0.95}} animate={{scale:1}} src={viewingImage} style={{ maxWidth: '95%', maxHeight: '95%', borderRadius: '20px' }} /></div>)}</AnimatePresence>
+            <AnimatePresence>{viewingImage && (<div style={{ position: 'fixed', inset: 0, zIndex: 2005, background: 'rgba(0,0,0,0.95)', display: 'flex', justifyContent: 'center', alignItems: 'center' }} onClick={() => setViewingImage(null)}><motion.img initial={{ scale: 0.95 }} animate={{ scale: 1 }} src={viewingImage} style={{ maxWidth: '95%', maxHeight: '95%', borderRadius: '20px' }} /></div>)}</AnimatePresence>
         </div>
     );
 };
@@ -521,7 +521,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
     const [form, setForm] = useState({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office' });
     const [file, setFile] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
-    
+
     useEffect(() => {
         if (vehicle) setForm(prev => ({ ...prev, vehicleId: vehicle._id }));
     }, [vehicle]);
@@ -545,12 +545,12 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
             setFile(null);
         }
     }, [editingItem, type, vehicle]);
-    
+
     const handleSave = async () => {
         const targetVehicleId = vehicle?._id || form.vehicleId;
         if (!targetVehicleId) return alert('Please select a vehicle');
         if (!form.amount) return alert('Amount is required');
-        
+
         let success = false;
         if (type === 'fastag') {
             const formData = new FormData();
@@ -563,31 +563,31 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
             if (editingItem) success = await onUpdate(editingItem._id, formData);
             else { await onAdd(targetVehicleId, formData); success = true; }
         } else {
-            const fd = new FormData(); 
+            const fd = new FormData();
             Object.keys(form).forEach(k => {
                 if (form[k] && !['date', 'billDate', 'vehicleId'].includes(k)) {
                     fd.append(k, form[k]);
                 }
             });
-            
+
             const finalDate = form.date || form.billDate || todayIST();
             fd.append('date', finalDate);
             fd.append('billDate', finalDate);
 
             if (companyId) fd.append('companyId', companyId);
             fd.append('vehicleId', targetVehicleId);
-            
+
             if (file) fd.append(type === 'border' ? 'receiptPhoto' : 'billPhoto', file);
-            if (type === 'services') { 
-                fd.append('maintenanceType', 'Driver Services'); 
+            if (type === 'services') {
+                fd.append('maintenanceType', 'Driver Services');
             }
-            
+
             if (editingItem) success = await onUpdate(editingItem._id, fd);
             else { await onAdd(targetVehicleId, fd); success = true; }
         }
-        
+
         if (success || !editingItem) {
-            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office' }); 
+            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office' });
             setFile(null);
             setEditingItem(null);
         }
@@ -600,17 +600,17 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
             {showForm && (
                 <div style={{ padding: '30px', background: 'rgba(255,255,255,0.02)', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '30px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: `${color}20`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{editingItem ? <Edit3 size={20}/> : <Plus size={20}/>}</div>
+                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: `${color}20`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{editingItem ? <Edit3 size={20} /> : <Plus size={20} />}</div>
                         <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '900' }}>{editingItem ? 'Edit Log Entry' : 'Add New Record'}</h4>
                     </div>
                     <div className="modal-form-grid">
                         {!vehicle && (
                             <div style={{ gridColumn: '1 / -1' }}>
                                 <label className="input-label">Select Vehicle</label>
-                                <select 
-                                    value={form.vehicleId} 
-                                    onChange={e => setForm({...form, vehicleId: e.target.value})} 
-                                    className="input-field" 
+                                <select
+                                    value={form.vehicleId}
+                                    onChange={e => setForm({ ...form, vehicleId: e.target.value })}
+                                    className="input-field"
                                 >
                                     <option value="">Select a car...</option>
                                     {allVehicles.map(v => (
@@ -621,23 +621,23 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                         )}
                         <div>
                             <label className="input-label">Date</label>
-                            <input type="date" value={form.date} onChange={e=>setForm({...form, date:e.target.value})} className="input-field" />
+                            <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="input-field" />
                         </div>
                         <div>
                             <label className="input-label">Amount (₹)</label>
-                            <input type="number" placeholder="0.00" value={form.amount} onChange={e=>setForm({...form, amount:e.target.value})} className="input-field" style={{ fontSize: '18px', fontWeight: '900' }} />
+                            <input type="number" placeholder="0.00" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} className="input-field" style={{ fontSize: '18px', fontWeight: '900' }} />
                         </div>
-                        
+
                         {type === 'fastag' && (
-                            <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Recharge Remarks</label><input type="text" placeholder="e.g. ICICI Bank Recharge" value={form.remarks} onChange={e=>setForm({...form, remarks:e.target.value})} className="input-field" /></div>
+                            <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Recharge Remarks</label><input type="text" placeholder="e.g. ICICI Bank Recharge" value={form.remarks} onChange={e => setForm({ ...form, remarks: e.target.value })} className="input-field" /></div>
                         )}
                         {type === 'border' && (
-                            <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Border Station / Permit Name</label><input type="text" placeholder="e.g. DL-HR Border" value={form.borderName} onChange={e=>setForm({...form, borderName:e.target.value})} className="input-field" /></div>
+                            <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Border Station / Permit Name</label><input type="text" placeholder="e.g. DL-HR Border" value={form.borderName} onChange={e => setForm({ ...form, borderName: e.target.value })} className="input-field" /></div>
                         )}
                         {type === 'services' && (
                             <div style={{ gridColumn: '1 / -1' }}>
                                 <label className="input-label">Service Category</label>
-                                <select value={form.category} onChange={e=>setForm({...form, category:e.target.value})} className="input-field">
+                                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="input-field">
                                     <option>Car Wash</option>
                                     <option>Puncture / Tyre</option>
                                     <option>Cleaning Supplies</option>
@@ -667,20 +667,20 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                                 ))}
                             </div>
                         </div>
-                        
+
                         <div style={{ gridColumn: '1 / -1' }}>
                             <label className="input-label">Reciept / Bill Photo</label>
-                            <label style={{ 
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', 
-                                padding: '20px', borderRadius: '15px', border: '1px dashed rgba(255,255,255,0.1)', 
-                                background: 'rgba(255,255,255,0.02)', cursor: 'pointer', transition: '0.3s' 
+                            <label style={{
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
+                                padding: '20px', borderRadius: '15px', border: '1px dashed rgba(255,255,255,0.1)',
+                                background: 'rgba(255,255,255,0.02)', cursor: 'pointer', transition: '0.3s'
                             }} className="table-row-hover">
-                                <input type="file" style={{display:'none'}} onChange={e=>setFile(e.target.files[0])}/>
+                                <input type="file" style={{ display: 'none' }} onChange={e => setFile(e.target.files[0])} />
                                 <Image size={24} color="rgba(255,255,255,0.3)" />
                                 <span style={{ fontSize: '13px', fontWeight: '800', color: file ? color : 'rgba(255,255,255,0.4)' }}>{file ? file.name : 'Click to upload receipt photo'}</span>
                             </label>
                         </div>
-                        
+
                         <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '15px', marginTop: '10px' }}>
                             <button onClick={handleSave} className="btn-primary" style={{ flex: 1, height: '52px', borderRadius: '14px', fontWeight: '950' }} disabled={submitting}>
                                 {submitting ? 'SAVING...' : (editingItem ? 'UPDATE RECORD' : 'SAVE LOG ENTRY')}
@@ -707,7 +707,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                     <tbody>
                         {hist.length === 0 ? (
                             <tr><td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>No history records found...</td></tr>
-                        ) : hist.sort((a,b)=>new Date(b.date||b.billDate)-new Date(a.date||a.billDate)).map((item, i) => (
+                        ) : hist.sort((a, b) => new Date(b.date || b.billDate) - new Date(a.date || a.billDate)).map((item, i) => (
                             <tr key={item._id || i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }} className="table-row-hover">
                                 <td style={{ padding: '18px 25px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -721,7 +721,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                                 </td>
                                 <td style={{ padding: '18px 25px', textAlign: 'right' }}>
                                     <div style={{ color: color, fontWeight: '1000', fontSize: '15px' }}>₹{(item.amount || 0).toLocaleString()}</div>
-                                    <div style={{ 
+                                    <div style={{
                                         fontSize: '8px', padding: '1px 4px', borderRadius: '3px', display: 'inline-block',
                                         background: item.paymentSource === 'Guest' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(14, 165, 233, 0.1)',
                                         color: item.paymentSource === 'Guest' ? '#10b981' : '#0ea5e9',
@@ -730,10 +730,10 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                                 </td>
                                 <td style={{ padding: '18px 25px', textAlign: 'center' }}>
                                     {(item.receiptPhoto || item.billPhoto) ? (
-                                        <button 
+                                        <button
                                             onClick={() => setViewingImage(getImageUrl(item.receiptPhoto || item.billPhoto))}
-                                            style={{ 
-                                                width: '36px', height: '36px', borderRadius: '10px', 
+                                            style={{
+                                                width: '36px', height: '36px', borderRadius: '10px',
                                                 background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
                                                 margin: '0 auto'
@@ -747,12 +747,12 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                                 </td>
                                 <td style={{ padding: '18px 25px', textAlign: 'right' }}>
                                     <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                                        <button onClick={() => setEditingItem(item)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.2)', cursor: 'pointer' }}><Edit3 size={16}/></button>
-                                        <button onClick={() => onDelete(item._id)} style={{ background: 'transparent', border: 'none', color: 'rgba(244,63,94,0.4)', cursor: 'pointer' }}><Trash2 size={16}/></button>
+                                        <button onClick={() => setEditingItem(item)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.2)', cursor: 'pointer' }}><Edit3 size={16} /></button>
+                                        <button onClick={() => onDelete(item._id)} style={{ background: 'transparent', border: 'none', color: 'rgba(244,63,94,0.4)', cursor: 'pointer' }}><Trash2 size={16} /></button>
                                     </div>
                                 </td>
                             </tr>
-                        )) }
+                        ))}
                     </tbody>
                 </table>
             </div>

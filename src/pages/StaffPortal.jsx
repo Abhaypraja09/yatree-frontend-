@@ -258,7 +258,7 @@ const StaffPortal = () => {
         glass: 'rgba(15, 23, 42, 0.7)'
     };
 
-    const attendanceScore = Math.round(((report?.presentDays || 0) / 26) * 100);
+    const attendanceScore = Math.round(((report?.earnedDays || 0) / (report?.totalDaysInCycle || 30)) * 100);
 
     if (loading) return (
         <div style={{ minHeight: '100vh', background: themeColors.bg, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
@@ -589,33 +589,43 @@ const StaffPortal = () => {
                             </div>
                             <div style={{ background: `linear-gradient(135deg, ${themeColors.primary}30, ${themeColors.secondary}30)`, padding: '40px 20px', borderRadius: '35px', textAlign: 'center', marginBottom: '20px', border: '1px solid rgba(255,255,255,0.1)' }}>
                                 <span style={{ fontSize: '11px', opacity: 0.5, fontWeight: '800' }}>NET PAYABLE</span>
-                                <h2 style={{ fontSize: '48px', fontWeight: '950', margin: '5px 0' }}>₹{report?.finalSalary || 0}</h2>
+                                <h2 style={{ fontSize: '48px', fontWeight: '950', margin: '5px 0' }}>₹{(report?.finalSalary || 0).toLocaleString()}</h2>
                                 <div style={{ fontSize: '12px', fontWeight: '800', color: themeColors.primary }}>CYCLE: {report?.cycleLabel || 'CURRENT'}</div>
                             </div>
                             <div style={{ background: themeColors.glass, padding: '24px', borderRadius: '24px', display: 'grid', gap: '15px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                                    <span style={{ opacity: 0.5 }}>Basic Salary</span>
-                                    <span style={{ fontWeight: '800' }}>₹{(report?.salary || 0).toLocaleString()}</span>
+                                    <span style={{ opacity: 0.5 }}>Monthly Base Salary</span>
+                                    <span style={{ fontWeight: '800' }}>₹{(report?.baseSalary || report?.salary || 0).toLocaleString()}</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                                    <span style={{ opacity: 0.5 }}>Duty Days (Presents)</span>
+                                    <span style={{ opacity: 0.5 }}>Total Days in Cycle</span>
+                                    <span style={{ fontWeight: '800' }}>{report?.totalDaysInCycle || 30} Days</span>
+                                </div>
+                                <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                    <span style={{ opacity: 0.5 }}>Present Days</span>
                                     <span style={{ fontWeight: '800', color: themeColors.success }}>{report?.presentDays || 0} Days</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                                    <span style={{ opacity: 0.5 }}>Sunday Holidays (Paid)</span>
-                                    <span style={{ fontWeight: '800', color: themeColors.primary }}>{report?.sundaysPassed || 0} Days</span>
+                                    <span style={{ opacity: 0.5 }}>Approved Leaves (Paid)</span>
+                                    <span style={{ fontWeight: '800', color: themeColors.primary }}>{report?.approvedLeaveDays || 0} Days</span>
                                 </div>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
-                                    <span style={{ opacity: 0.5 }}>Absences (Unpaid)</span>
-                                    <span style={{ fontWeight: '800', color: themeColors.danger }}>{report?.leavesTaken || 0} Days</span>
+                                    <span style={{ opacity: 0.5 }}>Earned Sundays (Paid)</span>
+                                    <span style={{ fontWeight: '800', color: '#10b981' }}>{report?.paidSundays || 0} Days</span>
+                                </div>
+                                <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)' }}></div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px' }}>
+                                    <span style={{ opacity: 0.5, color: themeColors.danger }}>Unapproved Absences</span>
+                                    <span style={{ fontWeight: '800', color: themeColors.danger }}>{report?.unapprovedAbsences || 0} Days</span>
+                                </div>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '15px', fontWeight: '900', marginTop: '10px' }}>
+                                    <span>Total Earned Days</span>
+                                    <span style={{ color: themeColors.success }}>{report?.earnedDays || 0} / {report?.totalDaysInCycle || 30}</span>
                                 </div>
                                 <div style={{ marginTop: '10px', padding: '15px', borderRadius: '15px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', lineHeight: '1.5' }}>
                                     <ShieldAlert size={12} style={{ marginRight: '5px', verticalAlign: 'middle', color: themeColors.primary }} />
-                                    POLICY: Sundays are paid holidays. All other absences are unpaid as per company standards.
-                                </div>
-                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', color: themeColors.primary }}>
-                                    <span style={{ fontWeight: '800' }}>Sunday Bonuses</span>
-                                    <span>+ ₹{(report?.sundayBonus || 0).toLocaleString()}</span>
+                                    POLICY: Salary is calculated based on Earned Days (Presents + Approved Leaves + Eligible Sundays). Sundays are paid only if no unapproved absences occurred during the preceding week.
                                 </div>
                             </div>
                         </motion.div>

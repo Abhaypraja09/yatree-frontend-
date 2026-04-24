@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Plus, Trash2, Shield, User as UserIcon, Lock, Phone, UserCheck, CheckSquare, Square, Settings, Activity, X, Users, Edit3, Wrench } from 'lucide-react';
+import { Plus, Trash2, Shield, User as UserIcon, Lock, Phone, UserCheck, CheckSquare, Square, Settings, Activity, X, Users, Edit3, Wrench, Briefcase, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -17,14 +17,68 @@ const Admins = () => {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [permissions, setPermissions] = useState({
-        driversService: false,
-        buySell: false,
-        vehiclesManagement: false,
-        fleetOperations: false,
+        dashboard: true,
+        liveFeed: true,
+        logBook: true,
+        driversService: { all: false, drivers: false, payroll: false, freelancers: false, parking: false },
+        buySell: { all: false, outsideCars: false, eventManagement: false },
+        vehiclesManagement: { all: false, maintenance: false, carLogs: false, vehiclesMgt: false, accidentLogs: false },
+        fleetOperations: { all: false, fuel: false, carUtility: false },
         staffManagement: false,
         manageAdmins: false,
         reports: true
     });
+
+    const [expandedModule, setExpandedModule] = useState(null);
+
+    const moduleHierarchy = [
+        { 
+            id: 'driversService', 
+            label: 'Drivers Services', 
+            icon: Users, 
+            color: '#38bdf8',
+            subItems: [
+                { id: 'drivers', label: 'Drivers Panel' },
+                { id: 'payroll', label: 'Monthly Payroll' },
+                { id: 'freelancers', label: 'Freelancers' },
+                { id: 'parking', label: 'Parking MGT' }
+            ]
+        },
+        { 
+            id: 'buySell', 
+            label: 'Buy/Sell', 
+            icon: Briefcase, 
+            color: '#818cf8',
+            subItems: [
+                { id: 'outsideCars', label: 'Outside Cars' },
+                { id: 'eventManagement', label: 'Event Management' }
+            ]
+        },
+        { 
+            id: 'vehiclesManagement', 
+            label: 'Vehicles Maintenance', 
+            icon: Wrench, 
+            color: 'var(--primary)',
+            subItems: [
+                { id: 'maintenance', label: 'Maintenance Logs' },
+                { id: 'carLogs', label: 'Car Monthly Logs' },
+                { id: 'vehiclesMgt', label: 'Vehicle Inventory' },
+                { id: 'accidentLogs', label: 'Active Logs' }
+            ]
+        },
+        { 
+            id: 'fleetOperations', 
+            label: 'Fleet Operations', 
+            icon: Activity, 
+            color: '#ec4899',
+            subItems: [
+                { id: 'fuel', label: 'Fuel Records' },
+                { id: 'carUtility', label: 'Car Utility' }
+            ]
+        },
+        { id: 'staffManagement', label: 'Staff Management', icon: Users, color: '#8b5cf6' },
+        { id: 'manageAdmins', label: 'Admin Management', icon: Shield, color: '#10b981' }
+    ];
 
     useEffect(() => {
         fetchExecutives();
@@ -77,23 +131,50 @@ const Admins = () => {
         setMobile(admin.mobile);
         setUsername(admin.username);
         setPassword('');
-        setPermissions(admin.permissions || {
-            driversService: false,
-            buySell: false,
-            vehiclesManagement: false,
-            fleetOperations: false,
-            staffManagement: false,
-            manageAdmins: false,
-            reports: true
-        });
+        
+        // Normalize permissions from DB
+        const dbPerms = admin.permissions || {};
+        const normalized = {
+            dashboard: dbPerms.dashboard ?? true,
+            liveFeed: dbPerms.liveFeed ?? true,
+            logBook: dbPerms.logBook ?? true,
+            driversService: (dbPerms.driversService && typeof dbPerms.driversService === 'object') 
+                ? { ...dbPerms.driversService, payroll: !!dbPerms.driversService.payroll } 
+                : { all: !!dbPerms.driversService, drivers: !!dbPerms.driversService, payroll: !!dbPerms.driversService, freelancers: !!dbPerms.driversService, parking: !!dbPerms.driversService },
+            buySell: (dbPerms.buySell && typeof dbPerms.buySell === 'object') 
+                ? dbPerms.buySell 
+                : { all: !!dbPerms.buySell, outsideCars: !!dbPerms.buySell, eventManagement: !!dbPerms.buySell },
+            vehiclesManagement: (dbPerms.vehiclesManagement && typeof dbPerms.vehiclesManagement === 'object') 
+                ? dbPerms.vehiclesManagement 
+                : { all: !!dbPerms.vehiclesManagement, maintenance: !!dbPerms.vehiclesManagement, carLogs: !!dbPerms.vehiclesManagement, vehiclesMgt: !!dbPerms.vehiclesManagement, accidentLogs: !!dbPerms.vehiclesManagement },
+            fleetOperations: (dbPerms.fleetOperations && typeof dbPerms.fleetOperations === 'object') 
+                ? dbPerms.fleetOperations 
+                : { all: !!dbPerms.fleetOperations, fuel: !!dbPerms.fleetOperations, carUtility: !!dbPerms.fleetOperations },
+            staffManagement: !!dbPerms.staffManagement,
+            manageAdmins: !!dbPerms.manageAdmins,
+            reports: dbPerms.reports ?? true
+        };
+        setPermissions(normalized);
         setShowModal(true);
     };
 
     const closeModal = () => {
         setShowModal(false);
         setEditingAdmin(null);
+        setExpandedModule(null);
         setName(''); setMobile(''); setUsername(''); setPassword('');
-        setPermissions({ driversService: false, buySell: false, vehiclesManagement: false, fleetOperations: false, staffManagement: false, manageAdmins: false, reports: true });
+        setPermissions({
+            dashboard: true,
+            liveFeed: true,
+            logBook: true,
+            driversService: { all: false, drivers: false, payroll: false, freelancers: false, parking: false },
+            buySell: { all: false, outsideCars: false, eventManagement: false },
+            vehiclesManagement: { all: false, maintenance: false, carLogs: false, vehiclesMgt: false, accidentLogs: false },
+            fleetOperations: { all: false, fuel: false, carUtility: false },
+            staffManagement: false,
+            manageAdmins: false,
+            reports: true
+        });
     };
 
     const handleDelete = async (id) => {
@@ -109,8 +190,47 @@ const Admins = () => {
         }
     };
 
-    const togglePermission = (key) => {
-        setPermissions(prev => ({ ...prev, [key]: !prev[key] }));
+    const toggleMainPermission = (key) => {
+        setPermissions(prev => {
+            const val = prev[key];
+            if (typeof val === 'object') {
+                const newState = !val.all;
+                const updatedObj = {};
+                Object.keys(val).forEach(k => {
+                    updatedObj[k] = newState;
+                });
+                return { ...prev, [key]: updatedObj };
+            }
+            return { ...prev, [key]: !prev[key] };
+        });
+    };
+
+    const toggleSubPermission = (moduleKey, subKey) => {
+        setPermissions(prev => {
+            const moduleObj = { ...prev[moduleKey] };
+            moduleObj[subKey] = !moduleObj[subKey];
+            
+            // If all sub-items are checked, check 'all'
+            const subItems = Object.keys(moduleObj).filter(k => k !== 'all');
+            const allChecked = subItems.every(k => moduleObj[k]);
+            moduleObj.all = allChecked;
+            
+            return { ...prev, [moduleKey]: moduleObj };
+        });
+    };
+
+    const isFormModuleActive = (key) => {
+        const val = permissions[key];
+        if (!val) return false;
+        if (typeof val === 'object') return val.all || Object.values(val).some(v => v);
+        return !!val;
+    };
+
+    const checkAdminAccess = (adminPerms, key) => {
+        const val = adminPerms?.[key];
+        if (!val) return false;
+        if (typeof val === 'object') return val.all || Object.values(val).some(v => v);
+        return !!val;
     };
 
     return (
@@ -208,13 +328,13 @@ const Admins = () => {
                                     </td>
                                     <td style={{ padding: '18px 25px' }}>
                                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                                            {admin.permissions?.driversService && <span style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.15)', textTransform: 'uppercase' }}>Drivers</span>}
-                                            {admin.permissions?.buySell && <span style={{ background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(129, 140, 248, 0.15)', textTransform: 'uppercase' }}>Buy/Sell</span>}
-                                            {admin.permissions?.vehiclesManagement && <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--primary)', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.15)', textTransform: 'uppercase' }}>Maintenance</span>}
-                                            {admin.permissions?.fleetOperations && <span style={{ background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(236, 72, 153, 0.15)', textTransform: 'uppercase' }}>Operations</span>}
-                                            {admin.permissions?.staffManagement && <span style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(139, 92, 246, 0.15)', textTransform: 'uppercase' }}>Staff MGT</span>}
-                                            {admin.permissions?.manageAdmins && <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.15)', textTransform: 'uppercase' }}>Admin MGT</span>}
-                                            {!admin.permissions?.driversService && !admin.permissions?.buySell && !admin.permissions?.vehiclesManagement && !admin.permissions?.fleetOperations && !admin.permissions?.staffManagement && !admin.permissions?.manageAdmins && (
+                                            {checkAdminAccess(admin.permissions, 'driversService') && <span style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(56, 189, 248, 0.15)', textTransform: 'uppercase' }}>Drivers</span>}
+                                            {checkAdminAccess(admin.permissions, 'buySell') && <span style={{ background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(129, 140, 248, 0.15)', textTransform: 'uppercase' }}>Buy/Sell</span>}
+                                            {checkAdminAccess(admin.permissions, 'vehiclesManagement') && <span style={{ background: 'rgba(245, 158, 11, 0.1)', color: 'var(--primary)', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(245, 158, 11, 0.15)', textTransform: 'uppercase' }}>Maintenance</span>}
+                                            {checkAdminAccess(admin.permissions, 'fleetOperations') && <span style={{ background: 'rgba(236, 72, 153, 0.1)', color: '#ec4899', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(236, 72, 153, 0.15)', textTransform: 'uppercase' }}>Operations</span>}
+                                            {checkAdminAccess(admin.permissions, 'staffManagement') && <span style={{ background: 'rgba(139, 92, 246, 0.1)', color: '#8b5cf6', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(139, 92, 246, 0.15)', textTransform: 'uppercase' }}>Staff MGT</span>}
+                                            {checkAdminAccess(admin.permissions, 'manageAdmins') && <span style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', fontSize: '9px', fontWeight: '900', padding: '3px 10px', borderRadius: '6px', border: '1px solid rgba(16, 185, 129, 0.15)', textTransform: 'uppercase' }}>Admin MGT</span>}
+                                            {!checkAdminAccess(admin.permissions, 'driversService') && !checkAdminAccess(admin.permissions, 'buySell') && !checkAdminAccess(admin.permissions, 'vehiclesManagement') && !checkAdminAccess(admin.permissions, 'fleetOperations') && !checkAdminAccess(admin.permissions, 'staffManagement') && !checkAdminAccess(admin.permissions, 'manageAdmins') && (
                                                 <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '11px', fontStyle: 'italic' }}>No modules assigned</span>
                                             )}
                                         </div>
@@ -252,7 +372,7 @@ const Admins = () => {
                             animate={{ scale: 1, opacity: 1, y: 0 }}
                             exit={{ scale: 0.95, opacity: 0, y: 20 }}
                             className="modal-content-wrapper"
-                            style={{ maxWidth: '650px', padding: 0 }}
+                            style={{ maxWidth: '700px', padding: 0 }}
                         >
                             <div style={{ padding: '25px 35px', background: 'linear-gradient(to right, #1e293b, #0f172a)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
@@ -291,49 +411,80 @@ const Admins = () => {
                                         <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
                                     </div>
                                     
-                                    <div className="modal-form-grid" style={{ gap: '12px' }}>
-                                        {[
-                                            { id: 'driversService', label: 'Drivers Services', desc: 'Drivers List, Freelancers, Salary Reports, Parking', icon: Users, color: '#38bdf8' },
-                                            { id: 'buySell', label: 'Outside Cars & Event MGT', desc: 'Outside Vehicle Logs, Transaction Reports', icon: Shield, color: '#818cf8' },
-                                            { id: 'vehiclesManagement', label: 'Vehicles Maintenance (CRITICAL)', desc: 'Maintenance Logs, Car Monthly Logs, Vehicle Inventory, Warranties', icon: Wrench, color: 'var(--primary)' },
-                                            { id: 'fleetOperations', label: 'Fleet Operations (Fuel/Tax)', desc: 'Fuel Records, Fastag, Border Tax, Utility', icon: Activity, color: '#ec4899' },
-                                            { id: 'staffManagement', label: 'Staff Management', desc: 'Manage Staff Attendance, Permissions, Leave, Salaries', icon: Users, color: '#8b5cf6' },
-                                            { id: 'manageAdmins', label: 'Full Admin Access (Manage Others)', desc: 'Create/Edit other Admins and their system rights', icon: Shield, color: '#10b981' }
-                                        ].map(mod => (
-                                            <div 
-                                                key={mod.id}
-                                                onClick={() => togglePermission(mod.id)}
-                                                style={{ 
-                                                    display: 'flex', 
-                                                    alignItems: 'flex-start', 
-                                                    gap: '12px', 
-                                                    cursor: 'pointer', 
-                                                    padding: '16px', 
-                                                    borderRadius: '16px', 
-                                                    background: permissions[mod.id] ? `${mod.color}15` : 'rgba(255,255,255,0.02)', 
-                                                    border: `1px solid ${permissions[mod.id] ? `${mod.color}40` : 'rgba(255,255,255,0.05)'}`, 
-                                                    transition: 'all 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                    position: 'relative',
-                                                    overflow: 'hidden'
-                                                }}
-                                            >
-                                                <div style={{ 
-                                                    width: '32px', 
-                                                    height: '32px', 
-                                                    borderRadius: '10px', 
-                                                    background: permissions[mod.id] ? mod.color : 'rgba(255,255,255,0.05)', 
-                                                    color: permissions[mod.id] ? 'black' : 'rgba(255,255,255,0.3)',
-                                                    display: 'flex', 
-                                                    alignItems: 'center', 
-                                                    justifyContent: 'center',
-                                                    transition: '0.3s'
-                                                }}>
-                                                    {permissions[mod.id] ? <CheckSquare size={18} /> : <Square size={18} />}
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}>
+                                        {moduleHierarchy.map(mod => (
+                                            <div key={mod.id} style={{ 
+                                                borderRadius: '20px', 
+                                                background: 'rgba(255,255,255,0.02)', 
+                                                border: `1px solid ${isFormModuleActive(mod.id) ? `${mod.color}40` : 'rgba(255,255,255,0.05)'}`,
+                                                overflow: 'hidden',
+                                                transition: 'all 0.3s ease'
+                                            }}>
+                                                <div 
+                                                    onClick={() => mod.subItems ? setExpandedModule(expandedModule === mod.id ? null : mod.id) : toggleMainPermission(mod.id)}
+                                                    style={{ 
+                                                        padding: '16px', 
+                                                        display: 'flex', 
+                                                        alignItems: 'center', 
+                                                        gap: '12px', 
+                                                        cursor: 'pointer',
+                                                        background: isFormModuleActive(mod.id) ? `${mod.color}10` : 'transparent'
+                                                    }}
+                                                >
+                                                    <div style={{ 
+                                                        width: '36px', height: '36px', borderRadius: '10px', 
+                                                        background: isFormModuleActive(mod.id) ? mod.color : 'rgba(255,255,255,0.05)', 
+                                                        color: isFormModuleActive(mod.id) ? 'black' : 'rgba(255,255,255,0.3)',
+                                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
+                                                    }}>
+                                                        {typeof permissions[mod.id] === 'object' ? (
+                                                            permissions[mod.id].all ? <CheckSquare size={18} /> : (Object.values(permissions[mod.id]).some(v => v) ? <div style={{ width: '10px', height: '10px', background: 'black', borderRadius: '2px' }} /> : <Square size={18} />)
+                                                        ) : (
+                                                            permissions[mod.id] ? <CheckSquare size={18} /> : <Square size={18} />
+                                                        )}
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ color: isFormModuleActive(mod.id) ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: '800', fontSize: '14px' }}>{mod.label}</div>
+                                                    </div>
+                                                    {mod.subItems && (
+                                                        <div style={{ color: 'rgba(255,255,255,0.3)', transition: '0.3s', transform: expandedModule === mod.id ? 'rotate(180deg)' : 'none' }}>
+                                                            <ChevronDown size={18} />
+                                                        </div>
+                                                    )}
                                                 </div>
-                                                <div style={{ flex: 1 }}>
-                                                    <div style={{ color: permissions[mod.id] ? 'white' : 'rgba(255,255,255,0.6)', fontWeight: '800', fontSize: '13px' }}>{mod.label}</div>
-                                                    <div style={{ fontSize: '10px', color: permissions[mod.id] ? 'rgba(255,255,255,0.4)' : 'rgba(255,255,255,0.2)', marginTop: '2px', fontWeight: '600' }}>{mod.desc}</div>
-                                                </div>
+
+                                                {mod.subItems && (
+                                                    <motion.div
+                                                        initial={false}
+                                                        animate={{ height: expandedModule === mod.id ? 'auto' : 0, opacity: expandedModule === mod.id ? 1 : 0 }}
+                                                        style={{ overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}
+                                                    >
+                                                        <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                            <div 
+                                                                onClick={() => toggleMainPermission(mod.id)}
+                                                                style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '8px', borderRadius: '8px', background: permissions[mod.id].all ? 'rgba(255,255,255,0.05)' : 'transparent' }}
+                                                            >
+                                                                <div style={{ color: permissions[mod.id].all ? mod.color : 'rgba(255,255,255,0.2)' }}>
+                                                                    {permissions[mod.id].all ? <CheckSquare size={14} /> : <Square size={14} />}
+                                                                </div>
+                                                                <span style={{ fontSize: '12px', color: permissions[mod.id].all ? 'white' : 'rgba(255,255,255,0.4)', fontWeight: '700' }}>FULL ACCESS (ALL PAGES)</span>
+                                                            </div>
+                                                            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
+                                                            {mod.subItems.map(sub => (
+                                                                <div 
+                                                                    key={sub.id}
+                                                                    onClick={() => toggleSubPermission(mod.id, sub.id)}
+                                                                    style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '8px', borderRadius: '8px', marginLeft: '10px' }}
+                                                                >
+                                                                    <div style={{ color: permissions[mod.id][sub.id] ? mod.color : 'rgba(255,255,255,0.2)' }}>
+                                                                        {permissions[mod.id][sub.id] ? <CheckSquare size={14} /> : <Square size={14} />}
+                                                                    </div>
+                                                                    <span style={{ fontSize: '12px', color: permissions[mod.id][sub.id] ? 'white' : 'rgba(255,255,255,0.4)', fontWeight: '600' }}>{sub.label}</span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    </motion.div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

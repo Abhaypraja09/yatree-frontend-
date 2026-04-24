@@ -373,16 +373,8 @@ const VehicleMonthlyDetails = () => {
                                                 <div style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>₹{(v.fuel?.totalAmount || 0).toLocaleString()}</div>
                                                 <div style={{ color: '#10b981', fontSize: '11px', fontWeight: '900', background: 'rgba(16,185,129,0.12)', padding: '2px 6px', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.1)' }}>{(v.fuel?.totalQuantity || 0).toFixed(1)} L</div>
                                             </div>
-                                            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(60px, auto) minmax(60px, auto)', gap: '10px', marginBottom: '10px' }}>
-                                                <div>
-                                                    <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '2px' }}>Avg</div>
-                                                    <div style={{ color: 'var(--primary)', fontWeight: '950', fontSize: '12px' }}>{(v.fuel?.avgMileage || 0).toFixed(2)}<span style={{ fontSize: '9px', opacity: 0.6 }}> KM/L</span></div>
-                                                </div>
-                                                <div style={{ borderLeft: '1px solid rgba(255,255,255,0.08)', paddingLeft: '10px' }}>
-                                                    <div style={{ fontSize: '8px', color: 'rgba(255,255,255,0.3)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '2px' }}>Run</div>
-                                                    <div style={{ color: 'white', opacity: 0.9, fontWeight: '950', fontSize: '12px' }}>{(v.totalDistance || 0).toLocaleString()}<span style={{ fontSize: '9px', opacity: 0.6 }}> KM</span></div>
-                                                </div>
-                                            </div>
+
+
                                             <div>
                                                 {v.fuel?.records?.length > 0 ? (
                                                     <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '140px', padding: '6px 10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', color: '#10b981', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>

@@ -150,7 +150,19 @@ const Sidebar = ({ isOpen, onClose }) => {
         'GoGetGo': '/logos/gogetgo.webp'
     };
 
-    const isExecutive = user.role === 'Executive';
+    const hasAccess = (moduleKey, subKey = null) => {
+        if (isAdmin) return true;
+        const perm = user.permissions?.[moduleKey];
+        if (perm === undefined) return false;
+        if (typeof perm === 'boolean') return perm;
+        if (typeof perm === 'object') {
+            if (perm.all) return true;
+            if (subKey) return !!perm[subKey];
+            // For group headers, show if any sub-item is active
+            return Object.values(perm).some(v => v);
+        }
+        return false;
+    };
 
     return (
         <div
@@ -259,54 +271,52 @@ const Sidebar = ({ isOpen, onClose }) => {
             </div>
 
             <nav style={{ flex: 1, overflowY: 'auto', paddingRight: '5px' }} className="sidebar-nav-scroll">
-                {(isAdmin || user.permissions?.dashboard !== false) && (
+                {hasAccess('dashboard') && (
                     <NavItem item={{ path: '/admin', icon: LayoutDashboard, label: 'Dashboard', labelKey: 'dashboard' }} onClick={onClose} />
                 )}
 
-                {(isAdmin || user.permissions?.liveFeed) && (
+                {hasAccess('liveFeed') && (
                     <NavItem item={{ path: '/admin/live-feed', icon: Activity, label: 'Live Feed', labelKey: 'live_feed' }} onClick={onClose} />
                 )}
 
-                {(isAdmin || user.permissions?.logBook) && (
+                {hasAccess('logBook') && (
                     <NavItem item={{ path: '/admin/log-book', icon: ClipboardList, label: 'Log Book', labelKey: 'log_book' }} onClick={onClose} />
                 )}
 
-                {(isAdmin || user.permissions?.driversService) && (
+                {hasAccess('driversService') && (
                     <NavGroup title="Drivers Services" labelKey="drivers_services" icon={Users} isOpen={openGroups.drivers} onToggle={() => toggleGroup('drivers')}>
-                        <NavItem item={{ path: '/admin/drivers-panel', label: 'Drivers', labelKey: 'drivers' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/freelancers', label: 'Freelancers', labelKey: 'freelancers' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/parking', label: 'Parking', labelKey: 'parking' }} onClick={onClose} isSubItem />
+                        {hasAccess('driversService', 'drivers') && <NavItem item={{ path: '/admin/drivers-panel', label: 'Drivers', labelKey: 'drivers' }} onClick={onClose} isSubItem />}
+                        {hasAccess('driversService', 'payroll') && <NavItem item={{ path: '/admin/drivers-panel?tab=settlement', label: 'Monthly Payroll', labelKey: 'monthly_payroll' }} onClick={onClose} isSubItem />}
+                        {hasAccess('driversService', 'freelancers') && <NavItem item={{ path: '/admin/freelancers', label: 'Freelancers', labelKey: 'freelancers' }} onClick={onClose} isSubItem />}
+                        {hasAccess('driversService', 'parking') && <NavItem item={{ path: '/admin/parking', label: 'Parking', labelKey: 'parking' }} onClick={onClose} isSubItem />}
                     </NavGroup>
                 )}
 
-                {(isAdmin || user.permissions?.fleetOperations) && (
+                {hasAccess('fleetOperations') && (
                     <NavGroup title="Fleet Operations" labelKey="fleet_operations" icon={Settings} isOpen={openGroups.vehicles} onToggle={() => toggleGroup('vehicles')}>
-                        <NavItem item={{ path: '/admin/fuel', label: 'Fuel', labelKey: 'fuel' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility', labelKey: 'car_utility' }} onClick={onClose} isSubItem />
+                        {hasAccess('fleetOperations', 'fuel') && <NavItem item={{ path: '/admin/fuel', label: 'Fuel', labelKey: 'fuel' }} onClick={onClose} isSubItem />}
+                        {hasAccess('fleetOperations', 'carUtility') && <NavItem item={{ path: '/admin/car-utility', label: 'Car Utility', labelKey: 'car_utility' }} onClick={onClose} isSubItem />}
                     </NavGroup>
                 )}
-                {(isAdmin || user.permissions?.vehiclesManagement) && (
+                {hasAccess('vehiclesManagement') && (
                     <NavGroup title="Vehicles Maintenance" labelKey="vehicles_maintenance" icon={Wrench} isOpen={openGroups.maintenance} onToggle={() => toggleGroup('maintenance')}>
-                        <NavItem item={{ path: '/admin/maintenance', label: 'Maintenance', labelKey: 'maintenance' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/vehicle-month-details', label: 'Car Logs', labelKey: 'car_logs' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/vehicles', label: 'Vehicles MGT', labelKey: 'vehicles_mgt' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/accident-logs', label: 'Active Logs', labelKey: 'active_logs' }} onClick={onClose} isSubItem />
-
+                        {hasAccess('vehiclesManagement', 'maintenance') && <NavItem item={{ path: '/admin/maintenance', label: 'Maintenance', labelKey: 'maintenance' }} onClick={onClose} isSubItem />}
+                        {hasAccess('vehiclesManagement', 'carLogs') && <NavItem item={{ path: '/admin/vehicle-month-details', label: 'Car Logs', labelKey: 'car_logs' }} onClick={onClose} isSubItem />}
+                        {hasAccess('vehiclesManagement', 'vehiclesMgt') && <NavItem item={{ path: '/admin/vehicles', label: 'Vehicles MGT', labelKey: 'vehicles_mgt' }} onClick={onClose} isSubItem />}
+                        {hasAccess('vehiclesManagement', 'accidentLogs') && <NavItem item={{ path: '/admin/accident-logs', label: 'Active Logs', labelKey: 'active_logs' }} onClick={onClose} isSubItem />}
                     </NavGroup>
                 )}
-                {(isAdmin || user.permissions?.buySell) && (
+                {hasAccess('buySell') && (
                     <NavGroup title="Buy/Sell" labelKey="buy_sell" icon={Briefcase} isOpen={openGroups.buysell} onToggle={() => toggleGroup('buysell')}>
-                        <NavItem item={{ path: '/admin/outside-cars', label: 'Outside Cars', labelKey: 'outside_cars' }} onClick={onClose} isSubItem />
-                        <NavItem item={{ path: '/admin/event-management', label: 'Event Management', labelKey: 'event_management' }} onClick={onClose} isSubItem />
+                        {hasAccess('buySell', 'outsideCars') && <NavItem item={{ path: '/admin/outside-cars', label: 'Outside Cars', labelKey: 'outside_cars' }} onClick={onClose} isSubItem />}
+                        {hasAccess('buySell', 'eventManagement') && <NavItem item={{ path: '/admin/event-management', label: 'Event Management', labelKey: 'event_management' }} onClick={onClose} isSubItem />}
                     </NavGroup>
                 )}
-
-
 
                 <div style={{ height: '10px' }} />
 
-                {(isAdmin || user.permissions?.staffManagement) && <NavItem item={{ path: '/admin/staff', icon: Users, label: 'Staff Management', labelKey: 'staff_management' }} onClick={onClose} />}
-                {(isAdmin || user.permissions?.manageAdmins) && <NavItem item={{ path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins', labelKey: 'manage_admins' }} onClick={onClose} />}
+                {hasAccess('staffManagement') && <NavItem item={{ path: '/admin/staff', icon: Users, label: 'Staff Management', labelKey: 'staff_management' }} onClick={onClose} />}
+                {hasAccess('manageAdmins') && <NavItem item={{ path: '/admin/admins', icon: ShieldAlert, label: 'Manage Admins', labelKey: 'manage_admins' }} onClick={onClose} />}
             </nav>
 
             <div style={{ marginTop: 'auto', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '20px' }}>

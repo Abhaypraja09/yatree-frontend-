@@ -163,6 +163,7 @@ export const translations = {
         car_logs: 'Car Logs',
         vehicles_mgt: 'Vehicles MGT',
         active_logs: 'Active Logs',
+        monthly_payroll: 'Monthly Payroll',
 
         fleet_operations: 'Fleet Operations',
         car_utility: 'Car Utility',
@@ -269,6 +270,7 @@ export const translations = {
         car_logs: 'गाड़ी लॉग',
         vehicles_mgt: 'वाहन प्रबंधन',
         active_logs: 'सक्रिय लॉग',
+        monthly_payroll: 'मासिक पेरोल',
 
         fleet_operations: 'फ्लीट ऑपरेशंस',
         car_utility: 'कार उपयोगिता',
@@ -431,6 +433,8 @@ export const translations = {
         optional: 'वैकल्पिक'
     }
 };
+
+// export const LanguageContext = createContext();
 
 export const LanguageProvider = ({ children }) => {
     const [language, setLanguage] = useState(localStorage.getItem('language') || 'en');

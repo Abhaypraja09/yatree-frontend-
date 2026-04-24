@@ -138,6 +138,7 @@ const Staff = () => {
     const [monthlyTarget, setMonthlyTarget] = useState(26); // Default monthly attendance target
     const [isEditing, setIsEditing] = useState(false);
     const [editingStaffId, setEditingStaffId] = useState(null);
+    const [staffStats, setStaffStats] = useState({ totalStaff: 0, todayAttendance: 0, pendingLeaves: 0 });
 
     const handleTargetChange = (val) => {
         const num = Number(val);
@@ -159,21 +160,35 @@ const Staff = () => {
     })();
 
     useEffect(() => {
-        if (selectedCompany) {
+        if (!selectedCompany) return;
+
+        // Fetch lightweight stats for the top cards
+        fetchStaffStats();
+
+        // Context-aware fetching: only fetch what is needed for the current view
+        if (view === 'list') {
             fetchStaff();
+        } else if (view === 'attendance') {
             fetchAttendance();
-            fetchPendingLeaves();
+        } else if (view === 'leaves') {
+            fetchAllLeaves();
+        } else if (view === 'summary') {
             fetchMonthlyReport();
         }
-    }, [selectedCompany, fromDate, toDate, view, selectedMonth, selectedYear]);
 
-    const fetchPendingLeaves = async () => {
+        // Always ensure staff list is present as it's often needed for IDs/Names
+        if (staffList.length === 0 && view !== 'list') {
+            fetchStaff();
+        }
+    }, [selectedCompany?._id, view, fromDate, toDate, selectedMonth, selectedYear, isRange]);
+
+    const fetchAllLeaves = async () => {
         if (!selectedCompany?._id) return;
         try {
-            const { data } = await axios.get(`/api/admin/leaves/pending/${selectedCompany._id}`);
-            setPendingLeaves(data);
+            const { data } = await axios.get(`/api/admin/leaves/all/${selectedCompany._id}`);
+            setPendingLeaves(data); // Reusing the same state but it will now contain all
         } catch (error) {
-            console.error('Error fetching pending leaves:', error);
+            console.error('Error fetching leaves:', error);
         }
     };
 
@@ -196,7 +211,7 @@ const Staff = () => {
     const handleLeaveAction = async (id, status) => {
         try {
             await axios.patch(`/api/admin/leaves/${id}`, { status });
-            fetchPendingLeaves();
+            fetchAllLeaves();
             fetchAttendance();
         } catch (error) {
             alert('Error updating leave status');
@@ -256,14 +271,29 @@ const Staff = () => {
         }
     };
 
+    const fetchStaffStats = async () => {
+        if (!selectedCompany?._id) return;
+        try {
+            const { data } = await axios.get(`/api/admin/staff-stats/${selectedCompany._id}`);
+            setStaffStats(data);
+        } catch (error) {
+            console.error('Error fetching staff stats:', error);
+        }
+    };
+
     const fetchAttendance = async () => {
         if (!selectedCompany?._id) return;
         try {
-            const { data } = await axios.get(`/api/admin/staff-attendance/${selectedCompany._id}`);
-            setAttendanceList(data);
+            setLoading(true);
+            // Always fetch current date as per request
+            const today = todayIST();
+            const params = `?from=${today}&to=${today}`;
+            const { data } = await axios.get(`/api/admin/staff-attendance/${selectedCompany._id}${params}`);
+            setAttendanceList(data.attendance || []);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching staff attendance:', error);
+            setLoading(false);
         }
     };
 
@@ -297,15 +327,15 @@ const Staff = () => {
             'Designation': item.designation || 'Staff',
             'Cycle Start': item.cycleStart,
             'Cycle End': item.cycleEnd,
-            'Basic Salary': item.salary,
+            'Basic Salary': item.baseSalary || item.salary,
+            'Days in Cycle': item.totalDaysInCycle,
             'Present Days': item.presentDays,
-            'Paid Leaves Used': item.paidLeavesUsed,
-            'Sundays Passed': item.sundaysPassed,
-            'Sundays Worked': item.sundaysWorked,
-            'Extra Leaves (Unpaid)': item.extraLeaves,
-            'Deduction': item.deduction,
-            'Sunday Bonus': item.sundayBonus,
-            'Final Salary': item.finalSalary
+            'Approved Leaves': item.approvedLeaveDays,
+            'Paid Sundays': item.paidSundays,
+            'Unpaid Sundays': item.unpaidSundays,
+            'Unapproved Absences': item.unapprovedAbsences,
+            'Total Earned Days': item.earnedDays,
+            'Net Payable': item.finalSalary
         }));
 
         const ws = XLSX.utils.json_to_sheet(dataToExport);
@@ -704,18 +734,30 @@ const Staff = () => {
         }
     };
 
-    const filteredStaff = staffList.filter(s =>
-    ((s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (s.mobile || '').includes(searchTerm))
-    );
+    const filteredStaff = React.useMemo(() => {
+        const lowerSearch = searchTerm.toLowerCase();
+        return staffList.filter(s =>
+            (s.name || '').toLowerCase().includes(lowerSearch) ||
+            (s.mobile || '').includes(searchTerm)
+        );
+    }, [staffList, searchTerm]);
 
-    const filteredAttendance = attendanceList.filter(record => {
-        const matchesDate = isRange
-            ? (record.date >= fromDate && record.date <= toDate)
-            : record.date === toDate;
-        const matchesStaff = filterStaff === 'all' || record.staff?._id === filterStaff;
-        return matchesDate && matchesStaff;
-    });
+    const filteredAttendance = React.useMemo(() => {
+        return attendanceList.filter(record => {
+            const matchesDate = isRange
+                ? (record.date >= fromDate && record.date <= toDate)
+                : record.date === toDate;
+            const matchesStaff = filterStaff === 'all' || record.staff?._id === filterStaff;
+            return matchesDate && matchesStaff;
+        });
+    }, [attendanceList, isRange, fromDate, toDate, filterStaff]);
+
+    const filteredMonthlyReport = React.useMemo(() => {
+        const lowerSearch = searchTerm.toLowerCase();
+        return monthlyReport.filter(item =>
+            (item.name || '').toLowerCase().includes(lowerSearch)
+        );
+    }, [monthlyReport, searchTerm]);
 
     const [selectedPhoto, setSelectedPhoto] = useState(null);
 
@@ -897,14 +939,7 @@ const Staff = () => {
                     </div>
 
                     <div className="flex-resp" style={{ gap: '12px' }}>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: 'var(--primary)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>Active Staff</span>
-                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{staffList.filter(s => s.status !== 'blocked').length}</span>
-                        </motion.div>
-                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: '12px 20px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
-                            <span style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>On Duty</span>
-                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>{attendanceList.filter(r => r.date === todayIST()).length}</span>
-                        </motion.div>
+
                         <div style={{ display: 'flex', gap: '8px' }}>
                             <button
                                 onClick={() => {
@@ -933,6 +968,23 @@ const Staff = () => {
                                 <Plus size={20} /> <span className="hide-mobile">Add Personnel</span><span className="show-mobile">Add</span>
                             </button>
                             <button
+                                onClick={() => {
+                                    setBackdateForm({ ...backdateForm, staffId: '', date: todayIST() });
+                                    setShowBackdateModal(true);
+                                }}
+                                style={{
+                                    display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 20px',
+                                    borderRadius: '14px', fontWeight: '800',
+                                    background: 'rgba(255, 255, 255, 0.05)',
+                                    color: 'white', border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap', flexShrink: 0,
+                                    cursor: 'pointer', transition: '0.3s'
+                                }}
+                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                            >
+                                <Clock size={20} color="var(--primary)" /> <span className="hide-mobile">MANUAL DUTY</span>
+                            </button>
+                            <button
                                 onClick={exportToExcel}
                                 className="glass-card-hover-effect"
                                 style={{
@@ -956,21 +1008,16 @@ const Staff = () => {
             </header>
 
             <main style={{ padding: '0', maxWidth: '1600px', margin: '0 auto' }}>
-                <div style={{
-                    display: 'grid',
-                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                    gap: '20px',
-                    marginBottom: '30px'
-                }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '25px', marginBottom: '30px' }} className="staff-stats-grid">
                     <div className="premium-stat-card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
-                                <p className="premium-label">Staff Strength</p>
-                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: 'white' }}>{staffList.length}</h2>
-                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Total Personnel</p>
+                                <p className="premium-label">Total Personnel</p>
+                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: 'white' }}>{staffStats.totalStaff}</h2>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Registered Team Members</p>
                             </div>
-                            <div style={{ background: 'rgba(251, 191, 36, 0.1)', padding: '12px', borderRadius: '16px' }}>
-                                <Users color="var(--primary)" size={24} />
+                            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '12px', borderRadius: '16px' }}>
+                                <Users color="white" size={24} style={{ opacity: 0.5 }} />
                             </div>
                         </div>
                     </div>
@@ -980,16 +1027,17 @@ const Staff = () => {
                             <div>
                                 <p className="premium-label">Today's Attendance</p>
                                 <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: '#10b981' }}>
-                                    {attendanceList.filter(a => a.date === todayIST() && a.status === 'present').length}
+                                    {staffStats.todayAttendance}
+                                    <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.3)', marginLeft: '5px' }}>/ {staffStats.totalStaff}</span>
                                 </h2>
-                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>On Duty</p>
+                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>{Math.round((staffStats.todayAttendance / (staffStats.totalStaff || 1)) * 100)}% Participation</p>
                             </div>
                             <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '16px' }}>
-                                <ShieldCheck color="#10b981" size={24} />
+                                <Clock color="#10b981" size={24} />
                             </div>
                         </div>
                         <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '4px', background: 'rgba(16, 185, 129, 0.1)' }}>
-                            <div style={{ width: `${(attendanceList.filter(a => a.date === todayIST() && a.status === 'present').length / (staffList.length || 1)) * 100}%`, height: '100%', background: '#10b981' }}></div>
+                            <div style={{ width: `${(staffStats.todayAttendance / (staffStats.totalStaff || 1)) * 100}%`, height: '100%', background: '#10b981' }}></div>
                         </div>
                     </div>
 
@@ -997,7 +1045,7 @@ const Staff = () => {
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                             <div>
                                 <p className="premium-label">Pending Leaves</p>
-                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: '#f59e0b' }}>{pendingLeaves.length}</h2>
+                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: '#f59e0b' }}>{staffStats.pendingLeaves}</h2>
                                 <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Awaiting Review</p>
                             </div>
                             <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '16px' }}>
@@ -1064,149 +1112,125 @@ const Staff = () => {
                                 {tab.label}
                             </button>
                         ))}
-                </div>
-
-                <div style={{ position: 'relative', flex: 1, maxWidth: '350px' }}>
-                    <Search style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
-                    <input
-                        type="text"
-                        placeholder="SEARCH PERSONNEL..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        style={{
-                            width: '100%',
-                            height: '48px',
-                            background: 'rgba(0,0,0,0.2)',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            borderRadius: '16px',
-                            padding: '0 15px 0 45px',
-                            color: 'white',
-                            fontSize: '12px',
-                            fontWeight: '700',
-                            letterSpacing: '0.5px'
-                        }}
-                    />
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.05)', height: '48px' }}>
-                    <Target size={14} style={{ color: 'var(--primary)', marginRight: '10px' }} />
-                    <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginRight: '10px' }}>GOAL:</span>
-                    <input
-                        type="number"
-                        value={monthlyTarget}
-                        onChange={e => handleTargetChange(e.target.value)}
-                        style={{ width: '40px', background: 'transparent', border: 'none', color: 'var(--primary)', fontWeight: '900', fontSize: '14px', textAlign: 'center', outline: 'none' }}
-                    />
-                </div>
-
-                {(view === 'summary' || view === 'attendance' || view === 'list') && (
-                    <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <button
-                            onClick={() => setIsRange(false)}
-                            style={{
-                                padding: '8px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-                                background: !isRange ? 'rgba(255,255,255,0.05)' : 'transparent',
-                                color: !isRange ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
-                                fontSize: '11px', fontWeight: '800', transition: '0.3s'
-                            }}
-                        >
-                            MONTHLY
-                        </button>
-                        <button
-                            onClick={() => setIsRange(true)}
-                            style={{
-                                padding: '8px 16px', borderRadius: '12px', border: 'none', cursor: 'pointer',
-                                background: isRange ? 'rgba(255,255,255,0.05)' : 'transparent',
-                                color: isRange ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
-                                fontSize: '11px', fontWeight: '800', transition: '0.3s'
-                            }}
-                        >
-                            RANGE
-                        </button>
                     </div>
-                )}
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    {!isRange ? (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <select
-                                className="premium-compact-input"
-                                style={{
-                                    height: '40px', border: 'none', background: 'transparent', width: '120px',
-                                    fontSize: '11px', fontWeight: '900', color: 'white', cursor: 'pointer',
-                                    textAlign: 'center', outline: 'none'
-                                }}
-                                value={selectedMonth}
-                                onChange={(e) => setSelectedMonth(e.target.value)}
-                            >
-                                <option value="1" style={{ background: '#0f172a', color: 'white' }}>JANUARY</option>
-                                <option value="2" style={{ background: '#0f172a', color: 'white' }}>FEBRUARY</option>
-                                <option value="3" style={{ background: '#0f172a', color: 'white' }}>MARCH</option>
-                                <option value="4" style={{ background: '#0f172a', color: 'white' }}>APRIL</option>
-                                <option value="5" style={{ background: '#0f172a', color: 'white' }}>MAY</option>
-                                <option value="6" style={{ background: '#0f172a', color: 'white' }}>JUNE</option>
-                                <option value="7" style={{ background: '#0f172a', color: 'white' }}>JULY</option>
-                                <option value="8" style={{ background: '#0f172a', color: 'white' }}>AUGUST</option>
-                                <option value="9" style={{ background: '#0f172a', color: 'white' }}>SEPTEMBER</option>
-                                <option value="10" style={{ background: '#0f172a', color: 'white' }}>OCTOBER</option>
-                                <option value="11" style={{ background: '#0f172a', color: 'white' }}>NOVEMBER</option>
-                                <option value="12" style={{ background: '#0f172a', color: 'white' }}>DECEMBER</option>
-                            </select>
-                            <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }}></div>
-                            <select
-                                className="premium-compact-input"
-                                style={{
-                                    height: '40px', border: 'none', background: 'transparent', width: '90px',
-                                    fontSize: '11px', fontWeight: '900', color: 'white', cursor: 'pointer',
-                                    textAlign: 'center', outline: 'none'
-                                }}
-                                value={selectedYear}
-                                onChange={(e) => setSelectedYear(e.target.value)}
-                            >
-                                {Array.from({ length: 5 }, (_, i) => nowIST().getUTCFullYear() - 2 + i).map(y => (
-                                    <option key={y} value={y} style={{ background: '#0f172a', color: 'white' }}>{y}</option>
-                                ))}
-                            </select>
-                        </div>
-                    ) : (
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <div
-                                onClick={() => document.getElementById('range-from-picker').showPicker()}
-                                style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', position: 'relative', minWidth: '120px' }}
-                            >
-                                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>FROM</span>
-                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{formatDateIST(fromDate)}</span>
-                                <input id="range-from-picker" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
-                            </div>
-                            <ArrowUpRight size={14} color="rgba(255,255,255,0.2)" />
-                            <div
-                                onClick={() => document.getElementById('range-to-picker').showPicker()}
-                                style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', position: 'relative', minWidth: '120px' }}
-                            >
-                                <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TO</span>
-                                <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{formatDateIST(toDate)}</span>
-                                <input id="range-to-picker" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
-                            </div>
-                        </div>
-                    )}
-
-                    {view === 'attendance' && (
-                        <button
-                            onClick={() => setShowBackdateModal(true)}
+                    <div style={{ position: 'relative', flex: 1, maxWidth: '350px' }}>
+                        <Search style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
+                        <input
+                            type="text"
+                            placeholder="SEARCH PERSONNEL..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
-                                height: '48px', padding: '0 20px', borderRadius: '16px',
-                                background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', fontWeight: '900',
-                                border: '1px solid rgba(251, 191, 36, 0.2)', cursor: 'pointer', fontSize: '12px',
-                                display: 'flex', alignItems: 'center', gap: '10px', transition: '0.3s'
+                                width: '100%',
+                                height: '48px',
+                                background: 'rgba(0,0,0,0.2)',
+                                border: '1px solid rgba(255,255,255,0.05)',
+                                borderRadius: '16px',
+                                padding: '0 15px 0 45px',
+                                color: 'white',
+                                fontSize: '12px',
+                                fontWeight: '700',
+                                letterSpacing: '0.5px'
                             }}
-                        >
-                            <Plus size={18} /> NEW LOG
-                        </button>
-                    )}
-                </div>
-        </div>
+                        />
+                    </div>
 
-                {/* Main Content Area */ }
+                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.05)', height: '48px' }}>
+                        <Target size={14} style={{ color: 'var(--primary)', marginRight: '10px' }} />
+                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginRight: '10px' }}>GOAL:</span>
+                        <input
+                            type="number"
+                            value={monthlyTarget}
+                            onChange={e => handleTargetChange(e.target.value)}
+                            style={{ width: '40px', background: 'transparent', border: 'none', color: 'var(--primary)', fontWeight: '900', fontSize: '14px', textAlign: 'center', outline: 'none' }}
+                        />
+                    </div>
+
+                    {/* Date Controls removed Range option for Payroll as per request */}
+
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        {!isRange ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                <select
+                                    className="premium-compact-input"
+                                    style={{
+                                        height: '40px', border: 'none', background: 'transparent', width: '120px',
+                                        fontSize: '11px', fontWeight: '900', color: 'white', cursor: 'pointer',
+                                        textAlign: 'center', outline: 'none'
+                                    }}
+                                    value={selectedMonth}
+                                    onChange={(e) => setSelectedMonth(e.target.value)}
+                                >
+                                    <option value="1" style={{ background: '#0f172a', color: 'white' }}>JANUARY</option>
+                                    <option value="2" style={{ background: '#0f172a', color: 'white' }}>FEBRUARY</option>
+                                    <option value="3" style={{ background: '#0f172a', color: 'white' }}>MARCH</option>
+                                    <option value="4" style={{ background: '#0f172a', color: 'white' }}>APRIL</option>
+                                    <option value="5" style={{ background: '#0f172a', color: 'white' }}>MAY</option>
+                                    <option value="6" style={{ background: '#0f172a', color: 'white' }}>JUNE</option>
+                                    <option value="7" style={{ background: '#0f172a', color: 'white' }}>JULY</option>
+                                    <option value="8" style={{ background: '#0f172a', color: 'white' }}>AUGUST</option>
+                                    <option value="9" style={{ background: '#0f172a', color: 'white' }}>SEPTEMBER</option>
+                                    <option value="10" style={{ background: '#0f172a', color: 'white' }}>OCTOBER</option>
+                                    <option value="11" style={{ background: '#0f172a', color: 'white' }}>NOVEMBER</option>
+                                    <option value="12" style={{ background: '#0f172a', color: 'white' }}>DECEMBER</option>
+                                </select>
+                                <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }}></div>
+                                <select
+                                    className="premium-compact-input"
+                                    style={{
+                                        height: '40px', border: 'none', background: 'transparent', width: '90px',
+                                        fontSize: '11px', fontWeight: '900', color: 'white', cursor: 'pointer',
+                                        textAlign: 'center', outline: 'none'
+                                    }}
+                                    value={selectedYear}
+                                    onChange={(e) => setSelectedYear(e.target.value)}
+                                >
+                                    {Array.from({ length: 5 }, (_, i) => nowIST().getUTCFullYear() - 2 + i).map(y => (
+                                        <option key={y} value={y} style={{ background: '#0f172a', color: 'white' }}>{y}</option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                <div
+                                    onClick={() => document.getElementById('range-from-picker').showPicker()}
+                                    style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', position: 'relative', minWidth: '120px' }}
+                                >
+                                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>FROM</span>
+                                    <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{formatDateIST(fromDate)}</span>
+                                    <input id="range-from-picker" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
+                                </div>
+                                <ArrowUpRight size={14} color="rgba(255,255,255,0.2)" />
+                                <div
+                                    onClick={() => document.getElementById('range-to-picker').showPicker()}
+                                    style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', position: 'relative', minWidth: '120px' }}
+                                >
+                                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TO</span>
+                                    <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{formatDateIST(toDate)}</span>
+                                    <input id="range-to-picker" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
+                                </div>
+                            </div>
+                        )}
+
+                        {view === 'attendance' && (
+                            <button
+                                onClick={() => setShowBackdateModal(true)}
+                                style={{
+                                    height: '48px', padding: '0 20px', borderRadius: '16px',
+                                    background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', fontWeight: '900',
+                                    border: '1px solid rgba(251, 191, 36, 0.2)', cursor: 'pointer', fontSize: '12px',
+                                    display: 'flex', alignItems: 'center', gap: '10px', transition: '0.3s'
+                                }}
+                            >
+                                <Clock size={18} /> MANUAL DUTY
+                            </button>
+                        )}
+                    </div>
+                </div>
+
+                {/* Main Content Area */}
                 <div style={{ padding: '0 0 50px 0' }}>
                     {view === 'list' && (
                         <div style={{
@@ -1244,7 +1268,7 @@ const Staff = () => {
                                                 key={staff._id}
                                                 initial={{ opacity: 0, y: 10 }}
                                                 animate={{ opacity: 1, y: 0 }}
-                                                whileHover={{ 
+                                                whileHover={{
                                                     backgroundColor: 'rgba(255,255,255,0.04)',
                                                     scale: 1.002,
                                                     boxShadow: '0 10px 30px -10px rgba(0,0,0,0.5)'
@@ -1298,6 +1322,16 @@ const Staff = () => {
                                                 </td>
                                                 <td style={{ padding: '12px 25px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px', textAlign: 'right' }}>
                                                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                        <button
+                                                            onClick={() => {
+                                                                setBackdateForm({ ...backdateForm, staffId: staff._id, date: todayIST() });
+                                                                setShowBackdateModal(true);
+                                                            }}
+                                                            title="Mark Attendance (Manual Duty)"
+                                                            style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                        >
+                                                            <Clock size={14} />
+                                                        </button>
                                                         <button
                                                             onClick={() => handleEditStaff(staff)}
                                                             style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
@@ -1476,12 +1510,12 @@ const Staff = () => {
                                     </tbody>
                                 </table>
                             </div >
-                        </div >
+                        </div>
                     )}
 
-                    {/* Leaves Management View */}
-                    {
-                        view === 'leaves' && (
+                    {view === 'leaves' && (
+                        <div style={{ display: 'grid', gap: '30px' }}>
+                            {/* Pending Requests Section */}
                             <div style={{
                                 background: 'rgba(15, 23, 42, 0.4)',
                                 borderRadius: '28px',
@@ -1490,114 +1524,53 @@ const Staff = () => {
                                 backdropFilter: 'blur(10px)',
                                 boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
                             }}>
+                                <div style={{ padding: '20px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ width: '10px', height: '24px', background: '#f59e0b', borderRadius: '10px' }}></div>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '1px' }}>PENDING LEAVE REQUESTS</h3>
+                                </div>
                                 <div style={{ overflowX: 'auto', padding: '10px' }}>
                                     <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
                                         <thead>
                                             <tr style={{ textAlign: 'left' }}>
                                                 <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
-                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LEAVE DURATION</th>
-                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>REASON / DETAILS</th>
-                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS (APPROVE / REJECT)</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LEAVE DATES</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>APPLIED ON</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {pendingLeaves.length === 0 ? (
+                                            {pendingLeaves.filter(l => l.status === 'Pending').length === 0 ? (
                                                 <tr>
                                                     <td colSpan="4">
-                                                        <div style={{ padding: '100px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.05)' }}>
-                                                            <Calendar size={48} color="#8b5cf6" style={{ opacity: 0.2, marginBottom: '20px' }} />
-                                                            <p style={{ margin: 0, fontWeight: '800', fontSize: '18px', color: 'white' }}>No Pending Leaves</p>
-                                                            <p style={{ margin: '8px 0 0 0', fontWeight: '500', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>Hooray! No leave requests are currently pending approval.</p>
+                                                        <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+                                                            <Calendar size={40} color="rgba(255,255,255,0.1)" style={{ marginBottom: '15px' }} />
+                                                            <p style={{ margin: 0, fontWeight: '700', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>No pending leave requests at the moment.</p>
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            ) : pendingLeaves.map(leave => (
-                                                <motion.tr
-                                                    key={leave._id}
-                                                    initial={{ opacity: 0, scale: 0.98 }}
-                                                    animate={{ opacity: 1, scale: 1 }}
-                                                    whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)', scale: 1.002 }}
-                                                    style={{
-                                                        background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0.5) 100%)',
-                                                        borderRadius: '20px',
-                                                        transition: 'all 0.3s ease',
-                                                        boxShadow: '0 10px 20px -10px rgba(0,0,0,0.2)'
-                                                    }}
-                                                >
-                                                    <td style={{ padding: '20px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(139, 92, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: '#8b5cf6', fontWeight: '900', fontSize: '18px', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
-                                                                {leave.staff?.name?.charAt(0) || '?'}
-                                                            </div>
+                                            ) : pendingLeaves.filter(l => l.status === 'Pending').map(leave => (
+                                                <motion.tr key={leave._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '20px' }}>
+                                                    <td style={{ padding: '18px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b', fontWeight: '900' }}>{leave.staff?.name?.charAt(0)}</div>
                                                             <div>
-                                                                <div style={{ fontWeight: '900', color: 'white', fontSize: '16px', letterSpacing: '-0.3px' }}>{leave.staff?.name || 'Unknown Staff'}</div>
-                                                                <div style={{ fontSize: '11px', color: '#8b5cf6', marginTop: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>ID: {leave._id.slice(-6).toUpperCase()}</div>
+                                                                <div style={{ fontWeight: '900', color: 'white', fontSize: '15px' }}>{leave.staff?.name}</div>
+                                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{leave.type}</div>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '20px 25px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: '800', color: 'white' }}>
-                                                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px' }}>
-                                                                {formatDateIST(leave.startDate, { day: '2-digit', month: 'short' })}
-                                                            </div>
-                                                            <ChevronRight size={14} style={{ opacity: 0.5 }} />
-                                                            <div style={{ background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px' }}>
-                                                                {formatDateIST(leave.endDate, { day: '2-digit', month: 'short' })}
-                                                            </div>
-                                                        </div>
-                                                        <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '800', textTransform: 'uppercase', marginTop: '8px', letterSpacing: '1px', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px', display: 'inline-block' }}>{leave.type} LEAVE</div>
-                                                    </td>
-                                                    <td style={{ padding: '20px 25px' }}>
-                                                        <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.6)', maxWidth: '320px', lineHeight: '1.6', fontWeight: '500', background: 'rgba(255,255,255,0.02)', padding: '10px 15px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.02)' }}>
-                                                            {leave.reason || <span style={{ opacity: 0.5, fontStyle: 'italic' }}>No reason provided.</span>}
+                                                    <td style={{ padding: '18px 25px' }}>
+                                                        <div style={{ fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                            {formatDateIST(leave.startDate)} <ChevronRight size={12} style={{ opacity: 0.3 }} /> {formatDateIST(leave.endDate)}
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '20px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px', textAlign: 'right' }}>
-                                                        <div style={{ display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-                                                            <motion.button
-                                                                whileHover={{ scale: 1.05, background: 'rgba(16, 185, 129, 0.2)', y: -2 }}
-                                                                whileTap={{ scale: 0.95 }}
-                                                                onClick={() => handleLeaveAction(leave._id, 'Approved')}
-                                                                style={{
-                                                                    background: 'rgba(16, 185, 129, 0.1)',
-                                                                    color: '#10b981',
-                                                                    border: '1px solid rgba(16, 185, 129, 0.2)',
-                                                                    padding: '10px 20px',
-                                                                    borderRadius: '12px',
-                                                                    fontSize: '12px',
-                                                                    fontWeight: '800',
-                                                                    cursor: 'pointer',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: '8px',
-                                                                    letterSpacing: '0.5px',
-                                                                    transition: '0.2s'
-                                                                }}
-                                                            >
-                                                                <CheckCircle2 size={16} /> APPROVE
-                                                            </motion.button>
-                                                            <motion.button
-                                                                whileHover={{ scale: 1.05, background: 'rgba(244, 63, 94, 0.2)', y: -2 }}
-                                                                whileTap={{ scale: 0.95 }}
-                                                                onClick={() => handleLeaveAction(leave._id, 'Rejected')}
-                                                                style={{
-                                                                    background: 'rgba(244, 63, 94, 0.1)',
-                                                                    color: '#f43f5e',
-                                                                    border: '1px solid rgba(244, 63, 94, 0.2)',
-                                                                    padding: '10px 20px',
-                                                                    borderRadius: '12px',
-                                                                    fontSize: '12px',
-                                                                    fontWeight: '800',
-                                                                    cursor: 'pointer',
-                                                                    display: 'flex',
-                                                                    alignItems: 'center',
-                                                                    gap: '8px',
-                                                                    letterSpacing: '0.5px',
-                                                                    transition: '0.2s'
-                                                                }}
-                                                            >
-                                                                <XCircle size={16} /> REJECT
-                                                            </motion.button>
+                                                    <td style={{ padding: '18px 25px' }}>
+                                                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>{formatDateIST(leave.appliedAt || leave.createdAt)}</div>
+                                                    </td>
+                                                    <td style={{ padding: '18px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px', textAlign: 'right' }}>
+                                                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleLeaveAction(leave._id, 'Approved')} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '8px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}>APPROVE</motion.button>
+                                                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleLeaveAction(leave._id, 'Rejected')} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '8px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}>REJECT</motion.button>
                                                         </div>
                                                     </td>
                                                 </motion.tr>
@@ -1606,7 +1579,79 @@ const Staff = () => {
                                     </table>
                                 </div>
                             </div>
-                        )}
+
+                            {/* Approved History Section */}
+                            <div style={{
+                                background: 'rgba(15, 23, 42, 0.4)',
+                                borderRadius: '28px',
+                                border: '1px solid rgba(255,255,255,0.06)',
+                                overflow: 'hidden',
+                                backdropFilter: 'blur(10px)',
+                                boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
+                            }}>
+                                <div style={{ padding: '20px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                    <div style={{ width: '10px', height: '24px', background: '#10b981', borderRadius: '10px' }}></div>
+                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '1px' }}>APPROVED LEAVE HISTORY</h3>
+                                </div>
+                                <div style={{ overflowX: 'auto', padding: '10px' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
+                                        <thead>
+                                            <tr style={{ textAlign: 'left' }}>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LEAVE DATES</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>REASON / DETAILS</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>STATUS</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {pendingLeaves.filter(l => {
+                                                if (l.status === 'Pending') return false;
+                                                const d = new Date(l.startDate);
+                                                return (d.getUTCMonth() + 1).toString() === selectedMonth && d.getUTCFullYear().toString() === selectedYear;
+                                            }).length === 0 ? (
+                                                <tr>
+                                                    <td colSpan="4">
+                                                        <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+                                                            <p style={{ margin: 0, fontWeight: '700', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>No leave history found for the selected period.</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ) : pendingLeaves.filter(l => {
+                                                if (l.status === 'Pending') return false;
+                                                const d = new Date(l.startDate);
+                                                return (d.getUTCMonth() + 1).toString() === selectedMonth && d.getUTCFullYear().toString() === selectedYear;
+                                            }).map(leave => (
+                                                <motion.tr key={leave._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'rgba(255,255,255,0.015)', borderRadius: '20px' }}>
+                                                    <td style={{ padding: '15px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
+                                                        <div style={{ fontWeight: '900', color: 'white', fontSize: '14px' }}>{leave.staff?.name}</div>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{leave.type}</div>
+                                                    </td>
+                                                    <td style={{ padding: '15px 25px' }}>
+                                                        <div style={{ fontSize: '12px', fontWeight: '700', color: 'white' }}>
+                                                            {formatDateIST(leave.startDate)} → {formatDateIST(leave.endDate)}
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '15px 25px' }}>
+                                                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{leave.reason || 'No reason specified'}</div>
+                                                    </td>
+                                                    <td style={{ padding: '15px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px', textAlign: 'right' }}>
+                                                        <div style={{
+                                                            display: 'inline-flex', padding: '6px 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '900',
+                                                            background: leave.status === 'Approved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+                                                            color: leave.status === 'Approved' ? '#10b981' : '#f43f5e',
+                                                            border: `1px solid ${leave.status === 'Approved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)'}`
+                                                        }}>
+                                                            {leave.status.toUpperCase()}
+                                                        </div>
+                                                    </td>
+                                                </motion.tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {view === 'summary' && (
                         <div style={{ marginTop: '10px' }}>
                             {/* Premium Payroll Intelligence Header */}
@@ -1696,7 +1741,7 @@ const Staff = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {monthlyReport.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase())).length === 0 ? (
+                                            {filteredMonthlyReport.length === 0 ? (
                                                 <tr>
                                                     <td colSpan="7">
                                                         <div style={{ textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.01)', borderRadius: '24px' }}>
@@ -1705,7 +1750,7 @@ const Staff = () => {
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            ) : monthlyReport.filter(item => item.name.toLowerCase().includes(searchTerm.toLowerCase())).map((item) => (
+                                            ) : filteredMonthlyReport.map((item) => (
                                                 <motion.tr
                                                     key={item.staffId}
                                                     initial={{ opacity: 0, y: 10 }}
@@ -2143,12 +2188,10 @@ const Staff = () => {
 
                                                 {/* Final calc box */}
                                                 <div style={{ background: 'linear-gradient(135deg, rgba(251,191,36,0.1), rgba(251,191,36,0.03))', border: '1px solid rgba(251,191,36,0.25)', borderRadius: '14px', padding: '12px 14px', marginTop: '2px' }}>
-                                                    <p style={{ margin: 0, fontSize: '9px', color: 'var(--primary)', fontWeight: '700', letterSpacing: '1px' }}>🧮 STEP-BY-STEP</p>
+                                                    <p style={{ margin: 0, fontSize: '9px', color: 'var(--primary)', fontWeight: '700', letterSpacing: '1px' }}>🧮 CALCULATION</p>
                                                     <p style={{ margin: '6px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.55)', fontWeight: '600', lineHeight: '1.7' }}>
-                                                        ({selectedStaffReport.presentDays || 0} presents
-                                                        {(selectedStaffReport.sundaysPassed || 0) > 0 ? ` + ${selectedStaffReport.sundaysPassed} sundays` : ''}
-                                                        {(selectedStaffReport.sundaysWorked || 0) > 0 ? ` + ${selectedStaffReport.sundaysWorked} extras` : ''})
-                                                        {' × ₹'}{selectedStaffReport.perDaySalary || Math.round((selectedStaffReport.salary || 0) / 30)}
+                                                        ({selectedStaffReport.earnedDays || 0} earned days / {selectedStaffReport.totalDaysInCycle || 30} total)
+                                                        {' × ₹'}{(selectedStaffReport.baseSalary || selectedStaffReport.salary || 0).toLocaleString()}
                                                     </p>
                                                     <p style={{ margin: '5px 0 0 0', fontSize: '15px', fontWeight: '900', color: 'var(--primary)' }}>= ₹{(selectedStaffReport.finalSalary || 0).toLocaleString()}</p>
                                                 </div>
@@ -2250,25 +2293,25 @@ const Staff = () => {
                                             <div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
                                                     <span style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>PAYROLL ACCRUAL</span>
-                                                    <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--primary)' }}>{Math.round((selectedStaffReport.finalSalary / (selectedStaffReport.salary || 1)) * 100)}%</span>
+                                                    <span style={{ fontSize: '11px', fontWeight: '700', color: 'var(--primary)' }}>{Math.round((selectedStaffReport.finalSalary / (selectedStaffReport.baseSalary || selectedStaffReport.salary || 1)) * 100)}%</span>
                                                 </div>
                                                 <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
                                                     <motion.div
                                                         initial={{ width: 0 }}
-                                                        animate={{ width: `${Math.min(100, (selectedStaffReport.finalSalary / (selectedStaffReport.salary || 1)) * 100)}%` }}
+                                                        animate={{ width: `${Math.min(100, (selectedStaffReport.finalSalary / (selectedStaffReport.baseSalary || selectedStaffReport.salary || 1)) * 100)}%` }}
                                                         style={{ height: '100%', background: 'linear-gradient(90deg, var(--primary), var(--primary))', boxShadow: '0 0 15px rgba(251, 191, 36, 0.3)' }}
                                                     />
                                                 </div>
                                             </div>
                                             <div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
-                                                    <span style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>ATTENDANCE RATE</span>
-                                                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#10b981' }}>{Math.round((selectedStaffReport.presentDays / (selectedStaffReport.workingDaysPassed || 1)) * 100) || 0}%</span>
+                                                    <span style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(255,255,255,0.4)', letterSpacing: '1px' }}>EARNED DAYS RATE</span>
+                                                    <span style={{ fontSize: '11px', fontWeight: '700', color: '#10b981' }}>{Math.round((selectedStaffReport.earnedDays / (selectedStaffReport.totalDaysInCycle || 1)) * 100) || 0}%</span>
                                                 </div>
                                                 <div style={{ height: '8px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
                                                     <motion.div
                                                         initial={{ width: 0 }}
-                                                        animate={{ width: `${Math.min(100, (selectedStaffReport.presentDays / (selectedStaffReport.workingDaysPassed || 1)) * 100)}%` }}
+                                                        animate={{ width: `${Math.min(100, (selectedStaffReport.earnedDays / (selectedStaffReport.totalDaysInCycle || 1)) * 100)}%` }}
                                                         style={{ height: '100%', background: 'linear-gradient(90deg, #10b981, #059669)', boxShadow: '0 0 15px rgba(16, 185, 129, 0.3)' }}
                                                     />
                                                 </div>

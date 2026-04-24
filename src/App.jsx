@@ -114,7 +114,12 @@ const AdminRoutes = () => {
 
   const canAccess = (key) => {
     if (isAdmin) return true;
-    if (p[key] === true) return true;
+    const perm = p[key];
+    if (!perm) return false;
+    if (typeof perm === 'boolean') return perm;
+    if (typeof perm === 'object') {
+      return perm.all || Object.values(perm).some(v => v === true);
+    }
     return false;
   };
 

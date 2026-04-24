@@ -37,7 +37,11 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         if (searchParam) setSearchTerm(searchParam);
         if (monthParam) setMonth(Number(monthParam));
         if (yearParam) setYear(Number(yearParam));
-        if (tabParam) setActiveTab(tabParam);
+        
+        if (tabParam) {
+            if (tabParam === 'settlement') setActiveTab('payroll');
+            else setActiveTab(tabParam);
+        }
     }, [location.search]);
 
     const [month, setMonth] = useState(new Date(Date.now() + 5.5 * 60 * 60 * 1000).getUTCMonth() + 1);
