@@ -166,6 +166,7 @@ const AdminRoutes = () => {
       )}
       <Route path="admins" element={canAccess('manageAdmins') ? <Admins /> : <Navigate to="/admin" />} />
       <Route path="staff" element={canAccess('staffManagement') ? <Staff /> : <Navigate to="/admin" />} />
+      <Route path="/vehicles/*" element={<Vehicles />} />
       <Route path="profile" element={<Profile />} />
       <Route path="*" element={<Navigate to="/admin" />} />
     </Routes>

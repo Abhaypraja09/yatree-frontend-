@@ -1,13 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { 
-    Bot, 
-    X, 
-    Send, 
-    Mic, 
-    MicOff, 
-    Sparkles, 
+import {
+    Bot,
+    X,
+    Send,
+    Mic,
+    MicOff,
+    Sparkles,
     MessageSquare,
     ChevronDown,
     Maximize2,
@@ -29,46 +29,16 @@ const AIChatAgent = () => {
     const [alerts, setAlerts] = useState([]);
     const [hasAlertsDetected, setHasAlertsDetected] = useState(false);
     const [isHovered, setIsHovered] = useState(false);
-    const [messages, setMessages] = useState([
-        { role: 'ai', content: 'Hello! I am your Texi Fleet AI Assistant. How can I help you manage your fleet today? (You can type or use voice!)' }
-    ]);
+    const [messages, setMessages] = useState([]);
     const [input, setInput] = useState('');
     const [isTyping, setIsTyping] = useState(false);
     const [isListening, setIsListening] = useState(false);
-    const [isSpeaking, setIsSpeaking] = useState(false);
     const [hasGreeted, setHasGreeted] = useState(false);
     const messagesEndRef = useRef(null);
     const audioRef = useRef(new Audio('https://assets.mixkit.co/active_storage/sfx/2869/2869-preview.mp3'));
 
-
-    // Speech Recognition setup
-    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-    const recognition = SpeechRecognition ? new SpeechRecognition() : null;
-
-    if (recognition) {
-        recognition.continuous = false;
-        recognition.lang = 'en-US'; // Can be improved to use 'en-IN' or 'hi-IN'
-
-        recognition.onresult = (event) => {
-            const transcript = event.results[0][0].transcript;
-            setInput(transcript);
-            setIsListening(false);
-        };
-
-        recognition.onerror = (event) => {
-            console.error('Speech Recognition Error', event.error);
-            setIsListening(false);
-        };
-    }
-
     const scrollToBottom = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    };
-    const stopSpeaking = () => {
-        if ('speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-            setIsSpeaking(false);
-        }
     };
 
     const playAlertSound = () => {
@@ -77,30 +47,6 @@ const AIChatAgent = () => {
             audioRef.current.volume = 0.4;
             audioRef.current.play().catch(e => console.log("Audio play blocked", e));
         }
-    };
-
-    const speakText = (text) => {
-        if (!('speechSynthesis' in window)) return;
-        
-        // Cancel ongoing speech
-        window.speechSynthesis.cancel();
-        
-        const utterance = new SpeechSynthesisUtterance(text);
-        
-        // Find professional English voice
-        const voices = window.speechSynthesis.getVoices();
-        const enVoice = voices.find(v => (v.lang === 'en-US' || v.lang === 'en-GB') && v.name.includes('Google')) || 
-                        voices.find(v => v.lang.startsWith('en'));
-        
-        if (enVoice) utterance.voice = enVoice;
-        utterance.lang = 'en-US';
-        utterance.rate = 0.95;
-
-        utterance.onstart = () => setIsSpeaking(true);
-        utterance.onend = () => setIsSpeaking(false);
-        utterance.onerror = () => setIsSpeaking(false);
-
-        window.speechSynthesis.speak(utterance);
     };
 
     useEffect(() => {
@@ -126,25 +72,16 @@ const AIChatAgent = () => {
         checkAlerts();
     }, [user]);
 
-    // Handle blinking based on location and detected alerts
     useEffect(() => {
         const isDashboard = location.pathname === '/admin' || location.pathname === '/admin/';
         if (isDashboard && hasAlertsDetected) {
             setShouldBlink(true);
-            // Optional: still auto-stop after 25s if you want, or keep it till seen
             const timer = setTimeout(() => setShouldBlink(false), 25000);
             return () => clearTimeout(timer);
         } else {
             setShouldBlink(false);
         }
     }, [location.pathname, hasAlertsDetected]);
-
-    // Stop speaking when closed
-    useEffect(() => {
-        if (!isOpen) {
-            stopSpeaking();
-        }
-    }, [isOpen]);
 
     useEffect(() => {
         const fetchBriefing = async () => {
@@ -156,21 +93,13 @@ const AIChatAgent = () => {
                         headers: { Authorization: `Bearer ${userInfo.token}` }
                     });
                     if (data.briefing) {
-                        setMessages(prev => [...prev, { role: 'ai', content: data.briefing }]);
+                        setMessages([{ role: 'ai', content: data.briefing }]);
                         setHasGreeted(true);
-                        
-                        // Speak the briefing - Disabled per user request
-                        // setTimeout(() => {
-                        //     speakText(data.briefing);
-                        // }, 500);
-
-                        if (data.alertsDetected) {
-                            playAlertSound();
-                        }
+                        if (data.alertsDetected) playAlertSound();
                     }
-
                 } catch (err) {
                     console.error("Briefing failed", err);
+                    setMessages([{ role: 'ai', content: "Hello! I am your Autonomous Fleet Assistant. How can I assist you today?" }]);
                 } finally {
                     setIsTyping(false);
                 }
@@ -194,106 +123,61 @@ const AIChatAgent = () => {
 
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.post('/api/ai/query', { 
-                question: userMessage,
-                history: messages.slice(-5) 
+            const { data } = await axios.post('/api/ai/analyze', {
+                question: userMessage
             }, {
-                headers: { Authorization: `Bearer ${userInfo.token}` }
+                headers: { Authorization: `Bearer ${userInfo.token}` },
+                timeout: 30000
             });
 
-            let finalMessage = data.response;
-            const actionMatch = finalMessage.match(/\[ACTION:\s*({.*?})\]/);
-            
-            if (actionMatch) {
-                try {
-                    const action = JSON.parse(actionMatch[1]);
-                    finalMessage = finalMessage.replace(/\[ACTION:.*?\]/g, '').trim();
-                    
-                    if (action.type === 'navigate') {
-                        let url = action.path;
-                        if (action.filters) {
-                            const params = new URLSearchParams(action.filters).toString();
-                            url += `?${params}`;
-                        }
-                        
-                        // Execute navigation after short delay
-                        setTimeout(() => {
-                            navigate(url);
-                        }, 1000);
-                    }
-                } catch (e) {
-                    console.error("Action Parse Error", e);
-                }
-            }
-
-            setMessages(prev => [...prev, { role: 'ai', content: finalMessage }]);
-            
-            // Speak response
-            speakText(finalMessage);
-
-            if (data.alertsDetected) {
-                playAlertSound();
-            }
-
+            setMessages(prev => [...prev, { role: 'ai', content: data.response }]);
         } catch (error) {
-            setMessages(prev => [...prev, { role: 'ai', content: error.response?.data?.message || 'Sorry, I am having trouble connecting to my brain right now.' }]);
+            setMessages(prev => [...prev, { role: 'ai', content: "I am having trouble analyzing that right now. Please try again." }]);
         } finally {
             setIsTyping(false);
-        }
-    };
-
-    const toggleListening = () => {
-        if (!recognition) {
-            alert('Speech Recognition is not supported in your browser. Please use Chrome.');
-            return;
-        }
-
-        if (isListening) {
-            recognition.stop();
-            setIsListening(false);
-        } else {
-            recognition.start();
-            setIsListening(true);
         }
     };
 
     const userRole = user?.role?.toLowerCase() || '';
     const isAdmin = userRole === 'admin' || userRole === 'superadmin' || userRole.includes('admin') || userRole === 'executive';
 
-    if (!user || !isAdmin) return null; // Only show for logged in admin/executive users
+    if (!user || !isAdmin) return null;
 
     return (
-        <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 999 }}>
+        <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999 }}>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div
-                        initial={{ opacity: 0, scale: 0.8, y: 100 }}
-                        animate={{ opacity: 1, scale: 1, y: 0 }}
-                        exit={{ opacity: 0, scale: 0.8, y: 100 }}
+                        initial={{ opacity: 0, scale: 0.9, y: 100, x: 0 }}
+                        animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
+                        exit={{ opacity: 0, scale: 0.9, y: 100, x: 0 }}
                         style={{
-                            width: '400px',
-                            height: '600px',
-                            background: 'rgba(15, 23, 42, 0.95)',
-                            backdropFilter: 'blur(20px)',
-                            border: '1px solid rgba(255,255,255,0.1)',
+                            width: '420px',
+                            maxWidth: '90vw',
+                            height: '650px',
+                            maxHeight: '80vh',
+                            background: '#111',
                             borderRadius: '30px',
-                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.6)',
+                            boxShadow: '0 30px 60px -12px rgba(0, 0, 0, 0.8)',
                             display: 'flex',
                             flexDirection: 'column',
                             overflow: 'hidden',
-                            marginBottom: '20px'
+                            marginBottom: '20px',
+                            border: '1px solid rgba(255,255,255,0.08)'
                         }}
                     >
                         {/* Header */}
                         <div style={{
                             padding: '20px',
-                            background: 'linear-gradient(90deg, rgba(99, 102, 241, 0.2), transparent)',
+                            background: 'rgba(17, 17, 17, 0.8)',
+                            backdropFilter: 'blur(20px)',
                             borderBottom: '1px solid rgba(255,255,255,0.05)',
                             display: 'flex',
                             alignItems: 'center',
-                            justifyContent: 'space-between'
+                            justifyContent: 'space-between',
+                            zIndex: 10
                         }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                 <div style={{
                                     width: '42px',
                                     height: '42px',
@@ -301,50 +185,24 @@ const AIChatAgent = () => {
                                     background: 'linear-gradient(135deg, #6366f1, #38bdf8)',
                                     display: 'flex',
                                     alignItems: 'center',
-                                    justifyContent: 'center',
-                                    boxShadow: '0 8px 16px -4px rgba(99, 102, 241, 0.3)'
+                                    justifyContent: 'center'
                                 }}>
                                     <Bot size={24} color="white" />
                                 </div>
                                 <div>
-                                    <h3 style={{ fontSize: '15px', color: 'white', fontWeight: '800', margin: 0 }}>Fleet AI Assistant</h3>
+                                    <h3 style={{ fontSize: '15px', color: 'white', fontWeight: '800', margin: 0 }}>Autonomous <span style={{ color: '#6366f1' }}>AI</span></h3>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
-                                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px' }}>System Active</span>
+                                        <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} />
+                                        <span style={{ fontSize: '10px', color: '#10b981', fontWeight: '800', textTransform: 'uppercase' }}>Online & Ready</span>
                                     </div>
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                                {isSpeaking && (
-                                    <motion.button
-                                        initial={{ scale: 0.5, opacity: 0 }}
-                                        animate={{ scale: 1, opacity: 1 }}
-                                        whileHover={{ scale: 1.1 }}
-                                        onClick={stopSpeaking}
-                                        style={{
-                                            background: 'rgba(244, 63, 94, 0.2)',
-                                            border: '1px solid rgba(244, 63, 94, 0.4)',
-                                            color: '#f43f5e',
-                                            padding: '6px 10px',
-                                            borderRadius: '10px',
-                                            fontSize: '10px',
-                                            fontWeight: '900',
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: '5px',
-                                            cursor: 'pointer',
-                                            textTransform: 'uppercase'
-                                        }}
-                                    >
-                                        <VolumeX size={14} /> Stop
-                                    </motion.button>
-                                )}
-                                <button onClick={() => {
-                                    setMessages([{ role: 'ai', content: 'History cleared. How can I help you?' }]);
-                                    stopSpeaking();
-                                }} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }} title="Clear Chat"><RotateCcw size={18} /></button>
-                                <button onClick={() => setIsOpen(false)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><X size={24} /></button>
-                            </div>
+                            <button
+                                onClick={() => setIsOpen(false)}
+                                style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', width: '36px', height: '36px', borderRadius: '10px' }}
+                            >
+                                <X size={20} />
+                            </button>
                         </div>
 
                         {/* Chat Area */}
@@ -354,39 +212,41 @@ const AIChatAgent = () => {
                             padding: '20px',
                             display: 'flex',
                             flexDirection: 'column',
-                            gap: '15px'
+                            gap: '20px',
+                            background: '#0a0a0a'
                         }} className="custom-scrollbar">
                             {messages.map((msg, i) => (
-                                <div key={i} style={{
-                                    alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
-                                    maxWidth: '85%',
-                                    position: 'relative'
-                                }}>
+                                <motion.div
+                                    key={i}
+                                    initial={{ opacity: 0, y: 10 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    style={{
+                                        alignSelf: msg.role === 'user' ? 'flex-end' : 'flex-start',
+                                        maxWidth: '85%'
+                                    }}
+                                >
                                     <div style={{
                                         padding: '14px 18px',
                                         borderRadius: '20px',
                                         borderBottomRightRadius: msg.role === 'user' ? '4px' : '20px',
                                         borderBottomLeftRadius: msg.role === 'ai' ? '4px' : '20px',
-                                        background: msg.role === 'user' ? '#6366f1' : 'rgba(255,255,255,0.05)',
-                                        border: '1px solid rgba(255,255,255,0.05)',
-                                        color: 'white',
+                                        background: msg.role === 'user' ? '#6366f1' : '#1e1e1e',
+                                        color: msg.role === 'user' ? 'white' : '#e5e5e5',
                                         fontSize: '14px',
                                         lineHeight: 1.5,
-                                        whiteSpace: 'pre-wrap'
+                                        whiteSpace: 'pre-wrap',
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.2)'
                                     }}>
                                         {msg.content}
                                     </div>
-                                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '5px', textAlign: msg.role === 'user' ? 'right' : 'left' }}>
-                                        {msg.role === 'user' ? 'You' : 'AI Agent'}
-                                    </div>
-                                </div>
+                                </motion.div>
                             ))}
                             {isTyping && (
-                                <div style={{ alignSelf: 'flex-start', background: 'rgba(255,255,255,0.03)', padding: '12px 20px', borderRadius: '15px' }}>
-                                    <div style={{ display: 'flex', gap: '5px' }}>
-                                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1 }} style={{ width: '4px', height: '4px', background: '#6366f1', borderRadius: '50%' }} />
-                                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} style={{ width: '4px', height: '4px', background: '#6366f1', borderRadius: '50%' }} />
-                                        <motion.div animate={{ scale: [1, 1.5, 1] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} style={{ width: '4px', height: '4px', background: '#6366f1', borderRadius: '50%' }} />
+                                <div style={{ alignSelf: 'flex-start', background: '#1e1e1e', padding: '12px 18px', borderRadius: '20px' }}>
+                                    <div style={{ display: 'flex', gap: '6px' }}>
+                                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1 }} style={{ width: '5px', height: '5px', background: '#6366f1', borderRadius: '50%' }} />
+                                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.2 }} style={{ width: '5px', height: '5px', background: '#6366f1', borderRadius: '50%' }} />
+                                        <motion.div animate={{ opacity: [0.3, 1, 0.3] }} transition={{ repeat: Infinity, duration: 1, delay: 0.4 }} style={{ width: '5px', height: '5px', background: '#6366f1', borderRadius: '50%' }} />
                                     </div>
                                 </div>
                             )}
@@ -394,118 +254,48 @@ const AIChatAgent = () => {
                         </div>
 
                         {/* Input Area */}
-                        <form onSubmit={handleSend} style={{
-                            padding: '20px',
-                            background: 'rgba(0,0,0,0.2)',
-                            borderTop: '1px solid rgba(255,255,255,0.05)',
-                            display: 'flex',
-                            gap: '10px',
-                            alignItems: 'center'
-                        }}>
-                            <button 
-                                type="button"
-                                onClick={toggleListening}
-                                style={{
-                                    width: '46px',
-                                    height: '46px',
-                                    borderRadius: '14px',
-                                    background: isListening ? '#f43f5e' : 'rgba(255,255,255,0.05)',
-                                    border: 'none',
-                                    color: 'white',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.3s ease'
-                                }}
-                            >
-                                {isListening ? <MicOff size={20} className="animate-pulse" /> : <Mic size={20} />}
-                            </button>
-                            <input
-                                value={input}
-                                onChange={(e) => setInput(e.target.value)}
-                                placeholder={isListening ? "Listening..." : "Ask fleet data or help..."}
-                                style={{
-                                    flex: 1,
-                                    height: '46px',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    borderRadius: '14px',
-                                    padding: '0 15px',
-                                    color: 'white',
-                                    outline: 'none',
-                                    fontSize: '14px'
-                                }}
-                            />
-                            <button
-                                type="submit"
-                                disabled={isTyping || !input.trim()}
-                                style={{
-                                    width: '46px',
-                                    height: '46px',
-                                    borderRadius: '14px',
-                                    background: '#6366f1',
-                                    border: 'none',
-                                    color: 'white',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: input.trim() ? 'pointer' : 'default',
-                                    opacity: input.trim() ? 1 : 0.5
-                                }}
-                            >
-                                <Send size={20} />
-                            </button>
-                        </form>
-                    </motion.div>
-                )}
-            </AnimatePresence>
-
-            <AnimatePresence>
-                {isHovered && shouldBlink && alerts.length > 0 && (
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9, y: 10, x: -20 }}
-                        animate={{ opacity: 1, scale: 1, y: 0, x: 0 }}
-                        exit={{ opacity: 0, scale: 0.9, y: 10, x: -20 }}
-                        style={{
-                            position: 'absolute',
-                            bottom: '80px',
-                            right: '20px',
-                            width: '280px',
-                            background: 'rgba(15, 23, 42, 0.95)',
-                            backdropFilter: 'blur(10px)',
-                            borderRadius: '20px',
-                            padding: '15px',
-                            border: '1px solid rgba(244, 63, 94, 0.3)',
-                            boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-                            zIndex: 100,
-                            pointerEvents: 'none'
-                        }}
-                    >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '8px' }}>
-                            <AlertTriangle size={16} color="#f43f5e" />
-                            <span style={{ color: 'white', fontWeight: '900', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px' }}>Expiry Alerts</span>
-                        </div>
-                        <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                            {alerts.map((alert, idx) => (
-                                <div key={idx} style={{ 
-                                    background: 'rgba(255,255,255,0.05)', 
-                                    padding: '8px 12px', 
-                                    borderRadius: '12px',
-                                    border: '1px solid rgba(255,255,255,0.05)',
-                                    display: 'flex',
-                                    justifyContent: 'space-between',
-                                    alignItems: 'center'
-                                }}>
-                                    <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                        <span style={{ color: 'white', fontSize: '11px', fontWeight: '800' }}>{alert.carNumber}</span>
-                                        <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '9px', fontWeight: '700' }}>{alert.type}</span>
-                                    </div>
-                                    <span style={{ color: '#f43f5e', fontSize: '10px', fontWeight: '800', background: 'rgba(244, 63, 94, 0.1)', padding: '2px 6px', borderRadius: '6px' }}>
-                                        {new Date(alert.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}
-                                    </span>
-                                </div>
-                            ))}
+                        <div style={{ padding: '20px', background: '#111', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                            <form onSubmit={handleSend} style={{ position: 'relative' }}>
+                                <input
+                                    value={input}
+                                    onChange={(e) => setInput(e.target.value)}
+                                    placeholder="Ask anything..."
+                                    style={{
+                                        width: '100%',
+                                        height: '50px',
+                                        background: '#1e1e1e',
+                                        border: '1px solid rgba(255,255,255,0.1)',
+                                        borderRadius: '15px',
+                                        padding: '0 60px 0 20px',
+                                        color: 'white',
+                                        fontSize: '14px',
+                                        outline: 'none'
+                                    }}
+                                />
+                                <button
+                                    type="submit"
+                                    disabled={isTyping || !input.trim()}
+                                    style={{
+                                        position: 'absolute',
+                                        right: '7px',
+                                        top: '7px',
+                                        width: '36px',
+                                        height: '36px',
+                                        borderRadius: '10px',
+                                        background: '#6366f1',
+                                        border: 'none',
+                                        color: 'white',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        opacity: input.trim() ? 1 : 0.5
+                                    }}
+                                >
+                                    <Send size={18} />
+                                </button>
+                            </form>
+                            <p style={{ textAlign: 'center', fontSize: '9px', color: '#444', marginTop: '10px', letterSpacing: '1px' }}>AUTONOMOUS FLEET INTELLIGENCE</p>
                         </div>
                     </motion.div>
                 )}
@@ -519,18 +309,14 @@ const AIChatAgent = () => {
                 onMouseLeave={() => setIsHovered(false)}
                 animate={shouldBlink ? {
                     background: ["rgba(99, 102, 241, 1)", "rgba(244, 63, 94, 1)", "rgba(99, 102, 241, 1)"],
-                    scale: [1, 1.05, 1],
+                    scale: [1, 1.1, 1],
                     boxShadow: [
                         '0 10px 40px -10px rgba(99, 102, 241, 0.6)',
                         '0 10px 50px -5px rgba(244, 63, 94, 0.9)',
                         '0 10px 40px -10px rgba(99, 102, 241, 0.6)'
                     ]
                 } : {}}
-                transition={shouldBlink ? {
-                    duration: 5, // Even slower as requested
-                    repeat: 5,
-                    ease: "easeInOut"
-                } : {}}
+                transition={shouldBlink ? { duration: 3, repeat: Infinity, ease: "easeInOut" } : {}}
                 onClick={() => {
                     setIsOpen(!isOpen);
                     setShouldBlink(false);
@@ -550,8 +336,7 @@ const AIChatAgent = () => {
                     position: 'relative'
                 }}
             >
-                <div style={{ position: 'absolute', inset: 0, borderRadius: '22px', background: 'inherit', filter: 'blur(20px)', opacity: 0.4 }} />
-                <Bot size={32} style={{ position: 'relative', zIndex: 1 }} />
+                <Bot size={32} />
                 <div style={{
                     position: 'absolute',
                     top: '-5px',
@@ -561,13 +346,14 @@ const AIChatAgent = () => {
                     borderRadius: '10px',
                     fontSize: '10px',
                     fontWeight: '900',
-                    border: '2px solid rgba(15, 23, 42, 1)',
-                    transition: 'all 0.3s ease',
-                    boxShadow: shouldBlink ? '0 0 15px rgba(244, 63, 94, 0.8)' : 'none'
-                }}>
-                    AI
-                </div>
+                    border: '2px solid #0f172a'
+                }}>AI</div>
             </motion.button>
+            <style>{`
+                .custom-scrollbar::-webkit-scrollbar { width: 4px; }
+                .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+                .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
+            `}</style>
         </div>
     );
 };

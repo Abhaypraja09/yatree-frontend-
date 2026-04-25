@@ -149,6 +149,7 @@ export const translations = {
 
         // Admin Sidebar
         dashboard: 'Dashboard',
+        ai_chatboard: 'AI ChatBoard',
         live_feed: 'Live Feed',
         log_book: 'Log Book',
         drivers_services: 'Drivers Services',
@@ -256,6 +257,7 @@ export const translations = {
 
         // Admin Sidebar
         dashboard: 'डैशबोर्ड',
+        ai_chatboard: 'AI चैटबोर्ड',
         live_feed: 'लाइव फीड',
         log_book: 'लॉग बुक',
         drivers_services: 'ड्राइवर सेवाएं',

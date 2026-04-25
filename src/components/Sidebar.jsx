@@ -20,7 +20,8 @@ import {
     ShieldCheck,
     Activity,
     Briefcase,
-    FileText
+    FileText,
+    Sparkles
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -272,7 +273,9 @@ const Sidebar = ({ isOpen, onClose }) => {
 
             <nav style={{ flex: 1, overflowY: 'auto', paddingRight: '5px' }} className="sidebar-nav-scroll">
                 {hasAccess('dashboard') && (
-                    <NavItem item={{ path: '/admin', icon: LayoutDashboard, label: 'Dashboard', labelKey: 'dashboard' }} onClick={onClose} />
+                    <>
+                        <NavItem item={{ path: '/admin', icon: LayoutDashboard, label: 'Dashboard', labelKey: 'dashboard' }} onClick={onClose} />
+                    </>
                 )}
 
                 {hasAccess('liveFeed') && (
@@ -286,7 +289,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                 {hasAccess('driversService') && (
                     <NavGroup title="Drivers Services" labelKey="drivers_services" icon={Users} isOpen={openGroups.drivers} onToggle={() => toggleGroup('drivers')}>
                         {hasAccess('driversService', 'drivers') && <NavItem item={{ path: '/admin/drivers-panel', label: 'Drivers', labelKey: 'drivers' }} onClick={onClose} isSubItem />}
-                        {hasAccess('driversService', 'payroll') && <NavItem item={{ path: '/admin/drivers-panel?tab=settlement', label: 'Monthly Payroll', labelKey: 'monthly_payroll' }} onClick={onClose} isSubItem />}
+
                         {hasAccess('driversService', 'freelancers') && <NavItem item={{ path: '/admin/freelancers', label: 'Freelancers', labelKey: 'freelancers' }} onClick={onClose} isSubItem />}
                         {hasAccess('driversService', 'parking') && <NavItem item={{ path: '/admin/parking', label: 'Parking', labelKey: 'parking' }} onClick={onClose} isSubItem />}
                     </NavGroup>
