@@ -18,6 +18,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import OfficeGeofencePicker from '../components/OfficeGeofencePicker';
 import { todayIST, toISTDateString, formatDateIST, formatTimeIST, nowIST } from '../utils/istUtils';
+import { DateTime } from 'luxon';
 
 const Staff = () => {
     const { theme } = useTheme();
@@ -129,6 +130,17 @@ const Staff = () => {
 
     const [pendingLeaves, setPendingLeaves] = useState([]);
     const [monthlyReport, setMonthlyReport] = useState([]);
+    const [isFetching, setIsFetching] = useState(false);
+
+    useEffect(() => {
+        if (selectedStaffReport && monthlyReport.length > 0) {
+            const updated = monthlyReport.find(r => r.staffId === (selectedStaffReport.staffId || selectedStaffReport._id));
+            if (updated) {
+                setSelectedStaffReport(updated);
+            }
+        }
+    }, [monthlyReport]);
+
     const [selectedMonth, setSelectedMonth] = useState((nowIST().getUTCMonth() + 1).toString());
     const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear().toString());
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
@@ -194,6 +206,7 @@ const Staff = () => {
 
     const fetchMonthlyReport = async () => {
         if (!selectedCompany?._id) return;
+        setIsFetching(true);
         try {
             let url = `/api/admin/staff-attendance/${selectedCompany._id}`;
             if (isRange) {
@@ -205,6 +218,8 @@ const Staff = () => {
             setMonthlyReport(data.report || []);
         } catch (error) {
             console.error('Error fetching monthly report:', error);
+        } finally {
+            setIsFetching(false);
         }
     };
 
@@ -1254,7 +1269,18 @@ const Staff = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredStaff.length === 0 ? (
+                                        {isFetching ? (
+                                            <tr>
+                                                <td colSpan="6">
+                                                    <div style={{ textAlign: 'center', padding: '100px' }}>
+                                                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ display: 'inline-block' }}>
+                                                            <Settings size={48} color="var(--primary)" />
+                                                        </motion.div>
+                                                        <p style={{ color: 'white', marginTop: '20px', fontWeight: '800' }}>SYNCHRONIZING PERSONNEL...</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : filteredStaff.length === 0 ? (
                                             <tr>
                                                 <td colSpan="6">
                                                     <div style={{ textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.01)', borderRadius: '24px' }}>
@@ -1380,7 +1406,18 @@ const Staff = () => {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {filteredAttendance.length === 0 ? (
+                                        {isFetching ? (
+                                            <tr>
+                                                <td colSpan="5">
+                                                    <div style={{ textAlign: 'center', padding: '100px' }}>
+                                                         <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ display: 'inline-block' }}>
+                                                            <Settings size={48} color="var(--primary)" />
+                                                         </motion.div>
+                                                         <p style={{ color: 'white', marginTop: '20px', fontWeight: '800' }}>SYNCHRONIZING ATTENDANCE...</p>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ) : filteredAttendance.length === 0 ? (
                                             <tr>
                                                 <td colSpan="5">
                                                     <div style={{ padding: '100px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.05)' }}>
@@ -1733,7 +1770,6 @@ const Staff = () => {
                                                 <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
                                                 <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>ATTENDANCE</th>
                                                 <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>BASE SALARY</th>
-                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>SUNDAY BONUS</th>
                                                 <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>DEDUCTIONS</th>
                                                 <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>NET PAYABLE</th>
                                                 <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STATUS</th>
@@ -1741,7 +1777,18 @@ const Staff = () => {
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {filteredMonthlyReport.length === 0 ? (
+                                            {isFetching ? (
+                                                <tr>
+                                                    <td colSpan="7">
+                                                        <div style={{ textAlign: 'center', padding: '100px' }}>
+                                                             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ display: 'inline-block' }}>
+                                                                <Settings size={48} color="var(--primary)" />
+                                                             </motion.div>
+                                                             <p style={{ color: 'white', marginTop: '20px', fontWeight: '800' }}>CALCULATING PAYROLL DISBURSEMENTS...</p>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            ) : filteredMonthlyReport.length === 0 ? (
                                                 <tr>
                                                     <td colSpan="7">
                                                         <div style={{ textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.01)', borderRadius: '24px' }}>
@@ -1793,10 +1840,6 @@ const Staff = () => {
                                                     <td style={{ padding: '12px 25px' }}>
                                                         <div style={{ fontSize: '14px', fontWeight: '800', color: 'rgba(255,255,255,0.8)' }}>₹{item.salary?.toLocaleString()}</div>
                                                         <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>MONTHLY BASE</div>
-                                                    </td>
-                                                    <td style={{ padding: '12px 25px' }}>
-                                                        <div style={{ fontSize: '14px', fontWeight: '800', color: '#fbbf24' }}>+ ₹{(item.sundayBonus || 0).toLocaleString()}</div>
-                                                        <div style={{ fontSize: '9px', color: '#fbbf24', fontWeight: '800', opacity: 0.6 }}>{item.sundaysWorked} SUN WORKED</div>
                                                     </td>
                                                     <td style={{ padding: '12px 25px' }}>
                                                         <div style={{ fontSize: '14px', fontWeight: '800', color: '#f43f5e' }}>- ₹{(item.deduction || 0).toLocaleString()}</div>
@@ -2200,11 +2243,44 @@ const Staff = () => {
                                     </div>
 
                                     {/* Main Content: Date-wise Attendance */}
-                                    <div style={{ padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '40px', zIndex: 2 }}>
+                                    <div style={{ padding: '40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '30px', zIndex: 2 }}>
+                                        
+                                        {/* Modal Month/Year Selection */}
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.03)', padding: '15px 25px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                <Calendar size={18} color="var(--primary)" />
+                                                <span style={{ fontSize: '12px', fontWeight: '800', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '1px' }}>Select Payroll Month</span>
+                                            </div>
+                                            <div style={{ display: 'flex', gap: '10px' }}>
+                                                <select 
+                                                    className="premium-compact-input" 
+                                                    style={{ height: '36px', padding: '0 10px', fontSize: '12px', fontWeight: '700' }}
+                                                    value={selectedMonth}
+                                                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+                                                >
+                                                    {Array.from({ length: 12 }, (_, i) => (
+                                                        <option key={i + 1} value={i + 1} style={{ background: '#0f172a' }}>{DateTime.fromObject({ month: i + 1 }).toFormat('MMMM')}</option>
+                                                    ))}
+                                                </select>
+                                                <select 
+                                                    className="premium-compact-input" 
+                                                    style={{ height: '36px', padding: '0 10px', fontSize: '12px', fontWeight: '700' }}
+                                                    value={selectedYear}
+                                                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                                                >
+                                                    {[2024, 2025, 2026].map(y => <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>)}
+                                                </select>
+                                                {isFetching && (
+                                                    <div style={{ width: '36px', height: '36px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}><Settings size={16} color="var(--primary)" /></motion.div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
 
                                         {/* Attendance Visual Insights */}
                                         <div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '25px' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
                                                 <div>
                                                     <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: 'white', letterSpacing: '-0.5px' }}>Salary Cycle Calendar</h4>
                                                     {selectedStaffReport.cycleStart && (
