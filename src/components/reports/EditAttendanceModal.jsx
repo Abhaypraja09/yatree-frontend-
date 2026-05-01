@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Clock } from 'lucide-react';
-import { toISTDateTimeString, formatDateIST } from '../../utils/istUtils';
+import { toISTDateTimeString, formatDateIST, formatDateTimeIST } from '../../utils/istUtils';
 
 const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
     const [formData, setFormData] = useState({
@@ -79,10 +79,11 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                                 readOnly
                                 className="input-field"
                                 value={formData.date ? formatDateIST(formData.date) : ''}
-                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                onClick={() => document.getElementById('edit-duty-date-picker').showPicker()}
                                 style={{ width: '100%', marginBottom: 0, height: '48px', cursor: 'pointer' }}
                             />
                             <input
+                                id="edit-duty-date-picker"
                                 type="date"
                                 className="input-field"
                                 value={formData.date}
@@ -95,23 +96,45 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                         <div className="form-group">
                             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}><Clock size={10} style={{marginRight: '4px'}}/> Punch In</label>
-                            <input
-                                type="datetime-local"
-                                className="input-field"
-                                value={formData.punchInTime}
-                                onChange={(e) => setFormData({ ...formData, punchInTime: e.target.value })}
-                                style={{ width: '100%', marginBottom: 0, height: '48px', colorScheme: 'dark', fontSize: '12px' }}
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    readOnly
+                                    className="input-field"
+                                    value={formData.punchInTime ? formatDateTimeIST(formData.punchInTime) : ''}
+                                    onClick={() => document.getElementById('edit-punch-in-time').showPicker()}
+                                    style={{ width: '100%', marginBottom: 0, height: '48px', cursor: 'pointer', fontSize: '11px' }}
+                                />
+                                <input
+                                    id="edit-punch-in-time"
+                                    type="datetime-local"
+                                    className="input-field"
+                                    value={formData.punchInTime}
+                                    onChange={(e) => setFormData({ ...formData, punchInTime: e.target.value })}
+                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                />
+                            </div>
                         </div>
                         <div className="form-group">
                             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}><Clock size={10} style={{marginRight: '4px'}}/> Punch Out</label>
-                            <input
-                                type="datetime-local"
-                                className="input-field"
-                                value={formData.punchOutTime}
-                                onChange={(e) => setFormData({ ...formData, punchOutTime: e.target.value })}
-                                style={{ width: '100%', marginBottom: 0, height: '48px', colorScheme: 'dark', fontSize: '12px' }}
-                            />
+                            <div style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    readOnly
+                                    className="input-field"
+                                    value={formData.punchOutTime ? formatDateTimeIST(formData.punchOutTime) : ''}
+                                    onClick={() => document.getElementById('edit-punch-out-time').showPicker()}
+                                    style={{ width: '100%', marginBottom: 0, height: '48px', cursor: 'pointer', fontSize: '11px' }}
+                                />
+                                <input
+                                    id="edit-punch-out-time"
+                                    type="datetime-local"
+                                    className="input-field"
+                                    value={formData.punchOutTime}
+                                    onChange={(e) => setFormData({ ...formData, punchOutTime: e.target.value })}
+                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                />
+                            </div>
                         </div>
                     </div>
 

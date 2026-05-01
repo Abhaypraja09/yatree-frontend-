@@ -421,12 +421,14 @@ const DriverServices = () => {
                                          readOnly
                                          style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none', cursor: 'pointer', width: '85px' }}
                                          value={startDate ? formatDateIST(startDate) : ''}
-                                         onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                         onClick={() => document.getElementById('driver-services-start-date').showPicker()}
                                      />
                                      <input
+                                         id="driver-services-start-date"
                                          type="date"
                                          value={startDate}
                                          onChange={e => setStartDate(e.target.value)}
+                                         onClick={(e) => e.target.showPicker()}
                                          style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                      />
                                  </div>
@@ -437,12 +439,14 @@ const DriverServices = () => {
                                          readOnly
                                          style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none', cursor: 'pointer', width: '85px' }}
                                          value={endDate ? formatDateIST(endDate) : ''}
-                                         onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                         onClick={() => document.getElementById('driver-services-end-date').showPicker()}
                                      />
                                      <input
+                                         id="driver-services-end-date"
                                          type="date"
                                          value={endDate}
                                          onChange={e => setEndDate(e.target.value)}
+                                         onClick={(e) => e.target.showPicker()}
                                          style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                      />
                                  </div>
@@ -707,13 +711,15 @@ const DriverServices = () => {
                                                 readOnly
                                                 className="input-field"
                                                 value={formData.billDate ? formatDateIST(formData.billDate) : ''}
-                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                onClick={() => document.getElementById('driver-services-bill-date').showPicker()}
                                                 style={{ width: '100%', cursor: 'pointer' }}
                                             />
                                             <input
+                                                id="driver-services-bill-date"
                                                 type="date"
                                                 value={formData.billDate}
                                                 onChange={e => setFormData({...formData, billDate: e.target.value})}
+                                                onClick={(e) => e.target.showPicker()}
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                 required
                                             />

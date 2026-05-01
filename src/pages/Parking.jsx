@@ -1452,6 +1452,7 @@ const ParkingPage = () => {
                                                             required
                                                             value={formData.date}
                                                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                                            onClick={(e) => e.target.showPicker()}
                                                             style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                         />
                                                     </div>

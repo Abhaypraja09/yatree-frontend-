@@ -888,14 +888,16 @@ const Vehicles = () => {
                                             readOnly
                                             className="input-field"
                                             value={docToUpload.expiry ? formatDateIST(docToUpload.expiry) : ''}
-                                            onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                            onClick={() => document.getElementById('doc-expiry-picker').showPicker()}
                                             style={{ height: '48px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', width: '100%', cursor: 'pointer' }}
                                         />
                                         <input
+                                            id="doc-expiry-picker"
                                             type="date"
                                             className="input-field"
                                             value={docToUpload.expiry}
                                             onChange={(e) => setDocToUpload({ ...docToUpload, expiry: e.target.value })}
+                                            onClick={(e) => e.target.showPicker()}
                                             style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                         />
                                     </div>

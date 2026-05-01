@@ -1207,6 +1207,7 @@ const EventManagement = () => {
                                                         required 
                                                         value={dutyFormData.date} 
                                                         onChange={e => setDutyFormData({ ...dutyFormData, date: e.target.value })} 
+                                                        onClick={(e) => e.target.showPicker()}
                                                         style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }} 
                                                     />
                                                 </div>
@@ -1718,13 +1719,15 @@ const EventManagement = () => {
                                                 readOnly
                                                 className="premium-compact-input"
                                                 value={eventFormData.date ? formatDateIST(eventFormData.date) : ''}
-                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                onClick={() => document.getElementById('event-mission-date-picker').showPicker()}
                                                 style={{ colorScheme: 'dark', height: '52px', width: '100%', cursor: 'pointer' }}
                                             />
                                             <input
+                                                id="event-mission-date-picker"
                                                 type="date"
                                                 value={eventFormData.date}
                                                 onChange={e => setEventFormData({ ...eventFormData, date: e.target.value })}
+                                                onClick={(e) => e.target.showPicker()}
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                             />
                                         </div>

@@ -833,16 +833,18 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                                     type="text"
                                     readOnly
                                     value={formatDateIST(form.date)}
-                                    onClick={(e) => e.currentTarget.nextElementSibling.nextElementSibling.showPicker()}
+                                    onClick={() => document.getElementById('utility-date-picker').showPicker()}
                                     className="premium-compact-input"
                                     style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '12px', color: '#fff', cursor: 'pointer' }}
                                 />
                                 <Calendar size={18} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
                                 <input
+                                    id="utility-date-picker"
                                     type="date"
                                     value={form.date}
                                     onChange={e => setForm({ ...form, date: e.target.value })}
-                                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+                                    onClick={(e) => e.target.showPicker()}
+                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                 />
                             </div>
                         </div>

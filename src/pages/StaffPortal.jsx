@@ -532,14 +532,16 @@ const StaffPortal = () => {
                                                     readOnly
                                                     style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: '600', width: '100%', cursor: 'pointer' }}
                                                     value={leaveForm.startDate ? formatDateIST(leaveForm.startDate) : ''}
-                                                    onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                    onClick={() => document.getElementById('leave-start-picker').showPicker()}
                                                 />
                                                 <input
+                                                    id="leave-start-picker"
                                                     type="date"
                                                     required
                                                     style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                     value={leaveForm.startDate}
                                                     onChange={e => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
+                                                    onClick={(e) => e.target.showPicker()}
                                                 />
                                             </div>
                                         </div>
@@ -551,14 +553,16 @@ const StaffPortal = () => {
                                                     readOnly
                                                     style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: '600', width: '100%', cursor: 'pointer' }}
                                                     value={leaveForm.endDate ? formatDateIST(leaveForm.endDate) : ''}
-                                                    onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                    onClick={() => document.getElementById('leave-end-picker').showPicker()}
                                                 />
                                                 <input
+                                                    id="leave-end-picker"
                                                     type="date"
                                                     required
                                                     style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                     value={leaveForm.endDate}
                                                     onChange={e => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
+                                                    onClick={(e) => e.target.showPicker()}
                                                 />
                                             </div>
                                         </div>

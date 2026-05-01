@@ -473,14 +473,16 @@ const BorderTax = () => {
                                                 readOnly
                                                 className="input-field"
                                                 value={formData.date ? formatDateIST(formData.date) : ''}
-                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                onClick={() => document.getElementById('border-tax-picker').showPicker()}
                                                 style={{ width: '100%', height: '52px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '0 18px', color: 'white', outline: 'none', fontSize: '15px' }}
                                             />
                                             <input
+                                                id="border-tax-picker"
                                                 type="date"
                                                 required
                                                 value={formData.date}
                                                 onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                                onClick={(e) => e.target.showPicker()}
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                             />
                                         </div>

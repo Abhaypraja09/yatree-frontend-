@@ -1315,6 +1315,7 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 value={manualDutyForm.date}
                                                 onChange={(e) => setManualDutyForm({ ...manualDutyForm, date: e.target.value })}
                                                 required
+                                                onClick={(e) => e.target.showPicker()}
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                             />
                                         </div>
@@ -1465,11 +1466,21 @@ const Drivers = ({ isSubComponent = false }) => {
                                         <div style={{ position: 'relative' }}>
                                             <Clock size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                                             <input
+                                                type="text"
+                                                readOnly
+                                                className="input-field"
+                                                value={punchInForm.date ? formatDateTimeIST(punchInForm.date) : ''}
+                                                onClick={() => document.getElementById('admin-punch-in-date').showPicker()}
+                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px 0 50px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
+                                            />
+                                            <input
+                                                id="admin-punch-in-date"
                                                 type="datetime-local"
                                                 required
                                                 value={punchInForm.date}
                                                 onChange={(e) => setPunchInForm({ ...punchInForm, date: e.target.value })}
-                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px 0 50px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600' }}
+                                                onClick={(e) => e.target.showPicker()}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                             />
                                         </div>
                                     </div>
@@ -1569,11 +1580,21 @@ const Drivers = ({ isSubComponent = false }) => {
                                         <div style={{ position: 'relative' }}>
                                             <Clock size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                                             <input
+                                                type="text"
+                                                readOnly
+                                                className="input-field"
+                                                value={punchOutForm.date ? formatDateTimeIST(punchOutForm.date) : ''}
+                                                onClick={() => document.getElementById('admin-punch-out-date').showPicker()}
+                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px 0 50px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
+                                            />
+                                            <input
+                                                id="admin-punch-out-date"
                                                 type="datetime-local"
                                                 required
                                                 value={punchOutForm.date}
                                                 onChange={(e) => setPunchOutForm({ ...punchOutForm, date: e.target.value })}
-                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px 0 50px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600' }}
+                                                onClick={(e) => e.target.showPicker()}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                             />
                                         </div>
                                     </div>

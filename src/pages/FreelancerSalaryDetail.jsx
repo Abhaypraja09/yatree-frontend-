@@ -344,15 +344,17 @@ const FreelancerSalaryDetail = () => {
                                             readOnly
                                             className="input-field"
                                             value={advanceData.date ? formatDateIST(advanceData.date) : ''}
-                                            onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                            onClick={() => document.getElementById('payment-date-picker').showPicker()}
                                             style={{ width: '100%', height: '50px', cursor: 'pointer' }}
                                         />
                                         <input
+                                            id="payment-date-picker"
                                             type="date"
                                             className="input-field"
                                             required
                                             value={advanceData.date}
                                             onChange={(e) => setAdvanceData({ ...advanceData, date: e.target.value })}
+                                            onClick={(e) => e.target.showPicker()}
                                             style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                         />
                                     </div>

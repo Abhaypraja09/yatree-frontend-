@@ -1591,6 +1591,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 required
                                                 value={advanceFormData.date}
                                                 onChange={(e) => setAdvanceFormData({ ...advanceFormData, date: e.target.value })}
+                                                onClick={(e) => e.target.showPicker()}
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                             />
                                         </div>
@@ -1669,6 +1670,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 required
                                                 value={allowanceFormData.date}
                                                 onChange={(e) => setAllowanceFormData({ ...allowanceFormData, date: e.target.value })}
+                                                onClick={(e) => e.target.showPicker()}
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                             />
                                         </div>
@@ -2063,6 +2065,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 required
                                                 value={loanFormData.startDate}
                                                 onChange={(e) => setLoanFormData({ ...loanFormData, startDate: e.target.value })}
+                                                onClick={(e) => e.target.showPicker()}
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                             />
                                         </div>

@@ -548,13 +548,15 @@ const Warranties = () => {
                                                 readOnly
                                                 style={inputStyle}
                                                 value={formData.purchaseDate ? formatDateIST(formData.purchaseDate) : ''}
-                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                onClick={() => document.getElementById('purchase-date-picker').showPicker()}
                                             />
                                             <input
+                                                id="purchase-date-picker"
                                                 type="date"
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                 value={formData.purchaseDate}
                                                 onChange={e => setFormData({ ...formData, purchaseDate: e.target.value })}
+                                                onClick={(e) => e.target.showPicker()}
                                             />
                                         </div>
                                     </div>
@@ -572,13 +574,15 @@ const Warranties = () => {
                                                 readOnly
                                                 style={inputStyle}
                                                 value={formData.warrantyStartDate ? formatDateIST(formData.warrantyStartDate) : ''}
-                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                onClick={() => document.getElementById('warranty-start-picker').showPicker()}
                                             />
                                             <input
+                                                id="warranty-start-picker"
                                                 type="date"
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                 value={formData.warrantyStartDate}
                                                 onChange={e => setFormData({ ...formData, warrantyStartDate: e.target.value })}
+                                                onClick={(e) => e.target.showPicker()}
                                             />
                                         </div>
                                     </div>
@@ -591,14 +595,16 @@ const Warranties = () => {
                                                 readOnly
                                                 style={inputStyle}
                                                 value={formData.warrantyEndDate ? formatDateIST(formData.warrantyEndDate) : ''}
-                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                onClick={() => document.getElementById('warranty-end-picker').showPicker()}
                                             />
                                             <input
+                                                id="warranty-end-picker"
                                                 type="date"
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                 required
                                                 value={formData.warrantyEndDate}
                                                 onChange={e => setFormData({ ...formData, warrantyEndDate: e.target.value })}
+                                                onClick={(e) => e.target.showPicker()}
                                             />
                                         </div>
                                     </div>
@@ -730,6 +736,7 @@ const Warranties = () => {
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                 value={claimFormData.claimDate}
                                                 onChange={e => setClaimFormData({ ...claimFormData, claimDate: e.target.value })}
+                                                onClick={(e) => e.target.showPicker()}
                                             />
                                         </div>
                                     </div>
@@ -759,6 +766,7 @@ const Warranties = () => {
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                 value={claimFormData.replacementDate}
                                                 onChange={e => setClaimFormData({ ...claimFormData, replacementDate: e.target.value })}
+                                                onClick={(e) => e.target.showPicker()}
                                             />
                                         </div>
                                     </div>

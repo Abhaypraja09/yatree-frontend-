@@ -579,15 +579,17 @@ const Fastag = () => {
                                                 readOnly
                                                 className="input-field"
                                                 value={rechargeData.date ? formatDateIST(rechargeData.date) : ''}
-                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                onClick={() => document.getElementById('fastag-recharge-date-picker').showPicker()}
                                                 style={{ width: '100%', cursor: 'pointer' }}
                                             />
                                             <input
+                                                id="fastag-recharge-date-picker"
                                                 type="date"
                                                 required
                                                 className="input-field"
                                                 value={rechargeData.date}
                                                 onChange={(e) => setRechargeData({ ...rechargeData, date: e.target.value })}
+                                                onClick={(e) => e.target.showPicker()}
                                                 style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                             />
                                         </div>

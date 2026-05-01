@@ -1704,6 +1704,7 @@ const Maintenance = () => {
                                                         required
                                                         value={formData.billDate}
                                                         onChange={(e) => setFormData({ ...formData, billDate: e.target.value })}
+                                                        onClick={(e) => e.target.showPicker()}
                                                         style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                     />
                                                 </div>

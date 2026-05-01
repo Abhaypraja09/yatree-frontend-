@@ -1228,7 +1228,7 @@ const Staff = () => {
                                 >
                                     <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>FROM</span>
                                     <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{fromDate ? formatDateIST(fromDate) : '--'}</span>
-                                    <input id="range-from-picker" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
+                                    <input id="range-from-picker" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} onClick={(e) => e.target.showPicker()} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
                                 </div>
                                 <ArrowUpRight size={14} color="rgba(255,255,255,0.2)" />
                                 <div
@@ -1237,7 +1237,7 @@ const Staff = () => {
                                 >
                                     <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TO</span>
                                     <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{toDate ? formatDateIST(toDate) : '--'}</span>
-                                    <input id="range-to-picker" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
+                                    <input id="range-to-picker" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} onClick={(e) => e.target.showPicker()} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
                                 </div>
                             </div>
                         )}
@@ -1950,6 +1950,7 @@ const Staff = () => {
                                                             required
                                                             value={formData.joiningDate}
                                                             onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
+                                                            onClick={(e) => e.target.showPicker()}
                                                             style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                         />
                                                     </div>

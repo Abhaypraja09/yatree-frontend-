@@ -803,27 +803,29 @@ const Reports = ({ isSubComponent = false }) => {
                             backdropFilter: 'blur(10px)'
                         }}>
 
-                            <div
-                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                style={{ height: '40px', minWidth: '130px', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.15)', borderRadius: '14px', padding: '0 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
-                            >
-                                <span style={{ fontSize: '13px', fontWeight: '900', color: 'var(--primary)', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
-                                    {selectedDay === 'All' ?
-                                        `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
-                                        fmt(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
-                                </span>
-                                <input
-                                    type="date"
-                                    value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
-                                    onChange={e => {
-                                        const d = new Date(e.target.value);
-                                        setSelectedYear(d.getFullYear());
-                                        setSelectedMonth(d.getMonth());
-                                        setSelectedDay(d.getDate().toString());
-                                    }}
-                                    style={{ position: 'absolute', inset: 0, opacity: 0 }}
-                                />
-                            </div>
+                                <div
+                                    onClick={() => document.getElementById('report-main-date-picker').showPicker()}
+                                    style={{ height: '40px', minWidth: '130px', background: 'rgba(251, 191, 36, 0.08)', border: '1px solid rgba(251, 191, 36, 0.15)', borderRadius: '14px', padding: '0 18px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
+                                >
+                                    <span style={{ fontSize: '13px', fontWeight: '900', color: 'var(--primary)', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
+                                        {selectedDay === 'All' ?
+                                            `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
+                                            fmt(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
+                                    </span>
+                                    <input
+                                        id="report-main-date-picker"
+                                        type="date"
+                                        value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                        onChange={e => {
+                                            const d = new Date(e.target.value);
+                                            setSelectedYear(d.getFullYear());
+                                            setSelectedMonth(d.getMonth());
+                                            setSelectedDay(d.getDate().toString());
+                                        }}
+                                        onClick={(e) => e.target.showPicker()}
+                                        style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }}
+                                    />
+                                </div>
 
                         </div>
 
@@ -896,11 +898,12 @@ const Reports = ({ isSubComponent = false }) => {
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '5px', position: 'relative' }}>
                             <div
-                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 10px', borderRadius: '8px', fontSize: '12px', outline: 'none', cursor: 'pointer', minWidth: '100px', textAlign: 'center' }}
+                                onClick={() => document.getElementById('report-sub-date-picker').showPicker()}
+                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 10px', borderRadius: '8px', fontSize: '12px', outline: 'none', cursor: 'pointer', minWidth: '100px', textAlign: 'center', position: 'relative' }}
                             >
                                 {fmt(fromDate)}
-                                <input type="date" value={fromDate} onChange={e => handleFromDate(e.target.value)}
+                                <input id="report-sub-date-picker" type="date" value={fromDate} onChange={e => handleFromDate(e.target.value)}
+                                    onClick={(e) => e.target.showPicker()}
                                     style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
                             </div>
                         </div>
