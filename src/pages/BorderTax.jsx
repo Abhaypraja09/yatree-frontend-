@@ -467,13 +467,23 @@ const BorderTax = () => {
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TAX DATE</label>
-                                        <input 
-                                            type="date" 
-                                            required
-                                            value={formData.date}
-                                            onChange={e => setFormData({...formData, date: e.target.value})}
-                                            style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', height: '52px', padding: '0 18px', color: 'white', outline: 'none', colorScheme: 'dark', fontSize: '15px' }}
-                                        />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                className="input-field"
+                                                value={formData.date ? formatDateIST(formData.date) : ''}
+                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                style={{ width: '100%', height: '52px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '0 18px', color: 'white', outline: 'none', fontSize: '15px' }}
+                                            />
+                                            <input
+                                                type="date"
+                                                required
+                                                value={formData.date}
+                                                onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                            />
+                                        </div>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>RECEIPT PHOTO</label>

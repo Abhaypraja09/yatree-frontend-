@@ -526,11 +526,41 @@ const StaffPortal = () => {
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             <label style={{ fontSize: '10px', fontWeight: '800', opacity: 0.4, marginLeft: '5px' }}>FROM DATE</label>
-                                            <input type="date" required style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: '600' }} value={leaveForm.startDate} onChange={e => setLeaveForm({ ...leaveForm, startDate: e.target.value })} />
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: '600', width: '100%', cursor: 'pointer' }}
+                                                    value={leaveForm.startDate ? formatDateIST(leaveForm.startDate) : ''}
+                                                    onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                />
+                                                <input
+                                                    type="date"
+                                                    required
+                                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                    value={leaveForm.startDate}
+                                                    onChange={e => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
+                                                />
+                                            </div>
                                         </div>
                                         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                                             <label style={{ fontSize: '10px', fontWeight: '800', opacity: 0.4, marginLeft: '5px' }}>TO DATE</label>
-                                            <input type="date" required style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: '600' }} value={leaveForm.endDate} onChange={e => setLeaveForm({ ...leaveForm, endDate: e.target.value })} />
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: '600', width: '100%', cursor: 'pointer' }}
+                                                    value={leaveForm.endDate ? formatDateIST(leaveForm.endDate) : ''}
+                                                    onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                />
+                                                <input
+                                                    type="date"
+                                                    required
+                                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                    value={leaveForm.endDate}
+                                                    onChange={e => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
+                                                />
+                                            </div>
                                         </div>
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>

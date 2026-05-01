@@ -338,7 +338,24 @@ const FreelancerSalaryDetail = () => {
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Date</label>
-                                    <input type="date" className="input-field" required value={advanceData.date} onChange={(e) => setAdvanceData({ ...advanceData, date: e.target.value })} style={{ width: '100%', height: '50px' }} />
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            className="input-field"
+                                            value={advanceData.date ? formatDateIST(advanceData.date) : ''}
+                                            onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                            style={{ width: '100%', height: '50px', cursor: 'pointer' }}
+                                        />
+                                        <input
+                                            type="date"
+                                            className="input-field"
+                                            required
+                                            value={advanceData.date}
+                                            onChange={(e) => setAdvanceData({ ...advanceData, date: e.target.value })}
+                                            style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Remark</label>

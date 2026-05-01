@@ -512,7 +512,7 @@ const EventManagement = () => {
         const data = filtered.map(v => {
             const event = events.find(e => e._id === v.eventId);
             return {
-                'Date': v.carNumber?.split('#')[1] || '',
+                'Date': v.carNumber?.split('#')[1] ? formatDateIST(v.carNumber.split('#')[1]) : '',
                 'Vehicle': v.carNumber?.split('#')[0],
                 'Model': v.model,
                 'Driver': v.driverName || '-',
@@ -534,7 +534,7 @@ const EventManagement = () => {
         if (!eventData) return;
         const allDuties = [...eventData.fleetDuties, ...eventData.externalDuties];
         const data = allDuties.map(v => ({
-            'Date': toISTDateString(new Date(v.date || v.createdAt)),
+            'Date': formatDateIST(v.date || v.createdAt),
             'Vehicle': (v.vehicle?.carNumber || v.vehicleNumber || v.carNumber?.split('#')[0] || 'N/A').toUpperCase(),
             'Model': v.vehicle?.model || v.model || 'N/A',
             'Driver': v.driver?.name || v.driverName || 'N/A',
@@ -1017,7 +1017,7 @@ const EventManagement = () => {
                                 width: '80px', padding: '10px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)',
                                 border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center', flexShrink: 0
                             }}>
-                                <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '950', letterSpacing: '1px', textTransform: 'uppercase' }}>{new Date(ev.date).toLocaleDateString('en-IN', { month: 'short' })}</div>
+                                <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '950', letterSpacing: '1px', textTransform: 'uppercase' }}>{new Date(ev.date).toLocaleDateString('en-IN', { month: '2-digit' }) === 'Invalid Date' ? '--' : new Date(ev.date).toLocaleDateString('en-IN', { month: 'short' })}</div>
                                 <div style={{ fontSize: '22px', color: 'white', fontWeight: '950', lineHeight: 1 }}>{new Date(ev.date).getDate()}</div>
                                 <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{new Date(ev.date).getFullYear()}</div>
                             </div>
@@ -1191,7 +1191,25 @@ const EventManagement = () => {
                                                     <Calendar size={12} color="var(--primary)" style={{ opacity: 0.7 }} />
                                                     <label className="premium-label">Log Date</label>
                                                 </div>
-                                                <input type="date" required value={dutyFormData.date} onChange={e => setDutyFormData({ ...dutyFormData, date: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark', height: '50px' }} />
+                                                <div style={{ position: 'relative' }}>
+                                                    <input 
+                                                        type="text" 
+                                                        readOnly
+                                                        value={dutyFormData.date ? formatDateIST(dutyFormData.date) : ''} 
+                                                        onClick={() => document.getElementById('duty-date-picker').showPicker()}
+                                                        className="premium-compact-input" 
+                                                        placeholder="DD/MM/YYYY"
+                                                        style={{ cursor: 'pointer', height: '50px' }} 
+                                                    />
+                                                    <input 
+                                                        id="duty-date-picker"
+                                                        type="date" 
+                                                        required 
+                                                        value={dutyFormData.date} 
+                                                        onChange={e => setDutyFormData({ ...dutyFormData, date: e.target.value })} 
+                                                        style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }} 
+                                                    />
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -1510,7 +1528,7 @@ const EventManagement = () => {
                                                         <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }} className="table-row-hover">
                                                             {/* TIMELINE */}
                                                             <td style={{ padding: '20px 24px' }}>
-                                                                <div style={{ color: 'white', fontWeight: '950', fontSize: '15px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short' })}</div>
+                                                                <div style={{ color: 'white', fontWeight: '950', fontSize: '15px' }}>{formatDateIST(d.date || d.createdAt)}</div>
                                                                 <div style={{ color: 'var(--primary)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginTop: '2px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { weekday: 'short' })}</div>
                                                             </td>
                                                             {/* RESOURCE */}
@@ -1694,7 +1712,22 @@ const EventManagement = () => {
                                             <Calendar size={12} color="var(--primary)" />
                                             <label className="premium-label">Focus Date</label>
                                         </div>
-                                        <input type="date" value={eventFormData.date} onChange={e => setEventFormData({ ...eventFormData, date: e.target.value })} className="premium-compact-input" style={{ colorScheme: 'dark', height: '52px' }} />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                className="premium-compact-input"
+                                                value={eventFormData.date ? formatDateIST(eventFormData.date) : ''}
+                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                style={{ colorScheme: 'dark', height: '52px', width: '100%', cursor: 'pointer' }}
+                                            />
+                                            <input
+                                                type="date"
+                                                value={eventFormData.date}
+                                                onChange={e => setEventFormData({ ...eventFormData, date: e.target.value })}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                            />
+                                        </div>
                                     </div>
                                     <div className="premium-input-group">
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>

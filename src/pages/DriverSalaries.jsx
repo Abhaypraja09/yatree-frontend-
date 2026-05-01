@@ -1575,7 +1575,25 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                     </div>
                                     <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Date</label>
-                                        <input type="date" className="input-field" required value={advanceFormData.date} onChange={(e) => setAdvanceFormData({ ...advanceFormData, date: e.target.value })} style={{ width: '100%', height: '50px' }} />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                className="input-field"
+                                                value={advanceFormData.date ? formatDateIST(advanceFormData.date) : ''}
+                                                onClick={() => document.getElementById('advance-date-picker').showPicker()}
+                                                style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', cursor: 'pointer' }}
+                                            />
+                                            <input
+                                                id="advance-date-picker"
+                                                type="date"
+                                                className="input-field"
+                                                required
+                                                value={advanceFormData.date}
+                                                onChange={(e) => setAdvanceFormData({ ...advanceFormData, date: e.target.value })}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
@@ -1635,7 +1653,25 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                     </div>
                                     <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Date</label>
-                                        <input type="date" className="input-field" required value={allowanceFormData.date} onChange={(e) => setAllowanceFormData({ ...allowanceFormData, date: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                className="input-field"
+                                                value={allowanceFormData.date ? formatDateIST(allowanceFormData.date) : ''}
+                                                onClick={() => document.getElementById('allowance-date-picker').showPicker()}
+                                                style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                            />
+                                            <input
+                                                id="allowance-date-picker"
+                                                type="date"
+                                                className="input-field"
+                                                required
+                                                value={allowanceFormData.date}
+                                                onChange={(e) => setAllowanceFormData({ ...allowanceFormData, date: e.target.value })}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
@@ -2011,7 +2047,25 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
                                     <div style={{ gridColumn: 'span 1' }}>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Loan Date</label>
-                                        <input type="date" className="input-field" required value={loanFormData.startDate} onChange={(e) => setLoanFormData({ ...loanFormData, startDate: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)' }} />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                className="input-field"
+                                                value={loanFormData.startDate ? formatDateIST(loanFormData.startDate) : ''}
+                                                onClick={() => document.getElementById('loan-date-picker').showPicker()}
+                                                style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
+                                            />
+                                            <input
+                                                id="loan-date-picker"
+                                                type="date"
+                                                className="input-field"
+                                                required
+                                                value={loanFormData.startDate}
+                                                onChange={(e) => setLoanFormData({ ...loanFormData, startDate: e.target.value })}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                            />
+                                        </div>
                                     </div>
                                     <div style={{ gridColumn: 'span 1' }}>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Total Loan</label>

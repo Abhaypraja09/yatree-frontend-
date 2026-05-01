@@ -1688,7 +1688,25 @@ const Maintenance = () => {
                                             </div>
                                             <div>
                                                 <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Bill Date *</label>
-                                                <input required type="date" className="input-field" style={{ borderRadius: '10px' }} value={formData.billDate} onChange={(e) => setFormData({ ...formData, billDate: e.target.value })} />
+                                                <div style={{ position: 'relative' }}>
+                                                    <input
+                                                        type="text"
+                                                        readOnly
+                                                        className="input-field"
+                                                        value={formData.billDate ? formatDateIST(formData.billDate) : ''}
+                                                        onClick={() => document.getElementById('maintenance-date-picker').showPicker()}
+                                                        style={{ borderRadius: '10px', cursor: 'pointer' }}
+                                                    />
+                                                    <input
+                                                        id="maintenance-date-picker"
+                                                        type="date"
+                                                        className="input-field"
+                                                        required
+                                                        value={formData.billDate}
+                                                        onChange={(e) => setFormData({ ...formData, billDate: e.target.value })}
+                                                        style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                    />
+                                                </div>
                                             </div>
                                             <div>
                                                 <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Amount (₹) *</label>

@@ -609,7 +609,24 @@ const ActiveLogs = () => {
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                         <div>
                                             <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Incident Date</label>
-                                            <input type="date" className="input-field" style={{ height: '54px', borderRadius: '15px' }} value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} required />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                className="input-field"
+                                                value={formData.date ? formatDateIST(formData.date) : ''}
+                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                style={{ width: '100%', height: '54px', borderRadius: '15px', cursor: 'pointer' }}
+                                            />
+                                            <input
+                                                type="date"
+                                                className="input-field"
+                                                required
+                                                value={formData.date}
+                                                onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                            />
+                                        </div>
                                         </div>
                                         <div>
                                             <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Estimated Recovery Cost</label>

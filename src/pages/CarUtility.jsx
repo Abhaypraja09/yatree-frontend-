@@ -4,12 +4,13 @@ import axios from '../api/axios';
 import {
     ShieldAlert, Wallet, Droplets, Car, Search, ChevronRight, ChevronLeft,
     X, Plus, CreditCard, Wrench, AlertCircle, CheckCircle2,
-    Calendar, Filter, TrendingUp, Zap, Layers, Trash2, Edit3, Eye, FileText, ExternalLink, ArrowRight, Image
+    Calendar, Filter, TrendingUp, Zap, Layers, Trash2, Edit3, Eye, FileText, ExternalLink, ArrowRight, Image,
+    History, Activity, RefreshCw, Edit2, Shield
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
-import { todayIST, formatDateIST, nowIST } from '../utils/istUtils';
+import { todayIST, formatDateIST, nowIST, toISTDateString } from '../utils/istUtils';
 
 const CarUtility = () => {
     const { selectedCompany } = useCompany();
@@ -112,18 +113,19 @@ const CarUtility = () => {
                 companyid: selectedCompany._id
             };
 
-            let payload = data;
-            if (data instanceof FormData) {
-                if (!data.get('vehicleId')) data.append('vehicleId', targetId);
-            } else {
-                payload = { ...data, vehicleId: targetId };
-            }
-
-            await axios.post(`/api/admin/vehicles/${targetId}/fastag-recharge`, payload, { headers });
-            setMessage({ type: 'success', text: 'Recharge Logged' });
-            setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
-            setSelectedVehicleId(null);
-        } catch (err) { setMessage({ type: 'error', text: 'Error' }); }
+            await axios.post(`/api/admin/vehicles/${targetId}/fastag-recharge`, data, { headers });
+            setMessage({ type: 'success', text: 'Fastag Recharge Logged Successfully!' });
+            setTimeout(() => { 
+                setMessage({ type: '', text: '' }); 
+                fetchAllData(); 
+                if (selectedVehicleId === 'new') setSelectedVehicleId(null);
+            }, 1500);
+            return true;
+        } catch (err) { 
+            console.error('Recharge error:', err.response?.data || err.message);
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Error logging recharge' }); 
+            return false;
+        }
         finally { setSubmitting(false); }
     };
 
@@ -133,7 +135,6 @@ const CarUtility = () => {
         setSubmitting(true);
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            // Ensure vehicleId is in the form data
             if (formData instanceof FormData && !formData.get('vehicleId')) {
                 formData.append('vehicleId', targetId);
             }
@@ -143,10 +144,17 @@ const CarUtility = () => {
                     companyid: selectedCompany._id
                 }
             });
-            setMessage({ type: 'success', text: 'Tax Recorded' });
-            setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
-            setSelectedVehicleId(null);
-        } catch (err) { setMessage({ type: 'error', text: 'Error' }); }
+            setMessage({ type: 'success', text: 'Border Tax Recorded Successfully!' });
+            setTimeout(() => { 
+                setMessage({ type: '', text: '' }); 
+                fetchAllData(); 
+                if (selectedVehicleId === 'new') setSelectedVehicleId(null);
+            }, 1500);
+            return true;
+        } catch (err) { 
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Error recording tax' }); 
+            return false;
+        }
         finally { setSubmitting(false); }
     };
 
@@ -156,7 +164,6 @@ const CarUtility = () => {
         setSubmitting(true);
         try {
             const token = JSON.parse(localStorage.getItem('userInfo')).token;
-            // Ensure vehicleId is in the form data
             if (formData instanceof FormData && !formData.get('vehicleId')) {
                 formData.append('vehicleId', targetId);
             }
@@ -166,10 +173,18 @@ const CarUtility = () => {
                     companyid: selectedCompany._id
                 }
             });
-            setMessage({ type: 'success', text: 'Trans Recorded' });
-            setTimeout(() => { setMessage({ type: '', text: '' }); fetchAllData(); }, 1500);
-            setSelectedVehicleId(null);
-        } catch (err) { console.error('Service add error:', err.response?.data || err.message); setMessage({ type: 'error', text: err.response?.data?.message || 'Error' }); }
+            setMessage({ type: 'success', text: 'Service Record Logged Successfully!' });
+            setTimeout(() => { 
+                setMessage({ type: '', text: '' }); 
+                fetchAllData(); 
+                if (selectedVehicleId === 'new') setSelectedVehicleId(null);
+            }, 1500);
+            return true;
+        } catch (err) { 
+            console.error('Service add error:', err.response?.data || err.message); 
+            setMessage({ type: 'error', text: err.response?.data?.message || 'Error recording service' }); 
+            return false;
+        }
         finally { setSubmitting(false); }
     };
 
@@ -206,34 +221,65 @@ const CarUtility = () => {
         } finally { setSubmitting(false); }
     };
 
-    const getVehicleActivity = (vId) => {
+    const getVehicleActivity = React.useCallback((vId) => {
         const v = vehicles.find(v => v._id === vId);
         const fHist = v ? (v.fastagHistory || []) : [];
 
+        const getISTMonthYear = (dateInput) => {
+            if (!dateInput) return { m: -1, y: -1 };
+            try {
+                const d = new Date(dateInput);
+                if (isNaN(d.getTime())) return { m: -1, y: -1 };
+                
+                const formatter = new Intl.DateTimeFormat('en-GB', {
+                    day: '2-digit', month: '2-digit', year: 'numeric', timeZone: 'Asia/Kolkata'
+                });
+                const parts = formatter.formatToParts(d);
+                const month = parseInt(parts.find(p => p.type === 'month').value) - 1;
+                const year = parseInt(parts.find(p => p.type === 'year').value);
+                return { m: month, y: year };
+            } catch (e) {
+                console.error("Date parsing error:", e);
+                return { m: -1, y: -1 };
+            }
+        };
+
         const fFilt = fHist.filter(h => {
-            const d = nowIST(h.date || new Date());
-            return d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
-        });
-        const bFilt = allBorderEntries.filter(e => {
-            const d = nowIST(e.date || new Date());
-            return (e.vehicle?._id === vId || e.vehicle === vId) && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
-        });
-        const sFilt = allServiceRecords.filter(r => {
-            const d = nowIST(r.billDate || r.date || new Date());
-            return (r.vehicle?._id === vId || r.vehicle === vId) && d.getUTCMonth() === selectedMonth && d.getUTCFullYear() === selectedYear;
+            const { m, y } = getISTMonthYear(h.date);
+            return m === selectedMonth && y === selectedYear;
         });
 
-        const bAll = allBorderEntries.filter(e => (e.vehicle?._id === vId || e.vehicle === vId));
-        const sAll = allServiceRecords.filter(r => (r.vehicle?._id === vId || r.vehicle === vId));
+        const bFilt = allBorderEntries.filter(e => {
+            const { m, y } = getISTMonthYear(e.date);
+            return (e.vehicle?._id === vId || e.vehicle === vId) && m === selectedMonth && y === selectedYear;
+        });
+
+        const sFilt = allServiceRecords.filter(r => {
+            const { m, y } = getISTMonthYear(r.billDate || r.date);
+            return (r.vehicle?._id === vId || r.vehicle === vId) && m === selectedMonth && y === selectedYear;
+        });
 
         return {
             fastag: fFilt.reduce((s, h) => s + (Number(h.amount) || 0), 0),
             border: bFilt.reduce((s, e) => s + (Number(e.amount) || 0), 0),
             service: sFilt.reduce((s, r) => s + (Number(r.amount) || 0), 0),
-            total: fFilt.reduce((s, h) => s + (Number(h.amount) || 0), 0) + bFilt.reduce((s, e) => s + (Number(e.amount) || 0), 0) + sFilt.reduce((s, r) => s + (Number(r.amount) || 0), 0),
+            total: fFilt.reduce((s, h) => s + (Number(h.amount) || 0), 0) + 
+                   bFilt.reduce((s, e) => s + (Number(e.amount) || 0), 0) + 
+                   sFilt.reduce((s, r) => s + (Number(r.amount) || 0), 0),
             items: { fastag: fFilt, border: bFilt, service: sFilt }
         };
-    };
+    }, [vehicles, allBorderEntries, allServiceRecords, selectedMonth, selectedYear]);
+
+    const recentActivity = useMemo(() => {
+        const all = [];
+        vehicles.forEach(v => {
+            const act = getVehicleActivity(v._id);
+            act.items.fastag.forEach(x => all.push({ ...x, type: 'Fastag', car: v.carNumber, color: '#fbbf24' }));
+            act.items.border.forEach(x => all.push({ ...x, type: 'Border', car: v.carNumber, color: '#38bdf8' }));
+            act.items.service.forEach(x => all.push({ ...x, type: 'Service', car: v.carNumber, color: '#a855f7' }));
+        });
+        return all.sort((a, b) => new Date(b.date || b.billDate) - new Date(a.date || a.billDate)).slice(0, 5);
+    }, [vehicles, getVehicleActivity]);
 
     const globalStats = useMemo(() => {
         let f = 0, b = 0, s = 0;
@@ -241,7 +287,11 @@ const CarUtility = () => {
             const act = getVehicleActivity(v._id);
             f += act.fastag; b += act.border; s += act.service;
         });
-        return { f, b, s, t: f + b + s };
+        return { 
+            f, b, s, 
+            t: f + b + s,
+            lowBalanceCount: vehicles.filter(v => (v.fastagBalance || 0) < 500).length
+        };
     }, [vehicles, allBorderEntries, allServiceRecords, selectedMonth, selectedYear]);
 
     const filteredVehicles = vehicles
@@ -260,6 +310,26 @@ const CarUtility = () => {
             <SEO title="Car Utility" description="Fleet Accounts Hub" />
 
             <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
+                <AnimatePresence>
+                    {message.text && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -20 }}
+                            style={{
+                                position: 'fixed', top: '40px', left: '50%', transform: 'translateX(-50%)',
+                                zIndex: 10000, padding: '15px 30px', borderRadius: '18px',
+                                background: message.type === 'success' ? 'rgba(16, 185, 129, 0.9)' : 'rgba(244, 63, 94, 0.9)',
+                                color: '#fff', fontWeight: '1000', fontSize: '14px',
+                                backdropFilter: 'blur(10px)', boxShadow: '0 10px 30px rgba(0,0,0,0.3)',
+                                display: 'flex', alignItems: 'center', gap: '10px', pointerEvents: 'none'
+                            }}
+                        >
+                            {message.type === 'success' ? <CheckCircle2 size={20} /> : <AlertCircle size={20} />}
+                            {message.text.toUpperCase()}
+                        </motion.div>
+                    )}
+                </AnimatePresence>
                 <AnimatePresence mode="wait">
                     {viewMode === 'fleet' ? (
                         <motion.div
@@ -297,12 +367,45 @@ const CarUtility = () => {
                                 </div>
                             </header>
 
-                            <div className="grid-1-2-2-4" style={{ marginBottom: '40px' }}>
-                                <SummaryStat label="Fastag Paid" val={globalStats.f} col="var(--primary)" icon={Zap} />
-                                <SummaryStat label="Border Taxes" val={globalStats.b} col="var(--primary)" icon={Layers} />
-                                <SummaryStat label="Service Exp" val={globalStats.s} col="#a855f7" icon={Droplets} />
-                                <SummaryStat label="Month Total" val={globalStats.t} col="#10b981" icon={TrendingUp} isDark />
+                            <div className="grid-1-2-2-4" style={{ marginBottom: '40px', gap: '20px' }}>
+                                <SummaryStat 
+                                    label="Fastag Paid" 
+                                    val={globalStats.f} 
+                                    col="#38bdf8" 
+                                    icon={CreditCard} 
+                                    desc={`${vehicles.reduce((acc, v) => acc + (v.fastagHistory?.length || 0), 0)} Logs Found in: ${[...new Set(vehicles.flatMap(v => v.fastagHistory || []).map(h => {
+                                        const str = formatDateIST(h.date);
+                                        const parts = str.split('/');
+                                        return parts[1] + '/' + parts[2];
+                                    }))].join(', ') || 'None'}`} 
+                                />
+                                <SummaryStat label="Border Tax" val={globalStats.b} col="#fbbf24" icon={Shield} desc="Permit Expenses" />
+                                <SummaryStat label="Service Exp" val={globalStats.s} col="#10b981" icon={Wrench} desc="Misc Services" />
+                                <SummaryStat label="Month Total" val={globalStats.t} col="#a855f7" icon={TrendingUp} isDark desc="Combined Ops" />
                             </div>
+
+                            {recentActivity.length > 0 && (
+                                <div style={{ marginBottom: '35px', padding: '25px', background: 'rgba(255,255,255,0.02)', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                                    <h4 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                        <TrendingUp size={18} /> RECENT FLEET ACTIVITY
+                                    </h4>
+                                    <div style={{ display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '10px' }} className="no-scrollbar">
+                                        {recentActivity.map((r, i) => (
+                                            <div key={i} style={{ minWidth: '240px', padding: '24px', background: 'rgba(255,255,255,0.03)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(10px)' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
+                                                    <span style={{ fontSize: '10px', fontWeight: '1000', color: r.color, textTransform: 'uppercase', letterSpacing: '1px', background: `${r.color}15`, padding: '4px 8px', borderRadius: '6px' }}>{r.type}</span>
+                                                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{formatDateIST(r.date || r.billDate)}</span>
+                                                </div>
+                                                <div style={{ fontSize: '20px', fontWeight: '1000', color: '#fff', marginBottom: '4px' }}>₹{Number(r.amount).toLocaleString()}</div>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <Car size={12} color="rgba(255,255,255,0.4)" />
+                                                    <div style={{ fontSize: '13px', fontWeight: '800', color: 'rgba(255,255,255,0.6)' }}>{r.car}</div>
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
 
                             <div style={{ position: 'relative', marginBottom: '30px' }}>
                                 <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
@@ -398,27 +501,46 @@ const CarUtility = () => {
                                 <div className="grid-1-2-2-4" style={{ marginBottom: '40px' }}>
                                     {detailVehicle && (
                                         <>
-                                            <DetailStat label="Fastag Paid" val={getVehicleActivity(detailVehicleId).fastag} icon={Zap} col="var(--primary)" />
-                                            <DetailStat label="Border Permit" val={getVehicleActivity(detailVehicleId).border} icon={Layers} col="var(--primary)" />
-                                            <DetailStat label="Extra Service" val={getVehicleActivity(detailVehicleId).service} icon={Wrench} col="#a855f7" />
-                                            <DetailStat label="Total Current" val={getVehicleActivity(detailVehicleId).total} icon={TrendingUp} col="#10b981" isDark />
+                                            <DetailStat 
+                                                label="Fastag Paid" 
+                                                val={getVehicleActivity(detailVehicleId).fastag} 
+                                                icon={CreditCard} col="#38bdf8" 
+                                                desc={`${detailVehicle.fastagHistory?.length || 0} Total Logs`}
+                                            />
+                                            <DetailStat 
+                                                label="Border Tax" 
+                                                val={getVehicleActivity(detailVehicleId).border} 
+                                                icon={Shield} col="#fbbf24" 
+                                                desc={`${allBorderEntries.filter(e => (e.vehicle?._id === detailVehicleId || e.vehicle === detailVehicleId)).length} Total Logs`}
+                                            />
+                                            <DetailStat 
+                                                label="Extra Service" 
+                                                val={getVehicleActivity(detailVehicleId).service} 
+                                                icon={Wrench} col="#10b981" 
+                                                desc={`${allServiceRecords.filter(r => (r.vehicle?._id === detailVehicleId || r.vehicle === detailVehicleId)).length} Total Logs`}
+                                            />
+                                            <DetailStat 
+                                                label="Total Current" 
+                                                val={getVehicleActivity(detailVehicleId).total} 
+                                                icon={TrendingUp} col="#a855f7" isDark 
+                                            />
                                         </>
                                     )}
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '10px', marginBottom: '30px', background: 'rgba(255,255,255,0.03)', padding: '6px', borderRadius: '18px', width: 'fit-content', border: '1px solid rgba(255,255,255,0.05)' }}>
                                     {[
-                                        { id: 'fastag', label: 'Fastag Logs', icon: Zap },
-                                        { id: 'border', label: 'Border Permits', icon: Layers },
-                                        { id: 'services', label: 'Extra Services', icon: Wrench }
+                                        { id: 'fastag', label: 'Fastag Logs', icon: CreditCard, color: '#38bdf8' },
+                                        { id: 'border', label: 'Border Permits', icon: Shield, color: '#fbbf24' },
+                                        { id: 'services', label: 'Extra Services', icon: Wrench, color: '#10b981' }
                                     ].map(t => (
                                         <button
                                             key={t.id}
                                             onClick={() => setActiveUtility(t.id)}
                                             style={{
                                                 padding: '12px 25px', borderRadius: '14px', border: 'none', cursor: 'pointer',
-                                                background: activeUtility === t.id ? 'rgba(255, 191, 36, 0.1)' : 'transparent',
-                                                color: activeUtility === t.id ? '#fbbf24' : 'rgba(255,255,255,0.4)',
+                                                background: activeUtility === t.id ? `${t.color}15` : 'transparent',
+                                                color: activeUtility === t.id ? t.color : 'rgba(255,255,255,0.4)',
                                                 fontSize: '12px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', transition: '0.2s', textTransform: 'uppercase'
                                             }}
                                         >
@@ -443,6 +565,8 @@ const CarUtility = () => {
                                         submitting={submitting}
                                         vehicle={detailVehicle}
                                         companyId={selectedCompany?._id}
+                                        selectedMonth={selectedMonth}
+                                        selectedYear={selectedYear}
                                     />
                                 )}
                             </div>
@@ -476,15 +600,39 @@ const CarUtility = () => {
                                 </button>
                             </div>
                             <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
+                                {/* Premium Tabbed Navigation */}
+                                <div style={{ display: 'flex', gap: '10px', padding: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '20px', marginBottom: '30px', border: '1px solid rgba(255,255,255,0.06)', width: 'fit-content' }}>
+                                    {[
+                                        { id: 'fastag', label: 'Fastag', color: '#38bdf8', icon: CreditCard },
+                                        { id: 'border', label: 'Border Tax', color: '#fbbf24', icon: Shield },
+                                        { id: 'services', label: 'Other Service', color: '#10b981', icon: Wrench }
+                                    ].map(tab => (
+                                        <button
+                                            key={tab.id}
+                                            onClick={() => setActiveUtility(tab.id)}
+                                            style={{
+                                                padding: '14px 25px', borderRadius: '14px', border: 'none', cursor: 'pointer',
+                                                background: (activeUtility || 'fastag') === tab.id ? tab.color : 'transparent',
+                                                color: (activeUtility || 'fastag') === tab.id ? '#000' : 'rgba(255,255,255,0.4)',
+                                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
+                                                fontWeight: '1000', fontSize: '13px', transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)'
+                                            }}
+                                        >
+                                            <tab.icon size={18} /> {tab.label.toUpperCase()}
+                                        </button>
+                                    ))}
+                                </div>
                                 <ManagerHub
                                     key={activeUtility || 'fastag'}
-                                    type={activeUtility || 'fastag'} color="var(--primary)"
+                                    type={activeUtility || 'fastag'} color={(activeUtility || 'fastag') === 'fastag' ? '#38bdf8' : (activeUtility || 'fastag') === 'border' ? '#fbbf24' : '#10b981'}
                                     act={selectedVehicleId === 'new' ? { items: { fastag: [], border: [], service: [] } } : getVehicleActivity(selectedVehicleId)}
                                     drivers={drivers} getImageUrl={getImageUrl}
                                     onAdd={(vId, data, file) => (activeUtility || 'fastag') === 'fastag' ? handleRecharge(vId, data, file) : (activeUtility || 'fastag') === 'border' ? handleAddTax(vId, data, file) : handleAddService(vId, data, file)}
                                     onUpdate={(id, data) => handleUpdateRecord((activeUtility || 'fastag') === 'fastag' ? `vehicles/${selectedVehicleId}/fastag-recharge` : (activeUtility || 'fastag') === 'border' ? 'border-tax' : 'maintenance', id, data)}
                                     onDelete={id => handleDeleteRecord((activeUtility || 'fastag') === 'fastag' ? `vehicles/${selectedVehicleId}/fastag-recharge` : (activeUtility || 'fastag') === 'border' ? 'border-tax' : 'maintenance', id)}
                                     setViewingImage={setViewingImage} submitting={submitting} vehicle={vehicles.find(v => v._id === selectedVehicleId)} allVehicles={vehicles} companyId={selectedCompany?._id}
+                                    selectedMonth={selectedMonth}
+                                    selectedYear={selectedYear}
                                 />
                             </div>
                         </motion.div>
@@ -497,28 +645,50 @@ const CarUtility = () => {
     );
 };
 
-const DetailStat = ({ label, val, icon: Icon, col, isDark }) => (
+const DetailStat = ({ label, val, icon: Icon, col, isDark, desc }) => (
     <div style={{ padding: '25px', background: isDark ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '25px', display: 'flex', alignItems: 'center', gap: '20px' }}>
         <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: `${col}15`, color: col, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Icon size={22} /></div>
         <div>
             <div style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{label}</div>
             <div style={{ fontSize: '22px', fontWeight: '1000', color: isDark ? col : '#fff' }}>₹{val.toLocaleString()}</div>
+            {desc && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '700', marginTop: '2px' }}>{desc}</div>}
         </div>
     </div>
 );
 
-const SummaryStat = ({ label, val, col, icon: Icon, isDark }) => (
-    <div style={{ padding: '24px', background: isDark ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '22px', display: 'flex', alignItems: 'center', gap: '20px' }}>
-        <div style={{ width: '48px', height: '48px', borderRadius: '13px', background: `${col}15`, color: col, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Icon size={24} /></div>
+const SummaryStat = ({ label, val, col, icon: Icon, isDark, desc }) => (
+    <div style={{ 
+        padding: '24px', 
+        background: isDark ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(16, 185, 129, 0.05))' : 'rgba(15, 23, 42, 0.6)', 
+        border: '1px solid rgba(255, 255, 255, 0.06)', 
+        borderRadius: '24px', 
+        display: 'flex', 
+        alignItems: 'center', 
+        gap: '20px',
+        backdropFilter: 'blur(10px)',
+        boxShadow: isDark ? '0 10px 30px rgba(16, 185, 129, 0.1)' : 'none'
+    }}>
+        <div style={{ 
+            width: '52px', 
+            height: '52px', 
+            borderRadius: '16px', 
+            background: `${col}15`, 
+            color: col, 
+            display: 'flex', 
+            justifyContent: 'center', 
+            alignItems: 'center',
+            boxShadow: `0 0 20px ${col}20`
+        }}><Icon size={24} /></div>
         <div>
-            <div style={{ fontSize: '12px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{label}</div>
-            <div style={{ fontSize: '24px', fontWeight: '1000', color: isDark ? col : '#fff' }}>₹{val.toLocaleString()}</div>
+            <div style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</div>
+            <div style={{ fontSize: '26px', fontWeight: '1000', color: isDark ? col : '#fff', letterSpacing: '-0.5px' }}>₹{val.toLocaleString()}</div>
+            {desc && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '700', marginTop: '2px' }}>{desc}</div>}
         </div>
     </div>
 );
 
-const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setViewingImage, submitting, vehicle, getImageUrl, companyId, hideForm = false, allVehicles = [] }) => {
-    const [form, setForm] = useState({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office' });
+const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setViewingImage, submitting, vehicle, getImageUrl, companyId, selectedMonth, selectedYear, hideForm = false, allVehicles = [] }) => {
+    const [form, setForm] = useState({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
     const [file, setFile] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
 
@@ -535,226 +705,275 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                 amount: editingItem.amount || '',
                 remarks: editingItem.remarks || '',
                 borderName: editingItem.borderName || '',
-                date: (editingItem.date || editingItem.billDate || todayIST()).split('T')[0],
-                billDate: (editingItem.billDate || editingItem.date || todayIST()).split('T')[0],
+                date: toISTDateString(editingItem.date || editingItem.billDate || todayIST()),
+                billDate: toISTDateString(editingItem.billDate || editingItem.date || todayIST()),
                 driverId: editingItem.driver?._id || editingItem.driver || '',
-                category: editingItem.category || 'Car Wash'
+                category: editingItem.category || 'Car Wash',
+                paymentMode: editingItem.method || editingItem.paymentMode || 'UPI',
+                vehicleId: vehicle?._id || editingItem.vehicle?._id || editingItem.vehicle || '',
+                paymentSource: editingItem.paymentSource || 'Office'
             });
         } else {
-            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office' });
+            // Default to today if current month is selected, else default to 1st of selected month
+            const istNow = nowIST();
+            const isCurrentMonth = istNow.getUTCMonth() === selectedMonth && istNow.getUTCFullYear() === selectedYear;
+            const defaultDate = isCurrentMonth ? todayIST() : `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01`;
+            
+            setForm({ amount: '', remarks: '', borderName: '', date: defaultDate, billDate: defaultDate, driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
             setFile(null);
         }
-    }, [editingItem, type, vehicle]);
+    }, [editingItem, type, vehicle, selectedMonth, selectedYear]);
 
     const handleSave = async () => {
         const targetVehicleId = vehicle?._id || form.vehicleId;
         if (!targetVehicleId) return alert('Please select a vehicle');
         if (!form.amount) return alert('Amount is required');
 
-        let success = false;
-        if (type === 'fastag') {
-            const formData = new FormData();
-            formData.append('amount', form.amount);
-            formData.append('method', 'UPI');
-            formData.append('remarks', form.remarks);
-            formData.append('date', form.date || todayIST());
-            if (file) formData.append('receiptPhoto', file);
+        const fd = new FormData();
+        Object.keys(form).forEach(k => {
+            if (form[k] && !['date', 'billDate', 'vehicleId'].includes(k)) {
+                fd.append(k, form[k]);
+            }
+        });
 
-            if (editingItem) success = await onUpdate(editingItem._id, formData);
-            else { await onAdd(targetVehicleId, formData); success = true; }
-        } else {
-            const fd = new FormData();
-            Object.keys(form).forEach(k => {
-                if (form[k] && !['date', 'billDate', 'vehicleId'].includes(k)) {
-                    fd.append(k, form[k]);
-                }
-            });
+        const finalDate = form.date || form.billDate || todayIST();
+        fd.append('date', finalDate);
+        fd.append('billDate', finalDate);
+        if (companyId) fd.append('companyId', companyId);
+        fd.append('vehicleId', targetVehicleId);
 
-            const finalDate = form.date || form.billDate || todayIST();
-            fd.append('date', finalDate);
-            fd.append('billDate', finalDate);
+        if (file) fd.append(type === 'border' ? 'receiptPhoto' : 'billPhoto', file);
 
-            if (companyId) fd.append('companyId', companyId);
-            fd.append('vehicleId', targetVehicleId);
+        try {
+            let success = false;
+            if (type === 'fastag') {
+                const formData = new FormData();
+                formData.append('amount', form.amount);
+                formData.append('method', form.paymentMode || 'UPI');
+                formData.append('remarks', form.remarks);
+                formData.append('date', finalDate);
+                if (file) formData.append('receiptPhoto', file);
+                if (companyId) formData.append('companyId', companyId);
 
-            if (file) fd.append(type === 'border' ? 'receiptPhoto' : 'billPhoto', file);
-            if (type === 'services') {
-                fd.append('maintenanceType', 'Driver Services');
+                if (editingItem) success = await onUpdate(editingItem._id, formData);
+                else { await onAdd(targetVehicleId, formData); success = true; }
+            } else {
+                if (type === 'services') fd.append('maintenanceType', 'Driver Services');
+                if (editingItem) success = await onUpdate(editingItem._id, fd);
+                else { await onAdd(targetVehicleId, fd); success = true; }
             }
 
-            if (editingItem) success = await onUpdate(editingItem._id, fd);
-            else { await onAdd(targetVehicleId, fd); success = true; }
-        }
-
-        if (success || !editingItem) {
-            setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office' });
-            setFile(null);
-            setEditingItem(null);
+            if (success) {
+                setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
+                setFile(null);
+                if (editingItem) setEditingItem(null);
+            }
+        } catch (err) {
+            console.error('Save error:', err);
         }
     };
 
-    const showForm = !hideForm || editingItem;
-
     return (
-        <div style={{ width: '100%' }}>
-            {showForm && (
-                <div style={{ padding: '30px', background: 'rgba(255,255,255,0.02)', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.06)', marginBottom: '30px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '25px' }}>
-                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: `${color}20`, color: color, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{editingItem ? <Edit3 size={20} /> : <Plus size={20} />}</div>
-                        <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '900' }}>{editingItem ? 'Edit Log Entry' : 'Add New Record'}</h4>
-                    </div>
-                    <div className="modal-form-grid">
+        <div className="manager-hub-container" style={{ color: '#fff' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
+                <div className="entry-card premium-card" style={{ padding: '32px', borderRadius: '28px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
+                    <h3 style={{ margin: '0 0 25px 0', fontSize: '20px', fontWeight: '900', color, display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <Plus size={22} /> {editingItem ? 'Edit' : 'New'} {type === 'fastag' ? 'Recharge' : type === 'border' ? 'Border Tax' : 'Service Record'}
+                    </h3>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {!vehicle && (
-                            <div style={{ gridColumn: '1 / -1' }}>
-                                <label className="input-label">Select Vehicle</label>
+                            <div>
+                                <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Select Vehicle</label>
                                 <select
                                     value={form.vehicleId}
                                     onChange={e => setForm({ ...form, vehicleId: e.target.value })}
-                                    className="input-field"
+                                    className="premium-compact-input"
+                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '12px', color: '#fff' }}
                                 >
-                                    <option value="">Select a car...</option>
+                                    <option value="" style={{ background: '#1a1a1a' }}>Choose a car...</option>
                                     {allVehicles.map(v => (
-                                        <option key={v._id} value={v._id}>{v.carNumber}</option>
+                                        <option key={v._id} value={v._id} style={{ background: '#1a1a1a' }}>{v.carNumber} ({v.model})</option>
                                     ))}
                                 </select>
                             </div>
                         )}
-                        <div>
-                            <label className="input-label">Date</label>
-                            <input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="input-field" />
-                        </div>
-                        <div>
-                            <label className="input-label">Amount (₹)</label>
-                            <input type="number" placeholder="0.00" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} className="input-field" style={{ fontSize: '18px', fontWeight: '900' }} />
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                            <div>
+                                <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Amount (₹)</label>
+                                <input
+                                    type="number"
+                                    value={form.amount}
+                                    onChange={e => setForm({ ...form, amount: e.target.value })}
+                                    className="premium-compact-input"
+                                    placeholder="0.00"
+                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '12px', color: '#fff', fontSize: '18px', fontWeight: '900' }}
+                                />
+                            </div>
+                            <div>
+                                <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Payment Mode</label>
+                                <select 
+                                    value={form.paymentMode} 
+                                    onChange={e => setForm({ ...form, paymentMode: e.target.value })} 
+                                    className="premium-compact-input"
+                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '12px', color: '#fff' }}
+                                >
+                                    <option value="UPI">UPI</option>
+                                    <option value="Cash">Cash</option>
+                                    <option value="Bank Transfer">Bank Transfer</option>
+                                </select>
+                            </div>
                         </div>
 
-                        {type === 'fastag' && (
-                            <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Recharge Remarks</label><input type="text" placeholder="e.g. ICICI Bank Recharge" value={form.remarks} onChange={e => setForm({ ...form, remarks: e.target.value })} className="input-field" /></div>
-                        )}
+                        <div>
+                            <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Date</label>
+                            <div className="dual-date-input-container" style={{ position: 'relative' }}>
+                                <input
+                                    type="text"
+                                    readOnly
+                                    value={formatDateIST(form.date)}
+                                    onClick={(e) => e.currentTarget.nextElementSibling.nextElementSibling.showPicker()}
+                                    className="premium-compact-input"
+                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '12px', color: '#fff', cursor: 'pointer' }}
+                                />
+                                <Calendar size={18} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
+                                <input
+                                    type="date"
+                                    value={form.date}
+                                    onChange={e => setForm({ ...form, date: e.target.value })}
+                                    style={{ position: 'absolute', opacity: 0, width: 0, height: 0 }}
+                                />
+                            </div>
+                        </div>
+
                         {type === 'border' && (
-                            <div style={{ gridColumn: '1 / -1' }}><label className="input-label">Border Station / Permit Name</label><input type="text" placeholder="e.g. DL-HR Border" value={form.borderName} onChange={e => setForm({ ...form, borderName: e.target.value })} className="input-field" /></div>
+                            <div>
+                                <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Border Name</label>
+                                <input
+                                    type="text"
+                                    value={form.borderName}
+                                    onChange={e => setForm({ ...form, borderName: e.target.value })}
+                                    className="premium-compact-input"
+                                    placeholder="e.g. Delhi-Haryana"
+                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '12px', color: '#fff' }}
+                                />
+                            </div>
                         )}
+
                         {type === 'services' && (
-                            <div style={{ gridColumn: '1 / -1' }}>
-                                <label className="input-label">Service Category</label>
-                                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="input-field">
+                            <div>
+                                <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Service Category</label>
+                                <select 
+                                    value={form.category} 
+                                    onChange={e => setForm({ ...form, category: e.target.value })} 
+                                    className="premium-compact-input"
+                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '12px', color: '#fff' }}
+                                >
                                     <option>Car Wash</option>
                                     <option>Puncture / Tyre</option>
                                     <option>Cleaning Supplies</option>
+                                    <option>Periodic Service</option>
                                     <option>Other Misc</option>
                                 </select>
                             </div>
                         )}
 
-                        <div style={{ gridColumn: '1 / -1' }}>
-                            <label className="input-label">Payment Source</label>
-                            <div style={{ display: 'flex', gap: '10px' }}>
-                                {['Office', 'Guest'].map(s => (
-                                    <button
-                                        key={s}
-                                        type="button"
-                                        onClick={() => setForm({ ...form, paymentSource: s })}
-                                        style={{
-                                            flex: 1, height: '48px', borderRadius: '12px',
-                                            background: form.paymentSource === s ? 'rgba(14, 165, 233, 0.1)' : 'rgba(255,255,255,0.02)',
-                                            color: form.paymentSource === s ? '#0ea5e9' : 'rgba(255,255,255,0.4)',
-                                            border: form.paymentSource === s ? '1px solid rgba(14, 165, 233, 0.3)' : '1px solid rgba(255,255,255,0.08)',
-                                            fontWeight: '800', fontSize: '13px', cursor: 'pointer'
-                                        }}
-                                    >
-                                        {s.toUpperCase()}
-                                    </button>
-                                ))}
+                        <div>
+                            <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Remarks / Notes</label>
+                            <textarea
+                                value={form.remarks}
+                                onChange={e => setForm({ ...form, remarks: e.target.value })}
+                                className="premium-compact-input"
+                                style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '12px', color: '#fff', height: '80px', resize: 'none' }}
+                                placeholder="Add any specific details..."
+                            />
+                        </div>
+
+                        <div>
+                            <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Attachment (Receipt/Bill)</label>
+                            <div 
+                                className="upload-zone"
+                                onClick={() => document.getElementById('file-upload').click()}
+                                style={{ 
+                                    border: '2px dashed rgba(255,255,255,0.1)', 
+                                    borderRadius: '18px', 
+                                    padding: '20px', 
+                                    textAlign: 'center',
+                                    cursor: 'pointer',
+                                    background: file ? `${color}10` : 'transparent',
+                                    transition: '0.3s'
+                                }}
+                            >
+                                <input id="file-upload" type="file" hidden onChange={e => setFile(e.target.files[0])} />
+                                <Image size={24} style={{ color: file ? color : 'rgba(255,255,255,0.2)', marginBottom: '8px' }} />
+                                <div style={{ fontSize: '12px', fontWeight: '700', color: file ? '#fff' : 'rgba(255,255,255,0.4)' }}>
+                                    {file ? file.name : 'Click to upload image'}
+                                </div>
                             </div>
                         </div>
 
-                        <div style={{ gridColumn: '1 / -1' }}>
-                            <label className="input-label">Reciept / Bill Photo</label>
-                            <label style={{
-                                display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px',
-                                padding: '20px', borderRadius: '15px', border: '1px dashed rgba(255,255,255,0.1)',
-                                background: 'rgba(255,255,255,0.02)', cursor: 'pointer', transition: '0.3s'
-                            }} className="table-row-hover">
-                                <input type="file" style={{ display: 'none' }} onChange={e => setFile(e.target.files[0])} />
-                                <Image size={24} color="rgba(255,255,255,0.3)" />
-                                <span style={{ fontSize: '13px', fontWeight: '800', color: file ? color : 'rgba(255,255,255,0.4)' }}>{file ? file.name : 'Click to upload receipt photo'}</span>
-                            </label>
-                        </div>
-
-                        <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '15px', marginTop: '10px' }}>
-                            <button onClick={handleSave} className="btn-primary" style={{ flex: 1, height: '52px', borderRadius: '14px', fontWeight: '950' }} disabled={submitting}>
-                                {submitting ? 'SAVING...' : (editingItem ? 'UPDATE RECORD' : 'SAVE LOG ENTRY')}
+                        <button 
+                            onClick={handleSave} 
+                            disabled={submitting}
+                            className="btn-primary"
+                            style={{ background: color, color: '#000', padding: '16px', borderRadius: '18px', fontWeight: '1000', fontSize: '15px', marginTop: '10px', width: '100%', border: 'none', cursor: 'pointer' }}
+                        >
+                            {submitting ? 'PROCESSING...' : editingItem ? 'UPDATE RECORD' : 'SAVE ENTRY'}
+                        </button>
+                        {editingItem && (
+                            <button 
+                                onClick={() => {
+                                    setEditingItem(null);
+                                    setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
+                                }}
+                                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', padding: '12px', borderRadius: '15px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
+                            >
+                                CANCEL EDIT
                             </button>
-                            {editingItem && (
-                                <button onClick={() => setEditingItem(null)} className="glass-card" style={{ padding: '0 25px', borderRadius: '14px', fontWeight: '900' }}>CANCEL</button>
-                            )}
-                        </div>
+                        )}
                     </div>
                 </div>
-            )}
 
-            <div style={{ background: 'rgba(255,255,255,0.01)', borderRadius: '25px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead>
-                        <tr style={{ background: 'rgba(255,255,255,0.03)' }}>
-                            <th style={{ padding: '15px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Date</th>
-                            <th style={{ padding: '15px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Details / Remark</th>
-                            <th style={{ padding: '15px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Amount</th>
-                            <th style={{ padding: '15px 25px', textAlign: 'center', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Reciept</th>
-                            <th style={{ padding: '15px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
+                <div className="history-section" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                    <h4 style={{ margin: '0', fontSize: '16px', fontWeight: '900', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <History size={18} /> RECENT LOGS
+                    </h4>
+                    
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '600px', overflowY: 'auto', paddingRight: '5px' }}>
                         {hist.length === 0 ? (
-                            <tr><td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontWeight: '800' }}>No history records found...</td></tr>
-                        ) : hist.sort((a, b) => new Date(b.date || b.billDate) - new Date(a.date || a.billDate)).map((item, i) => (
-                            <tr key={item._id || i} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }} className="table-row-hover">
-                                <td style={{ padding: '18px 25px' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <Calendar size={14} color="rgba(255,255,255,0.3)" />
-                                        <span style={{ fontSize: '13px', fontWeight: '850', color: 'rgba(255,255,255,0.8)' }}>{formatDateIST(item.date || item.billDate)}</span>
+                            <div style={{ padding: '40px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                <div style={{ opacity: 0.2, marginBottom: '10px' }}><History size={32} /></div>
+                                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>No records found for this car in selected month</div>
+                            </div>
+                        ) : hist.sort((a,b) => new Date(b.date || b.billDate) - new Date(a.date || a.billDate)).map(item => (
+                            <div key={item._id} className="history-item premium-card" style={{ padding: '20px', borderRadius: '22px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <div>
+                                    <div style={{ fontSize: '14px', fontWeight: '1000', color: '#fff' }}>₹{Number(item.amount).toLocaleString()}</div>
+                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginTop: '2px' }}>
+                                        {formatDateIST(item.date || item.billDate)} • {item.method || item.paymentMode || 'Manual'}
                                     </div>
-                                </td>
-                                <td style={{ padding: '18px 25px' }}>
-                                    <div style={{ fontSize: '13px', fontWeight: '700', color: '#fff' }}>{item.borderName || item.category || 'Fastag Recharge'}</div>
-                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>{item.remarks || '--'}</div>
-                                </td>
-                                <td style={{ padding: '18px 25px', textAlign: 'right' }}>
-                                    <div style={{ color: color, fontWeight: '1000', fontSize: '15px' }}>₹{(item.amount || 0).toLocaleString()}</div>
-                                    <div style={{
-                                        fontSize: '8px', padding: '1px 4px', borderRadius: '3px', display: 'inline-block',
-                                        background: item.paymentSource === 'Guest' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(14, 165, 233, 0.1)',
-                                        color: item.paymentSource === 'Guest' ? '#10b981' : '#0ea5e9',
-                                        fontWeight: '900', textTransform: 'uppercase', marginTop: '2px'
-                                    }}>{item.paymentSource || 'Office'}</div>
-                                </td>
-                                <td style={{ padding: '18px 25px', textAlign: 'center' }}>
-                                    {(item.receiptPhoto || item.billPhoto) ? (
-                                        <button
-                                            onClick={() => setViewingImage(getImageUrl(item.receiptPhoto || item.billPhoto))}
-                                            style={{
-                                                width: '36px', height: '36px', borderRadius: '10px',
-                                                background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                                margin: '0 auto'
-                                            }}
-                                        >
-                                            <Eye size={18} color="#10b981" />
+                                    {item.remarks && <div style={{ fontSize: '10px', color: color, fontWeight: '700', marginTop: '6px', opacity: 0.8 }}>{item.remarks}</div>}
+                                </div>
+                                <div style={{ display: 'flex', gap: '8px' }}>
+                                    {(item.receiptPhoto || item.billPhoto) && (
+                                        <button onClick={() => setViewingImage(getImageUrl(item.receiptPhoto || item.billPhoto))} className="icon-btn-sm" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}>
+                                            <Image size={14} />
                                         </button>
-                                    ) : (
-                                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.1)', fontWeight: '900' }}>N/A</span>
                                     )}
-                                </td>
-                                <td style={{ padding: '18px 25px', textAlign: 'right' }}>
-                                    <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                                        <button onClick={() => setEditingItem(item)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.2)', cursor: 'pointer' }}><Edit3 size={16} /></button>
-                                        <button onClick={() => onDelete(item._id)} style={{ background: 'transparent', border: 'none', color: 'rgba(244,63,94,0.4)', cursor: 'pointer' }}><Trash2 size={16} /></button>
-                                    </div>
-                                </td>
-                            </tr>
+                                    <button onClick={() => {
+                                        setEditingItem(item);
+                                    }} className="icon-btn-sm" style={{ background: 'rgba(255,255,255,0.05)', color: '#fbbf24', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}>
+                                        <Edit2 size={14} />
+                                    </button>
+                                    <button onClick={() => onDelete(item._id)} className="icon-btn-sm" style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}>
+                                        <Trash2 size={14} />
+                                    </button>
+                                </div>
+                            </div>
                         ))}
-                    </tbody>
-                </table>
+                    </div>
+                </div>
             </div>
         </div>
     );

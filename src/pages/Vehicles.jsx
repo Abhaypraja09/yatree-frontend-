@@ -65,11 +65,18 @@ const Vehicles = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             if (!userInfo) return;
-            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}`, {
+            // Disable pagination for management view to show all vehicles
+            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=fleet`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
-            setVehicles(data.vehicles || []);
-        } catch (err) { console.error(err); }
+            // Handle both paginated and non-paginated responses
+            const vehicleList = data.vehicles || (Array.isArray(data) ? data : []);
+            console.log('Vehicles fetched:', vehicleList.length);
+            setVehicles(vehicleList);
+        } catch (err) { 
+            console.error('Fetch Vehicles Error:', err);
+            setVehicles([]);
+        }
         finally { setLoading(false); }
     };
 
@@ -374,10 +381,34 @@ const Vehicles = () => {
                             <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1.5px', cursor: 'pointer' }}>
                                 Vehicle <span className="theme-gradient-text">Fleet</span>
                             </h1>
+                            {selectedCompany && (
+                                <div style={{ fontSize: '9px', fontWeight: '950', color: 'rgba(255,255,255,0.3)', marginTop: '4px', letterSpacing: '0.5px' }}>
+                                    REGISTRY: <span style={{ color: theme.primary }}>{selectedCompany.name.toUpperCase()}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
 
-                    <div className="mobile-stack" style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: '1', justifyContent: 'flex-end', maxWidth: '600px', flexWrap: 'wrap' }}>
+                    <div className="mobile-stack" style={{ display: 'flex', gap: '12px', alignItems: 'center', flex: '1', justifyContent: 'flex-end', maxWidth: '700px', flexWrap: 'wrap' }}>
+                        <button
+                            onClick={fetchVehicles}
+                            disabled={loading}
+                            style={{
+                                width: '40px',
+                                height: '40px',
+                                background: 'rgba(255,255,255,0.03)',
+                                border: '1px solid rgba(255,255,255,0.08)',
+                                borderRadius: '10px',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                cursor: 'pointer',
+                                color: 'white'
+                            }}
+                            title="Refresh Data"
+                        >
+                            <RefreshCw size={18} className={loading ? 'pulse-animation' : ''} />
+                        </button>
                         <div style={{ position: 'relative', flex: '1', minWidth: '140px' }}>
                             <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} />
                             <input
@@ -849,9 +880,25 @@ const Vehicles = () => {
                                         <option value="PUC">PUC Certificate</option>
                                     </select>
                                 </div>
-                                <div>
+                                <div style={{ position: 'relative' }}>
                                     <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Expiry</label>
-                                    <input type="date" className="input-field" value={docToUpload.expiry} onChange={(e) => setDocToUpload({ ...docToUpload, expiry: e.target.value })} style={{ height: '48px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)' }} />
+                                    <div style={{ position: 'relative' }}>
+                                        <input
+                                            type="text"
+                                            readOnly
+                                            className="input-field"
+                                            value={docToUpload.expiry ? formatDateIST(docToUpload.expiry) : ''}
+                                            onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                            style={{ height: '48px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', width: '100%', cursor: 'pointer' }}
+                                        />
+                                        <input
+                                            type="date"
+                                            className="input-field"
+                                            value={docToUpload.expiry}
+                                            onChange={(e) => setDocToUpload({ ...docToUpload, expiry: e.target.value })}
+                                            style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Scan / Photo</label>

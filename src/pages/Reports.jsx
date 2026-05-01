@@ -894,9 +894,15 @@ const Reports = ({ isSubComponent = false }) => {
                         </button>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <input type="date" value={fromDate} onChange={e => handleFromDate(e.target.value)}
-                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 10px', borderRadius: '8px', fontSize: '12px', outline: 'none' }} />
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px', position: 'relative' }}>
+                            <div
+                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
+                                style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '6px 10px', borderRadius: '8px', fontSize: '12px', outline: 'none', cursor: 'pointer', minWidth: '100px', textAlign: 'center' }}
+                            >
+                                {fmt(fromDate)}
+                                <input type="date" value={fromDate} onChange={e => handleFromDate(e.target.value)}
+                                    style={{ position: 'absolute', inset: 0, opacity: 0, cursor: 'pointer' }} />
+                            </div>
                         </div>
                     </div>
                 </div>

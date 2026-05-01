@@ -26,7 +26,7 @@ import {
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
-import { todayIST } from '../utils/istUtils';
+import { todayIST, formatDateIST } from '../utils/istUtils';
 
 const Warranties = () => {
     const { selectedCompany } = useCompany();
@@ -542,7 +542,21 @@ const Warranties = () => {
 
                                     <div className="input-field-group">
                                         <label style={labelStyle}>Purchase Date</label>
-                                        <input type="date" style={inputStyle} value={formData.purchaseDate} onChange={e => setFormData({ ...formData, purchaseDate: e.target.value })} />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                style={inputStyle}
+                                                value={formData.purchaseDate ? formatDateIST(formData.purchaseDate) : ''}
+                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                            />
+                                            <input
+                                                type="date"
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                value={formData.purchaseDate}
+                                                onChange={e => setFormData({ ...formData, purchaseDate: e.target.value })}
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="input-field-group">
@@ -552,12 +566,41 @@ const Warranties = () => {
 
                                     <div className="input-field-group">
                                         <label style={labelStyle}>Warranty Start</label>
-                                        <input type="date" style={inputStyle} value={formData.warrantyStartDate} onChange={e => setFormData({ ...formData, warrantyStartDate: e.target.value })} />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                style={inputStyle}
+                                                value={formData.warrantyStartDate ? formatDateIST(formData.warrantyStartDate) : ''}
+                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                            />
+                                            <input
+                                                type="date"
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                value={formData.warrantyStartDate}
+                                                onChange={e => setFormData({ ...formData, warrantyStartDate: e.target.value })}
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="input-field-group">
                                         <label style={labelStyle}>Warranty End *</label>
-                                        <input type="date" style={inputStyle} required value={formData.warrantyEndDate} onChange={e => setFormData({ ...formData, warrantyEndDate: e.target.value })} />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                style={inputStyle}
+                                                value={formData.warrantyEndDate ? formatDateIST(formData.warrantyEndDate) : ''}
+                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                            />
+                                            <input
+                                                type="date"
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                required
+                                                value={formData.warrantyEndDate}
+                                                onChange={e => setFormData({ ...formData, warrantyEndDate: e.target.value })}
+                                            />
+                                        </div>
                                     </div>
 
                                     <div className="input-field-group">
@@ -674,7 +717,21 @@ const Warranties = () => {
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '20px' }}>
                                     <div className="input-field-group">
                                         <label style={labelStyle}>Claim Date</label>
-                                        <input type="date" style={inputStyle} value={claimFormData.claimDate} onChange={e => setClaimFormData({ ...claimFormData, claimDate: e.target.value })} />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                style={inputStyle}
+                                                value={claimFormData.claimDate ? formatDateIST(claimFormData.claimDate) : ''}
+                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                            />
+                                            <input
+                                                type="date"
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                value={claimFormData.claimDate}
+                                                onChange={e => setClaimFormData({ ...claimFormData, claimDate: e.target.value })}
+                                            />
+                                        </div>
                                     </div>
                                     <div className="input-field-group">
                                         <label style={labelStyle}>Claim Status</label>
@@ -689,7 +746,21 @@ const Warranties = () => {
                                     </div>
                                     <div className="input-field-group" style={{ gridColumn: '1/-1' }}>
                                         <label style={labelStyle}>Replacement Date (if any)</label>
-                                        <input type="date" style={inputStyle} value={claimFormData.replacementDate} onChange={e => setClaimFormData({ ...claimFormData, replacementDate: e.target.value })} />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                style={inputStyle}
+                                                value={claimFormData.replacementDate ? formatDateIST(claimFormData.replacementDate) : ''}
+                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                            />
+                                            <input
+                                                type="date"
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                value={claimFormData.replacementDate}
+                                                onChange={e => setClaimFormData({ ...claimFormData, replacementDate: e.target.value })}
+                                            />
+                                        </div>
                                     </div>
                                     <div className="input-field-group" style={{ gridColumn: '1/-1' }}>
                                         <label style={labelStyle}>Remarks</label>

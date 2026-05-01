@@ -671,14 +671,24 @@ const Advances = () => {
                                     </div>
                                     <div className="input-field-group">
                                         <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Calendar size={14} /> Date</label>
-                                        <input
-                                            type="date"
-                                            className="input-field"
-                                            required
-                                            value={formData.date}
-                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                            style={{ height: '54px' }}
-                                        />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                className="input-field"
+                                                value={formData.date ? formatDateIST(formData.date) : ''}
+                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                style={{ width: '100%', height: '54px', cursor: 'pointer' }}
+                                            />
+                                            <input
+                                                type="date"
+                                                className="input-field"
+                                                required
+                                                value={formData.date}
+                                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 

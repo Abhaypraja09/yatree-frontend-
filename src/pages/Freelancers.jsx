@@ -32,23 +32,54 @@ const Modal = ({ title, onClose, children }) => (
 const Field = ({ label, value, onChange, type = "text", required = false, autoComplete = "off", placeholder = "", inputMode = "text" }) => (
     <div style={{ marginBottom: '20px' }}>
         <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>{label}</label>
-        <input
-            type={type}
-            className="input-field"
-            required={required}
-            value={(value === 0 || value) ? value : ''}
-            onChange={e => onChange(e.target.value)}
-            autoComplete={autoComplete}
-            placeholder={placeholder}
-            inputMode={inputMode}
-            style={{
-                height: '52px',
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.05)',
-                borderRadius: '14px',
-                fontSize: '15px'
-            }}
-        />
+        {type === 'date' ? (
+            <div style={{ position: 'relative' }}>
+                <input
+                    type="text"
+                    readOnly
+                    className="input-field"
+                    value={value ? formatDateIST(value) : ''}
+                    onClick={(e) => {
+                        const picker = e.currentTarget.nextElementSibling;
+                        if (picker && picker.showPicker) picker.showPicker();
+                    }}
+                    style={{
+                        height: '52px',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        borderRadius: '14px',
+                        fontSize: '15px',
+                        width: '100%',
+                        cursor: 'pointer'
+                    }}
+                />
+                <input
+                    type="date"
+                    required={required}
+                    value={value || ''}
+                    onChange={e => onChange(e.target.value)}
+                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                />
+            </div>
+        ) : (
+            <input
+                type={type}
+                className="input-field"
+                required={required}
+                value={(value === 0 || value) ? value : ''}
+                onChange={e => onChange(e.target.value)}
+                autoComplete={autoComplete}
+                placeholder={placeholder}
+                inputMode={inputMode}
+                style={{
+                    height: '52px',
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: '14px',
+                    fontSize: '15px'
+                }}
+            />
+        )}
     </div>
 );
 

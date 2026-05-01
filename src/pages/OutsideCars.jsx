@@ -1199,16 +1199,24 @@ const OutsideCars = () => {
                                             <div style={{ position: 'relative' }}>
                                                 <Calendar size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', opacity: 0.6, zIndex: 2 }} />
                                                 <input
-                                                    type="date"
+                                                    type="text"
+                                                    readOnly
                                                     className="premium-compact-input"
-                                                    required
-                                                    value={formData.date}
-                                                    onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                                    value={formData.date ? formatDateIST(formData.date) : ''}
+                                                    onClick={() => document.getElementById('outside-duty-date-picker').showPicker()}
                                                     style={{
                                                         background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
                                                         borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
-                                                        fontSize: '14px', fontWeight: '700'
+                                                        fontSize: '14px', fontWeight: '700', cursor: 'pointer'
                                                     }}
+                                                />
+                                                <input
+                                                    id="outside-duty-date-picker"
+                                                    type="date"
+                                                    required
+                                                    value={formData.date}
+                                                    onChange={e => setFormData({ ...formData, date: e.target.value })}
+                                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                                 />
                                             </div>
                                         </div>

@@ -68,28 +68,28 @@ export const formatTimeIST = (dateOrStr) => {
 };
 
 /**
- * Formats a date/timestamp to IST date string like "11 Mar 2026".
+ * Formats a date/timestamp to IST date string like "11/03/2026".
  */
 export const formatDateIST = (dateOrStr) => {
     if (!dateOrStr) return '--';
     const d = new Date(dateOrStr);
     return d.toLocaleDateString('en-IN', {
         day: '2-digit',
-        month: 'short',
+        month: '2-digit',
         year: 'numeric',
         timeZone: 'Asia/Kolkata'
     });
 };
 
 /**
- * Formats a date/timestamp to IST date + time string like "11 Mar 2026, 10:30 AM".
+ * Formats a date/timestamp to IST date + time string like "11/03/2026, 10:30 AM".
  */
 export const formatDateTimeIST = (dateOrStr) => {
     if (!dateOrStr) return '--';
     const d = new Date(dateOrStr);
     return d.toLocaleString('en-IN', {
         day: '2-digit',
-        month: 'short',
+        month: '2-digit',
         year: 'numeric',
         hour: '2-digit',
         minute: '2-digit',

@@ -573,13 +573,24 @@ const Fastag = () => {
 
                                     <div>
                                         <label className="input-label">Date</label>
-                                        <input
-                                            type="date"
-                                            required
-                                            className="input-field"
-                                            value={rechargeData.date}
-                                            onChange={(e) => setRechargeData({ ...rechargeData, date: e.target.value })}
-                                        />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                className="input-field"
+                                                value={rechargeData.date ? formatDateIST(rechargeData.date) : ''}
+                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                style={{ width: '100%', cursor: 'pointer' }}
+                                            />
+                                            <input
+                                                type="date"
+                                                required
+                                                className="input-field"
+                                                value={rechargeData.date}
+                                                onChange={(e) => setRechargeData({ ...rechargeData, date: e.target.value })}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                            />
+                                        </div>
                                     </div>
 
                                     <div style={{ gridColumn: '1 / -1' }}>

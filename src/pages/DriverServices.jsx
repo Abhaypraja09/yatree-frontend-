@@ -415,9 +415,37 @@ const DriverServices = () => {
                         <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
                             <button style={{ background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><ChevronLeft size={16} /></button>
                             <div style={{ padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                 <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none' }} />
+                                 <div style={{ position: 'relative' }}>
+                                     <input
+                                         type="text"
+                                         readOnly
+                                         style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none', cursor: 'pointer', width: '85px' }}
+                                         value={startDate ? formatDateIST(startDate) : ''}
+                                         onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                     />
+                                     <input
+                                         type="date"
+                                         value={startDate}
+                                         onChange={e => setStartDate(e.target.value)}
+                                         style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                     />
+                                 </div>
                                  <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: '900' }}>→</span>
-                                 <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none' }} />
+                                 <div style={{ position: 'relative' }}>
+                                     <input
+                                         type="text"
+                                         readOnly
+                                         style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none', cursor: 'pointer', width: '85px' }}
+                                         value={endDate ? formatDateIST(endDate) : ''}
+                                         onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                     />
+                                     <input
+                                         type="date"
+                                         value={endDate}
+                                         onChange={e => setEndDate(e.target.value)}
+                                         style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                     />
+                                 </div>
                             </div>
                             <button style={{ background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}><ChevronRight size={16} /></button>
                         </div>
@@ -673,7 +701,23 @@ const DriverServices = () => {
                                     </div>
                                     <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', marginBottom: '6px' }}>SERVICE DATE</label>
-                                        <input type="date" value={formData.billDate} onChange={e => setFormData({...formData, billDate: e.target.value})} className="input-field" required />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                className="input-field"
+                                                value={formData.billDate ? formatDateIST(formData.billDate) : ''}
+                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                                style={{ width: '100%', cursor: 'pointer' }}
+                                            />
+                                            <input
+                                                type="date"
+                                                value={formData.billDate}
+                                                onChange={e => setFormData({...formData, billDate: e.target.value})}
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                required
+                                            />
+                                        </div>
                                     </div>
                                 </div>
 

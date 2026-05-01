@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { X, Upload, CheckCircle, AlertCircle, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatDateIST } from '../utils/istUtils';
 
 const BorderTaxModal = ({ isOpen, onClose, selectedCompany }) => {
     const [vehicles, setVehicles] = useState([]);
@@ -228,13 +229,24 @@ const BorderTaxModal = ({ isOpen, onClose, selectedCompany }) => {
                             </div>
                             <div>
                                 <label style={{ color: 'var(--text-muted)', fontSize: '12px', display: 'block', marginBottom: '5px' }}>Date</label>
-                                <input
-                                    type="date"
-                                    className="input-field"
-                                    required
-                                    value={formData.date}
-                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                />
+                                <div style={{ position: 'relative' }}>
+                                    <input
+                                        type="text"
+                                        readOnly
+                                        className="input-field"
+                                        value={formData.date ? formatDateIST(formData.date) : ''}
+                                        onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                        style={{ width: '100%', cursor: 'pointer' }}
+                                    />
+                                    <input
+                                        type="date"
+                                        className="input-field"
+                                        required
+                                        value={formData.date}
+                                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                        style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                    />
+                                </div>
                             </div>
                         </div>
 

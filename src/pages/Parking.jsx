@@ -1436,14 +1436,25 @@ const ParkingPage = () => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                     <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Date *</label>
-                                                    <input
-                                                        type="date"
-                                                        className="input-field"
-                                                        style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', width: '100%', outline: 'none', colorScheme: 'dark' }}
-                                                        value={formData.date}
-                                                        onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                                        required
-                                                    />
+                                                    <div style={{ position: 'relative' }}>
+                                                        <input
+                                                            type="text"
+                                                            readOnly
+                                                            className="input-field"
+                                                            value={formData.date ? formatDateIST(formData.date) : ''}
+                                                            onClick={() => document.getElementById('parking-date-picker').showPicker()}
+                                                            style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', width: '100%', outline: 'none', cursor: 'pointer' }}
+                                                        />
+                                                        <input
+                                                            id="parking-date-picker"
+                                                            type="date"
+                                                            className="input-field"
+                                                            required
+                                                            value={formData.date}
+                                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                                            style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                        />
+                                                    </div>
                                                 </div>
                                             </div>
 

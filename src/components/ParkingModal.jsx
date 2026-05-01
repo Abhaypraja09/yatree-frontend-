@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { X, Upload, CheckCircle, AlertCircle, Trash2, Camera, Car, User, MapPin } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { formatDateIST } from '../utils/istUtils';
 
 const ParkingModal = ({ isOpen, onClose, selectedCompany, onRefresh }) => {
     const [vehicles, setVehicles] = useState([]);
@@ -198,14 +199,24 @@ const ParkingModal = ({ isOpen, onClose, selectedCompany, onRefresh }) => {
 
                     <div>
                         <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', display: 'block', marginBottom: '6px', textTransform: 'uppercase' }}>Date</label>
-                        <input
-                            type="date"
-                            className="input-field"
-                            required
-                            value={formData.date}
-                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            style={{ colorScheme: 'dark' }}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type="text"
+                                readOnly
+                                className="input-field"
+                                value={formData.date ? formatDateIST(formData.date) : ''}
+                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                style={{ width: '100%', cursor: 'pointer' }}
+                            />
+                            <input
+                                type="date"
+                                className="input-field"
+                                required
+                                value={formData.date}
+                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                            />
+                        </div>
                     </div>
 
                     <div>

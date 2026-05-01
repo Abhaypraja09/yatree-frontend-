@@ -1227,7 +1227,7 @@ const Staff = () => {
                                     style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', position: 'relative', minWidth: '120px' }}
                                 >
                                     <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>FROM</span>
-                                    <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{formatDateIST(fromDate)}</span>
+                                    <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{fromDate ? formatDateIST(fromDate) : '--'}</span>
                                     <input id="range-from-picker" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
                                 </div>
                                 <ArrowUpRight size={14} color="rgba(255,255,255,0.2)" />
@@ -1236,7 +1236,7 @@ const Staff = () => {
                                     style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', position: 'relative', minWidth: '120px' }}
                                 >
                                     <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TO</span>
-                                    <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{formatDateIST(toDate)}</span>
+                                    <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{toDate ? formatDateIST(toDate) : '--'}</span>
                                     <input id="range-to-picker" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
                                 </div>
                             </div>
@@ -1935,7 +1935,24 @@ const Staff = () => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                     <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Joining Date</label>
-                                                    <input required type="date" className="premium-compact-input" style={{ height: '60px', padding: '0 20px', fontSize: '15px', fontWeight: '700', borderRadius: '18px', background: 'rgba(255,255,255,0.03)' }} value={formData.joiningDate} onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })} />
+                                                    <div style={{ position: 'relative' }}>
+                                                        <input
+                                                            type="text"
+                                                            readOnly
+                                                            className="premium-compact-input"
+                                                            value={formData.joiningDate ? formatDateIST(formData.joiningDate) : ''}
+                                                            onClick={() => document.getElementById('joining-date-picker').showPicker()}
+                                                            style={{ height: '60px', width: '100%', padding: '0 20px', fontSize: '15px', fontWeight: '700', borderRadius: '18px', background: 'rgba(255,255,255,0.03)', cursor: 'pointer' }}
+                                                        />
+                                                        <input
+                                                            id="joining-date-picker"
+                                                            type="date"
+                                                            required
+                                                            value={formData.joiningDate}
+                                                            onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
+                                                            style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                        />
+                                                    </div>
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                     <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Employment Type</label>
@@ -2551,20 +2568,27 @@ const Staff = () => {
 
                                     <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '24px' }}>
                                         <div className="premium-input-group">
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
-                                                <label className="premium-label" style={{ margin: 0 }}>TARGET DATE</label>
-                                                <Calendar size={14} style={{ opacity: 0.3 }} color="white" />
+                                            <div style={{ position: 'relative' }}>
+                                                <input
+                                                    type="text"
+                                                    readOnly
+                                                    className="premium-compact-input"
+                                                    value={backdateForm.date ? formatDateIST(backdateForm.date) : ''}
+                                                    onClick={() => document.getElementById('backdate-picker').showPicker()}
+                                                    style={{ background: 'rgba(255,255,255,0.04)', height: '58px', borderRadius: '18px', padding: '0 20px', fontSize: '15px', cursor: 'pointer' }}
+                                                />
+                                                <input
+                                                    id="backdate-picker"
+                                                    type="date"
+                                                    required
+                                                    className="premium-compact-input"
+                                                    min={MIN_BACKDATE_LIMIT}
+                                                    max={todayIST()}
+                                                    value={backdateForm.date}
+                                                    onChange={(e) => setBackdateForm({ ...backdateForm, date: e.target.value })}
+                                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                />
                                             </div>
-                                            <input
-                                                type="date"
-                                                required
-                                                className="premium-compact-input"
-                                                min={MIN_BACKDATE_LIMIT}
-                                                max={todayIST()}
-                                                value={backdateForm.date}
-                                                onChange={(e) => setBackdateForm({ ...backdateForm, date: e.target.value })}
-                                                style={{ background: 'rgba(255,255,255,0.04)', height: '58px', borderRadius: '18px', padding: '0 20px', fontSize: '15px' }}
-                                            />
                                         </div>
                                         <div className="premium-input-group">
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>

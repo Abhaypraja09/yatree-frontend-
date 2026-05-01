@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { X, Clock } from 'lucide-react';
-import { toISTDateTimeString } from '../../utils/istUtils';
+import { toISTDateTimeString, formatDateIST } from '../../utils/istUtils';
 
 const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
     const [formData, setFormData] = useState({
@@ -73,13 +73,23 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                 <form onSubmit={handleSubmit} style={{ display: 'grid', gap: '20px' }}>
                     <div className="form-group">
                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.5px' }}>Duty Date</label>
-                        <input
-                            type="date"
-                            className="input-field"
-                            value={formData.date}
-                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                            style={{ width: '100%', marginBottom: 0, height: '48px', colorScheme: 'dark' }}
-                        />
+                        <div style={{ position: 'relative' }}>
+                            <input
+                                type="text"
+                                readOnly
+                                className="input-field"
+                                value={formData.date ? formatDateIST(formData.date) : ''}
+                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
+                                style={{ width: '100%', marginBottom: 0, height: '48px', cursor: 'pointer' }}
+                            />
+                            <input
+                                type="date"
+                                className="input-field"
+                                value={formData.date}
+                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                            />
+                        </div>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>

@@ -1299,7 +1299,25 @@ const Drivers = ({ isSubComponent = false }) => {
                                 <div className="form-grid-2" style={{ marginBottom: '20px' }}>
                                     <div>
                                         <label className="input-label">Duty Date *</label>
-                                        <input type="date" className="input-field" value={manualDutyForm.date} onChange={(e) => setManualDutyForm({ ...manualDutyForm, date: e.target.value })} required />
+                                        <div style={{ position: 'relative' }}>
+                                            <input
+                                                type="text"
+                                                readOnly
+                                                className="input-field"
+                                                value={manualDutyForm.date ? formatDateIST(manualDutyForm.date) : ''}
+                                                onClick={() => document.getElementById('manual-duty-picker').showPicker()}
+                                                style={{ background: 'rgba(0,0,0,0.2)', cursor: 'pointer' }}
+                                            />
+                                            <input
+                                                id="manual-duty-picker"
+                                                type="date"
+                                                className="input-field"
+                                                value={manualDutyForm.date}
+                                                onChange={(e) => setManualDutyForm({ ...manualDutyForm, date: e.target.value })}
+                                                required
+                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                            />
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="input-label">Vehicle *</label>
