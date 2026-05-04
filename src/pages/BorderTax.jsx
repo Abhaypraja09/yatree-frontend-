@@ -17,7 +17,7 @@ const BorderTax = () => {
         vehicleId: '',
         borderName: '',
         amount: '',
-        date: todayIST(),
+        date: '',
         remarks: '',
         driverId: ''
     });
@@ -44,7 +44,7 @@ const BorderTax = () => {
             vehicleId: '',
             borderName: '',
             amount: '',
-            date: todayIST(),
+            date: '',
             remarks: '',
             driverId: ''
         });
@@ -142,7 +142,7 @@ const BorderTax = () => {
                 vehicleId: formData.vehicleId, // Keep current vehicleId
                 borderName: '',
                 amount: '',
-                date: todayIST(),
+                date: '',
                 remarks: '',
                 driverId: formData.driverId // Keep current driverId
             });
@@ -469,21 +469,13 @@ const BorderTax = () => {
                                         <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TAX DATE</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                className="input-field"
-                                                value={formData.date ? formatDateIST(formData.date) : ''}
-                                                onClick={() => document.getElementById('border-tax-picker').showPicker()}
-                                                style={{ width: '100%', height: '52px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '0 18px', color: 'white', outline: 'none', fontSize: '15px' }}
-                                            />
-                                            <input
                                                 id="border-tax-picker"
                                                 type="date"
                                                 required
                                                 value={formData.date}
                                                 onChange={e => setFormData({ ...formData, date: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                style={{ colorScheme: 'dark', width: '100%', height: '52px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '0 18px', color: 'white', outline: 'none', fontSize: '15px' }}
                                             />
                                         </div>
                                     </div>

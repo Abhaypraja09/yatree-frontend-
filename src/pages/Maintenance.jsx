@@ -114,7 +114,7 @@ const Maintenance = () => {
             description: '',
             garageName: '',
             billNumber: '',
-            billDate: todayIST(),
+            billDate: '',
             amount: '',
             paymentMode: 'Cash',
             currentKm: '',
@@ -147,7 +147,7 @@ const Maintenance = () => {
         description: '',
         garageName: '',
         billNumber: '',
-        billDate: todayIST(),
+        billDate: '',
         amount: '',
         paymentMode: 'Cash',
         paymentSource: 'Office',
@@ -368,7 +368,7 @@ const Maintenance = () => {
             description: '',
             garageName: '',
             billNumber: '',
-            billDate: todayIST(),
+            billDate: '',
             amount: '',
             paymentMode: 'Cash',
             currentKm: '',
@@ -1690,14 +1690,6 @@ const Maintenance = () => {
                                                 <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Bill Date *</label>
                                                 <div style={{ position: 'relative' }}>
                                                     <input
-                                                        type="text"
-                                                        readOnly
-                                                        className="input-field"
-                                                        value={formData.billDate ? formatDateIST(formData.billDate) : ''}
-                                                        onClick={() => document.getElementById('maintenance-date-picker').showPicker()}
-                                                        style={{ borderRadius: '10px', cursor: 'pointer' }}
-                                                    />
-                                                    <input
                                                         id="maintenance-date-picker"
                                                         type="date"
                                                         className="input-field"
@@ -1705,7 +1697,7 @@ const Maintenance = () => {
                                                         value={formData.billDate}
                                                         onChange={(e) => setFormData({ ...formData, billDate: e.target.value })}
                                                         onClick={(e) => e.target.showPicker()}
-                                                        style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                        style={{ borderRadius: '10px', height: '50px', width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', cursor: 'pointer', outline: 'none' }}
                                                     />
                                                 </div>
                                             </div>

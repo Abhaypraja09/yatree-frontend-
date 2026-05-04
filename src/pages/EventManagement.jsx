@@ -45,8 +45,8 @@ const EventManagement = () => {
     useEffect(() => {
         const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
         const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
-        setFromDate(start);
-        setToDate(end);
+        setFromDate('');
+        setToDate('');
     }, [selectedMonth, selectedYear]);
 
     const shiftMonth = (amount) => {
@@ -69,7 +69,7 @@ const EventManagement = () => {
 
     const handleOpenDuty = () => {
         setIsEditingDuty(false);
-        let defaultDate = todayIST();
+        let defaultDate = '';
         if (selectedDay !== 'All') {
             defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
         } else {
@@ -86,7 +86,7 @@ const EventManagement = () => {
 
     const handleOpenEvent = () => {
         setIsEditingEvent(false);
-        let defaultDate = todayIST();
+        let defaultDate = '';
         if (selectedDay !== 'All') {
             defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
         } else {
@@ -134,11 +134,11 @@ const EventManagement = () => {
     };
 
     const [eventFormData, setEventFormData] = useState({
-        name: '', client: '', date: getToday(), location: '', description: '',
+        name: '', client: '', date: '', location: '', description: '',
         status: 'Upcoming'
     });
     const [dutyFormData, setDutyFormData] = useState({
-        carNumber: '', model: '', dropLocation: '', date: getToday(),
+        carNumber: '', model: '', dropLocation: '', date: '',
         eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet',
         dutyType: '', remarks: '', guestCount: ''
     });
@@ -388,7 +388,7 @@ const EventManagement = () => {
             if (showDetailsModal && selectedEventDetails?._id) {
                 fetchEventDetails(selectedEventDetails._id);
             }
-            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestCount: '' });
+            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: '', eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestCount: '' });
         } catch (err) {
             console.error('Save Error:', err.response?.data || err.message);
             alert('Error saving duty entry: ' + (err.response?.data?.message || 'Check connection'));
@@ -1193,22 +1193,14 @@ const EventManagement = () => {
                                                 </div>
                                                 <div style={{ position: 'relative' }}>
                                                     <input 
-                                                        type="text" 
-                                                        readOnly
-                                                        value={dutyFormData.date ? formatDateIST(dutyFormData.date) : ''} 
-                                                        onClick={() => document.getElementById('duty-date-picker').showPicker()}
-                                                        className="premium-compact-input" 
-                                                        placeholder="DD/MM/YYYY"
-                                                        style={{ cursor: 'pointer', height: '50px' }} 
-                                                    />
-                                                    <input 
                                                         id="duty-date-picker"
                                                         type="date" 
                                                         required 
                                                         value={dutyFormData.date} 
                                                         onChange={e => setDutyFormData({ ...dutyFormData, date: e.target.value })} 
                                                         onClick={(e) => e.target.showPicker()}
-                                                        style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }} 
+                                                        className="premium-compact-input"
+                                                        style={{ colorScheme: 'dark', height: '50px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', borderRadius: '10px' }}
                                                     />
                                                 </div>
                                             </div>
@@ -1715,20 +1707,14 @@ const EventManagement = () => {
                                         </div>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                className="premium-compact-input"
-                                                value={eventFormData.date ? formatDateIST(eventFormData.date) : ''}
-                                                onClick={() => document.getElementById('event-mission-date-picker').showPicker()}
-                                                style={{ colorScheme: 'dark', height: '52px', width: '100%', cursor: 'pointer' }}
-                                            />
-                                            <input
                                                 id="event-mission-date-picker"
                                                 type="date"
+                                                required
                                                 value={eventFormData.date}
                                                 onChange={e => setEventFormData({ ...eventFormData, date: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                className="premium-compact-input"
+                                                style={{ colorScheme: 'dark', height: '52px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', borderRadius: '10px' }}
                                             />
                                         </div>
                                     </div>

@@ -145,7 +145,7 @@ const ParkingPage = () => {
         driverId: '',
         driver: '', // Will start storing name here too for legacy/display
         amount: '',
-        date: todayIST(),
+        date: '',
         receiptPhoto: ''
     });
     const [submitting, setSubmitting] = useState(false);
@@ -168,7 +168,7 @@ const ParkingPage = () => {
             driverId: '',
             driver: '',
             amount: '',
-            date: todayIST(),
+            date: '',
             receiptPhoto: ''
         });
     }, [location.pathname, location.key]);
@@ -406,7 +406,7 @@ const ParkingPage = () => {
             driverId: '',
             driver: '',
             amount: '',
-            date: todayIST(),
+            date: '',
             receiptPhoto: ''
         });
     };
@@ -534,27 +534,33 @@ const ParkingPage = () => {
                             display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px',
                             border: '1px solid rgba(255,255,255,0.06)'
                         }}>
-                            <div
-                                onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                style={{ height: '32px', minWidth: '120px', background: 'rgba(251, 191, 36, 0.05)', borderRadius: '8px', padding: '0 12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative' }}
-                            >
-                                <span style={{ fontSize: '12px', fontWeight: '900', color: 'white', letterSpacing: '0.4px' }}>
-                                    {selectedDay === 'All' ?
-                                        `${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
-                                        formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
-                                </span>
-                                <input
-                                    type="date"
-                                    value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
-                                    onChange={e => {
-                                        const d = new Date(e.target.value);
-                                        setSelectedYear(d.getFullYear());
-                                        setSelectedMonth(d.getMonth());
-                                        setSelectedDay(d.getDate().toString());
-                                    }}
-                                    style={{ position: 'absolute', inset: 0, opacity: 0 }}
-                                />
-                            </div>
+                            <input
+                                type="date"
+                                style={{
+                                    height: '32px',
+                                    minWidth: '130px',
+                                    background: 'rgba(251, 191, 36, 0.05)',
+                                    borderRadius: '8px',
+                                    padding: '0 12px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    cursor: 'pointer',
+                                    color: 'white',
+                                    fontWeight: '900',
+                                    fontSize: '11px',
+                                    border: '1px solid rgba(251, 191, 36, 0.1)',
+                                    textAlign: 'center'
+                                }}
+                                value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                onChange={e => {
+                                    const d = new Date(e.target.value);
+                                    setSelectedYear(d.getFullYear());
+                                    setSelectedMonth(d.getMonth());
+                                    setSelectedDay(d.getDate().toString());
+                                }}
+                                onClick={(e) => e.target.showPicker()}
+                            />
                         </div>
 
                         <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -1438,14 +1444,6 @@ const ParkingPage = () => {
                                                     <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Date *</label>
                                                     <div style={{ position: 'relative' }}>
                                                         <input
-                                                            type="text"
-                                                            readOnly
-                                                            className="input-field"
-                                                            value={formData.date ? formatDateIST(formData.date) : ''}
-                                                            onClick={() => document.getElementById('parking-date-picker').showPicker()}
-                                                            style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', width: '100%', outline: 'none', cursor: 'pointer' }}
-                                                        />
-                                                        <input
                                                             id="parking-date-picker"
                                                             type="date"
                                                             className="input-field"
@@ -1453,7 +1451,7 @@ const ParkingPage = () => {
                                                             value={formData.date}
                                                             onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                                             onClick={(e) => e.target.showPicker()}
-                                                            style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                            style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', width: '100%', outline: 'none', cursor: 'pointer' }}
                                                         />
                                                     </div>
                                                 </div>

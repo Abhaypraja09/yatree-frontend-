@@ -123,7 +123,7 @@ const FuelPage = () => {
         setFormData({
             vehicleId: '',
             fuelType: 'Diesel',
-            date: todayIST(),
+            date: '',
             amount: '',
             quantity: '',
             rate: '',
@@ -316,7 +316,7 @@ const FuelPage = () => {
         setFormData({
             vehicleId: '',
             fuelType: 'Diesel',
-            date: todayIST(),
+            date: '',
             amount: '',
             quantity: '',
             rate: '',
@@ -1007,14 +1007,6 @@ const FuelPage = () => {
                                             <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Date *</label>
                                             <div style={{ position: 'relative' }}>
                                                 <input
-                                                    type="text"
-                                                    readOnly
-                                                    className="input-field"
-                                                    value={formData.date ? formatDateIST(formData.date) : ''}
-                                                    onClick={() => document.getElementById('fuel-date-picker').showPicker()}
-                                                    style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px', cursor: 'pointer' }}
-                                                />
-                                                <input
                                                     id="fuel-date-picker"
                                                     type="date"
                                                     className="input-field"
@@ -1022,7 +1014,7 @@ const FuelPage = () => {
                                                     value={formData.date}
                                                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                                     onClick={(e) => e.target.showPicker()}
-                                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                    style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }}
                                                 />
                                             </div>
                                         </div>

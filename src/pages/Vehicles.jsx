@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Car, AlertCircle, Trash2, Calendar, ExternalLink, Search, Wallet, Shield, MapPin, Clock, CheckCircle2, XCircle, Info, Wrench, Edit3 } from 'lucide-react';
+import { Plus, Car, AlertCircle, Trash2, Calendar, ExternalLink, Search, Wallet, Shield, MapPin, Clock, CheckCircle2, XCircle, Info, Wrench, Edit3, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import { useTheme } from '../context/ThemeContext';
@@ -884,21 +884,13 @@ const Vehicles = () => {
                                     <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Expiry</label>
                                     <div style={{ position: 'relative' }}>
                                         <input
-                                            type="text"
-                                            readOnly
-                                            className="input-field"
-                                            value={docToUpload.expiry ? formatDateIST(docToUpload.expiry) : ''}
-                                            onClick={() => document.getElementById('doc-expiry-picker').showPicker()}
-                                            style={{ height: '48px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', width: '100%', cursor: 'pointer' }}
-                                        />
-                                        <input
                                             id="doc-expiry-picker"
                                             type="date"
                                             className="input-field"
-                                            value={docToUpload.expiry}
+                                            style={{ height: '48px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)', width: '100%' }}
+                                            value={docToUpload.expiry || ''}
                                             onChange={(e) => setDocToUpload({ ...docToUpload, expiry: e.target.value })}
                                             onClick={(e) => e.target.showPicker()}
-                                            style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
                                         />
                                     </div>
                                 </div>

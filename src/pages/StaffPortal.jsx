@@ -528,18 +528,11 @@ const StaffPortal = () => {
                                             <label style={{ fontSize: '10px', fontWeight: '800', opacity: 0.4, marginLeft: '5px' }}>FROM DATE</label>
                                             <div style={{ position: 'relative' }}>
                                                 <input
-                                                    type="text"
-                                                    readOnly
-                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: '600', width: '100%', cursor: 'pointer' }}
-                                                    value={leaveForm.startDate ? formatDateIST(leaveForm.startDate) : ''}
-                                                    onClick={() => document.getElementById('leave-start-picker').showPicker()}
-                                                />
-                                                <input
                                                     id="leave-start-picker"
                                                     type="date"
                                                     required
-                                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                                                    value={leaveForm.startDate}
+                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: '600', width: '100%' }}
+                                                    value={leaveForm.startDate || ''}
                                                     onChange={e => setLeaveForm({ ...leaveForm, startDate: e.target.value })}
                                                     onClick={(e) => e.target.showPicker()}
                                                 />
@@ -549,18 +542,11 @@ const StaffPortal = () => {
                                             <label style={{ fontSize: '10px', fontWeight: '800', opacity: 0.4, marginLeft: '5px' }}>TO DATE</label>
                                             <div style={{ position: 'relative' }}>
                                                 <input
-                                                    type="text"
-                                                    readOnly
-                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: '600', width: '100%', cursor: 'pointer' }}
-                                                    value={leaveForm.endDate ? formatDateIST(leaveForm.endDate) : ''}
-                                                    onClick={() => document.getElementById('leave-end-picker').showPicker()}
-                                                />
-                                                <input
                                                     id="leave-end-picker"
                                                     type="date"
                                                     required
-                                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                                                    value={leaveForm.endDate}
+                                                    style={{ background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', padding: '16px', borderRadius: '16px', color: 'white', fontWeight: '600', width: '100%' }}
+                                                    value={leaveForm.endDate || ''}
                                                     onChange={e => setLeaveForm({ ...leaveForm, endDate: e.target.value })}
                                                     onClick={(e) => e.target.showPicker()}
                                                 />

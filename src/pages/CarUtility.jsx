@@ -688,7 +688,7 @@ const SummaryStat = ({ label, val, col, icon: Icon, isDark, desc }) => (
 );
 
 const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setViewingImage, submitting, vehicle, getImageUrl, companyId, selectedMonth, selectedYear, hideForm = false, allVehicles = [] }) => {
-    const [form, setForm] = useState({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
+    const [form, setForm] = useState({ amount: '', remarks: '', borderName: '', date: '', billDate: '', driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
     const [file, setFile] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
 
@@ -705,8 +705,8 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                 amount: editingItem.amount || '',
                 remarks: editingItem.remarks || '',
                 borderName: editingItem.borderName || '',
-                date: toISTDateString(editingItem.date || editingItem.billDate || todayIST()),
-                billDate: toISTDateString(editingItem.billDate || editingItem.date || todayIST()),
+                date: toISTDateString(editingItem.date || editingItem.billDate || ''),
+                billDate: toISTDateString(editingItem.billDate || editingItem.date || ''),
                 driverId: editingItem.driver?._id || editingItem.driver || '',
                 category: editingItem.category || 'Car Wash',
                 paymentMode: editingItem.method || editingItem.paymentMode || 'UPI',
@@ -719,7 +719,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
             const isCurrentMonth = istNow.getUTCMonth() === selectedMonth && istNow.getUTCFullYear() === selectedYear;
             const defaultDate = isCurrentMonth ? todayIST() : `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01`;
             
-            setForm({ amount: '', remarks: '', borderName: '', date: defaultDate, billDate: defaultDate, driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
+            setForm({ amount: '', remarks: '', borderName: '', date: '', billDate: '', driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
             setFile(null);
         }
     }, [editingItem, type, vehicle, selectedMonth, selectedYear]);
@@ -736,7 +736,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
             }
         });
 
-        const finalDate = form.date || form.billDate || todayIST();
+        const finalDate = form.date || form.billDate || '';
         fd.append('date', finalDate);
         fd.append('billDate', finalDate);
         if (companyId) fd.append('companyId', companyId);
@@ -764,7 +764,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
             }
 
             if (success) {
-                setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
+                setForm({ amount: '', remarks: '', borderName: '', date: '', billDate: '', driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
                 setFile(null);
                 if (editingItem) setEditingItem(null);
             }
@@ -830,22 +830,15 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                             <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', display: 'block', textTransform: 'uppercase' }}>Date</label>
                             <div className="dual-date-input-container" style={{ position: 'relative' }}>
                                 <input
-                                    type="text"
-                                    readOnly
-                                    value={formatDateIST(form.date)}
-                                    onClick={() => document.getElementById('utility-date-picker').showPicker()}
-                                    className="premium-compact-input"
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '12px', color: '#fff', cursor: 'pointer' }}
-                                />
-                                <Calendar size={18} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }} />
-                                <input
                                     id="utility-date-picker"
                                     type="date"
                                     value={form.date}
                                     onChange={e => setForm({ ...form, date: e.target.value })}
                                     onClick={(e) => e.target.showPicker()}
-                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                    className="premium-compact-input"
+                                    style={{ colorScheme: 'dark', width: '100%', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '12px', color: '#fff', cursor: 'pointer' }}
                                 />
+                                <Calendar size={18} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, pointerEvents: 'none' }} />
                             </div>
                         </div>
 
@@ -927,7 +920,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                             <button 
                                 onClick={() => {
                                     setEditingItem(null);
-                                    setForm({ amount: '', remarks: '', borderName: '', date: todayIST(), billDate: todayIST(), driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
+                                    setForm({ amount: '', remarks: '', borderName: '', date: '', billDate: '', driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
                                 }}
                                 style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', padding: '12px', borderRadius: '15px', fontWeight: '700', fontSize: '13px', cursor: 'pointer' }}
                             >

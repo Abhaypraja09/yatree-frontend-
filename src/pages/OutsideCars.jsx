@@ -58,7 +58,7 @@ const OutsideCars = () => {
             dutyAmount: '',
             dropLocation: '',
             transactionType: 'Buy',
-            date: todayIST()
+            date: ''
         });
     }, [location.pathname, location.key]);
     useEffect(() => {
@@ -95,7 +95,7 @@ const OutsideCars = () => {
         dutyAmount: '',
         dropLocation: '',
         transactionType: 'Buy',
-        date: todayIST()
+        date: ''
     });
 
     useEffect(() => {
@@ -832,27 +832,33 @@ const OutsideCars = () => {
                                 borderRadius: '20px',
                                 border: '1px solid rgba(255,255,255,0.06)'
                             }}>
-                                <div
-                                    onClick={(e) => { const i = e.currentTarget.querySelector('input'); if (i.showPicker) i.showPicker(); else i.click(); }}
-                                    style={{ height: '42px', minWidth: '140px', background: 'rgba(56, 189, 248, 0.08)', border: '1px solid rgba(56, 189, 248, 0.15)', borderRadius: '16px', padding: '0 20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', position: 'relative', margin: '0 6px' }}
-                                >
-                                    <span style={{ fontSize: '13px', fontWeight: '950', color: 'white', whiteSpace: 'nowrap', letterSpacing: '0.5px' }}>
-                                        {selectedDay === 'All' ?
-                                            ` ${['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][selectedMonth]} ${selectedYear}` :
-                                            formatDateIST(toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay))))}
-                                    </span>
-                                    <input
-                                        type="date"
-                                        value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
-                                        onChange={e => {
-                                            const d = new Date(e.target.value);
-                                            setSelectedYear(d.getFullYear());
-                                            setSelectedMonth(d.getMonth());
-                                            setSelectedDay(d.getDate().toString());
-                                        }}
-                                        style={{ position: 'absolute', inset: 0, opacity: 0 }}
-                                    />
-                                </div>
+                                <input
+                                    type="date"
+                                    style={{
+                                        height: '42px',
+                                        minWidth: '150px',
+                                        background: 'rgba(56, 189, 248, 0.08)',
+                                        border: '1px solid rgba(56, 189, 248, 0.15)',
+                                        borderRadius: '16px',
+                                        padding: '0 20px',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        cursor: 'pointer',
+                                        color: 'white',
+                                        fontWeight: '950',
+                                        fontSize: '13px',
+                                        textAlign: 'center'
+                                    }}
+                                    value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                    onChange={e => {
+                                        const d = new Date(e.target.value);
+                                        setSelectedYear(d.getFullYear());
+                                        setSelectedMonth(d.getMonth());
+                                        setSelectedDay(d.getDate().toString());
+                                    }}
+                                    onClick={(e) => e.target.showPicker()}
+                                />
                             </div>
 
                             {/* DYNAMIC "SHOW FULL MONTH" TAB */}
@@ -1197,27 +1203,19 @@ const OutsideCars = () => {
                                         <div className="premium-input-group">
                                             <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', display: 'block' }}>LOG DATE *</label>
                                             <div style={{ position: 'relative' }}>
-                                                <Calendar size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--primary)', opacity: 0.6, zIndex: 2 }} />
-                                                <input
-                                                    type="text"
-                                                    readOnly
-                                                    className="premium-compact-input"
-                                                    value={formData.date ? formatDateIST(formData.date) : ''}
-                                                    onClick={() => document.getElementById('outside-duty-date-picker').showPicker()}
-                                                    style={{
-                                                        background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
-                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
-                                                        fontSize: '14px', fontWeight: '700', cursor: 'pointer'
-                                                    }}
-                                                />
                                                 <input
                                                     id="outside-duty-date-picker"
                                                     type="date"
                                                     required
+                                                    className="premium-compact-input"
                                                     value={formData.date}
                                                     onChange={e => setFormData({ ...formData, date: e.target.value })}
                                                     onClick={(e) => e.target.showPicker()}
-                                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                    style={{
+                                                        background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
+                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px',
+                                                        fontSize: '14px', fontWeight: '700', cursor: 'pointer', outline: 'none'
+                                                    }}
                                                 />
                                             </div>
                                         </div>

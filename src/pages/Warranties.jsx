@@ -44,7 +44,7 @@ const Warranties = () => {
     const [showClaimModal, setShowClaimModal] = useState(false);
     const [selectedWarranty, setSelectedWarranty] = useState(null);
     const [claimFormData, setClaimFormData] = useState({
-        claimDate: todayIST(),
+        claimDate: '',
         claimStatus: 'Pending',
         replacementDate: '',
         remarks: ''
@@ -56,8 +56,8 @@ const Warranties = () => {
         partName: '',
         brandName: '',
         invoiceNumber: '',
-        purchaseDate: todayIST(),
-        warrantyStartDate: todayIST(),
+        purchaseDate: '',
+        warrantyStartDate: '',
         warrantyEndDate: '',
         warrantyPeriod: '',
         supplierName: '',
@@ -92,8 +92,8 @@ const Warranties = () => {
             partName: '',
             brandName: '',
             invoiceNumber: '',
-            purchaseDate: todayIST(),
-            warrantyStartDate: todayIST(),
+            purchaseDate: '',
+            warrantyStartDate: '',
             warrantyEndDate: '',
             warrantyPeriod: '',
             supplierName: '',
@@ -101,7 +101,7 @@ const Warranties = () => {
             status: 'Active'
         });
         setClaimFormData({
-            claimDate: todayIST(),
+            claimDate: '',
             claimStatus: 'Pending',
             replacementDate: '',
             remarks: ''
@@ -209,8 +209,8 @@ const Warranties = () => {
             partName: '',
             brandName: '',
             invoiceNumber: '',
-            purchaseDate: todayIST(),
-            warrantyStartDate: todayIST(),
+            purchaseDate: '',
+            warrantyStartDate: '',
             warrantyEndDate: '',
             warrantyPeriod: '',
             supplierName: '',
@@ -544,17 +544,11 @@ const Warranties = () => {
                                         <label style={labelStyle}>Purchase Date</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                style={inputStyle}
-                                                value={formData.purchaseDate ? formatDateIST(formData.purchaseDate) : ''}
-                                                onClick={() => document.getElementById('purchase-date-picker').showPicker()}
-                                            />
-                                            <input
                                                 id="purchase-date-picker"
                                                 type="date"
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                                                value={formData.purchaseDate}
+                                                className="input-field"
+                                                style={{ width: '100%', height: '48px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', color: 'white', padding: '0 15px' }}
+                                                value={formData.purchaseDate || ''}
                                                 onChange={e => setFormData({ ...formData, purchaseDate: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
                                             />
@@ -570,17 +564,11 @@ const Warranties = () => {
                                         <label style={labelStyle}>Warranty Start</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                style={inputStyle}
-                                                value={formData.warrantyStartDate ? formatDateIST(formData.warrantyStartDate) : ''}
-                                                onClick={() => document.getElementById('warranty-start-picker').showPicker()}
-                                            />
-                                            <input
                                                 id="warranty-start-picker"
                                                 type="date"
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                                                value={formData.warrantyStartDate}
+                                                className="input-field"
+                                                style={{ width: '100%', height: '48px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', color: 'white', padding: '0 15px' }}
+                                                value={formData.warrantyStartDate || ''}
                                                 onChange={e => setFormData({ ...formData, warrantyStartDate: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
                                             />
@@ -591,18 +579,12 @@ const Warranties = () => {
                                         <label style={labelStyle}>Warranty End *</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                style={inputStyle}
-                                                value={formData.warrantyEndDate ? formatDateIST(formData.warrantyEndDate) : ''}
-                                                onClick={() => document.getElementById('warranty-end-picker').showPicker()}
-                                            />
-                                            <input
                                                 id="warranty-end-picker"
                                                 type="date"
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                className="input-field"
                                                 required
-                                                value={formData.warrantyEndDate}
+                                                style={{ width: '100%', height: '48px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', color: 'white', padding: '0 15px' }}
+                                                value={formData.warrantyEndDate || ''}
                                                 onChange={e => setFormData({ ...formData, warrantyEndDate: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
                                             />
@@ -725,16 +707,11 @@ const Warranties = () => {
                                         <label style={labelStyle}>Claim Date</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                style={inputStyle}
-                                                value={claimFormData.claimDate ? formatDateIST(claimFormData.claimDate) : ''}
-                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
-                                            />
-                                            <input
+                                                id="claim-date-picker"
                                                 type="date"
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                                                value={claimFormData.claimDate}
+                                                className="input-field"
+                                                style={{ width: '100%', height: '48px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', color: 'white', padding: '0 15px' }}
+                                                value={claimFormData.claimDate || ''}
                                                 onChange={e => setClaimFormData({ ...claimFormData, claimDate: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
                                             />
@@ -755,16 +732,11 @@ const Warranties = () => {
                                         <label style={labelStyle}>Replacement Date (if any)</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                style={inputStyle}
-                                                value={claimFormData.replacementDate ? formatDateIST(claimFormData.replacementDate) : ''}
-                                                onClick={(e) => e.currentTarget.nextElementSibling.showPicker()}
-                                            />
-                                            <input
+                                                id="replacement-date-picker"
                                                 type="date"
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                                                value={claimFormData.replacementDate}
+                                                className="input-field"
+                                                style={{ width: '100%', height: '48px', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', borderRadius: '12px', color: 'white', padding: '0 15px' }}
+                                                value={claimFormData.replacementDate || ''}
                                                 onChange={e => setClaimFormData({ ...claimFormData, replacementDate: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
                                             />

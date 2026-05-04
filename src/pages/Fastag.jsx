@@ -26,7 +26,7 @@ const Fastag = () => {
         setShowModal(false);
         setIsEditing(false);
         setEditingEntryId(null);
-        setRechargeData({ amount: '', method: 'UPI', remarks: '', date: todayIST() });
+        setRechargeData({ amount: '', method: 'UPI', remarks: '', date: '' });
     }, [location.pathname, location.key]);
 
     const shiftMonth = (amount) => {
@@ -53,7 +53,7 @@ const Fastag = () => {
         amount: '',
         method: 'UPI',
         remarks: '',
-        date: todayIST()
+        date: ''
     });
     const [submitting, setSubmitting] = useState(false);
     const [message, setMessage] = useState({ type: '', text: '' });
@@ -124,7 +124,7 @@ const Fastag = () => {
         setShowModal(false);
         setIsEditing(false);
         setEditingEntryId(null);
-        setRechargeData({ amount: '', method: 'UPI', remarks: '', date: todayIST() });
+        setRechargeData({ amount: '', method: 'UPI', remarks: '', date: '' });
         setMessage({ type: '', text: '' });
     };
 
@@ -575,14 +575,6 @@ const Fastag = () => {
                                         <label className="input-label">Date</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                className="input-field"
-                                                value={rechargeData.date ? formatDateIST(rechargeData.date) : ''}
-                                                onClick={() => document.getElementById('fastag-recharge-date-picker').showPicker()}
-                                                style={{ width: '100%', cursor: 'pointer' }}
-                                            />
-                                            <input
                                                 id="fastag-recharge-date-picker"
                                                 type="date"
                                                 required
@@ -590,7 +582,7 @@ const Fastag = () => {
                                                 value={rechargeData.date}
                                                 onChange={(e) => setRechargeData({ ...rechargeData, date: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                style={{ width: '100%', height: '56px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '12px', color: 'white', padding: '0 15px', cursor: 'pointer', outline: 'none' }}
                                             />
                                         </div>
                                     </div>

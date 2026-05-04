@@ -60,7 +60,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     const [advanceFormData, setAdvanceFormData] = useState({
         driverId: '',
         amount: '',
-        date: todayIST(),
+        date: '',
         remark: ''
     });
     const [submittingAdvance, setSubmittingAdvance] = useState(false);
@@ -76,7 +76,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         totalAmount: '',
         tenureMonths: '',
         monthlyEMI: '',
-        startDate: todayIST(),
+        startDate: '',
         remarks: ''
     });
     const [submittingLoan, setSubmittingLoan] = useState(false);
@@ -88,7 +88,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     const [allowanceFormData, setAllowanceFormData] = useState({
         driverId: '',
         amount: '',
-        date: todayIST(),
+        date: '',
         remark: '',
         type: 'Other'
     });
@@ -266,7 +266,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             }
             setShowLoanModal(false);
             setEditingLoanId(null);
-            setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', startDate: todayIST(), remarks: '' });
+            setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', startDate: '', remarks: '' });
             fetchLoans();
             fetchSalaries();
         } catch (err) {
@@ -284,7 +284,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             totalAmount: loan.totalAmount,
             tenureMonths: tenure,
             monthlyEMI: loan.monthlyEMI,
-            startDate: loan.startDate ? toISTDateString(loan.startDate) : todayIST(),
+            startDate: loan.startDate ? toISTDateString(loan.startDate) : '',
             remarks: loan.remarks || ''
         });
         setShowLoanModal(true);
@@ -334,7 +334,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 setAdvanceFormData({
                     driverId: '',
                     amount: '',
-                    date: todayIST(),
+                    date: '',
                     remark: ''
                 });
                 setAdvanceMessage({ type: '', text: '' });
@@ -353,7 +353,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         setAdvanceFormData({
             driverId: advance.driver?._id || '',
             amount: advance.amount || '',
-            date: advance.date ? toISTDateString(advance.date) : todayIST(),
+            date: advance.date ? toISTDateString(advance.date) : '',
             remark: advance.remark || ''
         });
         setShowAdvanceModal(true);
@@ -396,7 +396,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             setTimeout(() => {
                 setShowAllowanceModal(false);
                 setEditingAllowanceId(null);
-                setAllowanceFormData({ driverId: '', amount: '', date: todayIST(), remark: '', type: 'Other' });
+                setAllowanceFormData({ driverId: '', amount: '', date: '', remark: '', type: 'Other' });
                 setAllowanceMessage({ type: '', text: '' });
                 fetchSalaries();
                 fetchAllowances();
@@ -413,7 +413,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         setAllowanceFormData({
             driverId: a.driver?._id || '',
             amount: a.amount || '',
-            date: a.date ? toISTDateString(a.date) : todayIST(),
+            date: a.date ? toISTDateString(a.date) : '',
             remark: a.remark || '',
             type: a.type || 'Other'
         });
@@ -1577,14 +1577,6 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Date</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                className="input-field"
-                                                value={advanceFormData.date ? formatDateIST(advanceFormData.date) : ''}
-                                                onClick={() => document.getElementById('advance-date-picker').showPicker()}
-                                                style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', cursor: 'pointer' }}
-                                            />
-                                            <input
                                                 id="advance-date-picker"
                                                 type="date"
                                                 className="input-field"
@@ -1592,7 +1584,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 value={advanceFormData.date}
                                                 onChange={(e) => setAdvanceFormData({ ...advanceFormData, date: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                style={{ colorScheme: 'dark', width: '100%', height: '50px', background: '#1e293b', color: 'white', cursor: 'pointer' }}
                                             />
                                         </div>
                                     </div>
@@ -1656,14 +1648,6 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Date</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                className="input-field"
-                                                value={allowanceFormData.date ? formatDateIST(allowanceFormData.date) : ''}
-                                                onClick={() => document.getElementById('allowance-date-picker').showPicker()}
-                                                style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                            />
-                                            <input
                                                 id="allowance-date-picker"
                                                 type="date"
                                                 className="input-field"
@@ -1671,7 +1655,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 value={allowanceFormData.date}
                                                 onChange={(e) => setAllowanceFormData({ ...allowanceFormData, date: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                style={{ colorScheme: 'dark', width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
                                             />
                                         </div>
                                     </div>
@@ -2051,14 +2035,6 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Loan Date</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                className="input-field"
-                                                value={loanFormData.startDate ? formatDateIST(loanFormData.startDate) : ''}
-                                                onClick={() => document.getElementById('loan-date-picker').showPicker()}
-                                                style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                            />
-                                            <input
                                                 id="loan-date-picker"
                                                 type="date"
                                                 className="input-field"
@@ -2066,7 +2042,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 value={loanFormData.startDate}
                                                 onChange={(e) => setLoanFormData({ ...loanFormData, startDate: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                style={{ colorScheme: 'dark', width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
                                             />
                                         </div>
                                     </div>

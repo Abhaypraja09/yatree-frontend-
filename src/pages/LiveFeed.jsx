@@ -302,19 +302,19 @@ const LiveFeed = () => {
                             >
                                 <ChevronLeft size={20} />
                             </button>
-                            <div
-                                onClick={() => document.getElementById('feed-date-picker').showPicker()}
-                                style={{ height: '40px', padding: '0 20px', borderRadius: '14px', background: `${theme.primary}15`, display: 'flex', alignItems: 'center', gap: '10px', color: 'white', fontWeight: '800', fontSize: '14px', border: `1px solid ${theme.primary}30`, position: 'relative', cursor: 'pointer' }}
-                            >
-                                <Calendar size={16} color={theme.primary} />
-                                {formatDate(selectedDate)}
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
                                 <input
                                     id="feed-date-picker"
                                     type="date"
                                     value={selectedDate}
                                     onChange={(e) => setSelectedDate(e.target.value)}
                                     onClick={(e) => e.target.showPicker()}
-                                    style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer', colorScheme: 'dark', zIndex: 10 }}
+                                    style={{
+                                        height: '40px', padding: '0 20px', borderRadius: '14px',
+                                        background: `${theme.primary}15`, color: 'white', fontWeight: '800',
+                                        fontSize: '14px', border: `1px solid ${theme.primary}30`,
+                                        cursor: 'pointer', outline: 'none', textAlign: 'center'
+                                    }}
                                 />
                             </div>
                             <button

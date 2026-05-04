@@ -35,33 +35,25 @@ const Field = ({ label, value, onChange, type = "text", required = false, autoCo
         <div style={{ marginBottom: '20px' }}>
             <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>{label}</label>
             {type === 'date' ? (
-                <div style={{ position: 'relative' }}>
-                    <input
-                        type="text"
-                        readOnly
-                        className="input-field"
-                        value={value ? formatDateIST(value) : ''}
-                        onClick={() => document.getElementById(id).showPicker()}
-                        style={{
-                            height: '52px',
-                            background: 'rgba(255,255,255,0.02)',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            borderRadius: '14px',
-                            fontSize: '15px',
-                            width: '100%',
-                            cursor: 'pointer'
-                        }}
-                    />
-                    <input
-                        id={id}
-                        type="date"
-                        required={required}
-                        value={value || ''}
-                        onChange={e => onChange(e.target.value)}
-                        onClick={(e) => e.target.showPicker()}
-                        style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                    />
-                </div>
+                <input
+                    id={id}
+                    type="date"
+                    className="input-field"
+                    required={required}
+                    value={value || ''}
+                    onChange={e => onChange(e.target.value)}
+                    onClick={(e) => e.target.showPicker()}
+                    style={{
+                        height: '52px',
+                        background: 'rgba(255,255,255,0.02)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        borderRadius: '14px',
+                        fontSize: '15px',
+                        width: '100%',
+                        color: 'white',
+                        padding: '0 15px'
+                    }}
+                />
             ) : (
                 <input
                     type={type}
@@ -204,7 +196,7 @@ const Freelancers = () => {
     const [settlementDriverFilter, setSettlementDriverFilter] = useState('All');
     const [quickExpenseData, setQuickExpenseData] = useState({
         amount: '',
-        date: todayIST(),
+        date: '',
         vehicleId: '',
         location: '',
         remark: '',
@@ -246,16 +238,16 @@ const Freelancers = () => {
         vehicleId: '',
         km: '',
         dailyWage: '',
-        date: todayIST(),
+        date: '',
         time: nowISTDateTimeString(),
         pickUpLocation: ''
     });
     const [punchOutData, setPunchOutData] = useState({ km: '', time: nowISTDateTimeString(), fuelAmount: '0', parkingAmount: '0', allowanceTA: '0', nightStayAmount: '0', parkingPaidBy: 'Self', review: '', dailyWage: '', dropLocation: '', parkingSlipPhoto: null, parkings: [{ id: Date.now(), amount: '', photo: null }] });
-    const [advanceData, setAdvanceData] = useState({ amount: '', remark: '', date: todayIST(), advanceType: 'Office', givenBy: 'Office' });
+    const [advanceData, setAdvanceData] = useState({ amount: '', remark: '', date: '', advanceType: 'Office', givenBy: 'Office' });
     const [manualData, setManualData] = useState({
         driverId: '',
         vehicleId: '',
-        date: todayIST(),
+        date: '',
         punchInKM: '',
         punchOutKM: '',
         punchInTime: todayIST() + 'T08:00',
@@ -341,7 +333,7 @@ const Freelancers = () => {
             vehicleId: '',
             km: '',
             dailyWage: '',
-            date: todayIST(),
+            date: '',
             time: nowISTDateTimeString(),
             pickUpLocation: ''
         });
@@ -349,7 +341,7 @@ const Freelancers = () => {
         setManualData({
             driverId: '',
             vehicleId: '',
-            date: todayIST(),
+            date: '',
             punchInKM: '',
             punchOutKM: '',
             punchInTime: todayIST() + 'T08:00',
@@ -365,10 +357,10 @@ const Freelancers = () => {
             review: '',
             eventId: ''
         });
-        setAdvanceData({ amount: '', remark: '', date: todayIST(), advanceType: 'Office', givenBy: 'Office' });
+        setAdvanceData({ amount: '', remark: '', date: '', advanceType: 'Office', givenBy: 'Office' });
         setQuickExpenseData({
             amount: '',
-            date: todayIST(),
+            date: '',
             vehicleId: '',
             location: '',
             remark: '',
@@ -459,7 +451,7 @@ const Freelancers = () => {
         totalAmount: '',
         monthlyEMI: '',
         remarks: '',
-        startDate: todayIST()
+        startDate: ''
     });
     const [submittingLoan, setSubmittingLoan] = useState(false);
 
@@ -682,7 +674,7 @@ const Freelancers = () => {
                 setShowQuickExpenseModal(false);
                 setQuickExpenseData({
                     amount: '',
-                    date: todayIST(),
+                    date: '',
                     vehicleId: '',
                     location: '',
                     remark: '',
@@ -740,7 +732,7 @@ const Freelancers = () => {
                 totalAmount: '',
                 monthlyEMI: '',
                 remarks: '',
-                startDate: todayIST()
+                startDate: ''
             });
             fetchLoans();
             if (typeof fetchSalarySummary === 'function') fetchSalarySummary();
@@ -816,7 +808,7 @@ const Freelancers = () => {
                 vehicleId: '',
                 km: '',
                 dailyWage: '',
-                date: todayIST(),
+                date: '',
                 time: nowISTDateTimeString(),
                 pickUpLocation: ''
             });
@@ -952,7 +944,7 @@ const Freelancers = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setShowAdvanceModal(false);
-            setAdvanceData({ amount: '', remark: '', date: todayIST(), advanceType: 'Office', givenBy: 'Office' });
+            setAdvanceData({ amount: '', remark: '', date: '', advanceType: 'Office', givenBy: 'Office' });
             fetchAdvances();
             setMessage({ type: 'success', text: 'Advance payment recorded!' });
             setTimeout(() => setMessage({ type: '', text: '' }), 3000);

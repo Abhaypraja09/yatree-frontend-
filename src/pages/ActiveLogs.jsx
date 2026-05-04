@@ -81,7 +81,7 @@ const ActiveLogs = () => {
     const [formData, setFormData] = useState({
         vehicleId: '',
         driverId: '',
-        date: getLocalYYYYMMDD(),
+        date: '',
         location: '',
         description: '',
         amount: '',
@@ -181,7 +181,7 @@ const ActiveLogs = () => {
         setFormData({
             vehicleId: '',
             driverId: '',
-            date: getLocalYYYYMMDD(),
+            date: '',
             location: '',
             description: '',
             amount: '',
@@ -611,14 +611,6 @@ const ActiveLogs = () => {
                                             <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Incident Date</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                className="input-field"
-                                                value={formData.date ? formatDateIST(formData.date) : ''}
-                                                onClick={() => document.getElementById('incident-date-picker').showPicker()}
-                                                style={{ width: '100%', height: '54px', borderRadius: '15px', cursor: 'pointer' }}
-                                            />
-                                            <input
                                                 id="incident-date-picker"
                                                 type="date"
                                                 className="input-field"
@@ -626,7 +618,7 @@ const ActiveLogs = () => {
                                                 value={formData.date}
                                                 onChange={e => setFormData({ ...formData, date: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                style={{ colorScheme: 'dark', width: '100%', height: '54px', borderRadius: '15px', cursor: 'pointer' }}
                                             />
                                         </div>
                                         </div>

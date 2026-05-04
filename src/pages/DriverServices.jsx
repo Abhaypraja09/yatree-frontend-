@@ -50,8 +50,8 @@ const DriverServices = () => {
     const [selectedMonth, setSelectedMonth] = useState('All');
     const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear());
     const [filterMode, setFilterMode] = useState('month'); // 'month' or 'range'
-    const [startDate, setStartDate] = useState(todayIST());
-    const [endDate, setEndDate] = useState(todayIST());
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const [selectedType, setSelectedType] = useState('All'); // 'All', 'Wash', 'Puncture'
     const [selectedVehicleFilter, setSelectedVehicleFilter] = useState('All');
     const [pendingRecords, setPendingRecords] = useState([]);
@@ -117,7 +117,7 @@ const DriverServices = () => {
         category: 'Car Wash',
         description: '',
         garageName: '',
-        billDate: todayIST(),
+        billDate: '',
         amount: '',
         paymentMode: 'Cash',
         status: 'Completed'
@@ -284,7 +284,7 @@ const DriverServices = () => {
             category: 'Car Wash',
             description: '',
             garageName: 'Local Vendor',
-            billDate: todayIST(),
+            billDate: '',
             amount: '',
             paymentMode: 'Cash',
             status: 'Completed'
@@ -417,37 +417,23 @@ const DriverServices = () => {
                             <div style={{ padding: '0 12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                  <div style={{ position: 'relative' }}>
                                      <input
-                                         type="text"
-                                         readOnly
-                                         style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none', cursor: 'pointer', width: '85px' }}
-                                         value={startDate ? formatDateIST(startDate) : ''}
-                                         onClick={() => document.getElementById('driver-services-start-date').showPicker()}
-                                     />
-                                     <input
                                          id="driver-services-start-date"
                                          type="date"
                                          value={startDate}
                                          onChange={e => setStartDate(e.target.value)}
                                          onClick={(e) => e.target.showPicker()}
-                                         style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                         style={{ colorScheme: 'dark', background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none', cursor: 'pointer', width: '100%' }}
                                      />
                                  </div>
                                  <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: '900' }}>→</span>
                                  <div style={{ position: 'relative' }}>
-                                     <input
-                                         type="text"
-                                         readOnly
-                                         style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none', cursor: 'pointer', width: '85px' }}
-                                         value={endDate ? formatDateIST(endDate) : ''}
-                                         onClick={() => document.getElementById('driver-services-end-date').showPicker()}
-                                     />
                                      <input
                                          id="driver-services-end-date"
                                          type="date"
                                          value={endDate}
                                          onChange={e => setEndDate(e.target.value)}
                                          onClick={(e) => e.target.showPicker()}
-                                         style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                         style={{ colorScheme: 'dark', background: 'transparent', border: 'none', color: 'white', fontSize: '12px', fontWeight: '800', outline: 'none', cursor: 'pointer', width: '100%' }}
                                      />
                                  </div>
                             </div>
@@ -707,21 +693,14 @@ const DriverServices = () => {
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.5)', fontSize: '11px', fontWeight: '800', marginBottom: '6px' }}>SERVICE DATE</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                className="input-field"
-                                                value={formData.billDate ? formatDateIST(formData.billDate) : ''}
-                                                onClick={() => document.getElementById('driver-services-bill-date').showPicker()}
-                                                style={{ width: '100%', cursor: 'pointer' }}
-                                            />
-                                            <input
                                                 id="driver-services-bill-date"
                                                 type="date"
+                                                required
                                                 value={formData.billDate}
                                                 onChange={e => setFormData({...formData, billDate: e.target.value})}
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
-                                                required
+                                                className="input-field"
+                                                style={{ colorScheme: 'dark', width: '100%', cursor: 'pointer' }}
                                             />
                                         </div>
                                     </div>

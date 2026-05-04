@@ -127,7 +127,7 @@ const Staff = () => {
         name: '', mobile: '', username: '', password: '', confirmPassword: '', oldPassword: '', salary: 0, monthlyLeaveAllowance: 4,
         email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
         officeLocation: { latitude: '', longitude: '', address: '', radius: 200 },
-        joiningDate: todayIST(),
+        joiningDate: '',
         staffType: 'Company'
     });
 
@@ -151,7 +151,7 @@ const Staff = () => {
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const [selectedStaffReport, setSelectedStaffReport] = useState(null);
     const [showBackdateModal, setShowBackdateModal] = useState(false);
-    const [backdateForm, setBackdateForm] = useState({ staffId: '', date: todayIST(), status: 'present', punchInTime: '', punchOutTime: '' });
+    const [backdateForm, setBackdateForm] = useState({ staffId: '', date: '', status: 'present', punchInTime: '', punchOutTime: '' });
     const [monthlyTarget, setMonthlyTarget] = useState(26); // Default monthly attendance target
     const [isEditing, setIsEditing] = useState(false);
     const [editingStaffId, setEditingStaffId] = useState(null);
@@ -980,7 +980,7 @@ const Staff = () => {
                                         name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
                                         email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
                                         officeLocation: defaultOffice,
-                                        joiningDate: todayIST(),
+                                        joiningDate: '',
                                         staffType: 'Company'
                                     });
                                     setShowAddModal(true);
@@ -997,7 +997,7 @@ const Staff = () => {
                             </button>
                             <button
                                 onClick={() => {
-                                    setBackdateForm({ ...backdateForm, staffId: '', date: todayIST() });
+                                    setBackdateForm({ ...backdateForm, staffId: '', date: '' });
                                     setShowBackdateModal(true);
                                 }}
                                 style={{
@@ -1223,21 +1223,17 @@ const Staff = () => {
                         ) : (
                             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                 <div
-                                    onClick={() => document.getElementById('range-from-picker').showPicker()}
-                                    style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', position: 'relative', minWidth: '120px' }}
+                                    style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', minWidth: '130px' }}
                                 >
                                     <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>FROM</span>
-                                    <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{fromDate ? formatDateIST(fromDate) : '--'}</span>
-                                    <input id="range-from-picker" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} onClick={(e) => e.target.showPicker()} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
+                                    <input id="range-from-picker" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} onClick={(e) => e.target.showPicker()} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', fontWeight: '700', padding: 0, width: '100%', outline: 'none' }} />
                                 </div>
                                 <ArrowUpRight size={14} color="rgba(255,255,255,0.2)" />
                                 <div
-                                    onClick={() => document.getElementById('range-to-picker').showPicker()}
-                                    style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', position: 'relative', minWidth: '120px' }}
+                                    style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', minWidth: '130px' }}
                                 >
                                     <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TO</span>
-                                    <span style={{ color: 'white', fontSize: '13px', fontWeight: '700' }}>{toDate ? formatDateIST(toDate) : '--'}</span>
-                                    <input id="range-to-picker" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} onClick={(e) => e.target.showPicker()} style={{ position: 'absolute', opacity: 0, width: '100%', height: '100%', left: 0, top: 0, cursor: 'pointer' }} />
+                                    <input id="range-to-picker" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} onClick={(e) => e.target.showPicker()} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', fontWeight: '700', padding: 0, width: '100%', outline: 'none' }} />
                                 </div>
                             </div>
                         )}
@@ -1937,21 +1933,14 @@ const Staff = () => {
                                                     <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Joining Date</label>
                                                     <div style={{ position: 'relative' }}>
                                                         <input
-                                                            type="text"
-                                                            readOnly
-                                                            className="premium-compact-input"
-                                                            value={formData.joiningDate ? formatDateIST(formData.joiningDate) : ''}
-                                                            onClick={() => document.getElementById('joining-date-picker').showPicker()}
-                                                            style={{ height: '60px', width: '100%', padding: '0 20px', fontSize: '15px', fontWeight: '700', borderRadius: '18px', background: 'rgba(255,255,255,0.03)', cursor: 'pointer' }}
-                                                        />
-                                                        <input
                                                             id="joining-date-picker"
                                                             type="date"
                                                             required
-                                                            value={formData.joiningDate}
+                                                            className="premium-compact-input"
+                                                            value={formData.joiningDate || ''}
                                                             onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
                                                             onClick={(e) => e.target.showPicker()}
-                                                            style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                            style={{ height: '60px', width: '100%', padding: '0 20px', fontSize: '15px', fontWeight: '700', borderRadius: '18px', background: 'rgba(255,255,255,0.03)' }}
                                                         />
                                                     </div>
                                                 </div>
@@ -2571,23 +2560,16 @@ const Staff = () => {
                                         <div className="premium-input-group">
                                             <div style={{ position: 'relative' }}>
                                                 <input
-                                                    type="text"
-                                                    readOnly
-                                                    className="premium-compact-input"
-                                                    value={backdateForm.date ? formatDateIST(backdateForm.date) : ''}
-                                                    onClick={() => document.getElementById('backdate-picker').showPicker()}
-                                                    style={{ background: 'rgba(255,255,255,0.04)', height: '58px', borderRadius: '18px', padding: '0 20px', fontSize: '15px', cursor: 'pointer' }}
-                                                />
-                                                <input
                                                     id="backdate-picker"
                                                     type="date"
                                                     required
                                                     className="premium-compact-input"
                                                     min={MIN_BACKDATE_LIMIT}
                                                     max={todayIST()}
-                                                    value={backdateForm.date}
+                                                    value={backdateForm.date || ''}
                                                     onChange={(e) => setBackdateForm({ ...backdateForm, date: e.target.value })}
-                                                    style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                    onClick={(e) => e.target.showPicker()}
+                                                    style={{ background: 'rgba(255,255,255,0.04)', height: '58px', borderRadius: '18px', padding: '0 20px', fontSize: '15px', width: '100%' }}
                                                 />
                                             </div>
                                         </div>

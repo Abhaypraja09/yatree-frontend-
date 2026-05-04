@@ -31,7 +31,7 @@ const Advances = () => {
     const [formData, setFormData] = useState({
         driverId: '',
         amount: '',
-        date: getLocalYYYYMMDD(),
+        date: '',
         remark: '',
         givenBy: 'Office'
     });
@@ -53,7 +53,7 @@ const Advances = () => {
             setFormData({
                 driverId: '',
                 amount: '',
-                date: todayIST(),
+                date: '',
                 remark: '',
                 givenBy: 'Office'
             });
@@ -133,7 +133,7 @@ const Advances = () => {
                 setFormData({
                     driverId: '',
                     amount: '',
-                    date: getLocalYYYYMMDD(),
+                    date: '',
                     remark: '',
                     givenBy: 'Office'
                 });
@@ -632,7 +632,7 @@ const Advances = () => {
                                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', marginTop: '4px', fontWeight: '700' }}>Manage driver financial assistance.</p>
                                 </div>
                                 <button
-                                    onClick={() => { setShowModal(false); setEditingId(null); setFormData({ driverId: '', amount: '', date: todayIST(), remark: '', givenBy: 'Office' }); }}
+                                    onClick={() => { setShowModal(false); setEditingId(null); setFormData({ driverId: '', amount: '', date: '', remark: '', givenBy: 'Office' }); }}
                                     className="glass-card"
                                     style={{ width: '40px', height: '40px', borderRadius: '50%', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                                 ><X size={20} /></button>
@@ -670,16 +670,7 @@ const Advances = () => {
                                         />
                                     </div>
                                     <div className="input-field-group">
-                                        <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Calendar size={14} /> Date</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                className="input-field"
-                                                value={formData.date ? formatDateIST(formData.date) : ''}
-                                                onClick={() => document.getElementById('advance-date-picker').showPicker()}
-                                                style={{ width: '100%', height: '54px', cursor: 'pointer' }}
-                                            />
+                                        <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '8px'                                         <div style={{ position: 'relative' }}>
                                             <input
                                                 id="advance-date-picker"
                                                 type="date"
@@ -688,9 +679,10 @@ const Advances = () => {
                                                 value={formData.date}
                                                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                style={{ colorScheme: 'dark', width: '100%', height: '54px', cursor: 'pointer' }}
                                             />
                                         </div>
+                                </div>
                                     </div>
                                 </div>
 

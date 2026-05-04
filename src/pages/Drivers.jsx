@@ -78,7 +78,7 @@ const Drivers = ({ isSubComponent = false }) => {
     const [vehicles, setVehicles] = useState([]);
     const [submitting, setSubmitting] = useState(false);
     const [manualDutyForm, setManualDutyForm] = useState({
-        date: todayIST(),
+        date: '',
         vehicleId: '',
         punchInKM: '',
         punchOutKM: '',
@@ -168,7 +168,7 @@ const Drivers = ({ isSubComponent = false }) => {
             });
             setShowManualModal(false);
             setManualDutyForm({
-                date: todayIST(),
+                date: '',
                 vehicleId: '',
                 punchInKM: '',
                 punchOutKM: '',
@@ -240,7 +240,7 @@ const Drivers = ({ isSubComponent = false }) => {
         setSelectedDriverForManual(driver);
         setManualDutyForm(prev => ({
             ...prev,
-            date: todayIST()
+            date: ''
         }));
         setShowManualModal(true);
     };
@@ -280,7 +280,7 @@ const Drivers = ({ isSubComponent = false }) => {
             setDocs({ aadharCard: null, drivingLicense: null, offerLetter: null });
             setOvertime({ enabled: false, threshold: 9, rate: 0 });
             setManualDutyForm({
-                date: todayIST(),
+                date: '',
                 vehicleId: '',
                 punchInKM: '',
                 punchOutKM: '',
@@ -1301,14 +1301,6 @@ const Drivers = ({ isSubComponent = false }) => {
                                         <label className="input-label">Duty Date *</label>
                                         <div style={{ position: 'relative' }}>
                                             <input
-                                                type="text"
-                                                readOnly
-                                                className="input-field"
-                                                value={manualDutyForm.date ? formatDateIST(manualDutyForm.date) : ''}
-                                                onClick={() => document.getElementById('manual-duty-picker').showPicker()}
-                                                style={{ background: 'rgba(0,0,0,0.2)', cursor: 'pointer' }}
-                                            />
-                                            <input
                                                 id="manual-duty-picker"
                                                 type="date"
                                                 className="input-field"
@@ -1316,7 +1308,7 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 onChange={(e) => setManualDutyForm({ ...manualDutyForm, date: e.target.value })}
                                                 required
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                style={{ colorScheme: 'dark', background: 'rgba(0,0,0,0.2)', cursor: 'pointer', width: '100%' }}
                                             />
                                         </div>
                                     </div>
@@ -1464,15 +1456,7 @@ const Drivers = ({ isSubComponent = false }) => {
                                     <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Punch-In Time</label>
                                         <div style={{ position: 'relative' }}>
-                                            <Clock size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                className="input-field"
-                                                value={punchInForm.date ? formatDateTimeIST(punchInForm.date) : ''}
-                                                onClick={() => document.getElementById('admin-punch-in-date').showPicker()}
-                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px 0 50px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
-                                            />
+                                            <Clock size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', zIndex: 1 }} />
                                             <input
                                                 id="admin-punch-in-date"
                                                 type="datetime-local"
@@ -1480,7 +1464,7 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 value={punchInForm.date}
                                                 onChange={(e) => setPunchInForm({ ...punchInForm, date: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                style={{ colorScheme: 'dark', width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px 0 50px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
                                             />
                                         </div>
                                     </div>
@@ -1578,15 +1562,7 @@ const Drivers = ({ isSubComponent = false }) => {
                                     <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}>Punch-Out Time</label>
                                         <div style={{ position: 'relative' }}>
-                                            <Clock size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
-                                            <input
-                                                type="text"
-                                                readOnly
-                                                className="input-field"
-                                                value={punchOutForm.date ? formatDateTimeIST(punchOutForm.date) : ''}
-                                                onClick={() => document.getElementById('admin-punch-out-date').showPicker()}
-                                                style={{ width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px 0 50px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
-                                            />
+                                            <Clock size={18} style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)', zIndex: 1 }} />
                                             <input
                                                 id="admin-punch-out-date"
                                                 type="datetime-local"
@@ -1594,7 +1570,7 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 value={punchOutForm.date}
                                                 onChange={(e) => setPunchOutForm({ ...punchOutForm, date: e.target.value })}
                                                 onClick={(e) => e.target.showPicker()}
-                                                style={{ position: 'absolute', opacity: 0, inset: 0, width: '100%', height: '100%', cursor: 'pointer' }}
+                                                style={{ colorScheme: 'dark', width: '100%', height: '54px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '16px', padding: '0 20px 0 50px', color: 'white', outline: 'none', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}
                                             />
                                         </div>
                                     </div>
