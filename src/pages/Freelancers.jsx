@@ -9,6 +9,7 @@ import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
 import AttendanceModal from '../components/reports/AttendanceModal';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 import { todayIST, toISTDateString, formatDateIST, nowISTDateTimeString, toISTDateTimeString, firstDayOfMonthIST, nowIST } from '../utils/istUtils';
 
 // Sub-components for cleaner code
@@ -30,49 +31,38 @@ const Modal = ({ title, onClose, children }) => (
 );
 
 const Field = ({ label, value, onChange, type = "text", required = false, autoComplete = "off", placeholder = "", inputMode = "text" }) => {
-    const id = label.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '-picker';
+    if (type === 'date') {
+        return (
+            <div style={{ marginBottom: '20px' }}>
+                <PremiumDateInput
+                    label={label}
+                    value={value}
+                    onChange={onChange}
+                    required={required}
+                />
+            </div>
+        );
+    }
     return (
         <div style={{ marginBottom: '20px' }}>
             <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>{label}</label>
-            {type === 'date' ? (
-                <input
-                    id={id}
-                    type="date"
-                    className="input-field"
-                    required={required}
-                    value={value || ''}
-                    onChange={e => onChange(e.target.value)}
-                    onClick={(e) => e.target.showPicker()}
-                    style={{
-                        height: '52px',
-                        background: 'rgba(255,255,255,0.02)',
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        borderRadius: '14px',
-                        fontSize: '15px',
-                        width: '100%',
-                        color: 'white',
-                        padding: '0 15px'
-                    }}
-                />
-            ) : (
-                <input
-                    type={type}
-                    className="input-field"
-                    required={required}
-                    value={(value === 0 || value) ? value : ''}
-                    onChange={e => onChange(e.target.value)}
-                    autoComplete={autoComplete}
-                    placeholder={placeholder}
-                    inputMode={inputMode}
-                    style={{
-                        height: '52px',
-                        background: 'rgba(255,255,255,0.02)',
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        borderRadius: '14px',
-                        fontSize: '15px'
-                    }}
-                />
-            )}
+            <input
+                type={type}
+                className="input-field"
+                required={required}
+                value={(value === 0 || value) ? value : ''}
+                onChange={e => onChange(e.target.value)}
+                autoComplete={autoComplete}
+                placeholder={placeholder}
+                inputMode={inputMode}
+                style={{
+                    height: '52px',
+                    background: 'rgba(255,255,255,0.02)',
+                    border: '1px solid rgba(255,255,255,0.05)',
+                    borderRadius: '14px',
+                    fontSize: '15px'
+                }}
+            />
         </div>
     );
 };

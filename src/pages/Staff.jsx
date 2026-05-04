@@ -18,6 +18,7 @@ import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import OfficeGeofencePicker from '../components/OfficeGeofencePicker';
 import { todayIST, toISTDateString, formatDateIST, formatTimeIST, nowIST } from '../utils/istUtils';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 import { DateTime } from 'luxon';
 
 const Staff = () => {
@@ -1226,14 +1227,20 @@ const Staff = () => {
                                     style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', minWidth: '130px' }}
                                 >
                                     <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>FROM</span>
-                                    <input id="range-from-picker" type="date" value={fromDate} onChange={(e) => setFromDate(e.target.value)} onClick={(e) => e.target.showPicker()} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', fontWeight: '700', padding: 0, width: '100%', outline: 'none' }} />
+                                    <PremiumDateInput
+                                        value={fromDate}
+                                        onChange={v => setFromDate(v)}
+                                    />
                                 </div>
                                 <ArrowUpRight size={14} color="rgba(255,255,255,0.2)" />
                                 <div
                                     style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', minWidth: '130px' }}
                                 >
                                     <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TO</span>
-                                    <input id="range-to-picker" type="date" value={toDate} onChange={(e) => setToDate(e.target.value)} onClick={(e) => e.target.showPicker()} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', fontWeight: '700', padding: 0, width: '100%', outline: 'none' }} />
+                                    <PremiumDateInput
+                                        value={toDate}
+                                        onChange={v => setToDate(v)}
+                                    />
                                 </div>
                             </div>
                         )}
@@ -1932,15 +1939,10 @@ const Staff = () => {
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                     <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Joining Date</label>
                                                     <div style={{ position: 'relative' }}>
-                                                        <input
-                                                            id="joining-date-picker"
-                                                            type="date"
+                                                        <PremiumDateInput
+                                                            value={formData.joiningDate}
+                                                            onChange={(v) => setFormData({ ...formData, joiningDate: v })}
                                                             required
-                                                            className="premium-compact-input"
-                                                            value={formData.joiningDate || ''}
-                                                            onChange={(e) => setFormData({ ...formData, joiningDate: e.target.value })}
-                                                            onClick={(e) => e.target.showPicker()}
-                                                            style={{ height: '60px', width: '100%', padding: '0 20px', fontSize: '15px', fontWeight: '700', borderRadius: '18px', background: 'rgba(255,255,255,0.03)' }}
                                                         />
                                                     </div>
                                                 </div>

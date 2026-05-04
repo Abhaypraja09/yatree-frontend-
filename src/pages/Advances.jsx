@@ -5,6 +5,7 @@ import { Search, Plus, X, CheckCircle, AlertCircle, IndianRupee, Calendar, User,
 import { useCompany } from '../context/CompanyContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 import {
     todayIST,
     toISTDateString,
@@ -670,19 +671,11 @@ const Advances = () => {
                                         />
                                     </div>
                                     <div className="input-field-group">
-                                        <label className="input-label" style={{ display: 'flex', alignItems: 'center', gap: '8px'                                         <div style={{ position: 'relative' }}>
-                                            <input
-                                                id="advance-date-picker"
-                                                type="date"
-                                                className="input-field"
-                                                required
-                                                value={formData.date}
-                                                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                                onClick={(e) => e.target.showPicker()}
-                                                style={{ colorScheme: 'dark', width: '100%', height: '54px', cursor: 'pointer' }}
-                                            />
-                                        </div>
-                                </div>
+                                        <PremiumDateInput
+                                            value={formData.date}
+                                            onChange={v => setFormData({ ...formData, date: v })}
+                                            required
+                                        />
                                     </div>
                                 </div>
 

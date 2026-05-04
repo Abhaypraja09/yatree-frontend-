@@ -8,6 +8,7 @@ import autoTable from 'jspdf-autotable';
 import { useCompany } from '../context/CompanyContext';
 import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST } from '../utils/istUtils';
 
 const OutsideCars = () => {
@@ -823,44 +824,6 @@ const OutsideCars = () => {
 
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
 
-                            {/* PREMIUM DAY NAV PILL */}
-                            <div style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                background: 'rgba(0,0,0,0.4)',
-                                padding: '4px',
-                                borderRadius: '20px',
-                                border: '1px solid rgba(255,255,255,0.06)'
-                            }}>
-                                <input
-                                    type="date"
-                                    style={{
-                                        height: '42px',
-                                        minWidth: '150px',
-                                        background: 'rgba(56, 189, 248, 0.08)',
-                                        border: '1px solid rgba(56, 189, 248, 0.15)',
-                                        borderRadius: '16px',
-                                        padding: '0 20px',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        cursor: 'pointer',
-                                        color: 'white',
-                                        fontWeight: '950',
-                                        fontSize: '13px',
-                                        textAlign: 'center'
-                                    }}
-                                    value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
-                                    onChange={e => {
-                                        const d = new Date(e.target.value);
-                                        setSelectedYear(d.getFullYear());
-                                        setSelectedMonth(d.getMonth());
-                                        setSelectedDay(d.getDate().toString());
-                                    }}
-                                    onClick={(e) => e.target.showPicker()}
-                                />
-                            </div>
-
                             {/* DYNAMIC "SHOW FULL MONTH" TAB */}
                             {selectedDay !== 'All' && (
                                 <motion.button
@@ -1203,14 +1166,10 @@ const OutsideCars = () => {
                                         <div className="premium-input-group">
                                             <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', display: 'block' }}>LOG DATE *</label>
                                             <div style={{ position: 'relative' }}>
-                                                <input
-                                                    id="outside-duty-date-picker"
-                                                    type="date"
-                                                    required
-                                                    className="premium-compact-input"
+                                                <PremiumDateInput
                                                     value={formData.date}
-                                                    onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                                    onClick={(e) => e.target.showPicker()}
+                                                    onChange={val => setFormData({ ...formData, date: val })}
+                                                    required
                                                     style={{
                                                         background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
                                                         borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px',

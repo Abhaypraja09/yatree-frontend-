@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import { useLocation } from 'react-router-dom';
 import SEO from '../components/SEO';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 import { todayIST, nowIST, formatDateIST } from '../utils/istUtils';
 
 const BorderTax = () => {
@@ -467,17 +468,11 @@ const BorderTax = () => {
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TAX DATE</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <input
-                                                id="border-tax-picker"
-                                                type="date"
-                                                required
-                                                value={formData.date}
-                                                onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                                onClick={(e) => e.target.showPicker()}
-                                                style={{ colorScheme: 'dark', width: '100%', height: '52px', cursor: 'pointer', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '14px', padding: '0 18px', color: 'white', outline: 'none', fontSize: '15px' }}
-                                            />
-                                        </div>
+                                        <PremiumDateInput
+                                            value={formData.date}
+                                            onChange={v => setFormData({ ...formData, date: v })}
+                                            required
+                                        />
                                     </div>
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                         <label style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>RECEIPT PHOTO</label>

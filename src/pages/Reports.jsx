@@ -15,6 +15,7 @@ import SEO from '../components/SEO';
 import AttendanceModal from '../components/reports/AttendanceModal';
 import EditAttendanceModal from '../components/reports/EditAttendanceModal';
 import { todayIST, toISTDateString, firstDayOfMonthIST, formatTimeIST, nowIST } from '../utils/istUtils';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 
 /* ─── tiny helpers ─── */
 const fmt = (d) => { if (!d) return '--'; const [y, m, dd] = (typeof d === 'string' ? d.split('T')[0] : toISTDateString(new Date(d))).split('-'); return `${dd}/${m}/${y}`; };
@@ -802,31 +803,15 @@ const Reports = ({ isSubComponent = false }) => {
                             border: '1px solid rgba(255,255,255,0.08)',
                             backdropFilter: 'blur(10px)'
                         }}>
-                            <input
-                                id="report-main-date-picker"
-                                type="date"
-                                style={{
-                                    height: '40px',
-                                    minWidth: '140px',
-                                    background: 'rgba(251, 191, 36, 0.08)',
-                                    border: '1px solid rgba(251, 191, 36, 0.15)',
-                                    borderRadius: '14px',
-                                    color: 'var(--primary)',
-                                    fontWeight: '900',
-                                    textAlign: 'center',
-                                    padding: '0 10px',
-                                    cursor: 'pointer',
-                                    margin: '0 6px'
-                                }}
-                                value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
-                                onChange={e => {
-                                    const d = new Date(e.target.value);
-                                    setSelectedYear(d.getFullYear());
-                                    setSelectedMonth(d.getMonth());
-                                    setSelectedDay(d.getDate().toString());
-                                }}
-                                onClick={(e) => e.target.showPicker()}
-                            />
+                                <PremiumDateInput
+                                    value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                    onChange={v => {
+                                        const d = new Date(v);
+                                        setSelectedYear(d.getFullYear());
+                                        setSelectedMonth(d.getMonth());
+                                        setSelectedDay(d.getDate().toString());
+                                    }}
+                                />
                         </div>
 
                         {/* 2. Quick Search & Selectors Group */}
@@ -896,27 +881,10 @@ const Reports = ({ isSubComponent = false }) => {
                         </button>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <input
-                                id="report-sub-date-picker"
-                                type="date"
-                                style={{
-                                    background: 'rgba(255,255,255,0.05)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    color: 'white',
-                                    padding: '6px 10px',
-                                    borderRadius: '8px',
-                                    fontSize: '12px',
-                                    outline: 'none',
-                                    cursor: 'pointer',
-                                    minWidth: '120px',
-                                    textAlign: 'center'
-                                }}
-                                value={fromDate}
-                                onChange={e => setFromDate(e.target.value)}
-                                onClick={(e) => e.target.showPicker()}
-                            />
-                        </div>
+                                <PremiumDateInput
+                                    value={fromDate}
+                                    onChange={v => setFromDate(v)}
+                                />
                     </div>
                 </div>
             )}

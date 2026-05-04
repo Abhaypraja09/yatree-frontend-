@@ -11,6 +11,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 import * as XLSX from 'xlsx-js-style';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 import {
     todayIST,
     toISTDateString,
@@ -1192,14 +1193,10 @@ const EventManagement = () => {
                                                     <label className="premium-label">Log Date</label>
                                                 </div>
                                                 <div style={{ position: 'relative' }}>
-                                                    <input 
-                                                        id="duty-date-picker"
-                                                        type="date" 
-                                                        required 
-                                                        value={dutyFormData.date} 
-                                                        onChange={e => setDutyFormData({ ...dutyFormData, date: e.target.value })} 
-                                                        onClick={(e) => e.target.showPicker()}
-                                                        className="premium-compact-input"
+                                                    <PremiumDateInput
+                                                        value={dutyFormData.date}
+                                                        onChange={val => setDutyFormData({ ...dutyFormData, date: val })}
+                                                        required
                                                         style={{ colorScheme: 'dark', height: '50px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', borderRadius: '10px' }}
                                                     />
                                                 </div>
@@ -1706,14 +1703,10 @@ const EventManagement = () => {
                                             <label className="premium-label">Focus Date</label>
                                         </div>
                                         <div style={{ position: 'relative' }}>
-                                            <input
-                                                id="event-mission-date-picker"
-                                                type="date"
-                                                required
+                                            <PremiumDateInput
                                                 value={eventFormData.date}
-                                                onChange={e => setEventFormData({ ...eventFormData, date: e.target.value })}
-                                                onClick={(e) => e.target.showPicker()}
-                                                className="premium-compact-input"
+                                                onChange={val => setEventFormData({ ...eventFormData, date: val })}
+                                                required
                                                 style={{ colorScheme: 'dark', height: '52px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', borderRadius: '10px' }}
                                             />
                                         </div>

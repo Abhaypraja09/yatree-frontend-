@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
 
 
@@ -1005,18 +1006,11 @@ const FuelPage = () => {
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 180px), 1fr))', gap: '15px' }}>
                                         <div>
                                             <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Date *</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <input
-                                                    id="fuel-date-picker"
-                                                    type="date"
-                                                    className="input-field"
-                                                    required
+                                                <PremiumDateInput
                                                     value={formData.date}
-                                                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                                    onClick={(e) => e.target.showPicker()}
-                                                    style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }}
+                                                    onChange={v => setFormData({ ...formData, date: v })}
+                                                    required
                                                 />
-                                            </div>
                                         </div>
                                         <div>
                                             <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Amount (₹) *</label>

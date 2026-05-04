@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
 import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 import { todayIST, toISTDateString, firstDayOfMonthIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
 
 const CameraModal = ({ onCapture, onClose }) => {
@@ -534,33 +535,15 @@ const ParkingPage = () => {
                             display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px',
                             border: '1px solid rgba(255,255,255,0.06)'
                         }}>
-                            <input
-                                type="date"
-                                style={{
-                                    height: '32px',
-                                    minWidth: '130px',
-                                    background: 'rgba(251, 191, 36, 0.05)',
-                                    borderRadius: '8px',
-                                    padding: '0 12px',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    cursor: 'pointer',
-                                    color: 'white',
-                                    fontWeight: '900',
-                                    fontSize: '11px',
-                                    border: '1px solid rgba(251, 191, 36, 0.1)',
-                                    textAlign: 'center'
-                                }}
-                                value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
-                                onChange={e => {
-                                    const d = new Date(e.target.value);
-                                    setSelectedYear(d.getFullYear());
-                                    setSelectedMonth(d.getMonth());
-                                    setSelectedDay(d.getDate().toString());
-                                }}
-                                onClick={(e) => e.target.showPicker()}
-                            />
+                                <PremiumDateInput
+                                    value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                    onChange={v => {
+                                        const d = new Date(v);
+                                        setSelectedYear(d.getFullYear());
+                                        setSelectedMonth(d.getMonth());
+                                        setSelectedDay(d.getDate().toString());
+                                    }}
+                                />
                         </div>
 
                         <div style={{ display: 'flex', gap: '4px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)' }}>
@@ -1442,18 +1425,11 @@ const ParkingPage = () => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                     <label style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Date *</label>
-                                                    <div style={{ position: 'relative' }}>
-                                                        <input
-                                                            id="parking-date-picker"
-                                                            type="date"
-                                                            className="input-field"
-                                                            required
-                                                            value={formData.date}
-                                                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                                                            onClick={(e) => e.target.showPicker()}
-                                                            style={{ height: '52px', borderRadius: '14px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', width: '100%', outline: 'none', cursor: 'pointer' }}
-                                                        />
-                                                    </div>
+                                                    <PremiumDateInput
+                                                        value={formData.date}
+                                                        onChange={v => setFormData({ ...formData, date: v })}
+                                                        required
+                                                    />
                                                 </div>
                                             </div>
 
