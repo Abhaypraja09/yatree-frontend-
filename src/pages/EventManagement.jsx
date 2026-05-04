@@ -46,8 +46,8 @@ const EventManagement = () => {
     useEffect(() => {
         const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
         const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
-        setFromDate('');
-        setToDate('');
+        setFromDate(start);
+        setToDate(end);
     }, [selectedMonth, selectedYear]);
 
     const shiftMonth = (amount) => {
@@ -176,7 +176,7 @@ const EventManagement = () => {
         if (!selectedCompany?._id) return;
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            const { data } = await axios.get(`/api/admin/events/${selectedCompany._id}`, {
+            const { data } = await axios.get(`/api/admin/events/${selectedCompany._id}?from=${fromDate}&to=${toDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
 
