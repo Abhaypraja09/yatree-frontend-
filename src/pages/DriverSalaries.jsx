@@ -678,7 +678,15 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                     formatDateIST(loan.startDate),
                     `Rs. ${loan.totalAmount?.toLocaleString()}`,
                     `Rs. ${loan.monthlyEMI?.toLocaleString()}`,
-                    `Rs. ${loan.remainingAmount?.toLocaleString()}`,
+                    (() => {
+                        const sDate = new Date(loan.startDate);
+                        const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
+                        const calendarYear = (month >= 1 && month <= 3) ? year + 1 : year;
+                        const selVal = (parseInt(calendarYear) * 12) + parseInt(month);
+                        const mIdx = (selVal - sVal) + 1;
+                        const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * (mIdx - 1)));
+                        return `Rs. ${histRem.toLocaleString()}`;
+                    })(),
                     progress,
                     loan.status?.toUpperCase()
                 ];
@@ -1413,6 +1421,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Loan Amount</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Monthly EMI</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remaining</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Loan Period</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Status</th>
                                         <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
@@ -1442,6 +1451,22 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                             </td>
                                             <td style={{ padding: '20px 25px' }}>
                                                 <div style={{ color: 'var(--primary)', fontWeight: '800' }}>₹ {loan.monthlyEMI?.toLocaleString()}</div>
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ color: '#f43f5e', fontWeight: '800', fontSize: '15px' }}>
+                                                    {(() => {
+                                                        const sDate = new Date(loan.startDate);
+                                                        const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
+                                                        const currentMonthNum = Number(month);
+                                                        const calendarYear = (currentMonthNum >= 1 && currentMonthNum <= 3) ? year + 1 : year;
+                                                        const selVal = (parseInt(calendarYear) * 12) + parseInt(currentMonthNum);
+                                                        const mIdx = month === 'All' ? null : (selVal - sVal) + 1;
+                                                        
+                                                        if (mIdx === null) return `₹ ${loan.remainingAmount?.toLocaleString()}`;
+                                                        const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * (mIdx - 1)));
+                                                        return `₹ ${histRem.toLocaleString()}`;
+                                                    })()}
+                                                </div>
                                             </td>
                                             <td style={{ padding: '20px 25px' }}>
                                                 {(() => {
@@ -1976,7 +2001,15 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                                 <td style={{ padding: '12px', color: 'white' }}>{formatDateIST(loan.startDate)}</td>
                                                                 <td style={{ padding: '12px', textAlign: 'right', color: 'rgba(255,255,255,0.6)' }}>₹{loan.totalAmount?.toLocaleString()}</td>
                                                                 <td style={{ padding: '12px', textAlign: 'right', color: 'white', fontWeight: '700' }}>₹{loan.monthlyEMI?.toLocaleString()}</td>
-                                                                <td style={{ padding: '12px', textAlign: 'right', color: '#f43f5e', fontWeight: '800' }}>₹{loan.remainingAmount?.toLocaleString()}</td>
+                                                                <td style={{ padding: '12px', textAlign: 'right', color: '#f43f5e', fontWeight: '800' }}>
+                                                                    {(() => {
+                                                                        const calendarYear = (month >= 1 && month <= 3) ? year + 1 : year;
+                                                                        const selVal = (parseInt(calendarYear) * 12) + parseInt(month);
+                                                                        const mIdx = (selVal - sVal) + 1;
+                                                                        const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * (mIdx - 1)));
+                                                                        return `₹ ${histRem.toLocaleString()}`;
+                                                                    })()}
+                                                                </td>
                                                                 <td style={{ padding: '12px', textAlign: 'center' }}>
                                                                     <span style={{ fontSize: '10px', background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', padding: '2px 8px', borderRadius: '4px', fontWeight: '900' }}>
                                                                         {loan.status === 'Completed' ? 'DONE' : `MONTH ${monthIdx}/${tenure}`}

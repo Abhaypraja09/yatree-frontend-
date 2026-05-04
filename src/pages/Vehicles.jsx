@@ -183,6 +183,7 @@ const Vehicles = () => {
 
             setDocToUpload({ type: '', file: null, expiry: '' });
             fetchVehicles();
+            fetchAlerts();
             alert('Document uploaded successfully');
         } catch (err) {
             alert(err.response?.data?.message || 'Error uploading document');
@@ -506,7 +507,36 @@ const Vehicles = () => {
                                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px', marginBottom: '25px' }}>
                                     {['INSURANCE', 'PERMIT', 'FITNESS', 'PUC', 'RC'].map(type => {
                                         const doc = v.documents?.find(d => d.documentType === type);
-                                        const isExpired = doc ? new Date(doc.expiryDate).toISOString().split('T')[0] < todayIST() : true;
+                                        const expiryStr = doc ? new Date(doc.expiryDate).toISOString().split('T')[0] : null;
+                                        const isExpired = doc ? expiryStr < todayIST() : true;
+                                        
+                                        const thirtyDaysFromNow = new Date(new Date().getTime() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+                                        const isExpiringSoon = doc ? (expiryStr <= thirtyDaysFromNow && !isExpired) : false;
+
+                                        let bgColor = 'rgba(255,255,255,0.02)';
+                                        let borderColor = 'rgba(255,255,255,0.05)';
+                                        let iconColor = 'rgba(255,255,255,0.1)';
+                                        let Icon = Clock;
+
+                                        if (doc) {
+                                            if (isExpired) {
+                                                bgColor = 'rgba(244, 63, 94, 0.05)';
+                                                borderColor = 'rgba(244, 63, 94, 0.1)';
+                                                iconColor = '#f43f5e';
+                                                Icon = XCircle;
+                                            } else if (isExpiringSoon) {
+                                                bgColor = 'rgba(251, 191, 36, 0.05)';
+                                                borderColor = 'rgba(251, 191, 36, 0.1)';
+                                                iconColor = '#fbbf24';
+                                                Icon = AlertCircle;
+                                            } else {
+                                                bgColor = 'rgba(16, 185, 129, 0.05)';
+                                                borderColor = 'rgba(16, 185, 129, 0.1)';
+                                                iconColor = '#10b981';
+                                                Icon = CheckCircle2;
+                                            }
+                                        }
+
                                         return (
                                             <div key={type} style={{
                                                 display: 'flex',
@@ -514,12 +544,12 @@ const Vehicles = () => {
                                                 justifyContent: 'space-between',
                                                 padding: '8px 12px',
                                                 borderRadius: '12px',
-                                                background: !doc ? 'rgba(255,255,255,0.02)' : (isExpired ? 'rgba(244, 63, 94, 0.05)' : 'rgba(16, 185, 129, 0.05)'),
-                                                border: `1px solid ${!doc ? 'rgba(255,255,255,0.05)' : (isExpired ? 'rgba(244, 63, 94, 0.1)' : 'rgba(16, 185, 129, 0.1)')}`
+                                                background: bgColor,
+                                                border: `1px solid ${borderColor}`
                                             }}>
                                                 <span style={{ fontSize: '10px', color: 'var(--text-muted)', fontWeight: '900' }}>{type}</span>
-                                                <div style={{ color: !doc ? 'rgba(255,255,255,0.1)' : (isExpired ? '#f43f5e' : '#10b981') }}>
-                                                    {doc ? (isExpired ? <XCircle size={14} /> : <CheckCircle2 size={14} />) : <Clock size={14} />}
+                                                <div style={{ color: iconColor }}>
+                                                    <Icon size={14} />
                                                 </div>
                                             </div>
                                         );
