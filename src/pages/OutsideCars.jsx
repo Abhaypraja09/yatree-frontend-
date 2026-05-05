@@ -62,6 +62,7 @@ const OutsideCars = () => {
             date: ''
         });
     }, [location.pathname, location.key]);
+
     useEffect(() => {
         if (viewMode === 'monthly') {
             if (selectedDay === 'All') {
@@ -538,32 +539,21 @@ const OutsideCars = () => {
                 }
                 .payout-glow { filter: drop-shadow(0 0 4px ${theme.primary}); }
                 .logs-glow { filter: drop-shadow(0 0 4px #10b981); }
+                .table-row-hover:hover { background: rgba(255, 255, 255, 0.02); }
+                .action-btn-hover:hover { background: rgba(255, 255, 255, 0.08) !important; color: ${theme.primary} !important; }
+                .action-btn-hover-del:hover { background: rgba(244, 63, 94, 0.15) !important; }
             `}</style>
 
             {/* ═══ PREMIUM DYNAMIC HEADER ═══ */}
-            <header style={{
-                padding: 'clamp(20px, 4vw, 40px) 0',
-                position: 'relative'
-            }}>
-                <div className="flex-resp" style={{
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    gap: '24px',
-                    marginBottom: 'clamp(20px, 4vw, 32px)'
-                }}>
+            <header style={{ padding: 'clamp(20px, 4vw, 40px) 0', position: 'relative' }}>
+                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '24px', marginBottom: 'clamp(20px, 4vw, 32px)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 3vw, 20px)' }}>
                         <div style={{
-                            width: 'clamp(48px, 10vw, 64px)',
-                            height: 'clamp(48px, 10vw, 64px)',
+                            width: 'clamp(48px, 10vw, 64px)', height: 'clamp(48px, 10vw, 64px)',
                             background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-                            borderRadius: 'clamp(12px, 3vw, 20px)',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
+                            borderRadius: 'clamp(12px, 3vw, 20px)', display: 'flex', justifyContent: 'center', alignItems: 'center',
                             boxShadow: '0 20px 40px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1)',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            position: 'relative',
-                            flexShrink: 0
+                            border: '1px solid rgba(255,255,255,0.05)', position: 'relative', flexShrink: 0
                         }}>
                             <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: `radial-gradient(circle at 30% 30%, ${theme.primary}33, transparent 70%)` }}></div>
                             <Car size={28} color={theme.primary} style={{ filter: `drop-shadow(0 0 10px ${theme.primary}66)` }} />
@@ -579,946 +569,266 @@ const OutsideCars = () => {
                         </div>
                     </div>
 
-                    <div className="flex-resp" style={{ gap: '24px', alignItems: 'center', flex: 1, justifyContent: 'flex-end', width: '100%' }}>
-                        {/* CIRCULAR STATS */}
-                        <div style={{ display: 'flex', gap: '16px' }}>
+                    <div className="flex-resp" style={{ gap: '16px', alignItems: 'center', flex: 1, justifyContent: 'flex-end', width: '100%' }}>
+                        <div style={{ display: 'flex', gap: '12px', flexWrap: 'nowrap' }}>
                             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} style={{
-                                width: 'clamp(80px, 15vw, 110px)', height: 'clamp(80px, 15vw, 110px)', borderRadius: '50%',
-                                background: 'rgba(15, 23, 42, 0.6)',
-                                border: '1px solid rgba(251, 191, 36, 0.1)',
-                                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                                position: 'relative'
+                                width: 'clamp(70px, 12vw, 100px)', height: 'clamp(70px, 12vw, 100px)', borderRadius: '50%',
+                                background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(251, 191, 36, 0.1)',
+                                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative'
                             }}>
                                 <svg className="stat-circle-svg" viewBox="0 0 100 100">
                                     <circle className="stat-circle-bg" cx="50" cy="50" r="45" />
-                                    <motion.circle
-                                        className="stat-circle-progress payout-glow"
-                                        cx="50" cy="50" r="45"
-                                        stroke={theme.primary}
-                                        initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }}
-                                        animate={{ strokeDashoffset: 0 }}
-                                        transition={{ duration: 1.5, ease: "easeOut" }}
-                                    />
+                                    <motion.circle className="stat-circle-progress payout-glow" cx="50" cy="50" r="45" stroke={theme.primary} initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }} animate={{ strokeDashoffset: 0 }} transition={{ duration: 1.5, ease: "easeOut" }} />
                                 </svg>
                                 <span style={{ fontSize: '7px', fontWeight: '950', color: theme.primary, letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px', position: 'relative', zIndex: 1 }}>Payout</span>
-                                <span style={{ color: 'white', fontSize: 'clamp(12px, 3vw, 15px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>₹{totalPayable.toLocaleString()}</span>
+                                <span style={{ color: 'white', fontSize: 'clamp(10px, 2.5vw, 14px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>₹{totalPayable.toLocaleString()}</span>
                             </motion.div>
 
                             <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.1 }} style={{
-                                width: 'clamp(80px, 15vw, 110px)', height: 'clamp(80px, 15vw, 110px)', borderRadius: '50%',
-                                background: 'rgba(15, 23, 42, 0.6)',
-                                border: '1px solid rgba(16, 185, 129, 0.1)',
-                                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center',
-                                position: 'relative'
+                                width: 'clamp(70px, 12vw, 100px)', height: 'clamp(70px, 12vw, 100px)', borderRadius: '50%',
+                                background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(16, 185, 129, 0.1)',
+                                display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', position: 'relative'
                             }}>
                                 <svg className="stat-circle-svg" viewBox="0 0 100 100">
                                     <circle className="stat-circle-bg" cx="50" cy="50" r="45" />
-                                    <motion.circle
-                                        className="stat-circle-progress logs-glow"
-                                        cx="50" cy="50" r="45"
-                                        stroke="#10b981"
-                                        initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }}
-                                        animate={{ strokeDashoffset: -200 }}
-                                        transition={{ duration: 1.8, ease: "easeOut" }}
-                                    />
+                                    <motion.circle className="stat-circle-progress logs-glow" cx="50" cy="50" r="45" stroke="#10b981" initial={{ strokeDasharray: "283 283", strokeDashoffset: 283 }} animate={{ strokeDashoffset: -200 }} transition={{ duration: 1.8, ease: "easeOut" }} />
                                 </svg>
                                 <span style={{ fontSize: '7px', fontWeight: '950', color: '#10b981', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '2px', position: 'relative', zIndex: 1 }}>Vehicles</span>
-                                <span style={{ color: 'white', fontSize: 'clamp(14px, 4vw, 18px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalDutiesCount}</span>
+                                <span style={{ color: 'white', fontSize: 'clamp(12px, 3vw, 16px)', fontWeight: '950', position: 'relative', zIndex: 1 }}>{totalDutiesCount}</span>
                             </motion.div>
                         </div>
-
-                        <div style={{ display: 'flex', gap: '24px', alignItems: 'center', flexWrap: 'wrap', flex: 1, justifyContent: 'flex-end' }}>
-                            {/* CIRCULAR STATS */}
-
-                            {/* TOP RIGHT BUTTONS */}
-                            <div className="flex-resp" style={{ gap: '12px', width: '100%', justifyContent: 'flex-end' }}>
-                                <button
-                                    onClick={handleOpenLogDuty}
-                                    style={{
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '10px',
-                                        height: '50px',
-                                        padding: '0 24px',
-                                        borderRadius: '14px',
-                                        fontWeight: '900',
-                                        background: theme.primary,
-                                        color: 'black',
-                                        border: 'none',
-                                        fontSize: '13px',
-                                        cursor: 'pointer',
-                                        flex: 1,
-                                        maxWidth: '240px',
-                                        boxShadow: `0 8px 20px ${theme.primary}40`
-                                    }}
-                                >
-                                    <Plus size={18} strokeWidth={3} /> Add Duty Entry
-                                </button>
-                                <button
-                                    onClick={handleExportPDF}
-                                    style={{
-                                        height: '50px',
-                                        padding: '0 16px',
-                                        background: 'rgba(239, 68, 68, 0.08)',
-                                        border: '1px solid rgba(239, 68, 68, 0.2)',
-                                        color: '#f87171',
-                                        fontWeight: '800',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '8px',
-                                        borderRadius: '14px',
-                                        fontSize: '11px',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    <FileText size={16} /> <span className="hide-mobile">Export PDF</span>
-                                </button>
-                                <button
-                                    onClick={async () => {
-                                        const XLSX = await import('xlsx-js-style');
-                                        const reportData = filtered.map(v => ({
-                                            'Property': v.property || '',
-                                            'Owner': v.ownerName || '',
-                                            'Date': (() => {
-                                                const rawDate = v.carNumber?.split('#')[1] || v.createdAt;
-                                                if (!rawDate) return '';
-                                                return formatDateIST(rawDate);
-                                            })(),
-                                            'Vehicle Details': `${v.model || ''} - ${v.carNumber?.split('#')[0] || ''}`,
-                                            'Drop Location': v.dropLocation?.replace(/ \| /g, ' ➜ ') || '',
-                                            'Service Type': v.dutyType || '',
-                                            'Amount': Number(v.dutyAmount) || 0
-                                        }));
-                                        const totalAmount = reportData.reduce((sum, row) => sum + row.Amount, 0);
-                                        reportData.push({
-                                            'Property': '', 'Owner': '', 'Date': '', 'Vehicle Details': '', 'Drop Location': '', 'Service Type': 'TOTAL PAYABLE', 'Amount': totalAmount
-                                        });
-                                        const ws = XLSX.utils.json_to_sheet(reportData);
-                                        const range = XLSX.utils.decode_range(ws['!ref']);
-                                        for (let C = range.s.c; C <= range.e.c; ++C) {
-                                            let maxWidth = 10;
-                                            for (let R = range.s.r; R <= range.e.r; ++R) {
-                                                const cell = ws[XLSX.utils.encode_cell({ r: R, c: C })];
-                                                if (!cell) continue;
-                                                cell.s = { alignment: { horizontal: 'center', vertical: 'center' }, font: { name: 'Arial', sz: 10 } };
-                                                if (R === 0) { cell.s.font.bold = true; cell.s.fill = { fgColor: { rgb: "4F46E5" } }; cell.s.font.color = { rgb: "FFFFFF" }; }
-                                                if (C === 6) cell.s.alignment.horizontal = 'right';
-                                                if (R === range.e.r) { cell.s.font.bold = true; cell.s.fill = { fgColor: { rgb: "E0E7FF" } }; }
-                                                if (cell.v) maxWidth = Math.max(maxWidth, cell.v.toString().length + 5);
-                                            }
-                                            if (!ws['!cols']) ws['!cols'] = [];
-                                            ws['!cols'][C] = { wch: maxWidth };
-                                        }
-                                        const wb = XLSX.utils.book_new();
-                                        XLSX.utils.book_append_sheet(wb, ws, "Outside Fleet Log");
-                                        XLSX.writeFile(wb, `Outside_Fleet_Report_${fromDate}_to_${toDate}.xlsx`);
-                                    }}
-                                    style={{
-                                        height: '50px',
-                                        padding: '0 16px',
-                                        background: 'rgba(16, 185, 129, 0.08)',
-                                        border: '1px solid rgba(16, 185, 129, 0.2)',
-                                        color: '#34d399',
-                                        fontWeight: '800',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '8px',
-                                        borderRadius: '14px',
-                                        fontSize: '11px',
-                                        cursor: 'pointer'
-                                    }}
-                                >
-                                    <Save size={16} /> <span className="hide-mobile">Export Excel</span>
-                                </button>
-                            </div>
-                        </div>
                     </div>
                 </div>
-
-                {/* ═══ DYNAMIC INTEGRATED CONTROL BAR ═══ */}
-                <div className="glass-card" style={{
-                    padding: 'clamp(10px, 2vw, 12px)',
-                    marginBottom: 'clamp(24px, 4vw, 32px)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '12px',
-                    background: 'rgba(15, 23, 42, 0.4)',
-                    backdropFilter: 'blur(10px)',
-                    border: '1px solid rgba(255,255,255,0.04)',
-                    borderRadius: '24px'
-                }}>
-                    <div className="flex-resp" style={{ gap: '12px', alignItems: 'center' }}>
-                        <div style={{ position: 'relative', flex: '1.5', minWidth: '0' }}>
-                            <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(251, 191, 36, 0.4)', zIndex: 1 }} />
-                            <input
-                                type="text"
-                                placeholder="Universal Search..."
-                                className="premium-compact-input"
-                                value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
-                                style={{ paddingLeft: '48px', height: '52px' }}
-                            />
-                        </div>
-
-                        <div className="flex-resp" style={{ gap: '8px', flex: '2', minWidth: '0' }}>
-                            <div style={{ flex: 1, position: 'relative' }}>
-                                <select value={ownerFilter} onChange={e => handleOwnerChange(e.target.value)} className="premium-compact-input" style={{ height: '52px', appearance: 'none' }}>
-                                    <option value="All">All Vendors</option>
-                                    {uniqueOwners.map(o => <option key={o} value={o}>{o}</option>)}
-                                </select>
-                                <ChevronRight size={14} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
-                            </div>
-                            <div style={{ flex: 1, position: 'relative' }}>
-                                <select value={propertyFilter} onChange={e => setPropertyFilter(e.target.value)} className="premium-compact-input" style={{ height: '52px', appearance: 'none' }}>
-                                    <option value="All">All Properties</option>
-                                    {uniqueProperties.map(p => <option key={p} value={p}>{p}</option>)}
-                                </select>
-                                <ChevronRight size={14} style={{ position: 'absolute', right: '16px', top: '50%', transform: 'translateY(-50%) rotate(90deg)', color: 'rgba(255,255,255,0.2)', pointerEvents: 'none' }} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="flex-resp" style={{ gap: '12px', alignItems: 'center' }}>
-                        {/* TRANSACTION FILTERS SCROLLABLE */}
-                        <div className="premium-scroll" style={{
-                            display: 'flex',
-                            background: 'rgba(15, 23, 42, 0.6)',
-                            padding: '6px',
-                            borderRadius: '18px',
-                            border: '1px solid rgba(255,255,255,0.05)',
-                            gap: '6px',
-                            overflowX: 'auto',
-                            flex: '1.5'
-                        }}>
-                            {[
-                                { id: 'Buy', label: 'Buy', icon: ShoppingCart, color: '#22c55e' },
-                                { id: 'Sell', label: 'Sell', icon: TrendingUp, color: '#ef4444' }
-                            ].map(type => (
-                                <button
-                                    key={type.id}
-                                    onClick={() => setTransactionFilter(type.id)}
-                                    style={{
-                                        padding: '8px 24px',
-                                        borderRadius: '14px',
-                                        border: '1px solid ' + (transactionFilter === type.id ? type.color + '40' : 'transparent'),
-                                        fontSize: '11px',
-                                        fontWeight: '950',
-                                        cursor: 'pointer',
-                                        background: transactionFilter === type.id ? type.color + '15' : 'transparent',
-                                        color: transactionFilter === type.id ? type.color : 'rgba(255,255,255,0.3)',
-                                        textTransform: 'uppercase',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '10px',
-                                        whiteSpace: 'nowrap'
-                                    }}
-                                >
-                                    <type.icon size={16} />
-                                    {type.label}
-                                </button>
-                            ))}
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-
-                            {/* DYNAMIC "SHOW FULL MONTH" TAB */}
-                            {selectedDay !== 'All' && (
-                                <motion.button
-                                    initial={{ opacity: 0, x: -10 }}
-                                    animate={{ opacity: 1, x: 0 }}
-                                    onClick={() => setSelectedDay('All')}
-                                    style={{
-                                        height: '50px',
-                                        padding: '0 20px',
-                                        borderRadius: '16px',
-                                        background: 'rgba(251, 191, 36, 0.1)',
-                                        border: '1px solid rgba(251, 191, 36, 0.2)',
-                                        color: 'var(--primary)',
-                                        fontSize: '11px',
-                                        fontWeight: '950',
-                                        cursor: 'pointer',
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: '8px',
-                                        textTransform: 'uppercase',
-                                        letterSpacing: '0.5px'
-                                    }}
-                                >
-                                    <Calendar size={14} /> View Full Month
-                                </motion.button>
-                            )}
-
-                            <select
-                                value={selectedMonth}
-                                onChange={e => {
-                                    setSelectedMonth(Number(e.target.value));
-                                    setSelectedDay('All'); // Show full month on change
-                                }}
-                                className="premium-compact-input"
-                                style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '90px' }}
-                            >
-                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, idx) => (
-                                    <option key={m} value={idx}>{m}</option>
-                                ))}
-                            </select>
-
-                            <select
-                                value={selectedYear}
-                                onChange={e => {
-                                    setSelectedYear(Number(e.target.value));
-                                    setSelectedDay('All'); // Show full month on change
-                                }}
-                                className="premium-compact-input"
-                                style={{ height: '50px', padding: '0 12px', fontSize: '12px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', fontWeight: '800', width: '80px' }}
-                            >
-                                {[2024, 2025, 2026, 2027].map(y => (
-                                    <option key={y} value={y}>{y}</option>
-                                ))}
-                            </select>
-                        </div>
-                    </div>
-                </div>
-
-
             </header>
 
-            {/* ═══ CLEAN PREMIUM DESKTOP TABLE ═══ */}
-            <div className="table-responsive-wrapper hide-mobile" style={{
-                padding: 0,
-                border: '1px solid rgba(255,255,255,0.08)',
-                background: 'rgba(8, 14, 26, 0.4)',
-                backdropFilter: 'blur(20px)',
-                borderRadius: '24px',
-                boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-            }}>
-                <div style={{ minWidth: '1000px' }}>
-                    <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                        <thead>
-                            <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                <th style={{ width: '120px', padding: '18px 24px', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Timeline</th>
-                                <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Resource Identification</th>
-                                <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Service Detail</th>
-                                <th style={{ padding: '18px 24px', textAlign: 'left', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Entities</th>
-                                <th style={{ padding: '18px 24px', textAlign: 'right', width: '160px', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Duty Settlement</th>
-                                <th style={{ padding: '18px 24px', textAlign: 'right', width: '120px', fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1.5px', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {loading ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '100px 0' }}>
-                                    <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '40px', height: '40px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: 'var(--primary)', borderRadius: '50%', margin: '0 auto 16px' }}></motion.div>
-                                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '800', letterSpacing: '1px' }}>SYNCHRONIZING FLEET DATA...</p>
-                                </td></tr>
-                            ) : filtered.length === 0 ? (
-                                <tr><td colSpan="6" style={{ textAlign: 'center', padding: '120px 0' }}>
-                                    <Car size={48} style={{ opacity: 0.1, color: 'var(--primary)', marginBottom: '24px' }} />
-                                    <h3 style={{ color: 'white', fontWeight: '900', marginBottom: '8px', letterSpacing: '-0.5px' }}>Registry Empty</h3>
-                                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '13px' }}>No external duties match the current filter selection.</p>
-                                </td></tr>
-                            ) : filtered.map((v, idx) => (
-                                <motion.tr
-                                    key={v._id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.02 }}
-                                    className="table-row-hover"
-                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
-                                >
-                                    <td style={{ padding: '20px 24px' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--primary)', letterSpacing: '1px', textTransform: 'uppercase', marginBottom: '4px' }}>
-                                                {(() => {
-                                                    const parts = v.carNumber?.split('#');
-                                                    if (parts && parts[1]) {
-                                                        const date = new Date(parts[1]);
-                                                        return date.toLocaleDateString('en-US', { weekday: 'short' });
-                                                    }
-                                                    return 'DUTY';
-                                                })()}
-                                            </span>
-                                            <span style={{ fontSize: '15px', fontWeight: '800', color: 'white' }}>
-                                                {(() => {
-                                                    const parts = v.carNumber?.split('#');
-                                                    if (parts && parts[1]) {
-                                                        const [y, m, d] = parts[1].split('-');
-                                                        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                                        return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
-                                                    }
-                                                    return 'Manual';
-                                                })()}
-                                            </span>
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '20px 24px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(129, 140, 248, 0.1)', border: '1px solid rgba(129, 140, 248, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                <Car size={20} color="#818cf8" />
-                                            </div>
-                                            <div>
-                                                <div style={{ fontWeight: '900', fontSize: '16px', color: 'white', letterSpacing: '0.8px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    {v.carNumber?.split('#')[0]}
-                                                    <span className={`badge-ext ${v.transactionType === 'Buy' ? 'bg-buy' : v.transactionType === 'Sell' ? 'bg-sell' : ''}`}>
-                                                        {v.transactionType || 'EXTERNAL'}
-                                                    </span>
-                                                </div>
-                                                <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', marginTop: '2px', textTransform: 'uppercase' }}>{v.model}</div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '20px 24px' }}>
-                                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', alignItems: 'center' }}>
-                                            <span className="badge-duty">{v.dutyType || 'Standard Duty'}</span>
-                                            {v.dropLocation && (
-                                                <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <ChevronRight size={14} style={{ opacity: 0.3 }} />
-                                                    {v.dropLocation}
-                                                </span>
-                                            )}
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '20px 24px' }}>
-                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                            <span style={{ fontSize: '14px', fontWeight: '800', color: 'white' }}>{v.property || 'Direct Order'}</span>
-                                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.35)', fontWeight: '600' }}>Vendor: {v.ownerName}</span>
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                                        <div style={{ display: 'inline-block', padding: '10px 18px', background: 'rgba(16, 185, 129, 0.08)', borderRadius: '14px', border: '1px solid rgba(16, 185, 129, 0.15)' }}>
-                                            <span style={{ color: '#10b981', fontWeight: '950', fontSize: '17px', letterSpacing: '-0.5px' }}>₹{v.dutyAmount?.toLocaleString()}</span>
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
-                                            <button onClick={() => handleEdit(v)} className="action-btn-hover" style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Edit Log"><Edit size={16} /></button>
-                                            <button onClick={() => handleDelete(v._id)} className="action-btn-hover-del" style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Delete Log"><Trash2 size={16} /></button>
-                                        </div>
-                                    </td>
-                                </motion.tr>
+            {/* ═══ CLEAN PREMIUM INTEGRATED CONTROL BAR ═══ */}
+            <div className="glass-card" style={{ padding: 'clamp(12px, 2vw, 16px)', marginBottom: 'clamp(24px, 4vw, 32px)', background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.04)', borderRadius: '24px' }}>
+                <div className="flex-resp" style={{ gap: '12px', alignItems: 'center', marginBottom: '12px' }}>
+                    <div style={{ position: 'relative', flex: '2', minWidth: '200px' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: theme.primary, opacity: 0.4, zIndex: 1 }} />
+                        <input type="text" placeholder="Search vehicle, owner, or property..." className="premium-compact-input" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} style={{ paddingLeft: '48px', height: '52px', width: '100%' }} />
+                    </div>
+                    <div className="flex-resp" style={{ gap: '8px', flex: '3', minWidth: '300px' }}>
+                        <select value={ownerFilter} onChange={e => handleOwnerChange(e.target.value)} className="premium-compact-input" style={{ height: '52px', flex: 1 }}>
+                            <option value="All">All Vendors</option>
+                            {uniqueOwners.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                        <select value={propertyFilter} onChange={e => setPropertyFilter(e.target.value)} className="premium-compact-input" style={{ height: '52px', flex: 1 }}>
+                            <option value="All">All Properties</option>
+                            {uniqueProperties.map(p => <option key={p} value={p}>{p}</option>)}
+                        </select>
+                    </div>
+                </div>
+
+                <div className="flex-resp" style={{ gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px', gap: '4px' }}>
+                            {['Buy', 'Sell'].map(t => (
+                                <button key={t} onClick={() => setTransactionFilter(t)} style={{
+                                    padding: '8px 16px', borderRadius: '10px', border: 'none', fontSize: '11px', fontWeight: '900', cursor: 'pointer',
+                                    background: transactionFilter === t ? (t === 'Buy' ? '#22c55e20' : '#ef444420') : 'transparent',
+                                    color: transactionFilter === t ? (t === 'Buy' ? '#22c55e' : '#ef4444') : 'rgba(255,255,255,0.3)',
+                                    transition: '0.3s'
+                                }}>{t}</button>
                             ))}
-                        </tbody>
-                    </table>
+                        </div>
+                        <div style={{ display: 'flex', gap: '6px' }}>
+                            <select value={selectedMonth} onChange={e => { setSelectedMonth(Number(e.target.value)); setSelectedDay('All'); }} className="premium-compact-input" style={{ height: '40px', width: '85px', fontSize: '11px', padding: '0 10px' }}>
+                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => <option key={m} value={i}>{m}</option>)}
+                            </select>
+                            <select value={selectedYear} onChange={e => { setSelectedYear(Number(e.target.value)); setSelectedDay('All'); }} className="premium-compact-input" style={{ height: '40px', width: '75px', fontSize: '11px', padding: '0 10px' }}>
+                                {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                            </select>
+                        </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <button onClick={handleOpenLogDuty} style={{ height: '40px', padding: '0 20px', background: theme.primary, color: 'black', border: 'none', borderRadius: '12px', fontWeight: '900', fontSize: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <Plus size={16} strokeWidth={3} /> <span className="hide-mobile">Add Duty</span>
+                        </button>
+                        <button onClick={handleExportPDF} style={{ height: '40px', width: '40px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#f87171', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                            <FileText size={16} />
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            {/* ═══ PREMIUM MOBILE DUTY CARDS ═══ */}
-            <div className="show-mobile">
-                {loading ? (
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '60px 0', gap: '16px' }}>
-                        <motion.div animate={{ rotate: 360 }} transition={{ duration: 1, repeat: Infinity, ease: 'linear' }} style={{ width: '32px', height: '32px', border: '3px solid rgba(251, 191, 36, 0.1)', borderTopColor: 'var(--primary)', borderRadius: '50%' }}></motion.div>
-                        <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', letterSpacing: '2px' }}>LOADING FLEET...</span>
-                    </div>
-                ) : filtered.length === 0 ? (
-                    <div className="glass-card" style={{ textAlign: 'center', padding: '60px 20px', border: '1px dashed rgba(255,255,255,0.1)', background: 'transparent' }}>
-                        <Car size={32} style={{ opacity: 0.2, color: 'var(--primary)', marginBottom: '16px' }} />
-                        <h3 style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>No Data Available</h3>
-                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px' }}>Try adjusting your filters.</p>
-                    </div>
-                ) : (
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                        {filtered.map((v, idx) => (
-                            <motion.div
-                                key={v._id}
-                                initial={{ opacity: 0, y: 15 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: idx * 0.04 }}
-                                style={{
-                                    background: 'rgba(15, 23, 42, 0.6)',
-                                    borderRadius: '24px',
-                                    border: '1px solid rgba(255,255,255,0.06)',
-                                    padding: '20px',
-                                    position: 'relative',
-                                    overflow: 'hidden'
-                                }}
-                            >
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px' }}>
-                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                                        <div style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {/* ═══ TABLE VIEW (Desktop) ═══ */}
+            <div className="hide-mobile table-responsive-wrapper" style={{ background: 'rgba(15, 23, 42, 0.2)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '24px', overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead>
+                        <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                            <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
+                            <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle / Vendor</th>
+                            <th style={{ padding: '20px 24px', textAlign: 'left', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Property / Duty</th>
+                            <th style={{ padding: '20px 24px', textAlign: 'right', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
+                            <th style={{ padding: '20px 24px', textAlign: 'right', fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loading ? (
+                            <tr><td colSpan="5" style={{ padding: '80px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '12px', fontWeight: '800' }}>LOADING DATA...</td></tr>
+                        ) : filtered.length === 0 ? (
+                            <tr><td colSpan="5" style={{ padding: '80px', textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: '12px', fontWeight: '800' }}>NO RECORDS FOUND</td></tr>
+                        ) : filtered.map((v, idx) => (
+                            <motion.tr key={v._id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.02 }} className="table-row-hover" style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
+                                <td style={{ padding: '16px 24px' }}>
+                                    <div style={{ fontSize: '14px', fontWeight: '800', color: 'white' }}>{formatDateIST(v.carNumber?.split('#')[1] || v.createdAt)}</div>
+                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{new Date(v.carNumber?.split('#')[1] || v.createdAt).toLocaleDateString('en-US', { weekday: 'short' })}</div>
+                                </td>
+                                <td style={{ padding: '16px 24px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                             <Car size={18} color="#38bdf8" />
                                         </div>
                                         <div>
-                                            <div style={{ fontSize: '15px', fontWeight: '950', color: 'white', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                {v.carNumber?.split('#')[0]}
-                                                <span className={`badge-ext ${v.transactionType === 'Buy' ? 'bg-buy' : v.transactionType === 'Sell' ? 'bg-sell' : ''}`} style={{ fontSize: '7px', padding: '2px 6px' }}>
-                                                    {v.transactionType || 'EXT'}
-                                                </span>
-                                            </div>
-                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', textTransform: 'uppercase' }}>{v.model}</div>
+                                            <div style={{ fontSize: '14px', fontWeight: '900', color: 'white' }}>{v.carNumber?.split('#')[0]} <span className={`badge-ext ${v.transactionType === 'Buy' ? 'bg-buy' : 'bg-sell'}`} style={{ fontSize: '7px' }}>{v.transactionType}</span></div>
+                                            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{v.ownerName} ({v.model})</div>
                                         </div>
                                     </div>
-                                    <div style={{ textAlign: 'right' }}>
-                                        <div style={{ fontSize: '16px', fontWeight: '950', color: '#10b981' }}>₹{v.dutyAmount?.toLocaleString()}</div>
-                                        <div style={{ fontSize: '8px', color: 'rgba(16, 185, 129, 0.5)', fontWeight: '900', textTransform: 'uppercase' }}>Payout</div>
+                                </td>
+                                <td style={{ padding: '16px 24px' }}>
+                                    <div style={{ fontSize: '14px', fontWeight: '800', color: 'white' }}>{v.property || 'Direct'}</div>
+                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '4px' }}>{v.dutyType} {v.dropLocation && <>➜ {v.dropLocation}</>}</div>
+                                </td>
+                                <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                                    <div style={{ fontSize: '16px', fontWeight: '1000', color: '#10b981' }}>₹{v.dutyAmount?.toLocaleString()}</div>
+                                </td>
+                                <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                                    <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                        <button onClick={() => handleEdit(v)} className="action-btn-hover" style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit size={14} /></button>
+                                        <button onClick={() => handleDelete(v._id)} className="action-btn-hover-del" style={{ width: '34px', height: '34px', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.05)', border: '1px solid rgba(244, 63, 94, 0.1)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={14} /></button>
                                     </div>
-                                </div>
-
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px', padding: '12px', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '2px' }}>Log Date</label>
-                                        <span style={{ fontSize: '12px', fontWeight: '800', color: 'var(--primary)' }}>
-                                            {(() => {
-                                                const parts = v.carNumber?.split('#');
-                                                if (parts && parts[1]) {
-                                                    const [y, m, d] = parts[1].split('-');
-                                                    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-                                                    return `${parseInt(d)} ${months[parseInt(m) - 1]}`;
-                                                }
-                                                return 'Manual';
-                                            })()}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <label style={{ display: 'block', fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', marginBottom: '2px' }}>Property</label>
-                                        <span style={{ fontSize: '12px', fontWeight: '800', color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{v.property || 'Direct'}</span>
-                                    </div>
-                                </div>
-
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                                    <Briefcase size={12} color="#38bdf8" style={{ opacity: 0.6 }} />
-                                    <span style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(255,255,255,0.8)' }}>{v.dutyType || 'Standard Duty'}</span>
-                                    {v.dropLocation && (
-                                        <>
-                                            <ChevronRight size={10} style={{ opacity: 0.3 }} />
-                                            <span style={{ fontSize: '11px', fontWeight: '600', color: 'rgba(255,255,255,0.4)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap' }}>{v.dropLocation}</span>
-                                        </>
-                                    )}
-                                </div>
-
-                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '12px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>
-                                        Vendor: <span style={{ color: 'rgba(255,255,255,0.6)' }}>{v.ownerName}</span>
-                                    </div>
-                                    <div style={{ display: 'flex', gap: '8px' }}>
-                                        <button onClick={() => handleEdit(v)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit size={14} /></button>
-                                        <button onClick={() => handleDelete(v._id)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.1)', border: '1px solid rgba(244, 63, 94, 0.2)', color: '#f43f5e', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={14} /></button>
-                                    </div>
-                                </div>
-                            </motion.div>
+                                </td>
+                            </motion.tr>
                         ))}
-                    </div>
-                )}
+                    </tbody>
+                </table>
             </div>
 
-            {/* ═══ PREMIUM OUTSIDE FLEET LOG MODAL ═══ */}
-            {/* ═══ PREMIUM OUTSIDE FLEET LOG MODAL ═══ */}
+            {/* ═══ CARD VIEW (Mobile) ═══ */}
+            <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {filtered.map((v, idx) => (
+                    <motion.div key={v._id} initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.05 }} style={{ background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '20px', padding: '16px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                            <div style={{ display: 'flex', gap: '10px' }}>
+                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Car size={18} color="#38bdf8" /></div>
+                                <div>
+                                    <div style={{ fontSize: '15px', fontWeight: '950', color: 'white' }}>{v.carNumber?.split('#')[0]}</div>
+                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{v.ownerName}</div>
+                                </div>
+                            </div>
+                            <div style={{ textAlign: 'right' }}>
+                                <div style={{ fontSize: '16px', fontWeight: '1000', color: '#10b981' }}>₹{v.dutyAmount?.toLocaleString()}</div>
+                                <span className={`badge-ext ${v.transactionType === 'Buy' ? 'bg-buy' : 'bg-sell'}`} style={{ fontSize: '6px', padding: '2px 6px' }}>{v.transactionType}</span>
+                            </div>
+                        </div>
+                        <div style={{ padding: '10px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px', marginBottom: '12px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>PROPERTY</span>
+                                <span style={{ fontSize: '11px', color: 'white', fontWeight: '900' }}>{v.property || 'Direct'}</span>
+                            </div>
+                            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>DATE</span>
+                                <span style={{ fontSize: '11px', color: theme.primary, fontWeight: '900' }}>{formatDateIST(v.carNumber?.split('#')[1] || v.createdAt)}</span>
+                            </div>
+                        </div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontWeight: '700' }}>{v.dutyType}</span>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                                <button onClick={() => handleEdit(v)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white' }}><Edit size={14} /></button>
+                                <button onClick={() => handleDelete(v._id)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.1)', border: 'none', color: '#f43f5e' }}><Trash2 size={14} /></button>
+                            </div>
+                        </div>
+                    </motion.div>
+                ))}
+            </div>
+
+            {/* ═══ MODAL ═══ */}
             <AnimatePresence>
                 {showModal && (
                     <div className="modal-overlay">
-                        <motion.div
-                            initial={{ scale: 0.9, opacity: 0, y: 10 }}
-                            animate={{ scale: 1, opacity: 1, y: 0 }}
-                            exit={{ scale: 0.95, opacity: 0, y: 10 }}
-                            className="modal-content-wrapper"
-                            style={{ maxWidth: '800px', padding: 'clamp(20px, 5vw, 40px)' }}
-                        >
-                            {/* Decorative Background Elements */}
-                            <div style={{ position: 'absolute', top: -100, right: -100, width: 300, height: 300, background: 'radial-gradient(circle, rgba(251, 191, 36, 0.05) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
-                            <div style={{ position: 'absolute', bottom: -100, left: -100, width: 300, height: 300, background: 'radial-gradient(circle, rgba(56, 189, 248, 0.05) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
-
-                            {/* Modal Header */}
-                            <div style={{
-                                padding: '32px 40px',
-                                borderBottom: '1px solid rgba(255,255,255,0.05)',
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                alignItems: 'center',
-                                position: 'relative',
-                                zIndex: 1
-                            }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                                    <div style={{
-                                        width: '56px', height: '56px', borderRadius: '18px',
-                                        background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1) 0%, rgba(251, 191, 36, 0.05) 100%)',
-                                        border: '1px solid rgba(251, 191, 36, 0.2)',
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
-                                    }}>
-                                        <Car size={26} color="var(--primary)" style={{ filter: 'drop-shadow(0 0 8px rgba(251, 191, 36, 0.3))' }} />
-                                    </div>
-                                    <div>
-                                        <h3 style={{ fontSize: '24px', fontWeight: '950', color: 'white', margin: 0, letterSpacing: '-0.5px' }}>
-                                            {editMode ? 'Edit Duty Log' : 'External Fleet Log'}
-                                        </h3>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '4px' }}>
-                                            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--primary)', boxShadow: '0 0 8px var(--primary)' }}></div>
-                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>Operational Registry</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <button onClick={() => setShowModal(false)} style={{
-                                    background: 'rgba(255,255,255,0.03)', color: 'rgba(255,255,255,0.4)',
-                                    border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px',
-                                    width: '40px', height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    cursor: 'pointer', transition: '0.2s hover'
-                                }}><X size={20} /></button>
-                            </div>
-
-                            {/* Modal Content */}
-                            <div style={{ padding: '0 40px 40px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '32px', position: 'relative', zIndex: 1 }} className="premium-scroll">
-
-                                <div style={{ height: '24px' }}></div> {/* Spacer */}
-
-                                {/* SECTION 1: CORE LOGISTICS */}
-                                <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                                    <div className="form-grid-2" style={{ gap: '20px' }}>
-                                        <div className="premium-input-group">
-                                            <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', display: 'block' }}>LOG DATE *</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <PremiumDateInput
-                                                    value={formData.date}
-                                                    onChange={val => setFormData({ ...formData, date: val })}
-                                                    required
-                                                    style={{
-                                                        background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
-                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px',
-                                                        fontSize: '14px', fontWeight: '700', cursor: 'pointer', outline: 'none'
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="premium-input-group">
-                                            <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', display: 'block' }}>CLIENT PROPERTY *</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <input
-                                                    type="text" className="premium-compact-input"
-                                                    required value={formData.property}
-                                                    onChange={e => {
-                                                        const val = e.target.value;
-                                                        setFormData({ ...formData, property: val });
-                                                        if(val.length > 0) {
-                                                            const matches = propertySuggestions.filter(p => p.toLowerCase().includes(val.toLowerCase()));
-                                                            setPropSuggestions(matches);
-                                                            setShowPropSuggestions(true);
-                                                        } else {
-                                                            setPropSuggestions(propertySuggestions);
-                                                            setShowPropSuggestions(true);
-                                                        }
-                                                    }}
-                                                    onFocus={() => { setPropSuggestions(propertySuggestions); setShowPropSuggestions(true); }}
-                                                    onBlur={() => setTimeout(() => setShowPropSuggestions(false), 200)}
-                                                    placeholder="Type Property Name..."
-                                                    style={{
-                                                        background: 'rgba(30, 41, 59, 0.4)', border: '1px solid rgba(255,255,255,0.1)',
-                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
-                                                        fontSize: '14px', fontWeight: '700'
-                                                    }}
-                                                />
-                                                {/* Property Suggestions */}
-                                                <AnimatePresence>
-                                                    {showPropSuggestions && propSuggestions.length > 0 && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
-                                                            style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', borderRadius: '16px', marginTop: '8px', border: '1px solid rgba(255,255,255,0.1)', overflowY: 'auto', maxHeight: '200px', zIndex: 100, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
-                                                        >
-                                                            {propSuggestions.map((p, i) => (
-                                                                <div key={i} onClick={() => setFormData({ ...formData, property: p })} style={{ padding: '12px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'white', fontSize: '13px', fontWeight: '700' }} className="suggestion-item-hover">{p}</div>
-                                                            ))}
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* SECTION 2: RESOURCE DATA */}
-                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '24px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.04)' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-                                        <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#38bdf8' }}></div>
-                                        <span style={{ fontSize: '11px', fontWeight: '950', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '2px' }}>Resource Identification</span>
-                                    </div>
-
-                                    <div className="form-grid-2" style={{ gap: '20px', marginBottom: '20px' }}>
-                                        <div className="premium-input-group">
-                                            <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>VEHICLE PLATE *</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <Car size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: theme.primary, opacity: 0.6, zIndex: 2 }} />
-                                                <input
-                                                    type="text" className="premium-compact-input"
-                                                    required value={formData.carNumber}
-                                                    onChange={e => handleCarNumberChange(e.target.value)}
-                                                    onFocus={() => { if(formData.carNumber.length > 1) setShowSuggestions(true); }}
-                                                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                                                    placeholder="RJ-XX-XX-XXXX"
-                                                    style={{
-                                                        background: 'rgba(15, 23, 42, 0.6)', border: `1px solid ${theme.primary}33`,
-                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
-                                                        fontSize: '16px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px'
-                                                    }}
-                                                />
-                                                {/* Custom Suggestions Dropdown */}
-                                                <AnimatePresence>
-                                                    {showSuggestions && suggestions.length > 0 && (
-                                                        <motion.div
-                                                            initial={{ opacity: 0, y: -10 }}
-                                                            animate={{ opacity: 1, y: 0 }}
-                                                            exit={{ opacity: 0, y: -10 }}
-                                                            style={{
-                                                                position: 'absolute', top: '100%', left: 0, right: 0,
-                                                                background: '#1e293b', borderRadius: '16px', marginTop: '8px',
-                                                                border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden',
-                                                                zIndex: 100, boxShadow: '0 20px 40px rgba(0,0,0,0.4)'
-                                                            }}
-                                                        >
-                                                            {suggestions.map((s, idx) => (
-                                                                <div
-                                                                    key={idx}
-                                                                    onClick={() => selectSuggestion(s)}
-                                                                    style={{
-                                                                        padding: '14px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)',
-                                                                        display: 'flex', justifyContent: 'space-between', alignItems: 'center', transition: '0.2s'
-                                                                    }}
-                                                                    className="suggestion-item-hover"
-                                                                >
-                                                                    <div>
-                                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{s.carNumber?.split('#')[0]}</div>
-                                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700' }}>{s.model}</div>
-                                                                    </div>
-                                                                    <div style={{ color: theme.primary, fontSize: '10px', fontWeight: '900' }}>{s.ownerName}</div>
-                                                                </div>
-                                                            ))}
-                                                        </motion.div>
-                                                    )}
-                                                </AnimatePresence>
-                                            </div>
-                                        </div>
-                                        <div className="premium-input-group">
-                                            <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>ASSET MODEL *</label>
-                                            <input
-                                                type="text" className="premium-compact-input"
-                                                required value={formData.model}
-                                                onChange={e => setFormData({ ...formData, model: e.target.value })}
-                                                placeholder="e.g. Innova Crysta"
-                                                style={{
-                                                    background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.08)',
-                                                    borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 20px',
-                                                    fontSize: '14px', fontWeight: '700'
-                                                }}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="form-grid-2" style={{ gap: '20px' }}>
-                                        <div className="premium-input-group">
-                                            <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>VENDOR NAME *</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <Briefcase size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#10b981', opacity: 0.6, zIndex: 2 }} />
-                                                <input
-                                                    type="text" className="premium-compact-input"
-                                                    required value={formData.ownerName}
-                                                    onChange={e => setFormData({ ...formData, ownerName: e.target.value })}
-                                                    placeholder="Type Vendor Name..."
-                                                    style={{
-                                                        background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.1)',
-                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
-                                                        fontSize: '14px', fontWeight: '700'
-                                                    }}
-                                                />
-                                            </div>
-                                        </div>
-                                        <div className="premium-input-group">
-                                            <label className="premium-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', marginBottom: '8px', display: 'block' }}>TRANSACTION MODE *</label>
-                                            <div style={{ display: 'flex', background: 'rgba(0,0,0,0.4)', padding: '6px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', gap: '6px', height: '56px' }}>
-                                                {[
-                                                    { id: 'Buy', label: 'Buy', icon: ShoppingCart, color: '#22c55e' },
-                                                    { id: 'Sell', label: 'Sell', icon: TrendingUp, color: '#ef4444' }
-                                                ].map(t => (
-                                                    <button
-                                                        key={t.id} type="button"
-                                                        onClick={() => setFormData({ ...formData, transactionType: t.id })}
-                                                        style={{
-                                                            flex: 1, borderRadius: '14px', cursor: 'pointer', transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', border: 'none',
-                                                            background: formData.transactionType === t.id ? t.color : 'transparent',
-                                                            color: formData.transactionType === t.id ? 'black' : 'rgba(255,255,255,0.3)',
-                                                            boxShadow: formData.transactionType === t.id ? `0 4px 12px ${t.color}40` : 'none'
-                                                        }}
-                                                    >
-                                                        <t.icon size={16} strokeWidth={formData.transactionType === t.id ? 3 : 2} />
-                                                        <span style={{ fontSize: '11px', fontWeight: '950', textTransform: 'uppercase' }}>{t.label}</span>
-                                                    </button>
-                                                ))}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* SECTION 3: SERVICE DETAILS */}
+                        <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.9, opacity: 0 }} className="modal-content-wrapper" style={{ maxWidth: '700px', width: '95%', padding: 0 }}>
+                            <div style={{ padding: '24px 32px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px' }}>
-                                        <div style={{ width: '8px', height: '8px', borderRadius: '2px', background: '#10b981' }}></div>
-                                        <span style={{ fontSize: '11px', fontWeight: '950', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '2px' }}>Service Settlement</span>
+                                    <h2 style={{ color: 'white', fontSize: '20px', fontWeight: '950', margin: 0 }}>{editMode ? 'Edit Entry' : 'Add Duty Entry'}</h2>
+                                    <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '700', marginTop: '4px' }}>Fill details for the outside fleet duty.</p>
+                                </div>
+                                <button onClick={() => setShowModal(false)} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer' }}><X size={24} /></button>
+                            </div>
+
+                            <form onSubmit={handleSubmit} style={{ padding: '32px' }}>
+                                <div className="form-grid-2" style={{ gap: '20px', marginBottom: '20px' }}>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Assignment Date *</label>
+                                        <input type="date" className="premium-compact-input" required value={formData.date} onChange={e => setFormData({ ...formData, date: e.target.value })} style={{ height: '52px', colorScheme: 'dark' }} />
                                     </div>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Client Property *</label>
+                                        <input type="text" className="premium-compact-input" list="propList" required value={formData.property} onChange={e => setFormData({ ...formData, property: e.target.value })} placeholder="Property Name" style={{ height: '52px' }} />
+                                        <datalist id="propList">{propertySuggestions.map(p => <option key={p} value={p} />)}</datalist>
+                                    </div>
+                                </div>
 
-                                    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-                                        <div className="form-grid-2" style={{ gap: '24px' }}>
-                                            <div className="premium-input-group">
-                                                <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', display: 'block' }}>SERVICE CATEGORY</label>
-                                                <div style={{ position: 'relative' }}>
-                                                    <Briefcase size={18} style={{ position: 'absolute', left: '16px', top: '28px', transform: 'translateY(-50%)', color: '#10b981', opacity: 0.6, zIndex: 2 }} />
-                                                    <input
-                                                        type="text" className="premium-compact-input"
-                                                        value={formData.dutyType}
-                                                        onChange={e => {
-                                                            const val = e.target.value;
-                                                            setFormData({ ...formData, dutyType: val });
-                                                            if(val.length > 0) {
-                                                                const matches = dutyTypeSuggestions.filter(s => s.toLowerCase().includes(val.toLowerCase()));
-                                                                setCatSuggestions(matches);
-                                                                setShowCatSuggestions(true);
-                                                            } else {
-                                                                setCatSuggestions(dutyTypeSuggestions);
-                                                                setShowCatSuggestions(true);
-                                                            }
-                                                        }}
-                                                        onFocus={() => { setCatSuggestions(dutyTypeSuggestions); setShowCatSuggestions(true); }}
-                                                        onBlur={() => setTimeout(() => setShowCatSuggestions(false), 200)}
-                                                        placeholder="e.g. Airport Transfer"
-                                                        style={{
-                                                            background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255,255,255,0.1)',
-                                                            borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
-                                                            fontSize: '14px', fontWeight: '700', marginBottom: '12px'
-                                                        }}
-                                                    />
-                                                    {/* Category Suggestions */}
-                                                    <AnimatePresence>
-                                                        {showCatSuggestions && catSuggestions.length > 0 && (
-                                                            <motion.div
-                                                                initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }}
-                                                                style={{ position: 'absolute', top: '56px', left: 0, right: 0, background: '#1e293b', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', overflowY: 'auto', maxHeight: '180px', zIndex: 100, boxShadow: '0 20px 40px rgba(0,0,0,0.4)' }}
-                                                            >
-                                                                {catSuggestions.map((s, i) => (
-                                                                    <div key={i} onClick={() => setFormData({ ...formData, dutyType: s })} style={{ padding: '12px 20px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'white', fontSize: '13px', fontWeight: '700' }} className="suggestion-item-hover">{s}</div>
-                                                                ))}
-                                                            </motion.div>
-                                                        )}
-                                                    </AnimatePresence>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                                                        {['Airport PickUp', 'Airport Drop', 'Local Duty', 'Outstation'].map(t => (
-                                                            <motion.button
-                                                                key={t} type="button"
-                                                                whileHover={{ scale: 1.02 }}
-                                                                whileTap={{ scale: 0.98 }}
-                                                                onClick={() => setFormData({ ...formData, dutyType: t })}
-                                                                style={{
-                                                                    fontSize: '11px', fontWeight: '900', padding: '12px', borderRadius: '14px', cursor: 'pointer', transition: 'all 0.3s ease',
-                                                                    background: formData.dutyType === t ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(16, 185, 129, 0.1))' : 'rgba(255,255,255,0.03)',
-                                                                    border: `1px solid ${formData.dutyType === t ? 'rgba(16, 185, 129, 0.4)' : 'rgba(255,255,255,0.06)'}`,
-                                                                    color: formData.dutyType === t ? '#10b981' : 'rgba(255,255,255,0.5)',
-                                                                    boxShadow: formData.dutyType === t ? '0 8px 16px rgba(16, 185, 129, 0.1)' : 'none'
-                                                                }}
-                                                            >
-                                                                {t}
-                                                            </motion.button>
-                                                        ))}
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div className="premium-input-group">
-                                                <label className="premium-label" style={{ fontSize: '11px', color: '#10b981', fontWeight: '900', marginBottom: '12px', display: 'block' }}>PAYOUT AMOUNT (₹) *</label>
-                                                <div style={{
-                                                    position: 'relative', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '20px',
-                                                    border: '1px solid rgba(16, 185, 129, 0.2)', padding: '12px 24px',
-                                                    display: 'flex', alignItems: 'center', gap: '16px', height: '80px',
-                                                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.2)'
-                                                }}>
-                                                    <span style={{ fontSize: '24px', fontWeight: '950', color: '#10b981' }}>₹</span>
-                                                    <input
-                                                        type="number" className="premium-compact-input"
-                                                        required value={formData.dutyAmount}
-                                                        onChange={e => setFormData({ ...formData, dutyAmount: e.target.value })}
-                                                        placeholder="0.00"
-                                                        style={{
-                                                            background: 'transparent', border: 'none', color: '#10b981',
-                                                            fontSize: '32px', fontWeight: '950', outline: 'none', width: '100%',
-                                                            letterSpacing: '-1px'
-                                                        }}
-                                                    />
-                                                </div>
-                                            </div>
-                                        </div>
+                                <div className="form-grid-2" style={{ gap: '20px', marginBottom: '20px' }}>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Vehicle Plate *</label>
+                                        <input type="text" className="premium-compact-input" required value={formData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} placeholder="RJ-XX-XX-XXXX" style={{ height: '52px', textTransform: 'uppercase' }} />
+                                        <AnimatePresence>
+                                            {showSuggestions && suggestions.length > 0 && (
+                                                <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="suggestions-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', borderRadius: '12px', zIndex: 100, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                                                    {suggestions.map((s, i) => <div key={i} onClick={() => selectSuggestion(s)} style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'white', fontSize: '13px' }}>{s.carNumber?.split('#')[0]} ({s.ownerName})</div>)}
+                                                </motion.div>
+                                            )}
+                                        </AnimatePresence>
+                                    </div>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Model *</label>
+                                        <input type="text" className="premium-compact-input" required value={formData.model} onChange={e => setFormData({ ...formData, model: e.target.value })} placeholder="e.g. Innova" style={{ height: '52px' }} />
+                                    </div>
+                                </div>
 
-                                        <div className="premium-input-group">
-                                            <label className="premium-label" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', marginBottom: '12px', display: 'block' }}>OPERATIONAL DESTINATION</label>
-                                            <div style={{ position: 'relative' }}>
-                                                <MapPin size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: '#38bdf8', opacity: 0.6, zIndex: 2 }} />
-                                                <input
-                                                    type="text" list="locList" className="premium-compact-input"
-                                                    value={formData.dropLocation}
-                                                    onChange={e => setFormData({ ...formData, dropLocation: e.target.value })}
-                                                    placeholder="Enter destination details..."
-                                                    style={{
-                                                        background: 'rgba(15, 23, 42, 0.4)', border: '1px solid rgba(255,255,255,0.06)',
-                                                        borderRadius: '16px', height: '56px', width: '100%', color: 'white', padding: '0 16px 0 48px',
-                                                        fontSize: '14px', fontWeight: '700'
-                                                    }}
-                                                />
-                                                <datalist id="locList">
-                                                    {dropLocationSuggestions.map(item => <option key={item} value={item} />)}
-                                                </datalist>
-                                            </div>
+                                <div className="form-grid-2" style={{ gap: '20px', marginBottom: '20px' }}>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Vendor / Owner *</label>
+                                        <input type="text" className="premium-compact-input" required value={formData.ownerName} onChange={e => setFormData({ ...formData, ownerName: e.target.value })} placeholder="Vendor Name" style={{ height: '52px' }} />
+                                    </div>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Transaction Type</label>
+                                        <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '12px', gap: '4px', height: '52px' }}>
+                                            {['Buy', 'Sell'].map(t => (
+                                                <button key={t} type="button" onClick={() => setFormData({ ...formData, transactionType: t })} style={{
+                                                    flex: 1, borderRadius: '8px', border: 'none', cursor: 'pointer', transition: '0.3s',
+                                                    background: formData.transactionType === t ? (t === 'Buy' ? '#22c55e' : '#ef4444') : 'transparent',
+                                                    color: formData.transactionType === t ? 'black' : 'rgba(255,255,255,0.3)',
+                                                    fontWeight: '900', fontSize: '12px'
+                                                }}>{t}</button>
+                                            ))}
                                         </div>
                                     </div>
                                 </div>
-                            </div>
 
-                             {/* Modal Footer */}
-                            <div style={{ 
-                                marginTop: '40px', 
-                                display: 'grid', 
-                                gridTemplateColumns: '1fr 2fr', 
-                                gap: '16px',
-                                padding: '0 40px 40px' 
-                            }}>
-                                <motion.button 
-                                    whileHover={{ background: 'rgba(255,255,255,0.08)' }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={() => setShowModal(false)} 
-                                    style={{ 
-                                        height: '64px', 
-                                        borderRadius: '20px',
-                                        background: 'rgba(255,255,255,0.03)',
-                                        border: '1px solid rgba(255,255,255,0.1)',
-                                        color: 'rgba(255,255,255,0.6)',
-                                        fontSize: '15px',
-                                        fontWeight: '800',
-                                        cursor: 'pointer',
-                                        transition: 'all 0.3s'
-                                    }}
-                                >
-                                    Dismiss
-                                </motion.button>
-                                <motion.button 
-                                    whileHover={{ y: -4, boxShadow: `0 20px 40px ${theme.primary}40` }}
-                                    whileTap={{ scale: 0.98 }}
-                                    onClick={handleSubmit} 
-                                    style={{ 
-                                        height: '64px', 
-                                        borderRadius: '20px',
-                                        background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.primary}dd 100%)`,
-                                        border: 'none',
-                                        color: 'black',
-                                        fontSize: '16px',
-                                        fontWeight: '1000',
-                                        cursor: 'pointer',
-                                        boxShadow: `0 10px 25px ${theme.primary}30`,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        justifyContent: 'center',
-                                        gap: '12px'
-                                    }}
-                                >
-                                    <Save size={20} strokeWidth={3} />
-                                    {editMode ? 'Update Record' : 'Submit Entry'}
-                                </motion.button>
-                            </div>
+                                <div className="form-grid-2" style={{ gap: '20px', marginBottom: '32px' }}>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Service Type</label>
+                                        <input type="text" className="premium-compact-input" list="typeList" value={formData.dutyType} onChange={e => setFormData({ ...formData, dutyType: e.target.value })} placeholder="e.g. Local Duty" style={{ height: '52px' }} />
+                                        <datalist id="typeList">{dutyTypeSuggestions.map(t => <option key={t} value={t} />)}</datalist>
+                                    </div>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">Payout Amount (₹) *</label>
+                                        <input type="number" className="premium-compact-input" required value={formData.dutyAmount} onChange={e => setFormData({ ...formData, dutyAmount: e.target.value })} placeholder="0.00" style={{ height: '52px', fontSize: '18px', fontWeight: '950', color: '#10b981' }} />
+                                    </div>
+                                </div>
+
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <button type="button" onClick={() => setShowModal(false)} style={{ flex: 1, height: '56px', borderRadius: '16px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', fontWeight: '800', cursor: 'pointer' }}>Cancel</button>
+                                    <button type="submit" style={{ flex: 2, height: '56px', borderRadius: '16px', background: theme.primary, border: 'none', color: 'black', fontWeight: '1000', fontSize: '16px', cursor: 'pointer', boxShadow: `0 10px 20px ${theme.primary}30` }}>{editMode ? 'Update' : 'Submit'}</button>
+                                </div>
+                            </form>
                         </motion.div>
                     </div>
                 )}
             </AnimatePresence>
-        </div >
+        </div>
     );
 };
 

@@ -18,6 +18,7 @@ import {
     formatTimeIST,
     nowIST
 } from '../utils/istUtils';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 
 const styles = `
   @keyframes pulse {
@@ -34,11 +35,67 @@ const styles = `
     box-shadow: 0 0 20px rgba(14, 165, 233, 0.1);
   }
   .premium-scroll::-webkit-scrollbar {
+    width: 6px;
     height: 4px;
   }
+  .premium-scroll::-webkit-scrollbar-track { background: transparent; }
   .premium-scroll::-webkit-scrollbar-thumb {
     background: rgba(255,255,255,0.1);
-    borderRadius: 10px;
+    border-radius: 10px;
+  }
+  .premium-scroll::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.2); }
+
+  /* Utility Classes */
+  .flex-resp { display: flex; flex-wrap: wrap; gap: 16px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 25px; }
+  .hide-mobile { display: block; }
+  .show-mobile { display: none; }
+
+  @media (max-width: 1024px) {
+    .card-grid { grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); }
+  }
+
+  @media (max-width: 768px) {
+    .flex-resp { flex-direction: column; align-items: stretch !important; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .card-grid { grid-template-columns: 1fr; }
+    .hide-mobile { display: none !important; }
+    .show-mobile { display: block !important; }
+    .header-row { flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
+    .date-controls { width: 100% !important; justify-content: space-between !important; }
+    
+    .livefeed-control-bar {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 15px !important;
+    }
+    .livefeed-tabs {
+        width: 100% !important;
+        padding-bottom: 8px !important;
+        margin-bottom: 5px !important;
+        display: flex !important;
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .livefeed-tabs::-webkit-scrollbar { display: none; }
+    .livefeed-tabs button {
+        padding: 10px 20px !important;
+        flex-shrink: 0 !important;
+        min-width: max-content !important;
+        white-space: nowrap !important;
+    }
+    .livefeed-tabs button span {
+        font-size: 11px !important;
+    }
+  }
+
+  @media (max-width: 480px) {
+    .card-grid { gap: 15px; }
+    .livefeed-tabs button {
+        padding: 8px 15px !important;
+    }
   }
 `;
 
@@ -276,7 +333,7 @@ const LiveFeed = () => {
             <SEO title="Live Fleet Control" description="Real-time mission control for drivers and vehicles." />
 
             <header style={{ marginBottom: '30px' }}>
-                <div className="livefeed-header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px', gap: '20px', flexWrap: 'wrap' }}>
+                <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px', gap: '20px' }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                             <div style={{ width: '32px', height: '32px', background: `${theme.primary}20`, borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${theme.primary}40` }}>
@@ -289,7 +346,7 @@ const LiveFeed = () => {
                         </h1>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    <div className="date-controls" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                         <div style={{ background: 'rgba(0,0,0,0.3)', padding: '4px', borderRadius: '18px', display: 'flex', gap: '4px', border: '1px solid rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)' }}>
                             <button
                                 onClick={() => {
@@ -302,19 +359,10 @@ const LiveFeed = () => {
                             >
                                 <ChevronLeft size={20} />
                             </button>
-                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                                <input
-                                    id="feed-date-picker"
-                                    type="date"
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: 'clamp(140px, 20vw, 180px)' }}>
+                                <PremiumDateInput
                                     value={selectedDate}
-                                    onChange={(e) => setSelectedDate(e.target.value)}
-                                    onClick={(e) => e.target.showPicker()}
-                                    style={{
-                                        height: '40px', padding: '0 20px', borderRadius: '14px',
-                                        background: `${theme.primary}15`, color: 'white', fontWeight: '800',
-                                        fontSize: '14px', border: `1px solid ${theme.primary}30`,
-                                        cursor: 'pointer', outline: 'none', textAlign: 'center'
-                                    }}
+                                    onChange={(v) => setSelectedDate(v)}
                                 />
                             </div>
                             <button
@@ -329,16 +377,13 @@ const LiveFeed = () => {
                                 <ChevronRight size={20} />
                             </button>
                         </div>
-
                     </div>
                 </div>
 
-                {/* Stats Grid — 5 boxes */}
-                <div className="livefeed-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px' }}>
+                {/* Stats Grid — Responsive Grid */}
+                <div className="livefeed-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(clamp(140px, 25vw, 170px), 1fr))', gap: '12px' }}>
                     {(() => {
                         const driversActive = stats?.liveDriversFeed?.filter(d => d.status === 'Present').length || 0;
-                        const driversCompleted = stats?.liveDriversFeed?.filter(d => d.status === 'Completed').length || 0;
-
                         const regTotal = stats?.dailyStats?.regularSalary || 0;
                         const freeTotal = stats?.dailyStats?.freelancerSalary || 0;
                         const fuelAmt = stats?.dailyFuelAmount?.total || 0;
@@ -349,11 +394,11 @@ const LiveFeed = () => {
                                 {/* 1. Drivers Box */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
-                                    style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                    style={{ background: 'rgba(255,255,255,0.03)', padding: 'clamp(12px, 2vw, 20px)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}
                                 >
                                     <div style={{
-                                        width: '48px',
-                                        height: '48px',
+                                        width: 'clamp(36px, 8vw, 48px)',
+                                        height: 'clamp(36px, 8vw, 48px)',
                                         background: 'rgba(16, 185, 129, 0.12)',
                                         borderRadius: '14px',
                                         display: 'flex',
@@ -365,24 +410,23 @@ const LiveFeed = () => {
                                         <Users size={20} color="#10b981" />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '24px', fontWeight: '950', color: '#10b981', lineHeight: 1.1, marginBottom: '2px' }}>
+                                        <div style={{ fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: '950', color: '#10b981', lineHeight: 1.1, marginBottom: '2px' }}>
                                             {isToday ? driversActive : (stats?.liveDriversFeed?.length || 0)}
                                         </div>
-                                        <div style={{ fontSize: '12px', color: '#10b981', fontWeight: '700', marginTop: '2px' }}>
+                                        <div style={{ fontSize: 'clamp(9px, 1.5vw, 12px)', color: '#10b981', fontWeight: '700' }}>
                                             {isToday ? 'Active Drivers' : 'Worked Drivers'}
                                         </div>
-
                                     </div>
                                 </motion.div>
 
                                 {/* 2. Fleet Box */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
-                                    style={{ background: 'rgba(255,255,255,0.03)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '15px' }}
+                                    style={{ background: 'rgba(255,255,255,0.03)', padding: 'clamp(12px, 2vw, 20px)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}
                                 >
                                     <div style={{
-                                        width: '48px',
-                                        height: '48px',
+                                        width: 'clamp(36px, 8vw, 48px)',
+                                        height: 'clamp(36px, 8vw, 48px)',
                                         background: `${theme.primary}15`,
                                         borderRadius: '14px',
                                         display: 'flex',
@@ -394,30 +438,24 @@ const LiveFeed = () => {
                                         <Car size={20} color={theme.primary} />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '24px', fontWeight: '950', color: theme.primary, lineHeight: 1.1, marginBottom: '2px' }}>
+                                        <div style={{ fontSize: 'clamp(18px, 4vw, 24px)', fontWeight: '950', color: theme.primary, lineHeight: 1.1, marginBottom: '2px' }}>
                                             {activeFleetCount}
                                         </div>
-                                        <div style={{ fontSize: '12px', color: theme.primary, fontWeight: '700', marginTop: '2px' }}>
+                                        <div style={{ fontSize: 'clamp(9px, 1.5vw, 12px)', color: theme.primary, fontWeight: '700' }}>
                                             {isToday ? 'Active Fleets' : 'Total Fleet Used'}
                                         </div>
-
-
-                                        <div style={{ fontSize: '13px', color: theme.primary, fontWeight: '700', marginTop: '2px' }}>
-
-                                        </div>
-
                                     </div>
                                 </motion.div>
 
-                                {/* 3. Company Total (Pay + Parking) */}
+                                {/* 3. Company Total */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
                                     onClick={() => navigate('/admin/drivers-panel?tab=settlement')}
-                                    style={{ background: 'rgba(16, 185, 129, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer' }}
+                                    style={{ background: 'rgba(16, 185, 129, 0.05)', padding: 'clamp(12px, 2vw, 20px)', borderRadius: '24px', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
                                 >
                                     <div style={{
-                                        width: '48px',
-                                        height: '48px',
+                                        width: 'clamp(36px, 8vw, 48px)',
+                                        height: 'clamp(36px, 8vw, 48px)',
                                         background: 'rgba(16, 185, 129, 0.12)',
                                         borderRadius: '14px',
                                         display: 'flex',
@@ -429,20 +467,20 @@ const LiveFeed = () => {
                                         <Landmark size={20} color="#10b981" />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{regTotal.toLocaleString()}</div>
-                                        <div style={{ fontSize: '11px', color: '#10b981', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver Salary</div>
+                                        <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{regTotal.toLocaleString()}</div>
+                                        <div style={{ fontSize: 'clamp(8px, 1.2vw, 11px)', color: '#10b981', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Driver Salary</div>
                                     </div>
                                 </motion.div>
 
-                                {/* 4. Freelancer Total (Pay + Parking) */}
+                                {/* 4. Freelancer Total */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
                                     onClick={() => navigate('/admin/freelancers?tab=logistics')}
-                                    style={{ background: 'rgba(129, 140, 248, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(129, 140, 248, 0.1)', display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer' }}
+                                    style={{ background: 'rgba(129, 140, 248, 0.05)', padding: 'clamp(12px, 2vw, 20px)', borderRadius: '24px', border: '1px solid rgba(129, 140, 248, 0.1)', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
                                 >
                                     <div style={{
-                                        width: '48px',
-                                        height: '48px',
+                                        width: 'clamp(36px, 8vw, 48px)',
+                                        height: 'clamp(36px, 8vw, 48px)',
                                         background: 'rgba(129, 140, 248, 0.12)',
                                         borderRadius: '14px',
                                         display: 'flex',
@@ -454,8 +492,8 @@ const LiveFeed = () => {
                                         <Activity size={20} color="#818cf8" />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{freeTotal.toLocaleString()}</div>
-                                        <div style={{ fontSize: '11px', color: '#818cf8', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '1px' }}>Freelancer Salary</div>
+                                        <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{freeTotal.toLocaleString()}</div>
+                                        <div style={{ fontSize: 'clamp(8px, 1.2vw, 11px)', color: '#818cf8', fontWeight: '950', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Freelancer Pay</div>
                                     </div>
                                 </motion.div>
 
@@ -463,29 +501,28 @@ const LiveFeed = () => {
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
                                     onClick={() => navigate('/admin/fuel')}
-                                    style={{ background: 'rgba(245, 158, 11, 0.05)', padding: '20px', borderRadius: '24px', border: '1px solid rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', gap: '15px', cursor: 'pointer' }}
+                                    style={{ background: 'rgba(245, 158, 11, 0.05)', padding: 'clamp(12px, 2vw, 20px)', borderRadius: '24px', border: '1px solid rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', gap: '12px', cursor: 'pointer' }}
                                 >
-                                    <div style={{ width: '45px', height: '45px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid var(--primary)20', flexShrink: 0 }}>
+                                    <div style={{ width: 'clamp(36px, 8vw, 45px)', height: 'clamp(36px, 8vw, 45px)', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid var(--primary)20', flexShrink: 0 }}>
                                         <Fuel size={22} color="var(--primary)" />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '20px', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{fuelAmt.toLocaleString()}</div>
-                                        <div style={{ fontSize: '11px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Fuel</div>
+                                        <div style={{ fontSize: 'clamp(16px, 3.5vw, 20px)', fontWeight: '950', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{fuelAmt.toLocaleString()}</div>
+                                        <div style={{ fontSize: 'clamp(8px, 1.2vw, 11px)', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Fuel</div>
                                     </div>
                                 </motion.div>
 
                                 {/* 6. Grand Total */}
                                 <motion.div
                                     initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
-                                    style={{ background: `linear-gradient(135deg, ${theme.primary}20, ${theme.secondary || theme.primary}20)`, padding: '18px', borderRadius: '24px', border: `1px solid ${theme.primary}40`, display: 'flex', alignItems: 'center', gap: '12px' }}
+                                    style={{ background: `linear-gradient(135deg, ${theme.primary}20, ${theme.secondary || theme.primary}20)`, padding: 'clamp(12px, 2vw, 18px)', borderRadius: '24px', border: `1px solid ${theme.primary}40`, display: 'flex', alignItems: 'center', gap: '12px' }}
                                 >
-                                    <div style={{ width: '42px', height: '42px', background: `${theme.primary}30`, borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${theme.primary}50`, flexShrink: 0 }}>
+                                    <div style={{ width: 'clamp(36px, 8vw, 42px)', height: 'clamp(36px, 8vw, 42px)', background: `${theme.primary}30`, borderRadius: '14px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${theme.primary}50`, flexShrink: 0 }}>
                                         <Activity size={20} color={theme.primary} />
                                     </div>
                                     <div>
-                                        <div style={{ fontSize: '18px', fontWeight: '1000', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{(grandTotal + fuelAmt).toLocaleString()}</div>
-                                        <div style={{ fontSize: '10px', color: theme.primary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Running Expenses
-                                        </div>
+                                        <div style={{ fontSize: 'clamp(14px, 3vw, 18px)', fontWeight: '1000', color: 'white', lineHeight: 1.1, marginBottom: '2px' }}>₹{(grandTotal + fuelAmt).toLocaleString()}</div>
+                                        <div style={{ fontSize: 'clamp(8px, 1.2vw, 10px)', color: theme.primary, fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Running Cost</div>
                                     </div>
                                 </motion.div>
                             </>
@@ -511,10 +548,9 @@ const LiveFeed = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
-                    gap: '20px',
-                    flexWrap: 'wrap'
+                    gap: '20px'
                 }}>
-                    <div className="livefeed-tabs" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                    <div className="livefeed-tabs premium-scroll" style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '5px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.03)', overflowX: 'auto' }}>
                         <TabButton id="drivers" label="Drivers" icon={Users} count={stats?.liveDriversFeed?.length || 0} />
                         <TabButton id="vehicles" label="Fleet" icon={Car} count={stats?.totalUsedVehiclesCount || 0} />
                         <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length || 0} />
@@ -522,7 +558,7 @@ const LiveFeed = () => {
                         <TabButton id="unused" label="IDEL" icon={Car} count={stats?.unusedVehiclesCount || 0} />
                     </div>
 
-                    <div style={{ position: 'relative', flex: 1, minWidth: '220px', maxWidth: '450px' }}>
+                    <div style={{ position: 'relative', flex: 1, minWidth: 'clamp(200px, 100%, 450px)' }}>
                         <div style={{ position: 'absolute', left: '22px', top: '50%', transform: 'translateY(-50%)', color: theme.primary, filter: `drop-shadow(0 0 8px ${theme.primary}40)` }}>
                             <Search size={20} strokeWidth={3} />
                         </div>
@@ -554,7 +590,7 @@ const LiveFeed = () => {
                 <div style={{ padding: '20px', minHeight: '65vh', position: 'relative' }} className="custom-scrollbar">
                     {loading && (
                         <div style={{ position: 'absolute', inset: 0, display: 'flex', justifyContent: 'center', alignItems: 'center', background: 'rgba(15, 23, 42, 0.4)', zIndex: 10, backdropFilter: 'blur(4px)' }}>
-                             <div className="pulse-animation" style={{ color: theme.primary, fontWeight: '950', fontSize: '18px', letterSpacing: '2px' }}>FETCHING LIVE DATA...</div>
+                            <div className="pulse-animation" style={{ color: theme.primary, fontWeight: '950', fontSize: '18px', letterSpacing: '2px' }}>FETCHING LIVE DATA...</div>
                         </div>
                     )}
                     <AnimatePresence mode="wait">
@@ -565,7 +601,7 @@ const LiveFeed = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.98 }}
                                 transition={{ duration: 0.4, ease: "easeOut" }}
-                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '25px' }}
+                                className="card-grid"
                             >
                                 {filteredDrivers.sort((a, b) => {
                                     const statusPriority = { 'Present': 1, 'Completed': 2, 'Absent': 3 };
@@ -765,7 +801,7 @@ const LiveFeed = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.98 }}
                                 transition={{ duration: 0.4 }}
-                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '25px' }}
+                                className="card-grid"
                             >
                                 {filteredVehicles.sort((a, b) => {
                                     // Priority: 'Used' before 'In Use' to show free/completed cars first
@@ -897,7 +933,7 @@ const LiveFeed = () => {
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(min(100%, 320px), 1fr))', gap: '20px' }}
+                                className="card-grid"
                             >
                                 {(stats?.dailyFuelEntries || []).filter(f =>
                                     (f.driver?.toLowerCase() || '').includes(searchQuery.toLowerCase()) ||
@@ -1024,7 +1060,7 @@ const LiveFeed = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.98 }}
                                 transition={{ duration: 0.4, ease: "easeOut" }}
-                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '25px' }}
+                                className="card-grid"
                             >
                                 {filteredAbsentDrivers.map((driver) => (
                                     <motion.div
@@ -1090,7 +1126,7 @@ const LiveFeed = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, scale: 0.98 }}
                                 transition={{ duration: 0.4 }}
-                                style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '25px' }}
+                                className="card-grid"
                             >
                                 {filteredUnusedVehicles.map((vehicle) => (
                                     <motion.div
@@ -1183,9 +1219,9 @@ const LiveFeed = () => {
                             animate={{ scale: 1, y: 0, opacity: 1 }}
                             exit={{ scale: 0.9, y: 20, opacity: 0 }}
                             onClick={(e) => e.stopPropagation()}
+                            className="modal-container"
                             style={{
-                                width: '100%',
-                                maxWidth: '700px',
+                                width: 'min(95%, 700px)',
                                 maxHeight: '90vh',
                                 background: '#1e293b',
                                 borderRadius: '32px',
@@ -1197,39 +1233,40 @@ const LiveFeed = () => {
                             }}
                         >
                             {/* Modal Header */}
-                            <div style={{ padding: '24px 30px', background: 'rgba(14, 165, 233, 0.1)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <div style={{ padding: 'clamp(15px, 3vw, 24px) clamp(20px, 4vw, 30px)', background: 'rgba(14, 165, 233, 0.1)', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                     <div style={{
-                                        width: '50px',
-                                        height: '50px',
+                                        width: 'clamp(40px, 10vw, 50px)',
+                                        height: 'clamp(40px, 10vw, 50px)',
                                         borderRadius: '16px',
                                         background: 'linear-gradient(135deg, var(--primary), var(--primary))',
                                         display: 'flex',
                                         justifyContent: 'center',
                                         alignItems: 'center',
-                                        boxShadow: '0 8px 16px rgba(14, 165, 233, 0.2)'
+                                        boxShadow: '0 8px 16px rgba(14, 165, 233, 0.2)',
+                                        flexShrink: 0
                                     }}>
                                         <Users size={24} color="white" />
                                     </div>
-                                    <div>
-                                        <h3 style={{ margin: 0, color: 'white', fontSize: '20px', fontWeight: '900', letterSpacing: '-0.5px' }}>{selectedDriver.name}</h3>
+                                    <div style={{ minWidth: 0 }}>
+                                        <h3 style={{ margin: 0, color: 'white', fontSize: 'clamp(16px, 4vw, 20px)', fontWeight: '900', letterSpacing: '-0.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{selectedDriver.name}</h3>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
                                             <Phone size={12} color="rgba(255,255,255,0.4)" />
                                             <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontWeight: '700' }}>{selectedDriver.mobile}</span>
-                                            {selectedDriver.isFreelancer && <span style={{ fontSize: '10px', background: 'rgba(129, 140, 248, 0.2)', color: '#8bafff', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>FREELANCER</span>}
+                                            {selectedDriver.isFreelancer && <span className="hide-mobile" style={{ fontSize: '10px', background: 'rgba(129, 140, 248, 0.2)', color: '#8bafff', padding: '2px 8px', borderRadius: '6px', fontWeight: '800' }}>FREELANCER</span>}
                                         </div>
                                     </div>
                                 </div>
                                 <button
                                     onClick={() => setShowDriverModal(false)}
-                                    style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                    style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', flexShrink: 0 }}
                                 >
                                     <X size={20} />
                                 </button>
                             </div>
 
                             {/* Modal Body */}
-                            <div style={{ flex: 1, overflowY: 'auto', padding: '30px' }} className="custom-scrollbar">
+                            <div style={{ flex: 1, overflowY: 'auto', padding: 'clamp(15px, 4vw, 30px)' }} className="premium-scroll">
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '25px' }}>
                                     {selectedDriver.attendances && selectedDriver.attendances.length > 0 ? (
                                         selectedDriver.attendances.map((att, idx) => (
@@ -1237,12 +1274,12 @@ const LiveFeed = () => {
                                                 background: 'rgba(255,255,255,0.02)',
                                                 borderRadius: '24px',
                                                 border: '1px solid rgba(255,255,255,0.05)',
-                                                padding: '24px',
+                                                padding: 'clamp(15px, 3vw, 24px)',
                                                 display: 'flex',
                                                 flexDirection: 'column',
                                                 gap: '20px'
                                             }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                         <div style={{ padding: '6px 14px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '10px', color: 'var(--primary)', fontWeight: '900', fontSize: '13px' }}>
                                                             SHIFT #{idx + 1}
@@ -1304,8 +1341,6 @@ const LiveFeed = () => {
                                                     </div>
                                                 </div>
 
-                                                {/* Removed Assign to Event */}
-
                                                 {/* Expenses & Fuel Badges in Modal */}
                                                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                                     {/* Approved Fuel Block */}
@@ -1326,7 +1361,7 @@ const LiveFeed = () => {
                                                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                                 <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>₹{att.fuel.amount}</span>
                                                                 <span style={{ color: '#10b981', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                                                    Verified & Approved <CheckCircle2 size={10} />
+                                                                    Verified <CheckCircle2 size={10} />
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -1350,7 +1385,7 @@ const LiveFeed = () => {
                                                             <div style={{ display: 'flex', flexDirection: 'column' }}>
                                                                 <span style={{ color: 'white', fontSize: '13px', fontWeight: '900' }}>₹{pf.amount}</span>
                                                                 <span style={{ color: 'var(--primary)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px', display: 'flex', alignItems: 'center', gap: '3px' }}>
-                                                                    Admin Approval Pending <Clock size={10} className="pulse-animation" />
+                                                                    Pending <Clock size={10} className="pulse-animation" />
                                                                 </span>
                                                             </div>
                                                         </div>
@@ -1373,32 +1408,32 @@ const LiveFeed = () => {
                                                     )}
                                                 </div>
 
-                                                <div className="livefeed-detail-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                                <div className="grid-2">
                                                     {/* Punch In Details */}
-                                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
+                                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: 'clamp(15px, 2vw, 20px)', borderRadius: '20px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
                                                         <div style={{ fontSize: '10px', color: '#10b981', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                             <LogIn size={12} /> Punch In
                                                         </div>
                                                         <div style={{ marginBottom: '15px' }}>
-                                                            <div style={{ fontSize: '24px', color: 'white', fontWeight: '950' }}>{formatTime(att.punchIn?.time)}</div>
+                                                            <div style={{ fontSize: 'clamp(20px, 4vw, 24px)', color: 'white', fontWeight: '950' }}>{formatTime(att.punchIn?.time)}</div>
                                                             <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Odometer: {att.punchIn?.km || 0} KM</div>
                                                         </div>
                                                         <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                                             {att.punchIn?.kmPhoto && (
                                                                 <div style={{ textAlign: 'center' }}>
-                                                                    <img src={att.punchIn.kmPhoto} onClick={() => setViewerUrl(att.punchIn.kmPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                    <img src={att.punchIn.kmPhoto} onClick={() => setViewerUrl(att.punchIn.kmPhoto)} style={{ width: 'clamp(50px, 12vw, 60px)', height: 'clamp(50px, 12vw, 60px)', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                     <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>METER</div>
                                                                 </div>
                                                             )}
                                                             {att.punchIn?.selfie && (
                                                                 <div style={{ textAlign: 'center' }}>
-                                                                    <img src={att.punchIn.selfie} onClick={() => setViewerUrl(att.punchIn.selfie)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                    <img src={att.punchIn.selfie} onClick={() => setViewerUrl(att.punchIn.selfie)} style={{ width: 'clamp(50px, 12vw, 60px)', height: 'clamp(50px, 12vw, 60px)', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                     <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>DRIVER</div>
                                                                 </div>
                                                             )}
                                                             {(att.punchIn?.carSelfie || att.punchIn?.carPhoto) && (
                                                                 <div style={{ textAlign: 'center' }}>
-                                                                    <img src={att.punchIn.carSelfie || att.punchIn.carPhoto} onClick={() => setViewerUrl(att.punchIn.carSelfie || att.punchIn.carPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                    <img src={att.punchIn.carSelfie || att.punchIn.carPhoto} onClick={() => setViewerUrl(att.punchIn.carSelfie || att.punchIn.carPhoto)} style={{ width: 'clamp(50px, 12vw, 60px)', height: 'clamp(50px, 12vw, 60px)', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                     <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>VEHICLE</div>
                                                                 </div>
                                                             )}
@@ -1406,32 +1441,32 @@ const LiveFeed = () => {
                                                     </div>
 
                                                     {/* Punch Out Details */}
-                                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '20px', borderRadius: '20px', border: '1px solid rgba(244, 63, 94, 0.1)' }}>
+                                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: 'clamp(15px, 2vw, 20px)', borderRadius: '20px', border: '1px solid rgba(244, 63, 94, 0.1)' }}>
                                                         <div style={{ fontSize: '10px', color: '#f43f5e', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                                                             <X size={12} /> Punch Out
                                                         </div>
                                                         {att.punchOut?.time ? (
                                                             <>
                                                                 <div style={{ marginBottom: '15px' }}>
-                                                                    <div style={{ fontSize: '24px', color: 'white', fontWeight: '950' }}>{formatTime(att.punchOut.time)}</div>
+                                                                    <div style={{ fontSize: 'clamp(20px, 4vw, 24px)', color: 'white', fontWeight: '950' }}>{formatTime(att.punchOut.time)}</div>
                                                                     <div style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Odometer: {att.punchOut.km || 0} KM</div>
                                                                 </div>
                                                                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                                                                     {att.punchOut?.kmPhoto && (
                                                                         <div style={{ textAlign: 'center' }}>
-                                                                            <img src={att.punchOut.kmPhoto} onClick={() => setViewerUrl(att.punchOut.kmPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                            <img src={att.punchOut.kmPhoto} onClick={() => setViewerUrl(att.punchOut.kmPhoto)} style={{ width: 'clamp(50px, 12vw, 60px)', height: 'clamp(50px, 12vw, 60px)', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>METER</div>
                                                                         </div>
                                                                     )}
                                                                     {att.punchOut?.selfie && !selectedDriver?.isFreelancer && (
                                                                         <div style={{ textAlign: 'center' }}>
-                                                                            <img src={att.punchOut.selfie} onClick={() => setViewerUrl(att.punchOut.selfie)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                            <img src={att.punchOut.selfie} onClick={() => setViewerUrl(att.punchOut.selfie)} style={{ width: 'clamp(50px, 12vw, 60px)', height: 'clamp(50px, 12vw, 60px)', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>DRIVER</div>
                                                                         </div>
                                                                     )}
                                                                     {(att.punchOut?.carSelfie || att.punchOut?.carPhoto) && (
                                                                         <div style={{ textAlign: 'center' }}>
-                                                                            <img src={att.punchOut.carSelfie || att.punchOut.carPhoto} onClick={() => setViewerUrl(att.punchOut.carSelfie || att.punchOut.carPhoto)} style={{ width: '60px', height: '60px', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+                                                                            <img src={att.punchOut.carSelfie || att.punchOut.carPhoto} onClick={() => setViewerUrl(att.punchOut.carSelfie || att.punchOut.carPhoto)} style={{ width: 'clamp(50px, 12vw, 60px)', height: 'clamp(50px, 12vw, 60px)', borderRadius: '12px', objectFit: 'cover', border: '2px solid rgba(255,255,255,0.1)', cursor: 'pointer' }} />
                                                                             <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', marginTop: '4px', fontWeight: '700' }}>VEHICLE</div>
                                                                         </div>
                                                                     )}
@@ -1630,75 +1665,6 @@ const LiveFeed = () => {
                 }
                 .driver-card-hover:active {
                     transform: translateY(0);
-                }
-
-                /* ---- LIVE FEED MOBILE FIXES ---- */
-                @media (max-width: 768px) {
-                    /* Main wrapper padding */
-                    .livefeed-root {
-                        padding: 20px 15px !important;
-                    }
-                    /* Stats: 2 columns */
-                    .livefeed-stats-grid {
-                        grid-template-columns: repeat(2, 1fr) !important;
-                    }
-                    /* Stat card size */
-                    .livefeed-stats-grid > div {
-                        padding: 16px !important;
-                        border-radius: 18px !important;
-                    }
-                    /* Control bar stacks vertically */
-                    .livefeed-control-bar {
-                        flex-direction: column !important;
-                        padding: 15px !important;
-                        gap: 12px !important;
-                    }
-                    /* Tabs scroll horizontally */
-                    .livefeed-tabs {
-                        overflow-x: auto !important;
-                        width: 100% !important;
-                        padding-bottom: 4px !important;
-                        scrollbar-width: none !important;
-                    }
-                    .livefeed-tabs::-webkit-scrollbar { display: none; }
-                    /* Tabs button smaller */
-                    .livefeed-tabs button {
-                        white-space: nowrap !important;
-                        padding: 8px 14px !important;
-                        font-size: 10px !important;
-                    }
-                    /* Search full width */
-                    .livefeed-control-bar > div:last-child {
-                        width: 100% !important;
-                        max-width: 100% !important;
-                    }
-                    /* Driver cards go 1 column */
-                    .livefeed-cards-grid {
-                        grid-template-columns: 1fr !important;
-                    }
-                    /* Detail modal punch grid: 1 col */
-                    .livefeed-detail-grid {
-                        grid-template-columns: 1fr !important;
-                        gap: 12px !important;
-                    }
-                    /* Duty summary wrap */
-                    .livefeed-duty-summary {
-                        flex-direction: column !important;
-                        gap: 10px !important;
-                    }
-                    .livefeed-duty-summary > div:nth-child(2) {
-                        display: none !important;
-                    }
-                    /* Stat card font sizes */
-                    .livefeed-stats-grid .stat-val {
-                        font-size: 24px !important;
-                    }
-                }
-                @media (max-width: 480px) {
-                    .livefeed-stats-grid {
-                        grid-template-columns: repeat(2, 1fr) !important;
-                        gap: 10px !important;
-                    }
                 }
             `}</style>
 

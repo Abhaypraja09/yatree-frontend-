@@ -19,6 +19,68 @@ import {
 
 const Drivers = ({ isSubComponent = false }) => {
     const { theme } = useTheme();
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            .drivers-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+                padding: 30px 0;
+                gap: 20px;
+            }
+            .mobile-search-row {
+                display: flex;
+                gap: 10px;
+                flex: 1;
+                justify-content: flex-end;
+                flex-wrap: wrap;
+            }
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+            .glass-card {
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(20px);
+                border-radius: 24px;
+            }
+            .hide-mobile { display: block; }
+            .show-mobile { display: none; }
+
+            @media (max-width: 900px) {
+                .drivers-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+                .mobile-search-row {
+                    width: 100%;
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+                .mobile-search-row > div {
+                    max-width: 100% !important;
+                }
+                .stats-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+
+            @media (max-width: 600px) {
+                .stats-grid {
+                    grid-template-columns: 1fr;
+                }
+                .hide-mobile { display: none !important; }
+                .show-mobile { display: block !important; }
+            }
+        `;
+        document.head.appendChild(style);
+        return () => document.head.removeChild(style);
+    }, []);
     const navigate = useNavigate();
     const location = useLocation();
     const { selectedCompany } = useCompany();
@@ -498,13 +560,7 @@ const Drivers = ({ isSubComponent = false }) => {
 
             {/* Header Section */}
             {!isSubComponent && (
-                <header className="flex-resp" style={{
-                    justifyContent: 'space-between',
-                    flexWrap: 'wrap',
-                    gap: '20px',
-                    padding: '30px 0',
-                    marginBottom: '10px'
-                }}>
+                <header className="drivers-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{
                             width: 'clamp(40px, 10vw, 50px)',
@@ -594,13 +650,7 @@ const Drivers = ({ isSubComponent = false }) => {
                 </div>
             )}
 
-            {/* Stats Grid */}
-            <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
-                gap: '20px',
-                marginBottom: '30px'
-            }}>
+            <div className="stats-grid">
                 <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.1 }} className="glass-card" style={{ padding: 'clamp(15px, 2.5vw, 20px)', display: 'flex', alignItems: 'center', gap: '15px', background: 'rgba(255,255,255,0.03)', cursor: 'default' }}>
                     <div style={{ width: '45px', height: '45px', borderRadius: '12px', background: 'rgba(59, 130, 246, 0.1)', color: 'var(--primary)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><UserIcon size={22} /></div>
                     <div>

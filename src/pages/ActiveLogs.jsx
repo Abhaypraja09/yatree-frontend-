@@ -22,6 +22,7 @@ import { useCompany } from '../context/CompanyContext';
 import SEO from '../components/SEO';
 import { todayIST, toISTDateString, formatDateIST, nowIST } from '../utils/istUtils';
 import { ChevronLeft, ChevronRight, ShoppingCart, TrendingUp } from 'lucide-react';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 
 const ActiveLogs = () => {
     const { selectedCompany } = useCompany();
@@ -608,19 +609,12 @@ const ActiveLogs = () => {
 
                                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                                         <div>
-                                            <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Incident Date</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <input
-                                                id="incident-date-picker"
-                                                type="date"
-                                                className="input-field"
+                                            <PremiumDateInput
+                                                label="Incident Date"
                                                 required
                                                 value={formData.date}
-                                                onChange={e => setFormData({ ...formData, date: e.target.value })}
-                                                onClick={(e) => e.target.showPicker()}
-                                                style={{ colorScheme: 'dark', width: '100%', height: '54px', borderRadius: '15px', cursor: 'pointer' }}
+                                                onChange={(v) => setFormData({ ...formData, date: v })}
                                             />
-                                        </div>
                                         </div>
                                         <div>
                                             <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Estimated Recovery Cost</label>

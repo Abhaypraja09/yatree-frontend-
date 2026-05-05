@@ -18,9 +18,95 @@ import {
     formatTimeIST,
     formatDateTimeIST
 } from '../utils/istUtils';
+import PremiumDateInput from '../components/common/PremiumDateInput';
 
 const DriverSalaries = ({ isSubComponent = false }) => {
     const { selectedCompany } = useCompany();
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            .salaries-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+                padding-top: 30px;
+                gap: 20px;
+            }
+            .salaries-controls {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .salaries-tabs {
+                display: flex;
+                gap: 15px;
+                margin-bottom: 25px;
+                overflow-x: auto;
+                padding-bottom: 5px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .salary-tab-btn {
+                padding: 10px 20px;
+                border-radius: 12px;
+                font-weight: 800;
+                font-size: 12px;
+                cursor: pointer;
+                white-space: nowrap;
+                transition: all 0.3s;
+                border: 1px solid rgba(255,255,255,0.05);
+            }
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+            .search-bar-container {
+                display: flex;
+                gap: 15px;
+                margin-bottom: 30px;
+                align-items: center;
+            }
+            .hide-mobile { display: block; }
+            .show-mobile { display: none; }
+
+            @media (max-width: 1024px) {
+                .salaries-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+                .salaries-controls {
+                    width: 100%;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .search-bar-container {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+                .stats-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .hide-mobile { display: none !important; }
+                .show-mobile { display: block !important; }
+            }
+
+            @media (max-width: 480px) {
+                .stats-grid {
+                    grid-template-columns: 1fr;
+                }
+                .salary-tab-btn {
+                    padding: 8px 15px;
+                    font-size: 11px;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        return () => document.head.removeChild(style);
+    }, []);
     const [salaries, setSalaries] = useState([]);
     const [loading, setLoading] = useState(true);
     const location = useLocation();
@@ -839,7 +925,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
             {/* Header */}
             {!isSubComponent && (
-                <header className="flex-resp" style={{ justifyContent: 'space-between', flexWrap: 'wrap', gap: '20px', padding: '30px 0', marginBottom: '10px' }}>
+                <header className="salaries-header">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                         <div style={{ width: 'clamp(40px,10vw,50px)', height: 'clamp(40px,10vw,50px)', background: 'linear-gradient(135deg, white, #f8fafc)', borderRadius: '16px', padding: '8px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 25px rgba(0,0,0,0.2)' }}>
                             <IndianRupee size={28} color="var(--primary)" />
@@ -855,7 +941,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         </div>
                     </div>
 
-                    <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div className="salaries-controls">
                         {/* MONTH SELECTOR */}
                         <div style={{ 
                             display: 'flex', 
@@ -921,7 +1007,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                             <Search size={18} style={{ margin: '0 15px', color: 'rgba(255,255,255,0.4)' }} />
                             <input type="text" placeholder="Search..." value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{ background: 'transparent', border: 'none', color: 'white', height: '100%', outline: 'none', width: '150px' }} />
+                                style={{ background: 'transparent', border: 'none', color: 'white', height: '100%', outline: 'none', width: '120px' }} />
                         </div>
                         <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.05)', padding: '6px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.08)' }}>
                             <button
@@ -929,21 +1015,21 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                 className="btn-primary"
                                 style={{ height: '38px', padding: '0 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', background: 'rgba(244, 63, 94, 0.15)', color: '#f43f5e', border: 'none' }}
                             >
-                                <TrendingDown size={14} /> ADVANCE
+                                <TrendingDown size={14} /> <span className="hide-mobile">ADVANCE</span><span className="show-mobile">ADV</span>
                             </button>
                             <button
                                 onClick={() => { setEditingLoanId(null); setLoanFormData({ driverId: '', totalAmount: '', tenureMonths: '', monthlyEMI: '', remarks: '' }); setShowLoanModal(true); }}
                                 className="btn-primary"
                                 style={{ height: '38px', padding: '0 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', background: 'rgba(99, 102, 241, 0.15)', color: '#818cf8', border: 'none' }}
                             >
-                                <Wallet size={14} /> LOAN
+                                <Wallet size={14} /> <span className="hide-mobile">LOAN</span><span className="show-mobile">LOAN</span>
                             </button>
                             <button
                                 onClick={() => { setEditingAllowanceId(null); setAllowanceFormData({ driverId: '', amount: '', date: todayIST(), remark: '', type: 'Other' }); setShowAllowanceModal(true); }}
                                 className="btn-primary"
                                 style={{ height: '38px', padding: '0 15px', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '800', background: 'rgba(16, 185, 129, 0.15)', color: '#10b981', border: 'none' }}
                             >
-                                <Plus size={14} /> ADDITIONAL PAYMENT
+                                <Plus size={14} /> <span className="hide-mobile">SPECIAL PAY</span><span className="show-mobile">PAY</span>
                             </button>
                         </div>
                     </div>
@@ -1044,7 +1130,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 </div>
             )}
             {/* SUMMARY CARDS - ACTING AS NAVIGATION */}
-            <div style={{ display: 'flex', gap: '15px', marginBottom: '30px', flexWrap: 'wrap' }}>
+            <div className="stats-grid">
                 <div 
                     onClick={() => setActiveTab('payroll')}
                     className={`glass-card ${activeTab === 'payroll' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
@@ -1507,6 +1593,69 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                 </tbody>
                             </table>
                         </div>
+                        <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            {filteredLoans.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
+                                    <p>No active loans found.</p>
+                                </div>
+                            ) : filteredLoans.map(loan => (
+                                <div key={loan._id} className="glass-card" style={{ padding: '20px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '14px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '15px' }}>
+                                        <div>
+                                            <div style={{ fontWeight: '800', color: 'white', fontSize: '16px' }}>{loan.driver?.name}</div>
+                                            <div style={{ fontSize: '12px', color: 'var(--text-muted)' }}>{loan.driver?.mobile}</div>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <span style={{
+                                                padding: '3px 8px', borderRadius: '4px', fontSize: '10px', fontWeight: '900',
+                                                background: loan.status === 'Active' ? 'rgba(16,185,129,0.1)' : 'rgba(244,63,94,0.1)',
+                                                color: loan.status === 'Active' ? '#10b981' : '#f43f5e'
+                                            }}>
+                                                {loan.status?.toUpperCase()}
+                                            </span>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '15px' }}>
+                                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '10px' }}>
+                                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>Loan Amount</div>
+                                            <div style={{ color: 'white', fontWeight: '800', fontSize: '15px' }}>₹{loan.totalAmount?.toLocaleString()}</div>
+                                        </div>
+                                        <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '10px' }}>
+                                            <div style={{ fontSize: '10px', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '800' }}>Monthly EMI</div>
+                                            <div style={{ color: 'var(--primary)', fontWeight: '800', fontSize: '15px' }}>₹{loan.monthlyEMI?.toLocaleString()}</div>
+                                        </div>
+                                        <div style={{ background: 'rgba(244, 63, 94, 0.05)', padding: '10px', borderRadius: '10px', gridColumn: 'span 2', border: '1px solid rgba(244, 63, 94, 0.1)' }}>
+                                            <div style={{ fontSize: '10px', color: '#f43f5e', textTransform: 'uppercase', fontWeight: '800' }}>Remaining Balance</div>
+                                            <div style={{ color: '#f43f5e', fontWeight: '900', fontSize: '18px' }}>
+                                                {(() => {
+                                                    const sDate = new Date(loan.startDate);
+                                                    const sVal = (sDate.getFullYear() * 12) + (sDate.getMonth() + 1);
+                                                    const currentMonthNum = Number(month);
+                                                    const calendarYear = (currentMonthNum >= 1 && currentMonthNum <= 3) ? year + 1 : year;
+                                                    const selVal = (parseInt(calendarYear) * 12) + parseInt(currentMonthNum);
+                                                    const mIdx = month === 'All' ? null : (selVal - sVal) + 1;
+                                                    
+                                                    if (mIdx === null) return `₹ ${loan.remainingAmount?.toLocaleString()}`;
+                                                    const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * (mIdx - 1)));
+                                                    return `₹ ${histRem.toLocaleString()}`;
+                                                })()}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>
+                                            Period: <span style={{ color: 'white', fontWeight: '700' }}>{formatDateIST(loan.startDate)}</span>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: '10px' }}>
+                                            <button onClick={() => handleEditLoan(loan)} style={{ background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', border: 'none', padding: '8px', borderRadius: '8px' }}><Edit2 size={16} /></button>
+                                            <button onClick={() => handleDeleteLoan(loan._id)} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', padding: '8px', borderRadius: '8px' }}><Trash2 size={16} /></button>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
                     </motion.div>
                 )}
 
@@ -1559,7 +1708,30 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                             </tbody>
                         </table>
                     </div>
-                </motion.div>
+                    <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            {filteredAllowances.length === 0 ? (
+                                <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
+                                    <p>No special payments found.</p>
+                                </div>
+                            ) : filteredAllowances.map(al => (
+                                <div key={al._id} className="glass-card" style={{ padding: '16px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '14px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                                        <div style={{ fontWeight: '800', color: 'white' }}>{al.driver?.name}</div>
+                                        <div style={{ color: '#10b981', fontWeight: '900' }}>₹{al.amount?.toLocaleString()}</div>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{formatDateIST(al.date)}</div>
+                                        <span style={{ fontSize: '9px', padding: '3px 8px', borderRadius: '4px', background: 'rgba(16,185,129,0.1)', color: '#10b981', fontWeight: '800' }}>{al.type?.toUpperCase()}</span>
+                                    </div>
+                                    {al.remark && <p style={{ margin: '0 0 10px', fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>"{al.remark}"</p>}
+                                    <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+                                        <button onClick={() => handleEditAllowance(al)} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '6px 12px', borderRadius: '6px', fontSize: '11px' }}>EDIT</button>
+                                        <button onClick={() => handleDeleteAllowance(al._id)} style={{ background: 'rgba(244,63,94,0.1)', border: 'none', color: '#f43f5e', padding: '6px 12px', borderRadius: '6px', fontSize: '11px' }}>DELETE</button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    </motion.div>
                 )}
             </AnimatePresence>
 
@@ -1593,25 +1765,18 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         ))}
                                     </select>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div className="modal-form-grid" style={{ marginBottom: '0' }}>
                                     <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Amount</label>
-                                        <input type="number" className="input-field" required value={advanceFormData.amount} onChange={(e) => setAdvanceFormData({ ...advanceFormData, amount: e.target.value })} style={{ width: '100%', height: '50px' }} placeholder="₹ 0" />
+                                        <input type="number" className="input-field" required value={advanceFormData.amount} onChange={(e) => setAdvanceFormData({ ...advanceFormData, amount: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="₹ 0" />
                                     </div>
                                     <div>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Date</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <input
-                                                id="advance-date-picker"
-                                                type="date"
-                                                className="input-field"
-                                                required
-                                                value={advanceFormData.date}
-                                                onChange={(e) => setAdvanceFormData({ ...advanceFormData, date: e.target.value })}
-                                                onClick={(e) => e.target.showPicker()}
-                                                style={{ colorScheme: 'dark', width: '100%', height: '50px', background: '#1e293b', color: 'white', cursor: 'pointer' }}
-                                            />
-                                        </div>
+                                        <PremiumDateInput
+                                            label="Date"
+                                            required
+                                            value={advanceFormData.date}
+                                            onChange={(v) => setAdvanceFormData({ ...advanceFormData, date: v })}
+                                        />
                                     </div>
                                 </div>
                                 <div>
@@ -1664,25 +1829,18 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         ))}
                                     </select>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                <div className="modal-form-grid" style={{ marginBottom: '0' }}>
                                     <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Amount</label>
                                         <input type="number" className="input-field" required value={allowanceFormData.amount} onChange={(e) => setAllowanceFormData({ ...allowanceFormData, amount: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="₹ 0" />
                                     </div>
                                     <div>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Date</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <input
-                                                id="allowance-date-picker"
-                                                type="date"
-                                                className="input-field"
-                                                required
-                                                value={allowanceFormData.date}
-                                                onChange={(e) => setAllowanceFormData({ ...allowanceFormData, date: e.target.value })}
-                                                onClick={(e) => e.target.showPicker()}
-                                                style={{ colorScheme: 'dark', width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                            />
-                                        </div>
+                                        <PremiumDateInput
+                                            label="Date"
+                                            required
+                                            value={allowanceFormData.date}
+                                            onChange={(v) => setAllowanceFormData({ ...allowanceFormData, date: v })}
+                                        />
                                     </div>
                                 </div>
                                 <div>
@@ -2063,31 +2221,24 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                         ))}
                                     </select>
                                 </div>
-                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '15px' }}>
-                                    <div style={{ gridColumn: 'span 1' }}>
-                                        <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Loan Date</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <input
-                                                id="loan-date-picker"
-                                                type="date"
-                                                className="input-field"
-                                                required
-                                                value={loanFormData.startDate}
-                                                onChange={(e) => setLoanFormData({ ...loanFormData, startDate: e.target.value })}
-                                                onClick={(e) => e.target.showPicker()}
-                                                style={{ colorScheme: 'dark', width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 10px', fontSize: '12px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer' }}
-                                            />
-                                        </div>
+                                <div className="modal-form-grid" style={{ marginBottom: '0' }}>
+                                    <div>
+                                        <PremiumDateInput
+                                            label="Loan Date"
+                                            required
+                                            value={loanFormData.startDate}
+                                            onChange={(v) => setLoanFormData({ ...loanFormData, startDate: v })}
+                                        />
                                     </div>
-                                    <div style={{ gridColumn: 'span 1' }}>
+                                    <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Total Loan</label>
                                         <input type="number" className="input-field" required value={loanFormData.totalAmount} onChange={(e) => setLoanFormData({ ...loanFormData, totalAmount: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="₹ 0" />
                                     </div>
-                                    <div style={{ gridColumn: 'span 1' }}>
+                                    <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Months</label>
                                         <input type="number" className="input-field" required value={loanFormData.tenureMonths} onChange={(e) => setLoanFormData({ ...loanFormData, tenureMonths: e.target.value })} style={{ width: '100%', height: '50px', background: '#1e293b', color: 'white', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)' }} placeholder="E.g. 12" />
                                     </div>
-                                    <div style={{ gridColumn: 'span 1' }}>
+                                    <div>
                                         <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>EMI</label>
                                         <input type="number" className="input-field" readOnly value={loanFormData.monthlyEMI} style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.05)', color: 'var(--primary)', borderRadius: '12px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.1)', cursor: 'not-allowed', fontWeight: '800' }} placeholder="₹ 0" />
                                     </div>

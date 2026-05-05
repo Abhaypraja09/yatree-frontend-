@@ -739,50 +739,91 @@ const EventManagement = () => {
         <div className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Event Command Center" description="Unified tracking for company and external vehicles assigned to events." />
 
-            {/* ═══ PREMIUM HERO HEADER ═══ */}
-            <div style={{ position: 'relative', padding: 'clamp(20px, 5vw, 40px) 0 20px', marginBottom: '24px' }}>
-                {/* Ambient dynamic background elements */}
-                <div style={{ position: 'absolute', top: -40, right: '0%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(251,191,36,0.08) 0%, transparent 70%)', pointerEvents: 'none', filter: 'blur(40px)' }} className="hide-mobile" />
-
-                <div className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', gap: '30px', position: 'relative' }}>
-                    {/* Title Block */}
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(15px, 3vw, 24px)' }}>
-                        <div style={{
-                            width: 'clamp(50px, 12vw, 68px)', height: 'clamp(50px, 12vw, 68px)',
-                            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
-                            borderRadius: '16px',
-                            display: 'flex', alignItems: 'center', justifyContent: 'center',
-                            boxShadow: '0 12px 30px rgba(0,0,0,0.4)',
-                            border: '1px solid rgba(251,191,36,0.2)',
-                            flexShrink: 0
-                        }}>
-                            <motion.div animate={{ rotate: [0, 5, -5, 0] }} transition={{ duration: 5, repeat: Infinity }}>
-                                <Briefcase size={28} color="var(--primary)" strokeWidth={1.5} />
-                            </motion.div>
+            {/* ═══ PREMIUM DYNAMIC HEADER ═══ */}
+            <div className="header-top" style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                gap: 'clamp(20px, 4vw, 40px)',
+                marginBottom: 'clamp(30px, 5vw, 48px)',
+                flexWrap: 'wrap'
+            }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(12px, 3vw, 20px)' }}>
+                    <div style={{
+                        width: 'clamp(56px, 12vw, 72px)',
+                        height: 'clamp(56px, 12vw, 72px)',
+                        background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+                        borderRadius: 'clamp(14px, 3vw, 22px)',
+                        display: 'flex',
+                        justifyContent: 'center',
+                        alignItems: 'center',
+                        boxShadow: '0 20px 40px rgba(0,0,0,0.3), inset 0 1px 1px rgba(255,255,255,0.1)',
+                        border: '1px solid rgba(255,255,255,0.05)',
+                        position: 'relative',
+                        flexShrink: 0
+                    }}>
+                        <div style={{ position: 'absolute', inset: 0, borderRadius: 'inherit', background: `radial-gradient(circle at 30% 30%, var(--primary)33, transparent 70%)` }}></div>
+                        <Target size={32} color="var(--primary)" style={{ filter: `drop-shadow(0 0 10px var(--primary)66)` }} />
+                    </div>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                            <div className="pulse-dot"></div>
+                            <span className="label-text">Mission Control</span>
                         </div>
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
-                                <div className="pulse-dot" />
-                                <span style={{ fontSize: '10px', fontWeight: '900', color: 'var(--primary)', letterSpacing: '2px', textTransform: 'uppercase' }}>Command Center</span>
-                            </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 6vw, 42px)', fontWeight: '950', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
-                                Event<span style={{ background: 'linear-gradient(90deg,var(--primary),var(--primary))', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}> Logistics</span>
-                            </h1>
+                        <h1 className="main-title">
+                            Event <span className="text-gradient-yellow">Logistics</span>
+                        </h1>
+                    </div>
+                </div>
 
-                            {/* PREMIUM MONTH SELECTOR */}
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '15px' }}>
-                                {/* Arrow-based month shifter removed as requested */}
+                <div className="flex-resp" style={{ flex: 1, justifyContent: 'flex-end', width: '100%', gap: '16px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '200px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <span className="label-text" style={{ color: 'var(--primary)' }}>Master Phase: {selectedMonth + 1}/{selectedYear}</span>
+                            <div className="calendar-controls">
+                                <button onClick={() => shiftMonth(-1)} className="shift-btn"><ChevronLeft size={16} /></button>
+                                <button onClick={() => shiftMonth(1)} className="shift-btn"><ChevronRight size={16} /></button>
+                                
+                                {selectedDay !== 'All' && (
+                                    <motion.button
+                                        whileHover={{ background: 'rgba(251,191,36,0.2)' }}
+                                        onClick={() => setSelectedDay('All')}
+                                        style={{
+                                            padding: '0 12px',
+                                            height: '36px',
+                                            borderRadius: '10px',
+                                            background: 'rgba(251,191,36,0.1)',
+                                            border: 'none',
+                                            color: 'var(--primary)',
+                                            fontSize: '11px',
+                                            fontWeight: '950',
+                                            cursor: 'pointer',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: '8px'
+                                        }}
+                                    >
+                                        <Calendar size={14} /> Full Month
+                                    </motion.button>
+                                )}
+
                                 <select
                                     value={selectedMonth}
-                                    onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
-                                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'white', height: '38px', borderRadius: '12px', padding: '0 10px', outline: 'none', fontWeight: '800', fontSize: '12px', cursor: 'pointer' }}
+                                    onChange={(e) => {
+                                        setSelectedMonth(parseInt(e.target.value));
+                                        setSelectedDay('All');
+                                    }}
+                                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'white', height: '36px', borderRadius: '10px', padding: '0 8px', outline: 'none', fontWeight: '800', fontSize: '11px', cursor: 'pointer' }}
                                 >
                                     {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => <option key={m} value={i} style={{ background: '#0a0f1d' }}>{m}</option>)}
                                 </select>
                                 <select
                                     value={selectedYear}
-                                    onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'white', height: '38px', borderRadius: '12px', padding: '0 10px', outline: 'none', fontWeight: '800', fontSize: '12px', cursor: 'pointer' }}
+                                    onChange={(e) => {
+                                        setSelectedYear(parseInt(e.target.value));
+                                        setSelectedDay('All');
+                                    }}
+                                    style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'white', height: '36px', borderRadius: '10px', padding: '0 8px', outline: 'none', fontWeight: '800', fontSize: '11px', cursor: 'pointer' }}
                                 >
                                     {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0a0f1d' }}>{y}</option>)}
                                 </select>
@@ -791,48 +832,57 @@ const EventManagement = () => {
                     </div>
 
                     {/* Stats Grid - High Fidelity */}
-                    <div className="stats-grid" style={{ flex: '1', maxWidth: '750px', width: '100%' }}>
+                    <div className="stats-grid" style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+                        gap: '12px', 
+                        flex: '1', 
+                        maxWidth: '600px', 
+                        width: '100%' 
+                    }}>
                         {[
                             { label: 'Total Duties', value: totalDuties, color: 'var(--primary)', icon: <TruckIcon size={18} /> },
-                            { label: 'Total Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', icon: <Target size={18} /> },
+                            { label: 'Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', icon: <Target size={18} /> },
                             { label: 'Fleet', value: fleetCount, color: '#38bdf8', icon: <Car size={18} /> },
                             { label: 'External', value: extCount, color: '#a855f7', icon: <Users size={18} /> },
                         ].map((s, i) => (
                             <motion.div key={s.label}
-                                initial={{ opacity: 0, y: 15 }}
+                                initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: i * 0.1 }}
+                                transition={{ delay: i * 0.05 }}
                                 style={{
-                                    padding: '16px', borderRadius: '20px',
+                                    padding: '12px 16px', borderRadius: '16px',
                                     background: 'rgba(15, 23, 42, 0.4)',
                                     border: `1px solid rgba(255,255,255,0.05)`,
                                     borderLeft: `3px solid ${s.color}`,
-                                    display: 'flex', flexDirection: 'column', gap: '8px',
-                                    boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
+                                    display: 'flex', flexDirection: 'column', gap: '4px',
+                                    boxShadow: '0 10px 20px rgba(0,0,0,0.1)'
                                 }}
                             >
                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{s.label}</span>
-                                    <div style={{ color: s.color, opacity: 0.6 }}>{s.icon}</div>
+                                    <span style={{ fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{s.label}</span>
+                                    <div style={{ color: s.color, opacity: 0.5 }}>{s.icon}</div>
                                 </div>
-                                <span style={{ color: 'white', fontSize: '20px', fontWeight: '900' }}>{s.value}</span>
+                                <span style={{ color: 'white', fontSize: '16px', fontWeight: '900' }}>{s.value}</span>
                             </motion.div>
                         ))}
                     </div>
                 </div>
             </div>
+
             {/* ═══ PREMIUM STATUS NAVIGATION ═══ */}
-            <div style={{
+            <div className="status-nav" style={{
                 position: 'relative',
-                marginBottom: '40px',
-                padding: '12px',
+                marginBottom: 'clamp(24px, 5vw, 40px)',
+                padding: 'clamp(8px, 2vw, 12px)',
                 background: 'rgba(15, 23, 42, 0.45)',
-                borderRadius: '30px',
+                borderRadius: 'clamp(20px, 4vw, 30px)',
                 border: '1px solid rgba(255,255,255,0.06)',
                 display: 'flex',
-                gap: '12px',
+                gap: 'clamp(8px, 2vw, 12px)',
                 backdropFilter: 'blur(30px)',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.3)'
+                boxShadow: '0 20px 40px rgba(0,0,0,0.3)',
+                flexWrap: 'wrap'
             }}>
                 {[
                     { id: 'Start', label: 'Upcoming', color: '#10b981', icon: <Navigation size={20} />, count: filteredMasterByDate.filter(e => e.visualStatus === 'Upcoming').length },
@@ -844,8 +894,9 @@ const EventManagement = () => {
                         onClick={() => setStatusTab(t.id)}
                         style={{
                             flex: 1,
-                            padding: '16px 20px',
-                            borderRadius: '20px',
+                            minWidth: 'clamp(140px, 30vw, 200px)',
+                            padding: 'clamp(12px, 3vw, 16px)',
+                            borderRadius: 'clamp(14px, 3vw, 20px)',
                             border: 'none',
                             background: statusTab === t.id ? 'rgba(255,255,255,0.05)' : 'transparent',
                             color: statusTab === t.id ? 'white' : 'rgba(255,255,255,0.3)',
@@ -854,15 +905,15 @@ const EventManagement = () => {
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            gap: '12px',
+                            gap: 'clamp(8px, 2vw, 12px)',
                             position: 'relative',
                             overflow: 'hidden'
                         }}
                     >
                         <div style={{
-                            width: '44px',
-                            height: '44px',
-                            borderRadius: '14px',
+                            width: 'clamp(36px, 10vw, 44px)',
+                            height: 'clamp(36px, 10vw, 44px)',
+                            borderRadius: 'clamp(10px, 3vw, 14px)',
                             background: statusTab === t.id ? `${t.color}25` : 'rgba(255,255,255,0.03)',
                             display: 'flex',
                             alignItems: 'center',
@@ -870,11 +921,12 @@ const EventManagement = () => {
                             color: statusTab === t.id ? t.color : 'rgba(255,255,255,0.4)',
                             transition: '0.3s',
                             boxShadow: statusTab === t.id ? `0 0 15px ${t.color}30` : 'none',
-                            position: 'relative'
+                            position: 'relative',
+                            flexShrink: 0
                         }}>
                             {t.id === 'Running' && statusTab === 'Running' && (
                                 <div style={{
-                                    position: 'absolute', top: '-2px', right: '-2px', width: '10px', height: '10px',
+                                    position: 'absolute', top: '-2px', right: '-2px', width: '8px', height: '8px',
                                     background: 'var(--primary)', borderRadius: '50%', border: '2px solid #0a0f1d',
                                     animation: 'pulse 1.5s infinite'
                                 }} />
@@ -882,9 +934,9 @@ const EventManagement = () => {
                             {t.icon}
                         </div>
                         <div style={{ textAlign: 'left' }}>
-                            <div style={{ fontSize: '15px', fontWeight: '950', letterSpacing: '-0.2px' }}>{t.label}</div>
-                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.25)', fontWeight: '800', marginTop: '3px', textTransform: 'uppercase' }}>
-                                {t.count} {t.count === 1 ? 'Event' : 'Events'} logged
+                            <div style={{ fontSize: 'clamp(13px, 3vw, 15px)', fontWeight: '950', letterSpacing: '-0.2px' }}>{t.label}</div>
+                            <div style={{ fontSize: 'clamp(8px, 2vw, 10px)', color: 'rgba(255,255,255,0.25)', fontWeight: '800', marginTop: '2px', textTransform: 'uppercase' }}>
+                                {t.count} {t.count === 1 ? 'Event' : 'Events'}
                             </div>
                         </div>
                         {statusTab === t.id && (
@@ -902,7 +954,7 @@ const EventManagement = () => {
                 alignItems: 'center',
                 flexWrap: 'wrap'
             }}>
-                <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}>
+                <div style={{ position: 'relative', flex: 1, minWidth: 'clamp(280px, 100%, 400px)' }}>
                     <Search style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} size={18} />
                     <input
                         className="premium-input-event"
@@ -910,7 +962,7 @@ const EventManagement = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         style={{
-                            width: '100%', height: '60px', borderRadius: '20px', background: 'rgba(15, 23, 42, 0.4)',
+                            width: '100%', height: '56px', borderRadius: '18px', background: 'rgba(15, 23, 42, 0.4)',
                             border: '1px solid rgba(255,255,255,0.06)', padding: '0 20px 0 55px', color: 'white',
                             fontSize: '14px', fontWeight: '600', outline: 'none', transition: '0.3s',
                             boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
@@ -918,7 +970,7 @@ const EventManagement = () => {
                     />
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div className="flex-resp" style={{ display: 'flex', gap: '12px', width: 'auto' }}>
                     {statusTab !== 'Close' && (
                         <button onClick={() => {
                             setIsEditingEvent(false);
@@ -932,13 +984,14 @@ const EventManagement = () => {
                         }}
                             className="primary-btn-premium"
                             style={{
-                                height: '60px', padding: '0 32px', borderRadius: '20px', border: 'none', cursor: 'pointer',
+                                height: '56px', padding: '0 24px', borderRadius: '18px', border: 'none', cursor: 'pointer',
                                 background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)', color: 'black',
-                                fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '12px',
-                                boxShadow: '0 10px 30px rgba(251,191,36,0.25)', transition: '0.3s', letterSpacing: '0.5px'
+                                fontSize: '13px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px',
+                                boxShadow: '0 10px 30px rgba(251,191,36,0.2)', transition: '0.3s', letterSpacing: '0.5px',
+                                flex: 1, whiteSpace: 'nowrap'
                             }}
                         >
-                            <PlusCircle size={22} strokeWidth={2.5} /> NEW MISSION
+                            <PlusCircle size={20} strokeWidth={2.5} /> NEW MISSION
                         </button>
                     )}
                     {statusTab !== 'Start' && (
@@ -950,24 +1003,24 @@ const EventManagement = () => {
                             setShowDutyModal(true);
                         }}
                             style={{
-                                height: '60px', padding: '0 28px', borderRadius: '20px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.05)',
-                                color: '#10b981', fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '12px',
-                                cursor: 'pointer', transition: '0.3s', letterSpacing: '0.5px'
+                                height: '56px', padding: '0 20px', borderRadius: '18px', border: '1px solid rgba(16,185,129,0.2)', background: 'rgba(16,185,129,0.05)',
+                                color: '#10b981', fontSize: '13px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px',
+                                cursor: 'pointer', transition: '0.3s', letterSpacing: '0.5px', flex: 1, whiteSpace: 'nowrap'
                             }}
                         >
-                            <Car size={22} strokeWidth={2.5} /> Add Vehicle
+                            <Car size={20} strokeWidth={2.5} /> Add Vehicle
                         </button>
                     )}
                     {statusTab === 'Close' && (
                         <button onClick={exportExcel}
                             style={{
-                                height: '60px', padding: '0 24px', borderRadius: '20px', border: '1px solid rgba(56,189,248,0.2)', background: 'rgba(56,189,248,0.05)',
-                                color: '#38bdf8', fontSize: '14px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '12px',
-                                cursor: 'pointer', transition: '0.3s', letterSpacing: '0.5px'
+                                height: '56px', padding: '0 18px', borderRadius: '18px', border: '1px solid rgba(56,189,248,0.2)', background: 'rgba(56,189,248,0.05)',
+                                color: '#38bdf8', fontSize: '13px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px',
+                                cursor: 'pointer', transition: '0.3s', letterSpacing: '0.5px', flex: 1
                             }}
                             title="Export all completed duties to Excel"
                         >
-                            <Download size={22} strokeWidth={2.5} /> EXCEL
+                            <Download size={20} strokeWidth={2.5} /> EXCEL
                         </button>
                     )}
                 </div>
@@ -977,14 +1030,14 @@ const EventManagement = () => {
             <div className="event-list" style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '16px',
+                gap: 'clamp(12px, 3vw, 16px)',
                 marginBottom: '40px'
             }}>
                 {events.length === 0 ? (
-                    <div style={{ padding: '80px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '32px', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                    <div style={{ padding: 'clamp(40px, 8vw, 80px)', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.1)' }}>
                         <Target size={48} style={{ opacity: 0.1, marginBottom: '16px' }} />
-                        <h3 style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>No {statusTab} Events Found</h3>
-                        <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '14px' }}>Search returned no matching master records.</p>
+                        <h3 style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '800', fontSize: 'clamp(16px, 4vw, 20px)' }}>No {statusTab} Events Found</h3>
+                        <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: '13px' }}>Search returned no matching master records.</p>
                     </div>
                 ) : events.filter(e => {
                     if (searchTerm) return e.name.toLowerCase().includes(searchTerm.toLowerCase()) || e.client.toLowerCase().includes(searchTerm.toLowerCase());
@@ -996,103 +1049,105 @@ const EventManagement = () => {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.05 }}
                         onClick={() => fetchEventDetails(ev._id)}
+                        className="event-row event-row-hover"
                         style={{
                             background: 'rgba(15, 23, 42, 0.4)',
                             border: '1px solid rgba(255,255,255,0.06)',
-                            borderRadius: '24px',
-                            padding: '16px 24px',
+                            borderRadius: 'clamp(18px, 4vw, 24px)',
+                            padding: 'clamp(16px, 4vw, 20px) clamp(20px, 5vw, 24px)',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '24px',
+                            gap: 'clamp(16px, 4vw, 24px)',
                             transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)',
                             backdropFilter: 'blur(20px)',
                             position: 'relative',
-                            boxShadow: '0 4px 20px rgba(0,0,0,0.15)'
+                            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+                            overflow: 'hidden'
                         }}
-                        className="event-row-hover"
                     >
                         {/* 1. Date Block */}
                         {statusTab !== 'Start' && (
-                            <div style={{
-                                width: '80px', padding: '10px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)',
+                            <div className="date-block" style={{
+                                width: 'clamp(60px, 15vw, 80px)', padding: '10px', borderRadius: '16px', background: 'rgba(255,255,255,0.03)',
                                 border: '1px solid rgba(255,255,255,0.06)', textAlign: 'center', flexShrink: 0
                             }}>
-                                <div style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '950', letterSpacing: '1px', textTransform: 'uppercase' }}>{new Date(ev.date).toLocaleDateString('en-IN', { month: '2-digit' }) === 'Invalid Date' ? '--' : new Date(ev.date).toLocaleDateString('en-IN', { month: 'short' })}</div>
-                                <div style={{ fontSize: '22px', color: 'white', fontWeight: '950', lineHeight: 1 }}>{new Date(ev.date).getDate()}</div>
-                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{new Date(ev.date).getFullYear()}</div>
+                                <div style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: '950', letterSpacing: '1px', textTransform: 'uppercase' }}>{new Date(ev.date).toLocaleDateString('en-IN', { month: '2-digit' }) === 'Invalid Date' ? '--' : new Date(ev.date).toLocaleDateString('en-IN', { month: 'short' })}</div>
+                                <div style={{ fontSize: 'clamp(20px, 5vw, 24px)', color: 'white', fontWeight: '950', lineHeight: 1 }}>{new Date(ev.date).getDate()}</div>
+                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{new Date(ev.date).getFullYear()}</div>
                             </div>
-                        )}                        {/* 2. Event Body */}
-                        <div style={{ flex: 1 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-                                <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '950', margin: 0, letterSpacing: '-0.5px' }}>{ev.name}</h3>
-                                <div style={{
-                                    padding: '4px 12px', borderRadius: '10px', fontSize: '9px', fontWeight: '900',
+                        )}
+
+                        {/* 2. Event Body */}
+                        <div className="event-body" style={{ flex: 1 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px', flexWrap: 'wrap' }}>
+                                <h3 style={{ color: 'white', fontSize: 'clamp(16px, 4vw, 18px)', fontWeight: '950', margin: 0, letterSpacing: '-0.3px' }}>{ev.name}</h3>
+                                <div className="status-badge" style={{
+                                    padding: '3px 10px', borderRadius: '8px', fontSize: '8px', fontWeight: '900',
                                     background: ev.visualStatus === 'Running' ? 'rgba(251,191,36,0.1)' : ev.visualStatus === 'Upcoming' ? 'rgba(16,185,129,0.1)' : 'rgba(248,113,113,0.1)',
                                     color: ev.visualStatus === 'Running' ? 'var(--primary)' : ev.visualStatus === 'Upcoming' ? '#10b981' : '#f87171',
                                     border: `1px solid ${ev.visualStatus === 'Running' ? 'rgba(251,191,36,0.2)' : ev.visualStatus === 'Upcoming' ? 'rgba(16,185,129,0.2)' : 'rgba(248,113,113,0.2)'}`,
-                                    textTransform: 'uppercase', letterSpacing: '1px'
+                                    textTransform: 'uppercase', letterSpacing: '0.5px'
                                 }}>
                                     {ev.visualStatus === 'Running' ? 'LIVE NOW' : ev.visualStatus.toUpperCase()}
                                 </div>
                             </div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '700' }}>
-                                    <Briefcase size={14} /> {ev.client}
+                                    <Briefcase size={14} color="var(--primary)" /> {ev.client}
                                 </div>
                                 {ev.location && (
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.3)', fontSize: '13px', fontWeight: '600' }}>
-                                        <MapPin size={14} /> {ev.location}
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.25)', fontSize: '13px', fontWeight: '600' }}>
+                                        <MapPin size={14} color="#f87171" /> {ev.location}
                                     </div>
                                 )}
                             </div>
                         </div>
 
                         {/* 3. Resource Matrix */}
-                        <div style={{ display: 'flex', gap: '32px', alignItems: 'center' }}>
+                        <div className="resource-matrix" style={{ display: 'flex', gap: '24px', alignItems: 'center', padding: '0 24px', borderLeft: '1px solid rgba(255,255,255,0.06)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
                             <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '4px', letterSpacing: '1px' }}>FLEET</div>
-                                <div style={{ color: '#38bdf8', fontSize: '18px', fontWeight: '950' }}>{ev.fleetCount || 0} <span style={{ fontSize: '10px', opacity: 0.35 }}>CARS</span></div>
+                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px', letterSpacing: '0.5px' }}>FLEET</div>
+                                <div style={{ color: '#38bdf8', fontSize: '16px', fontWeight: '950' }}>{ev.fleetCount || 0}</div>
                             </div>
-                            <div style={{ width: '1px', background: 'rgba(255,255,255,0.06)', height: '30px' }} />
                             <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '4px', letterSpacing: '1px' }}>EXTERNAL</div>
-                                <div style={{ color: '#a855f7', fontSize: '18px', fontWeight: '950' }}>{ev.externalCount || 0} <span style={{ fontSize: '10px', opacity: 0.35 }}>CARS</span></div>
+                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px', letterSpacing: '0.5px' }}>EXTERNAL</div>
+                                <div style={{ color: '#a855f7', fontSize: '16px', fontWeight: '950' }}>{ev.externalCount || 0}</div>
                             </div>
                         </div>
 
                         {/* 4. Settlement Summary */}
                         {statusTab !== 'Start' && (
-                            <div style={{
-                                background: 'rgba(16,185,129,0.05)', padding: '12px 24px', borderRadius: '18px',
-                                border: '1px solid rgba(16,185,129,0.1)', minWidth: '140px', textAlign: 'right'
+                            <div className="settlement-summary" style={{
+                                background: 'rgba(16,185,129,0.05)', padding: '10px 16px', borderRadius: '14px',
+                                border: '1px solid rgba(16,185,129,0.1)', minWidth: '120px', textAlign: 'right'
                             }}>
-                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px', textTransform: 'uppercase' }}>Duty Value</div>
-                                <div style={{ color: '#10b981', fontSize: '18px', fontWeight: '950', textShadow: '0 0 10px rgba(16,185,129,0.2)' }}>₹{Number(ev.totalRevenue || 0).toLocaleString()}</div>
+                                <div style={{ fontSize: '8px', color: 'rgba(16,185,129,0.5)', fontWeight: '900', marginBottom: '2px', textTransform: 'uppercase' }}>Duty Value</div>
+                                <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '950' }}>₹{Number(ev.totalRevenue || 0).toLocaleString()}</div>
                             </div>
                         )}
 
                         {/* 5. Actions */}
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div className="actions-block" style={{ display: 'flex', gap: '8px' }}>
                             <button onClick={(e) => { e.stopPropagation(); handleEditEvent(ev); }}
                                 style={{
-                                    width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)',
-                                    border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
+                                    width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)',
+                                    border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s'
                                 }}
                                 className="action-btn-list"
                             >
-                                <Edit size={18} />
+                                <Edit size={16} />
                             </button>
                             <button onClick={(e) => { e.stopPropagation(); handleDeleteEvent(ev._id); }}
                                 style={{
-                                    width: '42px', height: '42px', borderRadius: '14px', background: 'rgba(244,63,94,0.08)',
+                                    width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(244,63,94,0.08)',
                                     border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer',
                                     display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s'
                                 }}
                                 className="action-btn-list"
                             >
-                                <Trash2 size={18} />
+                                <Trash2 size={16} />
                             </button>
                         </div>
                     </motion.div>
@@ -1340,26 +1395,26 @@ const EventManagement = () => {
             {/* ═══ EVENT DETAILS MODAL ═══ */}
             <AnimatePresence>
                 {showDetailsModal && selectedEventDetails && (
-                    <div className="modal-overlay">
+                    <div className="modal-overlay" style={{ zIndex: 10000 }}>
                         <motion.div
                             initial={{ scale: 0.9, opacity: 0 }}
                             animate={{ scale: 1, opacity: 1 }}
                             exit={{ scale: 0.9, opacity: 0 }}
                             className="modal-container"
                             style={{
-                                width: 'min(98%, 950px)',
+                                width: 'min(98%, 1000px)',
                                 maxHeight: '95vh',
                                 background: '#0a0f1d',
-                                borderRadius: '32px',
+                                borderRadius: 'clamp(24px, 4vw, 32px)',
                                 overflow: 'hidden',
                                 display: 'flex',
                                 flexDirection: 'column'
                             }}
                         >
-                            <div style={{ padding: '32px', background: 'rgba(15,23,42,0.8)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px' }}>
-                                        <h2 style={{ color: 'white', fontSize: '32px', fontWeight: '950', margin: 0 }}>{selectedEventDetails.event.name}</h2>
+                            <div style={{ padding: 'clamp(20px, 4vw, 32px)', background: 'rgba(15,23,42,0.8)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+                                <div style={{ flex: 1, minWidth: '200px' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '4px', flexWrap: 'wrap' }}>
+                                        <h2 style={{ color: 'white', fontSize: 'clamp(20px, 5vw, 32px)', fontWeight: '950', margin: 0 }}>{selectedEventDetails.event.name}</h2>
                                         {(() => {
                                             const evDate = toISTDateString(new Date(selectedEventDetails.event.date));
                                             const todayStr = todayIST();
@@ -1368,93 +1423,51 @@ const EventManagement = () => {
 
                                             return (
                                                 <span style={{
-                                                    padding: '6px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '950',
+                                                    padding: '4px 12px', borderRadius: '10px', fontSize: '10px', fontWeight: '950',
                                                     background: vStat === 'Running' ? 'var(--primary)33' : vStat === 'Closed' ? '#f8717133' : '#10b98133',
                                                     color: vStat === 'Running' ? 'var(--primary)' : vStat === 'Closed' ? '#f87171' : '#10b981',
-                                                    border: '1px solid rgba(255,255,255,0.05)'
+                                                    border: '1px solid rgba(255,255,255,0.05)',
+                                                    textTransform: 'uppercase'
                                                 }}>
                                                     {vStat}
                                                 </span>
                                             );
                                         })()}
                                     </div>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '14px', fontWeight: '700' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flexWrap: 'wrap' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '700' }}>
                                             <Building2 size={16} color="var(--primary)" /> {selectedEventDetails.event.client}
                                         </div>
-                                        <div style={{ width: '1px', height: '14px', background: 'rgba(255,255,255,0.1)' }} />
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '14px', fontWeight: '700' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '700' }}>
                                             <Calendar size={16} color="var(--primary)" /> {formatDateIST(selectedEventDetails.event.date)}
                                         </div>
                                     </div>
                                 </div>
-                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
                                     {selectedEventDetails.event?.status === 'Closed' && (
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button
-                                                onClick={() => exportEventSpecificExcel(selectedEventDetails)}
-                                                style={{ height: '42px', padding: '0 18px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', color: '#38bdf8', fontWeight: '800', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                                            >
-                                                <FileSpreadsheet size={16} /> EXCEL
-                                            </button>
-                                            <button
-                                                onClick={() => handleExportEventPDF('internal')}
-                                                style={{ height: '42px', padding: '0 18px', borderRadius: '12px', background: 'rgba(99, 102, 241, 0.1)', border: '1px solid rgba(99, 102, 241, 0.2)', color: '#818cf8', fontWeight: '800', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                                            >
-                                                <FileText size={16} /> INTERNAL PDF
-                                            </button>
-                                            <button
-                                                onClick={() => handleExportEventPDF('client')}
-                                                style={{ height: '42px', padding: '0 18px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', fontWeight: '800', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}
-                                            >
-                                                <Download size={16} /> CLIENT PDF
-                                            </button>
+                                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                                            <button onClick={() => exportEventSpecificExcel(selectedEventDetails)} className="hide-mobile" style={{ height: '40px', padding: '0 15px', borderRadius: '10px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.2)', color: '#38bdf8', fontWeight: '800', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}><FileSpreadsheet size={16} /> EXCEL</button>
+                                            <button onClick={() => handleExportEventPDF('client')} style={{ height: '40px', padding: '0 15px', borderRadius: '10px', background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', fontWeight: '800', fontSize: '11px', display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}><Download size={16} /> PDF</button>
                                         </div>
                                     )}
-                                    <button onClick={() => setShowDetailsModal(false)} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', width: '48px', height: '48px', borderRadius: '16px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.3s' }}>
-                                        <X size={28} />
-                                    </button>
+                                    <button onClick={() => setShowDetailsModal(false)} style={{ background: 'rgba(248,113,113,0.1)', border: '1px solid rgba(248,113,113,0.2)', color: '#f87171', width: '40px', height: '40px', borderRadius: '12px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={24} /></button>
                                 </div>
                             </div>
 
-                            <div style={{ padding: '32px', overflowY: 'auto' }} className="premium-scroll">
-                                {/* Fin Summary */}
+                            <div style={{ padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }} className="premium-scroll">
+                                {/* Stats Summary */}
                                 <div className="stats-grid" style={{
                                     display: 'grid',
-                                    gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
-                                    gap: '15px',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+                                    gap: '12px',
                                     marginBottom: '32px',
                                     width: '100%'
                                 }}>
                                     {[
-                                        {
-                                            label: 'Total Duties',
-                                            value: (selectedEventDetails.fleetDuties.length + selectedEventDetails.externalDuties.length),
-                                            color: 'var(--primary)',
-                                            icon: <TruckIcon size={18} />,
-                                            sub: 'All Resources'
-                                        },
-                                        {
-                                            label: 'Fleet Revenue',
-                                            value: `₹${(selectedEventDetails.fleetDuties.reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`,
-                                            color: '#38bdf8',
-                                            icon: <Car size={18} />,
-                                            sub: `${selectedEventDetails.fleetDuties.length} Fleet Vehicles`
-                                        },
-                                        {
-                                            label: 'External Revenue',
-                                            value: `₹${(selectedEventDetails.externalDuties.reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`,
-                                            color: '#a855f7',
-                                            icon: <Users size={18} />,
-                                            sub: `${selectedEventDetails.externalDuties.length} Market Cars`
-                                        },
-                                        {
-                                            label: 'Grand Total',
-                                            value: `₹${([...selectedEventDetails.externalDuties, ...selectedEventDetails.fleetDuties].reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`,
-                                            color: '#10b981',
-                                            icon: <Target size={18} />,
-                                            sub: 'Master Settlement'
-                                        },
+                                        { label: 'Total Duties', value: (selectedEventDetails.fleetDuties.length + selectedEventDetails.externalDuties.length), color: 'var(--primary)', icon: <TruckIcon size={18} />, sub: 'All Resources' },
+                                        { label: 'Fleet Revenue', value: `₹${(selectedEventDetails.fleetDuties.reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`, color: '#38bdf8', icon: <Car size={18} />, sub: `${selectedEventDetails.fleetDuties.length} Fleet` },
+                                        { label: 'External Rev', value: `₹${(selectedEventDetails.externalDuties.reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`, color: '#a855f7', icon: <Users size={18} />, sub: `${selectedEventDetails.externalDuties.length} Market` },
+                                        { label: 'Grand Total', value: `₹${([...selectedEventDetails.externalDuties, ...selectedEventDetails.fleetDuties].reduce((sum, d) => sum + (Number(d.dutyAmount) || 0), 0)).toLocaleString()}`, color: '#10b981', icon: <Target size={18} />, sub: 'Master Settlement' },
                                     ].map((s, i) => (
                                         <div key={s.label}
                                             style={{
@@ -1467,162 +1480,132 @@ const EventManagement = () => {
                                             }}
                                         >
                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                                <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{s.label}</span>
-                                                <div style={{ color: s.color, opacity: 0.6 }}>{s.icon}</div>
+                                                <span style={{ fontSize: '8px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{s.label}</span>
+                                                <div style={{ color: s.color, opacity: 0.5 }}>{s.icon}</div>
                                             </div>
-                                            <span style={{ color: 'white', fontSize: '20px', fontWeight: '950' }}>{s.value}</span>
-                                            <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{s.sub}</span>
+                                            <span style={{ color: 'white', fontSize: '18px', fontWeight: '950' }}>{s.value}</span>
+                                            <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '700' }}>{s.sub}</span>
                                         </div>
                                     ))}
                                 </div>
 
-                                {/* ═══ CONSOLIDATED DUTY LOG TABLE ═══ */}
+                                {/* ═══ CONSOLIDATED DUTY LOG ═══ */}
                                 <div style={{
                                     background: 'rgba(15, 23, 42, 0.4)',
-                                    borderRadius: '28px',
+                                    borderRadius: '24px',
                                     border: '1px solid rgba(255,255,255,0.06)',
                                     overflow: 'hidden',
-                                    boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
-                                    marginBottom: '20px'
+                                    boxShadow: '0 20px 50px rgba(0,0,0,0.3)'
                                 }}>
                                     <div style={{
-                                        padding: '20px 24px',
+                                        padding: '16px 24px',
                                         borderBottom: '1px solid rgba(255,255,255,0.06)',
                                         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                                         background: 'rgba(255,255,255,0.02)'
                                     }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{ background: 'rgba(251,191,36,0.1)', padding: '8px', borderRadius: '10px' }}>
-                                                <Briefcase size={18} color="var(--primary)" />
-                                            </div>
-                                            <h4 style={{ color: 'white', margin: 0, fontSize: '18px', fontWeight: '950', letterSpacing: '-0.5px' }}>OPERATIONAL LOGS</h4>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <Briefcase size={18} color="var(--primary)" />
+                                            <h4 style={{ color: 'white', margin: 0, fontSize: '16px', fontWeight: '950' }}>OPERATIONAL LOGS</h4>
                                         </div>
                                     </div>
 
-                                    <div style={{ overflowX: 'auto' }} className="premium-scroll">
-                                        <table style={{ width: '100%', minWidth: '850px', borderCollapse: 'collapse' }}>
+                                    <div className="hide-mobile">
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <thead>
                                                 <tr style={{ background: 'rgba(255,255,255,0.01)' }}>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>TIMELINE</th>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>VEHICLE / RESOURCE</th>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>LOGISTICS</th>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>MEMBERS</th>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>SETTLEMENT</th>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>ACTIONS</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>TIMELINE</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>VEHICLE / RESOURCE</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>LOGISTICS</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>SETTLEMENT</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>ACTIONS</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {[...selectedEventDetails.fleetDuties, ...selectedEventDetails.externalDuties]
                                                     .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
-                                                    .map((d, idx) => (
-                                                        <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }} className="table-row-hover">
-                                                            {/* TIMELINE */}
-                                                            <td style={{ padding: '20px 24px' }}>
-                                                                <div style={{ color: 'white', fontWeight: '950', fontSize: '15px' }}>{formatDateIST(d.date || d.createdAt)}</div>
-                                                                <div style={{ color: 'var(--primary)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginTop: '2px' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { weekday: 'short' })}</div>
+                                                    .map((d) => (
+                                                        <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }} className="table-row-hover">
+                                                            <td style={{ padding: '16px 24px' }}>
+                                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{formatDateIST(d.date || d.createdAt)}</div>
+                                                                <div style={{ color: 'var(--primary)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { weekday: 'short' })}</div>
                                                             </td>
-                                                            {/* RESOURCE */}
-                                                            <td style={{ padding: '20px 24px' }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: d.vehicleSource === 'Fleet' ? 'rgba(16,185,129,0.1)' : 'rgba(168,85,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                        <Car size={20} color={d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'} />
+                                                            <td style={{ padding: '16px 24px' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: d.vehicleSource === 'Fleet' ? 'rgba(16,185,129,0.1)' : 'rgba(168,85,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                        <Car size={18} color={d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'} />
                                                                     </div>
                                                                     <div>
-                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                            <span style={{ color: 'white', fontWeight: '900', fontSize: '14px', letterSpacing: '0.5px' }}>{d.vehicle?.carNumber || d.vehicleNumber || d.carNumber?.split('#')[0] || 'N/A'}</span>
-                                                                            <span style={{
-                                                                                fontSize: '8px', padding: '2px 6px', borderRadius: '4px', fontWeight: '950',
-                                                                                background: d.vehicleSource === 'Fleet' ? '#10b98120' : '#a855f720',
-                                                                                color: d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'
-                                                                            }}>
-                                                                                {d.vehicleSource?.toUpperCase() || 'EXTERNAL'}
-                                                                            </span>
-                                                                        </div>
-                                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', marginTop: '4px' }}>
-                                                                            {d.vehicle?.model || d.model || 'N/A'} • <span style={{ color: 'rgba(255,255,255,0.25)' }}>{d.driver?.name || d.driverName || 'N/A'}</span>
-                                                                        </div>
+                                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '13px' }}>{d.vehicle?.carNumber || d.vehicleNumber || d.carNumber?.split('#')[0] || 'N/A'}</div>
+                                                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px' }}>{d.driver?.name || d.driverName || 'N/A'}</div>
                                                                     </div>
                                                                 </div>
                                                             </td>
-                                                            {/* LOGISTICS */}
-                                                            <td style={{ padding: '20px 24px' }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                                    <div style={{
-                                                                        padding: '4px 10px', borderRadius: '8px', background: 'rgba(251,191,36,0.1)',
-                                                                        color: 'var(--primary)', fontSize: '10px', fontWeight: '900', border: '1px solid rgba(251,191,36,0.2)'
-                                                                    }}>
-                                                                        {d.dutyType || 'General Duty'}
-                                                                    </div>
-
-                                                                </div>
-                                                                {d.remarks && (
-                                                                    <div style={{ marginTop: '8px', padding: '8px 12px', background: 'rgba(255,255,255,0.02)', borderRadius: '10px', borderLeft: '2px solid rgba(251,191,36,0.3)', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '600', fontStyle: 'italic' }}>
-                                                                        "{d.remarks}"
-                                                                    </div>
-                                                                )}
-                                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700', marginTop: '6px', display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: '8px' }}>
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                        <Navigation size={10} color="var(--primary)" />
-                                                                        <span>{d.pickUpLocation || 'HQ'}</span>
-                                                                    </div>
-                                                                    <ChevronRight size={10} style={{ opacity: 0.3 }} />
-                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                                                        <MapPin size={10} color="#f43f5e" />
-                                                                        <span>{d.dropLocation || 'BASE'}</span>
-                                                                    </div>
-                                                                </div>
+                                                            <td style={{ padding: '16px 24px' }}>
+                                                                <div className="badge-duty" style={{ fontSize: '10px' }}>{d.dutyType || 'General'}</div>
+                                                                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '4px' }}>{d.dropLocation || '—'}</div>
                                                             </td>
-                                                            {/* GUESTS */}
-                                                            <td style={{ padding: '20px 24px', textAlign: 'center' }}>
-                                                                {d.guestCount ? (
-                                                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(168,85,247,0.1)', padding: '6px 12px', borderRadius: '10px', border: '1px solid rgba(168,85,247,0.2)' }}>
-                                                                        <Users size={14} color="#a855f7" />
-                                                                        <span style={{ color: 'white', fontWeight: '950', fontSize: '14px' }}>{d.guestCount}</span>
-                                                                    </div>
-                                                                ) : (
-                                                                    <span style={{ opacity: 0.1 }}>—</span>
-                                                                )}
+                                                            <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                                                                <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{Number(d.dutyAmount || 0).toLocaleString()}</div>
                                                             </td>
-                                                            {/* SETTLEMENT */}
-                                                            <td style={{ padding: '20px 24px', textAlign: 'right' }}>
-                                                                <div style={{
-                                                                    background: 'rgba(16,185,129,0.05)',
-                                                                    padding: '8px 16px',
-                                                                    borderRadius: '12px',
-                                                                    border: '1px solid rgba(16,185,129,0.1)',
-                                                                    display: 'inline-block'
-                                                                }}>
-                                                                    <div style={{ color: '#10b981', fontWeight: '950', fontSize: '16px', display: 'flex', alignItems: 'center', gap: '4px', justifyContent: 'flex-end' }}>
-                                                                        <IndianRupee size={14} />
-                                                                        {Number(d.dutyAmount || d.dailyWage || 0).toLocaleString()}
-                                                                    </div>
-                                                                    <div style={{ color: 'rgba(16,185,129,0.5)', fontSize: '8px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Settled Amount</div>
-                                                                </div>
-                                                            </td>
-                                                            {/* ACTIONS */}
-                                                            <td style={{ padding: '20px 24px', textAlign: 'right' }}>
+                                                            <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                                                                 <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleEditDuty(d); }} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                        <Edit size={14} />
-                                                                    </button>
-                                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteDuty(d._id, d.isAttendance); }} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                        <Trash2 size={14} />
-                                                                    </button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleEditDuty(d); }} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}><Edit size={14} /></button>
+                                                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteDuty(d._id, d.isAttendance); }} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer' }}><Trash2 size={14} /></button>
                                                                 </div>
                                                             </td>
                                                         </tr>
                                                     ))}
-                                                {selectedEventDetails.fleetDuties.length === 0 && selectedEventDetails.externalDuties.length === 0 && (
-                                                    <tr>
-                                                        <td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.2)' }}>
-                                                            <TruckIcon size={40} style={{ opacity: 0.1, marginBottom: '16px' }} />
-                                                            <p style={{ margin: 0, fontWeight: '800', fontSize: '14px' }}>No operational logs recorded for this event.</p>
-                                                        </td>
-                                                    </tr>
-                                                )}
                                             </tbody>
                                         </table>
                                     </div>
+
+                                    <div className="show-mobile" style={{ padding: '16px' }}>
+                                        {[...selectedEventDetails.fleetDuties, ...selectedEventDetails.externalDuties]
+                                            .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+                                            .map((d) => (
+                                                <div key={d._id} style={{
+                                                    background: 'rgba(255,255,255,0.02)',
+                                                    borderRadius: '16px',
+                                                    padding: '16px',
+                                                    marginBottom: '12px',
+                                                    border: '1px solid rgba(255,255,255,0.05)'
+                                                }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                                        <div>
+                                                            <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{formatDateIST(d.date || d.createdAt)}</div>
+                                                            <div style={{ color: 'var(--primary)', fontSize: '10px', fontWeight: '800' }}>{d.vehicleSource} Resource</div>
+                                                        </div>
+                                                        <div style={{ textAlign: 'right' }}>
+                                                            <div style={{ color: '#10b981', fontWeight: '950', fontSize: '16px' }}>₹{Number(d.dutyAmount || 0).toLocaleString()}</div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '8px', fontWeight: '900' }}>SETTLEMENT</div>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
+                                                        <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: d.vehicleSource === 'Fleet' ? '#10b98120' : '#a855f720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                            <Car size={20} color={d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'} />
+                                                        </div>
+                                                        <div>
+                                                            <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{d.vehicle?.carNumber || d.vehicleNumber || d.carNumber?.split('#')[0] || 'N/A'}</div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>{d.driver?.name || d.driverName || 'N/A'}</div>
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <div className="badge-duty" style={{ fontSize: '10px' }}>{d.dutyType || 'General'}</div>
+                                                        <div style={{ display: 'flex', gap: '8px' }}>
+                                                            <button onClick={() => handleEditDuty(d)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'rgba(255,255,255,0.4)' }}><Edit size={16} /></button>
+                                                            <button onClick={() => handleDeleteDuty(d._id, d.isAttendance)} style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e' }}><Trash2 size={16} /></button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            ))}
+                                    </div>
+
+                                    {[...selectedEventDetails.fleetDuties, ...selectedEventDetails.externalDuties].length === 0 && (
+                                        <div style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.2)' }}>
+                                            <TruckIcon size={40} style={{ opacity: 0.1, marginBottom: '16px' }} />
+                                            <p style={{ margin: 0, fontWeight: '800', fontSize: '14px' }}>No operational logs recorded.</p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </motion.div>
@@ -1747,7 +1730,7 @@ const EventManagement = () => {
                 .main-title { color: white; font-size: clamp(24px, 5vw, 32px); font-weight: 900; margin: 0; letter-spacing: -1px; }
                 .text-gradient-yellow { background: linear-gradient(135deg, var(--primary) 0%, #d97706 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
                 .subtitle-text { margin-top: 4px; font-size: 13px; color: rgba(255,255,255,0.6); margin: 0; }
-                .flex-resp { display: flex; flex-wrap: wrap; }
+                .flex-resp { display: flex; flex-wrap: wrap; gap: 16px; }
                 .stat-card { padding: 12px 20px; min-width: 150px; display: flex; flex-direction: column; position: relative; overflow: hidden; background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.05); }
                 .stat-label { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
                 .stat-value { color: white; font-size: 20px; font-weight: 900; }
@@ -1792,44 +1775,14 @@ const EventManagement = () => {
                 .action-btn-hover:hover { background: rgba(56,189,248,0.15) !important; color: #38bdf8 !important; border-color: rgba(56,189,248,0.3) !important; transform: scale(1.05); }
                 .action-btn-hover-del:hover { background: rgba(244,63,94,0.15) !important; color: #f43f5e !important; border-color: rgba(244,63,94,0.3) !important; transform: scale(1.05); }
 
-                /* ===== DATE CELL ===== */
-                .date-cell { min-width: 80px; }
-                .date-cell .day-name { font-size: 8px; font-weight: 950; color: var(--primary); letter-spacing: 1.5px; margin-bottom: 3px; text-transform: uppercase; }
-                .date-cell .date-val { color: white; font-weight: 800; font-size: 15px; line-height: 1.2; }
-                .date-cell .year-val { font-size: 10px; color: rgba(255,255,255,0.25); font-weight: 600; margin-top: 2px; }
-
-                /* ===== VEHICLE CELL ===== */
-                .vehicle-cell .plate-num { font-weight: 900; color: white; font-size: 14px; letter-spacing: 0.8px; font-variant-numeric: tabular-nums; }
-                .vehicle-cell .model-name { font-size: 11px; color: rgba(255,255,255,0.35); font-weight: 600; margin-top: 3px; }
-                
-                /* ===== DUTY CELL ===== */
-                .duty-cell .event-name { color: white; font-weight: 800; font-size: 14px; margin-bottom: 3px; }
-                .duty-cell .venue-text { font-size: 11px; color: rgba(255,255,255,0.35); }
-                .duty-cell .loc-text { font-size: 11px; color: rgba(255,255,255,0.4); display: flex; align-items: center; gap: 4px; }
-
-                /* ===== ENTITY CELL ===== */
-                .entity-cell .client-name { color: white; font-weight: 700; font-size: 14px; margin-bottom: 4px; }
-                .entity-cell .venue-text { font-size: 11px; color: rgba(255,255,255,0.3); }
-
                 /* ===== BADGES ===== */
                 .badge-fleet { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); }
                 .badge-ext { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; border-radius: 6px; font-size: 9px; font-weight: 900; letter-spacing: 0.5px; background: rgba(245,158,11,0.15); color: var(--primary); border: 1px solid rgba(245,158,11,0.3); }
                 .badge-duty { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: rgba(251,191,36,0.12); color: var(--primary); border: 1px solid rgba(251,191,36,0.25); white-space: nowrap; }
                 .badge-time { display: inline-block; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800; background: rgba(56,189,248,0.12); color: #38bdf8; border: 1px solid rgba(56,189,248,0.25); white-space: nowrap; }
-                .badge-loc { display: flex; align-items: center; gap: 5px; color: rgba(255,255,255,0.65); font-size: 12px; font-weight: 600; }
-                .badge-no-data { font-size: 11px; color: rgba(255,255,255,0.18); font-style: italic; }
                 
-                /* ===== AMOUNT ===== */
-                .amount-cell { text-align: right; }
                 .amount-badge { display: inline-block; padding: 6px 14px; background: rgba(16,185,129,0.1); color: #10b981; font-weight: 900; font-size: 14px; border-radius: 10px; border: 1px solid rgba(16,185,129,0.2); }
 
-                /* ===== ACTIONS ===== */
-                .action-cell { text-align: right; }
-                .action-group { display: flex; gap: 8px; justify-content: flex-end; }
-                .action-group button { width: 36px; height: 36px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.07); background: rgba(255,255,255,0.03); color: rgba(255,255,255,0.6); cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; }
-                .edit-btn:hover { background: rgba(251,191,36,0.15); color: var(--primary); border-color: rgba(251,191,36,0.3); }
-                .delete-btn:hover { background: rgba(244,63,94,0.15); color: #f43f5e; border-color: rgba(244,63,94,0.3); }
-                
                 /* ===== MODAL BASE (GLOBAL OVERLAYS) ===== */
                 .modal-overlay { 
                     position: fixed; inset: 0; 
@@ -1839,9 +1792,6 @@ const EventManagement = () => {
                     display: flex; justify-content: center; align-items: center; 
                     padding: clamp(10px, 3vw, 20px); 
                 }
-
-                /* ===== MOBILE CARD LEGACY (if needed for list view) ===== */
-                .mobile-duty-card { background: linear-gradient(140deg, rgba(20,30,50,0.8), rgba(10,15,30,0.95)); padding: 18px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.07); margin-bottom: 14px; }
 
                 .event-row-hover:hover { 
                     transform: translateX(8px); 
@@ -1855,25 +1805,43 @@ const EventManagement = () => {
                     box-shadow: 0 5px 15px rgba(0,0,0,0.3);
                 }
 
+                .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
                 .form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-                @media (max-width: 600px) { .form-grid-3 { grid-template-columns: 1fr; } }
-                .hide-scrollbar::-webkit-scrollbar { display: none; }
-                .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-
-                .status-badge {
-                    padding: 4px 10px; borderRadius: 8px; fontSize: 10px; fontWeight: 900; letterSpacing: 0.5px; text-transform: uppercase;
+                @media (max-width: 600px) { 
+                    .form-grid-2, .form-grid-3 { grid-template-columns: 1fr; } 
                 }
                 
-                .table-row-hover:hover { 
-                    background: rgba(255,255,255,0.02) !important;
-                }
+                .premium-scroll::-webkit-scrollbar { width: 5px; height: 5px; }
+                .premium-scroll::-webkit-scrollbar-track { background: transparent; }
+                .premium-scroll::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+                .premium-scroll::-webkit-scrollbar-thumb:hover { background: var(--primary); }
 
                 @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+                
+                @media (max-width: 1024px) {
+                    .stats-grid { max-width: 100% !important; grid-template-columns: repeat(2, 1fr) !important; }
+                }
+
                 @media (max-width: 768px) { 
-                    .header-left { flex-direction: row; align-items: baseline; gap: 10px; } 
-                    .event-row-hover { flex-direction: column; align-items: flex-start; gap: 16px; padding: 24px; }
-                    .event-row-hover > div { width: 100% !important; border-left: none !important; padding-left: 0 !important; text-align: left !important; }
-                    .event-row-hover > div:last-child { justify-content: flex-start; }
+                    .flex-resp { flex-direction: column; }
+                    .header-top { flex-direction: column !important; align-items: flex-start !important; gap: 20px !important; }
+                    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; width: 100% !important; }
+                    .status-nav { flex-wrap: wrap !important; }
+                    .status-nav button { flex: 1 1 45% !important; padding: 12px !important; }
+                    .command-bar { flex-direction: column !important; }
+                    .command-bar > div { width: 100% !important; min-width: 100% !important; }
+                    .event-row { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; padding: 20px !important; }
+                    .event-row > div { width: 100% !important; border: none !important; padding: 0 !important; text-align: left !important; }
+                    .event-row .resource-matrix { justify-content: flex-start !important; gap: 40px !important; }
+                    .event-row .actions-block { justify-content: flex-end !important; }
+                    .hide-mobile { display: none !important; }
+                    .show-mobile { display: block !important; }
+                }
+
+                @media (max-width: 480px) {
+                    .stats-grid { grid-template-columns: 1fr !important; }
+                    .status-nav button { flex: 1 1 100% !important; }
+                    .event-row .resource-matrix { gap: 20px !important; }
                 }
             `}</style>
         </div>

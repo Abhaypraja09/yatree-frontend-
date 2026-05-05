@@ -157,6 +157,78 @@ const PhotoUpload = ({ label, icon: Icon, onFileSelect, previewFile }) => {
 
 const Freelancers = () => {
     const { theme } = useTheme();
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            .freelancers-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 40px;
+                padding-top: 40px;
+                gap: 20px;
+            }
+            .freelancers-tabs {
+                display: flex;
+                gap: 15px;
+                margin-bottom: 30px;
+                overflow-x: auto;
+                padding-bottom: 5px;
+                -webkit-overflow-scrolling: touch;
+            }
+            .freelancer-tab-btn {
+                padding: 12px 24px;
+                border-radius: 14px;
+                font-weight: 800;
+                font-size: 13px;
+                cursor: pointer;
+                white-space: nowrap;
+                transition: all 0.3s;
+                border: 1px solid rgba(255,255,255,0.05);
+            }
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+            .search-bar-row {
+                display: flex;
+                gap: 20px;
+                margin-bottom: 30px;
+                align-items: center;
+            }
+            .hide-mobile { display: block; }
+            .show-mobile { display: none; }
+
+            @media (max-width: 1024px) {
+                .freelancers-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+                .search-bar-row {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .stats-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .hide-mobile { display: none !important; }
+                .show-mobile { display: block !important; }
+            }
+
+            @media (max-width: 480px) {
+                .stats-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        return () => document.head.removeChild(style);
+    }, []);
     const { selectedCompany } = useCompany();
     const [drivers, setDrivers] = useState([]);
     const [allDrivers, setAllDrivers] = useState([]); // Includes both regular and freelancers
@@ -1234,13 +1306,7 @@ const Freelancers = () => {
             <SEO title="Freelancer Fleet Network" description="Onboard and manage freelance drivers for temporary duties and peak demand management." />
 
             {/* Header with Search and Stats */}
-            <header className="glass-card dashboard-header" style={{
-                padding: 'clamp(20px, 4vw, 30px)',
-                borderRadius: '24px',
-                border: '1px solid rgba(255,255,255,0.08)',
-                marginBottom: '20px',
-                background: 'rgba(30, 41, 59, 0.4)'
-            }}>
+            <header className="freelancers-header">
                 <div className="flex-resp" style={{ justifyContent: 'space-between', width: '100%', gap: '20px', alignItems: 'center' }}>
                     <div className="header-logo-section">
                         <div style={{ display: 'flex', alignItems: 'center', gap: 'clamp(10px, 3vw, 15px)' }}>
@@ -1279,64 +1345,30 @@ const Freelancers = () => {
                         flex: 1,
                         maxWidth: '550px'
                     }}>
-                        {/* Global Search Bar */}
-                        <div style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            background: 'rgba(0,0,0,0.25)',
-                            borderRadius: '16px',
-                            border: '1px solid rgba(255,255,255,0.08)',
-                            padding: '0 15px',
-                            height: '42px',
-                            flex: 1,
-                            boxShadow: 'inset 0 2px 10px rgba(0,0,0,0.2)'
-                        }}>
-                            <Search size={16} color="rgba(255,255,255,0.4)" strokeWidth={3} style={{ marginRight: '10px' }} />
-                            <input
-                                type="text"
-                                placeholder={`Search in ${activeTab}...`}
-                                value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                style={{
-                                    background: 'transparent',
-                                    border: 'none',
-                                    color: 'white',
-                                    fontSize: '12px',
-                                    fontWeight: '700',
-                                    outline: 'none',
-                                    width: '100%',
-                                    letterSpacing: '0.5px'
-                                }}
-                            />
-                            {searchTerm && (
-                                <button onClick={() => setSearchTerm('')} style={{ background: 'transparent', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', padding: '5px' }}>
-                                    <X size={14} />
-                                </button>
-                            )}
-                        </div>
-
-                        {activeTab !== 'accounts' && (
-                            <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
-                                <button
-                                    onClick={() => setShowAddModal(true)}
-                                    style={{
-                                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                        padding: '0 20px', height: '42px', borderRadius: '14px',
-                                        background: 'linear-gradient(135deg, var(--primary) 0%, #d97706 100%)',
-                                        border: 'none', color: 'black',
-                                        boxShadow: '0 8px 15px rgba(251, 191, 36, 0.25)',
-                                        cursor: 'pointer', fontWeight: '950', fontSize: '12px',
-                                        textTransform: 'uppercase', letterSpacing: '0.5px'
-                                    }}
-                                >
-                                    <Plus size={16} style={{ marginRight: '8px', strokeWidth: 3 }} />
-                                    <span className="hide-mobile">Add New</span>
-                                </button>
-                            </div>
-                        )}
+                        <div className="search-bar-row">
+                    <div style={{ position: 'relative', width: 'clamp(200px, 30vw, 300px)' }}>
+                        <Search size={18} style={{ position: 'absolute', left: '15px', top: '15px', color: 'rgba(255,255,255,0.3)' }} />
+                        <input 
+                            type="text" 
+                            placeholder="Search names..." 
+                            value={searchTerm}
+                            onChange={e => setSearchTerm(e.target.value)}
+                            style={{ width: '100%', height: '48px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '0 15px 0 45px', color: 'white', fontSize: '13px', outline: 'none' }}
+                        />
                     </div>
+                    {activeTab !== 'accounts' && (
+                        <button 
+                            onClick={() => setShowAddModal(true)}
+                            className="btn-primary"
+                            style={{ height: '48px', padding: '0 25px', borderRadius: '14px', fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}
+                        >
+                            <Plus size={18} /> <span className="hide-mobile">ONBOARD DRIVER</span><span className="show-mobile">ADD</span>
+                        </button>
+                    )}
                 </div>
-            </header>
+            </div>
+        </div>
+    </header>
 
             {/* Premium Filter Hub */}
             <div className="glass-card" style={{
@@ -1348,18 +1380,8 @@ const Freelancers = () => {
             }}>
                 <div className="flex-resp" style={{ gap: '15px', alignItems: 'center', justifyContent: 'space-between' }}>
 
-                    {/* Tabs */}
-                    <div className="premium-scroll" style={{
-                        display: 'flex',
-                        background: 'rgba(0,0,0,0.2)',
-                        padding: '4px',
-                        borderRadius: '16px',
-                        border: '1px solid rgba(255,255,255,0.03)',
-                        overflowX: 'auto',
-                        whiteSpace: 'nowrap',
-                        gap: '4px',
-                        maxWidth: '100%'
-                    }}>
+                    {/* Modern Tab Navigation */}
+                    <nav className="freelancers-tabs" style={{ margin: 0, background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
                         {[
                             { id: 'personnel', label: 'Drivers', icon: <UserIcon size={14} /> },
                             { id: 'logistics', label: 'Dutys', icon: <Car size={14} /> },
@@ -1368,6 +1390,7 @@ const Freelancers = () => {
                             <button
                                 key={tab.id}
                                 onClick={() => setActiveTab(tab.id)}
+                                className="freelancer-tab-btn"
                                 style={{
                                     display: 'flex',
                                     alignItems: 'center',
@@ -1376,20 +1399,14 @@ const Freelancers = () => {
                                     borderRadius: '12px',
                                     border: 'none',
                                     background: activeTab === tab.id ? 'rgba(251, 191, 36, 0.15)' : 'transparent',
-                                    color: activeTab === tab.id ? 'var(--primary)' : 'rgba(255,255,255,0.4)',
-                                    cursor: 'pointer',
-                                    fontSize: '11px',
-                                    fontWeight: '900',
-                                    transition: '0.3s',
-                                    flexShrink: 0,
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px'
+                                    color: activeTab === tab.id ? 'var(--primary)' : 'rgba(255,255,255,0.4)'
                                 }}
                             >
-                                {tab.icon} <span>{tab.label}</span>
+                                {tab.icon}
+                                <span style={{ fontWeight: '800', fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>{tab.label}</span>
                             </button>
                         ))}
-                    </div>
+                    </nav>
 
                     {/* Filter Controls */}
                     {activeTab !== 'personnel' && (

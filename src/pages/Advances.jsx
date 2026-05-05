@@ -40,6 +40,58 @@ const Advances = () => {
     const [message, setMessage] = useState({ type: '', text: '' });
     const [editingId, setEditingId] = useState(null);
 
+    useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            .advances-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 30px;
+                padding-top: 20px;
+                gap: 20px;
+            }
+            .advances-controls {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+                flex-wrap: wrap;
+            }
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 20px;
+                margin-bottom: 30px;
+            }
+            @media (max-width: 1024px) {
+                .advances-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+                .advances-controls {
+                    width: 100%;
+                }
+            }
+            @media (max-width: 768px) {
+                .stats-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+                .hide-mobile { display: none !important; }
+                .show-mobile { display: block !important; }
+            }
+            @media (max-width: 480px) {
+                .stats-grid {
+                    grid-template-columns: 1fr;
+                }
+                .modal-content-wrapper {
+                    padding: 20px !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        return () => document.head.removeChild(style);
+    }, []);
+
     // ── NAVIGATION RESET ──
     useEffect(() => {
         const resetAll = () => {
@@ -197,7 +249,7 @@ const Advances = () => {
         <div key={location.key} className="container-fluid" style={{ paddingBottom: '60px' }}>
             <SEO title="Driver Advances" description="Manage and track advances given to drivers and their recovery status." />
 
-            <header className="flex-resp" style={{ paddingBottom: '30px', borderBottom: '1px solid rgba(255,255,255,0.05)', marginBottom: '30px', justifyContent: 'space-between', alignItems: 'center', gap: '20px' }}>
+            <header className="advances-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                     <div style={{
                         width: 'clamp(40px,10vw,50px)',
@@ -223,7 +275,7 @@ const Advances = () => {
                     </div>
                 </div>
 
-                <div className="flex-resp" style={{ gap: '12px' }}>
+                <div className="advances-controls">
                     <div className="glass-card" style={{ padding: '12px 20px', background: 'rgba(16, 185, 129, 0.05)', border: '1px solid rgba(16, 185, 129, 0.1)', display: 'flex', flexDirection: 'column', minWidth: '130px' }}>
                         <span style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Total Issued</span>
                         <span style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{totalAdvanceAmount.toLocaleString()}</span>
@@ -239,8 +291,8 @@ const Advances = () => {
                 </div>
             </header>
 
-            <div className="flex-resp" style={{ gap: '15px', marginBottom: '30px' }}>
-                <div style={{ position: 'relative', flex: '1', display: 'flex', gap: '15px' }}>
+            <div className="advances-header" style={{ gap: '15px', marginBottom: '30px' }}>
+                <div style={{ position: 'relative', flex: '1', display: 'flex', gap: '15px', minWidth: '200px' }}>
                     <div style={{ position: 'relative', flex: '1' }}>
                         <Search size={20} style={{ position: 'absolute', left: '18px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                         <input
@@ -255,7 +307,7 @@ const Advances = () => {
                     <select
                         value={filterStatus}
                         onChange={(e) => setFilterStatus(e.target.value)}
-                        className="input-field"
+                        className="input-field hide-mobile"
                         style={{ width: '150px', marginBottom: 0, height: '54px' }}
                     >
                         <option value="All" style={{ background: '#0f172a' }}>All Status</option>
@@ -264,7 +316,7 @@ const Advances = () => {
                     </select>
                 </div>
 
-                <div className="flex-resp" style={{ width: 'auto', gap: '10px', alignItems: 'center' }}>
+                <div className="advances-controls" style={{ width: 'auto', gap: '10px', alignItems: 'center' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
                         <button
                             onClick={() => shiftMonth(-1)}
@@ -279,23 +331,19 @@ const Advances = () => {
                                 className="input-field"
                                 style={{ height: '38px', fontSize: '12px', padding: '0 8px', width: '80px', background: 'transparent', border: 'none', marginBottom: 0 }}
                             >
-                                {Array.from({ length: 12 }, (_, i) => (
-                                    <option key={i + 1} value={i + 1} style={{ background: '#0f172a' }}>
-                                        {new Date(2000, i).toLocaleString('default', { month: 'short' })}
-                                    </option>
+                                {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(m => (
+                                    <option key={m} value={m} style={{ background: '#0f172a' }}>{new Date(0, m - 1).toLocaleString('default', { month: 'short' })}</option>
                                 ))}
                             </select>
-
                             <select
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(Number(e.target.value))}
                                 className="input-field"
-                                style={{ height: '38px', fontSize: '12px', padding: '0 8px', width: '70px', background: 'transparent', border: 'none', marginBottom: 0 }}
+                                style={{ height: '38px', fontSize: '12px', padding: '0 8px', width: '80px', background: 'transparent', border: 'none', marginBottom: 0 }}
                             >
-                                {Array.from({ length: 5 }, (_, i) => {
-                                    const year = new Date().getFullYear() - 2 + i;
-                                    return <option key={year} value={year} style={{ background: '#0f172a' }}>{year}</option>;
-                                })}
+                                {[2023, 2024, 2025, 2026].map(y => (
+                                    <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
+                                ))}
                             </select>
                         </div>
                         <button
@@ -324,7 +372,7 @@ const Advances = () => {
                     <span style={{ fontSize: '11px', background: 'rgba(255,255,255,0.05)', color: 'var(--text-muted)', padding: '4px 12px', borderRadius: '20px', fontWeight: '800', marginLeft: 'auto', textTransform: 'uppercase', letterSpacing: '1px' }}>Real-time Duty Calculation</span>
                 </div>
 
-                <div className="grid-1-2-2-3">
+                <div className="stats-grid">
                     {salarySummary.length === 0 ? (
                         <div style={{ gridColumn: '1/-1', padding: '60px', background: 'rgba(30, 41, 59, 0.2)', borderRadius: '30px', textAlign: 'center', border: '2px dashed rgba(255,255,255,0.05)' }}>
                             <IndianRupee size={40} style={{ margin: '0 auto 15px', opacity: 0.2, color: 'var(--text-muted)' }} />
@@ -338,58 +386,55 @@ const Advances = () => {
                             transition={{ delay: idx * 0.05 }}
                             className="glass-card"
                             style={{
-                                padding: '30px',
+                                padding: '25px',
                                 background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.6), rgba(15, 23, 42, 0.8))',
                                 border: '1px solid rgba(255,255,255,0.05)',
-                                boxShadow: '0 20px 40px -15px rgba(0,0,0,0.3)'
+                                boxShadow: '0 20px 40px -15px rgba(0,0,0,0.3)',
+                                display: 'flex',
+                                flexDirection: 'column'
                             }}
                         >
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '25px' }}>
-                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center' }}>
-                                    <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '900', fontSize: '18px' }}>
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                    <div style={{ width: '38px', height: '38px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: '900', fontSize: '16px' }}>
                                         {s.name.charAt(0)}
                                     </div>
                                     <div>
-                                        <h3 style={{ color: 'white', fontSize: '18px', fontWeight: '800', margin: 0 }}>{s.name}</h3>
-                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', marginTop: '2px', fontWeight: '600' }}>{s.mobile} • {s.workingDays} Duty Days</p>
+                                        <h3 style={{ color: 'white', fontSize: '16px', fontWeight: '800', margin: 0 }}>{s.name}</h3>
+                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', marginTop: '2px', fontWeight: '600' }}>{s.workingDays} Duty Days</p>
                                     </div>
                                 </div>
                                 <div style={{
-                                    padding: '6px 14px', borderRadius: '20px',
+                                    padding: '4px 10px', borderRadius: '20px',
                                     background: s.netPayable >= 0 ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
                                     color: s.netPayable >= 0 ? '#10b981' : '#f43f5e',
-                                    fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', border: `1px solid ${s.netPayable >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)'}`,
-                                    letterSpacing: '1px'
+                                    fontSize: '9px', fontWeight: '900', textTransform: 'uppercase', border: `1px solid ${s.netPayable >= 0 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 94, 0.2)'}`,
+                                    letterSpacing: '0.5px'
                                 }}>
-                                    {s.netPayable >= 0 ? 'Net Payable' : 'Extra Advance'}
+                                    {s.netPayable >= 0 ? 'Payable' : 'Extra'}
                                 </div>
                             </div>
 
-                            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))', gap: '15px' }}>
-                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                    <span style={{ fontSize: '9px', color: 'var(--text-muted)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Earned Salary</span>
-                                    <div style={{ color: 'white', fontSize: '16px', fontWeight: '900', marginTop: '4px' }}>₹{s.totalEarned.toLocaleString()}</div>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
+                                <div style={{ background: 'rgba(255,255,255,0.02)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                    <span style={{ fontSize: '8px', color: 'var(--text-muted)', fontWeight: '900', textTransform: 'uppercase' }}>Earned</span>
+                                    <div style={{ color: 'white', fontSize: '14px', fontWeight: '900', marginTop: '2px' }}>₹{s.totalEarned.toLocaleString()}</div>
                                 </div>
-                                <div style={{ background: 'rgba(16, 185, 129, 0.04)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(16, 185, 129, 0.1)' }}>
-                                    <span style={{ fontSize: '9px', color: '#10b981', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Advance (Month)</span>
-                                    <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '900', marginTop: '4px' }}>₹{(s.totalAdvances || 0).toLocaleString()}</div>
-                                </div>
-                                <div style={{ background: 'rgba(251, 191, 36, 0.04)', padding: '15px', borderRadius: '16px', border: '1px solid rgba(251, 191, 36, 0.1)' }}>
-                                    <span style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Balance</span>
-                                    <div style={{ color: 'var(--primary)', fontSize: '16px', fontWeight: '900', marginTop: '4px' }}>₹{(s.advanceInfo?.pending || 0).toLocaleString()}</div>
+                                <div style={{ background: 'rgba(244, 63, 94, 0.04)', padding: '12px', borderRadius: '12px', border: '1px solid rgba(244, 63, 94, 0.1)' }}>
+                                    <span style={{ fontSize: '8px', color: '#f43f5e', fontWeight: '900', textTransform: 'uppercase' }}>Advance</span>
+                                    <div style={{ color: '#f43f5e', fontSize: '14px', fontWeight: '900', marginTop: '2px' }}>₹{(s.totalAdvances || 0).toLocaleString()}</div>
                                 </div>
                             </div>
 
                             <div style={{
-                                marginTop: '25px', padding: '20px', borderRadius: '18px',
+                                marginTop: 'auto', padding: '15px', borderRadius: '14px',
                                 background: s.netPayable >= 0 ? 'rgba(14, 165, 233, 0.1)' : 'rgba(244, 63, 94, 0.12)',
                                 border: `1px solid ${s.netPayable >= 0 ? 'rgba(14, 165, 233, 0.2)' : 'rgba(244, 63, 94, 0.25)'}`,
                                 display: 'flex', justifyContent: 'space-between', alignItems: 'center'
                             }}>
-                                <span style={{ color: 'white', fontWeight: '800', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dene Wali Salary</span>
+                                <span style={{ color: 'white', fontWeight: '800', fontSize: '12px' }}>FINAL</span>
                                 <div style={{ textAlign: 'right' }}>
-                                    <span style={{ color: 'white', fontSize: '24px', fontWeight: '1000' }}>₹{Math.abs(s.netPayable).toLocaleString()}</span>
-                                    <p style={{ margin: 0, fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>Final Settlement</p>
+                                    <span style={{ color: 'white', fontSize: '20px', fontWeight: '1000' }}>₹{Math.abs(s.netPayable).toLocaleString()}</span>
                                 </div>
                             </div>
                         </motion.div>

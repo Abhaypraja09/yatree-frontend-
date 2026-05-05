@@ -21,6 +21,73 @@ import PremiumDateInput from '../components/common/PremiumDateInput';
 const fmt = (d) => { if (!d) return '--'; const [y, m, dd] = (typeof d === 'string' ? d.split('T')[0] : toISTDateString(new Date(d))).split('-'); return `${dd}/${m}/${y}`; };
 const fmtTime = (t) => t ? formatTimeIST(t) : '--';
 
+const styles = `
+  .flex-resp { display: flex; flex-wrap: wrap; gap: 16px; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .hide-mobile { display: block; }
+  .show-mobile { display: none; }
+  
+  .table-responsive-wrapper {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.1) transparent;
+  }
+  .table-responsive-wrapper::-webkit-scrollbar { height: 6px; }
+  .table-responsive-wrapper::-webkit-scrollbar-track { background: transparent; }
+  .table-responsive-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+
+  @media (max-width: 1024px) {
+    .header-controls { flex-direction: column !important; align-items: stretch !important; }
+    .header-actions { justify-content: flex-start !important; }
+  }
+
+  @media (max-width: 768px) {
+    .flex-resp { flex-direction: column; align-items: stretch !important; }
+    .grid-2 { grid-template-columns: 1fr; }
+    .hide-mobile { display: none !important; }
+    .show-mobile { display: block !important; }
+    
+    .reports-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 20px !important;
+    }
+    
+    .header-actions-group {
+        width: 100% !important;
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 12px !important;
+    }
+
+    .premium-tab-container {
+        width: 100% !important;
+        overflow-x: auto !important;
+        padding-bottom: 5px !important;
+        display: flex !important;
+        -webkit-overflow-scrolling: touch;
+    }
+    .premium-tab-container button {
+        flex-shrink: 0 !important;
+        white-space: nowrap !important;
+    }
+    
+    .date-nav-mobile {
+        width: 100% !important;
+        justify-content: space-between !important;
+    }
+    
+    .search-group-mobile {
+        width: 100% !important;
+    }
+    .search-group-mobile input {
+        width: 100% !important;
+    }
+  }
+`;
+
 /* ─── shared table theme tokens ─── */
 const TAB_CONFIG = {
     drivers: { label: 'Staff Duties', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: UserIcon },
@@ -42,8 +109,8 @@ const SectionBanner = ({ tabId, count, chips, fromDate, toDate }) => {
     const cfg = TAB_CONFIG[tabId] || { label: tabId, color: '#fff', bg: 'rgba(255,255,255,0.05)', icon: FileText };
     const Icon = cfg.icon;
     return (
-        <div style={{ padding: '18px 24px', background: `linear-gradient(135deg, ${cfg.bg}, transparent)`, borderBottom: `1px solid ${cfg.color}20`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ padding: '18px 24px', background: `linear-gradient(135deg, ${cfg.bg}, transparent)`, borderBottom: `1px solid ${cfg.color}20`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', minWidth: 'max-content' }}>
                 <div style={{ width: '38px', height: '38px', borderRadius: '12px', background: cfg.bg, display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${cfg.color}30` }}>
                     <Icon size={18} color={cfg.color} />
                 </div>
@@ -52,7 +119,9 @@ const SectionBanner = ({ tabId, count, chips, fromDate, toDate }) => {
                     <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '700' }}>{count} records · {fromDate === toDate ? fmt(fromDate) : `${fmt(fromDate)} – ${fmt(toDate)}`}</div>
                 </div>
             </div>
-            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>{chips}</div>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', width: 'auto' }} className="flex-resp">
+                {chips}
+            </div>
         </div>
     );
 };
@@ -767,13 +836,14 @@ const Reports = ({ isSubComponent = false }) => {
 
     return (
         <div className={isSubComponent ? "sub-component" : "container-fluid"} style={{ paddingBottom: '60px', background: 'radial-gradient(circle at 0% 0%, rgba(99, 102, 241, 0.03), transparent 40%)' }}>
+            <style>{styles}</style>
             {!isSubComponent && <SEO title="Daily Reports" description="Premium daily fleet reports with attendance, fuel, maintenance, advances and more." />}
 
             {/* ── Header ── */}
             {!isSubComponent && (
-                <header className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', padding: '0 4px', gap: '20px', marginTop: '30px' }}>
+                <header className="reports-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', padding: '0 4px', gap: '20px', marginTop: '30px' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                        <div style={{
+                        <div className="hide-mobile" style={{
                             width: '56px', height: '56px', borderRadius: '18px',
                             background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.05))',
                             display: 'flex', justifyContent: 'center', alignItems: 'center',
@@ -792,9 +862,9 @@ const Reports = ({ isSubComponent = false }) => {
                     </div>
 
                     {/* Controls Group */}
-                    <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                    <div className="header-actions-group" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
                         {/* 1. Date Navigator */}
-                        <div style={{
+                        <div className="date-nav-mobile" style={{
                             display: 'flex',
                             alignItems: 'center',
                             background: 'rgba(15, 23, 42, 0.6)',
@@ -815,16 +885,16 @@ const Reports = ({ isSubComponent = false }) => {
                         </div>
 
                         {/* 2. Quick Search & Selectors Group */}
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <div style={{ position: 'relative' }}>
+                        <div className="search-group-mobile" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <div style={{ position: 'relative', flex: 1 }}>
                                 <Search size={14} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                                 <input
                                     type="text"
-                                    placeholder="Quick search..."
+                                    placeholder="Search..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="premium-compact-input"
-                                    style={{ height: '52px', paddingLeft: '42px', width: '200px', borderRadius: '18px' }}
+                                    style={{ height: '52px', paddingLeft: '42px', width: 'clamp(150px, 100%, 200px)', borderRadius: '18px' }}
                                 />
                             </div>
 
@@ -832,7 +902,7 @@ const Reports = ({ isSubComponent = false }) => {
                                 <select
                                     value={selectedMonth}
                                     onChange={e => setSelectedMonth(parseInt(e.target.value))}
-                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '44px', padding: '0 12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', outline: 'none' }}
+                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '44px', padding: '0 8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', outline: 'none' }}
                                 >
                                     {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => <option key={m} value={i} style={{ background: '#0f172a' }}>{m}</option>)}
                                 </select>
@@ -840,7 +910,7 @@ const Reports = ({ isSubComponent = false }) => {
                                 <select
                                     value={selectedYear}
                                     onChange={e => setSelectedYear(parseInt(e.target.value))}
-                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '44px', padding: '0 12px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', outline: 'none' }}
+                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '44px', padding: '0 8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', outline: 'none' }}
                                 >
                                     {[2024, 2025, 2026].map(y => <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>)}
                                 </select>
@@ -848,23 +918,23 @@ const Reports = ({ isSubComponent = false }) => {
                         </div>
 
                         {/* 3. Actions */}
-                        <div style={{ display: 'flex', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'flex-end' }} className="header-actions">
                             {selectedDay !== 'All' && (
                                 <motion.button
                                     whileHover={{ y: -2 }}
                                     onClick={() => setSelectedDay('All')}
-                                    style={{ height: '52px', padding: '0 20px', borderRadius: '18px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', color: 'var(--primary)', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}
+                                    style={{ height: '52px', padding: '0 15px', borderRadius: '18px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', color: 'var(--primary)', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}
                                 >
-                                    <Calendar size={14} /> Full Month
+                                    <Calendar size={14} /><span className="hide-mobile">Full Month</span><span className="show-mobile">Month</span>
                                 </motion.button>
                             )}
                             <motion.button
                                 whileHover={{ y: -2, background: 'rgba(16, 185, 129, 0.2)' }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={handleDownloadExcel}
-                                style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 22px', height: '52px', borderRadius: '18px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', letterSpacing: '0.5px' }}
+                                style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 20px', height: '52px', borderRadius: '18px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', letterSpacing: '0.5px' }}
                             >
-                                <Download size={16} /> EXCEL
+                                <Download size={16} /> <span className="hide-mobile">DOWNLOAD EXCEL</span><span className="show-mobile">EXCEL</span>
                             </motion.button>
                         </div>
                     </div>
@@ -891,7 +961,7 @@ const Reports = ({ isSubComponent = false }) => {
 
             {/* ── Tab Bar (multi-select) ── */}
             {tabList.length > 1 && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '22px', flexWrap: 'wrap' }}>
+                <div className="premium-tab-container" style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '22px' }}>
                     {/* Primary Tab Group */}
                     <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.06)', padding: '6px', display: 'flex', gap: '4px' }}>
                         {tabList.map(tab => {
@@ -899,9 +969,6 @@ const Reports = ({ isSubComponent = false }) => {
                             const isBothActive = activeTabs.length > 1;
                             const isSoloActive = activeTabs.includes(tab.id) && activeTabs.length === 1;
 
-                            // For logbook: highlight when solo active (only this tab shown)
-                            // For logbook when both active: show dimmed but visible (both running together)
-                            // For non-logbook: highlight only when solo
                             const isActive = isLogbook ? isSoloActive : (activeTabs.includes(tab.id) && activeTabs.length === 1);
                             const isBothRunning = isLogbook && isBothActive && activeTabs.includes(tab.id);
                             const Icon = tab.icon;
@@ -924,17 +991,15 @@ const Reports = ({ isSubComponent = false }) => {
                             );
                         })}
                     </div>
-
-                    {/* Standalone 'Both' Toggle REMOVED as per user request */}
                 </div>
             )}
 
             {/* ── Search Bar ── */}
-            <div style={{ position: 'relative', marginBottom: '22px', maxWidth: '420px' }}>
+            <div style={{ position: 'relative', marginBottom: '22px', maxWidth: '420px', width: '100%' }}>
                 <input type="text" placeholder="Search Car Logs…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                    className="input-field" style={{ width: '100%', paddingLeft: '44px', height: '46px', borderRadius: '13px', marginBottom: 0 }} />
-                <Search size={18} style={{ position: 'absolute', left: '15px', top: '14px', color: 'var(--text-muted)' }} />
-                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', right: '12px', top: '13px', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}><X size={16} /></button>}
+                    className="input-field" style={{ width: '100%', paddingLeft: '44px', height: '46px', borderRadius: '13px', marginBottom: 0, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }} />
+                <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}><X size={16} /></button>}
             </div>
 
             {/* ── Main Content ── */}

@@ -6,7 +6,14 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
     const [showCalendar, setShowCalendar] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [viewDate, setViewDate] = useState(new Date());
+    const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     const containerRef = useRef(null);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth <= 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
 
     // Sync internal input value with external 'YYYY-MM-DD' value
     useEffect(() => {
@@ -35,7 +42,7 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
     const handleInputChange = (e) => {
         let val = e.target.value.replace(/\D/g, ''); // Numbers only
         if (val.length > 8) val = val.slice(0, 8);
-        
+
         let formatted = val;
         if (val.length > 2) {
             formatted = val.slice(0, 2) + '-' + val.slice(2);
@@ -43,7 +50,7 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
         if (val.length > 4) {
             formatted = formatted.slice(0, 5) + '-' + formatted.slice(5);
         }
-        
+
         setInputValue(formatted);
 
         // If complete, trigger onChange
@@ -71,9 +78,9 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
         const year = viewDate.getFullYear();
         const days = daysInMonth(month, year);
         const firstDay = firstDayOfMonth(month, year);
-        
+
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-        
+
         const calendarDays = [];
         // Empty slots for first week
         for (let i = 0; i < firstDay; i++) {
@@ -83,18 +90,18 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
         for (let d = 1; d <= days; d++) {
             const isToday = new Date().toDateString() === new Date(year, month, d).toDateString();
             const isSelected = value === `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-            
+
             calendarDays.push(
-                <div 
-                    key={d} 
+                <div
+                    key={d}
                     onClick={() => selectDate(new Date(year, month, d))}
-                    style={{ 
-                        width: '14.28%', 
-                        height: '35px', 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        justifyContent: 'center', 
-                        fontSize: '12px', 
+                    style={{
+                        width: '14.28%',
+                        height: '35px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '12px',
                         fontWeight: '700',
                         cursor: 'pointer',
                         borderRadius: '8px',
@@ -111,51 +118,72 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
         }
 
         return (
-            <motion.div 
-                initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                style={{
-                    position: 'absolute',
-                    top: '100%',
-                    left: 0,
-                    zIndex: 100,
-                    marginTop: '10px',
-                    width: '280px',
-                    background: '#1e293b',
-                    border: '1px solid rgba(255,255,255,0.1)',
-                    borderRadius: '16px',
-                    padding: '15px',
-                    boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
-                    color: 'white'
-                }}
-            >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
-                    <button type="button" onClick={() => setViewDate(new Date(year, month - 1, 1))} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><ChevronLeft size={18}/></button>
-                    <span style={{ fontWeight: '900', fontSize: '14px' }}>{monthNames[month]} {year}</span>
-                    <button type="button" onClick={() => setViewDate(new Date(year, month + 1, 1))} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer' }}><ChevronRight size={18}/></button>
-                </div>
-                
-                <div style={{ display: 'flex', flexWrap: 'wrap', marginBottom: '5px' }}>
-                    {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
-                        <div key={d} style={{ width: '14.28%', textAlign: 'center', fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', marginBottom: '5px' }}>{d}</div>
-                    ))}
-                </div>
-                
-                <div style={{ display: 'flex', flexWrap: 'wrap' }}>
-                    {calendarDays}
-                </div>
+            <>
+                <div className="show-mobile" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 10000, backdropFilter: 'blur(4px)' }} onClick={() => setShowCalendar(false)} />
+                <motion.div
+                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                    className="calendar-dropdown"
+                    style={{
+                        position: 'absolute',
+                        top: '100%',
+                        left: 0,
+                        zIndex: 10001,
+                        marginTop: '10px',
+                        width: '300px',
+                        background: '#1e293b',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '24px',
+                        padding: '20px',
+                        boxShadow: '0 30px 60px rgba(0,0,0,0.5)',
+                        color: 'white'
+                    }}
+                >
+                    <div className="show-mobile" style={{ position: 'absolute', top: '-15px', right: '10px' }}>
+                         <button onClick={() => setShowCalendar(false)} style={{ background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '30px', height: '30px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 5px 15px rgba(244,63,94,0.3)' }}><X size={14} /></button>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                        <button type="button" onClick={() => setViewDate(new Date(year, month - 1, 1))} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', borderRadius: '10px', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><ChevronLeft size={18} /></button>
+                        <span style={{ fontWeight: '900', fontSize: '15px', letterSpacing: '0.5px' }}>{monthNames[month]} {year}</span>
+                        <button type="button" onClick={() => setViewDate(new Date(year, month + 1, 1))} style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', borderRadius: '10px', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}><ChevronRight size={18} /></button>
+                    </div>
 
-                <div style={{ marginTop: '15px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center' }}>
-                    <button 
-                        type="button" 
-                        onClick={() => selectDate(new Date())}
-                        style={{ background: 'rgba(251, 191, 36, 0.1)', border: 'none', color: 'var(--primary, #fbbf24)', padding: '5px 15px', borderRadius: '8px', fontSize: '11px', fontWeight: '800', cursor: 'pointer' }}
-                    >
-                        TODAY
-                    </button>
-                </div>
-            </motion.div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', marginBottom: '8px' }}>
+                        {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(d => (
+                            <div key={d} style={{ width: '14.28%', textAlign: 'center', fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', marginBottom: '5px' }}>{d}</div>
+                        ))}
+                    </div>
+
+                    <div style={{ display: 'flex', flexWrap: 'wrap' }}>
+                        {calendarDays}
+                    </div>
+
+                    <div style={{ marginTop: '20px', paddingTop: '15px', borderTop: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'center' }}>
+                        <button
+                            type="button"
+                            onClick={() => selectDate(new Date())}
+                            style={{ width: '100%', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', color: 'var(--primary, #fbbf24)', padding: '12px', borderRadius: '12px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', transition: '0.2s' }}
+                        >
+                            SELECT TODAY
+                        </button>
+                    </div>
+                </motion.div>
+
+                <style>{`
+                    @media (max-width: 480px) {
+                        .calendar-dropdown {
+                            position: fixed !important;
+                            top: 50% !important;
+                            left: 50% !important;
+                            transform: translate(-50%, -50%) !important;
+                            width: calc(100vw - 40px) !important;
+                            max-width: 320px !important;
+                            margin-top: 0 !important;
+                        }
+                    }
+                `}</style>
+            </>
         );
     };
 
@@ -182,10 +210,14 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
                         outline: 'none',
                         transition: 'all 0.3s'
                     }}
-                    onFocus={e => e.target.style.borderColor = 'var(--primary, #fbbf24)'}
+                    onFocus={e => {
+                        e.target.style.borderColor = 'var(--primary, #fbbf24)';
+                        setShowCalendar(true);
+                    }}
+                    onClick={() => setShowCalendar(true)}
                     onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
                 />
-                <div 
+                <div
                     onClick={() => setShowCalendar(!showCalendar)}
                     style={{
                         position: 'absolute',

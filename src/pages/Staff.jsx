@@ -104,6 +104,49 @@ const Staff = () => {
                 background: rgba(255,255,255,0.02) !important;
                 transform: scale(1.002);
             }
+            @media (max-width: 1024px) {
+                .staff-stats-grid {
+                    grid-template-columns: repeat(2, 1fr) !important;
+                    gap: 15px !important;
+                }
+            }
+            @media (max-width: 768px) {
+                .staff-controls-bar {
+                    flex-direction: column !important;
+                    align-items: stretch !important;
+                    gap: 15px !important;
+                    padding: 15px !important;
+                }
+                .staff-tabs-row {
+                    width: 100% !important;
+                    padding: 4px !important;
+                }
+                .staff-tabs-row button {
+                    flex: 1 !important;
+                    padding: 10px 12px !important;
+                    font-size: 10px !important;
+                    justify-content: center !important;
+                }
+                .premium-stat-card {
+                    padding: 15px !important;
+                }
+                .premium-stat-card h2 {
+                    font-size: 24px !important;
+                }
+            }
+            @media (max-width: 480px) {
+                .staff-stats-grid {
+                    grid-template-columns: 1fr !important;
+                }
+                .header-row {
+                    flex-direction: column !important;
+                    align-items: flex-start !important;
+                    gap: 15px !important;
+                }
+                .premium-search-container {
+                    max-width: 100% !important;
+                }
+            }
         `;
         document.head.appendChild(style);
         return () => document.head.removeChild(style);
@@ -1143,7 +1186,7 @@ const Staff = () => {
                         ))}
                     </div>
 
-                    <div style={{ position: 'relative', flex: 1, maxWidth: '350px' }}>
+                    <div className="premium-search-container" style={{ position: 'relative', flex: 1, maxWidth: '350px' }}>
                         <Search style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
                         <input
                             type="text"

@@ -57,6 +57,125 @@ const DriverServices = () => {
     const [pendingRecords, setPendingRecords] = useState([]);
 
     useEffect(() => {
+        const style = document.createElement('style');
+        style.textContent = `
+            .driver-services-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 40px;
+                padding-top: 40px;
+                gap: 20px;
+            }
+            .driver-services-controls {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+            }
+            .driver-services-search-bar {
+                display: flex;
+                gap: 20px;
+                margin-bottom: 30px;
+                align-items: center;
+            }
+            .stats-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+                gap: 20px;
+                margin-bottom: 25px;
+            }
+            .glass-card {
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                backdrop-filter: blur(20px);
+                border-radius: 24px;
+            }
+            .stat-card {
+                padding: 24px;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            }
+            .stat-card-header {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+            .stat-card-icon {
+                width: 42px;
+                height: 42px;
+                border-radius: 12px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .stat-card-label {
+                font-size: 11px;
+                font-weight: 800;
+                color: rgba(255, 255, 255, 0.4);
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin: 0;
+            }
+            .stat-card-value {
+                font-size: 32px;
+                font-weight: 950;
+                color: white;
+                margin: 0;
+            }
+            .scroll-x {
+                overflow-x: auto;
+                -webkit-overflow-scrolling: touch;
+            }
+            .form-grid-2 {
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 15px;
+            }
+            .input-field {
+                width: 100%;
+                height: 52px;
+                background: rgba(255, 255, 255, 0.03);
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                border-radius: 14px;
+                padding: 0 15px;
+                color: white;
+                font-size: 14px;
+                outline: none;
+            }
+            .hide-mobile { display: block; }
+            .show-mobile { display: none; }
+
+            @media (max-width: 1024px) {
+                .driver-services-header {
+                    flex-direction: column;
+                    align-items: flex-start;
+                }
+                .driver-services-controls {
+                    width: 100%;
+                    flex-wrap: wrap;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .driver-services-search-bar {
+                    flex-direction: column;
+                    align-items: stretch;
+                }
+                .form-grid-2 {
+                    grid-template-columns: 1fr;
+                }
+                .hide-mobile { display: none !important; }
+                .show-mobile { display: block !important; }
+                .stat-card-value {
+                    font-size: 24px;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+        return () => document.head.removeChild(style);
+    }, []);
+
+    useEffect(() => {
         if (selectedCompany) {
             fetchRecords();
             fetchPending();
@@ -360,7 +479,7 @@ const DriverServices = () => {
             <SEO title="Driver Services" description="Manage car wash, puncture repairs, and other driver-related services." />
 
             {/* Header Screenshot Match */}
-            <header style={{ marginBottom: '40px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '40px' }}>
+            <header className="driver-services-header">
                 <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                         <div style={{ background: '#10b981', padding: '6px', borderRadius: '10px', display: 'flex' }}>
@@ -371,7 +490,7 @@ const DriverServices = () => {
                     <h1 style={{ color: 'white', fontWeight: '900', margin: 0, letterSpacing: '-1px', fontSize: '32px' }}>Driver Services</h1>
                 </div>
 
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <div className="driver-services-controls">
                     {/* Toggle between Range and Month */}
                     <div style={{ display: 'flex', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)' }}>
                         <button 
@@ -441,7 +560,7 @@ const DriverServices = () => {
                         </div>
                     )}
                     <button onClick={handleExport} style={{ height: '42px', padding: '0 20px', borderRadius: '12px', background: 'rgba(16,185,129,0.1)', border: '1px solid rgba(16,185,129,0.2)', color: '#10b981', fontWeight: '900', fontSize: '12px', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                        <FileSpreadsheet size={16} /> EXCEL
+                        <FileSpreadsheet size={16} /> <span className="hide-mobile">EXCEL</span>
                     </button>
                 </div>
             </header>
@@ -509,7 +628,7 @@ const DriverServices = () => {
             )}
 
             {/* Search and Action Bar */}
-            <div style={{ display: 'flex', gap: '20px', marginBottom: '30px', alignItems: 'center' }}>
+            <div className="driver-services-search-bar">
                 <div style={{ position: 'relative', flex: 1 }}>
                     <Search size={18} style={{ position: 'absolute', left: '18px', top: '18px', color: 'rgba(255,255,255,0.2)' }} />
                     <input 
@@ -524,7 +643,7 @@ const DriverServices = () => {
                     onClick={() => { resetForm(); setShowModal(true); }}
                     style={{ height: '54px', padding: '0 25px', borderRadius: '18px', background: 'linear-gradient(135deg, #10b981, #059669)', border: 'none', color: 'white', fontWeight: '900', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', boxShadow: '0 10px 20px rgba(16, 185, 129, 0.3)' }}
                 >
-                    <Plus size={18} /> ADD RECORD
+                    <Plus size={18} /> <span className="hide-mobile">ADD RECORD</span><span className="show-mobile">ADD</span>
                 </button>
             </div>
 
