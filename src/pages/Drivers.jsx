@@ -942,7 +942,15 @@ const Drivers = ({ isSubComponent = false }) => {
                                         </div>
                                         <div className="form-group">
                                             <label>Password *</label>
-                                            <input type="password" className="input-field" value={password} onChange={(e) => setPassword(e.target.value)} required={!isFreelancer} />
+                                            <input 
+                                                type="password" 
+                                                name="driver-password"
+                                                autoComplete="new-password"
+                                                className="input-field" 
+                                                value={password} 
+                                                onChange={(e) => setPassword(e.target.value)} 
+                                                required={!isFreelancer} 
+                                            />
                                         </div>
                                     </div>
                                 </div>
@@ -1124,7 +1132,16 @@ const Drivers = ({ isSubComponent = false }) => {
                                         </div>
                                         <div style={{ marginBottom: '15px' }}>
                                             <label className="input-label" style={{ marginBottom: '6px' }}>Password</label>
-                                            <input type="password" name="password" className="input-field" value={editForm.password} onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} placeholder="Enter new password" style={{ background: 'rgba(0,0,0,0.2)' }} />
+                                            <input 
+                                                type="password" 
+                                                name="edit-driver-password" 
+                                                autoComplete="new-password"
+                                                className="input-field" 
+                                                value={editForm.password} 
+                                                onChange={(e) => setEditForm({ ...editForm, password: e.target.value })} 
+                                                placeholder="Enter new password" 
+                                                style={{ background: 'rgba(0,0,0,0.2)' }} 
+                                            />
                                         </div>
                                     </div>
 

@@ -393,16 +393,32 @@ const Admins = () => {
                                         <input className="input-field" value={mobile} onChange={e => setMobile(e.target.value)} required placeholder="10-digit #" />
                                     </div>
                                 </div>
-                                <div className="modal-form-grid" style={{ marginBottom: '30px' }}>
                                     <div className="input-field-group">
                                         <label className="input-label">System Username</label>
-                                        <input className="input-field" value={username} onChange={e => setUsername(e.target.value)} required placeholder="Unique ID" style={{ color: 'var(--primary)', fontWeight: '800' }} />
+                                        <input 
+                                            className="input-field" 
+                                            name="admin-username"
+                                            autoComplete="off"
+                                            value={username} 
+                                            onChange={e => setUsername(e.target.value)} 
+                                            required 
+                                            placeholder="Unique ID" 
+                                            style={{ color: 'var(--primary)', fontWeight: '800' }} 
+                                        />
                                     </div>
                                     <div className="input-field-group">
                                         <label className="input-label">{editingAdmin ? 'New Password (Optional)' : 'Access Password'}</label>
-                                        <input type="password" className="input-field" value={password} onChange={e => setPassword(e.target.value)} required={!editingAdmin} placeholder="••••••••" />
+                                        <input 
+                                            type="password" 
+                                            className="input-field" 
+                                            name="admin-password"
+                                            autoComplete="new-password"
+                                            value={password} 
+                                            onChange={e => setPassword(e.target.value)} 
+                                            required={!editingAdmin} 
+                                            placeholder="••••••••" 
+                                        />
                                     </div>
-                                </div>
 
                                 <div style={{ marginBottom: '30px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>

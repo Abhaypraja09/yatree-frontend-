@@ -116,6 +116,9 @@ const Login = () => {
                             <Phone size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
                             <input
                                 type="text"
+                                name="username"
+                                id="login-username"
+                                autoComplete="username"
                                 placeholder="Username or Mobile"
                                 value={mobile}
                                 onChange={(e) => setMobile(e.target.value)}
@@ -135,6 +138,9 @@ const Login = () => {
                             <Lock size={18} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
                             <input
                                 type="password"
+                                name="password"
+                                id="login-password"
+                                autoComplete="current-password"
                                 placeholder="••••••••"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}

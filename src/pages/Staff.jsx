@@ -2116,7 +2116,17 @@ const Staff = () => {
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                                                     <label style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{isEditing ? 'New Password (Optional)' : 'Password'}</label>
-                                                    <input required={!isEditing} type="password" className="premium-compact-input" placeholder="••••••••" style={{ height: '56px', padding: '0 20px', fontSize: '15px', fontWeight: '700', borderRadius: '16px' }} value={formData.password} onChange={(e) => setFormData({ ...formData, password: e.target.value })} />
+                                                    <input 
+                                                        required={!isEditing} 
+                                                        type="password" 
+                                                        name="staff-password"
+                                                        autoComplete="new-password"
+                                                        className="premium-compact-input" 
+                                                        placeholder="••••••••" 
+                                                        style={{ height: '56px', padding: '0 20px', fontSize: '15px', fontWeight: '700', borderRadius: '16px' }} 
+                                                        value={formData.password} 
+                                                        onChange={(e) => setFormData({ ...formData, password: e.target.value })} 
+                                                    />
                                                 </div>
                                             </div>
                                         </section>
