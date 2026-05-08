@@ -57,14 +57,14 @@ const MAINTENANCE_CATEGORIES = [
     'Misc. Repairs'
 ];
 
-const NEXT_SERVICE_TYPES = {
-    'Service': 'Scheduled Service',
-    'Oil Change': 'Engine Oil Change',
-    'Filter': 'Filter Replacement',
-    'Brake': 'Brake System',
-    'Tyres': 'Tyre/Wheel Job',
-    'Other': 'Misc. Repairs'
-};
+const NEXT_SERVICE_TYPES = [
+    'Service',
+    'Oil Change',
+    'Filter',
+    'Brake',
+    'Tyres',
+    'Other'
+];
 
 const Maintenance = () => {
     const { theme } = useTheme();
@@ -1151,11 +1151,7 @@ const Maintenance = () => {
                                                             <select
                                                                 value=""
                                                                 onChange={(e) => {
-                                                                    const rec = data.records[e.target.value];
-                                                                    if (rec) {
-                                                                        setDrillData({ vehicle: v.carNumber, category: rec.maintenanceType || 'Repair', records: [rec] });
-                                                                        setShowDrillModal(true);
-                                                                    }
+                                                                    // Only for visual selection, no modal trigger
                                                                 }}
                                                                 onClick={(e) => e.stopPropagation()}
                                                                 style={{
@@ -1190,13 +1186,7 @@ const Maintenance = () => {
                                                     initial={{ opacity: 0, x: -10 }}
                                                     animate={{ opacity: 1, x: 0 }}
                                                     transition={{ delay: idx * 0.03 }}
-                                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', cursor: 'pointer' }}
-                                                    whileHover={{ background: 'rgba(255,255,255,0.02)' }}
-                                                    onClick={() => {
-                                                        const allRecs = Object.values(v.cats).flatMap(c => c.records || []);
-                                                        setDrillData({ vehicle: v.carNumber, category: 'Complete History', records: allRecs });
-                                                        setShowDrillModal(true);
-                                                    }}
+                                                    style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}
                                                 >
                                                     <td style={{ position: 'sticky', left: 0, zIndex: 5, background: '#0f172a', padding: '20px 25px', borderRight: '1px solid rgba(255,255,255,0.05)' }}>
                                                         <div style={{ color: 'white', fontWeight: '900', fontSize: '15px', letterSpacing: '-0.5px' }}>{v.carNumber}</div>
