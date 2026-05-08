@@ -126,19 +126,42 @@ const VehicleMonthlyDetails = () => {
     const totalDriverSalary = summary.totalSalary; // Use the backend global summary total for the top card (includes parking)
     
     // Process "Other" maintenance and Combined Services
+    // Process "Maintenance" (Mechanical) vs "Misc. Repairs" vs "Operational Services"
     const processedData = filteredData.map(v => {
-        const otherRecords = (v.maintenance?.records || []).filter(r => 
+        // Standardized Operational Service Regex
+        const operationalRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher/i;
+        
+        // 1. Separate Operational Services from the Maintenance list
+        const maintRecs = (v.maintenance?.records || []);
+        const mechanicalRecs = maintRecs.filter(r => {
+            const search = `${r.type || ''} ${r.category || ''} ${r.description || ''}`.toLowerCase();
+            return !operationalRegex.test(search);
+        });
+
+        // 2. Identify "Misc. Repairs" (Other category within mechanical)
+        const otherRecords = mechanicalRecs.filter(r => 
             (r.type || '').toLowerCase().includes('other') || 
             (r.category || '').toLowerCase().includes('other')
         );
         const otherAmount = otherRecords.reduce((sum, r) => sum + (r.amount || 0), 0);
-        const baseMaintAmount = (v.maintenance?.totalAmount || 0) - otherAmount;
+
+        // 3. Identification of "Mechanical Maintenance" (Mechanical minus Other)
+        const baseMaintAmount = mechanicalRecs.reduce((sum, r) => sum + (r.amount || 0), 0) - otherAmount;
+
+        // 4. Combined Operational Cost: (Services from driver app) + (Operational items from maintenance) + (BorderTax/Fastag/Parking)
+        const maintOpsAmount = maintRecs.filter(r => {
+            const search = `${r.type || ''} ${r.category || ''} ${r.description || ''}`.toLowerCase();
+            return operationalRegex.test(search);
+        }).reduce((sum, r) => sum + (r.amount || 0), 0);
+
         const combinedServiceAmount = (v.services?.wash?.amount || 0) + 
                                     (v.services?.puncture?.amount || 0) + 
                                     (v.fastag?.totalAmount || 0) + 
                                     (v.borderTax?.totalAmount || 0) + 
-                                    (v.parking?.totalAmount || 0);
-        return { ...v, otherAmount, baseMaintAmount, combinedServiceAmount, otherRecords };
+                                    (v.parking?.totalAmount || 0) + 
+                                    maintOpsAmount;
+
+        return { ...v, otherAmount, baseMaintAmount, combinedServiceAmount, otherRecords, mechanicalRecs };
     });
 
     const totalServiceAmount = processedData.reduce((sum, v) => sum + v.combinedServiceAmount, 0);
@@ -355,8 +378,8 @@ const VehicleMonthlyDetails = () => {
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver Salary</th>
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Fuel & Avg</th>
-                                <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Misc. Repairs</th>
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Maintenance</th>
+                                <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Misc. Repairs</th>
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Wash / Tax / Fastag / Parking</th>
                                 <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right' }}>Total Amount</th>
                             </tr>
@@ -427,17 +450,19 @@ const VehicleMonthlyDetails = () => {
                                                 <div style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>₹{(v.fuel?.totalAmount || 0).toLocaleString()}</div>
                                                 <div style={{ color: '#10b981', fontSize: '11px', fontWeight: '900', background: 'rgba(16,185,129,0.12)', padding: '2px 6px', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.1)' }}>{(v.fuel?.totalQuantity || 0).toFixed(1)} L</div>
                                             </div>
-                                            <div>
-                                                {v.fuel?.records?.length > 0 ? (
-                                                    <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '140px', padding: '6px 10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', color: '#10b981', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
-                                                        <option value="" hidden>{v.fuel.records.length} Fills</option>
-                                                        {v.fuel.records.map((f, i) => (
-                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>
-                                                                {formatDateIST(f.date)} - {f.quantity.toFixed(1)}L - {f.mileage > 0 ? `${f.mileage.toFixed(2)} KML` : 'Entry'}
-                                                            </option>
+                                            <div style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800' }}>Avg: {(v.fuel?.avgMileage || 0).toFixed(2)} km/L</div>
+                                        </td>
+                                        <td style={{ padding: '20px 25px' }}>
+                                            <div style={{ color: 'var(--primary)', fontWeight: '900', fontSize: '15px' }}>₹{(v.baseMaintAmount || 0).toLocaleString()}</div>
+                                            <div style={{ marginTop: '8px' }}>
+                                                {v.mechanicalRecs?.filter(r => !(v.otherRecords || []).includes(r)).length > 0 ? (
+                                                    <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '8px', color: '#fcd34d', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
+                                                        <option value="" hidden>View Jobs</option>
+                                                        {v.mechanicalRecs.filter(r => !(v.otherRecords || []).includes(r)).map((m, i) => (
+                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>{formatDateIST(m.date)} - {m.category || 'Repair'} - ₹{m.amount.toLocaleString()}</option>
                                                         ))}
                                                     </select>
-                                                ) : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px', fontWeight: '700' }}>No Records</span>}
+                                                ) : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px', fontWeight: '700' }}>No Logs</span>}
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
@@ -448,7 +473,7 @@ const VehicleMonthlyDetails = () => {
                                                         <option value="" hidden>View {v.otherRecords.length} Logs</option>
                                                         {v.otherRecords.map((p, i) => (
                                                             <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>
-                                                                {formatDateIST(p.date)} - {p.category || 'Misc'} - ₹{p.amount.toLocaleString()}
+                                                                {formatDateIST(p.date || p.billDate)} - {p.category || 'Misc'} - ₹{p.amount.toLocaleString()}
                                                             </option>
                                                         ))}
                                                     </select>
@@ -456,33 +481,18 @@ const VehicleMonthlyDetails = () => {
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
-                                            <div style={{ color: 'var(--primary)', fontWeight: '900', fontSize: '15px' }}>₹{(v.baseMaintAmount || 0).toLocaleString()}</div>
-                                            <div style={{ marginTop: '8px' }}>
-                                                {v.maintenance?.records?.filter(r => !(v.otherRecords || []).includes(r)).length > 0 ? (
-                                                    <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', borderRadius: '8px', color: '#fcd34d', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
-                                                        <option value="" hidden>View Jobs</option>
-                                                        {v.maintenance.records.filter(r => !(v.otherRecords || []).includes(r)).map((m, i) => (
-                                                            <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>{formatDateIST(m.date)} - {m.category || 'Repair'} - ₹{m.amount.toLocaleString()}</option>
-                                                        ))}
-                                                    </select>
-                                                ) : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px', fontWeight: '700' }}>No Logs</span>}
-                                            </div>
-                                        </td>
-                                        <td style={{ padding: '20px 25px' }}>
                                             <div style={{ color: '#818cf8', fontWeight: '900', fontSize: '15px' }}>₹{(v.combinedServiceAmount || 0).toLocaleString()}</div>
-                                            <div style={{ marginTop: '10px' }}>
-                                                <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: '8px', color: '#818cf8', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
-                                                    <option value="" hidden>Breakdown</option>
-                                                    <option value="wash" style={{ background: '#0f172a', color: 'white' }}>Wash/Punc: ₹{((v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0)).toLocaleString()}</option>
-                                                    <option value="fastag" style={{ background: '#0f172a', color: 'white' }}>Fastag: ₹{(v.fastag?.totalAmount || 0).toLocaleString()}</option>
-                                                    <option value="tax" style={{ background: '#0f172a', color: 'white' }}>Border Tax: ₹{(v.borderTax?.totalAmount || 0).toLocaleString()}</option>
-                                                    <option value="parking" style={{ background: '#0f172a', color: 'white' }}>Parking: ₹{(v.parking?.totalAmount || 0).toLocaleString()}</option>
-                                                </select>
+                                            <div style={{ display: 'flex', gap: '4px', marginTop: '8px', flexWrap: 'wrap' }}>
+                                                {((v.services?.wash?.amount || 0) > 0) && <span style={{ fontSize: '9px', padding: '2px 4px', background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', borderRadius: '4px', fontWeight: '800' }}>WASH</span>}
+                                                {(v.fastag?.totalAmount > 0) && <span style={{ fontSize: '9px', padding: '2px 4px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderRadius: '4px', fontWeight: '800' }}>FASTAG</span>}
+                                                {(v.borderTax?.totalAmount > 0) && <span style={{ fontSize: '9px', padding: '2px 4px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '4px', fontWeight: '800' }}>TAX</span>}
                                             </div>
                                         </td>
                                         <td style={{ padding: '20px 25px', textAlign: 'right' }}>
                                             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Total Cost</div>
-                                            <div style={{ color: '#10b981', fontWeight: '950', fontSize: '18px', letterSpacing: '-0.5px' }}>₹{((v.fuel?.totalAmount || 0) + (v.maintenance?.totalAmount || 0) + (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0) + (v.driverSalary || 0) + (v.parking?.totalAmount || 0) + (v.fastag?.totalAmount || 0) + (v.borderTax?.totalAmount || 0)).toLocaleString()}</div>
+                                            <div style={{ color: '#10b981', fontWeight: '950', fontSize: '18px', letterSpacing: '-0.5px' }}>
+                                                ₹{( (v.driverSalary || 0) + (v.fuel?.totalAmount || 0) + (v.baseMaintAmount || 0) + (v.otherAmount || 0) + (v.combinedServiceAmount || 0) ).toLocaleString()}
+                                            </div>
                                         </td>
                                     </motion.tr>
                                 ))

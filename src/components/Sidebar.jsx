@@ -351,16 +351,31 @@ const Sidebar = ({ isOpen, onClose }) => {
                                     width: '44px',
                                     height: '44px',
                                     borderRadius: '14px',
-                                    background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`,
+                                    background: selectedCompany?.logoUrl ? '#FFFFFF' : `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`,
                                     display: 'flex',
                                     justifyContent: 'center',
                                     alignItems: 'center',
                                     color: '#000',
                                     fontWeight: '1000',
                                     fontSize: '20px',
-                                    boxShadow: `0 8px 16px ${theme.primary}20`
+                                    boxShadow: `0 8px 16px ${theme.primary}20`,
+                                    overflow: 'hidden',
+                                    border: selectedCompany?.logoUrl ? `2px solid ${theme.primary}` : 'none'
                                 }}>
-                                    {user?.name?.charAt(0) || 'A'}
+                                    {selectedCompany?.logoUrl ? (
+                                        <img 
+                                            src={selectedCompany.logoUrl} 
+                                            alt="Logo" 
+                                            style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} 
+                                            onError={(e) => {
+                                                e.target.style.display = 'none';
+                                                e.target.parentElement.innerText = user?.name?.charAt(0) || 'A';
+                                                e.target.parentElement.style.background = `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`;
+                                            }}
+                                        />
+                                    ) : (
+                                        user?.name?.charAt(0) || 'A'
+                                    )}
                                 </div>
                                 <div style={{ overflow: 'hidden' }}>
                                     <p style={{ fontSize: '16px', fontWeight: '900', color: 'white', margin: 0, whiteSpace: 'nowrap', textOverflow: 'ellipsis', letterSpacing: '-0.5px' }}>{user.name}</p>

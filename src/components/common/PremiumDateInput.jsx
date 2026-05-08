@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const PremiumDateInput = ({ value, onChange, label, required = false, placeholder = "DD-MM-YYYY", align, direction = "down" }) => {
+const PremiumDateInput = ({ value, onChange, label, required = false, placeholder = "DD-MM-YYYY", align, direction = "down", disableCalendar = false, inputStyle = {} }) => {
     const [showCalendar, setShowCalendar] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [viewDate, setViewDate] = useState(new Date());
@@ -193,7 +193,16 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
     return (
         <div ref={containerRef} style={{ position: 'relative', width: '100%' }}>
             {label && <label style={{ color: 'rgba(255,255,255,0.5)', fontSize: '12px', fontWeight: '700', letterSpacing: '0.5px', marginBottom: '10px', display: 'block' }}>{label}</label>}
-            <div style={{ position: 'relative' }}>
+            <div style={{ 
+                position: 'relative',
+                height: '60px',
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: '18px',
+                overflow: 'hidden',
+                display: 'flex',
+                alignItems: 'center'
+            }}>
                 <input
                     type="text"
                     value={inputValue}
@@ -202,40 +211,42 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
                     required={required}
                     inputMode="numeric"
                     style={{
-                        height: label ? '52px' : '40px',
-                        background: 'rgba(255,255,255,0.03)',
-                        border: '1px solid rgba(255,255,255,0.08)',
-                        borderRadius: '12px',
-                        fontSize: label ? '15px' : '13px',
+                        height: '100%',
+                        background: 'transparent',
+                        border: 'none',
+                        fontSize: label ? '15px' : 'inherit',
                         width: '100%',
                         color: 'white',
-                        padding: label ? '0 45px 0 15px' : '0 35px 0 12px',
+                        padding: label ? '0 45px 0 15px' : '0 15px',
                         outline: 'none',
                         transition: 'all 0.3s',
                         textAlign: label ? 'left' : 'center',
-                        fontWeight: '700'
+                        fontWeight: 'inherit',
+                        ...inputStyle
                     }}
                     onFocus={e => {
                         e.target.style.borderColor = 'var(--primary, #fbbf24)';
-                        setShowCalendar(true);
+                        if (!disableCalendar) setShowCalendar(true);
                     }}
-                    onClick={() => setShowCalendar(true)}
+                    onClick={() => !disableCalendar && setShowCalendar(true)}
                     onBlur={e => e.target.style.borderColor = 'rgba(255,255,255,0.05)'}
                 />
-                <div
-                    onClick={() => setShowCalendar(!showCalendar)}
-                    style={{
-                        position: 'absolute',
-                        right: label ? '15px' : '10px',
-                        top: '50%',
-                        transform: 'translateY(-50%)',
-                        color: 'rgba(255,255,255,0.3)',
-                        cursor: 'pointer',
-                        padding: '5px'
-                    }}
-                >
-                    <CalendarIcon size={20} />
-                </div>
+                {!disableCalendar && (
+                    <div
+                        onClick={() => !disableCalendar && setShowCalendar(!showCalendar)}
+                        style={{
+                            position: 'absolute',
+                            right: label ? '15px' : '10px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            color: 'rgba(255,255,255,0.3)',
+                            cursor: 'pointer',
+                            padding: '5px'
+                        }}
+                    >
+                        <CalendarIcon size={20} />
+                    </div>
+                )}
             </div>
 
             <AnimatePresence>

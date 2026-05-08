@@ -224,9 +224,9 @@ const Reports = ({ isSubComponent = false }) => {
     const { selectedCompany } = useCompany();
     const location = useLocation();
 
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [selectedDay, setSelectedDay] = useState(new Date().getDate().toString());
+    const [selectedMonth, setSelectedMonth] = useState(new Date(todayIST()).getMonth());
+    const [selectedYear, setSelectedYear] = useState(new Date(todayIST()).getFullYear());
+    const [selectedDay, setSelectedDay] = useState(new Date(todayIST()).getDate().toString());
     const [fromDate, setFromDate] = useState(todayIST());
     const [toDate, setToDate] = useState(todayIST());
 
@@ -276,10 +276,10 @@ const Reports = ({ isSubComponent = false }) => {
         setEditingItem(null);
 
         // Reset to current date as default on every fresh entry
-        const now = new Date();
-        setSelectedMonth(now.getMonth());
-        setSelectedYear(now.getFullYear());
-        setSelectedDay(now.getDate().toString());
+        const istDate = new Date(todayIST());
+        setSelectedMonth(istDate.getMonth());
+        setSelectedYear(istDate.getFullYear());
+        setSelectedDay(istDate.getDate().toString());
     }, [location.pathname, location.key]);
 
     const tabList = useMemo(() => {
@@ -309,28 +309,25 @@ const Reports = ({ isSubComponent = false }) => {
         if (tabList.length > 0) {
             if (location.pathname.includes('driver-duty')) {
                 setActiveTabs(['drivers']);
-                setSelectedDay('All');
             } else if (location.pathname.includes('freelancer-duty')) {
                 setActiveTabs(['freelancers']);
-                setSelectedDay('All');
             } else if (location.pathname.includes('log-book')) {
                 setActiveTabs(['drivers', 'freelancers', 'outsideCars']); // All active by default in Log Book
-                setSelectedDay('All');
             } else if (activeTabs.length === 0) {
                 setActiveTabs([tabList[0].id]);
-                setSelectedDay('All');
             }
         }
     }, [tabList, location.pathname]);
 
     useEffect(() => {
         if (selectedDay === 'All') {
-            const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
-            const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+            const start = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01`;
+            const lastDay = new Date(selectedYear, selectedMonth + 1, 0).getDate();
+            const end = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
             setFromDate(start);
             setToDate(end);
         } else {
-            const d = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+            const d = `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`;
             setFromDate(d);
             setToDate(d);
         }
@@ -908,12 +905,15 @@ const Reports = ({ isSubComponent = false }) => {
                             {/* Date Input */}
                             <div style={{ width: '150px' }}>
                                 <PremiumDateInput
-                                    value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
+                                    value={selectedDay === 'All' 
+                                        ? `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-01` 
+                                        : `${selectedYear}-${String(selectedMonth + 1).padStart(2, '0')}-${String(selectedDay).padStart(2, '0')}`
+                                    }
                                     onChange={v => {
-                                        const d = new Date(v);
-                                        setSelectedYear(d.getFullYear());
-                                        setSelectedMonth(d.getMonth());
-                                        setSelectedDay(d.getDate().toString());
+                                        const [y, m, d] = v.split('-');
+                                        setSelectedYear(parseInt(y));
+                                        setSelectedMonth(parseInt(m) - 1);
+                                        setSelectedDay(parseInt(d).toString());
                                     }}
                                 />
                             </div>

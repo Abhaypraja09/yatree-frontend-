@@ -501,18 +501,30 @@ const Maintenance = () => {
             doc.setFillColor(15, 23, 42);
             doc.rect(0, 0, pageWidth, 45, 'F');
 
-            if (logo) doc.addImage(logo, 'PNG', 12, 7, 30, 30);
+            // Premium Logo Container
+            if (logo) {
+                doc.setFillColor(255, 255, 255);
+                doc.roundedRect(12, 6, 32, 32, 3, 3, 'F'); // White background for logo
+                doc.addImage(logo, 'PNG', 14, 8, 28, 28);
+            } else {
+                doc.setDrawColor(255, 255, 255);
+                doc.setLineWidth(0.5);
+                doc.roundedRect(12, 6, 32, 32, 3, 3, 'D');
+                doc.setFontSize(8);
+                doc.setTextColor(255, 255, 255);
+                doc.text('LOGO', 24, 23, { align: 'center' });
+            }
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text((selectedCompany?.name || 'FLEET MANAGEMENT').toUpperCase(), 45, 22);
+            doc.text((selectedCompany?.name || 'FLEET MANAGEMENT').toUpperCase(), 50, 20);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(14, 165, 233);
-            doc.text('PREMIUM FLEET MAINTENANCE REPORT', 45, 30);
+            doc.text('PREMIUM FLEET MAINTENANCE REPORT', 50, 28);
             doc.setTextColor(200, 200, 200);
-            doc.text(selectedCompany?.address || '', 45, 37);
+            doc.text(selectedCompany?.address || '', 50, 35);
 
             // 2. Report Information & Filter Context
             doc.setTextColor(15, 23, 42);
@@ -654,7 +666,8 @@ const Maintenance = () => {
         const matchesVehicle = filterVehicle === 'All' || r.vehicle?.carNumber === filterVehicle;
 
         // Exclude strictly non-maintenance driver services (Wash, Water, etc.)
-        const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda/i;
+        // Standardized Operational Service Regex: Wash, Puncture, Consumables
+        const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher/i;
         const isService = driverServiceRegex.test(r.category || '') ||
             driverServiceRegex.test(r.description || '') ||
             driverServiceRegex.test(r.maintenanceType || '');
@@ -703,7 +716,7 @@ const Maintenance = () => {
             const matchesType = filterType === 'All' || (r.maintenanceType && r.maintenanceType.split(', ').includes(filterType));
             const matchesGarage = filterGarage === 'All' || (r.garageName || r.vendorName) === filterGarage;
 
-            const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda/i;
+            const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher/i;
             const isService = driverServiceRegex.test(r.category || '') ||
                 driverServiceRegex.test(r.description || '') ||
                 driverServiceRegex.test(r.maintenanceType || '');
@@ -729,7 +742,7 @@ const Maintenance = () => {
             const matchesType = filterType === 'All' || (r.maintenanceType && r.maintenanceType.split(', ').includes(filterType));
             const matchesVehicle = filterVehicle === 'All' || r.vehicle?.carNumber === filterVehicle;
 
-            const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda/i;
+            const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher/i;
             const isService = driverServiceRegex.test(r.category || '') ||
                 driverServiceRegex.test(r.description || '') ||
                 driverServiceRegex.test(r.maintenanceType || '');
@@ -762,8 +775,8 @@ const Maintenance = () => {
         .map(v => {
             // Pre-calculate category totals for sorting/filtering using accurate logic
             const allRecs = (v.maintenance?.records || v.maintenance?.recs || []).filter(r => {
-                const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda/i;
-                const searchStrRec = `${r.maintenanceType || r.type || ''} ${r.category || ''} ${r.description || ''}`.toLowerCase();
+                const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher/i;
+                const searchStrRec = `${r.maintenanceType || r.type || r.maintenanceType || ''} ${r.category || r.category || ''} ${r.description || r.description || ''}`.toLowerCase();
                 return !driverServiceRegex.test(searchStrRec);
             });
 
@@ -1139,10 +1152,12 @@ const Maintenance = () => {
                                 <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                                     <tr style={{ textAlign: 'left', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(10px)' }}>
                                         <th style={{ position: 'sticky', left: 0, zIndex: 11, background: '#1e293b', padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', borderRight: '1px solid rgba(255,255,255,0.05)' }}>Vehicle</th>
-                                        {NEXT_SERVICE_TYPES.map(cat => (
-                                            <th key={cat} style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '150px' }}>{cat}</th>
-                                        ))}
-                                        <th style={{ position: 'sticky', right: 0, zIndex: 11, background: '#1e293b', padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>Total Maint</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '150px' }}>Driver Salary</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '180px' }}>Fuel & Avg</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '150px' }}>Maintenance</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '150px' }}>Misc. Repairs</th>
+                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '220px' }}>Wash / Tax / Fastag / Parking</th>
+                                        <th style={{ position: 'sticky', right: 0, zIndex: 11, background: '#1e293b', padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>Total Amount</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1201,12 +1216,59 @@ const Maintenance = () => {
                                                         <div style={{ color: 'white', fontWeight: '900', fontSize: '15px', letterSpacing: '-0.5px' }}>{v.carNumber}</div>
                                                         <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '700' }}>{v.model || 'Fleet Unit'}</div>
                                                     </td>
-                                                    {NEXT_SERVICE_TYPES.map(cat => (
-                                                        <Cell key={cat} data={v.cats[cat]} color="var(--primary)" />
-                                                    ))}
+
+                                                    {/* Driver Salary */}
+                                                    <td style={{ padding: '20px 25px' }}>
+                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{(v.driverSalary || 0).toLocaleString()}</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '800', marginTop: '4px' }}>Monthly Payout</div>
+                                                    </td>
+
+                                                    {/* Fuel & Avg */}
+                                                    <td style={{ padding: '20px 25px' }}>
+                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{(v.fuel?.totalAmount || 0).toLocaleString()}</div>
+                                                        <div style={{ color: 'var(--primary)', fontSize: '12px', fontWeight: '900', marginTop: '4px' }}>{v.fuel?.avgMileage || 0} km/L Avg</div>
+                                                    </td>
+
+                                                    {/* Maintenance (Major) */}
+                                                    <Cell data={{ 
+                                                        amount: NEXT_SERVICE_TYPES.filter(c => c !== 'Other').reduce((s, c) => s + (v.cats[c]?.amount || 0), 0),
+                                                        records: NEXT_SERVICE_TYPES.filter(c => c !== 'Other').flatMap(c => v.cats[c]?.records || [])
+                                                    }} label="Repairs" />
+
+                                                    {/* Misc. Repairs (Other) */}
+                                                    <Cell data={v.cats['Other']} label="Misc" />
+
+                                                    {/* Wash / Tax / Fastag / Parking */}
+                                                    <td style={{ padding: '20px 25px' }}>
+                                                        {(() => {
+                                                            const wash = (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0);
+                                                            const tax = (v.borderTax?.totalAmount || 0);
+                                                            const fastag = (v.fastag?.totalAmount || 0);
+                                                            const parking = (v.parking?.totalAmount || 0);
+                                                            const opTotal = wash + tax + fastag + parking;
+                                                            return (
+                                                                <>
+                                                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{opTotal.toLocaleString()}</div>
+                                                                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                                                                        {wash > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(16,185,129,0.1)', color: '#10b981', borderRadius: '4px', fontWeight: '800' }}>WASH</span>}
+                                                                        {tax > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', borderRadius: '4px', fontWeight: '800' }}>TAX</span>}
+                                                                        {fastag > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', borderRadius: '4px', fontWeight: '800' }}>FASTAG</span>}
+                                                                        {parking > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(139,92,246,0.1)', color: '#8b5cf6', borderRadius: '4px', fontWeight: '800' }}>PARK</span>}
+                                                                    </div>
+                                                                </>
+                                                            );
+                                                        })()}
+                                                    </td>
+
                                                     <td style={{ position: 'sticky', right: 0, zIndex: 5, background: '#0f172a', padding: '20px 25px', textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
-                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Annual Cost</div>
-                                                        <div style={{ color: '#10b981', fontWeight: '950', fontSize: '18px', letterSpacing: '-0.5px' }}>₹{v.recalculatedTotal.toLocaleString()}</div>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Grand Total</div>
+                                                        <div style={{ color: '#10b981', fontWeight: '950', fontSize: '18px', letterSpacing: '-0.5px' }}>
+                                                            ₹{(() => {
+                                                                const opTotal = (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0) + (v.borderTax?.totalAmount || 0) + (v.fastag?.totalAmount || 0) + (v.parking?.totalAmount || 0);
+                                                                const grandTotal = (v.driverSalary || 0) + (v.fuel?.totalAmount || 0) + v.recalculatedTotal + opTotal;
+                                                                return grandTotal.toLocaleString();
+                                                            })()}
+                                                        </div>
                                                     </td>
                                                 </motion.tr>
                                             );

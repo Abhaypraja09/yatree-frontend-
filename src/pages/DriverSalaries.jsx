@@ -565,18 +565,30 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             doc.setFillColor(15, 23, 42);
             doc.rect(0, 0, pageWidth, 50, 'F');
 
-            if (logo) doc.addImage(logo, 'PNG', 12, 8, 30, 30);
+            // Premium Logo Container
+            if (logo) {
+                doc.setFillColor(255, 255, 255);
+                doc.roundedRect(12, 8, 34, 34, 3, 3, 'F'); // White background for logo
+                doc.addImage(logo, 'PNG', 14, 10, 30, 30);
+            } else {
+                doc.setDrawColor(255, 255, 255);
+                doc.setLineWidth(0.5);
+                doc.roundedRect(12, 8, 34, 34, 3, 3, 'D');
+                doc.setFontSize(8);
+                doc.setTextColor(255, 255, 255);
+                doc.text('LOGO', 24, 26, { align: 'center' });
+            }
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text((selectedCompany?.name || 'FLEET MANAGEMENT').toUpperCase(), 45, 22);
+            doc.text((selectedCompany?.name || 'FLEET MANAGEMENT').toUpperCase(), 52, 22);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(200, 200, 200);
-            doc.text('Commercial Fleet Operations & Management', 45, 30);
+            doc.text('Commercial Fleet Operations & Management', 52, 30);
             doc.setTextColor(14, 165, 233);
-            doc.text(selectedCompany?.website || '', 45, 37);
+            doc.text(selectedCompany?.website || '', 52, 37);
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);

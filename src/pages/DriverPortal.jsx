@@ -476,20 +476,30 @@ const DriverPortal = () => {
             doc.setFillColor(15, 23, 42); // Navy Dark
             doc.rect(0, 0, pageWidth, 50, 'F');
 
+            // Premium Logo Container
             if (logo) {
-                doc.addImage(logo, 'PNG', 12, 8, 30, 30);
+                doc.setFillColor(255, 255, 255);
+                doc.roundedRect(12, 8, 34, 34, 3, 3, 'F'); // White background for logo
+                doc.addImage(logo, 'PNG', 14, 10, 30, 30);
+            } else {
+                doc.setDrawColor(255, 255, 255);
+                doc.setLineWidth(0.5);
+                doc.roundedRect(12, 8, 34, 34, 3, 3, 'D');
+                doc.setFontSize(8);
+                doc.setTextColor(255, 255, 255);
+                doc.text('LOGO', 24, 26, { align: 'center' });
             }
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text(user.company?.name || 'FLEET MANAGEMENT', 45, 22);
+            doc.text((user.company?.name || 'FLEET MANAGEMENT').toUpperCase(), 52, 22);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(200, 200, 200);
-            doc.text('Premium Fleet Management & Travel Solutions', 45, 30);
+            doc.text('Premium Fleet Management & Travel Solutions', 52, 30);
             doc.setTextColor(14, 165, 233); // Blue accent
-            doc.text(user.company?.website || '', 45, 37);
+            doc.text(user.company?.website || '', 52, 37);
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);

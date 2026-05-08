@@ -162,12 +162,22 @@ const Profile = () => {
                 <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: '30px' }}>
                     <div style={{
                         width: '100px', height: '100px', borderRadius: '30px', 
-                        background: `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`,
+                        background: selectedCompany?.logoUrl ? '#FFFFFF' : `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`,
                         display: 'flex', justifyContent: 'center', alignItems: 'center',
                         fontSize: '40px', fontWeight: '1000', color: '#000',
-                        boxShadow: `0 20px 40px ${theme.primary}30`
+                        boxShadow: `0 20px 40px ${theme.primary}30`,
+                        overflow: 'hidden',
+                        border: selectedCompany?.logoUrl ? `3px solid ${theme.primary}` : 'none'
                     }}>
-                        {user?.name?.charAt(0) || 'U'}
+                        {selectedCompany?.logoUrl ? (
+                            <img 
+                                src={selectedCompany.logoUrl} 
+                                alt="Logo" 
+                                style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '10px' }} 
+                            />
+                        ) : (
+                            user?.name?.charAt(0) || 'U'
+                        )}
                     </div>
                     <div>
                         <h1 style={{ fontSize: '36px', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>{user.name}</h1>
