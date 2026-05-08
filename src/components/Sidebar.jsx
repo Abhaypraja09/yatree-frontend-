@@ -199,30 +199,71 @@ const Sidebar = ({ isOpen, onClose }) => {
                 `}
             </style>
 
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
-                <div style={{ padding: '0 10px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <div style={{
-                        width: '40px',
-                        height: '40px',
-                        background: 'white',
-                        borderRadius: '8px',
-                        padding: '4px',
-                        display: 'flex',
-                        justifyContent: 'center',
-                        alignItems: 'center',
-                        overflow: 'hidden'
-                    }}>
+            <div style={{ marginBottom: '35px', padding: '0 10px' }}>
+                <Link to="/admin" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '15px' }}>
+                    <motion.div 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ 
+                            opacity: 1, 
+                            x: 0,
+                            borderColor: [theme.primary, `${theme.primary}40`, theme.primary],
+                            boxShadow: [
+                                `0 0 0px ${theme.primary}00`,
+                                `0 0 15px ${theme.primary}60`,
+                                `0 0 0px ${theme.primary}00`
+                            ]
+                        }}
+                        transition={{
+                            opacity: { duration: 0.5 },
+                            x: { duration: 0.5 },
+                            borderColor: { duration: 3, repeat: Infinity, ease: "easeInOut" },
+                            boxShadow: { duration: 3, repeat: Infinity, ease: "easeInOut" }
+                        }}
+                        whileHover={{ scale: 1.05 }}
+                        style={{
+                            width: '48px',
+                            height: '48px',
+                            background: '#FFFFFF',
+                            borderRadius: '12px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            padding: '6px',
+                            flexShrink: 0,
+                            border: `2px solid ${theme.primary}`,
+                            position: 'relative'
+                        }}
+                    >
                         <img
-                            src={logoMap[selectedCompany?.name] || '/vite.svg'}
-                            alt="Logo"
-                            style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }}
+                            src="/logos/lk_logo.png"
+                            alt="LK"
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                         />
+                    </motion.div>
+                    <div style={{ overflow: 'hidden' }}>
+                        <h1 style={{ 
+                            fontSize: '24px', 
+                            fontWeight: '950', 
+                            color: 'white', 
+                            margin: 0, 
+                            letterSpacing: '-1.5px',
+                            display: 'flex',
+                            alignItems: 'center'
+                        }}>
+                            Log<span style={{ color: theme.primary }}>Karo</span>
+                        </h1>
+                        <p style={{ 
+                            fontSize: '10px', 
+                            color: 'rgba(255,255,255,0.4)', 
+                            fontWeight: '800', 
+                            textTransform: 'uppercase', 
+                            letterSpacing: '1px',
+                            margin: 0 
+                        }}>
+                            Enterprise Fleet
+                        </p>
                     </div>
-                    <div>
-                        <h2 style={{ fontSize: '18px', fontWeight: '800', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>{selectedCompany?.name || 'Loading CRM...'}</h2>
-                        <p style={{ fontSize: '10px', color: 'var(--text-muted)', margin: 0 }}>{t('automotive_excellence')}</p>
-                    </div>
-                </div>
+                </Link>
             </div>
 
 

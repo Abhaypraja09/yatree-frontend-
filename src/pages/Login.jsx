@@ -24,13 +24,13 @@ const Login = () => {
         setIsLoading(true);
         try {
             const user = await login(mobile, password);
-            
+
             // 🛡️ MULTI-TENANCY SYNC: Clear old selected company on new login to prevent 403s
             localStorage.removeItem('selectedCompany');
-            
+
             const role = user.role?.toLowerCase() || '';
             const isAdmin = role === 'admin' || role === 'executive' || role === 'superadmin' || role.includes('admin');
-            
+
             if (isAdmin) navigate('/admin');
             else if (user.role === 'Staff') navigate('/staff');
             else navigate('/driver');
@@ -69,22 +69,67 @@ const Login = () => {
                 }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                    <div style={{ 
-                        width: '80px', height: '80px', 
-                        background: `${theme.primary}20`, 
-                        borderRadius: '24px', 
-                        display: 'inline-flex', 
-                        justifyContent: 'center', 
-                        alignItems: 'center', 
-                        border: `1px solid ${theme.primary}40`, 
-                        marginBottom: '20px' 
+                    <motion.div 
+                        initial={{ y: -20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{ delay: 0.2, duration: 0.5 }}
+                        whileHover={{ scale: 1.05 }}
+                        style={{
+                            width: '120px', height: '120px',
+                            background: '#FFFFFF',
+                            borderRadius: '50%',
+                            display: 'inline-flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            border: `4px solid ${theme.primary}`,
+                            marginBottom: '25px',
+                            overflow: 'hidden',
+                            boxShadow: `0 10px 40px -10px ${theme.primary}60`,
+                            position: 'relative',
+                            padding: '10px'
+                        }}
+                    >
+                        <img
+                            src="/logos/lk_logo.png"
+                            alt="Logo"
+                            style={{ 
+                                width: '100%', 
+                                height: '100%', 
+                                objectFit: 'contain'
+                            }}
+                        />
+                        {/* Subtle glow effect */}
+                        <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            borderRadius: '50%',
+                            boxShadow: `inset 0 0 20px rgba(0,0,0,0.05)`,
+                            pointerEvents: 'none'
+                        }} />
+                    </motion.div>
+                    <h2 style={{ 
+                        fontSize: '36px', 
+                        fontWeight: '950', 
+                        color: 'white', 
+                        margin: '0 0 5px 0', 
+                        letterSpacing: '-1.5px',
+                        textShadow: '0 4px 12px rgba(0,0,0,0.3)'
                     }}>
-                        <Activity size={40} color={theme.primary} />
-                    </div>
-                    <h2 style={{ fontSize: '32px', fontWeight: '950', color: 'white', margin: '0 0 5px 0', letterSpacing: '-1px' }}>
-                        Fleet <span style={{ color: theme.primary }}>Console</span>
+                        Log <span style={{ color: theme.primary, position: 'relative' }}>
+                            Karo
+                            <div style={{ 
+                                position: 'absolute', 
+                                bottom: '5px', 
+                                left: 0, 
+                                width: '100%', 
+                                height: '4px', 
+                                background: theme.primary, 
+                                opacity: 0.3,
+                                borderRadius: '2px'
+                            }} />
+                        </span>
                     </h2>
-                    <p style={{ color: 'rgba(255,255,255,0.4)', fontWeight: '700', fontSize: '14px' }}>Log in to access your secure dashboard</p>
+                    <p style={{ color: 'rgba(255,255,255,0.5)', fontWeight: '600', fontSize: '15px' }}>Access your enterprise fleet console</p>
                 </div>
 
                 <AnimatePresence mode="wait">
