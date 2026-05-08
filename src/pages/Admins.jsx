@@ -378,7 +378,7 @@ const Admins = () => {
                                     <h2 style={{ color: 'white', fontSize: '22px', margin: 0, fontWeight: '900' }}>{editingAdmin ? 'Update Admin Access' : 'Create New Access'}</h2>
                                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: '4px 0 0', letterSpacing: '1px' }}>Permissions & Credentials</p>
                                 </div>
-                                <button onClick={closeModal} className="glass-card" style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+                                <button onClick={closeModal} className="glass-card" style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}><X size={20} color="white" /></button>
                             </div>
 
                             <form onSubmit={handleSubmit} style={{ padding: '35px' }}>
@@ -507,7 +507,7 @@ const Admins = () => {
 
                                 <div style={{ display: 'flex', gap: '15px' }}>
                                     <button type="button" onClick={closeModal} style={{ flex: 1, padding: '15px', background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', fontWeight: '800', cursor: 'pointer', height: '54px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                                        <ChevronLeft size={18} /> BACK
+                                        <ChevronLeft size={18} color="white" /> BACK
                                     </button>
                                     <button type="submit" className="btn-primary" style={{ flex: 1.5, padding: '15px', borderRadius: '14px', border: 'none', fontWeight: '900', cursor: 'pointer', height: '54px', fontSize: '15px', boxShadow: '0 8px 20px -6px rgba(14, 165, 233, 0.5)' }}>{editingAdmin ? 'Update Account' : 'Create Access'}</button>
                                 </div>
