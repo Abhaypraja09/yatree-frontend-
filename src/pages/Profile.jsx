@@ -7,7 +7,7 @@ import axios from '../api/axios';
 import { 
     User, Lock, CreditCard, Shield, ChevronRight, CheckCircle2, 
     AlertCircle, CreditCard as CardIcon, Calendar, History, 
-    ShieldCheck, Key, Save, Wallet, Receipt, Eye, EyeOff
+    ShieldCheck, Key, Save, Wallet, Receipt, Eye, EyeOff, Sparkles, Upload
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -35,6 +35,9 @@ const Profile = () => {
 
     // Real Subscription Data from Backend
     const [subscriptions, setSubscriptions] = useState([]);
+
+    // Brand Assets
+    const [brandAssets, setBrandAssets] = useState({ logo: null, signature: null });
 
     useEffect(() => {
         fetchHistory();
@@ -106,6 +109,33 @@ const Profile = () => {
         }
     };
 
+    const handleBrandUpload = async (e) => {
+        e.preventDefault();
+        if (!selectedCompany?._id) return alert('No company selected.');
+        if (!brandAssets.logo && !brandAssets.signature) return alert('Please select a file to upload.');
+
+        setLoading(true);
+        try {
+            const formData = new FormData();
+            if (brandAssets.logo) formData.append('logo', brandAssets.logo);
+            if (brandAssets.signature) formData.append('signature', brandAssets.signature);
+
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.put(`/api/admin/company/${selectedCompany._id}/brand`, formData, {
+                headers: { 
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${userInfo.token}`
+                }
+            });
+            alert('Brand assets updated successfully!');
+            window.location.reload();
+        } catch (error) {
+            alert('Failed to upload brand assets: ' + (error.response?.data?.message || error.message));
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const containerVariants = {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.6 } }
@@ -163,7 +193,8 @@ const Profile = () => {
                         {[
                             { id: 'account', label: 'Account Profile', icon: User },
                             { id: 'security', label: 'Security & Privacy', icon: Lock },
-                            { id: 'billing', label: 'Billing & Payments', icon: CreditCard }
+                            { id: 'billing', label: 'Billing & Payments', icon: CreditCard },
+                            ...(user?.role?.toLowerCase() === 'superadmin' || user?.role?.toLowerCase() === 'admin' ? [{ id: 'brand', label: 'Brand Assets', icon: Sparkles }] : [])
                         ].map(tab => (
                             <button
                                 key={tab.id}
@@ -439,6 +470,82 @@ const Profile = () => {
                                             </tbody>
                                         </table>
                                     </div>
+                                </motion.div>
+                            )}
+
+                            {activeTab === 'brand' && (
+                                <motion.div
+                                    key="brand" variants={containerVariants} initial="hidden" animate="visible" exit="hidden"
+                                    className="premium-glass" style={{ padding: '40px', borderRadius: '32px' }}
+                                >
+                                    <h2 style={{ fontSize: '24px', fontWeight: '900', marginBottom: '30px', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <Sparkles size={24} style={{ color: theme.primary }} />
+                                        Organization Brand Assets
+                                    </h2>
+                                    <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '30px' }}>
+                                        Upload your official company logo and signature. These assets will automatically appear on all generated PDFs, invoices, and reports.
+                                    </p>
+
+                                    <form onSubmit={handleBrandUpload}>
+                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', maxWidth: '600px' }}>
+                                            
+                                            {/* Logo Upload */}
+                                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '25px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <label style={{ color: 'white', fontSize: '15px', fontWeight: '800', marginBottom: '15px', display: 'block' }}>Company Logo</label>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                                    <div style={{ width: '80px', height: '80px', borderRadius: '16px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                                                        {brandAssets.logo ? (
+                                                            <img src={URL.createObjectURL(brandAssets.logo)} alt="Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                                                        ) : (
+                                                            <img src={selectedCompany?.logoUrl || '/logos/logo.png'} alt="Current Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                                                        )}
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <label htmlFor="logo-upload" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontSize: '13px', fontWeight: '800' }}>
+                                                            <Upload size={16} /> Choose New Logo
+                                                        </label>
+                                                        <input 
+                                                            id="logo-upload" type="file" accept="image/*" style={{ display: 'none' }}
+                                                            onChange={e => setBrandAssets({...brandAssets, logo: e.target.files[0]})}
+                                                        />
+                                                        <p style={{ color: '#64748b', fontSize: '11px', marginTop: '10px' }}>Recommended: Square or horizontal PNG/JPG with transparent background.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Signature Upload */}
+                                            <div style={{ background: 'rgba(255,255,255,0.02)', padding: '25px', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                <label style={{ color: 'white', fontSize: '15px', fontWeight: '800', marginBottom: '15px', display: 'block' }}>Official Signature</label>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                                                    <div style={{ width: '120px', height: '60px', borderRadius: '12px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', padding: '5px' }}>
+                                                        {brandAssets.signature ? (
+                                                            <img src={URL.createObjectURL(brandAssets.signature)} alt="Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                                                        ) : (
+                                                            <img src={selectedCompany?.ownerSignatureUrl || '/logos/signature.png'} alt="Current Signature" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                                                        )}
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <label htmlFor="sig-upload" className="btn-primary" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', borderRadius: '12px', cursor: 'pointer', fontSize: '13px', fontWeight: '800' }}>
+                                                            <Upload size={16} /> Choose New Signature
+                                                        </label>
+                                                        <input 
+                                                            id="sig-upload" type="file" accept="image/*" style={{ display: 'none' }}
+                                                            onChange={e => setBrandAssets({...brandAssets, signature: e.target.files[0]})}
+                                                        />
+                                                        <p style={{ color: '#64748b', fontSize: '11px', marginTop: '10px' }}>Recommended: Clear PNG with transparent background.</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <button
+                                                type="submit" disabled={loading || (!brandAssets.logo && !brandAssets.signature)}
+                                                className="btn-primary"
+                                                style={{ height: '60px', borderRadius: '18px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', opacity: (loading || (!brandAssets.logo && !brandAssets.signature)) ? 0.5 : 1 }}
+                                            >
+                                                {loading ? <div className="spinner" style={{ width: '20px', height: '20px', borderTopColor: 'black' }}></div> : <><Save size={20} /> Save Brand Assets</>}
+                                            </button>
+                                        </div>
+                                    </form>
                                 </motion.div>
                             )}
                         </AnimatePresence>
