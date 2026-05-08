@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { Plus, Trash2, Shield, User as UserIcon, Lock, Phone, UserCheck, CheckSquare, Square, Settings, Activity, X, Users, Edit3, Wrench, Briefcase, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, Shield, User as UserIcon, Lock, Phone, UserCheck, CheckSquare, Square, Settings, Activity, X, Users, Edit3, Wrench, Briefcase, ChevronDown, ChevronUp, ChevronLeft } from 'lucide-react';
 import { useTheme } from '../context/ThemeContext';
 import { motion, AnimatePresence } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -32,32 +32,31 @@ const Admins = () => {
     const [expandedModule, setExpandedModule] = useState(null);
 
     const moduleHierarchy = [
-        { 
-            id: 'driversService', 
-            label: 'Drivers Services', 
-            icon: Users, 
+        {
+            id: 'driversService',
+            label: 'Drivers Services',
+            icon: Users,
             color: '#38bdf8',
             subItems: [
                 { id: 'drivers', label: 'Drivers Panel' },
-                { id: 'payroll', label: 'Monthly Payroll' },
                 { id: 'freelancers', label: 'Freelancers' },
                 { id: 'parking', label: 'Parking MGT' }
             ]
         },
-        { 
-            id: 'buySell', 
-            label: 'Buy/Sell', 
-            icon: Briefcase, 
+        {
+            id: 'buySell',
+            label: 'Buy/Sell',
+            icon: Briefcase,
             color: '#818cf8',
             subItems: [
                 { id: 'outsideCars', label: 'Outside Cars' },
                 { id: 'eventManagement', label: 'Event Management' }
             ]
         },
-        { 
-            id: 'vehiclesManagement', 
-            label: 'Vehicles Life', 
-            icon: Wrench, 
+        {
+            id: 'vehiclesManagement',
+            label: 'Vehicles Life',
+            icon: Wrench,
             color: 'var(--primary)',
             subItems: [
                 { id: 'maintenance', label: 'Maintenance Logs' },
@@ -66,10 +65,10 @@ const Admins = () => {
                 { id: 'accidentLogs', label: 'Active Logs' }
             ]
         },
-        { 
-            id: 'fleetOperations', 
-            label: 'Fleet Operations', 
-            icon: Activity, 
+        {
+            id: 'fleetOperations',
+            label: 'Fleet Operations',
+            icon: Activity,
             color: '#ec4899',
             subItems: [
                 { id: 'fuel', label: 'Fuel Records' },
@@ -131,24 +130,24 @@ const Admins = () => {
         setMobile(admin.mobile);
         setUsername(admin.username);
         setPassword('');
-        
+
         // Normalize permissions from DB
         const dbPerms = admin.permissions || {};
         const normalized = {
             dashboard: dbPerms.dashboard ?? true,
             liveFeed: dbPerms.liveFeed ?? true,
             logBook: dbPerms.logBook ?? true,
-            driversService: (dbPerms.driversService && typeof dbPerms.driversService === 'object') 
-                ? { ...dbPerms.driversService, payroll: !!dbPerms.driversService.payroll } 
+            driversService: (dbPerms.driversService && typeof dbPerms.driversService === 'object')
+                ? { ...dbPerms.driversService, payroll: !!dbPerms.driversService.payroll }
                 : { all: !!dbPerms.driversService, drivers: !!dbPerms.driversService, payroll: !!dbPerms.driversService, freelancers: !!dbPerms.driversService, parking: !!dbPerms.driversService },
-            buySell: (dbPerms.buySell && typeof dbPerms.buySell === 'object') 
-                ? dbPerms.buySell 
+            buySell: (dbPerms.buySell && typeof dbPerms.buySell === 'object')
+                ? dbPerms.buySell
                 : { all: !!dbPerms.buySell, outsideCars: !!dbPerms.buySell, eventManagement: !!dbPerms.buySell },
-            vehiclesManagement: (dbPerms.vehiclesManagement && typeof dbPerms.vehiclesManagement === 'object') 
-                ? dbPerms.vehiclesManagement 
+            vehiclesManagement: (dbPerms.vehiclesManagement && typeof dbPerms.vehiclesManagement === 'object')
+                ? dbPerms.vehiclesManagement
                 : { all: !!dbPerms.vehiclesManagement, maintenance: !!dbPerms.vehiclesManagement, carLogs: !!dbPerms.vehiclesManagement, vehiclesMgt: !!dbPerms.vehiclesManagement, accidentLogs: !!dbPerms.vehiclesManagement },
-            fleetOperations: (dbPerms.fleetOperations && typeof dbPerms.fleetOperations === 'object') 
-                ? dbPerms.fleetOperations 
+            fleetOperations: (dbPerms.fleetOperations && typeof dbPerms.fleetOperations === 'object')
+                ? dbPerms.fleetOperations
                 : { all: !!dbPerms.fleetOperations, fuel: !!dbPerms.fleetOperations, carUtility: !!dbPerms.fleetOperations },
             staffManagement: !!dbPerms.staffManagement,
             manageAdmins: !!dbPerms.manageAdmins,
@@ -209,12 +208,12 @@ const Admins = () => {
         setPermissions(prev => {
             const moduleObj = { ...prev[moduleKey] };
             moduleObj[subKey] = !moduleObj[subKey];
-            
+
             // If all sub-items are checked, check 'all'
             const subItems = Object.keys(moduleObj).filter(k => k !== 'all');
             const allChecked = subItems.every(k => moduleObj[k]);
             moduleObj.all = allChecked;
-            
+
             return { ...prev, [moduleKey]: moduleObj };
         });
     };
@@ -379,7 +378,12 @@ const Admins = () => {
                                     <h2 style={{ color: 'white', fontSize: '22px', margin: 0, fontWeight: '900' }}>{editingAdmin ? 'Update Admin Access' : 'Create New Access'}</h2>
                                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: '4px 0 0', letterSpacing: '1px' }}>Permissions & Credentials</p>
                                 </div>
-                                <button onClick={closeModal} className="glass-card" style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+                                <div style={{ display: 'flex', gap: '10px' }}>
+                                    <button onClick={closeModal} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '5px' }}>
+                                        <ChevronLeft size={14} /> BACK
+                                    </button>
+                                    <button onClick={closeModal} className="glass-card" style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+                                </div>
                             </div>
 
                             <form onSubmit={handleSubmit} style={{ padding: '35px' }}>
@@ -393,32 +397,32 @@ const Admins = () => {
                                         <input className="input-field" value={mobile} onChange={e => setMobile(e.target.value)} required placeholder="10-digit #" />
                                     </div>
                                 </div>
-                                    <div className="input-field-group">
-                                        <label className="input-label">System Username</label>
-                                        <input 
-                                            className="input-field" 
-                                            name="admin-username"
-                                            autoComplete="off"
-                                            value={username} 
-                                            onChange={e => setUsername(e.target.value)} 
-                                            required 
-                                            placeholder="Unique ID" 
-                                            style={{ color: 'var(--primary)', fontWeight: '800' }} 
-                                        />
-                                    </div>
-                                    <div className="input-field-group">
-                                        <label className="input-label">{editingAdmin ? 'New Password (Optional)' : 'Access Password'}</label>
-                                        <input 
-                                            type="password" 
-                                            className="input-field" 
-                                            name="admin-password"
-                                            autoComplete="new-password"
-                                            value={password} 
-                                            onChange={e => setPassword(e.target.value)} 
-                                            required={!editingAdmin} 
-                                            placeholder="••••••••" 
-                                        />
-                                    </div>
+                                <div className="input-field-group">
+                                    <label className="input-label">System Username</label>
+                                    <input
+                                        className="input-field"
+                                        name="admin-username"
+                                        autoComplete="off"
+                                        value={username}
+                                        onChange={e => setUsername(e.target.value)}
+                                        required
+                                        placeholder="Unique ID"
+                                        style={{ color: 'var(--primary)', fontWeight: '800' }}
+                                    />
+                                </div>
+                                <div className="input-field-group">
+                                    <label className="input-label">{editingAdmin ? 'New Password (Optional)' : 'Access Password'}</label>
+                                    <input
+                                        type="password"
+                                        className="input-field"
+                                        name="admin-password"
+                                        autoComplete="new-password"
+                                        value={password}
+                                        onChange={e => setPassword(e.target.value)}
+                                        required={!editingAdmin}
+                                        placeholder="••••••••"
+                                    />
+                                </div>
 
                                 <div style={{ marginBottom: '30px' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
@@ -426,30 +430,30 @@ const Admins = () => {
                                         <h3 style={{ color: 'white', fontSize: '13px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', margin: 0 }}>Assign Modules Access</h3>
                                         <div style={{ flex: 1, height: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
                                     </div>
-                                    
+
                                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '15px' }}>
                                         {moduleHierarchy.map(mod => (
-                                            <div key={mod.id} style={{ 
-                                                borderRadius: '20px', 
-                                                background: 'rgba(255,255,255,0.02)', 
+                                            <div key={mod.id} style={{
+                                                borderRadius: '20px',
+                                                background: 'rgba(255,255,255,0.02)',
                                                 border: `1px solid ${isFormModuleActive(mod.id) ? `${mod.color}40` : 'rgba(255,255,255,0.05)'}`,
                                                 overflow: 'hidden',
                                                 transition: 'all 0.3s ease'
                                             }}>
-                                                <div 
+                                                <div
                                                     onClick={() => mod.subItems ? setExpandedModule(expandedModule === mod.id ? null : mod.id) : toggleMainPermission(mod.id)}
-                                                    style={{ 
-                                                        padding: '16px', 
-                                                        display: 'flex', 
-                                                        alignItems: 'center', 
-                                                        gap: '12px', 
+                                                    style={{
+                                                        padding: '16px',
+                                                        display: 'flex',
+                                                        alignItems: 'center',
+                                                        gap: '12px',
                                                         cursor: 'pointer',
                                                         background: isFormModuleActive(mod.id) ? `${mod.color}10` : 'transparent'
                                                     }}
                                                 >
-                                                    <div style={{ 
-                                                        width: '36px', height: '36px', borderRadius: '10px', 
-                                                        background: isFormModuleActive(mod.id) ? mod.color : 'rgba(255,255,255,0.05)', 
+                                                    <div style={{
+                                                        width: '36px', height: '36px', borderRadius: '10px',
+                                                        background: isFormModuleActive(mod.id) ? mod.color : 'rgba(255,255,255,0.05)',
                                                         color: isFormModuleActive(mod.id) ? 'black' : 'rgba(255,255,255,0.3)',
                                                         display: 'flex', alignItems: 'center', justifyContent: 'center'
                                                     }}>
@@ -476,7 +480,7 @@ const Admins = () => {
                                                         style={{ overflow: 'hidden', background: 'rgba(0,0,0,0.2)' }}
                                                     >
                                                         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                            <div 
+                                                            <div
                                                                 onClick={() => toggleMainPermission(mod.id)}
                                                                 style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '8px', borderRadius: '8px', background: permissions[mod.id].all ? 'rgba(255,255,255,0.05)' : 'transparent' }}
                                                             >
@@ -487,7 +491,7 @@ const Admins = () => {
                                                             </div>
                                                             <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '4px 0' }} />
                                                             {mod.subItems.map(sub => (
-                                                                <div 
+                                                                <div
                                                                     key={sub.id}
                                                                     onClick={() => toggleSubPermission(mod.id, sub.id)}
                                                                     style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '8px', borderRadius: '8px', marginLeft: '10px' }}
@@ -507,7 +511,9 @@ const Admins = () => {
                                 </div>
 
                                 <div style={{ display: 'flex', gap: '15px' }}>
-                                    <button type="button" onClick={closeModal} style={{ flex: 1, padding: '15px', background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', fontWeight: '800', cursor: 'pointer', height: '54px' }}>Cancel</button>
+                                    <button type="button" onClick={closeModal} style={{ flex: 1, padding: '15px', background: 'rgba(255,255,255,0.05)', color: 'white', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', fontWeight: '800', cursor: 'pointer', height: '54px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                                        <ChevronLeft size={18} /> BACK
+                                    </button>
                                     <button type="submit" className="btn-primary" style={{ flex: 1.5, padding: '15px', borderRadius: '14px', border: 'none', fontWeight: '900', cursor: 'pointer', height: '54px', fontSize: '15px', boxShadow: '0 8px 20px -6px rgba(14, 165, 233, 0.5)' }}>{editingAdmin ? 'Update Account' : 'Create Access'}</button>
                                 </div>
                             </form>
