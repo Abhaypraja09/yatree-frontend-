@@ -453,8 +453,8 @@ const DriverPortal = () => {
             }
 
             // Load assets
-            const logo = await loadImage(user.company?.logoUrl || '/logos/yatree_logo.png').catch(() => null);
-            const signature = await loadImage(user.company?.ownerSignatureUrl || '/logos/kavish_sign.png').catch(() => null);
+            const logo = await loadImage(user.company?.logoUrl || '/logos/logo.png').catch(() => null);
+            const signature = await loadImage(user.company?.ownerSignatureUrl || '/logos/signature.png').catch(() => null);
 
             const monthName = new Date(ledgerYear, ledgerMonth - 1, 1).toLocaleString('default', { month: 'long' });
             const periodLabel = `${monthName} ${ledgerYear}`;
@@ -474,13 +474,13 @@ const DriverPortal = () => {
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text(user.company?.name || 'YATREE DESTINATION', 45, 22);
+            doc.text(user.company?.name || 'FLEET MANAGEMENT', 45, 22);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(200, 200, 200);
             doc.text('Premium Fleet Management & Travel Solutions', 45, 30);
             doc.setTextColor(14, 165, 233); // Blue accent
-            doc.text(user.company?.website || 'www.yatreedestination.com', 45, 37);
+            doc.text(user.company?.website || '', 45, 37);
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);

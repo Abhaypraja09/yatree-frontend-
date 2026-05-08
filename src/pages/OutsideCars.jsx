@@ -145,8 +145,8 @@ const OutsideCars = () => {
             }
 
             // Load assets
-            const logo = await loadImage(selectedCompany?.logoUrl || '/logos/yatree_logo.png').catch(() => null);
-            const signature = await loadImage(selectedCompany?.ownerSignatureUrl || '/logos/kavish_sign.png').catch(() => null);
+            const logo = await loadImage(selectedCompany?.logoUrl || '/logos/logo.png').catch(() => null);
+            const signature = await loadImage(selectedCompany?.ownerSignatureUrl || '/logos/signature.png').catch(() => null);
 
             const doc = new jsPDF();
             const pageWidth = doc.internal.pageSize.getWidth();
@@ -169,7 +169,7 @@ const OutsideCars = () => {
             doc.setTextColor(200, 200, 200);
             doc.text('Premium Fleet Management & Travel Solutions', 45, 30);
             doc.setTextColor(14, 165, 233);
-            doc.text(selectedCompany?.website || 'www.yatreedestination.com', 45, 37);
+            doc.text(selectedCompany?.website || '', 45, 37);
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);

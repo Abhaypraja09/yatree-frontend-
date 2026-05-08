@@ -433,10 +433,10 @@ const Vehicles = () => {
                         <button className="btn-primary" onClick={() => { 
                             const internalCount = vehicles.filter(v => !v.isOutsideCar).length;
                             const limit = selectedCompany?.vehicleLimit || 10;
-                            const isYatree = selectedCompany?.name === 'YatreeDestination' || selectedCompany?.name === 'Yatree Destination';
+                            const isPrimary = selectedCompany?.isPrimary;
                             
-                            if (internalCount >= limit && !isYatree) {
-                                return alert(`PLAN LIMIT REACHED: You have already added ${internalCount} vehicles (Limit: ${limit}). Please contact Super Admin to upgrade your plan.`);
+                            if (internalCount >= limit && !isPrimary) {
+                                return alert(`PLAN LIMIT REACHED: You have already added ${internalCount} vehicles (Limit: ${limit}). Please contact administration to upgrade your plan.`);
                             }
 
                             setEditingId(null); setCarNumber(''); setModel(''); setCarType('SUV'); 
@@ -600,10 +600,10 @@ const Vehicles = () => {
                         <button className="btn-primary" onClick={() => {
                             const internalCount = vehicles.filter(v => !v.isOutsideCar).length;
                             const limit = selectedCompany?.vehicleLimit || 10;
-                            const isYatree = selectedCompany?.name === 'YatreeDestination' || selectedCompany?.name === 'Yatree Destination';
+                            const isPrimary = selectedCompany?.isPrimary;
                             
-                            if (internalCount >= limit && !isYatree) {
-                                return alert(`PLAN LIMIT REACHED: You have already added ${internalCount} vehicles (Limit: ${limit}). Please contact Super Admin to upgrade your plan.`);
+                            if (internalCount >= limit && !isPrimary) {
+                                return alert(`PLAN LIMIT REACHED: You have already added ${internalCount} vehicles (Limit: ${limit}). Please contact administration to upgrade your plan.`);
                             }
                             setShowModal(true);
                         }} style={{ padding: '12px 30px' }}>Add New Fleet Vehicle</button>

@@ -116,7 +116,7 @@ const Sidebar = ({ isOpen, onClose }) => {
 
     const userRole = user?.role?.toLowerCase() || '';
     const isAdmin = userRole === 'admin' || userRole === 'superadmin' || (userRole.includes('admin') && userRole !== 'executive');
-    const isYatree = selectedCompany?.name === 'YatreeDestination' || selectedCompany?.name === 'Yatree Destination';
+    const isPrimary = selectedCompany?.name?.toLowerCase().includes('primary') || selectedCompany?.isPrimary;
 
     // Group state
     const [openGroups, setOpenGroups] = useState({
@@ -146,8 +146,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     };
 
     const logoMap = {
-        'YatreeDestination': '/logos/logo.png',
-        'Yatree Destination': '/logos/logo.png',
+        'Primary': '/logos/logo.png',
+        'Fleet': '/logos/logo.png',
         'GoGetGo': '/logos/gogetgo.webp'
     };
 

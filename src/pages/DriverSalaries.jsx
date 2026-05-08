@@ -537,10 +537,10 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 return;
             }
 
-            const logoUrl = selectedCompany?.logoUrl || '/logos/yatree_logo.png';
+            const logoUrl = selectedCompany?.logoUrl || '/logos/logo.png';
             const logo = await loadImage(logoUrl).catch(() => null);
 
-            const sigUrl = selectedCompany?.ownerSignatureUrl || '/logos/kavish_sign.png';
+            const sigUrl = selectedCompany?.ownerSignatureUrl || '/logos/signature.png';
             const signature = await loadImage(sigUrl).catch(() => null);
 
             const monthName = new Date(year, month - 1, 1).toLocaleString('default', { month: 'long' });
@@ -561,13 +561,13 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(22);
             doc.setFont('helvetica', 'bold');
-            doc.text((selectedCompany?.name || 'YATREE DESTINATION').toUpperCase(), 45, 22);
+            doc.text((selectedCompany?.name || 'FLEET MANAGEMENT').toUpperCase(), 45, 22);
             doc.setFontSize(10);
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(200, 200, 200);
             doc.text('Commercial Fleet Operations & Management', 45, 30);
             doc.setTextColor(14, 165, 233);
-            doc.text(selectedCompany?.website || 'www.yatreedestination.com', 45, 37);
+            doc.text(selectedCompany?.website || '', 45, 37);
 
             doc.setTextColor(255, 255, 255);
             doc.setFontSize(16);
@@ -809,10 +809,10 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             doc.setDrawColor(15, 23, 42); doc.setLineWidth(0.6);
             doc.line(sigX - 5, currentY + 5, pageWidth - 15, currentY + 5);
             doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42);
-            doc.text((selectedCompany?.ownerName || 'KAVISH JAIN').toUpperCase(), sigX - 2, currentY + 12);
+            doc.text((selectedCompany?.ownerName || 'AUTHORIZED MANAGER').toUpperCase(), sigX - 2, currentY + 12);
             doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
             doc.text('Authorized Signatory', sigX - 2, currentY + 17);
-            doc.text(`${selectedCompany?.name || 'Yatree Destination Pvt. Ltd.'}`, sigX - 2, currentY + 21);
+            doc.text(`${selectedCompany?.name || 'Authorized Fleet Management'}`, sigX - 2, currentY + 21);
 
             doc.setFontSize(7); doc.setTextColor(203, 213, 225);
             doc.text(`Generated on: ${formatDateTimeIST(new Date())}`, 15, pageHeight - 10);

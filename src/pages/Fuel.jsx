@@ -356,7 +356,7 @@ const FuelPage = () => {
 
         const uploadData = new FormData();
         uploadData.append('file', file);
-        uploadData.append('upload_preset', 'yatreedestination'); // Replace with your setup or use your backend upload
+        uploadData.append('upload_preset', 'fleet_crm'); // Generic preset
 
         try {
             // Using existing axios with base url? Probably better to use a dedicated upload route or direct cloudinary
@@ -380,7 +380,7 @@ const FuelPage = () => {
         if (!file) return;
         const uploadData = new FormData();
         uploadData.append('file', file);
-        uploadData.append('upload_preset', 'yatreedestination');
+        uploadData.append('upload_preset', 'fleet_crm');
 
         try {
             const userInfoStr = localStorage.getItem('userInfo');

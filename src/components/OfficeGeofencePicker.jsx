@@ -197,7 +197,7 @@ const OfficeGeofencePicker = ({ value, onChange }) => {
                     />
                     <input
                         type="text"
-                        placeholder="Search Office (e.g. Yatree Destination Udaipur)"
+                        placeholder="Search Office (e.g. City Branch Office)"
                         value={search}
                         onChange={handleSearchChange}
                         onKeyDown={(e) => {

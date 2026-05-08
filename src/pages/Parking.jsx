@@ -384,7 +384,7 @@ const ParkingPage = () => {
 
         const uploadData = new FormData();
         uploadData.append('file', file);
-        uploadData.append('upload_preset', 'yatreedestination');
+        uploadData.append('upload_preset', 'fleet_crm');
 
         try {
             const userInfoStr = localStorage.getItem('userInfo');
