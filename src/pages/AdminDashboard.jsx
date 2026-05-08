@@ -121,7 +121,7 @@ const AdminDashboard = () => {
     const { user } = useAuth();
     const { theme } = useTheme();
     const navigate = useNavigate();
-    const { t } = useLanguage();
+    const { language, setLanguage, t } = useLanguage();
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
     const [loading, setLoading] = useState(true);

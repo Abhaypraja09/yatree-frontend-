@@ -225,51 +225,6 @@ const Sidebar = ({ isOpen, onClose }) => {
                 </div>
             </div>
 
-            {/* Language Toggle */}
-            <div style={{ marginBottom: '20px', padding: '0 10px' }}>
-                <div style={{
-                    display: 'flex',
-                    background: 'rgba(255,255,255,0.05)',
-                    borderRadius: '12px',
-                    padding: '4px',
-                    border: '1px solid rgba(255,255,255,0.1)'
-                }}>
-                    <button
-                        onClick={() => setLanguage('en')}
-                        style={{
-                            flex: 1,
-                            padding: '8px',
-                            borderRadius: '8px',
-                            border: 'none',
-                            background: language === 'en' ? 'var(--primary)' : 'transparent',
-                            color: language === 'en' ? '#000' : '#64748b',
-                            fontSize: '12px',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease'
-                        }}
-                    >
-                        English
-                    </button>
-                    <button
-                        onClick={() => setLanguage('hi')}
-                        style={{
-                            flex: 1,
-                            padding: '8px',
-                            borderRadius: '8px',
-                            border: 'none',
-                            background: language === 'hi' ? 'var(--primary)' : 'transparent',
-                            color: language === 'hi' ? '#000' : '#64748b',
-                            fontSize: '12px',
-                            fontWeight: '700',
-                            cursor: 'pointer',
-                            transition: 'all 0.3s ease'
-                        }}
-                    >
-                        हिन्दी
-                    </button>
-                </div>
-            </div>
 
             <nav style={{ flex: 1, overflowY: 'auto', paddingRight: '5px' }} className="sidebar-nav-scroll">
                 {hasAccess('dashboard') && (
