@@ -615,27 +615,7 @@ const AdminDashboard = () => {
                                                             {formatDateIST(alert.expiryDate)}
                                                         </span>
                                                     </div>
-                                                    <a
-                                                        href={`https://wa.me/${(selectedCompany?.whatsappNumber || user?.mobile || '').replace(/[^0-9]/g, '').replace(/^(?!91)/, '91')}?text=${encodeURIComponent(`REMINDER: Vehicle document for ${alert.identifier} (${alert.documentType}) is expiring on ${formatDateIST(alert.expiryDate)}. Please renew it ASAP.`)}`}
-                                                        target="_blank"
-                                                        rel="noopener noreferrer"
-                                                        style={{
-                                                            background: 'rgba(37, 211, 102, 0.2)',
-                                                            color: '#25D366',
-                                                            padding: '4px 8px',
-                                                            borderRadius: '6px',
-                                                            fontSize: 'clamp(9px, 2.2vw, 10px)',
-                                                            fontWeight: '800',
-                                                            display: 'flex',
-                                                            alignItems: 'center',
-                                                            gap: '4px',
-                                                            textDecoration: 'none',
-                                                            border: '1px solid rgba(37, 211, 102, 0.3)'
-                                                        }}
-                                                        title="Send WhatsApp Reminder"
-                                                    >
-                                                        <span style={{ fontSize: '14px' }}>💬</span> WA
-                                                    </a>
+
                                                 </div>
                                             </div>
                                         ))}
