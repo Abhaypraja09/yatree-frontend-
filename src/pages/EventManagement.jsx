@@ -576,11 +576,20 @@ const EventManagement = () => {
 
     const loadImage = (url) => {
         return new Promise((resolve, reject) => {
+            if (!url) return resolve(null);
+            let finalUrl = url;
+            if (!url.startsWith('http') && !url.startsWith('/')) {
+                finalUrl = `https://superadmin.yatreedestination.com/uploads/${url}`;
+            }
             const img = new Image();
             img.crossOrigin = 'Anonymous';
             img.onload = () => resolve(img);
             img.onerror = reject;
-            img.src = url;
+            if (finalUrl.startsWith('http')) {
+                img.src = `/api/admin/proxy-image?url=${encodeURIComponent(finalUrl)}`;
+            } else {
+                img.src = finalUrl;
+            }
         });
     };
 
