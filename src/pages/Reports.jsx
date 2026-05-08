@@ -33,14 +33,20 @@ const styles = `
     width: 100%;
     scrollbar-width: thin;
     scrollbar-color: rgba(255,255,255,0.1) transparent;
+    padding-bottom: 10px;
   }
-  .table-responsive-wrapper::-webkit-scrollbar { height: 6px; }
+  .table-responsive-wrapper::-webkit-scrollbar { height: 4px; }
   .table-responsive-wrapper::-webkit-scrollbar-track { background: transparent; }
-  .table-responsive-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 10px; }
+  .table-responsive-wrapper::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 10px; }
 
-  @media (max-width: 1024px) {
-    .header-controls { flex-direction: column !important; align-items: stretch !important; }
-    .header-actions { justify-content: flex-start !important; }
+  .premium-compact-input:focus {
+    background: rgba(255,255,255,0.08) !important;
+    border-color: rgba(251, 191, 36, 0.4) !important;
+    box-shadow: 0 0 20px rgba(251, 191, 36, 0.05);
+  }
+
+  @media (max-width: 1200px) {
+    .header-actions-group { flex: 1; width: 100%; }
   }
 
   @media (max-width: 768px) {
@@ -51,15 +57,15 @@ const styles = `
     
     .reports-header {
         flex-direction: column !important;
-        align-items: flex-start !important;
-        gap: 20px !important;
+        align-items: stretch !important;
+        gap: 25px !important;
     }
     
     .header-actions-group {
         width: 100% !important;
         flex-direction: column !important;
         align-items: stretch !important;
-        gap: 12px !important;
+        gap: 15px !important;
     }
 
     .premium-tab-container {
@@ -68,23 +74,9 @@ const styles = `
         padding-bottom: 5px !important;
         display: flex !important;
         -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
     }
-    .premium-tab-container button {
-        flex-shrink: 0 !important;
-        white-space: nowrap !important;
-    }
-    
-    .date-nav-mobile {
-        width: 100% !important;
-        justify-content: space-between !important;
-    }
-    
-    .search-group-mobile {
-        width: 100% !important;
-    }
-    .search-group-mobile input {
-        width: 100% !important;
-    }
+    .premium-tab-container::-webkit-scrollbar { display: none; }
   }
 `;
 
@@ -93,6 +85,7 @@ const TAB_CONFIG = {
     drivers: { label: 'Staff Duties', color: '#10b981', bg: 'rgba(16,185,129,0.12)', icon: UserIcon },
     freelancers: { label: 'Freelancer Duties', color: '#8b5cf6', bg: 'rgba(139,92,246,0.12)', icon: Users },
     parking: { label: 'Parking & Toll', color: '#818cf8', bg: 'rgba(129,140,248,0.12)', icon: ArrowUpRight },
+    fastag: { label: 'Fastag Recharges', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)', icon: FileText },
     logbook: { label: 'Overall Log Book', color: 'var(--primary)', bg: 'rgba(251,191,36,0.12)', icon: FileText },
 };
 
@@ -135,18 +128,17 @@ const Th = ({ color, children, align, width, style }) => (
 
 /* ─── Status badge ─── */
 const StatusBadge = ({ ok, okLabel = '✓ Done', badLabel = '⏳ Active' }) => (
-    <span style={{ fontSize: '10px', fontWeight: '900', padding: '4px 10px', borderRadius: '8px', whiteSpace: 'nowrap', background: ok ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)', color: ok ? '#10b981' : 'var(--primary)', border: `1px solid ${ok ? 'rgba(16,185,129,0.2)' : 'rgba(245,158,11,0.2)'}` }}>
+    <span style={{ fontSize: '10px', fontWeight: '900', padding: '5px 12px', borderRadius: '10px', whiteSpace: 'nowrap', background: ok ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)', color: ok ? '#10b981' : 'var(--primary)', border: `1px solid ${ok ? 'rgba(16,185,129,0.15)' : 'rgba(245,158,11,0.15)'}`, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
         {ok ? okLabel : badLabel}
     </span>
 );
 
 /* ─── Action Buttons ─── */
-const ActionBtns = ({ onView, onEdit, onDelete, onDeleteBonus }) => (
-    <div style={{ display: 'flex', gap: '6px' }}>
-        {onView && <button onClick={onView} title="View Details" style={{ background: 'rgba(14,165,233,0.1)', border: '1px solid rgba(14,165,233,0.2)', color: '#38bdf8', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '800', transition: 'all 0.2s' }} className="btn-hover-scale"><Eye size={14} /> View</button>}
-        {onEdit && <button onClick={onEdit} title="Edit" style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'var(--primary)', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '12px', fontWeight: '800', transition: 'all 0.2s' }} className="btn-hover-scale"><Edit2 size={14} /></button>}
-        {onDelete && <button onClick={onDelete} title="Delete" style={{ background: 'rgba(244,63,94,0.1)', border: '1px solid rgba(244,63,94,0.2)', color: '#f43f5e', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', display: 'flex', alignItems: 'center', transition: 'all 0.2s' }} className="btn-hover-scale"><Trash2 size={14} /></button>}
-        {/* {onDeleteBonus && <button onClick={onDeleteBonus} title="Delete Bonus Only" style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)', color: '#8b5cf6', borderRadius: '10px', padding: '10px 14px', cursor: 'pointer', fontSize: '11px', fontWeight: '950', transition: 'all 0.2s' }} className="btn-hover-scale">Bonus Delete</button>} */}
+const ActionBtns = ({ onView, onEdit, onDelete }) => (
+    <div style={{ display: 'flex', gap: '8px' }}>
+        {onView && <button onClick={onView} title="View Details" style={{ background: 'rgba(14,165,233,0.08)', border: '1px solid rgba(14,165,233,0.15)', color: '#38bdf8', borderRadius: '12px', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }} className="btn-hover-scale"><Eye size={16} /></button>}
+        {onEdit && <button onClick={onEdit} title="Edit" style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.15)', color: 'var(--primary)', borderRadius: '12px', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }} className="btn-hover-scale"><Edit2 size={16} /></button>}
+        {onDelete && <button onClick={onDelete} title="Delete" style={{ background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', borderRadius: '12px', width: '40px', height: '40px', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', transition: 'all 0.3s' }} className="btn-hover-scale"><Trash2 size={16} /></button>}
     </div>
 );
 
@@ -202,7 +194,13 @@ const TableSection = ({ tabId, rows, headers, chips, fromDate, toDate, colSummar
 
 /* ─── TR wrapper ─── */
 const TR = ({ children, idx }) => (
-    <motion.tr initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)', transition: 'background 0.15s' }} className="hover-row">
+    <motion.tr
+        initial={{ opacity: 0, x: -5 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: Math.min(idx * 0.02, 0.5) }}
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.04)', background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)', transition: 'all 0.3s' }}
+        className="hover-row-premium"
+    >
         {children}
     </motion.tr>
 );
@@ -433,6 +431,7 @@ const Reports = ({ isSubComponent = false }) => {
             accidentLog: `/api/admin/accident-logs/${item._id}`,
             partsWarranty: `/api/admin/parts-warranty/${item._id}`,
             voucher: `/api/admin/vehicles/${item._id}`,
+            fastag: `/api/admin/vehicles/${item.vehicleId}/fastag-recharge/${item._id}`
         };
         const endpoint = endpoints[item.entryType];
         if (!endpoint) return alert('Delete not supported for this type.');
@@ -785,7 +784,33 @@ const Reports = ({ isSubComponent = false }) => {
                 );
             }
 
-            /* ── OUTSIDE CARS ── */
+            /* ── FASTAG RECHARGES ── */
+            case 'fastag': {
+                const data = applySearch(reportsData.fastagRecharges || []);
+                return (
+                    <TableSection tabId="fastag" fromDate={fromDate} toDate={toDate}
+                        headers={['Date', 'Vehicle', 'Amount (₹)', 'Method', 'Remarks', 'Action']}
+                        rows={data.map((r, i) => (
+                            <TR key={r._id || i} idx={i}>
+                                <TD noWrap>{fmt(r.date)}</TD>
+                                <TD>
+                                    <div style={{ fontSize: '13px', fontWeight: '900' }}>{r.carNumber || 'Unknown'}</div>
+                                </TD>
+                                <TD><span style={{ color: '#fbbf24', fontWeight: '900' }}>₹{r.amount}</span></TD>
+                                <TD>{r.method || 'Cash'}</TD>
+                                <TD style={{ maxWidth: '200px', fontSize: '11px', color: 'rgba(255,255,255,0.6)' }}>{r.remarks || '--'}</TD>
+                                <TD>
+                                    <ActionBtns 
+                                        onDelete={() => handleDelete({ ...r, entryType: 'fastag' })} 
+                                    />
+                                </TD>
+                            </TR>
+                        ))}
+                        empty="No Fastag recharges found in this period."
+                    />
+                );
+            }
+
             case 'outsideCars': {
                 const data = applySearch(outsideCars);
                 return (
@@ -842,37 +867,46 @@ const Reports = ({ isSubComponent = false }) => {
             {/* ── Header ── */}
             {!isSubComponent && (
                 <header className="reports-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', padding: '0 4px', gap: '20px', marginTop: '30px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '25px' }}>
                         <div className="hide-mobile" style={{
-                            width: '56px', height: '56px', borderRadius: '18px',
+                            width: '64px', height: '64px', borderRadius: '20px',
                             background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.2), rgba(251, 191, 36, 0.05))',
-                            display: 'flex', justifyContent: 'center', alignItems: 'center',
-                            border: '1px solid rgba(251, 191, 36, 0.2)',
-                            boxShadow: '0 8px 16px rgba(0,0,0,0.2)'
+                            display: 'grid',
+                            placeItems: 'center',
+                            paddingTop: '15px',
+                            border: '1px solid rgba(251, 191, 36, 0.3)',
+                            boxShadow: '0 10px 25px rgba(251, 191, 36, 0.1)',
+                            position: 'relative',
+                            flexShrink: 0
                         }}>
-                            <FileText size={28} color="var(--primary)" />
+                            <div style={{ position: 'absolute', inset: '-2px', borderRadius: '22px', border: '1px solid rgba(251, 191, 36, 0.1)', opacity: 0.5, pointerEvents: 'none' }}></div>
+                            <FileText size={30} color="var(--primary)" strokeWidth={2.5} style={{ display: 'block' }} />
                         </div>
                         <div>
-                            <div style={{ fontSize: '10px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '2px', marginBottom: '4px' }}>Operational Insights</div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(22px, 5vw, 32px)', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>
+                            <div style={{ fontSize: '11px', fontWeight: '950', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '3px', marginBottom: '6px' }}>Operational Insights</div>
+                            <h1 style={{ color: 'white', fontSize: 'clamp(24px, 5vw, 36px)', fontWeight: '1000', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
                                 {location.pathname.includes('driver-duty') ? 'Driver ' : (location.pathname.includes('freelancer-duty') ? 'Freelancer ' : (location.pathname.includes('log-book') ? 'Overall ' : 'Daily '))}
-                                <span className="theme-gradient-text" style={{ background: 'linear-gradient(135deg, #fff, #94a3b8)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>{location.pathname.includes('log-book') ? 'Log Book' : 'Duty'}</span>
+                                <span style={{ color: 'var(--primary)', filter: 'drop-shadow(0 0 10px rgba(251, 191, 36, 0.2))' }}>{location.pathname.includes('log-book') ? 'Log Book' : 'Duty'}</span>
                             </h1>
                         </div>
                     </div>
 
                     {/* Controls Group */}
-                    <div className="header-actions-group" style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                        {/* 1. Date Navigator */}
-                        <div className="date-nav-mobile" style={{
+                    <div className="header-actions-group" style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+
+                        {/* 1. Integrated Control Bar */}
+                        <div style={{
                             display: 'flex',
                             alignItems: 'center',
-                            background: 'rgba(15, 23, 42, 0.6)',
+                            gap: '10px',
+                            background: 'rgba(15, 23, 42, 0.4)',
                             padding: '6px',
                             borderRadius: '20px',
                             border: '1px solid rgba(255,255,255,0.08)',
                             backdropFilter: 'blur(10px)'
                         }}>
+                            {/* Date Input */}
+                            <div style={{ width: '150px' }}>
                                 <PremiumDateInput
                                     value={toISTDateString(new Date(selectedYear, selectedMonth, selectedDay === 'All' ? 1 : parseInt(selectedDay)))}
                                     onChange={v => {
@@ -882,59 +916,87 @@ const Reports = ({ isSubComponent = false }) => {
                                         setSelectedDay(d.getDate().toString());
                                     }}
                                 />
-                        </div>
+                            </div>
 
-                        {/* 2. Quick Search & Selectors Group */}
-                        <div className="search-group-mobile" style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
-                            <div style={{ position: 'relative', flex: 1 }}>
-                                <Search size={14} style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                            <div style={{ width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)' }}></div>
+
+                            {/* Search */}
+                            <div style={{ position: 'relative' }}>
+                                <Search size={15} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
                                 <input
                                     type="text"
-                                    placeholder="Search..."
+                                    placeholder="Search Logs..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
                                     className="premium-compact-input"
-                                    style={{ height: '52px', paddingLeft: '42px', width: 'clamp(150px, 100%, 200px)', borderRadius: '18px' }}
+                                    style={{
+                                        height: '42px',
+                                        paddingLeft: '38px',
+                                        width: '180px',
+                                        borderRadius: '12px',
+                                        background: 'rgba(255,255,255,0.03)',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        color: 'white',
+                                        fontSize: '13px',
+                                        outline: 'none'
+                                    }}
                                 />
                             </div>
 
-                            <div style={{ display: 'flex', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '18px', padding: '4px', border: '1px solid rgba(255,255,255,0.06)' }}>
+                            <div style={{ width: '1px', height: '30px', background: 'rgba(255,255,255,0.1)' }}></div>
+
+                            {/* Selectors */}
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', paddingRight: '5px' }}>
                                 <select
                                     value={selectedMonth}
                                     onChange={e => setSelectedMonth(parseInt(e.target.value))}
-                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '44px', padding: '0 8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', outline: 'none' }}
+                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '38px', padding: '0 5px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', outline: 'none' }}
                                 >
                                     {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => <option key={m} value={i} style={{ background: '#0f172a' }}>{m}</option>)}
                                 </select>
-                                <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}></div>
                                 <select
                                     value={selectedYear}
                                     onChange={e => setSelectedYear(parseInt(e.target.value))}
-                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '44px', padding: '0 8px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', outline: 'none' }}
+                                    style={{ background: 'transparent', border: 'none', color: 'white', height: '38px', padding: '0 5px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', outline: 'none' }}
                                 >
                                     {[2024, 2025, 2026].map(y => <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>)}
                                 </select>
                             </div>
                         </div>
 
-                        {/* 3. Actions */}
-                        <div style={{ display: 'flex', gap: '8px', width: '100%', justifyContent: 'flex-end' }} className="header-actions">
+                        {/* 2. Actions Group */}
+                        <div style={{ display: 'flex', gap: '10px' }}>
                             {selectedDay !== 'All' && (
                                 <motion.button
                                     whileHover={{ y: -2 }}
                                     onClick={() => setSelectedDay('All')}
-                                    style={{ height: '52px', padding: '0 15px', borderRadius: '18px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', color: 'var(--primary)', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}
+                                    style={{ height: '54px', padding: '0 20px', borderRadius: '18px', background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)', color: 'var(--primary)', fontSize: '11px', fontWeight: '900', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', textTransform: 'uppercase', letterSpacing: '1px' }}
                                 >
-                                    <Calendar size={14} /><span className="hide-mobile">Full Month</span><span className="show-mobile">Month</span>
+                                    <Calendar size={14} /> Full Month
                                 </motion.button>
                             )}
                             <motion.button
                                 whileHover={{ y: -2, background: 'rgba(16, 185, 129, 0.2)' }}
                                 whileTap={{ scale: 0.98 }}
                                 onClick={handleDownloadExcel}
-                                style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0 20px', height: '52px', borderRadius: '18px', display: 'flex', alignItems: 'center', gap: '10px', fontSize: '12px', fontWeight: '900', cursor: 'pointer', letterSpacing: '0.5px' }}
+                                style={{
+                                    background: 'rgba(16, 185, 129, 0.12)',
+                                    border: '1px solid rgba(16, 185, 129, 0.25)',
+                                    color: '#10b981',
+                                    padding: '0 25px',
+                                    height: '54px',
+                                    borderRadius: '18px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '12px',
+                                    fontSize: '12px',
+                                    fontWeight: '950',
+                                    cursor: 'pointer',
+                                    letterSpacing: '1px',
+                                    textTransform: 'uppercase'
+                                }}
                             >
-                                <Download size={16} /> <span className="hide-mobile">DOWNLOAD EXCEL</span><span className="show-mobile">EXCEL</span>
+                                <Download size={18} /> DOWNLOAD EXCEL
                             </motion.button>
                         </div>
                     </div>
@@ -951,10 +1013,10 @@ const Reports = ({ isSubComponent = false }) => {
                         </button>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                <PremiumDateInput
-                                    value={fromDate}
-                                    onChange={v => setFromDate(v)}
-                                />
+                        <PremiumDateInput
+                            value={fromDate}
+                            onChange={v => setFromDate(v)}
+                        />
                     </div>
                 </div>
             )}
@@ -963,7 +1025,7 @@ const Reports = ({ isSubComponent = false }) => {
             {tabList.length > 1 && (
                 <div className="premium-tab-container" style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '22px' }}>
                     {/* Primary Tab Group */}
-                    <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.06)', padding: '6px', display: 'flex', gap: '4px' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.06)', padding: '5px', display: 'flex', gap: '5px' }}>
                         {tabList.map(tab => {
                             const isLogbook = location.pathname.includes('log-book');
                             const isBothActive = activeTabs.length > 1;
@@ -976,14 +1038,15 @@ const Reports = ({ isSubComponent = false }) => {
                                 <button key={tab.id} onClick={() => toggleTab(tab.id)}
                                     title={isLogbook && isBothActive ? `Click to show only ${tab.label}` : isLogbook && isSoloActive ? `Click to show both` : ''}
                                     style={{
-                                        display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 18px', borderRadius: '14px', cursor: 'pointer', transition: '0.2s', fontSize: '12px', fontWeight: '900',
-                                        background: isActive ? tab.bg : isBothRunning ? `${tab.bg}` : 'transparent',
-                                        border: isBothRunning && !isActive ? `1px solid ${tab.color}40` : 'none',
-                                        color: isActive ? 'white' : isBothRunning ? tab.color : 'rgba(255,255,255,0.3)',
-                                        opacity: isActive ? 1 : isBothRunning ? 0.75 : 1,
+                                        display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 22px', borderRadius: '12px', cursor: 'pointer', transition: 'all 0.3s ease', fontSize: '11px', fontWeight: '900',
+                                        background: isActive ? `${tab.color}15` : isBothRunning ? `${tab.color}15` : 'transparent',
+                                        color: isActive ? tab.color : isBothRunning ? tab.color : 'rgba(255,255,255,0.4)',
+                                        border: 'none',
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '1px'
                                     }}
                                 >
-                                    <Icon size={14} color={isActive ? tab.color : isBothRunning ? tab.color : 'rgba(255,255,255,0.3)'} />{tab.label}
+                                    <Icon size={16} color="currentColor" />{tab.label}
                                     {isBothRunning && !isActive && (
                                         <span style={{ fontSize: '8px', background: tab.color, color: '#000', borderRadius: '4px', padding: '1px 5px', fontWeight: '900', marginLeft: '2px' }}>ON</span>
                                     )}
@@ -994,13 +1057,6 @@ const Reports = ({ isSubComponent = false }) => {
                 </div>
             )}
 
-            {/* ── Search Bar ── */}
-            <div style={{ position: 'relative', marginBottom: '22px', maxWidth: '420px', width: '100%' }}>
-                <input type="text" placeholder="Search Car Logs…" value={searchTerm} onChange={e => setSearchTerm(e.target.value)}
-                    className="input-field" style={{ width: '100%', paddingLeft: '44px', height: '46px', borderRadius: '13px', marginBottom: 0, background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.08)' }} />
-                <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
-                {searchTerm && <button onClick={() => setSearchTerm('')} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}><X size={16} /></button>}
-            </div>
 
             {/* ── Main Content ── */}
             {renderContent()}

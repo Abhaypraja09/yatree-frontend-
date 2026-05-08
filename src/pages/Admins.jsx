@@ -56,7 +56,7 @@ const Admins = () => {
         },
         { 
             id: 'vehiclesManagement', 
-            label: 'Vehicles Maintenance', 
+            label: 'Vehicles Life', 
             icon: Wrench, 
             color: 'var(--primary)',
             subItems: [

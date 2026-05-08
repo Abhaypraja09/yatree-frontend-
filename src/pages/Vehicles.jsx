@@ -4,12 +4,14 @@ import axios from '../api/axios';
 import { Plus, Car, AlertCircle, Trash2, Calendar, ExternalLink, Search, Wallet, Shield, MapPin, Clock, CheckCircle2, XCircle, Info, Wrench, Edit3, RefreshCw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
+import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, formatDateIST } from '../utils/istUtils';
 
 const Vehicles = () => {
     const { theme } = useTheme();
+    const { user } = useAuth();
     const { selectedCompany } = useCompany();
     const location = useLocation();
     const [vehicles, setVehicles] = useState([]);
@@ -99,7 +101,14 @@ const Vehicles = () => {
             const { data } = await axios.get(`/api/admin/dashboard/${selectedCompany._id}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
-            setAlerts(data.expiringAlerts || []);
+            const allAlerts = data.expiringAlerts || [];
+            const filteredAlerts = allAlerts.filter(alert => {
+                if (user?.role === 'Admin') return true;
+                if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
+                if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
+                return true;
+            }).sort((a, b) => new Date(a.expiryDate || a.date) - new Date(b.expiryDate || b.date));
+            setAlerts(filteredAlerts);
         } catch (err) { console.error(err); }
     };
 

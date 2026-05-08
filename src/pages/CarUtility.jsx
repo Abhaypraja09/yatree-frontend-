@@ -30,14 +30,21 @@ const CarUtility = () => {
     const [submitting, setSubmitting] = useState(false);
     const [viewingImage, setViewingImage] = useState(null);
 
-    const [selectedMonth, setSelectedMonth] = useState(nowIST().getUTCMonth());
-    const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear());
+    const getInitialFY = () => {
+        const istNow = nowIST();
+        const m = istNow.getUTCMonth() + 1; // 1-12
+        const y = istNow.getUTCFullYear();
+        return (m >= 1 && m <= 3) ? y - 1 : y;
+    };
+
+    const [selectedMonth, setSelectedMonth] = useState(nowIST().getUTCMonth() + 1); // 1-12
+    const [selectedYear, setSelectedYear] = useState(getInitialFY());
 
     const shiftMonth = (amount) => {
         let newMonth = selectedMonth + amount;
         let newYear = selectedYear;
-        if (newMonth < 0) { newMonth = 11; newYear--; }
-        if (newMonth > 11) { newMonth = 0; newYear++; }
+        if (newMonth < 1) { newMonth = 12; newYear--; }
+        if (newMonth > 12) { newMonth = 1; newYear++; }
         setSelectedMonth(newMonth);
         setSelectedYear(newYear);
     };
@@ -57,7 +64,7 @@ const CarUtility = () => {
 
         if (searchParam) setSearchTerm(searchParam);
         if (utilityParam) setActiveUtility(utilityParam);
-        if (monthParam) setSelectedMonth(parseInt(monthParam) - 1); // 0-indexed
+        if (monthParam) setSelectedMonth(parseInt(monthParam));
         if (yearParam) setSelectedYear(parseInt(yearParam));
         if (vehicleIdParam) {
             setSelectedVehicleId(vehicleIdParam);
@@ -70,8 +77,8 @@ const CarUtility = () => {
         setViewMode('fleet');
         setActiveUtility(null);
         const istNow = nowIST();
-        setSelectedMonth(istNow.getUTCMonth());
-        setSelectedYear(istNow.getUTCFullYear());
+        setSelectedMonth(istNow.getUTCMonth() + 1);
+        setSelectedYear(getInitialFY());
     }, [location.pathname, location.key]);
 
     const fetchAllData = async () => {
@@ -246,17 +253,20 @@ const CarUtility = () => {
 
         const fFilt = fHist.filter(h => {
             const { m, y } = getISTMonthYear(h.date);
-            return m === selectedMonth && y === selectedYear;
+            const calendarYear = (selectedMonth >= 1 && selectedMonth <= 3) ? selectedYear + 1 : selectedYear;
+            return (m + 1) === selectedMonth && y === calendarYear;
         });
 
         const bFilt = allBorderEntries.filter(e => {
             const { m, y } = getISTMonthYear(e.date);
-            return (e.vehicle?._id === vId || e.vehicle === vId) && m === selectedMonth && y === selectedYear;
+            const calendarYear = (selectedMonth >= 1 && selectedMonth <= 3) ? selectedYear + 1 : selectedYear;
+            return (e.vehicle?._id === vId || e.vehicle === vId) && (m + 1) === selectedMonth && y === calendarYear;
         });
 
         const sFilt = allServiceRecords.filter(r => {
             const { m, y } = getISTMonthYear(r.billDate || r.date);
-            return (r.vehicle?._id === vId || r.vehicle === vId) && m === selectedMonth && y === selectedYear;
+            const calendarYear = (selectedMonth >= 1 && selectedMonth <= 3) ? selectedYear + 1 : selectedYear;
+            return (r.vehicle?._id === vId || r.vehicle === vId) && (m + 1) === selectedMonth && y === calendarYear;
         });
 
         return {
@@ -338,7 +348,7 @@ const CarUtility = () => {
                             animate={{ opacity: 1, x: 0 }}
                             exit={{ opacity: 0, x: -20 }}
                         >
-                            <header className="flex-resp" style={{ justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', gap: '20px' }}>
+                            <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '40px', gap: '20px', flexWrap: 'wrap' }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
                                     <div style={{ width: 'clamp(40px,10vw,50px)', height: 'clamp(40px,10vw,50px)', background: 'var(--primary)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 20px rgba(14, 165, 233, 0.2)' }}>
                                         <Wrench size={24} color="white" />
@@ -349,16 +359,63 @@ const CarUtility = () => {
                                     </div>
                                 </div>
 
-                                <div className="flex-resp" style={{ gap: '15px', alignItems: 'center' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '8px 16px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                        <div style={{ display: 'flex', gap: '12px' }}>
-                                            <select value={selectedMonth} onChange={(e) => setSelectedMonth(Number(e.target.value))} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', outline: 'none', cursor: 'pointer' }}>
-                                                {[{ n: 0, m: 'Jan' }, { n: 1, m: 'Feb' }, { n: 2, m: 'Mar' }, { n: 3, m: 'Apr' }, { n: 4, m: 'May' }, { n: 5, m: 'Jun' }, { n: 6, m: 'Jul' }, { n: 7, m: 'Aug' }, { n: 8, m: 'Sep' }, { n: 9, m: 'Oct' }, { n: 10, m: 'Nov' }, { n: 11, m: 'Dec' }].map(item => (<option key={item.n} value={item.n} style={{ background: '#0f172a' }}>{item.m}</option>))}
-                                            </select>
-                                            <select value={selectedYear} onChange={(e) => setSelectedYear(Number(e.target.value))} style={{ background: 'transparent', border: 'none', color: 'white', fontSize: '13px', fontWeight: '900', outline: 'none', cursor: 'pointer' }}>
-                                                {[2024, 2025, 2026, 2027].map(y => (<option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>))}
-                                            </select>
-                                        </div>
+                                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', marginLeft: 'auto' }}>
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        background: 'rgba(15, 23, 42, 0.4)',
+                                        borderRadius: '16px',
+                                        padding: '4px 8px',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                        height: '48px'
+                                    }}>
+                                        <select
+                                            value={selectedMonth}
+                                            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                color: 'white', fontWeight: '900', fontSize: '14px', padding: '0 10px',
+                                                height: '100%', outline: 'none', cursor: 'pointer'
+                                            }}
+                                        >
+                                            {[4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3].map(m => (
+                                                <option key={m} value={m} style={{ background: '#0f172a' }}>
+                                                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div style={{
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        background: 'rgba(15, 23, 42, 0.4)',
+                                        borderRadius: '16px',
+                                        padding: '4px 15px',
+                                        border: '1px solid rgba(255,255,255,0.05)',
+                                        boxShadow: '0 4px 15px rgba(0,0,0,0.1)',
+                                        height: '48px',
+                                        gap: '8px'
+                                    }}>
+                                        <span style={{ fontSize: '10px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>FY</span>
+                                        <select
+                                            value={selectedYear}
+                                            onChange={(e) => setSelectedYear(Number(e.target.value))}
+                                            style={{
+                                                background: 'transparent',
+                                                border: 'none',
+                                                color: 'white', fontWeight: '900', fontSize: '14px',
+                                                outline: 'none', cursor: 'pointer'
+                                            }}
+                                        >
+                                            {[2023, 2024, 2025, 2026, 2027].map(y => (
+                                                <option key={y} value={y} style={{ background: '#0f172a' }}>
+                                                    {y}-{y + 1}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
 
                                     <button onClick={() => { setSelectedVehicleId('new'); setActiveUtility('fastag'); }} className="btn-primary" style={{ padding: '12px 24px', borderRadius: '15px', fontWeight: '1000' }}>
@@ -384,28 +441,6 @@ const CarUtility = () => {
                                 <SummaryStat label="Month Total" val={globalStats.t} col="#a855f7" icon={TrendingUp} isDark desc="Combined Ops" />
                             </div>
 
-                            {recentActivity.length > 0 && (
-                                <div style={{ marginBottom: '35px', padding: '25px', background: 'rgba(255,255,255,0.02)', borderRadius: '28px', border: '1px solid rgba(255,255,255,0.06)' }}>
-                                    <h4 style={{ margin: '0 0 20px 0', fontSize: '16px', fontWeight: '900', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                        <TrendingUp size={18} /> RECENT FLEET ACTIVITY
-                                    </h4>
-                                    <div style={{ display: 'flex', gap: '15px', overflowX: 'auto', paddingBottom: '10px' }} className="no-scrollbar">
-                                        {recentActivity.map((r, i) => (
-                                            <div key={i} style={{ minWidth: '240px', padding: '24px', background: 'rgba(255,255,255,0.03)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.06)', backdropFilter: 'blur(10px)' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px', alignItems: 'center' }}>
-                                                    <span style={{ fontSize: '10px', fontWeight: '1000', color: r.color, textTransform: 'uppercase', letterSpacing: '1px', background: `${r.color}15`, padding: '4px 8px', borderRadius: '6px' }}>{r.type}</span>
-                                                    <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{formatDateIST(r.date || r.billDate)}</span>
-                                                </div>
-                                                <div style={{ fontSize: '20px', fontWeight: '1000', color: '#fff', marginBottom: '4px' }}>₹{Number(r.amount).toLocaleString()}</div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                                    <Car size={12} color="rgba(255,255,255,0.4)" />
-                                                    <div style={{ fontSize: '13px', fontWeight: '800', color: 'rgba(255,255,255,0.6)' }}>{r.car}</div>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
 
                             <div style={{ position: 'relative', marginBottom: '30px' }}>
                                 <Search size={18} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.2)' }} />
@@ -417,9 +452,11 @@ const CarUtility = () => {
                                     <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                         <thead>
                                             <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                                <th style={{ padding: '20px 30px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Vehicle</th>
-                                                <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Fastag Balance</th>
-                                                <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Month Total</th>
+                                                <th style={{ padding: '20px 30px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}><Car size={14} /> Vehicle</div></th>
+                                                <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}><CreditCard size={14} /> Fastag (M)</div></th>
+                                                <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}><Shield size={14} /> Border (M)</div></th>
+                                                <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}><Wrench size={14} /> Service (M)</div></th>
+                                                <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}><div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}><TrendingUp size={14} /> Total (M)</div></th>
                                                 <th style={{ padding: '20px 30px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Action</th>
                                             </tr>
                                         </thead>
@@ -444,14 +481,20 @@ const CarUtility = () => {
                                                             </div>
                                                         </td>
                                                         <td style={{ padding: '20px 30px', textAlign: 'right' }}>
-                                                            <div style={{ fontSize: '16px', fontWeight: '900', color: (v.fastagBalance || 0) < 500 ? '#f43f5e' : '#fff' }}>₹{(v.fastagBalance || 0).toLocaleString()}</div>
+                                                            <div style={{ fontSize: '14px', fontWeight: '800', color: 'rgba(255,255,255,0.7)' }}>₹{act.fastag.toLocaleString()}</div>
                                                         </td>
                                                         <td style={{ padding: '20px 30px', textAlign: 'right' }}>
-                                                            <div style={{ fontSize: '16px', fontWeight: '1000', color: '#10b981' }}>₹{act.total.toLocaleString()}</div>
+                                                            <div style={{ fontSize: '14px', fontWeight: '800', color: 'rgba(255,255,255,0.7)' }}>₹{act.border.toLocaleString()}</div>
+                                                        </td>
+                                                        <td style={{ padding: '20px 30px', textAlign: 'right' }}>
+                                                            <div style={{ fontSize: '14px', fontWeight: '800', color: 'rgba(255,255,255,0.7)' }}>₹{act.service.toLocaleString()}</div>
+                                                        </td>
+                                                        <td style={{ padding: '20px 30px', textAlign: 'right' }}>
+                                                            <div style={{ fontSize: '15px', fontWeight: '1000', color: '#10b981' }}>₹{act.total.toLocaleString()}</div>
                                                         </td>
                                                         <td style={{ padding: '20px 30px', textAlign: 'right' }}>
                                                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--primary)', fontWeight: '900', fontSize: '11px' }}>
-                                                                VIEW DETAILS <ArrowRight size={14} />
+                                                                VIEW <ArrowRight size={14} />
                                                             </div>
                                                         </td>
                                                     </tr>
@@ -483,8 +526,6 @@ const CarUtility = () => {
                                             <h2 style={{ margin: 0, fontSize: '36px', fontWeight: '1000' }}>{detailVehicle?.carNumber}</h2>
                                             <div style={{ display: 'flex', gap: '15px', marginTop: '5px' }}>
                                                 <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '800' }}>{detailVehicle?.model}</span>
-                                                <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)' }}></div>
-                                                <span style={{ fontSize: '13px', color: (detailVehicle?.fastagBalance || 0) < 500 ? '#f43f5e' : 'var(--primary)', fontWeight: '900' }}>FASTAG BAL: ₹{detailVehicle?.fastagBalance || 0}</span>
                                             </div>
                                         </div>
                                     </div>

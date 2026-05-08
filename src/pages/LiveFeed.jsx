@@ -286,27 +286,29 @@ const LiveFeed = () => {
             style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
-                padding: '12px 28px',
-                borderRadius: '16px',
+                gap: '10px',
+                padding: '10px 22px',
+                borderRadius: '14px',
                 border: 'none',
                 background: activeTab === id ? `${theme.primary}15` : 'transparent',
-                color: activeTab === id ? theme.primary : 'rgba(255, 255, 255, 0.5)',
+                color: activeTab === id ? theme.primary : 'rgba(255, 255, 255, 0.45)',
                 fontWeight: '900',
                 cursor: 'pointer',
-                transition: 'all 0.4s ease',
+                transition: 'all 0.3s ease',
                 position: 'relative',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                flexShrink: 0,
+                whiteSpace: 'nowrap'
             }}
         >
             {activeTab === id && (
                 <motion.div
                     layoutId="activeTabGlow"
-                    style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${theme.primary}10, transparent)`, zIndex: 0 }}
+                    style={{ position: 'absolute', inset: 0, background: `linear-gradient(135deg, ${theme.primary}15, transparent)`, zIndex: 0 }}
                 />
             )}
-            <Icon size={18} strokeWidth={activeTab === id ? 3 : 2} style={{ position: 'relative', zIndex: 1 }} />
-            <span style={{ fontSize: '13px', textTransform: 'uppercase', letterSpacing: '1px', position: 'relative', zIndex: 1 }}>{label}</span>
+            <Icon size={19} strokeWidth={activeTab === id ? 2.5 : 2} color="currentColor" style={{ position: 'relative', zIndex: 1, minWidth: '19px' }} />
+            <span style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '1.2px', position: 'relative', zIndex: 1 }}>{label}</span>
             {typeof count === 'number' && (
                 <span style={{
                     background: activeTab === id ? theme.primary : 'rgba(255,255,255,0.08)',
@@ -333,7 +335,7 @@ const LiveFeed = () => {
             <SEO title="Live Fleet Control" description="Real-time mission control for drivers and vehicles." />
 
             <header style={{ marginBottom: '30px' }}>
-                <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px', gap: '20px' }}>
+                <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px', gap: '20px', position: 'relative', zIndex: 1000 }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                             <div style={{ width: '32px', height: '32px', background: `${theme.primary}20`, borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${theme.primary}40` }}>
@@ -354,15 +356,17 @@ const LiveFeed = () => {
                                     d.setUTCDate(d.getUTCDate() - 1);
                                     setSelectedDate(d.toISOString().split('T')[0]);
                                 }}
-                                style={{ width: '40px', height: '40px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
+                                style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
                                 className="driver-card-hover"
                             >
                                 <ChevronLeft size={20} />
                             </button>
-                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: 'clamp(140px, 20vw, 180px)' }}>
+                            <div style={{ position: 'relative', display: 'flex', alignItems: 'center', width: 'clamp(140px, 20vw, 180px)', zIndex: 100 }}>
                                 <PremiumDateInput
                                     value={selectedDate}
                                     onChange={(v) => setSelectedDate(v)}
+                                    align="right"
+
                                 />
                             </div>
                             <button
@@ -371,7 +375,7 @@ const LiveFeed = () => {
                                     d.setUTCDate(d.getUTCDate() + 1);
                                     setSelectedDate(d.toISOString().split('T')[0]);
                                 }}
-                                style={{ width: '40px', height: '40px', borderRadius: '14px', background: 'rgba(255,255,255,0.03)', border: 'none', color: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
+                                style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', cursor: 'pointer', transition: 'all 0.2s' }}
                                 className="driver-card-hover"
                             >
                                 <ChevronRight size={20} />
@@ -555,7 +559,7 @@ const LiveFeed = () => {
                         <TabButton id="vehicles" label="Fleet" icon={Car} count={stats?.totalUsedVehiclesCount || 0} />
                         <TabButton id="fuel" label="Fuel" icon={Fuel} count={stats?.dailyFuelEntries?.length || 0} />
                         <TabButton id="absent" label="Absent" icon={Users} count={stats?.absentDriversCount || 0} />
-                        <TabButton id="unused" label="IDEL" icon={Car} count={stats?.unusedVehiclesCount || 0} />
+                        <TabButton id="unused" label="IDLE" icon={Car} count={stats?.unusedVehiclesCount || 0} />
                     </div>
 
                     <div style={{ position: 'relative', flex: 1, minWidth: 'clamp(200px, 100%, 450px)' }}>

@@ -17,15 +17,15 @@ const OutsideCars = () => {
     const [vehicles, setVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [selectedDay, setSelectedDay] = useState('All'); // 'All' or 1-31
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12 or 'All'
+    const [selectedYear, setSelectedYear] = useState(new Date().getMonth() < 3 ? new Date().getFullYear() - 1 : new Date().getFullYear());
+    const [selectedDay, setSelectedDay] = useState('All'); 
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
     const [ownerFilter, setOwnerFilter] = useState('All');
     const [propertyFilter, setPropertyFilter] = useState('All');
     const [transactionFilter, setTransactionFilter] = useState('Buy');
-    const [viewMode, setViewMode] = useState('monthly'); // 'monthly' or 'range'
+    const [viewMode, setViewMode] = useState('monthly'); 
     const location = useLocation();
 
     // ── AI AGENT SEARCH INTEGRATION ──
@@ -65,15 +65,23 @@ const OutsideCars = () => {
 
     useEffect(() => {
         if (viewMode === 'monthly') {
-            if (selectedDay === 'All') {
-                const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
-                const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
+            if (selectedMonth === 'All') {
+                const start = `${selectedYear}-04-01`;
+                const end = `${selectedYear + 1}-03-31`;
                 setFromDate(start);
                 setToDate(end);
             } else {
-                const d = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
-                setFromDate(d);
-                setToDate(d);
+                const calendarYear = (selectedMonth >= 1 && selectedMonth <= 3) ? selectedYear + 1 : selectedYear;
+                if (selectedDay === 'All') {
+                    const start = toISTDateString(new Date(calendarYear, selectedMonth - 1, 1));
+                    const end = toISTDateString(new Date(calendarYear, selectedMonth, 0));
+                    setFromDate(start);
+                    setToDate(end);
+                } else {
+                    const d = toISTDateString(new Date(calendarYear, selectedMonth - 1, parseInt(selectedDay)));
+                    setFromDate(d);
+                    setToDate(d);
+                }
             }
         }
     }, [selectedMonth, selectedYear, selectedDay, viewMode]);
@@ -241,12 +249,19 @@ const OutsideCars = () => {
 
         // Intelligence: Default the form date to the viewed month
         const now = new Date();
+        const currentMonth = now.getMonth() + 1;
+        const currentYear = now.getFullYear();
+        
         let defaultDate = todayIST();
-        if (selectedMonth !== now.getMonth() || selectedYear !== now.getFullYear()) {
+        if (selectedMonth === 'All') {
+            defaultDate = todayIST();
+        } else if (selectedMonth !== currentMonth || selectedYear !== currentYear) {
+            const calendarYear = (selectedMonth >= 1 && selectedMonth <= 3) ? selectedYear + 1 : selectedYear;
             const dayToUse = selectedDay === 'All' ? 1 : parseInt(selectedDay);
-            defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, dayToUse));
+            defaultDate = toISTDateString(new Date(calendarYear, selectedMonth - 1, dayToUse));
         } else if (selectedDay !== 'All' && parseInt(selectedDay) !== now.getDate()) {
-            defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, parseInt(selectedDay)));
+            const calendarYear = (selectedMonth >= 1 && selectedMonth <= 3) ? selectedYear + 1 : selectedYear;
+            defaultDate = toISTDateString(new Date(calendarYear, selectedMonth - 1, parseInt(selectedDay)));
         }
 
         setFormData({
@@ -437,16 +452,25 @@ const OutsideCars = () => {
     const totalPayable = filtered.reduce((sum, v) => sum + (v ? (Number(v.dutyAmount) || 0) : 0), 0);
     const totalDutiesCount = filtered.reduce((sum, v) => sum + (v?.dutyType ? v.dutyType.split(' + ').filter(Boolean).length : 0), 0);
 
-    // Cascading unique drivers based on proprietor selection
-    const uniqueOwners = [...new Set(vehicles.map(v => v.ownerName?.trim()).filter(Boolean))].sort();
+    // ── DYNAMIC FILTERS ──
+    const ownerBalances = vehicles.reduce((acc, v) => {
+        const owner = v.ownerName?.trim();
+        const dutyDate = v.carNumber?.split('#')[1];
+        if (owner && dutyDate >= fromDate && dutyDate <= toDate && (v.transactionType || 'Buy') === transactionFilter) {
+            acc[owner] = (acc[owner] || 0) + (Number(v.dutyAmount) || 0);
+        }
+        return acc;
+    }, {});
 
-    // Create unique properties list, normalizing to avoid duplicates in dropdown but keeping original casing for display
+    const uniqueOwners = Object.keys(ownerBalances).sort();
+
     const uniqueProperties = Object.values(vehicles
         .filter(v => {
             const ownerMatch = ownerFilter === 'All' || v.ownerName?.trim() === ownerFilter?.trim();
             const dutyDate = v.carNumber?.split('#')[1];
             const dateMatch = dutyDate >= fromDate && dutyDate <= toDate;
-            return ownerMatch && dateMatch;
+            const transMatch = (v.transactionType || 'Buy') === transactionFilter;
+            return ownerMatch && dateMatch && transMatch;
         })
         .reduce((acc, v) => {
             const prop = v.property?.trim();
@@ -611,7 +635,11 @@ const OutsideCars = () => {
                     <div className="flex-resp" style={{ gap: '8px', flex: '3', minWidth: '300px' }}>
                         <select value={ownerFilter} onChange={e => handleOwnerChange(e.target.value)} className="premium-compact-input" style={{ height: '52px', flex: 1 }}>
                             <option value="All">All Vendors</option>
-                            {uniqueOwners.map(o => <option key={o} value={o}>{o}</option>)}
+                            {uniqueOwners.map(o => (
+                                <option key={o} value={o}>
+                                    {o} (₹{(ownerBalances[o] || 0).toLocaleString()})
+                                </option>
+                            ))}
                         </select>
                         <select value={propertyFilter} onChange={e => setPropertyFilter(e.target.value)} className="premium-compact-input" style={{ height: '52px', flex: 1 }}>
                             <option value="All">All Properties</option>
@@ -633,11 +661,16 @@ const OutsideCars = () => {
                             ))}
                         </div>
                         <div style={{ display: 'flex', gap: '6px' }}>
-                            <select value={selectedMonth} onChange={e => { setSelectedMonth(Number(e.target.value)); setSelectedDay('All'); }} className="premium-compact-input" style={{ height: '40px', width: '85px', fontSize: '11px', padding: '0 10px' }}>
-                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => <option key={m} value={i}>{m}</option>)}
+                            <select value={selectedMonth} onChange={e => { setSelectedMonth(e.target.value === 'All' ? 'All' : Number(e.target.value)); setSelectedDay('All'); }} className="premium-compact-input" style={{ height: '40px', width: '95px', fontSize: '11px', padding: '0 10px' }}>
+                                <option value="All">Full Year</option>
+                                {[4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3].map(m => (
+                                    <option key={m} value={m}>
+                                        {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]}
+                                    </option>
+                                ))}
                             </select>
-                            <select value={selectedYear} onChange={e => { setSelectedYear(Number(e.target.value)); setSelectedDay('All'); }} className="premium-compact-input" style={{ height: '40px', width: '75px', fontSize: '11px', padding: '0 10px' }}>
-                                {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}</option>)}
+                            <select value={selectedYear} onChange={e => { setSelectedYear(Number(e.target.value)); setSelectedDay('All'); }} className="premium-compact-input" style={{ height: '40px', width: '85px', fontSize: '11px', padding: '0 10px' }}>
+                                {[2023, 2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}-{y + 1}</option>)}
                             </select>
                         </div>
                     </div>

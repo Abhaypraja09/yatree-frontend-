@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const PremiumDateInput = ({ value, onChange, label, required = false, placeholder = "DD-MM-YYYY" }) => {
+const PremiumDateInput = ({ value, onChange, label, required = false, placeholder = "DD-MM-YYYY", align, direction = "down" }) => {
     const [showCalendar, setShowCalendar] = useState(false);
     const [inputValue, setInputValue] = useState('');
     const [viewDate, setViewDate] = useState(new Date());
@@ -127,10 +127,13 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
                     className="calendar-dropdown"
                     style={{
                         position: 'absolute',
-                        top: '100%',
-                        left: 0,
+                        top: direction === 'up' ? 'auto' : '100%',
+                        bottom: direction === 'up' ? 'calc(100% + 12px)' : 'auto',
+                        left: align === 'right' ? 'auto' : (label ? '0' : (align === 'left' ? '0' : '50%')),
+                        right: align === 'right' ? 0 : 'auto',
+                        transform: (label || align === 'left' || align === 'right') ? 'none' : 'translateX(-50%)',
                         zIndex: 10001,
-                        marginTop: '10px',
+                        marginTop: direction === 'up' ? '0' : '12px',
                         width: '300px',
                         background: '#1e293b',
                         border: '1px solid rgba(255,255,255,0.1)',
@@ -199,16 +202,18 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
                     required={required}
                     inputMode="numeric"
                     style={{
-                        height: '52px',
-                        background: 'rgba(255,255,255,0.02)',
-                        border: '1px solid rgba(255,255,255,0.05)',
-                        borderRadius: '14px',
-                        fontSize: '15px',
+                        height: label ? '52px' : '40px',
+                        background: 'rgba(255,255,255,0.03)',
+                        border: '1px solid rgba(255,255,255,0.08)',
+                        borderRadius: '12px',
+                        fontSize: label ? '15px' : '13px',
                         width: '100%',
                         color: 'white',
-                        padding: '0 45px 0 15px',
+                        padding: label ? '0 45px 0 15px' : '0 35px 0 12px',
                         outline: 'none',
-                        transition: 'all 0.3s'
+                        transition: 'all 0.3s',
+                        textAlign: label ? 'left' : 'center',
+                        fontWeight: '700'
                     }}
                     onFocus={e => {
                         e.target.style.borderColor = 'var(--primary, #fbbf24)';
@@ -221,7 +226,7 @@ const PremiumDateInput = ({ value, onChange, label, required = false, placeholde
                     onClick={() => setShowCalendar(!showCalendar)}
                     style={{
                         position: 'absolute',
-                        right: '15px',
+                        right: label ? '15px' : '10px',
                         top: '50%',
                         transform: 'translateY(-50%)',
                         color: 'rgba(255,255,255,0.3)',

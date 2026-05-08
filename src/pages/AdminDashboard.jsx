@@ -479,7 +479,7 @@ const AdminDashboard = () => {
                             </>
                         )}
 
-                        {/* Vehicles Maintenance Related */}
+                        {/* Vehicles Life Related */}
                         {canAccess('vehiclesManagement') && (
                             <>
                                 {canAccess('vehiclesManagement', 'maintenance') && (
@@ -548,7 +548,7 @@ const AdminDashboard = () => {
                                             if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
                                             if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
                                             return true;
-                                        }).sort((a, b) => new Date(a.expiryDate || a.date) - new Date(b.expiryDate || b.date)).slice(0, 3).map((alert, index) => (
+                                        }).sort((a, b) => new Date(a.expiryDate || a.date) - new Date(b.expiryDate || b.date)).map((alert, index) => (
                                             <div
                                                 key={index}
                                                 className="alert-card glass-card-hover-effect"

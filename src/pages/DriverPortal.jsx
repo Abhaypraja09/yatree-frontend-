@@ -286,9 +286,9 @@ const DriverPortal = () => {
 
         try {
             const pos = await new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, { 
-                    enableHighAccuracy: true, 
-                    timeout: 5000 
+                navigator.geolocation.getCurrentPosition(resolve, reject, {
+                    enableHighAccuracy: true,
+                    timeout: 5000
                 });
             });
             latitude = pos.coords.latitude;
@@ -306,8 +306,8 @@ const DriverPortal = () => {
         formData.append('kmPhoto', kmPhoto);
         formData.append('carSelfie', carSelfie);
         formData.append('dutyCount', '1');
-        formData.append('specialPay', specialPay || '0');
-        formData.append('specialPayRemark', specialPayRemark || '');
+        formData.append('specialPay', '0');
+        formData.append('specialPayRemark', '');
         formData.append('latitude', latitude);
         formData.append('longitude', longitude);
         formData.append('address', address);
@@ -883,7 +883,7 @@ const DriverPortal = () => {
                                     )}
                                 </>
                             )}
-                            <button 
+                            <button
                                 onClick={() => setShowPasswordSection(true)}
                                 style={{
                                     background: 'linear-gradient(135deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0.03) 100%)',
@@ -1091,81 +1091,81 @@ const DriverPortal = () => {
 
 
 
-                            {/* Security Modal */}
-                            {showPasswordSection && (
-                                <div className="modal-overlay" style={{ zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                    <div className="modal-content glass-card" style={{ maxWidth: '400px', width: '90%', padding: '24px', position: 'relative' }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                <div style={{ padding: '10px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '12px' }}>
-                                                    <Lock size={20} color="var(--primary)" />
+                                    {/* Security Modal */}
+                                    {showPasswordSection && (
+                                        <div className="modal-overlay" style={{ zIndex: 10000, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                            <div className="modal-content glass-card" style={{ maxWidth: '400px', width: '90%', padding: '24px', position: 'relative' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                        <div style={{ padding: '10px', background: 'rgba(14, 165, 233, 0.1)', borderRadius: '12px' }}>
+                                                            <Lock size={20} color="var(--primary)" />
+                                                        </div>
+                                                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white' }}>{t('security') || 'Security Settings'}</h3>
+                                                    </div>
+                                                    <button
+                                                        onClick={() => {
+                                                            setShowPasswordSection(false);
+                                                            setMessage({ type: '', text: '' });
+                                                        }}
+                                                        className="modal-close-btn"
+                                                    >
+                                                        <X size={20} />
+                                                    </button>
                                                 </div>
-                                                <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white' }}>{t('security') || 'Security Settings'}</h3>
-                                            </div>
-                                            <button 
-                                                onClick={() => {
-                                                    setShowPasswordSection(false);
-                                                    setMessage({ type: '', text: '' });
-                                                }} 
-                                                className="modal-close-btn"
-                                            >
-                                                <X size={20} />
-                                            </button>
-                                        </div>
 
-                                        <div style={{ display: 'grid', gap: '16px' }}>
-                                            <div className="input-wrapper-full">
-                                                <label className="input-label" style={{ fontSize: '11px', fontWeight: '800', opacity: 0.5, letterSpacing: '0.5px' }}>CURRENT PASSWORD</label>
-                                                <input 
-                                                    type="password" 
-                                                    className="input-field" 
-                                                    placeholder="Enter current password"
-                                                    value={passwordData.oldPassword}
-                                                    onChange={(e) => setPasswordData({...passwordData, oldPassword: e.target.value})}
-                                                    style={{ background: 'rgba(0,0,0,0.2)' }}
-                                                />
-                                            </div>
-                                            <div className="input-wrapper-full">
-                                                <label className="input-label" style={{ fontSize: '11px', fontWeight: '800', opacity: 0.5, letterSpacing: '0.5px' }}>NEW PASSWORD</label>
-                                                <input 
-                                                    type="password" 
-                                                    className="input-field" 
-                                                    placeholder="Enter new password"
-                                                    value={passwordData.newPassword}
-                                                    onChange={(e) => setPasswordData({...passwordData, newPassword: e.target.value})}
-                                                    style={{ background: 'rgba(0,0,0,0.2)' }}
-                                                />
-                                            </div>
+                                                <div style={{ display: 'grid', gap: '16px' }}>
+                                                    <div className="input-wrapper-full">
+                                                        <label className="input-label" style={{ fontSize: '11px', fontWeight: '800', opacity: 0.5, letterSpacing: '0.5px' }}>CURRENT PASSWORD</label>
+                                                        <input
+                                                            type="password"
+                                                            className="input-field"
+                                                            placeholder="Enter current password"
+                                                            value={passwordData.oldPassword}
+                                                            onChange={(e) => setPasswordData({ ...passwordData, oldPassword: e.target.value })}
+                                                            style={{ background: 'rgba(0,0,0,0.2)' }}
+                                                        />
+                                                    </div>
+                                                    <div className="input-wrapper-full">
+                                                        <label className="input-label" style={{ fontSize: '11px', fontWeight: '800', opacity: 0.5, letterSpacing: '0.5px' }}>NEW PASSWORD</label>
+                                                        <input
+                                                            type="password"
+                                                            className="input-field"
+                                                            placeholder="Enter new password"
+                                                            value={passwordData.newPassword}
+                                                            onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                                                            style={{ background: 'rgba(0,0,0,0.2)' }}
+                                                        />
+                                                    </div>
 
-                                            {message.text && (
-                                                <div style={{ 
-                                                    padding: '12px', 
-                                                    borderRadius: '12px', 
-                                                    fontSize: '13px', 
-                                                    fontWeight: '700',
-                                                    background: message.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-                                                    color: message.type === 'success' ? '#10b981' : '#f43f5e',
-                                                    border: `1px solid ${message.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 129, 0.2)'}`
-                                                }}>
-                                                    {message.text}
+                                                    {message.text && (
+                                                        <div style={{
+                                                            padding: '12px',
+                                                            borderRadius: '12px',
+                                                            fontSize: '13px',
+                                                            fontWeight: '700',
+                                                            background: message.type === 'success' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+                                                            color: message.type === 'success' ? '#10b981' : '#f43f5e',
+                                                            border: `1px solid ${message.type === 'success' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(244, 63, 129, 0.2)'}`
+                                                        }}>
+                                                            {message.text}
+                                                        </div>
+                                                    )}
+
+                                                    <button
+                                                        className="btn-primary"
+                                                        disabled={isSubmitting}
+                                                        onClick={handlePasswordUpdate}
+                                                        style={{ height: '52px', borderRadius: '14px', fontSize: '14px', fontWeight: '1000', letterSpacing: '1px', marginTop: '10px' }}
+                                                    >
+                                                        {isSubmitting ? 'UPDATING...' : 'CONFIRM CHANGE'}
+                                                    </button>
                                                 </div>
-                                            )}
-
-                                            <button 
-                                                className="btn-primary" 
-                                                disabled={isSubmitting}
-                                                onClick={handlePasswordUpdate}
-                                                style={{ height: '52px', borderRadius: '14px', fontSize: '14px', fontWeight: '1000', letterSpacing: '1px', marginTop: '10px' }}
-                                            >
-                                                {isSubmitting ? 'UPDATING...' : 'CONFIRM CHANGE'}
-                                            </button>
+                                            </div>
                                         </div>
-                                    </div>
-                                </div>
-                            )}
+                                    )}
 
 
-                            {tripStatus === 'completed' && (
+                                    {tripStatus === 'completed' && (
                                         <div className="glass-card" style={{
                                             padding: 'clamp(32px, 8vw, 48px)',
                                             textAlign: 'center',
@@ -1579,15 +1579,6 @@ const DriverPortal = () => {
                                                                 style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '12px', background: 'var(--secondary)', display: 'flex', alignItems: 'center', gap: '8px' }}
                                                             >
                                                                 <Car size={20} /> {t('logParking')}
-                                                            </button>
-                                                        )}
-                                                        {expenseModalType === 'special_pay' && (
-                                                            <button
-                                                                onClick={() => setExpenseEntries([{ type: 'special_pay', amount: '', quantity: '', km: '', fuelType: '', slip: null, preview: null }])}
-                                                                className="btn-primary"
-                                                                style={{ padding: '12px 24px', fontSize: '14px', borderRadius: '12px', background: '#10b981', display: 'flex', alignItems: 'center', gap: '8px' }}
-                                                            >
-                                                                <Wallet size={20} /> {t('specialPay')}
                                                             </button>
                                                         )}
                                                         {expenseModalType === 'other' && (

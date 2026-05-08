@@ -8,7 +8,7 @@ import {
     Users, Plus, Search, Clock, MapPin, User, MoreVertical, IndianRupee, Calendar, Download, X,
     ChevronLeft, ChevronRight, UserPlus, Eye, Trash2, Filter, ArrowUpRight, ArrowDownLeft,
     ShieldCheck, Lock, Unlock, Settings, LayoutDashboard, AlertCircle, CheckCircle, Info,
-    Camera, Printer, FileText, Phone, Edit2, Edit3, TrendingUp, History, CheckCircle2, XCircle, Target,
+    Camera, Printer, FileText, Phone, Edit2, Edit3, TrendingUp, TrendingDown, History, CheckCircle2, XCircle, Target,
     CalendarX, Plane, Mail, ShieldAlert
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -33,119 +33,71 @@ const Staff = () => {
                 --glass-bg: rgba(255, 255, 255, 0.03);
                 --glass-border: rgba(255, 255, 255, 0.08);
             }
-            @keyframes pulse {
-                0% { opacity: 0.6; transform: scale(1); }
-                50% { opacity: 1; transform: scale(1.1); }
-                100% { opacity: 0.6; transform: scale(1); }
-            }
-            @keyframes gradientFlow {
-                0% { background-position: 0% 50%; }
-                50% { background-position: 100% 50%; }
-                100% { background-position: 0% 50%; }
-            }
-            .premium-compact-input {
-                background: rgba(0, 0, 0, 0.2) !important;
-                border: 1px solid rgba(255, 255, 255, 0.08) !important;
-                border-radius: 14px !important;
-                color: white !important;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
-                outline: none !important;
-            }
-            .premium-compact-input option {
-                background: #0f172a !important;
-                color: white !important;
-                padding: 10px !important;
-            }
-            .premium-compact-input:focus {
-                border-color: var(--primary) !important;
-                box-shadow: 0 0 15px var(--primary-glow) !important;
-                outline: none !important;
-            }
-            .glass-panel {
-                background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+            .premium-panel {
+                background: linear-gradient(135deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
                 backdrop-filter: blur(20px);
-                border: 1px solid rgba(255, 255, 255, 0.08);
-                border-radius: 24px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                border-radius: 32px;
+                box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
             }
-            .premium-stat-card {
+            .stat-card-inner {
+                padding: 24px;
+                border-radius: 28px;
                 background: rgba(255, 255, 255, 0.02);
                 border: 1px solid rgba(255, 255, 255, 0.05);
-                border-radius: 28px;
-                padding: 24px;
                 transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-                position: relative;
-                overflow: hidden;
+                cursor: pointer;
             }
-            .premium-stat-card:hover {
+            .stat-card-inner:hover {
                 background: rgba(255, 255, 255, 0.04);
-                border-color: rgba(255, 255, 255, 0.1);
-                transform: translateY(-8px);
-                box-shadow: 0 20px 40px -15px rgba(0,0,0,0.5);
+                transform: translateY(-5px);
+                border-color: var(--primary);
             }
-            .premium-label {
-                font-size: 10px;
+            .action-btn-premium {
+                height: 52px;
+                padding: 0 24px;
+                border-radius: 16px;
+                font-weight: 800;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                transition: all 0.3s ease;
+                cursor: pointer;
+                border: 1px solid rgba(255,255,255,0.1);
+            }
+            .tab-btn-premium {
+                padding: 12px 24px;
+                border-radius: 16px;
+                font-size: 13px;
+                font-weight: 700;
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+                cursor: pointer;
+                border: none;
+                white-space: nowrap;
+            }
+            .custom-table th {
+                padding: 20px 25px;
+                color: rgba(255,255,255,0.4);
+                font-size: 11px;
                 font-weight: 900;
-                color: rgba(255, 255, 255, 0.3);
                 text-transform: uppercase;
-                letter-spacing: 2px;
+                letter-spacing: 1.5px;
+                border-bottom: 1px solid rgba(255,255,255,0.05);
             }
-            .custom-scrollbar::-webkit-scrollbar {
-                width: 6px;
-                height: 6px;
+            .custom-table td {
+                padding: 16px 25px;
+                vertical-align: middle;
             }
-            .custom-scrollbar::-webkit-scrollbar-thumb {
-                background: rgba(255, 255, 255, 0.1);
-                border-radius: 10px;
+            .row-card {
+                background: rgba(255,255,255,0.02);
+                transition: all 0.3s ease;
             }
-            .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-                background: var(--primary);
-            }
-            .staff-row-hover:hover {
-                background: rgba(255,255,255,0.02) !important;
+            .row-card:hover {
+                background: rgba(255,255,255,0.05);
                 transform: scale(1.002);
-            }
-            @media (max-width: 1024px) {
-                .staff-stats-grid {
-                    grid-template-columns: repeat(2, 1fr) !important;
-                    gap: 15px !important;
-                }
-            }
-            @media (max-width: 768px) {
-                .staff-controls-bar {
-                    flex-direction: column !important;
-                    align-items: stretch !important;
-                    gap: 15px !important;
-                    padding: 15px !important;
-                }
-                .staff-tabs-row {
-                    width: 100% !important;
-                    padding: 4px !important;
-                }
-                .staff-tabs-row button {
-                    flex: 1 !important;
-                    padding: 10px 12px !important;
-                    font-size: 10px !important;
-                    justify-content: center !important;
-                }
-                .premium-stat-card {
-                    padding: 15px !important;
-                }
-                .premium-stat-card h2 {
-                    font-size: 24px !important;
-                }
-            }
-            @media (max-width: 480px) {
-                .staff-stats-grid {
-                    grid-template-columns: 1fr !important;
-                }
-                .header-row {
-                    flex-direction: column !important;
-                    align-items: flex-start !important;
-                    gap: 15px !important;
-                }
-                .premium-search-container {
-                    max-width: 100% !important;
-                }
             }
         `;
         document.head.appendChild(style);
@@ -160,7 +112,7 @@ const Staff = () => {
     const [attendanceList, setAttendanceList] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showAddModal, setShowAddModal] = useState(false);
-    const [view, setView] = useState('list'); // 'list', 'attendance', 'leaves', 'summary'
+    const [view, setView] = useState('summary'); // 'list', 'attendance', 'leaves', 'summary'
     const [searchTerm, setSearchTerm] = useState('');
     const [isRange, setIsRange] = useState(false);
     const [fromDate, setFromDate] = useState(todayIST());
@@ -179,6 +131,14 @@ const Staff = () => {
 
     const [pendingLeaves, setPendingLeaves] = useState([]);
     const [monthlyReport, setMonthlyReport] = useState([]);
+    const [salaryPayments, setSalaryPayments] = useState([]);
+    const [advances, setAdvances] = useState([]);
+    const [showAdvanceModal, setShowAdvanceModal] = useState(false);
+    const [advanceFormData, setAdvanceFormData] = useState({
+        staffId: '', amount: '', date: todayIST(), remark: '', givenBy: 'Office'
+    });
+    const [editingAdvance, setEditingAdvance] = useState(null);
+    const [submittingAdvance, setSubmittingAdvance] = useState(false);
     const [isFetching, setIsFetching] = useState(false);
 
     useEffect(() => {
@@ -190,8 +150,9 @@ const Staff = () => {
         }
     }, [monthlyReport]);
 
-    const [selectedMonth, setSelectedMonth] = useState((nowIST().getUTCMonth() + 1).toString());
-    const [selectedYear, setSelectedYear] = useState(nowIST().getUTCFullYear().toString());
+    const [selectedMonth, setSelectedMonth] = useState(DateTime.now().setZone('Asia/Kolkata').month.toString());
+    const [selectedYear, setSelectedYear] = useState(DateTime.now().setZone('Asia/Kolkata').year.toString());
+    const [selectedDay, setSelectedDay] = useState(DateTime.now().setZone('Asia/Kolkata').day.toString());
     const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
     const [selectedStaffReport, setSelectedStaffReport] = useState(null);
     const [showBackdateModal, setShowBackdateModal] = useState(false);
@@ -214,9 +175,18 @@ const Staff = () => {
         }
     }, [selectedCompany]);
 
+    useEffect(() => {
+        if (view === 'attendance') {
+            setSelectedDay(DateTime.now().setZone('Asia/Kolkata').day.toString());
+        }
+        if (view === 'summary' || view === 'advances' || view === 'list') {
+            setIsRange(false);
+        }
+    }, [view]);
+
     const MIN_BACKDATE_LIMIT = (() => {
         const d = nowIST();
-        d.setUTCDate(d.getUTCDate() - 60); // Allow up to 2 months old backdated entries
+        d.setUTCDate(d.getUTCDate() - 60);
         return toISTDateString(d);
     })();
 
@@ -233,7 +203,7 @@ const Staff = () => {
             fetchAttendance();
         } else if (view === 'leaves') {
             fetchAllLeaves();
-        } else if (view === 'summary') {
+        } else if (view === 'summary' || view === 'advances') {
             fetchMonthlyReport();
         }
 
@@ -241,7 +211,7 @@ const Staff = () => {
         if (staffList.length === 0 && view !== 'list') {
             fetchStaff();
         }
-    }, [selectedCompany?._id, view, fromDate, toDate, selectedMonth, selectedYear, isRange]);
+    }, [selectedCompany?._id, view, fromDate, toDate, selectedMonth, selectedYear, selectedDay, isRange]);
 
     const fetchAllLeaves = async () => {
         if (!selectedCompany?._id) return;
@@ -255,21 +225,107 @@ const Staff = () => {
 
     const fetchMonthlyReport = async () => {
         if (!selectedCompany?._id) return;
+        console.log(`[fetchMonthlyReport] month=${selectedMonth}, year=${selectedYear}, view=${view}`);
         setIsFetching(true);
         try {
             let url = `/api/admin/staff-attendance/${selectedCompany._id}`;
+            let paymentUrl = `/api/admin/salary-payments/${selectedCompany._id}`;
+
             if (isRange) {
                 url += `?from=${fromDate}&to=${toDate}&includeAttendance=false`;
+                paymentUrl += `?month=${selectedMonth}&year=${selectedYear}`;
             } else {
                 url += `?month=${selectedMonth}&year=${selectedYear}&includeAttendance=false`;
+                paymentUrl += `?month=${selectedMonth}&year=${selectedYear}`;
             }
-            const { data } = await axios.get(url);
-            setMonthlyReport(data.report || []);
+
+            const [attendanceRes, paymentRes, advancesRes] = await Promise.all([
+                axios.get(`${url}${url.includes('?') ? '&' : '?'}t=${Date.now()}`),
+                axios.get(`${paymentUrl}${paymentUrl.includes('?') ? '&' : '?'}t=${Date.now()}`).catch(() => ({ data: [] })),
+                axios.get(`/api/admin/advances/${selectedCompany._id}?month=${selectedMonth}&year=${selectedYear}&isStaffAdvance=true&t=${Date.now()}`).catch(() => ({ data: [] }))
+            ]);
+
+            setMonthlyReport(attendanceRes.data.report || []);
+            setSalaryPayments(paymentRes.data || []);
+            setAdvances(advancesRes.data || []);
         } catch (error) {
             console.error('Error fetching monthly report:', error);
         } finally {
             setIsFetching(false);
         }
+    };
+
+    const handleMarkAsPaid = async (report) => {
+        if (!window.confirm(`Mark ₹${(report.finalSalary || 0).toLocaleString()} as PAID for ${report.name}?`)) return;
+
+        try {
+            await axios.post('/api/admin/salary-payment', {
+                staffId: report.staffId,
+                companyId: selectedCompany._id,
+                month: parseInt(selectedMonth),
+                year: parseInt(selectedYear),
+                amount: report.finalSalary,
+                method: 'Bank Transfer'
+            });
+            fetchMonthlyReport();
+        } catch (err) {
+            console.error('Payment error:', err);
+            alert('Failed to update payment status');
+        }
+    };
+
+    const handleSaveAdvance = async (e) => {
+        e.preventDefault();
+        setSubmittingAdvance(true);
+        try {
+            if (editingAdvance) {
+                await axios.put(`/api/admin/advances/${editingAdvance._id}`, {
+                    ...advanceFormData,
+                    month: parseInt(selectedMonth),
+                    year: parseInt(selectedYear)
+                });
+            } else {
+                await axios.post('/api/admin/advances', {
+                    ...advanceFormData,
+                    companyId: selectedCompany._id,
+                    isStaffAdvance: true,
+                    month: parseInt(selectedMonth),
+                    year: parseInt(selectedYear)
+                });
+            }
+            setShowAdvanceModal(false);
+            setEditingAdvance(null);
+            setAdvanceFormData({ staffId: '', amount: '', date: todayIST(), remark: '', givenBy: 'Office' });
+            fetchMonthlyReport();
+        } catch (err) {
+            console.error('Advance error:', err);
+            alert('Failed to save advance');
+        } finally {
+            setSubmittingAdvance(false);
+        }
+    };
+
+    const handleDeleteAdvance = async (id) => {
+        if (!window.confirm('Are you sure you want to delete this advance record?')) return;
+        try {
+            await axios.delete(`/api/admin/advances/${id}`);
+            fetchMonthlyReport();
+        } catch (err) {
+            console.error('Delete error:', err);
+            alert('Failed to delete advance');
+        }
+    };
+
+    const handleEditAdvance = (adv) => {
+        setEditingAdvance(adv);
+        setAdvanceFormData({
+            staffId: adv.staff?._id || adv.staff,
+            amount: adv.amount,
+            date: toISTDateString(adv.date),
+            remark: adv.remark || '',
+            givenBy: adv.givenBy || 'Office'
+        });
+        setShowAdvanceModal(true);
     };
 
     const handleLeaveAction = async (id, status) => {
@@ -307,8 +363,6 @@ const Staff = () => {
             setShowBackdateModal(false);
             setIsEditing(false);
             const now = nowIST();
-            setSelectedMonth((now.getUTCMonth() + 1).toString());
-            setSelectedYear(now.getUTCFullYear().toString());
             setFromDate(todayIST());
             setToDate(todayIST());
             setBackdateForm({ staffId: '', date: todayIST(), status: 'present', punchInTime: '', punchOutTime: '' });
@@ -348,16 +402,26 @@ const Staff = () => {
     const fetchAttendance = async () => {
         if (!selectedCompany?._id) return;
         try {
-            setLoading(true);
-            // Always fetch current date as per request
-            const today = todayIST();
-            const params = `?from=${today}&to=${today}`;
+            setIsFetching(true);
+            let params = `?t=${Date.now()}`;
+            if (isRange) {
+                params += `&from=${fromDate}&to=${toDate}`;
+            } else if (selectedDay !== 'all') {
+                const dayStr = String(selectedDay).padStart(2, '0');
+                const targetDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${dayStr}`;
+                params += `&date=${targetDate}`;
+            } else if (selectedMonth && selectedYear) {
+                params += `&month=${selectedMonth}&year=${selectedYear}`;
+            } else {
+                const today = todayIST();
+                params += `&date=${today}`;
+            }
             const { data } = await axios.get(`/api/admin/staff-attendance/${selectedCompany._id}${params}`);
             setAttendanceList(data.attendance || []);
-            setLoading(false);
+            setIsFetching(false);
         } catch (error) {
             console.error('Error fetching staff attendance:', error);
-            setLoading(false);
+            setIsFetching(false);
         }
     };
 
@@ -400,7 +464,7 @@ const Staff = () => {
             'Unapproved Absences': item.unapprovedAbsences,
             'Total Earned Days': item.earnedDays,
             'Net Payable': item.finalSalary
-        }));
+        })); y
 
         const ws = XLSX.utils.json_to_sheet(dataToExport);
         const wb = XLSX.utils.book_new();
@@ -816,13 +880,20 @@ const Staff = () => {
 
     const filteredAttendance = React.useMemo(() => {
         return attendanceList.filter(record => {
-            const matchesDate = isRange
-                ? (record.date >= fromDate && record.date <= toDate)
-                : record.date === toDate;
             const matchesStaff = filterStaff === 'all' || record.staff?._id === filterStaff;
-            return matchesDate && matchesStaff;
+            if (isRange) {
+                const matchesDate = record.date >= fromDate && record.date <= toDate;
+                return matchesDate && matchesStaff;
+            }
+            // Filter by selectedDay if it's not 'all'
+            if (selectedDay !== 'all') {
+                const dayStr = String(selectedDay).padStart(2, '0');
+                const targetDate = `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-${dayStr}`;
+                if (record.date !== targetDate) return false;
+            }
+            return matchesStaff;
         });
-    }, [attendanceList, isRange, fromDate, toDate, filterStaff]);
+    }, [attendanceList, isRange, fromDate, toDate, filterStaff, selectedDay, selectedMonth, selectedYear]);
 
     const filteredMonthlyReport = React.useMemo(() => {
         const lowerSearch = searchTerm.toLowerCase();
@@ -830,6 +901,18 @@ const Staff = () => {
             (item.name || '').toLowerCase().includes(lowerSearch)
         );
     }, [monthlyReport, searchTerm]);
+
+    const totalBaseSalary = React.useMemo(() => {
+        return filteredMonthlyReport.reduce((acc, item) => acc + (item.salary || 0), 0);
+    }, [filteredMonthlyReport]);
+
+    const totalAdvancesAmount = React.useMemo(() => {
+        return filteredMonthlyReport.reduce((acc, item) => acc + (item.totalAdvances || 0), 0);
+    }, [filteredMonthlyReport]);
+
+    const totalRemainingSalary = React.useMemo(() => {
+        return filteredMonthlyReport.reduce((acc, item) => acc + (item.finalSalary || 0), 0);
+    }, [filteredMonthlyReport]);
 
     const [selectedPhoto, setSelectedPhoto] = useState(null);
 
@@ -973,358 +1056,219 @@ const Staff = () => {
             <div style={{ position: 'absolute', top: '-10%', right: '-10%', width: '30%', height: '30%', background: 'radial-gradient(circle, rgba(14, 165, 233, 0.1) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }}></div>
             <div style={{ position: 'absolute', bottom: '10%', left: '-10%', width: '40%', height: '40%', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.08) 0%, transparent 70%)', filter: 'blur(100px)', pointerEvents: 'none' }}></div>
 
-            <header style={{ padding: 'clamp(20px, 4vw, 40px) 0' }}>
+            <header style={{ paddingBottom: '30px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '30px' }}>
+                    <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '8px' }}>
+                            <div style={{ width: '48px', height: '48px', background: 'var(--primary)', borderRadius: '16px', display: 'flex', justifyContent: 'center', alignItems: 'center', boxShadow: '0 10px 20px -5px var(--primary-glow)' }}>
+                                <Users size={24} color="black" />
+                            </div>
+                            <div>
+                                <h1 style={{ color: 'white', fontSize: '32px', fontWeight: '900', margin: 0, letterSpacing: '-1px' }}>Staff <span style={{ color: 'var(--primary)' }}>Operations</span></h1>
+                                <p style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', margin: 0, fontWeight: '600' }}>Manage personnel, attendance and monthly payroll</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                        <button
+                            onClick={() => {
+                                setIsEditing(false);
+                                const defaultOffice = staffList.find(s => s.officeLocation?.latitude)?.officeLocation || { latitude: '', longitude: '', address: '', radius: 200 };
+                                setFormData({
+                                    name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
+                                    email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
+                                    officeLocation: defaultOffice,
+                                    joiningDate: '',
+                                    staffType: 'Company'
+                                });
+                                setShowAddModal(true);
+                            }}
+                            className="action-btn-premium"
+                            style={{ background: 'var(--primary)', color: 'black', border: 'none' }}
+                        >
+                            <Plus size={18} /> Add Staff
+                        </button>
+                        <button
+                            onClick={() => {
+                                setBackdateForm({ ...backdateForm, staffId: '', date: '' });
+                                setShowBackdateModal(true);
+                            }}
+                            className="action-btn-premium"
+                            style={{ background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                        >
+                            <Clock size={18} color="var(--primary)" /> Manual Duty
+                        </button>
+                        <button
+                            onClick={() => {
+                                setEditingAdvance(null);
+                                setAdvanceFormData({ staffId: '', amount: '', date: todayIST(), remark: '', givenBy: 'Office' });
+                                setShowAdvanceModal(true);
+                            }}
+                            className="action-btn-premium"
+                            style={{ background: 'rgba(255,255,255,0.05)', color: 'white' }}
+                        >
+                            <IndianRupee size={18} color="#10b981" /> Record Advance
+                        </button>
+                        <button
+                            onClick={exportToExcel}
+                            className="action-btn-premium"
+                            style={{ background: 'rgba(255,255,255,0.05)', color: 'white', width: '52px', padding: 0, justifyContent: 'center' }}
+                        >
+                            <Download size={18} />
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main style={{ padding: '0', maxWidth: '1600px', margin: '0 auto' }}>
+                <div className="staff-stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '20px', marginBottom: '25px' }}>
+                    <div className="stat-card-inner" onClick={() => setView('list')}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                                <p style={{ margin: 0, fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Total Personnel</p>
+                                <h2 style={{ margin: '8px 0 0 0', fontSize: '32px', fontWeight: '900', color: 'white' }}>{staffStats.totalStaff}</h2>
+                            </div>
+                            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '10px', borderRadius: '12px' }}>
+                                <Users color="white" size={20} style={{ opacity: 0.5 }} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="stat-card-inner" onClick={() => setView('attendance')}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                                <p style={{ margin: 0, fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Today Attendance</p>
+                                <h2 style={{ margin: '8px 0 0 0', fontSize: '32px', fontWeight: '900', color: '#10b981' }}>{staffStats.todayAttendance}</h2>
+                            </div>
+                            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '12px' }}>
+                                <Clock color="#10b981" size={20} />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div className="stat-card-inner" onClick={() => setView('summary')}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                            <div>
+                                <p style={{ margin: 0, fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Total Baki Salary</p>
+                                <h2 style={{ margin: '8px 0 0 0', fontSize: '32px', fontWeight: '900', color: 'var(--primary)' }}>₹{totalRemainingSalary.toLocaleString()}</h2>
+                            </div>
+                            <div style={{ background: 'rgba(251, 191, 36, 0.1)', padding: '10px', borderRadius: '12px' }}>
+                                <IndianRupee color="var(--primary)" size={20} />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div style={{
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     flexWrap: 'wrap',
                     gap: '20px',
-                    marginBottom: '30px'
-                }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                        <div style={{
-                            width: 'clamp(40px,10vw,50px)',
-                            height: 'clamp(40px,10vw,50px)',
-                            background: 'linear-gradient(135deg, white, #f8fafc)',
-                            borderRadius: '16px',
-                            padding: '8px',
-                            display: 'flex',
-                            justifyContent: 'center',
-                            alignItems: 'center',
-                            boxShadow: `0 10px 25px ${theme.primary}30`
-                        }}>
-                            <Users size={32} color={theme.primary} />
-                        </div>
-                        <div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                                <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: theme.primary, boxShadow: `0 0 8px ${theme.primary}` }}></div>
-                                <span style={{ fontSize: 'clamp(9px,2.5vw,10px)', fontWeight: '800', color: 'rgba(255,255,255,0.5)', letterSpacing: '1px', textTransform: 'uppercase' }}>Human Resources</span>
-                            </div>
-                            <h1 style={{ color: 'white', fontSize: 'clamp(26px, 5vw, 34px)', fontWeight: '1000', margin: 0, letterSpacing: '-1.5px', lineHeight: 1 }}>
-                                Staff <span className="theme-gradient-text">Management</span>
-                            </h1>
-                            <p style={{ marginTop: '4px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', margin: 0 }}>
-                                Personnel Tracking: <b style={{ color: 'white' }}>{formatDateIST(todayIST())}</b>
-                            </p>
-                        </div>
-                    </div>
-
-                    <div className="flex-resp" style={{ gap: '12px' }}>
-
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                            <button
-                                onClick={() => {
-                                    setIsEditing(false);
-
-                                    // Try to find a default office location from other staff
-                                    const defaultOffice = staffList.find(s => s.officeLocation?.latitude)?.officeLocation || { latitude: '', longitude: '', address: '', radius: 200 };
-
-                                    setFormData({
-                                        name: '', mobile: '', username: '', password: '', salary: 0, monthlyLeaveAllowance: 4,
-                                        email: '', designation: '', shiftTiming: { start: '09:00', end: '18:00' },
-                                        officeLocation: defaultOffice,
-                                        joiningDate: '',
-                                        staffType: 'Company'
-                                    });
-                                    setShowAddModal(true);
-                                }}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 25px',
-                                    borderRadius: '14px', fontWeight: '800',
-                                    background: `linear-gradient(135deg, ${theme.primary} 0%, ${theme.secondary || theme.primary} 100%)`,
-                                    color: 'black', border: 'none', whiteSpace: 'nowrap', flexShrink: 0,
-                                    boxShadow: `0 8px 15px ${theme.primary}40`, cursor: 'pointer'
-                                }}
-                            >
-                                <Plus size={20} /> <span className="hide-mobile">Add Personnel</span><span className="show-mobile">Add</span>
-                            </button>
-                            <button
-                                onClick={() => {
-                                    setBackdateForm({ ...backdateForm, staffId: '', date: '' });
-                                    setShowBackdateModal(true);
-                                }}
-                                style={{
-                                    display: 'flex', alignItems: 'center', gap: '10px', height: '52px', padding: '0 20px',
-                                    borderRadius: '14px', fontWeight: '800',
-                                    background: 'rgba(255, 255, 255, 0.05)',
-                                    color: 'white', border: '1px solid rgba(255,255,255,0.1)', whiteSpace: 'nowrap', flexShrink: 0,
-                                    cursor: 'pointer', transition: '0.3s'
-                                }}
-                                onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
-                                onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
-                            >
-                                <Clock size={20} color="var(--primary)" /> <span className="hide-mobile">MANUAL DUTY</span>
-                            </button>
-                            <button
-                                onClick={exportToExcel}
-                                className="glass-card-hover-effect"
-                                style={{
-                                    height: '52px',
-                                    width: '52px',
-                                    background: 'rgba(255,255,255,0.05)',
-                                    border: '1px solid rgba(255,255,255,0.1)',
-                                    color: 'white',
-                                    display: 'flex',
-                                    justifyContent: 'center',
-                                    alignItems: 'center',
-                                    borderRadius: '14px',
-                                    cursor: 'pointer'
-                                }}
-                            >
-                                <Download size={20} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <main style={{ padding: '0', maxWidth: '1600px', margin: '0 auto' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '25px', marginBottom: '30px' }} className="staff-stats-grid">
-                    <div className="premium-stat-card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <p className="premium-label">Total Personnel</p>
-                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: 'white' }}>{staffStats.totalStaff}</h2>
-                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Registered Team Members</p>
-                            </div>
-                            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '12px', borderRadius: '16px' }}>
-                                <Users color="white" size={24} style={{ opacity: 0.5 }} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="premium-stat-card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <p className="premium-label">Today's Attendance</p>
-                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: '#10b981' }}>
-                                    {staffStats.todayAttendance}
-                                    <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.3)', marginLeft: '5px' }}>/ {staffStats.totalStaff}</span>
-                                </h2>
-                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>{Math.round((staffStats.todayAttendance / (staffStats.totalStaff || 1)) * 100)}% Participation</p>
-                            </div>
-                            <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '16px' }}>
-                                <Clock color="#10b981" size={24} />
-                            </div>
-                        </div>
-                        <div style={{ position: 'absolute', bottom: 0, left: 0, width: '100%', height: '4px', background: 'rgba(16, 185, 129, 0.1)' }}>
-                            <div style={{ width: `${(staffStats.todayAttendance / (staffStats.totalStaff || 1)) * 100}%`, height: '100%', background: '#10b981' }}></div>
-                        </div>
-                    </div>
-
-                    <div className="premium-stat-card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <p className="premium-label">Pending Leaves</p>
-                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: '#f59e0b' }}>{staffStats.pendingLeaves}</h2>
-                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Awaiting Review</p>
-                            </div>
-                            <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '16px' }}>
-                                <Calendar color="#f59e0b" size={24} />
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="premium-stat-card">
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <p className="premium-label">Monthly Target</p>
-                                <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: 'white' }}>
-                                    {monthlyTarget} <span style={{ fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>/26</span>
-                                </h2>
-                                <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Goal: 26 days</p>
-                            </div>
-                            <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '12px', borderRadius: '16px' }}>
-                                <Target color="white" size={24} style={{ opacity: 0.5 }} />
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Control Bar */}
-                <div className="staff-controls-bar" style={{
+                    marginBottom: '25px',
                     background: 'rgba(30, 41, 59, 0.4)',
                     padding: '12px',
                     borderRadius: '24px',
-                    border: '1px solid rgba(255,255,255,0.05)',
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignItems: 'center',
-                    marginBottom: '25px',
-                    gap: '20px'
+                    border: '1px solid rgba(255,255,255,0.05)'
                 }}>
-                    {/* Unified Glass Tabs */}
-                    <div style={{ display: 'flex', gap: '8px', padding: '6px', background: 'rgba(0,0,0,0.2)', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)', overflowX: 'auto', scrollbarWidth: 'none' }} className="staff-tabs-row custom-scrollbar">
+                    <div style={{ display: 'flex', gap: '8px', overflowX: 'auto', paddingBottom: '4px' }} className="custom-scrollbar">
                         {[
-                            { id: 'list', label: 'PERSONNEL', icon: Users },
-                            { id: 'attendance', label: 'ATTENDANCE', icon: Clock },
-                            { id: 'leaves', label: 'LEAVES', icon: CalendarX, count: pendingLeaves.length },
-                            { id: 'summary', label: 'PAYROLL', icon: LayoutDashboard }
+                            { id: 'list', label: 'Personnel', icon: Users },
+                            { id: 'attendance', label: 'Attendance', icon: Clock },
+                            { id: 'leaves', label: 'Leaves', icon: CalendarX },
+                            { id: 'advances', label: 'Advances', icon: IndianRupee },
+                            { id: 'summary', label: 'Payroll', icon: LayoutDashboard }
                         ].map((tab) => (
                             <button
                                 key={tab.id}
                                 onClick={() => setView(tab.id)}
+                                className="tab-btn-premium"
                                 style={{
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '8px',
-                                    padding: '10px 18px',
-                                    borderRadius: '14px',
-                                    border: 'none',
-                                    cursor: 'pointer',
-                                    transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                                    background: view === tab.id ? 'var(--primary)' : 'transparent',
-                                    color: view === tab.id ? 'black' : 'rgba(255,255,255,0.4)',
-                                    whiteSpace: 'nowrap',
-                                    boxShadow: view === tab.id ? '0 10px 20px -5px var(--primary-glow)' : 'none'
+                                    background: view === tab.id ? 'var(--primary)' : 'rgba(255,255,255,0.03)',
+                                    color: view === tab.id ? 'black' : 'rgba(255,255,255,0.5)',
+                                    position: 'relative'
                                 }}
                             >
-                                <tab.icon size={16} />
-                                {tab.label}
+                                <tab.icon size={16} /> {tab.label}
+                                {tab.id === 'leaves' && staffStats.pendingLeaves > 0 && (
+                                     <span style={{
+                                         position: 'absolute',
+                                         top: '-5px',
+                                         right: '-5px',
+                                         background: '#ef4444',
+                                         color: 'white',
+                                         fontSize: '10px',
+                                         fontWeight: '900',
+                                         width: '18px',
+                                         height: '18px',
+                                         borderRadius: '50%',
+                                         display: 'flex',
+                                         justifyContent: 'center',
+                                         alignItems: 'center',
+                                         border: '2px solid #0f172a',
+                                         boxShadow: '0 0 10px rgba(239, 68, 68, 0.4)'
+                                     }}>
+                                         {staffStats.pendingLeaves}
+                                     </span>
+                                 )}
                             </button>
                         ))}
                     </div>
+                </div>
 
-                    <div className="premium-search-container" style={{ position: 'relative', flex: 1, maxWidth: '350px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '15px', flex: 1 }}>
+                    <div className="premium-search-container" style={{ position: 'relative', flex: 1, maxWidth: '400px' }}>
                         <Search style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} size={18} />
                         <input
                             type="text"
-                            placeholder="SEARCH PERSONNEL..."
+                            placeholder="Search Personnel..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             style={{
-                                width: '100%',
-                                height: '48px',
-                                background: 'rgba(0,0,0,0.2)',
-                                border: '1px solid rgba(255,255,255,0.05)',
-                                borderRadius: '16px',
-                                padding: '0 15px 0 45px',
-                                color: 'white',
-                                fontSize: '12px',
-                                fontWeight: '700',
-                                letterSpacing: '0.5px'
+                                width: '100%', height: '48px', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.05)',
+                                borderRadius: '16px', padding: '0 15px 0 45px', color: 'white', fontSize: '13px', fontWeight: '600'
                             }}
                         />
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', padding: '0 15px', border: '1px solid rgba(255,255,255,0.05)', height: '48px' }}>
-                        <Target size={14} style={{ color: 'var(--primary)', marginRight: '10px' }} />
-                        <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginRight: '10px' }}>GOAL:</span>
-                        <input
-                            type="number"
-                            value={monthlyTarget}
-                            onChange={e => handleTargetChange(e.target.value)}
-                            style={{ width: '40px', background: 'transparent', border: 'none', color: 'var(--primary)', fontWeight: '900', fontSize: '14px', textAlign: 'center', outline: 'none' }}
-                        />
-                    </div>
-
-                    {/* Date Controls removed Range option for Payroll as per request */}
-
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                        {!isRange ? (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                <select
-                                    className="premium-compact-input"
-                                    style={{
-                                        height: '40px', border: 'none', background: 'transparent', width: '120px',
-                                        fontSize: '11px', fontWeight: '900', color: 'white', cursor: 'pointer',
-                                        textAlign: 'center', outline: 'none'
-                                    }}
-                                    value={selectedMonth}
-                                    onChange={(e) => setSelectedMonth(e.target.value)}
-                                >
-                                    <option value="1" style={{ background: '#0f172a', color: 'white' }}>JANUARY</option>
-                                    <option value="2" style={{ background: '#0f172a', color: 'white' }}>FEBRUARY</option>
-                                    <option value="3" style={{ background: '#0f172a', color: 'white' }}>MARCH</option>
-                                    <option value="4" style={{ background: '#0f172a', color: 'white' }}>APRIL</option>
-                                    <option value="5" style={{ background: '#0f172a', color: 'white' }}>MAY</option>
-                                    <option value="6" style={{ background: '#0f172a', color: 'white' }}>JUNE</option>
-                                    <option value="7" style={{ background: '#0f172a', color: 'white' }}>JULY</option>
-                                    <option value="8" style={{ background: '#0f172a', color: 'white' }}>AUGUST</option>
-                                    <option value="9" style={{ background: '#0f172a', color: 'white' }}>SEPTEMBER</option>
-                                    <option value="10" style={{ background: '#0f172a', color: 'white' }}>OCTOBER</option>
-                                    <option value="11" style={{ background: '#0f172a', color: 'white' }}>NOVEMBER</option>
-                                    <option value="12" style={{ background: '#0f172a', color: 'white' }}>DECEMBER</option>
-                                </select>
-                                <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)' }}></div>
-                                <select
-                                    className="premium-compact-input"
-                                    style={{
-                                        height: '40px', border: 'none', background: 'transparent', width: '90px',
-                                        fontSize: '11px', fontWeight: '900', color: 'white', cursor: 'pointer',
-                                        textAlign: 'center', outline: 'none'
-                                    }}
-                                    value={selectedYear}
-                                    onChange={(e) => setSelectedYear(e.target.value)}
-                                >
-                                    {Array.from({ length: 5 }, (_, i) => nowIST().getUTCFullYear() - 2 + i).map(y => (
-                                        <option key={y} value={y} style={{ background: '#0f172a', color: 'white' }}>{y}</option>
-                                    ))}
-                                </select>
-                            </div>
-                        ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                <div
-                                    style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', minWidth: '130px' }}
-                                >
-                                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>FROM</span>
-                                    <PremiumDateInput
-                                        value={fromDate}
-                                        onChange={v => setFromDate(v)}
-                                    />
-                                </div>
-                                <ArrowUpRight size={14} color="rgba(255,255,255,0.2)" />
-                                <div
-                                    style={{ padding: '0 15px', height: '48px', display: 'flex', flexDirection: 'column', justifyContent: 'center', background: 'rgba(0,0,0,0.2)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', minWidth: '130px' }}
-                                >
-                                    <span style={{ fontSize: '9px', color: 'rgba(255,255,255,0.3)', fontWeight: '800', letterSpacing: '0.5px' }}>TO</span>
-                                    <PremiumDateInput
-                                        value={toDate}
-                                        onChange={v => setToDate(v)}
-                                    />
-                                </div>
-                            </div>
-                        )}
-
-                        {view === 'attendance' && (
-                            <button
-                                onClick={() => setShowBackdateModal(true)}
-                                style={{
-                                    height: '48px', padding: '0 20px', borderRadius: '16px',
-                                    background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', fontWeight: '900',
-                                    border: '1px solid rgba(251, 191, 36, 0.2)', cursor: 'pointer', fontSize: '12px',
-                                    display: 'flex', alignItems: 'center', gap: '10px', transition: '0.3s'
-                                }}
-                            >
-                                <Clock size={18} /> MANUAL DUTY
-                            </button>
-                        )}
+                    <div style={{ display: 'flex', gap: '8px', background: 'rgba(0,0,0,0.2)', padding: '4px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        <select
+                            className="premium-compact-input"
+                            style={{ height: '40px', border: 'none', background: 'transparent', width: '120px', fontSize: '12px', fontWeight: '800', textAlign: 'center' }}
+                            value={selectedMonth}
+                            onChange={(e) => setSelectedMonth(e.target.value)}
+                        >
+                            {['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'].map((m, i) => (
+                                <option key={i + 1} value={i + 1} style={{ background: '#0f172a' }}>{m.toUpperCase()}</option>
+                            ))}
+                        </select>
+                        <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.1)', alignSelf: 'center' }}></div>
+                        <select
+                            className="premium-compact-input"
+                            style={{ height: '40px', border: 'none', background: 'transparent', width: '80px', fontSize: '12px', fontWeight: '800', textAlign: 'center' }}
+                            value={selectedYear}
+                            onChange={(e) => setSelectedYear(e.target.value)}
+                        >
+                            {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>)}
+                        </select>
                     </div>
                 </div>
 
                 {/* Main Content Area */}
                 <div style={{ padding: '0 0 50px 0' }}>
                     {view === 'list' && (
-                        <div style={{
-                            background: 'rgba(15, 23, 42, 0.4)',
-                            borderRadius: '28px',
-                            border: '1px solid rgba(255, 255, 255, 0.08)',
-                            overflow: 'hidden',
-                            backdropFilter: 'blur(20px)',
-                            boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)'
-                        }}>
-                            <div style={{ overflowX: 'auto', padding: '10px' }}>
-                                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', color: 'white', minWidth: '1000px' }}>
+                        <div className="premium-panel" style={{ overflow: 'hidden' }}>
+                            <div style={{ overflowX: 'auto' }}>
+                                <table className="custom-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
                                     <thead>
-                                        <tr style={{ textAlign: 'left' }}>
-                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>PERSONNEL</th>
-                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>DESIGNATION</th>
-                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>CONTACT INFO</th>
-                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>JOINING DATE</th>
-                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STATUS</th>
-                                            <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>CONTROL</th>
+                                        <tr>
+                                            <th>Personnel</th>
+                                            <th>Designation</th>
+                                            <th>Contact</th>
+                                            <th>Join Date</th>
+                                            <th>Status</th>
+                                            <th style={{ textAlign: 'right' }}>Actions</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -1365,6 +1309,7 @@ const Staff = () => {
                                                     cursor: 'pointer'
                                                 }}
                                                 className="staff-row-hover"
+                                                onClick={() => handleEditStaff(staff)}
                                             >
                                                 <td style={{ padding: '12px 25px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
@@ -1408,7 +1353,8 @@ const Staff = () => {
                                                 <td style={{ padding: '12px 25px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px', textAlign: 'right' }}>
                                                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                         <button
-                                                            onClick={() => {
+                                                            onClick={(e) => {
+                                                                e.stopPropagation();
                                                                 setBackdateForm({ ...backdateForm, staffId: staff._id, date: todayIST() });
                                                                 setShowBackdateModal(true);
                                                             }}
@@ -1418,13 +1364,13 @@ const Staff = () => {
                                                             <Clock size={14} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleEditStaff(staff)}
+                                                            onClick={(e) => { e.stopPropagation(); handleEditStaff(staff); }}
                                                             style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                                                         >
                                                             <Edit2 size={14} />
                                                         </button>
                                                         <button
-                                                            onClick={() => handleDeleteStaff(staff._id)}
+                                                            onClick={(e) => { e.stopPropagation(); handleDeleteStaff(staff._id); }}
                                                             style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
                                                         >
                                                             <Trash2 size={14} />
@@ -1439,436 +1385,168 @@ const Staff = () => {
                         </div>
                     )}
 
-
-
-
                     {/* Redesigned Selected Staff Sidebar is removed for simplicity */}
                     {/* Attendance Logs View */}
-                    {view === 'attendance' && (
-                        <div style={{
-                            background: 'rgba(30, 41, 59, 0.4)',
-                            borderRadius: '32px',
-                            border: '1px solid rgba(255, 255, 255, 0.05)',
-                            overflow: 'hidden',
-                            backdropFilter: 'blur(20px)',
-                            boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
-                        }}>
-                            <div style={{ overflowX: 'auto', padding: '10px' }}>
-                                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
-                                    <thead>
-                                        <tr style={{ textAlign: 'left' }}>
-                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
-                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>IN / OUT TIMES</th>
-                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>EVIDENCE</th>
-                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LOCATION</th>
-                                            <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {isFetching ? (
-                                            <tr>
-                                                <td colSpan="5">
-                                                    <div style={{ textAlign: 'center', padding: '100px' }}>
-                                                        <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ display: 'inline-block' }}>
-                                                            <Settings size={48} color="var(--primary)" />
-                                                        </motion.div>
-                                                        <p style={{ color: 'white', marginTop: '20px', fontWeight: '800' }}>SYNCHRONIZING ATTENDANCE...</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ) : filteredAttendance.length === 0 ? (
-                                            <tr>
-                                                <td colSpan="5">
-                                                    <div style={{ padding: '100px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.05)' }}>
-                                                        <History size={48} color="var(--primary)" style={{ opacity: 0.2, marginBottom: '20px' }} />
-                                                        <p style={{ margin: 0, fontWeight: '800', fontSize: '18px', color: 'white' }}>No Attendance found</p>
-                                                        <p style={{ margin: '8px 0 0 0', fontWeight: '500', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>There are no records for this date range.</p>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ) : filteredAttendance.map(record => (
-                                            <motion.tr
-                                                key={record._id}
-                                                initial={{ opacity: 0, x: -10 }}
-                                                animate={{ opacity: 1, x: 0 }}
-                                                whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)', scale: 1.002 }}
-                                                style={{
-                                                    background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0.5) 100%)',
-                                                    borderRadius: '20px',
-                                                    transition: 'all 0.3s ease',
-                                                    boxShadow: '0 10px 20px -10px rgba(0,0,0,0.2)'
-                                                }}
-                                            >
-                                                <td style={{ padding: '20px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)', fontWeight: '900', fontSize: '18px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
-                                                            {record.staff?.name?.charAt(0) || '?'}
-                                                        </div>
-                                                        <div>
-                                                            <div style={{ fontWeight: '900', color: 'white', fontSize: '16px', letterSpacing: '-0.3px' }}>{record.staff?.name || 'Unknown Staff'}</div>
-                                                            <div style={{ fontSize: '11px', color: 'var(--primary)', marginTop: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>User: {record.staff?.username || 'SYSTEM'}</div>
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td style={{ padding: '20px 25px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                        {record.status === 'absent' ? (
-                                                            <div style={{ background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '900', letterSpacing: '1px', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
-                                                                ON LEAVE / ABSENT
-                                                            </div>
-                                                        ) : (
-                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontSize: '13px', fontWeight: '900' }}>
-                                                                    <div style={{ width: '24px', height: '24px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                                        <ArrowUpRight size={14} />
-                                                                    </div>
-                                                                    {record.punchIn?.time ? formatTimeIST(record.punchIn.time) : 'N/A'}
-                                                                </div>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: record.punchOut?.time ? '#f43f5e' : 'var(--primary)', fontSize: '13px', fontWeight: '900' }}>
-                                                                    <div style={{ width: '24px', height: '24px', borderRadius: '8px', background: record.punchOut?.time ? 'rgba(244, 63, 94, 0.1)' : 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                                                        <ArrowDownLeft size={14} />
-                                                                    </div>
-                                                                    {record.punchOut?.time
-                                                                        ? formatTimeIST(record.punchOut.time)
-                                                                        : 'ACTIVE SHIFT'
-                                                                    }
-                                                                </div>
-                                                            </div>
-                                                        )}
-                                                    </div>
-                                                </td>
-                                                <td style={{ padding: '20px 25px' }}>
-                                                    <div style={{ display: 'flex', gap: '12px' }}>
-                                                        {record.punchIn?.photo ? (
-                                                            <motion.div whileHover={{ scale: 1.1, translateY: -2 }} onClick={() => setSelectedPhoto(record.punchIn.photo)} style={{ position: 'relative', cursor: 'zoom-in' }}>
-                                                                <img src={record.punchIn.photo} style={{ width: '50px', height: '50px', borderRadius: '14px', objectFit: 'cover', border: '2px solid rgba(16,185,129,0.3)', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }} alt="" />
-                                                                <div style={{ position: 'absolute', top: -5, right: -5, background: '#10b981', padding: '4px', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}><ArrowUpRight size={10} color="white" /></div>
-                                                            </motion.div>
-                                                        ) : <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={18} style={{ opacity: 0.2 }} /></div>}
-
-                                                        {record.punchOut?.photo ? (
-                                                            <motion.div whileHover={{ scale: 1.1, translateY: -2 }} onClick={() => setSelectedPhoto(record.punchOut.photo)} style={{ position: 'relative', cursor: 'zoom-in' }}>
-                                                                <img src={record.punchOut.photo} style={{ width: '50px', height: '50px', borderRadius: '14px', objectFit: 'cover', border: '2px solid rgba(244,63,94,0.3)', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }} alt="" />
-                                                                <div style={{ position: 'absolute', top: -5, right: -5, background: '#f43f5e', padding: '4px', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}><ArrowDownLeft size={10} color="white" /></div>
-                                                            </motion.div>
-                                                        ) : record.punchOut?.time ? (
-                                                            <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={18} style={{ opacity: 0.2 }} /></div>
-                                                        ) : null}
-                                                    </div>
-                                                </td>
-                                                <td style={{ padding: '20px 25px' }}>
-                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                        <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
-                                                            <MapPin size={20} color="var(--primary)" />
-                                                        </div>
-                                                        <div style={{ maxWidth: '240px' }}>
-                                                            <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                                {record.punchIn?.location?.address || 'Location unknown'}
-                                                            </div>
-                                                            {record.punchIn?.location?.latitude && (
-                                                                <a
-                                                                    href={`https://www.google.com/maps?q=${record.punchIn.location.latitude},${record.punchIn.location.longitude}`}
-                                                                    target="_blank" rel="noreferrer"
-                                                                    style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px', display: 'inline-block', textDecoration: 'none', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px' }}
-                                                                >
-                                                                    OPEN MAP →
-                                                                </a>
-                                                            )}
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                                <td style={{ padding: '20px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px' }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                                                        <motion.button
-                                                            whileHover={{ scale: 1.1, background: 'rgba(244, 63, 94, 0.2)', y: -2 }}
-                                                            whileTap={{ scale: 0.95 }}
-                                                            onClick={() => handleDeleteStaffAttendance(record._id)}
-                                                            style={{
-                                                                width: '44px',
-                                                                height: '44px',
-                                                                borderRadius: '14px',
-                                                                background: 'rgba(244, 63, 94, 0.1)',
-                                                                color: '#f43f5e',
-                                                                border: '1px solid rgba(244, 63, 94, 0.2)',
-                                                                cursor: 'pointer',
-                                                                display: 'flex',
-                                                                justifyContent: 'center',
-                                                                alignItems: 'center',
-                                                                transition: '0.2s'
-                                                            }}
-                                                        >
-                                                            <Trash2 size={18} />
-                                                        </motion.button>
-                                                    </div>
-                                                </td>
-                                            </motion.tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div >
-                        </div>
-                    )}
-
-                    {view === 'leaves' && (
-                        <div style={{ display: 'grid', gap: '30px' }}>
-                            {/* Pending Requests Section */}
+                    {
+                        view === 'attendance' && (
                             <div style={{
-                                background: 'rgba(15, 23, 42, 0.4)',
-                                borderRadius: '28px',
-                                border: '1px solid rgba(255,255,255,0.06)',
-                                overflow: 'hidden',
-                                backdropFilter: 'blur(10px)',
-                                boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
-                            }}>
-                                <div style={{ padding: '20px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{ width: '10px', height: '24px', background: '#f59e0b', borderRadius: '10px' }}></div>
-                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '1px' }}>PENDING LEAVE REQUESTS</h3>
-                                </div>
-                                <div style={{ overflowX: 'auto', padding: '10px' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
-                                        <thead>
-                                            <tr style={{ textAlign: 'left' }}>
-                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
-                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LEAVE DATES</th>
-                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>APPLIED ON</th>
-                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {pendingLeaves.filter(l => l.status === 'Pending').length === 0 ? (
-                                                <tr>
-                                                    <td colSpan="4">
-                                                        <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-                                                            <Calendar size={40} color="rgba(255,255,255,0.1)" style={{ marginBottom: '15px' }} />
-                                                            <p style={{ margin: 0, fontWeight: '700', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>No pending leave requests at the moment.</p>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ) : pendingLeaves.filter(l => l.status === 'Pending').map(leave => (
-                                                <motion.tr key={leave._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '20px' }}>
-                                                    <td style={{ padding: '18px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b', fontWeight: '900' }}>{leave.staff?.name?.charAt(0)}</div>
-                                                            <div>
-                                                                <div style={{ fontWeight: '900', color: 'white', fontSize: '15px' }}>{leave.staff?.name}</div>
-                                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{leave.type}</div>
-                                                            </div>
-                                                        </div>
-                                                    </td>
-                                                    <td style={{ padding: '18px 25px' }}>
-                                                        <div style={{ fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            {formatDateIST(leave.startDate)} <ChevronRight size={12} style={{ opacity: 0.3 }} /> {formatDateIST(leave.endDate)}
-                                                        </div>
-                                                    </td>
-                                                    <td style={{ padding: '18px 25px' }}>
-                                                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>{formatDateIST(leave.appliedAt || leave.createdAt)}</div>
-                                                    </td>
-                                                    <td style={{ padding: '18px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px', textAlign: 'right' }}>
-                                                        <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                                                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleLeaveAction(leave._id, 'Approved')} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '8px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}>APPROVE</motion.button>
-                                                            <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleLeaveAction(leave._id, 'Rejected')} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '8px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}>REJECT</motion.button>
-                                                        </div>
-                                                    </td>
-                                                </motion.tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-
-                            {/* Approved History Section */}
-                            <div style={{
-                                background: 'rgba(15, 23, 42, 0.4)',
-                                borderRadius: '28px',
-                                border: '1px solid rgba(255,255,255,0.06)',
-                                overflow: 'hidden',
-                                backdropFilter: 'blur(10px)',
-                                boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
-                            }}>
-                                <div style={{ padding: '20px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                    <div style={{ width: '10px', height: '24px', background: '#10b981', borderRadius: '10px' }}></div>
-                                    <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '1px' }}>APPROVED LEAVE HISTORY</h3>
-                                </div>
-                                <div style={{ overflowX: 'auto', padding: '10px' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
-                                        <thead>
-                                            <tr style={{ textAlign: 'left' }}>
-                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
-                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LEAVE DATES</th>
-                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>REASON / DETAILS</th>
-                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>STATUS</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            {pendingLeaves.filter(l => {
-                                                if (l.status === 'Pending') return false;
-                                                const d = new Date(l.startDate);
-                                                return (d.getUTCMonth() + 1).toString() === selectedMonth && d.getUTCFullYear().toString() === selectedYear;
-                                            }).length === 0 ? (
-                                                <tr>
-                                                    <td colSpan="4">
-                                                        <div style={{ padding: '60px 20px', textAlign: 'center' }}>
-                                                            <p style={{ margin: 0, fontWeight: '700', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>No leave history found for the selected period.</p>
-                                                        </div>
-                                                    </td>
-                                                </tr>
-                                            ) : pendingLeaves.filter(l => {
-                                                if (l.status === 'Pending') return false;
-                                                const d = new Date(l.startDate);
-                                                return (d.getUTCMonth() + 1).toString() === selectedMonth && d.getUTCFullYear().toString() === selectedYear;
-                                            }).map(leave => (
-                                                <motion.tr key={leave._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'rgba(255,255,255,0.015)', borderRadius: '20px' }}>
-                                                    <td style={{ padding: '15px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
-                                                        <div style={{ fontWeight: '900', color: 'white', fontSize: '14px' }}>{leave.staff?.name}</div>
-                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{leave.type}</div>
-                                                    </td>
-                                                    <td style={{ padding: '15px 25px' }}>
-                                                        <div style={{ fontSize: '12px', fontWeight: '700', color: 'white' }}>
-                                                            {formatDateIST(leave.startDate)} → {formatDateIST(leave.endDate)}
-                                                        </div>
-                                                    </td>
-                                                    <td style={{ padding: '15px 25px' }}>
-                                                        <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{leave.reason || 'No reason specified'}</div>
-                                                    </td>
-                                                    <td style={{ padding: '15px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px', textAlign: 'right' }}>
-                                                        <div style={{
-                                                            display: 'inline-flex', padding: '6px 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '900',
-                                                            background: leave.status === 'Approved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
-                                                            color: leave.status === 'Approved' ? '#10b981' : '#f43f5e',
-                                                            border: `1px solid ${leave.status === 'Approved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)'}`
-                                                        }}>
-                                                            {leave.status.toUpperCase()}
-                                                        </div>
-                                                    </td>
-                                                </motion.tr>
-                                            ))}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                    {view === 'summary' && (
-                        <div style={{ marginTop: '10px' }}>
-                            {/* Premium Payroll Intelligence Header */}
-
-                            {/* Personnel Payroll Table */}
-                            <div style={{
-                                background: 'rgba(15, 23, 42, 0.4)',
+                                background: 'rgba(30, 41, 59, 0.4)',
                                 borderRadius: '32px',
-                                border: '1px solid rgba(255, 255, 255, 0.08)',
+                                border: '1px solid rgba(255, 255, 255, 0.05)',
                                 overflow: 'hidden',
-                                backdropFilter: 'blur(20px)'
+                                backdropFilter: 'blur(20px)',
+                                boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
                             }}>
                                 <div style={{ overflowX: 'auto', padding: '10px' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', color: 'white', minWidth: '1200px' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
                                         <thead>
                                             <tr style={{ textAlign: 'left' }}>
-                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
-                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>ATTENDANCE</th>
-                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>BASE SALARY</th>
-                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>DEDUCTIONS</th>
-                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>TOTAL SALARY</th>
-                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STATUS</th>
-                                                <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>DATE</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>IN / OUT TIMES</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>EVIDENCE</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LOCATION</th>
+                                                <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {isFetching ? (
                                                 <tr>
-                                                    <td colSpan="7">
+                                                    <td colSpan="5">
                                                         <div style={{ textAlign: 'center', padding: '100px' }}>
                                                             <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ display: 'inline-block' }}>
                                                                 <Settings size={48} color="var(--primary)" />
                                                             </motion.div>
-                                                            <p style={{ color: 'white', marginTop: '20px', fontWeight: '800' }}>CALCULATING PAYROLL DISBURSEMENTS...</p>
+                                                            <p style={{ color: 'white', marginTop: '20px', fontWeight: '800' }}>SYNCHRONIZING ATTENDANCE...</p>
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            ) : filteredMonthlyReport.length === 0 ? (
+                                            ) : filteredAttendance.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan="7">
-                                                        <div style={{ textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.01)', borderRadius: '24px' }}>
-                                                            <IndianRupee size={48} color="rgba(255,255,255,0.1)" style={{ margin: '0 auto 20px' }} />
-                                                            <h3 style={{ color: 'white', fontWeight: '900' }}>No Payroll Data</h3>
+                                                    <td colSpan="5">
+                                                        <div style={{ padding: '100px 20px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '24px', border: '1px dashed rgba(255,255,255,0.05)' }}>
+                                                            <History size={48} color="var(--primary)" style={{ opacity: 0.2, marginBottom: '20px' }} />
+                                                            <p style={{ margin: 0, fontWeight: '800', fontSize: '18px', color: 'white' }}>No Attendance found</p>
+                                                            <p style={{ margin: '8px 0 0 0', fontWeight: '500', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>There are no records for this date range.</p>
                                                         </div>
                                                     </td>
                                                 </tr>
-                                            ) : filteredMonthlyReport.map((item) => (
+                                            ) : filteredAttendance.map(record => (
                                                 <motion.tr
-                                                    key={item.staffId}
-                                                    initial={{ opacity: 0, y: 10 }}
-                                                    animate={{ opacity: 1, y: 0 }}
+                                                    key={record._id}
+                                                    initial={{ opacity: 0, x: -10 }}
+                                                    animate={{ opacity: 1, x: 0 }}
+                                                    whileHover={{ backgroundColor: 'rgba(255,255,255,0.03)', scale: 1.002 }}
                                                     style={{
-                                                        background: 'rgba(255,255,255,0.02)',
-                                                        borderRadius: '16px',
-                                                        transition: 'all 0.3s ease'
+                                                        background: 'linear-gradient(145deg, rgba(30, 41, 59, 0.3) 0%, rgba(15, 23, 42, 0.5) 100%)',
+                                                        borderRadius: '20px',
+                                                        transition: 'all 0.3s ease',
+                                                        boxShadow: '0 10px 20px -10px rgba(0,0,0,0.2)'
                                                     }}
-                                                    className="staff-row-hover"
                                                 >
-                                                    <td style={{ padding: '12px 25px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
+                                                    <td style={{ padding: '20px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
+                                                        <div style={{ fontWeight: '900', color: 'var(--primary)', fontSize: '14px' }}>{formatDateIST(record.date)}</div>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '800' }}>{DateTime.fromISO(record.date).toFormat('cccc')}</div>
+                                                    </td>
+                                                    <td style={{ padding: '20px 25px' }}>
                                                         <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                                                            <div style={{
-                                                                width: '44px', height: '44px', borderRadius: '12px',
-                                                                background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)',
-                                                                display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '16px', fontWeight: '900', color: 'var(--primary)'
-                                                            }}>
-                                                                {item.name.charAt(0)}
+                                                            <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: 'rgba(59, 130, 246, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', color: 'var(--primary)', fontWeight: '900', fontSize: '18px', border: '1px solid rgba(59, 130, 246, 0.2)' }}>
+                                                                {record.staff?.name?.charAt(0) || '?'}
                                                             </div>
                                                             <div>
-                                                                <div style={{ fontWeight: '900', color: 'white', fontSize: '15px' }}>{item.name}</div>
-                                                                <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase' }}>{item.designation || 'Specialist'}</div>
+                                                                <div style={{ fontWeight: '900', color: 'white', fontSize: '16px', letterSpacing: '-0.3px' }}>{record.staff?.name || 'Unknown Staff'}</div>
+                                                                <div style={{ fontSize: '11px', color: 'var(--primary)', marginTop: '4px', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '1px' }}>User: {record.staff?.username || 'SYSTEM'}</div>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '12px 25px' }}>
+                                                    <td style={{ padding: '20px 25px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                            {record.status === 'absent' ? (
+                                                                <div style={{ background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', padding: '8px 16px', borderRadius: '12px', fontSize: '12px', fontWeight: '900', letterSpacing: '1px', border: '1px solid rgba(251, 191, 36, 0.2)' }}>
+                                                                    ON LEAVE / ABSENT
+                                                                </div>
+                                                            ) : (
+                                                                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#10b981', fontSize: '13px', fontWeight: '900' }}>
+                                                                        <div style={{ width: '24px', height: '24px', borderRadius: '8px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                            <ArrowUpRight size={14} />
+                                                                        </div>
+                                                                        {record.punchIn?.time ? formatTimeIST(record.punchIn.time) : 'N/A'}
+                                                                    </div>
+                                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: record.punchOut?.time ? '#f43f5e' : 'var(--primary)', fontSize: '13px', fontWeight: '900' }}>
+                                                                        <div style={{ width: '24px', height: '24px', borderRadius: '8px', background: record.punchOut?.time ? 'rgba(244, 63, 94, 0.1)' : 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                            <ArrowDownLeft size={14} />
+                                                                        </div>
+                                                                        {record.punchOut?.time
+                                                                            ? formatTimeIST(record.punchOut.time)
+                                                                            : 'ACTIVE SHIFT'
+                                                                        }
+                                                                    </div>
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '20px 25px' }}>
                                                         <div style={{ display: 'flex', gap: '12px' }}>
-                                                            <div>
-                                                                <div style={{ fontSize: '13px', fontWeight: '900', color: 'white' }}>{item.presentDays} <span style={{ opacity: 0.3, fontSize: '10px' }}>DAYS</span></div>
-                                                                <div style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Present</div>
+                                                            {record.punchIn?.photo ? (
+                                                                <motion.div whileHover={{ scale: 1.1, translateY: -2 }} onClick={() => setSelectedPhoto(record.punchIn.photo)} style={{ position: 'relative', cursor: 'zoom-in' }}>
+                                                                    <img src={record.punchIn.photo} style={{ width: '50px', height: '50px', borderRadius: '14px', objectFit: 'cover', border: '2px solid rgba(16,185,129,0.3)', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }} alt="" />
+                                                                    <div style={{ position: 'absolute', top: -5, right: -5, background: '#10b981', padding: '4px', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}><ArrowUpRight size={10} color="white" /></div>
+                                                                </motion.div>
+                                                            ) : <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={18} style={{ opacity: 0.2 }} /></div>}
+
+                                                            {record.punchOut?.photo ? (
+                                                                <motion.div whileHover={{ scale: 1.1, translateY: -2 }} onClick={() => setSelectedPhoto(record.punchOut.photo)} style={{ position: 'relative', cursor: 'zoom-in' }}>
+                                                                    <img src={record.punchOut.photo} style={{ width: '50px', height: '50px', borderRadius: '14px', objectFit: 'cover', border: '2px solid rgba(244,63,94,0.3)', boxShadow: '0 5px 15px rgba(0,0,0,0.3)' }} alt="" />
+                                                                    <div style={{ position: 'absolute', top: -5, right: -5, background: '#f43f5e', padding: '4px', borderRadius: '50%', boxShadow: '0 2px 5px rgba(0,0,0,0.5)' }}><ArrowDownLeft size={10} color="white" /></div>
+                                                                </motion.div>
+                                                            ) : record.punchOut?.time ? (
+                                                                <div style={{ width: '50px', height: '50px', borderRadius: '14px', background: 'rgba(255,255,255,0.02)', border: '1px dashed rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Camera size={18} style={{ opacity: 0.2 }} /></div>
+                                                            ) : null}
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '20px 25px' }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                            <div style={{ width: '42px', height: '42px', borderRadius: '12px', background: 'rgba(14, 165, 233, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center', border: '1px solid rgba(14, 165, 233, 0.2)' }}>
+                                                                <MapPin size={20} color="var(--primary)" />
                                                             </div>
-                                                            <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)' }}></div>
-                                                            <div>
-                                                                <div style={{ fontSize: '13px', fontWeight: '900', color: '#f43f5e' }}>{item.leavesTaken} <span style={{ opacity: 0.3, fontSize: '10px' }}>ABS</span></div>
-                                                                <div style={{ fontSize: '9px', fontWeight: '800', color: '#f43f5e', textTransform: 'uppercase' }}>Leaves</div>
+                                                            <div style={{ maxWidth: '240px' }}>
+                                                                <div style={{ fontSize: '13px', fontWeight: '700', color: 'rgba(255,255,255,0.9)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                    {record.punchIn?.location?.address || 'Location unknown'}
+                                                                </div>
+                                                                {record.punchIn?.location?.latitude && (
+                                                                    <a
+                                                                        href={`https://www.google.com/maps?q=${record.punchIn.location.latitude},${record.punchIn.location.longitude}`}
+                                                                        target="_blank" rel="noreferrer"
+                                                                        style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px', marginTop: '4px', display: 'inline-block', textDecoration: 'none', background: 'rgba(251, 191, 36, 0.1)', padding: '2px 8px', borderRadius: '6px' }}
+                                                                    >
+                                                                        OPEN MAP →
+                                                                    </a>
+                                                                )}
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td style={{ padding: '12px 25px' }}>
-                                                        <div style={{ fontSize: '14px', fontWeight: '800', color: 'rgba(255,255,255,0.8)' }}>₹{item.salary?.toLocaleString()}</div>
-                                                    </td>
-                                                    <td style={{ padding: '12px 25px' }}>
-                                                        <div style={{ fontSize: '14px', fontWeight: '800', color: '#f43f5e' }}>- ₹{(item.deduction || 0).toLocaleString()}</div>
-                                                        <div style={{ fontSize: '9px', color: '#f43f5e', fontWeight: '800', opacity: 0.6 }}>{item.extraLeaves} UNPAID DAYS</div>
-                                                    </td>
-                                                    <td style={{ padding: '12px 25px', textAlign: 'right' }}>
-                                                        <div style={{ fontSize: '20px', fontWeight: '1000', color: 'white' }}>₹{(item.finalSalary || 0).toLocaleString()}</div>
-                                                        <div style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Payout</div>
-                                                    </td>
-                                                    <td style={{ padding: '12px 25px' }}>
-                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#fbbf24', boxShadow: '0 0 10px rgba(251, 191, 36, 0.5)' }}></div>
-                                                            <span style={{ fontSize: '11px', fontWeight: '900', color: '#fbbf24' }}>DUE</span>
-                                                        </div>
-                                                    </td>
-                                                    <td style={{ padding: '12px 25px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px', textAlign: 'right' }}>
-                                                        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                    <td style={{ padding: '20px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px' }}>
+                                                        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
                                                             <motion.button
-                                                                whileHover={{ scale: 1.1, background: 'rgba(251, 191, 36, 0.2)' }}
+                                                                whileHover={{ scale: 1.1, background: 'rgba(244, 63, 94, 0.2)', y: -2 }}
                                                                 whileTap={{ scale: 0.95 }}
-                                                                onClick={() => downloadSalarySlip(item)}
-                                                                style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.05)', color: 'var(--primary)', border: '1px solid rgba(251, 191, 36, 0.2)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                                title="Download Slip"
+                                                                onClick={() => handleDeleteStaffAttendance(record._id)}
+                                                                style={{
+                                                                    width: '44px',
+                                                                    height: '44px',
+                                                                    borderRadius: '14px',
+                                                                    background: 'rgba(244, 63, 94, 0.1)',
+                                                                    color: '#f43f5e',
+                                                                    border: '1px solid rgba(244, 63, 94, 0.2)',
+                                                                    cursor: 'pointer',
+                                                                    display: 'flex',
+                                                                    justifyContent: 'center',
+                                                                    alignItems: 'center',
+                                                                    transition: '0.2s'
+                                                                }}
                                                             >
-                                                                <FileText size={16} />
-                                                            </motion.button>
-                                                            <motion.button
-                                                                whileHover={{ scale: 1.1, background: 'rgba(255, 255, 255, 0.1)' }}
-                                                                whileTap={{ scale: 0.95 }}
-                                                                onClick={() => handleStaffClick(item)}
-                                                                style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.03)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
-                                                            >
-                                                                <ChevronRight size={18} />
+                                                                <Trash2 size={18} />
                                                             </motion.button>
                                                         </div>
                                                     </td>
@@ -1876,11 +1554,494 @@ const Staff = () => {
                                             ))}
                                         </tbody>
                                     </table>
+                                </div >
+                            </div>
+                        )
+                    }
+
+                    {
+                        view === 'leaves' && (
+                            <div style={{ display: 'grid', gap: '30px' }}>
+                                {/* Pending Requests Section */}
+                                <div style={{
+                                    background: 'rgba(15, 23, 42, 0.4)',
+                                    borderRadius: '28px',
+                                    border: '1px solid rgba(255,255,255,0.06)',
+                                    overflow: 'hidden',
+                                    backdropFilter: 'blur(10px)',
+                                    boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
+                                }}>
+                                    <div style={{ padding: '20px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ width: '10px', height: '24px', background: '#f59e0b', borderRadius: '10px' }}></div>
+                                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '1px' }}>PENDING LEAVE REQUESTS</h3>
+                                    </div>
+                                    <div style={{ overflowX: 'auto', padding: '10px' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
+                                            <thead>
+                                                <tr style={{ textAlign: 'left' }}>
+                                                    <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
+                                                    <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LEAVE DATES</th>
+                                                    <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>APPLIED ON</th>
+                                                    <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {pendingLeaves.filter(l => l.status === 'Pending').length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan="4">
+                                                            <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+                                                                <Calendar size={40} color="rgba(255,255,255,0.1)" style={{ marginBottom: '15px' }} />
+                                                                <p style={{ margin: 0, fontWeight: '700', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>No pending leave requests at the moment.</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ) : pendingLeaves.filter(l => l.status === 'Pending').map(leave => (
+                                                    <motion.tr key={leave._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '20px' }}>
+                                                        <td style={{ padding: '18px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                                <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(245, 158, 11, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#f59e0b', fontWeight: '900' }}>{leave.staff?.name?.charAt(0)}</div>
+                                                                <div>
+                                                                    <div style={{ fontWeight: '900', color: 'white', fontSize: '15px' }}>{leave.staff?.name}</div>
+                                                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>{leave.type}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: '18px 25px' }}>
+                                                            <div style={{ fontSize: '13px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                                {formatDateIST(leave.startDate)} <ChevronRight size={12} style={{ opacity: 0.3 }} /> {formatDateIST(leave.endDate)}
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: '18px 25px' }}>
+                                                            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>{formatDateIST(leave.appliedAt || leave.createdAt)}</div>
+                                                        </td>
+                                                        <td style={{ padding: '18px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px', textAlign: 'right' }}>
+                                                            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleLeaveAction(leave._id, 'Approved')} style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', border: '1px solid rgba(16, 185, 129, 0.2)', padding: '8px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}>APPROVE</motion.button>
+                                                                <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} onClick={() => handleLeaveAction(leave._id, 'Rejected')} style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: '1px solid rgba(244, 63, 94, 0.2)', padding: '8px 16px', borderRadius: '10px', fontSize: '11px', fontWeight: '900', cursor: 'pointer' }}>REJECT</motion.button>
+                                                            </div>
+                                                        </td>
+                                                    </motion.tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                {/* Approved History Section */}
+                                <div style={{
+                                    background: 'rgba(15, 23, 42, 0.4)',
+                                    borderRadius: '28px',
+                                    border: '1px solid rgba(255,255,255,0.06)',
+                                    overflow: 'hidden',
+                                    backdropFilter: 'blur(10px)',
+                                    boxShadow: '0 20px 40px -20px rgba(0,0,0,0.5)'
+                                }}>
+                                    <div style={{ padding: '20px 25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                        <div style={{ width: '10px', height: '24px', background: '#10b981', borderRadius: '10px' }}></div>
+                                        <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '1px' }}>APPROVED LEAVE HISTORY</h3>
+                                    </div>
+                                    <div style={{ overflowX: 'auto', padding: '10px' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 12px', color: 'white', minWidth: '800px' }}>
+                                            <thead>
+                                                <tr style={{ textAlign: 'left' }}>
+                                                    <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
+                                                    <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>LEAVE DATES</th>
+                                                    <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px' }}>REASON / DETAILS</th>
+                                                    <th style={{ padding: '0 25px 10px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>STATUS</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {pendingLeaves.filter(l => {
+                                                    if (l.status === 'Pending') return false;
+                                                    const d = new Date(l.startDate);
+                                                    return (d.getUTCMonth() + 1).toString() === selectedMonth && d.getUTCFullYear().toString() === selectedYear;
+                                                }).length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan="4">
+                                                            <div style={{ padding: '60px 20px', textAlign: 'center' }}>
+                                                                <p style={{ margin: 0, fontWeight: '700', fontSize: '14px', color: 'rgba(255,255,255,0.3)' }}>No leave history found for the selected period.</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ) : pendingLeaves.filter(l => {
+                                                    if (l.status === 'Pending') return false;
+                                                    const d = new Date(l.startDate);
+                                                    return (d.getUTCMonth() + 1).toString() === selectedMonth && d.getUTCFullYear().toString() === selectedYear;
+                                                }).map(leave => (
+                                                    <motion.tr key={leave._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: 'rgba(255,255,255,0.015)', borderRadius: '20px' }}>
+                                                        <td style={{ padding: '15px 25px', borderTopLeftRadius: '20px', borderBottomLeftRadius: '20px' }}>
+                                                            <div style={{ fontWeight: '900', color: 'white', fontSize: '14px' }}>{leave.staff?.name}</div>
+                                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{leave.type}</div>
+                                                        </td>
+                                                        <td style={{ padding: '15px 25px' }}>
+                                                            <div style={{ fontSize: '12px', fontWeight: '700', color: 'white' }}>
+                                                                {formatDateIST(leave.startDate)} → {formatDateIST(leave.endDate)}
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: '15px 25px' }}>
+                                                            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{leave.reason || 'No reason specified'}</div>
+                                                        </td>
+                                                        <td style={{ padding: '15px 25px', borderTopRightRadius: '20px', borderBottomRightRadius: '20px', textAlign: 'right' }}>
+                                                            <div style={{
+                                                                display: 'inline-flex', padding: '6px 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '900',
+                                                                background: leave.status === 'Approved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)',
+                                                                color: leave.status === 'Approved' ? '#10b981' : '#f43f5e',
+                                                                border: `1px solid ${leave.status === 'Approved' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(244, 63, 94, 0.1)'}`
+                                                            }}>
+                                                                {leave.status.toUpperCase()}
+                                                            </div>
+                                                        </td>
+                                                    </motion.tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )
+                    }
+                    {
+                        view === 'advances' && (
+                            <div style={{ marginTop: '10px' }}>
+                                <div className="premium-stat-card" style={{ marginBottom: '20px', background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, rgba(0,0,0,0.2) 100%)' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div>
+                                            <p className="premium-label" style={{ color: '#f43f5e' }}>Total Advances Given</p>
+                                            <h2 style={{ margin: '4px 0 0 0', fontSize: '32px', fontWeight: '900', color: 'white' }}>
+                                                ₹{advances.reduce((sum, a) => sum + (a.amount || 0), 0).toLocaleString()}
+                                            </h2>
+                                            <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '600' }}>Selected Period: {DateTime.fromObject({ month: parseInt(selectedMonth) }).monthLong} {selectedYear}</p>
+                                        </div>
+                                        <div style={{ background: 'rgba(244, 63, 94, 0.1)', padding: '15px', borderRadius: '20px' }}>
+                                            <IndianRupee color="#f43f5e" size={30} />
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div className="glass-card" style={{ padding: '0', overflow: 'hidden', borderRadius: '24px' }}>
+                                    <div style={{ padding: '25px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <h3 style={{ margin: 0, color: 'white', fontSize: '18px', fontWeight: '800' }}>Advance Payment Records</h3>
+                                        <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>{advances.length} Records found</span>
+                                    </div>
+                                    <div className="table-responsive-wrapper">
+                                        <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                                            <thead>
+                                                <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
+                                                    <th style={{ padding: '15px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Staff Member</th>
+                                                    <th style={{ padding: '15px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Date</th>
+                                                    <th style={{ padding: '15px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Amount</th>
+                                                    <th style={{ padding: '15px 25px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Remark</th>
+                                                    <th style={{ padding: '15px 25px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {advances.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan="5" style={{ padding: '80px 25px', textAlign: 'center' }}>
+                                                            <div style={{ opacity: 0.2 }}>
+                                                                <IndianRupee size={48} color="white" style={{ marginBottom: '15px' }} />
+                                                                <p style={{ margin: 0, fontWeight: '700', fontSize: '14px', color: 'white' }}>No advance records found.</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ) : advances.map((adv, idx) => (
+                                                    <motion.tr key={adv._id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} style={{ background: idx % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.01)' }}>
+                                                        <td style={{ padding: '20px 25px' }}>
+                                                            <div style={{ fontWeight: '800', color: 'white' }}>{adv.staff?.name || 'Unknown Staff'}</div>
+                                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>{adv.staff?.designation || 'Staff'}</div>
+                                                        </td>
+                                                        <td style={{ padding: '20px 25px' }}>
+                                                            <div style={{ fontSize: '13px', color: 'white' }}>{formatDateIST(adv.date)}</div>
+                                                        </td>
+                                                        <td style={{ padding: '20px 25px' }}>
+                                                            <div style={{ fontSize: '14px', fontWeight: '900', color: '#f43f5e' }}>₹{adv.amount?.toLocaleString()}</div>
+                                                        </td>
+                                                        <td style={{ padding: '20px 25px' }}>
+                                                            <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.5)' }}>{adv.remark || '-'}</div>
+                                                        </td>
+                                                        <td style={{ padding: '20px 25px', textAlign: 'right' }}>
+                                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                                <button
+                                                                    onClick={() => handleEditAdvance(adv)}
+                                                                    style={{ background: 'rgba(59, 130, 246, 0.1)', color: '#3b82f6', border: 'none', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer' }}
+                                                                >
+                                                                    <Edit2 size={16} />
+                                                                </button>
+                                                                <button
+                                                                    onClick={() => handleDeleteAdvance(adv._id)}
+                                                                    style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', width: '32px', height: '32px', borderRadius: '8px', cursor: 'pointer' }}
+                                                                >
+                                                                    <Trash2 size={16} />
+                                                                </button>
+                                                            </div>
+                                                        </td>
+                                                    </motion.tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    }
+                    {
+                        view === 'summary' && (
+                            <div style={{ marginTop: '10px' }}>
+                                {/* Premium Payroll Intelligence Header */}
+                                <div style={{
+                                    display: 'grid',
+                                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                                    gap: '20px',
+                                    marginBottom: '20px'
+                                }}>
+                                    <div style={{
+                                        background: 'rgba(30, 41, 59, 0.6)',
+                                        padding: '25px',
+                                        borderRadius: '24px',
+                                        border: '1px solid rgba(255, 255, 255, 0.05)',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Staff Salary</p>
+                                            <h3 style={{ margin: '5px 0 0 0', fontSize: '28px', fontWeight: '1000', color: 'white' }}>₹{totalBaseSalary.toLocaleString()}</h3>
+                                        </div>
+                                        <div style={{ width: '50px', height: '50px', background: 'rgba(255,255,255,0.05)', borderRadius: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                            <Users size={24} color="white" style={{ opacity: 0.5 }} />
+                                        </div>
+                                    </div>
+
+                                    <div style={{
+                                        background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, rgba(0,0,0,0.2) 100%)',
+                                        padding: '25px',
+                                        borderRadius: '24px',
+                                        border: '1px solid rgba(244, 63, 94, 0.2)',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: '11px', fontWeight: '800', color: '#f43f5e', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Advances (Month)</p>
+                                            <h3 style={{ margin: '5px 0 0 0', fontSize: '28px', fontWeight: '1000', color: 'white' }}>₹{totalAdvancesAmount.toLocaleString()}</h3>
+                                        </div>
+                                        <div style={{ width: '50px', height: '50px', background: 'rgba(244, 63, 94, 0.2)', borderRadius: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                            <TrendingDown size={24} color="#f43f5e" />
+                                        </div>
+                                    </div>
+
+                                    <div style={{
+                                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(0,0,0,0.2) 100%)',
+                                        padding: '25px',
+                                        borderRadius: '24px',
+                                        border: '1px solid rgba(16, 185, 129, 0.2)',
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                    }}>
+                                        <div>
+                                            <p style={{ margin: 0, fontSize: '11px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1px' }}>Net Baki Salary (Due)</p>
+                                            <h3 style={{ margin: '5px 0 0 0', fontSize: '28px', fontWeight: '1000', color: 'white' }}>₹{totalRemainingSalary.toLocaleString()}</h3>
+                                        </div>
+                                        <div style={{ width: '50px', height: '50px', background: 'rgba(16, 185, 129, 0.2)', borderRadius: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                            <IndianRupee size={24} color="#10b981" />
+                                        </div>
+                                    </div>
+
+                                    <div style={{
+                                        display: 'flex',
+                                        gap: '10px',
+                                        alignItems: 'center',
+                                        justifyContent: 'flex-end'
+                                    }}>
+                                        <button
+                                            onClick={downloadAllSalarySlips}
+                                            style={{
+                                                height: '60px', padding: '0 25px', borderRadius: '18px',
+                                                background: 'rgba(255,255,255,0.05)', color: 'white', fontWeight: '800',
+                                                border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', gap: '10px'
+                                            }}
+                                        >
+                                            <FileText size={20} /> BULK SLIPS
+                                        </button>
+                                        <button
+                                            onClick={exportPayrollToExcel}
+                                            style={{
+                                                height: '60px', padding: '0 25px', borderRadius: '18px',
+                                                background: 'var(--primary)', color: 'black', fontWeight: '800',
+                                                border: 'none', cursor: 'pointer',
+                                                display: 'flex', alignItems: 'center', gap: '10px',
+                                                boxShadow: '0 10px 20px -5px var(--primary-glow)'
+                                            }}
+                                        >
+                                            <Download size={20} /> EXPORT DATA
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Personnel Payroll Table */}
+                                <div style={{
+                                    background: 'rgba(15, 23, 42, 0.4)',
+                                    borderRadius: '32px',
+                                    border: '1px solid rgba(255, 255, 255, 0.08)',
+                                    overflow: 'hidden',
+                                    backdropFilter: 'blur(20px)'
+                                }}>
+                                    <div style={{ overflowX: 'auto', padding: '10px' }}>
+                                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', color: 'white', minWidth: '1200px' }}>
+                                            <thead>
+                                                <tr style={{ textAlign: 'left' }}>
+                                                    <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
+                                                    <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>ATTENDANCE</th>
+                                                    <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>BASE SALARY</th>
+                                                    <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>DEDUCTIONS</th>
+                                                    <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>ADVANCES</th>
+                                                    <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>TOTAL SALARY</th>
+                                                    <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STATUS</th>
+                                                    <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px', textAlign: 'right' }}>ACTIONS</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {isFetching ? (
+                                                    <tr>
+                                                        <td colSpan="7">
+                                                            <div style={{ textAlign: 'center', padding: '100px' }}>
+                                                                <motion.div animate={{ rotate: 360 }} transition={{ repeat: Infinity, duration: 1, ease: 'linear' }} style={{ display: 'inline-block' }}>
+                                                                    <Settings size={48} color="var(--primary)" />
+                                                                </motion.div>
+                                                                <p style={{ color: 'white', marginTop: '20px', fontWeight: '800' }}>CALCULATING PAYROLL DISBURSEMENTS...</p>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ) : filteredMonthlyReport.length === 0 ? (
+                                                    <tr>
+                                                        <td colSpan="7">
+                                                            <div style={{ textAlign: 'center', padding: '100px', background: 'rgba(255,255,255,0.01)', borderRadius: '24px' }}>
+                                                                <IndianRupee size={48} color="rgba(255,255,255,0.1)" style={{ margin: '0 auto 20px' }} />
+                                                                <h3 style={{ color: 'white', fontWeight: '900' }}>No Payroll Data</h3>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                ) : filteredMonthlyReport.map((item) => (
+                                                    <motion.tr
+                                                        key={item.staffId}
+                                                        initial={{ opacity: 0, y: 10 }}
+                                                        animate={{ opacity: 1, y: 0 }}
+                                                        style={{
+                                                            background: 'rgba(255,255,255,0.02)',
+                                                            borderRadius: '16px',
+                                                            transition: 'all 0.3s ease'
+                                                        }}
+                                                        className="staff-row-hover"
+                                                    >
+                                                        <td style={{ padding: '12px 25px', borderTopLeftRadius: '16px', borderBottomLeftRadius: '16px' }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
+                                                                <div style={{
+                                                                    width: '44px', height: '44px', borderRadius: '12px',
+                                                                    background: 'rgba(251, 191, 36, 0.1)', border: '1px solid rgba(251, 191, 36, 0.2)',
+                                                                    display: 'flex', justifyContent: 'center', alignItems: 'center', fontSize: '16px', fontWeight: '900', color: 'var(--primary)'
+                                                                }}>
+                                                                    {item.name.charAt(0)}
+                                                                </div>
+                                                                <div>
+                                                                    <div style={{ fontWeight: '900', color: 'white', fontSize: '15px' }}>{item.name}</div>
+                                                                    <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700', textTransform: 'uppercase' }}>{item.designation || 'Specialist'}</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: '12px 25px' }}>
+                                                            <div style={{ display: 'flex', gap: '12px' }}>
+                                                                <div>
+                                                                    <div style={{ fontSize: '13px', fontWeight: '900', color: '#10b981' }}>{item.presentDays} <span style={{ opacity: 0.3, fontSize: '10px' }}>PRES</span></div>
+                                                                    <div style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Present</div>
+                                                                </div>
+                                                                <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)' }}></div>
+                                                                <div>
+                                                                    <div style={{ fontSize: '13px', fontWeight: '900', color: 'var(--primary)' }}>{item.paidLeavesUsed || 0} <span style={{ opacity: 0.3, fontSize: '10px' }}>PAID</span></div>
+                                                                    <div style={{ fontSize: '9px', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase' }}>Leaves</div>
+                                                                </div>
+                                                            </div>
+                                                        </td>
+                                                        <td style={{ padding: '12px 25px' }}>
+                                                            <div style={{ fontSize: '14px', fontWeight: '800', color: 'rgba(255,255,255,0.8)' }}>₹{item.salary?.toLocaleString()}</div>
+                                                        </td>
+                                                        <td style={{ padding: '12px 25px' }}>
+                                                            <div style={{ fontSize: '14px', fontWeight: '800', color: '#f43f5e' }}>- ₹{(item.deduction || 0).toLocaleString()}</div>
+                                                            <div style={{ fontSize: '9px', color: '#f43f5e', fontWeight: '800', opacity: 0.8 }}>{item.extraLeaves} UNPAID DAYS</div>
+                                                        </td>
+                                                        <td style={{ padding: '12px 25px' }}>
+                                                            <div style={{ fontSize: '14px', fontWeight: '800', color: '#f43f5e' }}>- ₹{(item.totalAdvances || 0).toLocaleString()}</div>
+                                                            <div style={{ fontSize: '9px', color: '#f43f5e', fontWeight: '800', opacity: 0.8 }}>MONTHLY ADVANCE</div>
+                                                        </td>
+                                                        <td style={{ padding: '12px 25px', textAlign: 'right' }}>
+                                                            <div style={{ fontSize: '20px', fontWeight: '1000', color: 'white' }}>₹{(item.earnedSoFar !== undefined ? item.earnedSoFar : (item.finalSalary || 0)).toLocaleString()}</div>
+                                                            <div style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Earned So Far</div>
+                                                        </td>
+                                                        <td style={{ padding: '12px 25px' }}>
+                                                            {(() => {
+                                                                const payment = salaryPayments.find(p => p.staff === (item.staffId || item._id));
+                                                                const isPaid = payment?.status === 'paid';
+                                                                return (
+                                                                    <div
+                                                                        onClick={() => !isPaid && handleMarkAsPaid(item)}
+                                                                        style={{
+                                                                            display: 'flex',
+                                                                            alignItems: 'center',
+                                                                            gap: '8px',
+                                                                            cursor: isPaid ? 'default' : 'pointer',
+                                                                            padding: '6px 12px',
+                                                                            borderRadius: '10px',
+                                                                            background: isPaid ? 'rgba(16, 185, 129, 0.1)' : 'rgba(251, 191, 36, 0.1)',
+                                                                            border: `1px solid ${isPaid ? 'rgba(16, 185, 129, 0.2)' : 'rgba(251, 191, 36, 0.2)'}`,
+                                                                            width: 'fit-content'
+                                                                        }}
+                                                                    >
+                                                                        <div style={{
+                                                                            width: '8px',
+                                                                            height: '8px',
+                                                                            borderRadius: '50%',
+                                                                            background: isPaid ? '#10b981' : '#fbbf24',
+                                                                            boxShadow: `0 0 10px ${isPaid ? 'rgba(16, 185, 129, 0.5)' : 'rgba(251, 191, 36, 0.5)'}`
+                                                                        }}></div>
+                                                                        <span style={{ fontSize: '11px', fontWeight: '900', color: isPaid ? '#10b981' : '#fbbf24' }}>
+                                                                            {isPaid ? 'PAID' : 'DUE'}
+                                                                        </span>
+                                                                    </div>
+                                                                );
+                                                            })()}
+                                                        </td>
+                                                        <td style={{ padding: '12px 25px', borderTopRightRadius: '16px', borderBottomRightRadius: '16px', textAlign: 'right' }}>
+                                                            <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                                <motion.button
+                                                                    whileHover={{ scale: 1.1, background: 'rgba(251, 191, 36, 0.2)' }}
+                                                                    whileTap={{ scale: 0.95 }}
+                                                                    onClick={() => downloadSalarySlip(item)}
+                                                                    style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(251, 191, 36, 0.05)', color: 'var(--primary)', border: '1px solid rgba(251, 191, 36, 0.2)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                                    title="Download Slip"
+                                                                >
+                                                                    <FileText size={16} />
+                                                                </motion.button>
+                                                                <motion.button
+                                                                    whileHover={{ scale: 1.1, background: 'rgba(255, 255, 255, 0.1)' }}
+                                                                    whileTap={{ scale: 0.95 }}
+                                                                    onClick={() => handleStaffClick(item)}
+                                                                    style={{ width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.03)', color: 'white', border: '1px solid rgba(255, 255, 255, 0.1)', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center' }}
+                                                                >
+                                                                    <ChevronRight size={18} />
+                                                                </motion.button>
+                                                            </div>
+                                                        </td>
+                                                    </motion.tr>
+                                                ))}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        )
+                    }
+                </div >
                 <AnimatePresence>
                     {showAddModal && (
                         <div style={{
@@ -2134,10 +2295,10 @@ const Staff = () => {
                                             flexShrink: 0
                                         }}>
                                             <div style={{ position: 'absolute', top: '-50%', left: '-50%', width: '200%', height: '200%', background: 'radial-gradient(circle, rgba(251, 191, 36, 0.1) 0%, transparent 50%)', opacity: 0.5 }}></div>
-                                            <p style={{ margin: 0, fontSize: '9px', fontWeight: '700', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>NET PAYABLE THIS CYCLE</p>
+                                            <p style={{ margin: 0, fontSize: '9px', fontWeight: '700', color: 'var(--primary)', textTransform: 'uppercase', letterSpacing: '2px' }}>EARNED SO FAR</p>
                                             <h1 style={{ margin: '6px 0 0 0', fontSize: '40px', fontWeight: '900', color: 'white', letterSpacing: '-2px', textShadow: '0 0 30px rgba(251, 191, 36, 0.4)', position: 'relative' }}>
                                                 <span style={{ fontSize: '14px', verticalAlign: 'top', color: 'var(--primary)', marginRight: '3px', fontWeight: '700' }}>₹</span>
-                                                {(selectedStaffReport.finalSalary || 0).toLocaleString()}
+                                                {(selectedStaffReport.earnedSoFar !== undefined ? selectedStaffReport.earnedSoFar : (selectedStaffReport.finalSalary || 0)).toLocaleString()}
                                             </h1>
                                             {selectedStaffReport.cycleStart && (
                                                 <p style={{ margin: '6px 0 0 0', fontSize: '10px', color: 'rgba(255,255,255,0.45)', fontWeight: '600' }}>
@@ -2708,6 +2869,90 @@ const Staff = () => {
                                             Action will be logged in security audit history
                                         </p>
                                     </div>
+                                </form>
+                            </motion.div>
+                        </div>
+                    )}
+                    {showAdvanceModal && (
+                        <div className="modal-overlay">
+                            <motion.div
+                                initial={{ scale: 0.9, opacity: 0, y: 20 }}
+                                animate={{ scale: 1, opacity: 1, y: 0 }}
+                                exit={{ scale: 0.9, opacity: 0, y: 20 }}
+                                className="staff-add-modal"
+                                style={{ maxWidth: '500px' }}
+                            >
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '30px' }}>
+                                    <div>
+                                        <h2 style={{ color: 'white', fontSize: '24px', margin: 0, fontWeight: '950' }}>{editingAdvance ? 'Update Advance' : 'Log Staff Advance'}</h2>
+                                        <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', marginTop: '4px', fontWeight: '700' }}>{editingAdvance ? 'Modify existing advance record.' : 'Record financial assistance for personnel.'}</p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowAdvanceModal(false)}
+                                        style={{ background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', width: '40px', height: '40px', borderRadius: '50%', cursor: 'pointer' }}
+                                    ><X size={20} /></button>
+                                </div>
+
+                                <form onSubmit={handleSaveAdvance} style={{ display: 'grid', gap: '20px' }}>
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">SELECT STAFF MEMBER</label>
+                                        <select
+                                            className="premium-compact-input"
+                                            required
+                                            value={advanceFormData.staffId}
+                                            onChange={(e) => setAdvanceFormData({ ...advanceFormData, staffId: e.target.value })}
+                                            style={{ height: '54px', background: 'rgba(255,255,255,0.05)' }}
+                                        >
+                                            <option value="" style={{ background: '#0f172a' }}>Select personnel...</option>
+                                            {staffList.map(s => (
+                                                <option key={s._id} value={s._id} style={{ background: '#0f172a' }}>{s.name} ({s.designation})</option>
+                                            ))}
+                                        </select>
+                                    </div>
+
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                                        <div className="premium-input-group">
+                                            <label className="premium-label">AMOUNT (₹)</label>
+                                            <input
+                                                type="number"
+                                                className="premium-compact-input"
+                                                placeholder="0"
+                                                required
+                                                value={advanceFormData.amount}
+                                                onChange={(e) => setAdvanceFormData({ ...advanceFormData, amount: e.target.value })}
+                                                style={{ height: '54px', background: 'rgba(255,255,255,0.05)' }}
+                                            />
+                                        </div>
+                                        <div className="premium-input-group">
+                                            <PremiumDateInput
+                                                label="DATE"
+                                                value={advanceFormData.date}
+                                                onChange={v => setAdvanceFormData({ ...advanceFormData, date: v })}
+                                                required
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="premium-input-group">
+                                        <label className="premium-label">REMARK / PURPOSE</label>
+                                        <textarea
+                                            className="premium-compact-input"
+                                            placeholder="Ex: Urgent family need..."
+                                            rows="2"
+                                            value={advanceFormData.remark}
+                                            onChange={(e) => setAdvanceFormData({ ...advanceFormData, remark: e.target.value })}
+                                            style={{ resize: 'none', paddingTop: '15px', background: 'rgba(255,255,255,0.05)' }}
+                                        />
+                                    </div>
+
+                                    <button
+                                        type="submit"
+                                        disabled={submittingAdvance}
+                                        className="btn-primary"
+                                        style={{ height: '56px', fontSize: '16px', fontWeight: '900', marginTop: '10px' }}
+                                    >
+                                        {submittingAdvance ? 'SAVING...' : (editingAdvance ? 'UPDATE ADVANCE' : 'CONFIRM ADVANCE')}
+                                    </button>
                                 </form>
                             </motion.div>
                         </div>

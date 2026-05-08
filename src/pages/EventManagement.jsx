@@ -34,21 +34,43 @@ const EventManagement = () => {
     const [clientFilter, setClientFilter] = useState('All');
     const [sourceFilter, setSourceFilter] = useState('All');
 
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-    const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
-    const [selectedDay, setSelectedDay] = useState('All'); // 'All' or 1-31
+    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12 or 'All'
+    const [selectedYear, setSelectedYear] = useState(new Date().getMonth() < 3 ? new Date().getFullYear() - 1 : new Date().getFullYear());
+    const [selectedDay, setSelectedDay] = useState('All');
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
-    const [statusTab, setStatusTab] = useState('Running'); // 'Upcoming' | 'Running' | 'Closed'
+    const [statusTab, setStatusTab] = useState('Running');
     const [selectedEventDetails, setSelectedEventDetails] = useState(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
 
     useEffect(() => {
-        const start = toISTDateString(new Date(selectedYear, selectedMonth, 1));
-        const end = toISTDateString(new Date(selectedYear, selectedMonth + 1, 0));
-        setFromDate(start);
-        setToDate(end);
-    }, [selectedMonth, selectedYear]);
+        if (selectedMonth === 'All') {
+            const start = `${selectedYear}-04-01`;
+            const end = `${selectedYear + 1}-03-31`;
+            setFromDate(start);
+            setToDate(end);
+        } else {
+            const calendarYear = (selectedMonth >= 1 && selectedMonth <= 3) ? selectedYear + 1 : selectedYear;
+            if (selectedDay === 'All') {
+                const start = toISTDateString(new Date(calendarYear, selectedMonth - 1, 1));
+                const end = toISTDateString(new Date(calendarYear, selectedMonth, 0));
+                setFromDate(start);
+                setToDate(end);
+            } else {
+                const d = toISTDateString(new Date(calendarYear, selectedMonth - 1, parseInt(selectedDay)));
+                setFromDate(d);
+                setToDate(d);
+            }
+        }
+    }, [selectedMonth, selectedYear, selectedDay]);
+
+    // Handle 'Completed' tab defaulting to 'All Months'
+    useEffect(() => {
+        if (statusTab === 'Close') {
+            setSelectedMonth('All');
+            setSelectedDay('All');
+        }
+    }, [statusTab]);
 
     const shiftMonth = (amount) => {
         let newMonth = selectedMonth + amount;
@@ -489,15 +511,15 @@ const EventManagement = () => {
 
     // OPTIMIZATION: Memoize statistics
     const stats = React.useMemo(() => {
-        const totalDuties = filtered.length;
-        const totalAmount = filtered.reduce((sum, v) => sum + (Number(v.dutyAmount) || 0), 0);
-        const fleetCount = filtered.filter(v => (v.vehicleSource || 'External') === 'Fleet').length;
-        const extCount = filtered.filter(v => (v.vehicleSource || 'External') === 'External').length;
+        const uniqueEvents = [...new Set(filtered.map(v => v.eventId).filter(Boolean))].length;
+        const fleetAmount = filtered.filter(v => (v.vehicleSource || 'External') === 'Fleet').reduce((sum, v) => sum + (Number(v.dutyAmount || v.dailyWage) || 0), 0);
+        const extAmount = filtered.filter(v => (v.vehicleSource || 'External') === 'External').reduce((sum, v) => sum + (Number(v.dutyAmount || v.dailyWage) || 0), 0);
+        const totalAmount = fleetAmount + extAmount;
         const uniqueClients = [...new Set(events.map(e => e.client).filter(Boolean))].sort();
-        return { totalDuties, totalAmount, fleetCount, extCount, uniqueClients };
+        return { totalEvents: uniqueEvents, totalAmount, fleetAmount, extAmount, uniqueClients };
     }, [filtered, events]);
 
-    const { totalDuties, totalAmount, fleetCount, extCount, uniqueClients } = stats;
+    const { totalEvents, totalAmount, fleetAmount, extAmount, uniqueClients } = stats;
 
     const now = nowIST();
     const curMonth = (now.getUTCMonth() + 1).toString().padStart(2, '0');
@@ -779,11 +801,11 @@ const EventManagement = () => {
                 <div className="flex-resp" style={{ flex: 1, justifyContent: 'flex-end', width: '100%', gap: '16px' }}>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', minWidth: '200px' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span className="label-text" style={{ color: 'var(--primary)' }}>Master Phase: {selectedMonth + 1}/{selectedYear}</span>
+
                             <div className="calendar-controls">
                                 <button onClick={() => shiftMonth(-1)} className="shift-btn"><ChevronLeft size={16} /></button>
                                 <button onClick={() => shiftMonth(1)} className="shift-btn"><ChevronRight size={16} /></button>
-                                
+
                                 {selectedDay !== 'All' && (
                                     <motion.button
                                         whileHover={{ background: 'rgba(251,191,36,0.2)' }}
@@ -810,12 +832,17 @@ const EventManagement = () => {
                                 <select
                                     value={selectedMonth}
                                     onChange={(e) => {
-                                        setSelectedMonth(parseInt(e.target.value));
+                                        setSelectedMonth(e.target.value === 'All' ? 'All' : parseInt(e.target.value));
                                         setSelectedDay('All');
                                     }}
                                     style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'white', height: '36px', borderRadius: '10px', padding: '0 8px', outline: 'none', fontWeight: '800', fontSize: '11px', cursor: 'pointer' }}
                                 >
-                                    {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => <option key={m} value={i} style={{ background: '#0a0f1d' }}>{m}</option>)}
+                                    <option value="All" style={{ background: '#0a0f1d' }}>Full Year</option>
+                                    {[4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3].map(m => (
+                                        <option key={m} value={m} style={{ background: '#0a0f1d' }}>
+                                            {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]}
+                                        </option>
+                                    ))}
                                 </select>
                                 <select
                                     value={selectedYear}
@@ -825,26 +852,26 @@ const EventManagement = () => {
                                     }}
                                     style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'white', height: '36px', borderRadius: '10px', padding: '0 8px', outline: 'none', fontWeight: '800', fontSize: '11px', cursor: 'pointer' }}
                                 >
-                                    {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0a0f1d' }}>{y}</option>)}
+                                    {[2023, 2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0a0f1d' }}>FY {y}-{y + 1}</option>)}
                                 </select>
                             </div>
                         </div>
                     </div>
 
                     {/* Stats Grid - High Fidelity */}
-                    <div className="stats-grid" style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
-                        gap: '12px', 
-                        flex: '1', 
-                        maxWidth: '600px', 
-                        width: '100%' 
+                    <div className="stats-grid" style={{
+                        display: 'grid',
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                        gap: '12px',
+                        flex: '1',
+                        maxWidth: '600px',
+                        width: '100%'
                     }}>
                         {[
-                            { label: 'Total Duties', value: totalDuties, color: 'var(--primary)', icon: <TruckIcon size={18} /> },
-                            { label: 'Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', icon: <Target size={18} /> },
-                            { label: 'Fleet', value: fleetCount, color: '#38bdf8', icon: <Car size={18} /> },
-                            { label: 'External', value: extCount, color: '#a855f7', icon: <Users size={18} /> },
+                            { label: 'Total Events', value: totalEvents, color: 'var(--primary)', icon: <Target size={18} /> },
+                            { label: 'Total Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', icon: <Wallet size={18} /> },
+                            { label: 'Fleet Amount', value: `₹${fleetAmount.toLocaleString()}`, color: '#38bdf8', icon: <Car size={18} /> },
+                            { label: 'External Amount', value: `₹${extAmount.toLocaleString()}`, color: '#a855f7', icon: <Users size={18} /> },
                         ].map((s, i) => (
                             <motion.div key={s.label}
                                 initial={{ opacity: 0, y: 10 }}

@@ -39,7 +39,7 @@ import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
 
-const NEXT_SERVICE_TYPES = [
+const MAINTENANCE_CATEGORIES = [
     'Regular Service',
     'Engine / Mechanical',
     'Suspension',
@@ -47,15 +47,24 @@ const NEXT_SERVICE_TYPES = [
     'Fuel',
     'Exhaust',
     'Clutch / Transmission',
-    'Brake',
-    'Tyres / Wheels',
-    'Electrical / Battery',
-    'Sensors / Electronics',
-    'AC / Cooling',
-    'Body / Interior',
+    'Brake System',
+    'Tyres & Wheels',
+    'Electrical & Battery',
+    'Sensors & Electronics',
+    'AC & Cooling',
+    'Body & Interior',
     'Emergency Repairs',
-    'Other'
+    'Misc. Repairs'
 ];
+
+const NEXT_SERVICE_TYPES = {
+    'Service': 'Scheduled Service',
+    'Oil Change': 'Engine Oil Change',
+    'Filter': 'Filter Replacement',
+    'Brake': 'Brake System',
+    'Tyres': 'Tyre/Wheel Job',
+    'Other': 'Misc. Repairs'
+};
 
 const Maintenance = () => {
     const { theme } = useTheme();

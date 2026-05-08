@@ -302,7 +302,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                     </NavGroup>
                 )}
                 {hasAccess('vehiclesManagement') && (
-                    <NavGroup title="Vehicles Maintenance" labelKey="vehicles_maintenance" icon={Wrench} isOpen={openGroups.maintenance} onToggle={() => toggleGroup('maintenance')}>
+                    <NavGroup title="Vehicles Life" labelKey="vehicles_life" icon={Wrench} isOpen={openGroups.maintenance} onToggle={() => toggleGroup('maintenance')}>
                         {hasAccess('vehiclesManagement', 'maintenance') && <NavItem item={{ path: '/admin/maintenance', label: 'Maintenance', labelKey: 'maintenance' }} onClick={onClose} isSubItem />}
                         {hasAccess('vehiclesManagement', 'carLogs') && <NavItem item={{ path: '/admin/vehicle-month-details', label: 'Car Logs', labelKey: 'car_logs' }} onClick={onClose} isSubItem />}
                         {hasAccess('vehiclesManagement', 'vehiclesMgt') && <NavItem item={{ path: '/admin/vehicles', label: 'Vehicles MGT', labelKey: 'vehicles_mgt' }} onClick={onClose} isSubItem />}
