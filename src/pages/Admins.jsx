@@ -378,11 +378,48 @@ const Admins = () => {
                                     <h2 style={{ color: 'white', fontSize: '22px', margin: 0, fontWeight: '900' }}>{editingAdmin ? 'Update Admin Access' : 'Create New Access'}</h2>
                                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', margin: '4px 0 0', letterSpacing: '1px' }}>Permissions & Credentials</p>
                                 </div>
-                                <div style={{ display: 'flex', gap: '10px' }}>
-                                    <button onClick={closeModal} style={{ background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', padding: '6px 12px', borderRadius: '8px', fontSize: '10px', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '5px' }}>
-                                        <ChevronLeft size={14} /> BACK
+                                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                                    <button 
+                                        onClick={closeModal} 
+                                        style={{ 
+                                            background: 'rgba(255,255,255,0.1)', 
+                                            color: 'white', 
+                                            border: '1px solid rgba(255,255,255,0.2)', 
+                                            padding: '8px 16px', 
+                                            borderRadius: '10px', 
+                                            fontSize: '11px', 
+                                            fontWeight: '900', 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            gap: '6px',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.15)'}
+                                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.1)'}
+                                    >
+                                        <ChevronLeft size={16} strokeWidth={3} /> BACK
                                     </button>
-                                    <button onClick={closeModal} className="glass-card" style={{ width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><X size={20} /></button>
+                                    <button 
+                                        onClick={closeModal} 
+                                        style={{ 
+                                            width: '40px', 
+                                            height: '40px', 
+                                            borderRadius: '50%', 
+                                            display: 'flex', 
+                                            alignItems: 'center', 
+                                            justifyContent: 'center',
+                                            background: 'rgba(255,255,255,0.05)',
+                                            border: '1px solid rgba(255,255,255,0.1)',
+                                            color: 'white',
+                                            cursor: 'pointer',
+                                            transition: 'all 0.2s ease'
+                                        }}
+                                        onMouseOver={(e) => e.currentTarget.style.background = 'rgba(244, 63, 94, 0.2)'}
+                                        onMouseOut={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.05)'}
+                                    >
+                                        <X size={22} strokeWidth={2.5} />
+                                    </button>
                                 </div>
                             </div>
 
