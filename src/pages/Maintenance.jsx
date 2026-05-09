@@ -1226,7 +1226,17 @@ const Maintenance = () => {
                                                     {/* Fuel & Avg */}
                                                     <td style={{ padding: '20px 25px' }}>
                                                         <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{(v.fuel?.totalAmount || 0).toLocaleString()}</div>
-                                                        <div style={{ color: 'var(--primary)', fontSize: '12px', fontWeight: '900', marginTop: '4px' }}>{v.fuel?.avgMileage || 0} km/L Avg</div>
+                                                        <div style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '900', marginTop: '4px', marginBottom: '8px' }}>{v.fuel?.avgMileage || 0} km/L Avg</div>
+                                                        {v.fuel?.records?.length > 0 ? (
+                                                            <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '140px', padding: '6px 10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', color: '#10b981', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
+                                                                <option value="" hidden>{v.fuel.records.length} Fills</option>
+                                                                {v.fuel.records.map((f, i) => (
+                                                                    <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>
+                                                                        {formatDateIST(f.date)} - {f.quantity.toFixed(1)}L - ₹{f.amount.toLocaleString()}
+                                                                    </option>
+                                                                ))}
+                                                            </select>
+                                                        ) : null}
                                                     </td>
 
                                                     {/* Maintenance (Major) */}
@@ -1249,12 +1259,19 @@ const Maintenance = () => {
                                                             return (
                                                                 <>
                                                                     <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{opTotal.toLocaleString()}</div>
-                                                                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap' }}>
+                                                                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
                                                                         {wash > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(16,185,129,0.1)', color: '#10b981', borderRadius: '4px', fontWeight: '800' }}>WASH</span>}
                                                                         {tax > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', borderRadius: '4px', fontWeight: '800' }}>TAX</span>}
                                                                         {fastag > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', borderRadius: '4px', fontWeight: '800' }}>FASTAG</span>}
                                                                         {parking > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(139,92,246,0.1)', color: '#8b5cf6', borderRadius: '4px', fontWeight: '800' }}>PARK</span>}
                                                                     </div>
+                                                                    <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '140px', padding: '4px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '10px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
+                                                                        <option value="" hidden>Breakdown</option>
+                                                                        <option value="wash" style={{ background: '#0f172a', color: 'white' }}>Wash/Ops: ₹{wash.toLocaleString()}</option>
+                                                                        <option value="fastag" style={{ background: '#0f172a', color: 'white' }}>Fastag: ₹{fastag.toLocaleString()}</option>
+                                                                        <option value="tax" style={{ background: '#0f172a', color: 'white' }}>Border Tax: ₹{tax.toLocaleString()}</option>
+                                                                        <option value="parking" style={{ background: '#0f172a', color: 'white' }}>Parking: ₹{parking.toLocaleString()}</option>
+                                                                    </select>
                                                                 </>
                                                             );
                                                         })()}

@@ -450,7 +450,17 @@ const VehicleMonthlyDetails = () => {
                                                 <div style={{ color: 'white', fontWeight: '900', fontSize: '16px' }}>₹{(v.fuel?.totalAmount || 0).toLocaleString()}</div>
                                                 <div style={{ color: '#10b981', fontSize: '11px', fontWeight: '900', background: 'rgba(16,185,129,0.12)', padding: '2px 6px', borderRadius: '6px', border: '1px solid rgba(16,185,129,0.1)' }}>{(v.fuel?.totalQuantity || 0).toFixed(1)} L</div>
                                             </div>
-                                            <div style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800' }}>Avg: {(v.fuel?.avgMileage || 0).toFixed(2)} km/L</div>
+                                            <div style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', marginBottom: '8px' }}>Avg: {(v.fuel?.avgMileage || 0).toFixed(2)} km/L</div>
+                                            {v.fuel?.records?.length > 0 ? (
+                                                <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '140px', padding: '6px 10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', color: '#10b981', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
+                                                    <option value="" hidden>{v.fuel.records.length} Fills</option>
+                                                    {v.fuel.records.map((f, i) => (
+                                                        <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>
+                                                            {formatDateIST(f.date)} - {f.quantity.toFixed(1)}L - ₹{f.amount.toLocaleString()}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            ) : <span style={{ color: 'rgba(255,255,255,0.15)', fontSize: '11px', fontWeight: '700' }}>No Records</span>}
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
                                             <div style={{ color: 'var(--primary)', fontWeight: '900', fontSize: '15px' }}>₹{(v.baseMaintAmount || 0).toLocaleString()}</div>
@@ -482,11 +492,18 @@ const VehicleMonthlyDetails = () => {
                                         </td>
                                         <td style={{ padding: '20px 25px' }}>
                                             <div style={{ color: '#818cf8', fontWeight: '900', fontSize: '15px' }}>₹{(v.combinedServiceAmount || 0).toLocaleString()}</div>
-                                            <div style={{ display: 'flex', gap: '4px', marginTop: '8px', flexWrap: 'wrap' }}>
+                                            <div style={{ display: 'flex', gap: '4px', marginTop: '8px', flexWrap: 'wrap', marginBottom: '8px' }}>
                                                 {((v.services?.wash?.amount || 0) > 0) && <span style={{ fontSize: '9px', padding: '2px 4px', background: 'rgba(129, 140, 248, 0.1)', color: '#818cf8', borderRadius: '4px', fontWeight: '800' }}>WASH</span>}
                                                 {(v.fastag?.totalAmount > 0) && <span style={{ fontSize: '9px', padding: '2px 4px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', borderRadius: '4px', fontWeight: '800' }}>FASTAG</span>}
                                                 {(v.borderTax?.totalAmount > 0) && <span style={{ fontSize: '9px', padding: '2px 4px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', borderRadius: '4px', fontWeight: '800' }}>TAX</span>}
                                             </div>
+                                            <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '180px', padding: '6px 10px', background: 'rgba(99, 102, 241, 0.08)', border: '1px solid rgba(99, 102, 241, 0.2)', borderRadius: '8px', color: '#818cf8', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
+                                                <option value="" hidden>Breakdown</option>
+                                                <option value="wash" style={{ background: '#0f172a', color: 'white' }}>Wash/Ops: ₹{((v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0) + (v.maintOpsAmount || 0)).toLocaleString()}</option>
+                                                <option value="fastag" style={{ background: '#0f172a', color: 'white' }}>Fastag: ₹{(v.fastag?.totalAmount || 0).toLocaleString()}</option>
+                                                <option value="tax" style={{ background: '#0f172a', color: 'white' }}>Border Tax: ₹{(v.borderTax?.totalAmount || 0).toLocaleString()}</option>
+                                                <option value="parking" style={{ background: '#0f172a', color: 'white' }}>Parking: ₹{(v.parking?.totalAmount || 0).toLocaleString()}</option>
+                                            </select>
                                         </td>
                                         <td style={{ padding: '20px 25px', textAlign: 'right' }}>
                                             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Total Cost</div>
