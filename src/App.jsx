@@ -72,7 +72,7 @@ const AdminLayout = ({ children }) => {
 
   return (
     <div className="with-sidebar" style={{ display: 'flex', minHeight: '100vh', position: 'relative', maxWidth: '100vw', overflowX: 'hidden' }}>
-      <div className="show-mobile-flex" style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, height: '64px', background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.08)', zIndex: 90, padding: '0 20px', alignItems: 'center', justifyContent: 'space-between', width: '100vw' }}>
+      <div className="show-mobile-flex" style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, height: '64px', background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.08)', zIndex: 99998, padding: '0 20px', alignItems: 'center', justifyContent: 'space-between', width: '100vw' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <img src="/logos/logo.png" alt="Logo" style={{ width: '30px', height: 'auto' }} />
           <h2 style={{ fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>Fleet CRM</h2>
@@ -85,7 +85,7 @@ const AdminLayout = ({ children }) => {
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {isSidebarOpen && (
-        <div onClick={() => setIsSidebarOpen(false)} className="show-mobile" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 95 }} />
+        <div onClick={() => setIsSidebarOpen(false)} className="show-mobile" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 99999 }} />
       )}
 
       <main className="main-content" style={{ flex: '1', width: '100%', maxWidth: '100vw', overflowX: 'hidden', transition: 'padding 0.3s ease', padding: '0' }}>

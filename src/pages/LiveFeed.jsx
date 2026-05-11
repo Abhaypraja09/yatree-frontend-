@@ -335,7 +335,7 @@ const LiveFeed = () => {
             <SEO title="Live Fleet Control" description="Real-time mission control for drivers and vehicles." />
 
             <header style={{ marginBottom: '30px' }}>
-                <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px', gap: '20px', position: 'relative', zIndex: 1000 }}>
+                <div className="header-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: '25px', gap: '20px', position: 'relative', zIndex: 50 }}>
                     <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                             <div style={{ width: '32px', height: '32px', background: `${theme.primary}20`, borderRadius: '10px', display: 'flex', justifyContent: 'center', alignItems: 'center', border: `1px solid ${theme.primary}40` }}>

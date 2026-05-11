@@ -144,7 +144,7 @@ const AIChatAgent = () => {
     if (!user || !isAdmin) return null;
 
     return (
-        <div style={{ position: 'fixed', bottom: '30px', right: '30px', zIndex: 9999 }}>
+        <div style={{ position: 'fixed', bottom: 'clamp(20px, 5vh, 40px)', right: 'clamp(15px, 4vw, 30px)', zIndex: 9999 }}>
             <AnimatePresence>
                 {isOpen && (
                     <motion.div

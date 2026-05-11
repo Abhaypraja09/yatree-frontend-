@@ -34,6 +34,7 @@ const NavItem = ({ item, onClick, isSubItem = false }) => {
     return (
         <NavLink
             to={item.path}
+            className="sidebar-nav-item"
             onClick={onClick}
             end={item.path === '/admin'}
             style={({ isActive }) => ({
@@ -169,20 +170,20 @@ const Sidebar = ({ isOpen, onClose }) => {
         <div
             className="sidebar"
             style={{
-                width: '280px',
+                width: 'clamp(260px, 80vw, 280px)',
                 height: '100vh',
                 position: 'fixed',
-                left: isOpen ? '0' : '-280px',
+                left: isOpen ? '0' : '-100%',
                 top: 0,
-                padding: '30px 20px',
+                padding: 'clamp(15px, 5vw, 30px) clamp(10px, 4vw, 20px)',
                 display: 'flex',
                 flexDirection: 'column',
                 borderRight: '1px solid rgba(148, 163, 184, 0.1)',
                 background: 'linear-gradient(180deg, #0d1526 0%, #0f172a 100%)',
                 backdropFilter: 'blur(20px)',
-                zIndex: 100,
+                zIndex: 100000,
                 transition: 'left 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                boxShadow: isOpen ? '4px 0 30px rgba(0,0,0,0.4)' : 'none'
+                boxShadow: isOpen ? '10px 0 50px rgba(0,0,0,0.6)' : 'none'
             }}
         >
             <style>
@@ -192,6 +193,11 @@ const Sidebar = ({ isOpen, onClose }) => {
                             left: 0 !important;
                             box-shadow: none !important;
                         }
+                    }
+                    @media (max-width: 380px) {
+                        .sidebar h1 { font-size: 20px !important; }
+                        .sidebar p { font-size: 9px !important; }
+                        .sidebar-nav-item span { font-size: 13px !important; }
                     }
                     .sidebar-nav-scroll::-webkit-scrollbar { width: 4px; }
                     .sidebar-nav-scroll::-webkit-scrollbar-track { background: transparent; }
