@@ -129,7 +129,7 @@ const VehicleMonthlyDetails = () => {
     // Process "Maintenance" (Mechanical) vs "Misc. Repairs" vs "Operational Services"
     const processedData = filteredData.map(v => {
         // Standardized Operational Service Regex
-        const operationalRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher/i;
+        const operationalRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher|parking/i;
         
         // 1. Separate Operational Services from the Maintenance list
         const maintRecs = (v.maintenance?.records || []);

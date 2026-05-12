@@ -667,7 +667,7 @@ const Maintenance = () => {
 
         // Exclude strictly non-maintenance driver services (Wash, Water, etc.)
         // Standardized Operational Service Regex: Wash, Puncture, Consumables
-        const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher/i;
+        const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher|parking/i;
         const isService = driverServiceRegex.test(r.category || '') ||
             driverServiceRegex.test(r.description || '') ||
             driverServiceRegex.test(r.maintenanceType || '');
@@ -716,7 +716,7 @@ const Maintenance = () => {
             const matchesType = filterType === 'All' || (r.maintenanceType && r.maintenanceType.split(', ').includes(filterType));
             const matchesGarage = filterGarage === 'All' || (r.garageName || r.vendorName) === filterGarage;
 
-            const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher/i;
+            const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher|parking/i;
             const isService = driverServiceRegex.test(r.category || '') ||
                 driverServiceRegex.test(r.description || '') ||
                 driverServiceRegex.test(r.maintenanceType || '');
@@ -742,7 +742,7 @@ const Maintenance = () => {
             const matchesType = filterType === 'All' || (r.maintenanceType && r.maintenanceType.split(', ').includes(filterType));
             const matchesVehicle = filterVehicle === 'All' || r.vehicle?.carNumber === filterVehicle;
 
-            const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher/i;
+            const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher|parking/i;
             const isService = driverServiceRegex.test(r.category || '') ||
                 driverServiceRegex.test(r.description || '') ||
                 driverServiceRegex.test(r.maintenanceType || '');
@@ -775,7 +775,7 @@ const Maintenance = () => {
         .map(v => {
             // Pre-calculate category totals for sorting/filtering using accurate logic
             const allRecs = (v.maintenance?.records || v.maintenance?.recs || []).filter(r => {
-                const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher/i;
+                const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher|parking/i;
                 const searchStrRec = `${r.maintenanceType || r.type || r.maintenanceType || ''} ${r.category || r.category || ''} ${r.description || r.description || ''}`.toLowerCase();
                 return !driverServiceRegex.test(searchStrRec);
             });

@@ -37,7 +37,7 @@ const OutsideCars = () => {
         const dayParam = params.get('day');
 
         if (searchParam) setSearchTerm(searchParam);
-        if (monthParam) setSelectedMonth(Number(monthParam) - 1); // 0-indexed month
+        if (monthParam) setSelectedMonth(Number(monthParam)); // Match 1-indexed state
         if (yearParam) setSelectedYear(Number(yearParam));
         if (dayParam) setSelectedDay(dayParam);
     }, [location.search]);
@@ -47,8 +47,8 @@ const OutsideCars = () => {
         setShowModal(false);
         setEditMode(false);
         const now = new Date();
-        setSelectedMonth(now.getMonth());
-        setSelectedYear(now.getFullYear());
+        setSelectedMonth(now.getMonth() + 1);
+        setSelectedYear(now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear());
         setSelectedDay('All');
         setFormData({
             carNumber: '',
