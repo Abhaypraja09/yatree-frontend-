@@ -74,7 +74,7 @@ const AdminLayout = ({ children }) => {
     <div className="with-sidebar" style={{ display: 'flex', minHeight: '100vh', position: 'relative', maxWidth: '100vw', overflowX: 'hidden' }}>
       <div className="show-mobile-flex" style={{ display: 'none', position: 'fixed', top: 0, left: 0, right: 0, height: '64px', background: 'rgba(15, 23, 42, 0.9)', backdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.08)', zIndex: 99998, padding: '0 20px', alignItems: 'center', justifyContent: 'space-between', width: '100vw' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <img src="/logos/lk_logo.png" alt="Logo" style={{ width: '30px', height: 'auto' }} />
+          <img src="/logos/logo.png" alt="Logo" style={{ width: '30px', height: 'auto' }} />
           <h2 style={{ fontSize: '18px', fontWeight: '900', color: 'white', letterSpacing: '-0.5px', margin: 0 }}>
             Log<span style={{ color: 'var(--primary, #0ea5e9)' }}>Karo</span>
           </h2>

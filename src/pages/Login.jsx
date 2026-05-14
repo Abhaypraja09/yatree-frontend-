@@ -90,7 +90,7 @@ const Login = () => {
                         }}
                     >
                         <img
-                            src="/logos/lk_logo.png"
+                            src="/logos/logo.png"
                             alt="Logo"
                             style={{ 
                                 width: '100%', 

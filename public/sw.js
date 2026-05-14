@@ -1,4 +1,4 @@
-const CACHE_NAME = 'logkaro-v3';
+const CACHE_NAME = 'logkaro-v7';
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
@@ -6,9 +6,8 @@ self.addEventListener('install', (event) => {
             return cache.addAll([
                 '/',
                 '/index.html',
-                '/manifest.json',
-                '/icon-192.png',
-                '/icon-512.png'
+                '/manifest.json?v=13',
+                '/logos.png'
             ]).catch(() => {
                 // Silently fail if some assets are not available yet
                 console.log('PWA: Initial cache failed, will retry on fetch.');

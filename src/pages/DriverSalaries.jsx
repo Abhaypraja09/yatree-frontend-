@@ -546,7 +546,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 return;
             }
 
-            const logoUrl = selectedCompany?.logoUrl || '/logos/lk_logo.png';
+            const logoUrl = selectedCompany?.logoUrl || '/logos/logo.png';
             const logo = await loadImage(logoUrl).catch(() => null);
 
             const sigUrl = selectedCompany?.ownerSignatureUrl || '/logos/signature.png';
@@ -791,7 +791,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         const calendarYear = (month >= 1 && month <= 3) ? year + 1 : year;
                         const selVal = (parseInt(calendarYear) * 12) + parseInt(month);
                         const mIdx = (selVal - sVal) + 1;
-                        const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * (mIdx - 1)));
+                        const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * mIdx));
                         return `Rs. ${histRem.toLocaleString()}`;
                     })(),
                     progress,
@@ -923,9 +923,11 @@ const DriverSalaries = ({ isSubComponent = false }) => {
     // Use backend-calculated parking total to avoid double counting across duties and standalone entries
     const calcParking = summary.parkingTotal || 0;
     const calcOT = summary.totalOT || 0;
+    const calcSpecialPay = breakdown.reduce((s, d) => s + (d.specialPay || 0), 0);
+    const calcOtherBonuses = breakdown.reduce((s, d) => s + (d.otherBonuses || 0), 0);
 
     // Combined Routine Earnings (Everything related to duties)
-    const routineEarningsTotal = calcWages + calcSDR + calcNight + calcOT;
+    const routineEarningsTotal = calcWages + calcSDR + calcNight + calcOT + calcSpecialPay + calcOtherBonuses;
 
     // Other Adjustments
     const totalAllowances = summary.totalAllowances || 0;
@@ -1570,7 +1572,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                         const mIdx = month === 'All' ? null : (selVal - sVal) + 1;
                                                         
                                                         if (mIdx === null) return `₹ ${loan.remainingAmount?.toLocaleString()}`;
-                                                        const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * (mIdx - 1)));
+                                                        const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * mIdx));
                                                         return `₹ ${histRem.toLocaleString()}`;
                                                     })()}
                                                 </div>
@@ -1658,7 +1660,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                     const mIdx = month === 'All' ? null : (selVal - sVal) + 1;
                                                     
                                                     if (mIdx === null) return `₹ ${loan.remainingAmount?.toLocaleString()}`;
-                                                    const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * (mIdx - 1)));
+                                                    const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * mIdx));
                                                     return `₹ ${histRem.toLocaleString()}`;
                                                 })()}
                                             </div>
@@ -1955,6 +1957,8 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                     Wages: ₹{calcWages.toLocaleString()} 
                                                     {showSDR && ` + SDR: ₹${calcSDR.toLocaleString()}`}
                                                     {showNight && ` + Night: ₹${calcNight.toLocaleString()}`}
+                                                    {calcOT > 0 && ` + OT: ₹${calcOT.toLocaleString()}`}
+                                                    {(calcSpecialPay > 0 || calcOtherBonuses > 0) && ` + Extra: ₹${(calcSpecialPay + calcOtherBonuses).toLocaleString()}`}
                                                 </div>
                                             </div>
 
@@ -2185,7 +2189,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                                         const calendarYear = (month >= 1 && month <= 3) ? year + 1 : year;
                                                                         const selVal = (parseInt(calendarYear) * 12) + parseInt(month);
                                                                         const mIdx = (selVal - sVal) + 1;
-                                                                        const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * (mIdx - 1)));
+                                                                        const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * mIdx));
                                                                         return `₹ ${histRem.toLocaleString()}`;
                                                                     })()}
                                                                 </td>

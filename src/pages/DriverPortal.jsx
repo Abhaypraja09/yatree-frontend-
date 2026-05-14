@@ -462,7 +462,7 @@ const DriverPortal = () => {
             }
 
             // Load assets
-            const logo = await loadImage(user.company?.logoUrl || '/logos/lk_logo.png').catch(() => null);
+            const logo = await loadImage(user.company?.logoUrl || '/logos/logo.png').catch(() => null);
             const signature = await loadImage(user.company?.ownerSignatureUrl || '/logos/signature.png').catch(() => null);
 
             const monthName = new Date(ledgerYear, ledgerMonth - 1, 1).toLocaleString('default', { month: 'long' });
@@ -790,7 +790,7 @@ const DriverPortal = () => {
                     <header className="dashboard-header" style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         <div className="header-logo-section">
                             <img
-                                src={user.company?.logo || "/logos/lk_logo.png"}
+                                src={user.company?.logo || "/logos/logo.png"}
                                 alt={user.company?.name || "LogKaro"}
                                 style={{
                                     width: '100px',

@@ -4,19 +4,13 @@
     "description": "Professional Taxi & Fleet Management CRM",
     "icons": [
         {
-            "src": "icon-192.png",
-            "type": "image/png",
-            "sizes": "192x192",
-            "purpose": "any"
-        },
-        {
-            "src": "icon-512.png",
+            "src": "/logos.png",
             "type": "image/png",
             "sizes": "512x512",
             "purpose": "any"
         },
         {
-            "src": "icon-512.png",
+            "src": "/logos.png",
             "type": "image/png",
             "sizes": "512x512",
             "purpose": "maskable"

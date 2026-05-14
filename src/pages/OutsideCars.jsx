@@ -154,7 +154,7 @@ const OutsideCars = () => {
             }
 
             // Load assets
-            const logo = await loadImage(selectedCompany?.logoUrl || '/logos/lk_logo.png').catch(() => null);
+            const logo = await loadImage(selectedCompany?.logoUrl || '/logos/logo.png').catch(() => null);
             const signature = await loadImage(selectedCompany?.ownerSignatureUrl || '/logos/signature.png').catch(() => null);
 
             const doc = new jsPDF();

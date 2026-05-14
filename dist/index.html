@@ -3,15 +3,22 @@
 
 <head>
   <meta charset="UTF-8" />
-  <link rel="icon" type="image/png" href="/logos/logo.png" />
-  <link rel="apple-touch-icon" href="/logos/logo.png" />
+  <link rel="manifest" href="/manifest.json?v=11" />
+  <link rel="icon" type="image/png" href="./logos/lk_logo.png" />
+  <link rel="apple-touch-icon" href="./logos/lk_logo.png" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="description"
     content="Professional Taxi & Fleet Management CRM. Manage your vehicles, drivers, and daily reports efficiently." />
   <meta name="keywords" content="fleet management, taxi crm, taxi software, driver management" />
-  <meta name="author" content="Yatree Destination" />
-  <link rel="manifest" href="/manifest.json" />
+  <meta name="author" content="LogKaro" />
   <meta name="theme-color" content="#080c14" />
+
+  <!-- PWA / Mobile Optimized -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="LogKaro">
+  <link rel="icon" sizes="192x192" href="./dist/logos/lk_logo.png">
+  <link rel="icon" sizes="512x512" href="./dist/logos/lk_logo.png">
 
   <!-- ⚡ Preconnect for faster Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -21,15 +28,12 @@
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800;900&display=swap"
     rel="stylesheet" />
 
-  <title>Yatree Destination | Smart Fleet Management Solution</title>
-  <script type="module" crossorigin src="/assets/index-CBJ7ajZ1.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/vendor-DYfvhc91.js">
-  <link rel="modulepreload" crossorigin href="/assets/icons-DnQSEdL-.js">
-  <link rel="stylesheet" crossorigin href="/assets/index-cUB22u2M.css">
+  <title>LogKaro | Smart Fleet Management Solution</title>
 </head>
 
 <body>
-  <div id="root"></div>
+  <div id="root"></div>
+  <script type="module" src="/src/main.jsx"></script>
 </body>
 
 </html>
