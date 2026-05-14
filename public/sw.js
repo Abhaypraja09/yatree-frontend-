@@ -1,4 +1,4 @@
-const CACHE_NAME = 'logkaro-v7';
+const CACHE_NAME = 'logkaro-v15';
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
@@ -6,7 +6,7 @@ self.addEventListener('install', (event) => {
             return cache.addAll([
                 '/',
                 '/index.html',
-                '/manifest.json?v=13',
+                '/manifest.json?v=15',
                 '/logos.png'
             ]).catch(() => {
                 // Silently fail if some assets are not available yet
