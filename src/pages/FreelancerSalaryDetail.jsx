@@ -121,7 +121,7 @@ const FreelancerSalaryDetail = () => {
     const summary = det?.summary || {};
     const totalWages = summary.totalWages || 0;
     const parkingTotal = summary.parkingTotal || 0;
-    const totalBonuses = summary.totalBonus || 0;
+    const totalBonuses = summary.totalBonuses || 0;
     const totalAdvances = summary.totalAdvances || 0;
     const grandTotal = summary.grandTotal || 0;
     const netPayable = summary.netPayable || 0;

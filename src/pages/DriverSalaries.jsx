@@ -119,11 +119,11 @@ const DriverSalaries = ({ isSubComponent = false }) => {
         const yearParam = params.get('year');
 
         const tabParam = params.get('tab');
-        
+
         if (searchParam) setSearchTerm(searchParam);
         if (monthParam) setMonth(Number(monthParam));
         if (yearParam) setYear(Number(yearParam));
-        
+
         if (tabParam) {
             if (tabParam === 'settlement') setActiveTab('payroll');
             else setActiveTab(tabParam);
@@ -279,21 +279,21 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
     const filteredLoans = useMemo(() => {
         if (!loans) return [];
-        
+
         let processedLoans = loans;
 
         if (month === 'All') {
             const fyStartValue = (year * 12) + 4; // April of start year
             const fyEndValue = ((year + 1) * 12) + 3; // March of end year
-            
+
             processedLoans = loans.filter(loan => {
                 if (!loan.startDate) return true;
                 const start = new Date(loan.startDate);
                 const loanStartValue = (start.getFullYear() * 12) + (start.getMonth() + 1);
-                
+
                 const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 12);
                 const loanEndValue = loanStartValue + tenure - 1;
-                
+
                 // Show if loan overlaps with this FY
                 const overlapsFY = (loanStartValue <= fyEndValue) && (loanEndValue >= fyStartValue);
                 return overlapsFY && (loan.status !== 'Completed');
@@ -323,7 +323,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
         // Apply Search Filter and Sort
         return processedLoans
-            .filter(l => 
+            .filter(l =>
                 l.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 l.remarks?.toLowerCase().includes(searchTerm.toLowerCase())
             )
@@ -898,7 +898,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
 
     const filteredAllowances = (allowances || [])
-        .filter(a => 
+        .filter(a =>
             a.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             a.remark?.toLowerCase().includes(searchTerm.toLowerCase())
         )
@@ -966,9 +966,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
                     <div className="salaries-controls">
                         {/* MONTH SELECTOR */}
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
                             background: 'rgba(15, 23, 42, 0.4)',
                             borderRadius: '16px',
                             padding: '4px 8px',
@@ -996,9 +996,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         </div>
 
                         {/* FINANCIAL YEAR SELECTOR */}
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
                             background: 'rgba(15, 23, 42, 0.4)',
                             borderRadius: '16px',
                             padding: '4px 15px',
@@ -1068,9 +1068,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
                     <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
                         {/* MONTH SELECTOR */}
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
                             background: 'rgba(15, 23, 42, 0.4)',
                             borderRadius: '16px',
                             padding: '4px 8px',
@@ -1098,9 +1098,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                         </div>
 
                         {/* FINANCIAL YEAR SELECTOR */}
-                        <div style={{ 
-                            display: 'flex', 
-                            alignItems: 'center', 
+                        <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
                             background: 'rgba(15, 23, 42, 0.4)',
                             borderRadius: '16px',
                             padding: '4px 15px',
@@ -1154,20 +1154,20 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             )}
             {/* SUMMARY CARDS - ACTING AS NAVIGATION */}
             <div className="stats-grid">
-                <div 
+                <div
                     onClick={() => setActiveTab('payroll')}
-                    className={`glass-card ${activeTab === 'payroll' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
-                    style={{ 
-                        flex: '1', 
+                    className={`glass-card ${activeTab === 'payroll' ? 'active-nav-card' : 'glass-card-hover-effect'}`}
+                    style={{
+                        flex: '1',
                         minWidth: '240px',
-                        maxWidth: '400px', 
-                        padding: '24px', 
+                        maxWidth: '400px',
+                        padding: '24px',
                         cursor: 'pointer',
-                        background: activeTab === 'payroll' 
-                            ? 'linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(56,189,248,0.1) 100%)' 
-                            : 'linear-gradient(135deg, rgba(56,189,248,0.1) 0%, rgba(56,189,248,0.05) 100%)', 
-                        border: activeTab === 'payroll' 
-                            ? '2px solid var(--primary)' 
+                        background: activeTab === 'payroll'
+                            ? 'linear-gradient(135deg, rgba(56,189,248,0.2) 0%, rgba(56,189,248,0.1) 100%)'
+                            : 'linear-gradient(135deg, rgba(56,189,248,0.1) 0%, rgba(56,189,248,0.05) 100%)',
+                        border: activeTab === 'payroll'
+                            ? '2px solid var(--primary)'
                             : '1px solid rgba(56,189,248,0.2)',
                         transition: 'all 0.3s ease',
                         boxShadow: activeTab === 'payroll' ? '0 10px 25px rgba(56,189,248,0.2)' : 'none'
@@ -1176,7 +1176,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
                             <p style={{ fontSize: '12px', fontWeight: '800', color: 'var(--primary)', marginBottom: '8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                Monthly Payroll <CheckCircle size={14} />
+                                Monthly Due <CheckCircle size={14} />
                             </p>
                             <h3 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: 0 }}>₹ {salaries.reduce((sum, s) => sum + (s.netPayable || 0), 0).toLocaleString()}</h3>
                         </div>
@@ -1187,20 +1187,20 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 </div>
 
 
-                <div 
+                <div
                     onClick={() => setActiveTab('advances')}
-                    className={`glass-card ${activeTab === 'advances' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
-                    style={{ 
-                        flex: '1', 
+                    className={`glass-card ${activeTab === 'advances' ? 'active-nav-card' : 'glass-card-hover-effect'}`}
+                    style={{
+                        flex: '1',
                         minWidth: '240px',
-                        maxWidth: '400px', 
-                        padding: '24px', 
+                        maxWidth: '400px',
+                        padding: '24px',
                         cursor: 'pointer',
-                        background: activeTab === 'advances' 
-                            ? 'linear-gradient(135deg, rgba(244,63,94,0.2) 0%, rgba(244,63,94,0.1) 100%)' 
-                            : 'linear-gradient(135deg, rgba(244,63,94,0.1) 0%, rgba(244,63,94,0.05) 100%)', 
-                        border: activeTab === 'advances' 
-                            ? '2px solid #f43f5e' 
+                        background: activeTab === 'advances'
+                            ? 'linear-gradient(135deg, rgba(244,63,94,0.2) 0%, rgba(244,63,94,0.1) 100%)'
+                            : 'linear-gradient(135deg, rgba(244,63,94,0.1) 0%, rgba(244,63,94,0.05) 100%)',
+                        border: activeTab === 'advances'
+                            ? '2px solid #f43f5e'
                             : '1px solid rgba(244,63,94,0.2)',
                         transition: 'all 0.3s ease',
                         boxShadow: activeTab === 'advances' ? '0 10px 25px rgba(244,63,94,0.2)' : 'none'
@@ -1219,20 +1219,20 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                     </div>
                 </div>
 
-                <div 
+                <div
                     onClick={() => setActiveTab('loans')}
-                    className={`glass-card ${activeTab === 'loans' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
-                    style={{ 
-                        flex: '1', 
+                    className={`glass-card ${activeTab === 'loans' ? 'active-nav-card' : 'glass-card-hover-effect'}`}
+                    style={{
+                        flex: '1',
                         minWidth: '240px',
-                        maxWidth: '400px', 
-                        padding: '24px', 
+                        maxWidth: '400px',
+                        padding: '24px',
                         cursor: 'pointer',
-                        background: activeTab === 'loans' 
-                            ? 'linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.1) 100%)' 
-                            : 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.05) 100%)', 
-                        border: activeTab === 'loans' 
-                            ? '2px solid var(--primary)' 
+                        background: activeTab === 'loans'
+                            ? 'linear-gradient(135deg, rgba(251,191,36,0.2) 0%, rgba(251,191,36,0.1) 100%)'
+                            : 'linear-gradient(135deg, rgba(251,191,36,0.1) 0%, rgba(251,191,36,0.05) 100%)',
+                        border: activeTab === 'loans'
+                            ? '2px solid var(--primary)'
                             : '1px solid rgba(251,191,36,0.2)',
                         transition: 'all 0.3s ease',
                         boxShadow: activeTab === 'loans' ? '0 10px 25px rgba(251,191,36,0.2)' : 'none'
@@ -1251,20 +1251,20 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                     </div>
                 </div>
 
-                <div 
+                <div
                     onClick={() => setActiveTab('allowances')}
-                    className={`glass-card ${activeTab === 'allowances' ? 'active-nav-card' : 'glass-card-hover-effect'}`} 
-                    style={{ 
-                        flex: '1', 
+                    className={`glass-card ${activeTab === 'allowances' ? 'active-nav-card' : 'glass-card-hover-effect'}`}
+                    style={{
+                        flex: '1',
                         minWidth: '240px',
-                        maxWidth: '400px', 
-                        padding: '24px', 
+                        maxWidth: '400px',
+                        padding: '24px',
                         cursor: 'pointer',
-                        background: activeTab === 'allowances' 
-                            ? 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%)' 
-                            : 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)', 
-                        border: activeTab === 'allowances' 
-                            ? '2px solid #10b981' 
+                        background: activeTab === 'allowances'
+                            ? 'linear-gradient(135deg, rgba(16,185,129,0.2) 0%, rgba(16,185,129,0.1) 100%)'
+                            : 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, rgba(16,185,129,0.05) 100%)',
+                        border: activeTab === 'allowances'
+                            ? '2px solid #10b981'
                             : '1px solid rgba(16,185,129,0.2)',
                         transition: 'all 0.3s ease',
                         boxShadow: activeTab === 'allowances' ? '0 10px 25px rgba(16,185,129,0.2)' : 'none'
@@ -1288,232 +1288,232 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 {activeTab === 'payroll' && (
                     <motion.div key="payroll" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.3 }}>
 
-            {/* Desktop Table */}
-            <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
-                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
-                    <thead>
-                        <tr style={{ textAlign: 'left' }}>
-                            {['Driver', 'Daily Wage', 'Duty Days', 'Nights', 'Earnings', 'Advances', 'EMI', 'Total', 'Reports'].map(h => (
-                                <th key={h} style={{ padding: '15px 20px', color: (h === 'Total' || h === 'Reports') ? '#10b981' : 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
-                            ))}
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <AnimatePresence>
-                            {loading ? (
-                                <tr><td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: 'white' }}>Loading report...</td></tr>
-                            ) : filteredSalaries.length === 0 ? (
-                                <tr><td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No records found for this period.</td></tr>
-                            ) : (
-                                filteredSalaries.map((s, idx) => (
-                                    <motion.tr key={s.driverId} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                                        transition={{ delay: idx * 0.05 }} onClick={() => fetchDriverDetails(s.driverId)}
-                                        className="glass-card-hover-effect"
-                                        style={{ background: 'rgba(30,41,59,0.4)', borderRadius: '12px', cursor: 'pointer' }}>
-                                        <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
-                                            <div style={{ fontWeight: '700', color: 'white' }}>{s.name}</div>
-                                            <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{s.mobile}</div>
-                                        </td>
-                                        <td style={{ padding: '20px 20px', color: 'rgba(255,255,255,0.7)', fontWeight: '600', fontFamily: 'monospace' }}>₹ {s.dailyWage}</td>
-                                        <td style={{ padding: '20px 20px', color: 'white', fontWeight: '800' }}>{s.workingDays || 0}</td>
-                                        <td style={{ padding: '20px 20px' }}>
-                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                                {s.nightStayCount > 0 && <span style={{ fontSize: '10px', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--primary)', padding: '2px 6px', borderRadius: '4px', fontWeight: '800' }}>{s.nightStayCount} NIGHTS</span>}
-                                                {s.sameDayCount > 0 && <span style={{ fontSize: '10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 6px', borderRadius: '4px', fontWeight: '800' }}>{s.sameDayCount} DAY</span>}
-                                                {!(s.nightStayCount > 0 || s.sameDayCount > 0) && <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>-</span>}
+                        {/* Desktop Table */}
+                        <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
+                                <thead>
+                                    <tr style={{ textAlign: 'left' }}>
+                                        {['Driver', 'Daily Wage', 'Duty Days', 'Nights', 'Earnings', 'Advances', 'EMI', 'Total', 'Reports'].map(h => (
+                                            <th key={h} style={{ padding: '15px 20px', color: (h === 'Total' || h === 'Reports') ? '#10b981' : 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>{h}</th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <AnimatePresence>
+                                        {loading ? (
+                                            <tr><td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: 'white' }}>Loading report...</td></tr>
+                                        ) : filteredSalaries.length === 0 ? (
+                                            <tr><td colSpan="10" style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)' }}>No records found for this period.</td></tr>
+                                        ) : (
+                                            filteredSalaries.map((s, idx) => (
+                                                <motion.tr key={s.driverId} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
+                                                    transition={{ delay: idx * 0.05 }} onClick={() => fetchDriverDetails(s.driverId)}
+                                                    className="glass-card-hover-effect"
+                                                    style={{ background: 'rgba(30,41,59,0.4)', borderRadius: '12px', cursor: 'pointer' }}>
+                                                    <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
+                                                        <div style={{ fontWeight: '700', color: 'white' }}>{s.name}</div>
+                                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{s.mobile}</div>
+                                                    </td>
+                                                    <td style={{ padding: '20px 20px', color: 'rgba(255,255,255,0.7)', fontWeight: '600', fontFamily: 'monospace' }}>₹ {s.dailyWage}</td>
+                                                    <td style={{ padding: '20px 20px', color: 'white', fontWeight: '800' }}>{s.workingDays || 0}</td>
+                                                    <td style={{ padding: '20px 20px' }}>
+                                                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                            {s.nightStayCount > 0 && <span style={{ fontSize: '10px', background: 'rgba(245, 158, 11, 0.1)', color: 'var(--primary)', padding: '2px 6px', borderRadius: '4px', fontWeight: '800' }}>{s.nightStayCount} NIGHTS</span>}
+                                                            {s.sameDayCount > 0 && <span style={{ fontSize: '10px', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981', padding: '2px 6px', borderRadius: '4px', fontWeight: '800' }}>{s.sameDayCount} DAY</span>}
+                                                            {!(s.nightStayCount > 0 || s.sameDayCount > 0) && <span style={{ color: 'var(--text-muted)', fontSize: '12px' }}>-</span>}
+                                                        </div>
+                                                    </td>
+                                                    <td style={{ padding: '20px 20px', color: '#38bdf8', fontWeight: '700' }}>₹ {s.totalEarned - (s.totalAllowances || 0)}</td>
+                                                    <td style={{ padding: '20px 20px', color: '#f43f5e', fontWeight: '700' }}>₹ {(s.totalAdvances || 0).toLocaleString()}</td>
+                                                    <td style={{ padding: '20px 20px', color: 'var(--primary)', fontWeight: '700' }}>₹ {s.totalEMI}</td>
+                                                    <td style={{ padding: '20px 20px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {s.netPayable}</td>
+                                                    <td style={{ padding: '20px 20px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                                        <button
+                                                            onClick={(e) => { e.stopPropagation(); handleQuickDownload(s.driverId); }}
+                                                            className="btn-glass"
+                                                            title="Download Salary Slip"
+                                                            style={{ padding: '8px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+                                                        >
+                                                            <Download size={18} color="#10b981" />
+                                                        </button>
+                                                    </td>
+                                                </motion.tr>
+                                            ))
+                                        )}
+                                    </AnimatePresence>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        {/* Mobile View */}
+                        <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            {filteredSalaries.map(s => (
+                                <div key={s.driverId} className="glass-card" style={{ padding: '20px', cursor: 'pointer' }} onClick={() => fetchDriverDetails(s.driverId)}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
+                                        <div>
+                                            <h3 style={{ margin: 0, color: 'white', fontSize: '16px' }}>{s.name}</h3>
+                                            <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '12px' }}>{s.mobile}</p>
+                                        </div>
+                                        <div style={{ textAlign: 'right' }}>
+                                            <p style={{ margin: '0 0 4px', color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>
+                                                Earnings: ₹{s.totalEarned - (s.totalAllowances || 0)}
+                                            </p>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
+                                                <h3 style={{ margin: 0, color: '#10b981', fontSize: '18px' }}>₹ {s.netPayable}</h3>
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); handleQuickDownload(s.driverId); }}
+                                                    style={{ background: 'rgba(16,185,129,0.1)', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                                                >
+                                                    <Download size={14} color="#10b981" />
+                                                </button>
                                             </div>
-                                        </td>
-                                        <td style={{ padding: '20px 20px', color: '#38bdf8', fontWeight: '700' }}>₹ {s.totalEarned - (s.totalAllowances || 0)}</td>
-                                        <td style={{ padding: '20px 20px', color: '#f43f5e', fontWeight: '700' }}>₹ {(s.totalAdvances || 0).toLocaleString()}</td>
-                                        <td style={{ padding: '20px 20px', color: 'var(--primary)', fontWeight: '700' }}>₹ {s.totalEMI}</td>
-                                        <td style={{ padding: '20px 20px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {s.netPayable}</td>
-                                        <td style={{ padding: '20px 20px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleQuickDownload(s.driverId); }}
-                                                className="btn-glass"
-                                                title="Download Salary Slip"
-                                                style={{ padding: '8px', borderRadius: '10px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
-                                            >
-                                                <Download size={18} color="#10b981" />
-                                            </button>
-                                        </td>
-                                    </motion.tr>
-                                ))
-                            )}
-                        </AnimatePresence>
-                    </tbody>
-                </table>
-            </div>
-
-            {/* Mobile View */}
-            <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                {filteredSalaries.map(s => (
-                    <div key={s.driverId} className="glass-card" style={{ padding: '20px', cursor: 'pointer' }} onClick={() => fetchDriverDetails(s.driverId)}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '15px' }}>
-                            <div>
-                                <h3 style={{ margin: 0, color: 'white', fontSize: '16px' }}>{s.name}</h3>
-                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '12px' }}>{s.mobile}</p>
-                            </div>
-                            <div style={{ textAlign: 'right' }}>
-                                <p style={{ margin: '0 0 4px', color: 'rgba(255,255,255,0.4)', fontSize: '10px' }}>
-                                    Earnings: ₹{s.totalEarned - (s.totalAllowances || 0)}
-                                </p>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', justifyContent: 'flex-end' }}>
-                                    <h3 style={{ margin: 0, color: '#10b981', fontSize: '18px' }}>₹ {s.netPayable}</h3>
-                                    <button
-                                        onClick={(e) => { e.stopPropagation(); handleQuickDownload(s.driverId); }}
-                                        style={{ background: 'rgba(16,185,129,0.1)', border: 'none', padding: '6px', borderRadius: '6px', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
-                                    >
-                                        <Download size={14} color="#10b981" />
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px' }}>
-                            {[
-                                ['DAILY WAGE', `₹ ${s.dailyWage}`, 'rgba(255,255,255,0.7)'],
-                                ['DUTY DAYS', s.workingDays, 'white'],
-                                ['NIGHTS', s.nightStayCount || 0, 'var(--primary)'],
-                                ['SAME DAY', s.sameDayCount || 0, '#10b981'],
-                                ['EARNINGS', `₹ ${s.totalEarned - (s.totalAllowances || 0)}`, 'white'],
-                                ['ADVANCES', `₹ ${(s.totalAdvances || 0).toLocaleString()}`, '#f43f5e']
-                            ].map(([label, val, color]) => (
-                                <div key={label} style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '8px' }}>
-                                    <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '10px' }}>{label}</p>
-                                    <p style={{ margin: '4px 0 0', color, fontWeight: '700' }}>{val}</p>
+                                        </div>
+                                    </div>
+                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', fontSize: '13px' }}>
+                                        {[
+                                            ['DAILY WAGE', `₹ ${s.dailyWage}`, 'rgba(255,255,255,0.7)'],
+                                            ['DUTY DAYS', s.workingDays, 'white'],
+                                            ['NIGHTS', s.nightStayCount || 0, 'var(--primary)'],
+                                            ['SAME DAY', s.sameDayCount || 0, '#10b981'],
+                                            ['EARNINGS', `₹ ${s.totalEarned - (s.totalAllowances || 0)}`, 'white'],
+                                            ['ADVANCES', `₹ ${(s.totalAdvances || 0).toLocaleString()}`, '#f43f5e']
+                                        ].map(([label, val, color]) => (
+                                            <div key={label} style={{ background: 'rgba(255,255,255,0.03)', padding: '10px', borderRadius: '8px' }}>
+                                                <p style={{ margin: 0, color: 'var(--text-muted)', fontSize: '10px' }}>{label}</p>
+                                                <p style={{ margin: '4px 0 0', color, fontWeight: '700' }}>{val}</p>
+                                            </div>
+                                        ))}
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                    </div>
-                ))}
-            </div>
 
-                </motion.div>
+                    </motion.div>
                 )}
 
                 {activeTab === 'advances' && (
-                <motion.div key="advances" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ marginTop: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
-                        <div style={{ width: '4px', height: '24px', background: '#f43f5e', borderRadius: '2px' }}></div>
-                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Advance <span style={{ color: '#f43f5e' }}>Ledger History</span></h2>
-                    </div>
+                    <motion.div key="advances" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ marginTop: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+                            <div style={{ width: '4px', height: '24px', background: '#f43f5e', borderRadius: '2px' }}></div>
+                            <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Advance <span style={{ color: '#f43f5e' }}>Ledger History</span></h2>
+                        </div>
 
-                <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
-                    <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
-                        <thead>
-                            <tr style={{ textAlign: 'left' }}>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remarks</th>
-                                <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {filteredAdvances.length === 0 ? (
-                                <tr><td colSpan="5" style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(30, 41, 59, 0.2)', borderRadius: '30px', border: '2px dashed rgba(255,255,255,0.05)' }}>
-                                    <IndianRupee size={60} style={{ margin: '0 auto 20px', opacity: 0.1, color: 'var(--primary)' }} />
-                                    <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>No Advance Records</h3>
-                                    <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>Record a new advance to start tracking.</p>
-                                </td></tr>
-                            ) : filteredAdvances.map((advance, idx) => (
-                                <motion.tr
-                                    key={advance._id}
-                                    initial={{ opacity: 0, y: 10 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ delay: idx * 0.03 }}
-                                    className="glass-card-hover-effect"
-                                    style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}
-                                >
-                                    <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
-                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                                            <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
+                        <div className="glass-card hide-mobile" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
+                                <thead>
+                                    <tr style={{ textAlign: 'left' }}>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remarks</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredAdvances.length === 0 ? (
+                                        <tr><td colSpan="5" style={{ textAlign: 'center', padding: '120px 0', background: 'rgba(30, 41, 59, 0.2)', borderRadius: '30px', border: '2px dashed rgba(255,255,255,0.05)' }}>
+                                            <IndianRupee size={60} style={{ margin: '0 auto 20px', opacity: 0.1, color: 'var(--primary)' }} />
+                                            <h3 style={{ color: 'white', fontSize: '20px', fontWeight: '700', margin: 0 }}>No Advance Records</h3>
+                                            <p style={{ color: 'var(--text-muted)', marginTop: '8px' }}>Record a new advance to start tracking.</p>
+                                        </td></tr>
+                                    ) : filteredAdvances.map((advance, idx) => (
+                                        <motion.tr
+                                            key={advance._id}
+                                            initial={{ opacity: 0, y: 10 }}
+                                            animate={{ opacity: 1, y: 0 }}
+                                            transition={{ delay: idx * 0.03 }}
+                                            className="glass-card-hover-effect"
+                                            style={{ background: 'rgba(30, 41, 59, 0.4)', borderRadius: '12px' }}
+                                        >
+                                            <td style={{ padding: '20px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                    <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
+                                                        {advance.driver?.name?.charAt(0)}
+                                                    </div>
+                                                    <div>
+                                                        <div style={{ color: 'white', fontWeight: '700' }}>{advance.driver?.name}</div>
+                                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{advance.driver?.mobile}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>
+                                                    {formatDateIST(advance.date)}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ color: 'white', fontWeight: '800' }}>₹ {advance.amount?.toLocaleString()}</div>
+                                            </td>
+                                            <td style={{ padding: '20px 25px' }}>
+                                                <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {advance.remark || '-'}
+                                                </div>
+                                            </td>
+                                            <td style={{ padding: '20px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                                <div style={{ display: 'flex', gap: '8px' }}>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleEditClick(advance); }}
+                                                        style={{
+                                                            background: 'rgba(56, 189, 248, 0.1)',
+                                                            color: '#38bdf8',
+                                                            border: 'none',
+                                                            padding: '8px',
+                                                            borderRadius: '8px',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        <Edit2 size={16} />
+                                                    </button>
+                                                    <button
+                                                        onClick={(e) => { e.stopPropagation(); handleDeleteAdvance(advance._id); }}
+                                                        style={{
+                                                            background: 'rgba(244, 63, 94, 0.1)',
+                                                            color: '#f43f5e',
+                                                            border: 'none',
+                                                            padding: '8px',
+                                                            borderRadius: '8px',
+                                                            cursor: 'pointer',
+                                                            transition: 'all 0.2s'
+                                                        }}
+                                                    >
+                                                        <X size={16} />
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </motion.tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            {filteredAdvances.map(advance => (
+                                <div key={advance._id} className="glass-card" style={{ padding: '16px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '14px' }}>
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
                                                 {advance.driver?.name?.charAt(0)}
                                             </div>
                                             <div>
-                                                <div style={{ color: 'white', fontWeight: '700' }}>{advance.driver?.name}</div>
-                                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{advance.driver?.mobile}</div>
+                                                <div style={{ fontWeight: '800', color: 'white' }}>{advance.driver?.name}</div>
+                                                <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{formatDateIST(advance.date)}</div>
                                             </div>
                                         </div>
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>
-                                            {formatDateIST(advance.date)}
+                                        <div style={{ textAlign: 'right' }}>
+                                            <div style={{ color: 'var(--primary)', fontWeight: '800' }}>₹{advance.amount}</div>
+                                            <div style={{ display: 'flex', gap: '8px', marginTop: '4px', justifyContent: 'flex-end' }}>
+                                                <button onClick={() => handleEditClick(advance)} style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '10px' }}>Edit</button>
+                                                <button onClick={() => handleDeleteAdvance(advance._id)} style={{ background: 'transparent', border: 'none', color: '#f43f5e', fontSize: '10px' }}>Delete</button>
+                                            </div>
                                         </div>
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ color: 'white', fontWeight: '800' }}>₹ {advance.amount?.toLocaleString()}</div>
-                                    </td>
-                                    <td style={{ padding: '20px 25px' }}>
-                                        <div style={{ color: 'var(--text-muted)', fontSize: '13px', fontStyle: 'italic', maxWidth: '200px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                            {advance.remark || '-'}
-                                        </div>
-                                    </td>
-                                    <td style={{ padding: '20px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
-                                        <div style={{ display: 'flex', gap: '8px' }}>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleEditClick(advance); }}
-                                                style={{
-                                                    background: 'rgba(56, 189, 248, 0.1)',
-                                                    color: '#38bdf8',
-                                                    border: 'none',
-                                                    padding: '8px',
-                                                    borderRadius: '8px',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s'
-                                                }}
-                                            >
-                                                <Edit2 size={16} />
-                                            </button>
-                                            <button
-                                                onClick={(e) => { e.stopPropagation(); handleDeleteAdvance(advance._id); }}
-                                                style={{
-                                                    background: 'rgba(244, 63, 94, 0.1)',
-                                                    color: '#f43f5e',
-                                                    border: 'none',
-                                                    padding: '8px',
-                                                    borderRadius: '8px',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s'
-                                                }}
-                                            >
-                                                <X size={16} />
-                                            </button>
-                                        </div>
-                                    </td>
-                                </motion.tr>
+                                    </div>
+                                    {advance.remark && <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>"{advance.remark}"</p>}
+                                </div>
                             ))}
-                        </tbody>
-                    </table>
-                </div>
-
-                <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
-                    {filteredAdvances.map(advance => (
-                        <div key={advance._id} className="glass-card" style={{ padding: '16px', background: 'rgba(30, 41, 59, 0.4)', borderRadius: '14px' }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(251, 191, 36, 0.1)', color: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800' }}>
-                                        {advance.driver?.name?.charAt(0)}
-                                    </div>
-                                    <div>
-                                        <div style={{ fontWeight: '800', color: 'white' }}>{advance.driver?.name}</div>
-                                        <div style={{ fontSize: '11px', color: 'var(--text-muted)' }}>{formatDateIST(advance.date)}</div>
-                                    </div>
-                                </div>
-                                <div style={{ textAlign: 'right' }}>
-                                    <div style={{ color: 'var(--primary)', fontWeight: '800' }}>₹{advance.amount}</div>
-                                    <div style={{ display: 'flex', gap: '8px', marginTop: '4px', justifyContent: 'flex-end' }}>
-                                        <button onClick={() => handleEditClick(advance)} style={{ background: 'transparent', border: 'none', color: '#38bdf8', fontSize: '10px' }}>Edit</button>
-                                        <button onClick={() => handleDeleteAdvance(advance._id)} style={{ background: 'transparent', border: 'none', color: '#f43f5e', fontSize: '10px' }}>Delete</button>
-                                    </div>
-                                </div>
-                            </div>
-                            {advance.remark && <p style={{ margin: '8px 0 0', fontSize: '12px', color: 'var(--text-muted)', fontStyle: 'italic' }}>"{advance.remark}"</p>}
                         </div>
-                    ))}
-                </div>
-            </motion.div>
-        )}
+                    </motion.div>
+                )}
 
 
                 {activeTab === 'loans' && (
@@ -1570,7 +1570,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                         const calendarYear = (currentMonthNum >= 1 && currentMonthNum <= 3) ? year + 1 : year;
                                                         const selVal = (parseInt(calendarYear) * 12) + parseInt(currentMonthNum);
                                                         const mIdx = month === 'All' ? null : (selVal - sVal) + 1;
-                                                        
+
                                                         if (mIdx === null) return `₹ ${loan.remainingAmount?.toLocaleString()}`;
                                                         const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * mIdx));
                                                         return `₹ ${histRem.toLocaleString()}`;
@@ -1658,7 +1658,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                     const calendarYear = (currentMonthNum >= 1 && currentMonthNum <= 3) ? year + 1 : year;
                                                     const selVal = (parseInt(calendarYear) * 12) + parseInt(currentMonthNum);
                                                     const mIdx = month === 'All' ? null : (selVal - sVal) + 1;
-                                                    
+
                                                     if (mIdx === null) return `₹ ${loan.remainingAmount?.toLocaleString()}`;
                                                     const histRem = Math.max(0, loan.totalAmount - (loan.monthlyEMI * mIdx));
                                                     return `₹ ${histRem.toLocaleString()}`;
@@ -1683,55 +1683,55 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 )}
 
                 {activeTab === 'allowances' && (
-                <motion.div key="allowances" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ marginTop: '20px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
-                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                            <Plus size={22} color="#10b981" />
+                    <motion.div key="allowances" initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.3 }} style={{ marginTop: '20px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '25px' }}>
+                            <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(16, 185, 129, 0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                <Plus size={22} color="#10b981" />
+                            </div>
+                            <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Special Payments <span style={{ color: '#10b981' }}>(Allowances)</span></h2>
                         </div>
-                        <h2 style={{ color: 'white', fontSize: '22px', fontWeight: '900', margin: 0, letterSpacing: '-0.5px' }}>Special Payments <span style={{ color: '#10b981' }}>(Allowances)</span></h2>
-                    </div>
 
-                    <div className="glass-card" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
-                        <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
-                            <thead>
-                                <tr style={{ textAlign: 'left' }}>
-                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
-                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
-                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Type</th>
-                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
-                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remarks</th>
-                                    <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredAllowances.length === 0 ? (
-                                    <tr><td colSpan="6" style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-muted)' }}>No special payments found.</td></tr>
-                                ) : (
-                                    filteredAllowances.map((al, idx) => (
-                                        <motion.tr key={al._id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }}
-                                            style={{ background: 'rgba(30,41,59,0.4)', borderRadius: '12px' }}>
-                                            <td style={{ padding: '15px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
-                                                <div style={{ fontWeight: '700', color: 'white' }}>{al.driver?.name}</div>
-                                            </td>
-                                            <td style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.7)', fontWeight: '600' }}>{formatDateIST(al.date)}</td>
-                                            <td style={{ padding: '15px 25px' }}>
-                                                <span style={{ fontSize: '10px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(16,185,129,0.1)', color: '#10b981', fontWeight: '800' }}>{al.type?.toUpperCase()}</span>
-                                            </td>
-                                            <td style={{ padding: '15px 25px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {(al.amount || 0).toLocaleString()}</td>
-                                            <td style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>{al.remark || '-'}</td>
-                                            <td style={{ padding: '15px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
-                                                <div style={{ display: 'flex', gap: '10px' }}>
-                                                    <button onClick={() => handleEditAllowance(al)} style={{ padding: '8px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer' }}><Edit2 size={14} /></button>
-                                                    <button onClick={() => handleDeleteAllowance(al._id)} style={{ padding: '8px', borderRadius: '8px', background: 'rgba(244,63,94,0.1)', border: 'none', color: '#f43f5e', cursor: 'pointer' }}><Trash2 size={14} /></button>
-                                                </div>
-                                            </td>
-                                        </motion.tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
-                    </div>
-                    <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                        <div className="glass-card" style={{ padding: '0', overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)', background: 'transparent' }}>
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 8px', padding: '0 10px', minWidth: '800px' }}>
+                                <thead>
+                                    <tr style={{ textAlign: 'left' }}>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Driver</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Type</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Remarks</th>
+                                        <th style={{ padding: '15px 25px', color: 'var(--text-muted)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredAllowances.length === 0 ? (
+                                        <tr><td colSpan="6" style={{ textAlign: 'center', padding: '80px 0', color: 'var(--text-muted)' }}>No special payments found.</td></tr>
+                                    ) : (
+                                        filteredAllowances.map((al, idx) => (
+                                            <motion.tr key={al._id} initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.03 }}
+                                                style={{ background: 'rgba(30,41,59,0.4)', borderRadius: '12px' }}>
+                                                <td style={{ padding: '15px 25px', borderTopLeftRadius: '12px', borderBottomLeftRadius: '12px' }}>
+                                                    <div style={{ fontWeight: '700', color: 'white' }}>{al.driver?.name}</div>
+                                                </td>
+                                                <td style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.7)', fontWeight: '600' }}>{formatDateIST(al.date)}</td>
+                                                <td style={{ padding: '15px 25px' }}>
+                                                    <span style={{ fontSize: '10px', padding: '4px 10px', borderRadius: '20px', background: 'rgba(16,185,129,0.1)', color: '#10b981', fontWeight: '800' }}>{al.type?.toUpperCase()}</span>
+                                                </td>
+                                                <td style={{ padding: '15px 25px', color: '#10b981', fontWeight: '900', fontSize: '15px' }}>₹ {(al.amount || 0).toLocaleString()}</td>
+                                                <td style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.5)', fontSize: '13px' }}>{al.remark || '-'}</td>
+                                                <td style={{ padding: '15px 25px', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
+                                                    <div style={{ display: 'flex', gap: '10px' }}>
+                                                        <button onClick={() => handleEditAllowance(al)} style={{ padding: '8px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer' }}><Edit2 size={14} /></button>
+                                                        <button onClick={() => handleDeleteAllowance(al._id)} style={{ padding: '8px', borderRadius: '8px', background: 'rgba(244,63,94,0.1)', border: 'none', color: '#f43f5e', cursor: 'pointer' }}><Trash2 size={14} /></button>
+                                                    </div>
+                                                </td>
+                                            </motion.tr>
+                                        ))
+                                    )}
+                                </tbody>
+                            </table>
+                        </div>
+                        <div className="show-mobile" style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
                             {filteredAllowances.length === 0 ? (
                                 <div style={{ textAlign: 'center', padding: '40px', color: 'var(--text-muted)', background: 'rgba(255,255,255,0.02)', borderRadius: '16px' }}>
                                     <p>No special payments found.</p>
@@ -1954,7 +1954,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                 </div>
                                                 <div style={{ color: 'white', fontWeight: '900', fontSize: '20px' }}>₹{routineEarningsTotal.toLocaleString()}</div>
                                                 <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                                    Wages: ₹{calcWages.toLocaleString()} 
+                                                    Wages: ₹{calcWages.toLocaleString()}
                                                     {showSDR && ` + SDR: ₹${calcSDR.toLocaleString()}`}
                                                     {showNight && ` + Night: ₹${calcNight.toLocaleString()}`}
                                                     {calcOT > 0 && ` + OT: ₹${calcOT.toLocaleString()}`}
@@ -2178,7 +2178,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                         const selVal = (parseInt(year) * 12) + parseInt(month);
                                                         const monthIdx = (selVal - sVal) + 1;
                                                         const tenure = parseInt(loan.tenureMonths, 10) || (loan.monthlyEMI > 0 ? Math.round(loan.totalAmount / loan.monthlyEMI) : 1);
-                                                        
+
                                                         return (
                                                             <tr key={loan._id || idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }}>
                                                                 <td style={{ padding: '12px', color: 'white' }}>{formatDateIST(loan.startDate)}</td>
