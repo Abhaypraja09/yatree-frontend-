@@ -147,8 +147,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     };
 
     const logoMap = {
-        'Primary': '/logos/logo.png',
-        'Fleet': '/logos/logo.png',
+        'Primary': '/logkaro_square.png',
+        'Fleet': '/logkaro_square.png',
         'GoGetGo': '/logos/gogetgo.webp'
     };
 
@@ -241,7 +241,7 @@ const Sidebar = ({ isOpen, onClose }) => {
                         }}
                     >
                         <img
-                            src="/logos/logo.png"
+                            src="/logkaro_square.png"
                             alt="LK"
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                         />
