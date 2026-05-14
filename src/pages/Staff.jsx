@@ -2127,6 +2127,7 @@ const Staff = () => {
                                                     <select className="premium-compact-input" style={{ height: '56px', padding: '0 15px', fontSize: '14px', fontWeight: '700', borderRadius: '16px' }} value={formData.staffType} onChange={(e) => setFormData({ ...formData, staffType: e.target.value })}>
                                                         <option value="Company">REGULAR (MON-SAT)</option>
                                                         <option value="Hotel">FULL TIME (7 DAYS)</option>
+                                                        <option value="Fixed">FIXED (30 DAYS / FULL SALARY)</option>
                                                     </select>
                                                 </div>
                                                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
