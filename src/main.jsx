@@ -13,3 +13,12 @@ createRoot(document.getElementById('root')).render(
       </ThemeProvider>
     </HelmetProvider>
 )
+
+// ⚡ Register Service Worker for PWA (Installability)
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+            .then(reg => console.log('LogKaro PWA: Service Worker Registered', reg))
+            .catch(err => console.log('LogKaro PWA: Service Worker Failed', err));
+    });
+}

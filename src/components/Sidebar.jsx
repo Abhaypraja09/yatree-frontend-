@@ -147,8 +147,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     };
 
     const logoMap = {
-        'Primary': '/logos/logo.png',
-        'Fleet': '/logos/logo.png',
+        'Primary': '/logos/lk_logo.png',
+        'Fleet': '/logos/lk_logo.png',
         'GoGetGo': '/logos/gogetgo.webp'
     };
 

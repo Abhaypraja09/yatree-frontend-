@@ -44,16 +44,20 @@ const ActiveLogs = () => {
     const [fromDate, setFromDate] = useState('');
     const [toDate, setToDate] = useState('');
 
+    // Financial Year Logic: April to March
     useEffect(() => {
         if (selectedMonth === 'All') {
-            const start = toISTDateString(new Date(selectedYear, 0, 1));
-            const end = toISTDateString(new Date(selectedYear, 12, 0));
+            // Full Financial Year: April 1st to March 31st (of next year)
+            const start = `${selectedYear}-04-01`;
+            const end = `${selectedYear + 1}-03-31`;
             setFromDate(start);
             setToDate(end);
         } else {
-            const m = parseInt(selectedMonth);
-            const start = toISTDateString(new Date(selectedYear, m, 1));
-            const end = toISTDateString(new Date(selectedYear, m + 1, 0));
+            const m = parseInt(selectedMonth); // 1-12
+            // If month is Jan(1)-Mar(3), it belongs to the next calendar year
+            const calendarYear = (m >= 1 && m <= 3) ? selectedYear + 1 : selectedYear;
+            const start = toISTDateString(new Date(calendarYear, m - 1, 1));
+            const end = toISTDateString(new Date(calendarYear, m, 0));
             setFromDate(start);
             setToDate(end);
         }
@@ -357,16 +361,22 @@ const ActiveLogs = () => {
                                 onChange={(e) => setSelectedMonth(e.target.value)}
                                 style={{ background: 'transparent', border: 'none', color: 'white', padding: '8px 12px', fontWeight: '800', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
                             >
-                                <option value="All" style={{ background: '#0f172a' }}>All Months</option>
-                                {['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'].map((m, i) => <option key={i} value={i} style={{ background: '#0f172a' }}>{m}</option>)}
+                                <option value="All" style={{ background: '#0f172a' }}>Full Year</option>
+                                {[4, 5, 6, 7, 8, 9, 10, 11, 12, 1, 2, 3].map(m => (
+                                    <option key={m} value={m} style={{ background: '#0f172a' }}>
+                                        {new Date(0, m - 1).toLocaleString('default', { month: 'short' })}
+                                    </option>
+                                ))}
                             </select>
                             <div style={{ width: '1px', background: 'rgba(255,255,255,0.1)', height: '20px', alignSelf: 'center' }}></div>
                             <select
                                 value={selectedYear}
                                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                                style={{ background: 'transparent', border: 'none', color: 'white', padding: '8px 12px', fontWeight: '800', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
+                                style={{ background: 'transparent', border: 'none', color: 'var(--primary)', padding: '8px 12px', fontWeight: '900', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
                             >
-                                {[2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>)}
+                                {[2023, 2024, 2025, 2026, 2027].map(y => (
+                                    <option key={y} value={y} style={{ background: '#0f172a' }}>FY {y}-{String(y + 1).slice(-2)}</option>
+                                ))}
                             </select>
                         </div>
                     </div>

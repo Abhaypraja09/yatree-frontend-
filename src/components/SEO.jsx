@@ -2,7 +2,7 @@ import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
 const SEO = ({ title, description, keywords, image }) => {
-    const siteTitle = "FleetCRM | Professional Taxi & Fleet Management";
+    const siteTitle = "LogKaro | Professional Taxi & Fleet Management";
     const defaultDescription = "Smart Fleet Management solution for modern taxi businesses. Track vehicles, manage drivers, and monitor daily reports with ease.";
     const fullTitle = title ? `${title} | ${siteTitle}` : siteTitle;
 
@@ -20,7 +20,7 @@ const SEO = ({ title, description, keywords, image }) => {
             {image && <meta property="og:image" content={image} />}
 
             {/* Twitter tags */}
-            <meta name="twitter:creator" content="FleetCRM" />
+            <meta name="twitter:creator" content="LogKaro" />
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content={fullTitle} />
             <meta name="twitter:description" content={description || defaultDescription} />

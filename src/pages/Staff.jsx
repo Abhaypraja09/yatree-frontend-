@@ -492,7 +492,7 @@ const Staff = () => {
     };
 
     const generateSalarySlipPage = async (doc, staff, isFirstPage = true) => {
-        const logoUrl = selectedCompany?.logoUrl || '/logos/logo.png';
+        const logoUrl = selectedCompany?.logoUrl || '/logos/lk_logo.png';
         const logo = await loadImage(logoUrl).catch(() => null);
 
         const sigUrl = selectedCompany?.ownerSignatureUrl || '/logos/signature.png';
@@ -1169,17 +1169,7 @@ const Staff = () => {
                         </div>
                     </div>
 
-                    <div className="stat-card-inner" onClick={() => setView('summary')}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                            <div>
-                                <p style={{ margin: 0, fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Total Baki Salary</p>
-                                <h2 style={{ margin: '8px 0 0 0', fontSize: '32px', fontWeight: '900', color: 'var(--primary)' }}>₹{totalRemainingSalary.toLocaleString()}</h2>
-                            </div>
-                            <div style={{ background: 'rgba(251, 191, 36, 0.1)', padding: '10px', borderRadius: '12px' }}>
-                                <IndianRupee color="var(--primary)" size={20} />
-                            </div>
-                        </div>
-                    </div>
+
                 </div>
 
                 <div style={{
@@ -1816,59 +1806,7 @@ const Staff = () => {
                                     gap: '20px',
                                     marginBottom: '20px'
                                 }}>
-                                    <div style={{
-                                        background: 'rgba(30, 41, 59, 0.6)',
-                                        padding: '25px',
-                                        borderRadius: '24px',
-                                        border: '1px solid rgba(255, 255, 255, 0.05)',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
-                                    }}>
-                                        <div>
-                                            <p style={{ margin: 0, fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Staff Salary</p>
-                                            <h3 style={{ margin: '5px 0 0 0', fontSize: '28px', fontWeight: '1000', color: 'white' }}>₹{totalBaseSalary.toLocaleString()}</h3>
-                                        </div>
-                                        <div style={{ width: '50px', height: '50px', background: 'rgba(255,255,255,0.05)', borderRadius: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                            <Users size={24} color="white" style={{ opacity: 0.5 }} />
-                                        </div>
-                                    </div>
 
-                                    <div style={{
-                                        background: 'linear-gradient(135deg, rgba(244, 63, 94, 0.1) 0%, rgba(0,0,0,0.2) 100%)',
-                                        padding: '25px',
-                                        borderRadius: '24px',
-                                        border: '1px solid rgba(244, 63, 94, 0.2)',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
-                                    }}>
-                                        <div>
-                                            <p style={{ margin: 0, fontSize: '11px', fontWeight: '800', color: '#f43f5e', textTransform: 'uppercase', letterSpacing: '1px' }}>Total Advances (Month)</p>
-                                            <h3 style={{ margin: '5px 0 0 0', fontSize: '28px', fontWeight: '1000', color: 'white' }}>₹{totalAdvancesAmount.toLocaleString()}</h3>
-                                        </div>
-                                        <div style={{ width: '50px', height: '50px', background: 'rgba(244, 63, 94, 0.2)', borderRadius: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                            <TrendingDown size={24} color="#f43f5e" />
-                                        </div>
-                                    </div>
-
-                                    <div style={{
-                                        background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1) 0%, rgba(0,0,0,0.2) 100%)',
-                                        padding: '25px',
-                                        borderRadius: '24px',
-                                        border: '1px solid rgba(16, 185, 129, 0.2)',
-                                        display: 'flex',
-                                        justifyContent: 'space-between',
-                                        alignItems: 'center'
-                                    }}>
-                                        <div>
-                                            <p style={{ margin: 0, fontSize: '11px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase', letterSpacing: '1px' }}>Net Baki Salary (Due)</p>
-                                            <h3 style={{ margin: '5px 0 0 0', fontSize: '28px', fontWeight: '1000', color: 'white' }}>₹{totalRemainingSalary.toLocaleString()}</h3>
-                                        </div>
-                                        <div style={{ width: '50px', height: '50px', background: 'rgba(16, 185, 129, 0.2)', borderRadius: '15px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                                            <IndianRupee size={24} color="#10b981" />
-                                        </div>
-                                    </div>
 
                                     <div style={{
                                         display: 'flex',

@@ -600,7 +600,7 @@ const EventManagement = () => {
                 return;
             }
             // Load assets
-            const logo = await loadImage(selectedCompany?.logoUrl || '/logos/logo.png').catch(() => null);
+            const logo = await loadImage(selectedCompany?.logoUrl || '/logos/lk_logo.png').catch(() => null);
             const signature = await loadImage(selectedCompany?.ownerSignatureUrl || '/logos/signature.png').catch(() => null);
 
             const doc = new jsPDF();
@@ -767,7 +767,7 @@ const EventManagement = () => {
             doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(15, 23, 42); doc.text((selectedCompany?.ownerName || 'AUTHORISED SIGNATORY').toUpperCase(), sigX - 2, footerY + 12);
             doc.setFontSize(8); doc.setFont('helvetica', 'normal'); doc.setTextColor(100, 116, 139);
             doc.text('Operations Controller', sigX - 2, footerY + 17);
-            doc.text(`${selectedCompany?.name || 'Fleet CRM'}`, sigX - 2, footerY + 21);
+            doc.text(`${selectedCompany?.name || 'LogKaro'}`, sigX - 2, footerY + 21);
 
             doc.save(`${mode === 'client' ? 'Client' : 'Internal'}_Report_${(selectedEventDetails.event?.name || 'Report').replace(/\s+/g, '_')}.pdf`);
         } catch (error) {

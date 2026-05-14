@@ -546,7 +546,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 return;
             }
 
-            const logoUrl = selectedCompany?.logoUrl || '/logos/logo.png';
+            const logoUrl = selectedCompany?.logoUrl || '/logos/lk_logo.png';
             const logo = await loadImage(logoUrl).catch(() => null);
 
             const sigUrl = selectedCompany?.ownerSignatureUrl || '/logos/signature.png';

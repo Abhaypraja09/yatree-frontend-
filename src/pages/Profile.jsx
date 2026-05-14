@@ -507,7 +507,7 @@ const Profile = () => {
                                                         {brandAssets.logo ? (
                                                             <img src={URL.createObjectURL(brandAssets.logo)} alt="Preview" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                                                         ) : (
-                                                            <img src={selectedCompany?.logoUrl || '/logos/logo.png'} alt="Current Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                                                            <img src={selectedCompany?.logoUrl || '/logos/lk_logo.png'} alt="Current Logo" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
                                                         )}
                                                     </div>
                                                     <div style={{ flex: 1 }}>

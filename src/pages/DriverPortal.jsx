@@ -462,7 +462,7 @@ const DriverPortal = () => {
             }
 
             // Load assets
-            const logo = await loadImage(user.company?.logoUrl || '/logos/logo.png').catch(() => null);
+            const logo = await loadImage(user.company?.logoUrl || '/logos/lk_logo.png').catch(() => null);
             const signature = await loadImage(user.company?.ownerSignatureUrl || '/logos/signature.png').catch(() => null);
 
             const monthName = new Date(ledgerYear, ledgerMonth - 1, 1).toLocaleString('default', { month: 'long' });
@@ -757,7 +757,7 @@ const DriverPortal = () => {
             doc.setFont('helvetica', 'normal');
             doc.setTextColor(100, 116, 139);
             doc.text('Founder & Director', sigX - 2, footerY + 17);
-            doc.text(`${user.company?.name || 'Fleet CRM'}`, sigX - 2, footerY + 21);
+            doc.text(`${user.company?.name || 'LogKaro'}`, sigX - 2, footerY + 21);
 
 
             // Generated at bottom
@@ -790,8 +790,8 @@ const DriverPortal = () => {
                     <header className="dashboard-header" style={{ marginBottom: '32px', paddingBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                         <div className="header-logo-section">
                             <img
-                                src={user.company?.logo || "/logos/logo.png"}
-                                alt={user.company?.name || "Fleet CRM"}
+                                src={user.company?.logo || "/logos/lk_logo.png"}
+                                alt={user.company?.name || "LogKaro"}
                                 style={{
                                     width: '100px',
                                     height: 'auto',
@@ -800,7 +800,7 @@ const DriverPortal = () => {
                             />
                             <div>
                                 <h1 className="header-title" style={{ fontSize: 'clamp(20px, 5vw, 26px)', fontWeight: '900', letterSpacing: '-0.5px', background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', marginBottom: '4px' }}>
-                                    {user.company?.name || "Fleet CRM"}
+                                    {user.company?.name || "LogKaro"}
                                 </h1>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                     <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }}></div>

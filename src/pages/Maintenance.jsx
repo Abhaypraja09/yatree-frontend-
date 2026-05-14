@@ -58,11 +58,12 @@ const MAINTENANCE_CATEGORIES = [
 ];
 
 const NEXT_SERVICE_TYPES = [
-    'Service',
-    'Oil Change',
-    'Filter',
-    'Brake',
-    'Tyres',
+    'Regular Service',
+    'Tyres / Wheels',
+    'Engine / Mechanical',
+    'AC / Cooling',
+    'Suspension',
+    'Electrical',
     'Other'
 ];
 
@@ -93,6 +94,7 @@ const Maintenance = () => {
     const [showDrillModal, setShowDrillModal] = useState(false);
     const [drillData, setDrillData] = useState({ vehicle: '', category: '', records: [] });
     const [expandedVehicle, setExpandedVehicle] = useState(null); // Added for Master Data Accordion
+    const [showGarageSuggestions, setShowGarageSuggestions] = useState(false);
 
     const shiftMonth = (amount) => {
         let newMonth = selectedMonth + amount;
@@ -126,6 +128,7 @@ const Maintenance = () => {
             billDate: '',
             amount: '',
             paymentMode: 'Cash',
+            paymentStatus: 'Paid',
             currentKm: '',
             nextServiceKm: '',
             status: 'Completed'
@@ -159,7 +162,8 @@ const Maintenance = () => {
         billDate: '',
         amount: '',
         paymentMode: 'Cash',
-        paymentSource: 'Office',
+        paymentStatus: 'Paid',
+        paymentSource: 'Paid',
         currentKm: '',
         nextServiceKm: '',
         status: 'Completed'
@@ -380,6 +384,8 @@ const Maintenance = () => {
             billDate: '',
             amount: '',
             paymentMode: 'Cash',
+            paymentStatus: 'Paid',
+            paymentSource: 'Paid',
             currentKm: '',
             nextServiceKm: '',
             status: 'Completed'
@@ -392,7 +398,10 @@ const Maintenance = () => {
 
     const handleEdit = (record) => {
         const types = (record.maintenanceType || '').split(', ').filter(Boolean);
-        const isEligibleForReminder = types.some(t => ['Regular Service', 'Tyres & Wheels'].includes(t));
+        const isEligibleForReminder = types.some(t => 
+            t === 'Regular Service' || 
+            (t === 'Tyres / Wheels' && (record.category || '').includes('Alignment & Balancing'))
+        );
         setFormData({
             vehicleId: record.vehicle?._id || record.vehicle || '',
             driverId: record.driver?._id || record.driver || '',
@@ -405,7 +414,8 @@ const Maintenance = () => {
             billDate: record.billDate ? nowIST(record.billDate).toISOString().split('T')[0] : '',
             amount: record.amount,
             paymentMode: record.paymentMode || 'Cash',
-            paymentSource: record.paymentSource || 'Office',
+            paymentStatus: record.paymentStatus || 'Paid',
+            paymentSource: record.paymentSource || 'Paid',
             currentKm: record.currentKm || '',
             nextServiceKm: record.nextServiceKm || '',
             status: record.status || 'Completed'
@@ -487,7 +497,7 @@ const Maintenance = () => {
                 return;
             }
 
-            const logoUrl = selectedCompany?.logoUrl || '/logos/logo.png';
+            const logoUrl = selectedCompany?.logoUrl || '/logos/lk_logo.png';
             const logo = await loadImage(logoUrl).catch(() => null);
 
             const sigUrl = selectedCompany?.ownerSignatureUrl || '/logos/signature.png';
@@ -773,30 +783,34 @@ const Maintenance = () => {
         })
         .sort((a, b) => (a.carNumber || '').localeCompare(b.carNumber || ''))
         .map(v => {
-            // Pre-calculate category totals for sorting/filtering using accurate logic
             const allRecs = (v.maintenance?.records || v.maintenance?.recs || []).filter(r => {
                 const driverServiceRegex = /wash|washing|cleaning|tissue|water|mask|sanitizer|kapda|punc|puncture|puncher|parking/i;
-                const searchStrRec = `${r.maintenanceType || r.type || r.maintenanceType || ''} ${r.category || r.category || ''} ${r.description || r.description || ''}`.toLowerCase();
+                const searchStrRec = `${r.maintenanceType || ''} ${r.category || ''} ${r.description || ''}`.toLowerCase();
                 return !driverServiceRegex.test(searchStrRec);
             });
 
             const assignments = new Set();
             const cats = {};
+            
+            // Map our explicit types to keywords for better matching
+            const categoryMap = {
+                'Regular Service': ['regular', 'service', 'oil change', 'filter'],
+                'Tyres / Wheels': ['tyre', 'wheel', 'alignment', 'balancing'],
+                'Engine / Mechanical': ['engine', 'mechanical', 'gear', 'clutch', 'exhaust', 'fuel pump'],
+                'AC / Cooling': ['ac ', 'cooling', 'compressor', 'radiator', 'gas refill'],
+                'Suspension': ['suspension', 'shock', 'strut', 'bush'],
+                'Electrical': ['electrical', 'battery', 'sensor', 'light', 'alternator', 'starter'],
+                'Other': []
+            };
+
             const explicitCats = NEXT_SERVICE_TYPES.filter(c => c !== 'Other');
 
             explicitCats.forEach(catName => {
-                // Get keywords from subCategories map + the category name itself
-                const keywords = [
-                    catName,
-                    ...(subCategories[catName] || [])
-                ].map(s => s.toLowerCase().replace(' system', '').trim()).filter(Boolean);
+                const keywords = categoryMap[catName] || [catName.toLowerCase()];
 
                 const matched = allRecs.filter(r => {
                     if (assignments.has(r._id)) return false;
-                    const rType = (r.maintenanceType || r.type || '').toLowerCase();
-                    const rCat = (r.category || r.description || '').toLowerCase();
-                    const searchStr = `${rType} ${rCat}`.toLowerCase();
-
+                    const searchStr = `${r.maintenanceType || ''} ${r.category || ''} ${r.description || ''}`.toLowerCase();
                     const isMatch = keywords.some(kw => searchStr.includes(kw.toLowerCase()));
                     return isMatch;
                 });
@@ -818,8 +832,8 @@ const Maintenance = () => {
                 const valB = b.recalculatedTotal || 0;
                 return sortConfig.direction === 'desc' ? valB - valA : valA - valB;
             } else {
-                const valA = a.cats[sortConfig.key] || 0;
-                const valB = b.cats[sortConfig.key] || 0;
+                const valA = a.cats[sortConfig.key]?.amount || 0;
+                const valB = b.cats[sortConfig.key]?.amount || 0;
                 return sortConfig.direction === 'desc' ? valB - valA : valA - valB;
             }
         });
@@ -1148,16 +1162,18 @@ const Maintenance = () => {
 
                     <div className="glass-card" style={{ padding: '0', background: 'rgba(30,30,40,0.3)', borderRadius: '24px', border: '1px solid rgba(255,255,255,0.05)', overflow: 'hidden', marginTop: '10px' }}>
                         <div style={{ overflowX: 'auto' }} className="custom-scrollbar">
-                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', minWidth: '1800px' }}>
+                            <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0', minWidth: '1500px' }}>
                                 <thead style={{ position: 'sticky', top: 0, zIndex: 10 }}>
                                     <tr style={{ textAlign: 'left', background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(10px)' }}>
                                         <th style={{ position: 'sticky', left: 0, zIndex: 11, background: '#1e293b', padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', borderRight: '1px solid rgba(255,255,255,0.05)' }}>Vehicle</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '150px' }}>Driver Salary</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '180px' }}>Fuel & Avg</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '150px' }}>Maintenance</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '150px' }}>Misc. Repairs</th>
-                                        <th style={{ padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '220px' }}>Wash / Tax / Fastag / Parking</th>
-                                        <th style={{ position: 'sticky', right: 0, zIndex: 11, background: '#1e293b', padding: '20px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>Total Amount</th>
+                                        {NEXT_SERVICE_TYPES.map(cat => (
+                                            <th key={cat} onClick={() => handleSort(cat)} style={{ cursor: 'pointer', padding: '20px 25px', color: sortConfig.key === cat ? 'var(--primary)' : 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', minWidth: '150px' }}>
+                                                {cat} {sortConfig.key === cat && (sortConfig.direction === 'desc' ? '↓' : '↑')}
+                                            </th>
+                                        ))}
+                                        <th onClick={() => handleSort('total')} style={{ cursor: 'pointer', position: 'sticky', right: 0, zIndex: 11, background: '#1e293b', padding: '20px 25px', color: sortConfig.key === 'total' ? 'var(--primary)' : 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px', textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
+                                            Total Amount {sortConfig.key === 'total' && (sortConfig.direction === 'desc' ? '↓' : '↑')}
+                                        </th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -1217,74 +1233,14 @@ const Maintenance = () => {
                                                         <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', fontWeight: '700' }}>{v.model || 'Fleet Unit'}</div>
                                                     </td>
 
-                                                    {/* Driver Salary */}
-                                                    <td style={{ padding: '20px 25px' }}>
-                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{(v.driverSalary || 0).toLocaleString()}</div>
-                                                        <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', fontWeight: '800', marginTop: '4px' }}>Monthly Payout</div>
-                                                    </td>
-
-                                                    {/* Fuel & Avg */}
-                                                    <td style={{ padding: '20px 25px' }}>
-                                                        <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{(v.fuel?.totalAmount || 0).toLocaleString()}</div>
-                                                        <div style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '900', marginTop: '4px', marginBottom: '8px' }}>{v.fuel?.avgMileage || 0} km/L Avg</div>
-                                                        {v.fuel?.records?.length > 0 ? (
-                                                            <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '140px', padding: '6px 10px', background: 'rgba(16, 185, 129, 0.08)', border: '1px solid rgba(16, 185, 129, 0.2)', borderRadius: '8px', color: '#10b981', fontSize: '11px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
-                                                                <option value="" hidden>{v.fuel.records.length} Fills</option>
-                                                                {v.fuel.records.map((f, i) => (
-                                                                    <option key={i} value={i} style={{ background: '#0f172a', color: 'white' }}>
-                                                                        {formatDateIST(f.date)} - {f.quantity.toFixed(1)}L - ₹{f.amount.toLocaleString()}
-                                                                    </option>
-                                                                ))}
-                                                            </select>
-                                                        ) : null}
-                                                    </td>
-
-                                                    {/* Maintenance (Major) */}
-                                                    <Cell data={{ 
-                                                        amount: NEXT_SERVICE_TYPES.filter(c => c !== 'Other').reduce((s, c) => s + (v.cats[c]?.amount || 0), 0),
-                                                        records: NEXT_SERVICE_TYPES.filter(c => c !== 'Other').flatMap(c => v.cats[c]?.records || [])
-                                                    }} label="Repairs" />
-
-                                                    {/* Misc. Repairs (Other) */}
-                                                    <Cell data={v.cats['Other']} label="Misc" />
-
-                                                    {/* Wash / Tax / Fastag / Parking */}
-                                                    <td style={{ padding: '20px 25px' }}>
-                                                        {(() => {
-                                                            const wash = (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0);
-                                                            const tax = (v.borderTax?.totalAmount || 0);
-                                                            const fastag = (v.fastag?.totalAmount || 0);
-                                                            const parking = (v.parking?.totalAmount || 0);
-                                                            const opTotal = wash + tax + fastag + parking;
-                                                            return (
-                                                                <>
-                                                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '15px' }}>₹{opTotal.toLocaleString()}</div>
-                                                                    <div style={{ display: 'flex', gap: '6px', marginTop: '6px', flexWrap: 'wrap', marginBottom: '8px' }}>
-                                                                        {wash > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(16,185,129,0.1)', color: '#10b981', borderRadius: '4px', fontWeight: '800' }}>WASH</span>}
-                                                                        {tax > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(59,130,246,0.1)', color: '#3b82f6', borderRadius: '4px', fontWeight: '800' }}>TAX</span>}
-                                                                        {fastag > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(245,158,11,0.1)', color: '#f59e0b', borderRadius: '4px', fontWeight: '800' }}>FASTAG</span>}
-                                                                        {parking > 0 && <span style={{ fontSize: '9px', padding: '2px 6px', background: 'rgba(139,92,246,0.1)', color: '#8b5cf6', borderRadius: '4px', fontWeight: '800' }}>PARK</span>}
-                                                                    </div>
-                                                                    <select value="" onChange={() => { }} onClick={(e) => e.stopPropagation()} style={{ width: '100%', maxWidth: '140px', padding: '4px 8px', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', color: 'rgba(255,255,255,0.6)', fontSize: '10px', fontWeight: '800', outline: 'none', cursor: 'pointer' }}>
-                                                                        <option value="" hidden>Breakdown</option>
-                                                                        <option value="wash" style={{ background: '#0f172a', color: 'white' }}>Wash/Ops: ₹{wash.toLocaleString()}</option>
-                                                                        <option value="fastag" style={{ background: '#0f172a', color: 'white' }}>Fastag: ₹{fastag.toLocaleString()}</option>
-                                                                        <option value="tax" style={{ background: '#0f172a', color: 'white' }}>Border Tax: ₹{tax.toLocaleString()}</option>
-                                                                        <option value="parking" style={{ background: '#0f172a', color: 'white' }}>Parking: ₹{parking.toLocaleString()}</option>
-                                                                    </select>
-                                                                </>
-                                                            );
-                                                        })()}
-                                                    </td>
+                                                    {NEXT_SERVICE_TYPES.map(cat => (
+                                                        <Cell key={cat} data={v.cats[cat]} label="Jobs" />
+                                                    ))}
 
                                                     <td style={{ position: 'sticky', right: 0, zIndex: 5, background: '#0f172a', padding: '20px 25px', textAlign: 'right', borderLeft: '1px solid rgba(255,255,255,0.05)' }}>
-                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Grand Total</div>
+                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontWeight: '900', textTransform: 'uppercase', marginBottom: '4px' }}>Maint. Total</div>
                                                         <div style={{ color: '#10b981', fontWeight: '950', fontSize: '18px', letterSpacing: '-0.5px' }}>
-                                                            ₹{(() => {
-                                                                const opTotal = (v.services?.wash?.amount || 0) + (v.services?.puncture?.amount || 0) + (v.borderTax?.totalAmount || 0) + (v.fastag?.totalAmount || 0) + (v.parking?.totalAmount || 0);
-                                                                const grandTotal = (v.driverSalary || 0) + (v.fuel?.totalAmount || 0) + v.recalculatedTotal + opTotal;
-                                                                return grandTotal.toLocaleString();
-                                                            })()}
+                                                            ₹{(v.recalculatedTotal || 0).toLocaleString()}
                                                         </div>
                                                     </td>
                                                 </motion.tr>
@@ -1423,13 +1379,14 @@ const Maintenance = () => {
                                             </td>
                                             <td style={{ padding: '20px 25px' }}>
                                                 <div style={{ color: '#10b981', fontWeight: '800', fontSize: '16px' }}>₹{Number(record.amount || 0).toLocaleString()}</div>
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '2px' }}>
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '4px', flexWrap: 'wrap' }}>
                                                     <span style={{
-                                                        fontSize: '9px', padding: '2px 6px', borderRadius: '4px',
-                                                        background: record.paymentSource === 'Guest' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                                                        color: record.paymentSource === 'Guest' ? '#10b981' : '#818cf8',
-                                                        fontWeight: '900', textTransform: 'uppercase'
-                                                    }}>{record.paymentSource || 'Office'}</span>
+                                                        fontSize: '9px', padding: '2px 7px', borderRadius: '4px',
+                                                        background: (record.paymentStatus === 'Due') ? 'rgba(244, 63, 94, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                                                        color: (record.paymentStatus === 'Due') ? '#f43f5e' : '#10b981',
+                                                        fontWeight: '900', textTransform: 'uppercase',
+                                                        border: `1px solid ${(record.paymentStatus === 'Due') ? 'rgba(244,63,94,0.3)' : 'rgba(16,185,129,0.3)'}`
+                                                    }}>{record.paymentStatus || 'Paid'}</span>
                                                 </div>
                                             </td>
                                             <td style={{ padding: '20px 25px', textAlign: 'right' }}>
@@ -1531,12 +1488,15 @@ const Maintenance = () => {
                                                 </div>
                                                 <div style={{ textAlign: 'right' }}>
                                                     <div style={{ color: '#10b981', fontWeight: '800', fontSize: '16px' }}>₹{Number(record.amount || 0).toLocaleString()}</div>
-                                                    <span style={{
-                                                        fontSize: '9px', padding: '2px 6px', borderRadius: '4px',
-                                                        background: record.paymentSource === 'Guest' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(99, 102, 241, 0.1)',
-                                                        color: record.paymentSource === 'Guest' ? '#10b981' : '#818cf8',
-                                                        fontWeight: '900', textTransform: 'uppercase'
-                                                    }}>{record.paymentSource || 'Office'}</span>
+                                                    <div style={{ display: 'flex', gap: '4px', justifyContent: 'flex-end', marginTop: '4px' }}>
+                                                        <span style={{
+                                                            fontSize: '9px', padding: '2px 7px', borderRadius: '4px',
+                                                            background: (record.paymentStatus === 'Due') ? 'rgba(244, 63, 94, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+                                                            color: (record.paymentStatus === 'Due') ? '#f43f5e' : '#10b981',
+                                                            fontWeight: '900', textTransform: 'uppercase',
+                                                            border: `1px solid ${(record.paymentStatus === 'Due') ? 'rgba(244,63,94,0.3)' : 'rgba(16,185,129,0.3)'}`
+                                                        }}>{record.paymentStatus || 'Paid'}</span>
+                                                    </div>
                                                 </div>
                                             </div>
 
@@ -1765,9 +1725,76 @@ const Maintenance = () => {
                                     <div style={{ padding: '20px', background: 'rgba(255,255,255,0.02)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.05)' }}>
                                         <p style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '20px' }}>Workshop & Billing</p>
                                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 200px), 1fr))', gap: '15px' }}>
-                                            <div>
+                                            <div style={{ position: 'relative' }}>
                                                 <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Garage Name *</label>
-                                                <input required className="input-field" style={{ borderRadius: '10px' }} placeholder="e.g. Bosch Service" value={formData.garageName} onChange={(e) => setFormData({ ...formData, garageName: e.target.value })} />
+                                                <input
+                                                    required
+                                                    className="input-field"
+                                                    style={{ borderRadius: '10px' }}
+                                                    placeholder="Type or select garage..."
+                                                    value={formData.garageName}
+                                                    onFocus={() => setShowGarageSuggestions(true)}
+                                                    onBlur={() => setTimeout(() => setShowGarageSuggestions(false), 200)}
+                                                    onChange={(e) => setFormData({ ...formData, garageName: e.target.value })}
+                                                />
+                                                <AnimatePresence>
+                                                    {showGarageSuggestions && (
+                                                        <motion.div
+                                                            initial={{ opacity: 0, y: -10 }}
+                                                            animate={{ opacity: 1, y: 0 }}
+                                                            exit={{ opacity: 0, y: -10 }}
+                                                            style={{
+                                                                position: 'absolute',
+                                                                top: '100%',
+                                                                left: 0,
+                                                                right: 0,
+                                                                zIndex: 100,
+                                                                background: '#1e293b',
+                                                                borderRadius: '12px',
+                                                                marginTop: '5px',
+                                                                border: '1px solid rgba(255,255,255,0.1)',
+                                                                maxHeight: '200px',
+                                                                overflowY: 'auto',
+                                                                boxShadow: '0 10px 25px rgba(0,0,0,0.5)'
+                                                            }}
+                                                            className="custom-scrollbar"
+                                                        >
+                                                            {(() => {
+                                                                const search = (formData.garageName || '').toLowerCase();
+                                                                const filtered = uniqueGarages.filter(g => g.toLowerCase().includes(search));
+
+                                                                if (filtered.length === 0) return (
+                                                                    <div style={{ padding: '12px 15px', color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>
+                                                                        No previous garages found. Type to add new.
+                                                                    </div>
+                                                                );
+
+                                                                return filtered.map((g, i) => (
+                                                                    <div
+                                                                        key={i}
+                                                                        onClick={() => {
+                                                                            setFormData({ ...formData, garageName: g });
+                                                                            setShowGarageSuggestions(false);
+                                                                        }}
+                                                                        style={{
+                                                                            padding: '10px 15px',
+                                                                            color: 'white',
+                                                                            fontSize: '13px',
+                                                                            cursor: 'pointer',
+                                                                            borderBottom: i === filtered.length - 1 ? 'none' : '1px solid rgba(255,255,255,0.05)',
+                                                                            background: 'transparent',
+                                                                            transition: 'background 0.2s'
+                                                                        }}
+                                                                        onMouseEnter={(e) => e.target.style.background = 'rgba(255,255,255,0.05)'}
+                                                                        onMouseLeave={(e) => e.target.style.background = 'transparent'}
+                                                                    >
+                                                                        {g}
+                                                                    </div>
+                                                                ));
+                                                            })()}
+                                                        </motion.div>
+                                                    )}
+                                                </AnimatePresence>
                                             </div>
                                             <div>
                                                 <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Bill Number</label>
@@ -1794,9 +1821,18 @@ const Maintenance = () => {
                                             </div>
                                             <div>
                                                 <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Payment Source</label>
-                                                <select className="input-field" style={{ borderRadius: '10px' }} value={formData.paymentSource} onChange={(e) => setFormData({ ...formData, paymentSource: e.target.value })}>
-                                                    <option value="Office" style={{ background: '#1e293b' }}>Office</option>
-                                                    <option value="Guest" style={{ background: '#1e293b' }}>Guest</option>
+                                                <select
+                                                    className="input-field"
+                                                    style={{
+                                                        borderRadius: '10px',
+                                                        color: formData.paymentStatus === 'Due' ? '#f43f5e' : '#10b981',
+                                                        fontWeight: '800'
+                                                    }}
+                                                    value={formData.paymentStatus}
+                                                    onChange={(e) => setFormData({ ...formData, paymentStatus: e.target.value })}
+                                                >
+                                                    <option value="Paid" style={{ background: '#1e293b', color: '#10b981' }}>✅ Paid</option>
+                                                    <option value="Due" style={{ background: '#1e293b', color: '#f43f5e' }}>⚠️ Due (Pending Payment)</option>
                                                 </select>
                                             </div>
                                             <div style={{ display: 'none' }}>
@@ -1820,7 +1856,10 @@ const Maintenance = () => {
                                         {/* Next Service Reminder — only for Regular Service & Tyres & Wheels */}
                                         {(() => {
                                             const selectedTypes = formData.maintenanceType.split(', ').filter(Boolean);
-                                            const showReminderSection = selectedTypes.some(t => ['Regular Service', 'Tyres & Wheels'].includes(t));
+                                            const showReminderSection = selectedTypes.some(t => 
+                                                t === 'Regular Service' || 
+                                                (t === 'Tyres / Wheels' && (formData.category || '').includes('Alignment & Balancing'))
+                                            );
                                             if (!showReminderSection) return null;
                                             return (
                                                 <div style={{ padding: '20px', background: showNextService ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.02)', borderRadius: '16px', border: showNextService ? '1px solid rgba(16, 185, 129, 0.1)' : '1px solid rgba(255,255,255,0.05)', transition: 'all 0.3s ease' }}>
