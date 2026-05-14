@@ -147,8 +147,8 @@ const Sidebar = ({ isOpen, onClose }) => {
     };
 
     const logoMap = {
-        'Primary': '/logkaro_square.png',
-        'Fleet': '/logkaro_square.png',
+        'Primary': '/logos.png',
+        'Fleet': '/logos.png',
         'GoGetGo': '/logos/gogetgo.webp'
     };
 
@@ -207,10 +207,10 @@ const Sidebar = ({ isOpen, onClose }) => {
 
             <div style={{ marginBottom: '35px', padding: '0 10px' }}>
                 <Link to="/admin" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <motion.div 
+                    <motion.div
                         initial={{ opacity: 0, x: -20 }}
-                        animate={{ 
-                            opacity: 1, 
+                        animate={{
+                            opacity: 1,
                             x: 0,
                             borderColor: [theme.primary, `${theme.primary}40`, theme.primary],
                             boxShadow: [
@@ -241,30 +241,30 @@ const Sidebar = ({ isOpen, onClose }) => {
                         }}
                     >
                         <img
-                            src="/logkaro_square.png"
+                            src="/logos.png"
                             alt="LK"
                             style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                         />
                     </motion.div>
                     <div style={{ overflow: 'hidden' }}>
-                        <h1 style={{ 
-                            fontSize: '24px', 
-                            fontWeight: '950', 
-                            color: 'white', 
-                            margin: 0, 
+                        <h1 style={{
+                            fontSize: '24px',
+                            fontWeight: '950',
+                            color: 'white',
+                            margin: 0,
                             letterSpacing: '-1.5px',
                             display: 'flex',
                             alignItems: 'center'
                         }}>
                             Log<span style={{ color: theme.primary }}>Karo</span>
                         </h1>
-                        <p style={{ 
-                            fontSize: '10px', 
-                            color: 'rgba(255,255,255,0.4)', 
-                            fontWeight: '800', 
-                            textTransform: 'uppercase', 
+                        <p style={{
+                            fontSize: '10px',
+                            color: 'rgba(255,255,255,0.4)',
+                            fontWeight: '800',
+                            textTransform: 'uppercase',
                             letterSpacing: '1px',
-                            margin: 0 
+                            margin: 0
                         }}>
                             Enterprise Fleet
                         </p>
@@ -369,10 +369,10 @@ const Sidebar = ({ isOpen, onClose }) => {
                                     border: selectedCompany?.logoUrl ? `2px solid ${theme.primary}` : 'none'
                                 }}>
                                     {selectedCompany?.logoUrl ? (
-                                        <img 
-                                            src={selectedCompany.logoUrl} 
-                                            alt="Logo" 
-                                            style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }} 
+                                        <img
+                                            src={selectedCompany.logoUrl}
+                                            alt="Logo"
+                                            style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }}
                                             onError={(e) => {
                                                 e.target.style.display = 'none';
                                                 e.target.parentElement.innerText = user?.name?.charAt(0) || 'A';

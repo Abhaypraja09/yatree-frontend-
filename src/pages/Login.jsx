@@ -69,7 +69,7 @@ const Login = () => {
                 }}
             >
                 <div style={{ textAlign: 'center', marginBottom: '30px' }}>
-                    <motion.div 
+                    <motion.div
                         initial={{ y: -20, opacity: 0 }}
                         animate={{ y: 0, opacity: 1 }}
                         transition={{ delay: 0.2, duration: 0.5 }}
@@ -90,11 +90,11 @@ const Login = () => {
                         }}
                     >
                         <img
-                            src="/logkaro_square.png"
+                            src="/logos.png"
                             alt="Logo"
-                            style={{ 
-                                width: '100%', 
-                                height: '100%', 
+                            style={{
+                                width: '100%',
+                                height: '100%',
                                 objectFit: 'contain'
                             }}
                         />
@@ -107,23 +107,23 @@ const Login = () => {
                             pointerEvents: 'none'
                         }} />
                     </motion.div>
-                    <h2 style={{ 
-                        fontSize: '36px', 
-                        fontWeight: '950', 
-                        color: 'white', 
-                        margin: '0 0 5px 0', 
+                    <h2 style={{
+                        fontSize: '36px',
+                        fontWeight: '950',
+                        color: 'white',
+                        margin: '0 0 5px 0',
                         letterSpacing: '-1.5px',
                         textShadow: '0 4px 12px rgba(0,0,0,0.3)'
                     }}>
                         Log <span style={{ color: theme.primary, position: 'relative' }}>
                             Karo
-                            <div style={{ 
-                                position: 'absolute', 
-                                bottom: '5px', 
-                                left: 0, 
-                                width: '100%', 
-                                height: '4px', 
-                                background: theme.primary, 
+                            <div style={{
+                                position: 'absolute',
+                                bottom: '5px',
+                                left: 0,
+                                width: '100%',
+                                height: '4px',
+                                background: theme.primary,
                                 opacity: 0.3,
                                 borderRadius: '2px'
                             }} />
