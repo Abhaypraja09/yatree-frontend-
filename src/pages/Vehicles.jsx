@@ -68,7 +68,7 @@ const Vehicles = () => {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             if (!userInfo) return;
             // Disable pagination for management view to show all vehicles
-            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=fleet`, {
+            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=fleet&includeBlocked=true`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             // Handle both paginated and non-paginated responses

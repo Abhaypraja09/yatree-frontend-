@@ -6,7 +6,7 @@ import { LanguageProvider } from './context/LanguageContext';
 // Last Updated: 2026-04-25 12:39 PM - Frontend Sync
 import { ThemeProvider } from './context/ThemeContext';
 import Sidebar from './components/Sidebar';
-import AIChatAgent from './components/AIChatAgent';
+
 import ThemeSwitcher from './components/common/ThemeSwitcher';
 
 // Lazy load pages
@@ -95,7 +95,7 @@ const AdminLayout = ({ children }) => {
           {children}
         </div>
       </main>
-      <AIChatAgent />
+
 
       <style>{`
         @media (max-width: 1024px) {
