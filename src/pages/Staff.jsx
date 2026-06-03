@@ -2024,7 +2024,7 @@ const Staff = () => {
                                             <thead>
                                                 <tr style={{ textAlign: 'left' }}>
                                                     <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>STAFF MEMBER</th>
-                                                    <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>ATTENDANCE</th>
+                                                    <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>PAYROLL MONTH</th>
                                                     <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>BASE SALARY</th>
 
                                                     <th style={{ padding: '15px 25px', color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1.5px' }}>ADVANCES</th>
@@ -2082,25 +2082,14 @@ const Staff = () => {
                                                             </div>
                                                         </td>
                                                         <td style={{ padding: '12px 25px' }}>
-                                                            <div style={{ display: 'flex', gap: '12px' }}>
-                                                                <div>
-                                                                    <div style={{ fontSize: '13px', fontWeight: '900', color: '#10b981' }}>{item.presentDays} <span style={{ opacity: 0.3, fontSize: '10px' }}>PRES</span></div>
-                                                                    <div style={{ fontSize: '9px', fontWeight: '800', color: '#10b981', textTransform: 'uppercase' }}>Present</div>
+                                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                                                <div style={{ fontSize: '13px', fontWeight: '900', color: 'var(--primary)' }}>
+                                                                    {item.cycleStart && item.cycleEnd 
+                                                                        ? `${DateTime.fromISO(item.cycleStart).toFormat('dd MMM yyyy')} - ${DateTime.fromISO(item.cycleEnd).toFormat('dd MMM yyyy')}`
+                                                                        : 'N/A'
+                                                                    }
                                                                 </div>
-                                                                {item.staffType !== 'Fixed' && (
-                                                                    <>
-                                                                        <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)' }}></div>
-                                                                        <div>
-                                                                            <div style={{ fontSize: '13px', fontWeight: '900', color: 'var(--primary)' }}>{item.paidLeavesUsed || 0} <span style={{ opacity: 0.3, fontSize: '10px' }}>PAID</span></div>
-                                                                            <div style={{ fontSize: '9px', fontWeight: '800', color: 'var(--primary)', textTransform: 'uppercase' }}>Leaves</div>
-                                                                        </div>
-                                                                        <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.1)' }}></div>
-                                                                        <div>
-                                                                            <div style={{ fontSize: '13px', fontWeight: '900', color: '#fbbf24' }}>{item.availableLeavesPool || 0} <span style={{ opacity: 0.3, fontSize: '10px' }}>LEFT</span></div>
-                                                                            <div style={{ fontSize: '9px', fontWeight: '800', color: '#fbbf24', textTransform: 'uppercase' }}>Balance</div>
-                                                                        </div>
-                                                                    </>
-                                                                )}
+                                                                <div style={{ fontSize: '9px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>Payroll Month</div>
                                                             </div>
                                                         </td>
                                                         <td style={{ padding: '12px 25px' }}>

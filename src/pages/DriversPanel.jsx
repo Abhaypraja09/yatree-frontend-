@@ -1,12 +1,13 @@
 import React from 'react';
 import { useNavigate, useLocation, useSearchParams } from 'react-router-dom';
-import { User, Car, IndianRupee, Users } from 'lucide-react';
+import { User, Car, IndianRupee, Users, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 import SEO from '../components/SEO';
 
 import Drivers from './Drivers';
 import Reports from './Reports';
 import DriverSalaries from './DriverSalaries';
+import DriverPerformance from './DriverPerformance';
 
 const DriversPanel = () => {
     const navigate = useNavigate();
@@ -20,7 +21,8 @@ const DriversPanel = () => {
     const navItems = [
         { id: 'drivers', title: 'DRIVERS', icon: User },
         // { id: 'dutys', title: 'DUTYS', icon: Car },
-        { id: 'settlement', title: 'Salaries', icon: IndianRupee }
+        { id: 'settlement', title: 'Salaries', icon: IndianRupee },
+        { id: 'performance', title: 'Performance', icon: AlertCircle }
     ];
 
     const renderContent = () => {
@@ -31,6 +33,8 @@ const DriversPanel = () => {
                 return <Reports isSubComponent={true} />;
             case 'settlement':
                 return <DriverSalaries isSubComponent={true} />;
+            case 'performance':
+                return <DriverPerformance />;
             default:
                 return null;
         }
