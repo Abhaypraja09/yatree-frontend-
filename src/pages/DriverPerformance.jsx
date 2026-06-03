@@ -18,6 +18,7 @@ const DriverPerformance = () => {
     const [records, setRecords] = useState([]);
     const [loading, setLoading] = useState(false);
     const [showModal, setShowModal] = useState(false);
+    const [filterDriverId, setFilterDriverId] = useState('');
     
     // Form state
     const [selectedDriver, setSelectedDriver] = useState('');
@@ -155,6 +156,8 @@ const DriverPerformance = () => {
         }
     };
 
+    const filteredRecords = filterDriverId ? records.filter(r => r.driverId?._id === filterDriverId || r.driverId === filterDriverId) : records;
+
     return (
         <div style={{ padding: '0 10px', color: 'white', animation: 'fadeIn 0.5s ease-in-out' }}>
             {/* Header with Title and Right-Aligned Filters + Button */}
@@ -225,6 +228,30 @@ const DriverPerformance = () => {
                                 ))}
                             </select>
                         </div>
+                        
+                        <div style={{ background: 'rgba(0,0,0,0.3)', borderRadius: '10px', display: 'flex', alignItems: 'center', padding: '0 10px' }}>
+                            <User size={16} color="rgba(255,255,255,0.5)" style={{ marginRight: '8px' }} />
+                            <select 
+                                value={filterDriverId}
+                                onChange={(e) => setFilterDriverId(e.target.value)}
+                                style={{
+                                    padding: '10px 5px',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: 'white',
+                                    outline: 'none',
+                                    fontWeight: '600',
+                                    fontSize: '14px',
+                                    cursor: 'pointer',
+                                    maxWidth: '150px'
+                                }}
+                            >
+                                <option value="" style={{ background: '#0f172a' }}>All Drivers</option>
+                                {drivers.map(d => (
+                                    <option key={d._id} value={d._id} style={{ background: '#0f172a' }}>{d.name}</option>
+                                ))}
+                            </select>
+                        </div>
                     </div>
 
                     <button 
@@ -258,7 +285,7 @@ const DriverPerformance = () => {
                     <div className="spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(251, 191, 36, 0.3)', borderTopColor: '#fbbf24', borderRadius: '50%', animation: 'spin 1s linear infinite', margin: '0 auto 15px auto' }}></div>
                     <p style={{ fontWeight: '600' }}>Loading fleet incidents...</p>
                 </div>
-            ) : records.length > 0 ? (
+            ) : filteredRecords.length > 0 ? (
                 <div style={{
                     background: 'rgba(15, 23, 42, 0.4)',
                     borderRadius: '20px',
@@ -278,7 +305,7 @@ const DriverPerformance = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            {records.map(record => (
+                            {filteredRecords.map(record => (
                                 <tr key={record._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)', transition: 'background 0.2s' }}>
                                     <td style={{ padding: '20px' }}>
                                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
