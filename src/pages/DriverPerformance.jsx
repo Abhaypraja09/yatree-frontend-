@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import axios from '../api/axios';
 import { User, Calendar, Plus, Trash2, AlertCircle, CheckCircle2, ShieldAlert, Edit2 } from 'lucide-react';
 import { useCompany } from '../context/CompanyContext';
 
@@ -26,7 +26,7 @@ const DriverPerformance = () => {
     const [remarks, setRemarks] = useState('');
     const [editingId, setEditingId] = useState(null);
     
-    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5005';
+
     
     const INCIDENT_TYPES = [
         'Late for Duty',
@@ -58,19 +58,10 @@ const DriverPerformance = () => {
         }
     }, [selectedCompany, selectedFY, selectedMonth]);
 
-    const getAuthHeaders = () => {
-        const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-        return {
-            headers: {
-                Authorization: `Bearer ${userInfo?.token}`
-            }
-        };
-    };
-
     const fetchDrivers = async () => {
         if (!selectedCompany?._id) return;
         try {
-            const { data } = await axios.get(`${API_URL}/api/admin/drivers/${selectedCompany._id}?usePagination=false&isFreelancer=false`, getAuthHeaders());
+            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&isFreelancer=false`);
             setDrivers(data.drivers || data);
         } catch (error) {
             console.error('Error fetching drivers', error);
@@ -85,8 +76,7 @@ const DriverPerformance = () => {
         try {
             setLoading(true);
             const { data } = await axios.get(
-                `${API_URL}/api/driver-performance/company/${selectedCompany._id}?month=${selectedMonth}&year=${actualYear}`,
-                getAuthHeaders()
+                `/api/driver-performance/company/${selectedCompany._id}?month=${selectedMonth}&year=${actualYear}`
             );
             setRecords(data);
             setLoading(false);
@@ -105,19 +95,19 @@ const DriverPerformance = () => {
 
         try {
             if (editingId) {
-                await axios.put(`${API_URL}/api/driver-performance/${editingId}`, {
+                await axios.put(`/api/driver-performance/${editingId}`, {
                     driverId: selectedDriver,
                     date,
                     incidentType,
                     remarks
-                }, getAuthHeaders());
+                });
             } else {
-                await axios.post(`${API_URL}/api/driver-performance`, {
+                await axios.post(`/api/driver-performance`, {
                     driverId: selectedDriver,
                     date,
                     incidentType,
                     remarks
-                }, getAuthHeaders());
+                });
             }
             
             closeModal();
@@ -157,7 +147,7 @@ const DriverPerformance = () => {
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this record?')) {
             try {
-                await axios.delete(`${API_URL}/api/driver-performance/${id}`, getAuthHeaders());
+                await axios.delete(`/api/driver-performance/${id}`);
                 fetchRecords();
             } catch (error) {
                 console.error('Error deleting record', error);
