@@ -327,7 +327,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 l.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
                 l.remarks?.toLowerCase().includes(searchTerm.toLowerCase())
             )
-            .sort((a, b) => (a.driver?.name || '').localeCompare(b.driver?.name || ''));
+            .sort((a, b) => new Date(b.createdAt || b.startDate || 0) - new Date(a.createdAt || a.startDate || 0));
     }, [loans, month, year, searchTerm]);
 
     const handleRecordLoan = async (e) => {
@@ -893,7 +893,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             a.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             a.remark?.toLowerCase().includes(searchTerm.toLowerCase())
         )
-        .sort((a, b) => (a.driver?.name || '').localeCompare(b.driver?.name || ''));
+        .sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
 
 
 
@@ -902,7 +902,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             a.driver?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             a.remark?.toLowerCase().includes(searchTerm.toLowerCase())
         )
-        .sort((a, b) => (a.driver?.name || '').localeCompare(b.driver?.name || ''));
+        .sort((a, b) => new Date(b.createdAt || b.date || 0) - new Date(a.createdAt || a.date || 0));
 
     const totalGrossEarnings = filteredSalaries.reduce((sum, s) => sum + (s.totalEarned || 0), 0);
     const totalNetPayout = filteredSalaries.reduce((sum, s) => sum + (s.netPayable || 0), 0);
