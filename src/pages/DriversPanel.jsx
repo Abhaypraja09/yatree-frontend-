@@ -41,7 +41,7 @@ const DriversPanel = () => {
     };
 
     return (
-        <div className="container-fluid" style={{ minHeight: '100vh', padding: '40px 20px' }}>
+        <div className="container-fluid" style={{ minHeight: '100vh', padding: '40px 20px', position: 'relative' }}>
             <SEO title="Drivers Dashboard" description="Access driver profiles, duty logs, and salary settlements." />
 
             <header style={{ marginBottom: '30px' }}>

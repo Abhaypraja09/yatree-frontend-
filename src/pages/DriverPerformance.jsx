@@ -174,7 +174,7 @@ const DriverPerformance = () => {
                     <p style={{ color: 'rgba(255,255,255,0.5)', margin: '5px 0 0 0', fontSize: '14px' }}>Monitor incidents and duty violations across your fleet.</p>
                 </div>
                 
-                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap' }}>
+                <div style={{ display: 'flex', gap: '15px', alignItems: 'center', flexWrap: 'wrap', position: 'absolute', top: '40px', right: '20px', zIndex: 10 }}>
                     {/* FY Calendar Filters on Top Right */}
                     <div style={{ 
                         background: 'rgba(15, 23, 42, 0.6)', 
