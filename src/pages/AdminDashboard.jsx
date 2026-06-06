@@ -214,7 +214,7 @@ const AdminDashboard = () => {
     useEffect(() => {
         if (stats?.expiringAlerts && stats.expiringAlerts.length > 0) {
             const currentAlerts = stats.expiringAlerts.filter(alert => {
-                if (user?.role === 'Admin') return true;
+                if (user?.role === 'Admin' || user?.role === 'SuperAdmin') return true;
                 if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
                 if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
                 return true;
@@ -511,7 +511,7 @@ const AdminDashboard = () => {
 
                         {/* Expiry Alerts */}
                         {stats.expiringAlerts && stats.expiringAlerts.filter(alert => {
-                            if (user?.role === 'Admin') return true;
+                            if (user?.role === 'Admin' || user?.role === 'SuperAdmin') return true;
                             if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
                             if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
                             return true;
@@ -544,7 +544,7 @@ const AdminDashboard = () => {
                                     </div>
                                     <div className="expiry-alerts-grid">
                                         {stats.expiringAlerts.filter(alert => {
-                                            if (user?.role === 'Admin') return true;
+                                            if (user?.role === 'Admin' || user?.role === 'SuperAdmin') return true;
                                             if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
                                             if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
                                             return true;

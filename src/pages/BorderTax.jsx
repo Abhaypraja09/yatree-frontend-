@@ -72,7 +72,7 @@ const BorderTax = () => {
     };
 
     useEffect(() => {
-        if (selectedCompany) {
+        if (selectedCompany?._id) {
             fetchData();
             fetchEntries();
         }
