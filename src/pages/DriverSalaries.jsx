@@ -234,7 +234,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                 axios.get(`/api/admin/advances/${selectedCompany._id}?${query}`, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 }),
-                axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&isFreelancer=false&status=active`, {
+                axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&isFreelancer=false&status=active&month=${selectedMonth}&year=${selectedYear}`, {
                     headers: { Authorization: `Bearer ${userInfo.token}` }
                 })
             ]);
