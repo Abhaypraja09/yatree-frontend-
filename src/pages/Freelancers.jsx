@@ -612,13 +612,13 @@ const Freelancers = () => {
         try {
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
             // Fetch Freelancers
-            const resF = await axios.get(`/api/admin/drivers/${selectedCompany._id}?isFreelancer=true&usePagination=false`, {
+            const resF = await axios.get(`/api/admin/drivers/${selectedCompany._id}?isFreelancer=true&usePagination=false&includeAll=true`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setDrivers(resF.data.drivers || []);
 
             // Fetch All Drivers (for manual entry)
-            const resA = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false`, {
+            const resA = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&includeAll=true`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setAllDrivers(resA.data.drivers || []);
