@@ -260,28 +260,37 @@ const ParkingPage = () => {
         finally { setLoading(false); }
     };
 
-    const fetchDrivers = async () => {
+    const fetchDrivers = async (overrideDate = null) => {
         if (!selectedCompany?._id) return;
         try {
             const userInfoStr = localStorage.getItem('userInfo');
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&toDate=${toDate}`, {
+            const targetDate = overrideDate || toDate;
+            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&toDate=${targetDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setDrivers(data.drivers || []);
         } catch (err) { console.error(err); }
     };
 
-    const fetchVehicles = async () => {
+    useEffect(() => {
+        if (showModal && formData.date) {
+            fetchDrivers(formData.date);
+            fetchVehicles(formData.date);
+        }
+    }, [formData.date, showModal]);
+
+    const fetchVehicles = async (overrideDate = null) => {
         if (!selectedCompany?._id) return;
         try {
             const userInfoStr = localStorage.getItem('userInfo');
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}`, {
+            const targetDate = overrideDate || toDate;
+            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=fleet&toDate=${targetDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setVehicles(data.vehicles || []);

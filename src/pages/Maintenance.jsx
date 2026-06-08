@@ -279,33 +279,47 @@ const Maintenance = () => {
         } catch (err) { console.error(err); }
     };
 
-    const fetchVehicles = async () => {
+    const fetchVehicles = async (overrideDate = null) => {
         if (!selectedCompany?._id) return;
         try {
             const userInfoStr = localStorage.getItem('userInfo');
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}`, {
+            // In maintenance, we might want to default to the selected month instead of just current date
+            const defaultDate = new Date(selectedYear, selectedMonth, 0).toISOString().split('T')[0];
+            const targetDate = overrideDate || defaultDate;
+
+            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=fleet&toDate=${targetDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setVehicles(data.vehicles || []);
         } catch (err) { console.error(err); }
     };
 
-    const fetchDrivers = async () => {
+    const fetchDrivers = async (overrideDate = null) => {
         if (!selectedCompany?._id) return;
         try {
             const userInfoStr = localStorage.getItem('userInfo');
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&month=${selectedMonth}&year=${selectedYear}`, {
+            const defaultDate = new Date(selectedYear, selectedMonth, 0).toISOString().split('T')[0];
+            const targetDate = overrideDate || defaultDate;
+
+            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&toDate=${targetDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setDrivers(data.drivers || []);
         } catch (err) { console.error(err); }
     };
+
+    useEffect(() => {
+        if (showModal && formData.billDate) {
+            fetchDrivers(formData.billDate);
+            fetchVehicles(formData.billDate);
+        }
+    }, [formData.billDate, showModal]);
 
     const handleCreate = async (e) => {
         e.preventDefault();
