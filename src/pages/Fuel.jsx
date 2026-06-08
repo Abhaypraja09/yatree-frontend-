@@ -248,14 +248,15 @@ const FuelPage = () => {
         }
     };
 
-    const fetchVehicles = async () => {
+    const fetchVehicles = async (overrideDate = null) => {
         if (!selectedCompany?._id) return;
         try {
             const userInfoStr = localStorage.getItem('userInfo');
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             if (!userInfo?.token) return;
 
-            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=fleet`, {
+            const targetDate = overrideDate || toDate;
+            const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=fleet&toDate=${targetDate}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setVehicles(data.vehicles || []);
@@ -280,6 +281,7 @@ const FuelPage = () => {
     useEffect(() => {
         if (showModal && formData.date) {
             fetchDrivers(formData.date);
+            fetchVehicles(formData.date);
         }
     }, [formData.date, showModal]);
 
