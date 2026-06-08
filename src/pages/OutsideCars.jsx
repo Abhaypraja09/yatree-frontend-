@@ -824,7 +824,31 @@ const OutsideCars = () => {
                                 <div className="form-grid-2" style={{ gap: '20px', marginBottom: '20px' }}>
                                     <div className="premium-input-group">
                                         <label className="premium-label">Vehicle Plate *</label>
-                                        <input type="text" className="premium-compact-input" required value={formData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} placeholder="RJ-XX-XX-XXXX" style={{ height: '52px', textTransform: 'uppercase' }} />
+                                        <input 
+                                            type="text" 
+                                            className="premium-compact-input" 
+                                            required 
+                                            value={formData.carNumber} 
+                                            onChange={e => handleCarNumberChange(e.target.value)} 
+                                            onFocus={() => {
+                                                if (!formData.carNumber) {
+                                                    const uniqueMatches = [];
+                                                    const seen = new Set();
+                                                    vehicles.forEach(m => {
+                                                        const plate = m.carNumber?.split('#')[0];
+                                                        if (plate && !seen.has(plate)) {
+                                                            seen.add(plate);
+                                                            uniqueMatches.push(m);
+                                                        }
+                                                    });
+                                                    setSuggestions(uniqueMatches.slice(0, 15));
+                                                    setShowSuggestions(uniqueMatches.length > 0);
+                                                }
+                                            }}
+                                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                                            placeholder="RJ-XX-XX-XXXX" 
+                                            style={{ height: '52px', textTransform: 'uppercase' }} 
+                                        />
                                         <AnimatePresence>
                                             {showSuggestions && suggestions.length > 0 && (
                                                 <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="suggestions-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', borderRadius: '12px', zIndex: 100, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
