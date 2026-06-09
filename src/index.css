@@ -172,8 +172,8 @@ input[type="datetime-local"].input-field {
 
 input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="datetime-local"]::-webkit-calendar-picker-indicator {
-  filter: invert(1);
-  opacity: 0.5;
+  filter: none;
+  opacity: 0.8;
   cursor: pointer;
 }
 
@@ -198,8 +198,30 @@ input[type="datetime-local"]::-webkit-datetime-edit-year-field,
 input[type="datetime-local"]::-webkit-datetime-edit-hour-field,
 input[type="datetime-local"]::-webkit-datetime-edit-minute-field,
 input[type="datetime-local"]::-webkit-datetime-edit-ampm-field {
-  color: white;
+  color: transparent !important;
+  background: transparent !important;
 }
+
+input[type="date"]::-webkit-datetime-edit-text,
+input[type="datetime-local"]::-webkit-datetime-edit-text {
+  color: transparent !important;
+}
+
+input[type="date"]::before,
+input[type="datetime-local"]::before {
+  content: attr(data-date);
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: white;
+  pointer-events: none;
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
 
 /* Animations */
 @keyframes fadeIn {

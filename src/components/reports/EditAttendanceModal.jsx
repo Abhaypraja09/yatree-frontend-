@@ -148,7 +148,7 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                     </div>
 
                     {/* Financial Adjustments Grid */}
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '15px' }}>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                         <div className="form-group">
                             <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>T/A (₹)</label>
                             <input
@@ -167,17 +167,6 @@ const EditAttendanceModal = ({ item, onClose, onUpdate }) => {
                                 className="input-field"
                                 value={formData.nightStayAmount}
                                 onChange={(e) => setFormData({ ...formData, nightStayAmount: e.target.value })}
-                                style={{ width: '100%', marginBottom: 0, height: '48px' }}
-                                placeholder="0"
-                            />
-                        </div>
-                        <div className="form-group">
-                            <label style={{ display: 'block', color: 'rgba(255,255,255,0.6)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px' }}>Bonus (₹)</label>
-                            <input
-                                type="number"
-                                className="input-field"
-                                value={formData.bonusAmount}
-                                onChange={(e) => setFormData({ ...formData, bonusAmount: e.target.value })}
                                 style={{ width: '100%', marginBottom: 0, height: '48px' }}
                                 placeholder="0"
                             />

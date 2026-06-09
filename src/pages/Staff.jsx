@@ -2110,8 +2110,8 @@ const Staff = () => {
                                                             )}
                                                         </td>
                                                         <td style={{ padding: '12px 25px', textAlign: 'right' }}>
-                                                            <div style={{ fontSize: '20px', fontWeight: '1000', color: 'white' }}>₹{(item.earnedSoFar !== undefined ? item.earnedSoFar : (item.finalSalary || 0)).toLocaleString()}</div>
-                                                            <div style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Earned So Far</div>
+                                                            <div style={{ fontSize: '20px', fontWeight: '1000', color: 'white' }}>₹{Math.max(0, (item.earnedSoFar || 0) - (item.totalAdvances || 0)).toLocaleString()}</div>
+                                                            <div style={{ fontSize: '9px', color: 'var(--primary)', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '1px' }}>Net Salary</div>
                                                         </td>
                                                         <td style={{ padding: '12px 25px' }}>
                                                             {(() => {
@@ -2269,7 +2269,7 @@ const Staff = () => {
 
                                     {/* Right Column: Financials & Location */}
                                     <div style={{ display: 'flex', flexDirection: 'column', gap: '30px' }}>
-                                        <section style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative', overflow: 'hidden' }}>
+                                        <section style={{ background: 'rgba(255,255,255,0.02)', padding: '30px', borderRadius: '30px', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
                                             <div style={{ position: 'absolute', top: 0, right: 0, width: '150px', height: '150px', background: 'radial-gradient(circle, var(--primary-glow) 0%, transparent 70%)', opacity: 0.1 }}></div>
 
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '25px' }}>
@@ -2292,7 +2292,7 @@ const Staff = () => {
                                                             value={formData.joiningDate}
                                                             onChange={(v) => setFormData({ ...formData, joiningDate: v })}
                                                             required
-                                                            disableCalendar={true}
+                                                            align="right"
                                                             inputStyle={{ fontSize: '20px', fontWeight: '1000', color: 'var(--primary)' }}
                                                         />
                                                     </div>

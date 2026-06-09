@@ -53,7 +53,7 @@ const CarUtility = () => {
                 --glass-border: rgba(255, 255, 255, 0.05);
             }
             .premium-panel-utility {
-                background: linear-gradient(135deg, rgba(255, 255, 255, 0.02) 0%, rgba(255, 255, 255, 0.005) 100%);
+                background: rgba(15, 23, 42, 0.6);
                 backdrop-filter: blur(20px);
                 border: 1px solid var(--glass-border);
                 border-radius: 28px;
@@ -124,6 +124,28 @@ const CarUtility = () => {
             }
             .premium-input-container input::placeholder, .premium-input-container textarea::placeholder {
                 color: rgba(255, 255, 255, 0.2);
+            }
+            .premium-input-container input[type="date"]::-webkit-calendar-picker-indicator {
+                background: transparent;
+                bottom: 0;
+                color: transparent;
+                cursor: pointer;
+                height: auto;
+                left: 0;
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: auto;
+                z-index: 10;
+                opacity: 0;
+            }
+            .premium-input-container input[type="number"]::-webkit-inner-spin-button, 
+            .premium-input-container input[type="number"]::-webkit-outer-spin-button { 
+                -webkit-appearance: none; 
+                margin: 0; 
+            }
+            .premium-input-container input[type="number"] {
+                -moz-appearance: textfield;
             }
         `;
         document.head.appendChild(style);
@@ -439,7 +461,7 @@ const CarUtility = () => {
     const detailVehicle = useMemo(() => vehicles.find(v => v._id === detailVehicleId), [vehicles, detailVehicleId]);
 
     return (
-        <div key={location.key} className="container-fluid" style={{ paddingBottom: '40px' }}>
+        <div key={location.key} className="container-fluid" style={{ paddingBottom: '40px', color: '#fff' }}>
             <SEO title="Car Utility" description="Fleet Accounts Hub" />
 
             <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
@@ -497,7 +519,7 @@ const CarUtility = () => {
                                 ))}
                             </select>
                             <div style={{ display: 'flex', alignItems: 'center', padding: '0 10px', gap: '6px' }}>
-                                <span style={{ fontSize: '9px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase' }}>FY</span>
+                                <span style={{ fontSize: '9px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase' }}>FY</span>
                                 <select
                                     value={selectedYear}
                                     onChange={(e) => setSelectedYear(Number(e.target.value))}
@@ -552,7 +574,7 @@ const CarUtility = () => {
                             <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr 1fr', gap: '15px', marginBottom: '25px', flexWrap: 'wrap' }}>
                                 {/* Search bar */}
                                 <div style={{ position: 'relative', width: '100%' }}>
-                                    <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                                    <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                                     <input 
                                         type="text" 
                                         placeholder="Search remarks, borders, categories..." 
@@ -565,7 +587,7 @@ const CarUtility = () => {
                                 
                                 {/* Utility selector */}
                                 <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', height: '48px', padding: '0 15px', gap: '10px' }}>
-                                    <Filter size={14} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                                    <Filter size={14} style={{ color: '#94a3b8' }} />
                                     <select
                                         value={filterUtility}
                                         onChange={e => setFilterUtility(e.target.value)}
@@ -580,7 +602,7 @@ const CarUtility = () => {
 
                                 {/* Vehicle Selector */}
                                 <div style={{ display: 'flex', alignItems: 'center', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.06)', height: '48px', padding: '0 15px', gap: '10px' }}>
-                                    <Car size={14} style={{ color: 'rgba(255,255,255,0.3)' }} />
+                                    <Car size={14} style={{ color: '#94a3b8' }} />
                                     <select
                                         value={filterVehicle}
                                         onChange={e => setFilterVehicle(e.target.value)}
@@ -595,17 +617,17 @@ const CarUtility = () => {
                             </div>
 
                             {/* Combined logs table */}
-                            <div className="premium-panel-utility" style={{ overflow: 'hidden', padding: '10px' }}>
+                            <div className="premium-panel-utility" style={{ overflow: 'hidden', padding: '10px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '28px' }}>
                                 <div style={{ overflowX: 'auto' }}>
                                     <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
                                         <thead>
                                             <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                                <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Utility Type</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Details / Remarks</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Date</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Utility Type</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Details / Remarks</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -629,7 +651,7 @@ const CarUtility = () => {
                                                     </td>
                                                     <td style={{ padding: '18px 25px' }}>
                                                         <div style={{ fontWeight: '800', fontSize: '15px' }}>{log.car}</div>
-                                                        <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{log.carModel || 'Standard'}</div>
+                                                        <div style={{ fontSize: '10px', color: '#94a3b8', fontWeight: '700' }}>{log.carModel || 'Standard'}</div>
                                                     </td>
                                                     <td style={{ padding: '18px 25px' }}>
                                                         <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '11px', fontWeight: '850', color: log.color, background: `${log.color}15`, padding: '4px 10px', borderRadius: '8px', textTransform: 'uppercase' }}>
@@ -688,7 +710,7 @@ const CarUtility = () => {
                             {/* Search bar & balance filter */}
                             <div style={{ display: 'flex', gap: '15px', marginBottom: '25px', flexWrap: 'wrap', alignItems: 'center' }}>
                                 <div style={{ position: 'relative', flex: 1, minWidth: '300px' }}>
-                                    <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.3)' }} />
+                                    <Search size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
                                     <input 
                                         type="text" 
                                         placeholder="Search vehicle number..." 
@@ -714,18 +736,18 @@ const CarUtility = () => {
                             </div>
 
                             {/* Fleet Overview Grid */}
-                            <div className="premium-panel-utility" style={{ overflow: 'hidden', padding: '10px' }}>
+                            <div className="premium-panel-utility" style={{ overflow: 'hidden', padding: '10px', background: 'rgba(15, 23, 42, 0.6)', border: '1px solid rgba(255, 255, 255, 0.05)', borderRadius: '28px' }}>
                                 <div style={{ overflowX: 'auto' }}>
                                     <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0' }}>
                                         <thead>
                                             <tr style={{ background: 'rgba(255,255,255,0.02)' }}>
-                                                <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Fastag Balance</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Fastag (Month)</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Border (Month)</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Service (Month)</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Total (Month)</th>
-                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>Action</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Fastag Balance</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Fastag (Month)</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Border (Month)</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Service (Month)</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Total (Month)</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Action</th>
                                             </tr>
                                         </thead>
                                         <tbody>
@@ -745,7 +767,7 @@ const CarUtility = () => {
                                                                 <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'rgba(255,255,255,0.03)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Car size={18} color="rgba(255,255,255,0.4)" /></div>
                                                                 <div>
                                                                     <div style={{ fontWeight: '800', fontSize: '16px' }}>{v.carNumber}</div>
-                                                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>{v.model}</div>
+                                                                    <div style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '700' }}>{v.model}</div>
                                                                 </div>
                                                             </div>
                                                         </td>
@@ -869,7 +891,7 @@ const CarUtility = () => {
                                     <ManagerHub
                                         key={activeUtility}
                                         type={activeUtility}
-                                        color={activeUtility === 'fastag' ? '#38bdf8' : activeUtility === 'border' ? '#fbbf24' : '#10b981'}
+                                        color="#fbbf24"
                                         act={getVehicleActivity(detailVehicleId)}
                                         drivers={drivers}
                                         getImageUrl={getImageUrl}
@@ -897,7 +919,7 @@ const CarUtility = () => {
                     <div className="modal-overlay">
                         <motion.div
                             initial={{ scale: 0.95, opacity: 0, y: 15 }} animate={{ scale: 1, opacity: 1, y: 0 }} exit={{ scale: 0.95, opacity: 0, y: 15 }}
-                            className="modal-content-wrapper" style={{ maxWidth: '1000px', height: '90vh', padding: '0', background: '#020617', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '28px' }}
+                            className="modal-content-wrapper" style={{ width: '100%', maxWidth: '650px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', padding: '0', background: '#020617', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '28px', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)', overflow: 'hidden' }}
                         >
                             <div style={{ padding: '30px 40px', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.01)' }}>
                                 <h3 style={{ margin: 0, fontWeight: '950', fontSize: '22px', letterSpacing: '-0.5px' }}>
@@ -918,18 +940,18 @@ const CarUtility = () => {
                             </div>
                             <div style={{ flex: 1, padding: '40px', overflowY: 'auto' }}>
                                 {/* Tabbed Navigation */}
-                                <div style={{ display: 'flex', gap: '10px', padding: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '20px', marginBottom: '30px', border: '1px solid rgba(255,255,255,0.06)', width: 'fit-content' }}>
+                                <div style={{ display: 'flex', gap: '10px', padding: '8px', background: 'rgba(255,255,255,0.03)', borderRadius: '20px', marginBottom: '30px', border: '1px solid rgba(255,255,255,0.06)', width: 'fit-content', margin: '0 auto 30px auto' }}>
                                     {[
-                                        { id: 'fastag', label: 'Fastag', color: '#38bdf8', icon: CreditCard },
-                                        { id: 'border', label: 'Border Tax', color: '#fbbf24', icon: Shield },
-                                        { id: 'services', label: 'Other Service', color: '#10b981', icon: Wrench }
+                                        { id: 'fastag', label: 'Fastag', icon: CreditCard },
+                                        { id: 'border', label: 'Border Tax', icon: Shield },
+                                        { id: 'services', label: 'Other Service', icon: Wrench }
                                     ].map(tab => (
                                         <button
                                             key={tab.id}
                                             onClick={() => setActiveUtility(tab.id)}
                                             style={{
                                                 padding: '14px 25px', borderRadius: '14px', border: 'none', cursor: 'pointer',
-                                                background: (activeUtility || 'fastag') === tab.id ? tab.color : 'transparent',
+                                                background: (activeUtility || 'fastag') === tab.id ? '#fbbf24' : 'transparent',
                                                 color: (activeUtility || 'fastag') === tab.id ? '#000' : 'rgba(255,255,255,0.4)',
                                                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
                                                 fontWeight: '1000', fontSize: '13px', transition: '0.3s cubic-bezier(0.4, 0, 0.2, 1)'
@@ -941,7 +963,7 @@ const CarUtility = () => {
                                 </div>
                                 <ManagerHub
                                     key={activeUtility || 'fastag'}
-                                    type={activeUtility || 'fastag'} color={(activeUtility || 'fastag') === 'fastag' ? '#38bdf8' : (activeUtility || 'fastag') === 'border' ? '#fbbf24' : '#10b981'}
+                                    type={activeUtility || 'fastag'} color="#fbbf24"
                                     act={selectedVehicleId === 'new' ? { items: { fastag: [], border: [], service: [] } } : getVehicleActivity(selectedVehicleId)}
                                     drivers={drivers} getImageUrl={getImageUrl}
                                     onAdd={(vId, data, file) => (activeUtility || 'fastag') === 'fastag' ? handleRecharge(vId, data, file) : (activeUtility || 'fastag') === 'border' ? handleAddTax(vId, data, file) : handleAddService(vId, data, file)}
@@ -966,7 +988,7 @@ const DetailStat = ({ label, val, icon: Icon, col, isDark, desc }) => (
     <div className="glass-card" style={{ padding: '25px', background: isDark ? 'rgba(16, 185, 129, 0.05)' : 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '25px', display: 'flex', alignItems: 'center', gap: '20px' }}>
         <div style={{ width: '50px', height: '50px', borderRadius: '15px', background: `${col}15`, color: col, display: 'flex', justifyContent: 'center', alignItems: 'center' }}><Icon size={22} /></div>
         <div>
-            <div style={{ fontSize: '11px', fontWeight: '900', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{label}</div>
+            <div style={{ fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.8px' }}>{label}</div>
             <div style={{ fontSize: '22px', fontWeight: '1000', color: isDark ? col : '#fff' }}>₹{val.toLocaleString()}</div>
             {desc && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '700', marginTop: '2px' }}>{desc}</div>}
         </div>
@@ -997,7 +1019,7 @@ const SummaryStat = ({ label, val, col, icon: Icon, isDark, desc }) => (
             boxShadow: `0 0 20px ${col}20`
         }}><Icon size={24} /></div>
         <div>
-            <div style={{ fontSize: '11px', fontWeight: '800', color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</div>
+            <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>{label}</div>
             <div style={{ fontSize: '26px', fontWeight: '1000', color: isDark ? col : '#fff', letterSpacing: '-0.5px' }}>₹{val.toLocaleString()}</div>
             {desc && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.2)', fontWeight: '700', marginTop: '2px' }}>{desc}</div>}
         </div>
@@ -1005,7 +1027,7 @@ const SummaryStat = ({ label, val, col, icon: Icon, isDark, desc }) => (
 );
 
 const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setViewingImage, submitting, vehicle, getImageUrl, companyId, selectedMonth, selectedYear, hideForm = false, allVehicles = [] }) => {
-    const [form, setForm] = useState({ amount: '', remarks: '', borderName: '', date: '', billDate: '', driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
+    const [form, setForm] = useState({ amount: '', remarks: '', borderName: '', date: '', billDate: '', validTill: '', driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
     const [file, setFile] = useState(null);
     const [editingItem, setEditingItem] = useState(null);
 
@@ -1035,6 +1057,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                 borderName: editingItem.borderName || '',
                 date: toISTDateString(editingItem.date || editingItem.billDate || ''),
                 billDate: toISTDateString(editingItem.billDate || editingItem.date || ''),
+                validTill: toISTDateString(editingItem.validTill || ''),
                 driverId: editingItem.driver?._id || editingItem.driver || '',
                 category: editingItem.category || 'Car Wash',
                 paymentMode: editingItem.method || editingItem.paymentMode || 'UPI',
@@ -1053,6 +1076,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                 borderName: '', 
                 date: defaultDate, 
                 billDate: defaultDate, 
+                validTill: '',
                 driverId: '', 
                 category: 'Car Wash', 
                 vehicleId: vehicle?._id || '', 
@@ -1113,7 +1137,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                 const isCurrentMonth = (istNow.getUTCMonth() + 1) === selectedMonth && istNow.getUTCFullYear() === selectedYear;
                 const defaultDate = isCurrentMonth ? todayIST() : `${selectedYear}-${String(selectedMonth).padStart(2, '0')}-01`;
                 
-                setForm({ amount: '', remarks: '', borderName: '', date: defaultDate, billDate: defaultDate, driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
+                setForm({ amount: '', remarks: '', borderName: '', date: defaultDate, billDate: defaultDate, validTill: '', driverId: '', category: 'Car Wash', vehicleId: vehicle?._id || '', paymentSource: 'Office', paymentMode: 'UPI' });
                 setFile(null);
                 if (editingItem) setEditingItem(null);
             }
@@ -1123,10 +1147,10 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
     };
 
     return (
-        <div className="manager-hub-container" style={{ color: '#fff', height: '100%' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '40px', height: '100%' }}>
+        <div className="manager-hub-container" style={{ color: '#fff', height: '100%', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ width: '100%', maxWidth: '600px' }}>
                 {/* Form Side */}
-                <div style={{ padding: '10px 0' }}>
+                <div style={{ padding: '20px 0' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px' }}>
                         <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: `${color}15`, color: color, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                             <Plus size={24} />
@@ -1169,9 +1193,42 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                             </div>
                         </div>
 
-                        <div className="premium-input-container">
-                            <label>Date</label>
-                            <input type="date" value={form.date || form.billDate} onChange={e => setForm({ ...form, date: e.target.value, billDate: e.target.value })} style={{ colorScheme: 'dark', cursor: 'pointer' }} />
+                        <div style={type === 'border' ? { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' } : {}}>
+                            <div className="premium-input-container">
+                                <label>{type === 'border' ? 'From Date' : 'Date'}</label>
+                                <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
+                                    <div style={{ fontSize: '15px', fontWeight: '600', color: (form.date || form.billDate) ? '#fff' : 'rgba(255,255,255,0.2)' }}>
+                                        {(() => {
+                                            const dStr = form.date || form.billDate;
+                                            if (!dStr) return 'DD/MM/YYYY';
+                                            const parts = dStr.split('-');
+                                            if(parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                            return dStr;
+                                        })()}
+                                    </div>
+                                    <input type="date" value={form.date || form.billDate} onChange={e => setForm({ ...form, date: e.target.value, billDate: e.target.value })} style={{ opacity: 0, position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                                    <Calendar size={18} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: color, pointerEvents: 'none', opacity: 0.8 }} />
+                                </div>
+                            </div>
+                            
+                            {type === 'border' && (
+                                <div className="premium-input-container">
+                                    <label>Valid Till</label>
+                                    <div style={{ position: 'relative', width: '100%', display: 'flex', alignItems: 'center' }}>
+                                        <div style={{ fontSize: '15px', fontWeight: '600', color: form.validTill ? '#fff' : 'rgba(255,255,255,0.2)' }}>
+                                            {(() => {
+                                                const dStr = form.validTill;
+                                                if (!dStr) return 'DD/MM/YYYY';
+                                                const parts = dStr.split('-');
+                                                if(parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+                                                return dStr;
+                                            })()}
+                                        </div>
+                                        <input type="date" value={form.validTill || ''} onChange={e => setForm({ ...form, validTill: e.target.value })} style={{ opacity: 0, position: 'absolute', left: 0, top: 0, width: '100%', height: '100%', cursor: 'pointer' }} />
+                                        <Calendar size={18} style={{ position: 'absolute', right: '10px', top: '50%', transform: 'translateY(-50%)', color: color, pointerEvents: 'none', opacity: 0.8 }} />
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
                         {type === 'border' && (
@@ -1236,50 +1293,6 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                                 </button>
                             )}
                         </div>
-                    </div>
-                </div>
-
-                <div className="history-section" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                    <h4 style={{ margin: '0', fontSize: '16px', fontWeight: '900', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <History size={18} /> RECENT LOGS
-                    </h4>
-                    
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '600px', overflowY: 'auto', paddingRight: '5px' }}>
-                        {hist.length === 0 ? (
-                            <div style={{ padding: '40px', textAlign: 'center', background: 'rgba(255,255,255,0.01)', borderRadius: '20px', border: '1px solid rgba(255,255,255,0.03)' }}>
-                                <div style={{ opacity: 0.2, marginBottom: '10px' }}><History size={32} /></div>
-                                <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.3)', fontWeight: '700' }}>No records found in this cycle</div>
-                            </div>
-                        ) : hist.sort((a,b) => new Date(b.date || b.billDate) - new Date(a.date || a.billDate)).map(item => (
-                            <div key={item._id} className="history-item premium-card" style={{ padding: '20px', borderRadius: '22px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <div>
-                                    <div style={{ fontSize: '14px', fontWeight: '1000', color: '#fff' }}>₹{Number(item.amount).toLocaleString()}</div>
-                                    <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '700', marginTop: '2px' }}>
-                                        {formatDateIST(item.date || item.billDate)} • {item.method || item.paymentMode || 'Manual'}
-                                    </div>
-                                    {(item.remarks || item.borderName) && (
-                                        <div style={{ fontSize: '10px', color: color, fontWeight: '750', marginTop: '6px', opacity: 0.9 }}>
-                                            {item.remarks} {item.borderName ? `(${item.borderName})` : ''}
-                                        </div>
-                                    )}
-                                </div>
-                                <div style={{ display: 'flex', gap: '8px' }}>
-                                    {(item.receiptPhoto || item.billPhoto) && (
-                                        <button onClick={() => setViewingImage(getImageUrl(item.receiptPhoto || item.billPhoto))} className="icon-btn-sm" style={{ background: 'rgba(255,255,255,0.05)', color: '#fff', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}>
-                                            <Image size={14} />
-                                        </button>
-                                    )}
-                                    <button onClick={() => {
-                                        setEditingItem(item);
-                                    }} className="icon-btn-sm" style={{ background: 'rgba(255,255,255,0.05)', color: '#fbbf24', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}>
-                                        <Edit2 size={14} />
-                                    </button>
-                                    <button onClick={() => onDelete(item._id)} className="icon-btn-sm" style={{ background: 'rgba(244, 63, 94, 0.1)', color: '#f43f5e', border: 'none', padding: '8px', borderRadius: '10px', cursor: 'pointer' }}>
-                                        <Trash2 size={14} />
-                                    </button>
-                                </div>
-                            </div>
-                        ))}
                     </div>
                 </div>
             </div>

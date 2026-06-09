@@ -15,6 +15,7 @@ const OutsideCars = () => {
     const { theme } = useTheme();
     const { selectedCompany } = useCompany();
     const [vehicles, setVehicles] = useState([]);
+    const [companyVehicles, setCompanyVehicles] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12 or 'All'
@@ -123,6 +124,11 @@ const OutsideCars = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setVehicles(data.vehicles?.filter(v => v.isOutsideCar && !v.eventId) || []);
+
+            const { data: compData } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setCompanyVehicles(compData.vehicles?.filter(v => !v.isOutsideCar && !v.eventId) || []);
         } catch (err) { console.error(err); }
         finally { setLoading(false); }
     };
@@ -303,17 +309,17 @@ const OutsideCars = () => {
         setFormData(prev => ({ ...prev, carNumber: upVal }));
         
         if (upVal.length > 1) {
-            const matches = vehicles.filter(v => {
-                const plate = v.carNumber?.split('#')[0] || '';
-                return plate.toUpperCase().includes(upVal);
+            const matches = [...vehicles, ...companyVehicles].filter(v => {
+                const plate = (v.carNumber?.split('#')[0] || v.carNumber || '').toUpperCase();
+                return plate.includes(upVal);
             });
             
             // Remove duplicates (by plate number)
             const uniqueMatches = [];
             const seen = new Set();
             matches.forEach(m => {
-                const plate = m.carNumber?.split('#')[0];
-                if (!seen.has(plate)) {
+                const plate = m.carNumber?.split('#')[0] || m.carNumber;
+                if (plate && !seen.has(plate)) {
                     seen.add(plate);
                     uniqueMatches.push(m);
                 }
@@ -323,7 +329,7 @@ const OutsideCars = () => {
             setShowSuggestions(true);
 
             // Exact match auto-fill
-            const exactMatch = uniqueMatches.find(m => (m.carNumber?.split('#')[0] || '').toUpperCase() === upVal);
+            const exactMatch = uniqueMatches.find(m => ((m.carNumber?.split('#')[0] || m.carNumber || '').toUpperCase() === upVal));
             if (exactMatch) {
                 setFormData(prev => ({
                     ...prev,
@@ -338,7 +344,7 @@ const OutsideCars = () => {
     };
 
     const selectSuggestion = (v) => {
-        const plate = v.carNumber?.split('#')[0];
+        const plate = v.carNumber?.split('#')[0] || v.carNumber;
         setFormData(prev => ({
             ...prev,
             carNumber: plate,
@@ -834,8 +840,8 @@ const OutsideCars = () => {
                                                 if (!formData.carNumber) {
                                                     const uniqueMatches = [];
                                                     const seen = new Set();
-                                                    vehicles.forEach(m => {
-                                                        const plate = m.carNumber?.split('#')[0];
+                                                    [...vehicles, ...companyVehicles].forEach(m => {
+                                                        const plate = m.carNumber?.split('#')[0] || m.carNumber;
                                                         if (plate && !seen.has(plate)) {
                                                             seen.add(plate);
                                                             uniqueMatches.push(m);
@@ -852,7 +858,7 @@ const OutsideCars = () => {
                                         <AnimatePresence>
                                             {showSuggestions && suggestions.length > 0 && (
                                                 <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} className="suggestions-dropdown" style={{ position: 'absolute', top: '100%', left: 0, right: 0, background: '#1e293b', borderRadius: '12px', zIndex: 100, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-                                                    {suggestions.map((s, i) => <div key={i} onClick={() => selectSuggestion(s)} style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'white', fontSize: '13px' }}>{s.carNumber?.split('#')[0]} ({s.ownerName})</div>)}
+                                                    {suggestions.map((s, i) => <div key={i} onClick={() => selectSuggestion(s)} style={{ padding: '10px 16px', cursor: 'pointer', borderBottom: '1px solid rgba(255,255,255,0.05)', color: 'white', fontSize: '13px' }}>{s.carNumber?.split('#')[0] || s.carNumber} {s.ownerName ? `(${s.ownerName})` : '(Company Car)'}</div>)}
                                                 </motion.div>
                                             )}
                                         </AnimatePresence>

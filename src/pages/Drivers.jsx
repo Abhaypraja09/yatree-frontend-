@@ -1160,9 +1160,6 @@ const Drivers = ({ isSubComponent = false }) => {
                                             <label className="input-label" style={{ marginBottom: '6px' }}>License Number</label>
                                             <input className="input-field" value={editForm.licenseNumber} onChange={(e) => setEditForm({ ...editForm, licenseNumber: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)' }} />
                                         </div>
-                                    </div>
-
-                                    <div className="form-grid-2" style={{ marginBottom: '15px' }}>
                                         <div>
                                             <label className="input-label" style={{ marginBottom: '6px' }}>Night Stay Bonus</label>
                                             <div style={{ position: 'relative' }}>
@@ -1170,17 +1167,13 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 <input type="number" className="input-field" value={editForm.nightStayBonus} onChange={(e) => setEditForm({ ...editForm, nightStayBonus: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
                                             </div>
                                         </div>
-                                    {editForm.sameDayReturnEnabled && (
-                                        <div className="form-grid-1" style={{ marginBottom: '15px' }}>
-                                            <div>
-                                                <label className="input-label" style={{ marginBottom: '6px' }}>Same Day Return Bonus</label>
-                                                <div style={{ position: 'relative' }}>
-                                                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>₹</span>
-                                                    <input type="number" className="input-field" value={editForm.sameDayReturnBonus} onChange={(e) => setEditForm({ ...editForm, sameDayReturnBonus: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
-                                                </div>
+                                        <div>
+                                            <label className="input-label" style={{ marginBottom: '6px' }}>Same Day Bonus</label>
+                                            <div style={{ position: 'relative' }}>
+                                                <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)', fontSize: '14px' }}>₹</span>
+                                                <input type="number" className="input-field" value={editForm.sameDayReturnBonus} onChange={(e) => setEditForm({ ...editForm, sameDayReturnBonus: e.target.value })} style={{ background: 'rgba(0,0,0,0.2)', paddingLeft: '28px' }} />
                                             </div>
                                         </div>
-                                    )}
                                     </div>
 
                                     <div style={{ marginTop: '10px', padding: '15px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '12px', border: '1px solid rgba(59, 130, 246, 0.1)', marginBottom: '20px' }}>

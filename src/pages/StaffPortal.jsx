@@ -477,7 +477,7 @@ const StaffPortal = () => {
                                             <div>
                                                 <div style={{ fontSize: '15px', fontWeight: '900' }}>{formatDateIST(record.date)}</div>
                                                 <div style={{ fontSize: '12px', color: 'rgba(255,255,255,0.4)', marginTop: '2px' }}>
-                                                    {formatTimeIST(record.punchIn.time)} — {record.punchOut?.time ? formatTimeIST(record.punchOut.time) : 'Active Session'}
+                                                    {record.punchIn?.time ? formatTimeIST(record.punchIn.time) : 'N/A'} — {record.punchOut?.time ? formatTimeIST(record.punchOut.time) : 'Active Session'}
                                                 </div>
                                             </div>
                                             <div style={{ background: record.status === 'present' ? `${themeColors.success}15` : `${themeColors.danger}15`, color: record.status === 'present' ? themeColors.success : themeColors.danger, padding: '5px 12px', borderRadius: '10px', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}>
@@ -490,10 +490,10 @@ const StaffPortal = () => {
                                             <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '18px', border: '1px solid rgba(255,255,255,0.03)' }}>
                                                 <span style={{ fontSize: '8px', fontWeight: '900', color: themeColors.primary, display: 'block', marginBottom: '8px' }}>PUNCH IN</span>
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    {record.punchIn.photo && (
+                                                    {record.punchIn?.photo && (
                                                         <img src={record.punchIn.photo} style={{ width: '40px', height: '40px', borderRadius: '10px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.1)' }} />
                                                     )}
-                                                    <div style={{ fontSize: '12px', fontWeight: '800' }}>{formatTimeIST(record.punchIn.time)}</div>
+                                                    <div style={{ fontSize: '12px', fontWeight: '800' }}>{record.punchIn?.time ? formatTimeIST(record.punchIn.time) : 'N/A'}</div>
                                                 </div>
                                             </div>
 

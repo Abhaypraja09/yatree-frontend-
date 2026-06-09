@@ -124,6 +124,7 @@ const AdminDashboard = () => {
     const { language, setLanguage, t } = useLanguage();
     const { selectedCompany, selectedDate, setSelectedDate } = useCompany();
     const [stats, setStats] = useState(null);
+    const [pendingLeaves, setPendingLeaves] = useState([]);
     const [loading, setLoading] = useState(true);
     const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12
     const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -170,10 +171,33 @@ const AdminDashboard = () => {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setStats(data);
+
+            if (userRole === 'admin' || userRole === 'superadmin' || userRole === 'executive' || (user?.permissions?.driversService)) {
+                try {
+                    const leavesRes = await axios.get(`/api/admin/leaves/pending/${selectedCompany._id}`, {
+                        headers: { Authorization: `Bearer ${userInfo.token}` }
+                    });
+                    setPendingLeaves(leavesRes.data || []);
+                } catch(e) { console.error('Error fetching leaves', e); }
+            }
         } catch (err) {
             console.error('Error fetching stats', err);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleApproveRejectLeave = async (leaveId, status) => {
+        if (!window.confirm(`Are you sure you want to ${status.toLowerCase()} this leave?`)) return;
+        try {
+            const userInfoRaw = localStorage.getItem('userInfo');
+            const userInfo = JSON.parse(userInfoRaw);
+            await axios.patch(`/api/admin/leaves/${leaveId}`, { status }, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            fetchStats();
+        } catch (err) {
+            alert(err.response?.data?.message || 'Error updating leave status');
         }
     };
 
@@ -502,6 +526,112 @@ const AdminDashboard = () => {
                         )}
                     </div>
 
+                    {/* Pending Leaves Alerts */}
+                    {pendingLeaves && pendingLeaves.length > 0 && (
+                        <div className="glass-card" style={{
+                            border: '1px solid rgba(139, 92, 246, 0.3)',
+                            background: 'linear-gradient(145deg, rgba(139, 92, 246, 0.05), rgba(15, 23, 42, 0.4))',
+                            marginBottom: 'clamp(20px, 4vw, 30px)',
+                            marginTop: '30px',
+                            width: '100%',
+                            boxSizing: 'border-box'
+                        }}>
+                            <div style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '10px',
+                                marginBottom: 'clamp(16px, 3.5vw, 20px)',
+                                flexWrap: 'wrap',
+                                padding: 'clamp(20px, 4vw, 32px) clamp(20px, 4vw, 32px) 0'
+                            }}>
+                                <Calendar color="#8b5cf6" size={20} />
+                                <h3 style={{
+                                    fontSize: 'clamp(13px, 3.2vw, 16px)',
+                                    fontWeight: '700',
+                                    color: 'white',
+                                    margin: 0,
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px'
+                                }}>
+                                    Pending Leave Requests ({pendingLeaves.length})
+                                </h3>
+                            </div>
+                            <div className="expiry-alerts-grid" style={{ padding: '0 clamp(20px, 4vw, 32px) clamp(20px, 4vw, 32px)' }}>
+                                {pendingLeaves.map((leave, index) => (
+                                    <div
+                                        key={index}
+                                        className="alert-card glass-card-hover-effect"
+                                        style={{
+                                            background: 'rgba(139, 92, 246, 0.1)',
+                                            border: '1px solid rgba(139, 92, 246, 0.2)',
+                                            position: 'relative',
+                                            overflow: 'hidden'
+                                        }}
+                                    >
+                                        <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'flex-start',
+                                            marginBottom: '10px',
+                                            gap: '8px'
+                                        }}>
+                                            <span className="alert-identifier" style={{
+                                                color: 'rgba(255,255,255,0.9)',
+                                                textTransform: 'uppercase',
+                                                flex: 1,
+                                                fontWeight: '700'
+                                            }}>
+                                                {leave.staff?.name || 'Unknown Staff'}
+                                            </span>
+                                            <span style={{
+                                                fontSize: 'clamp(9px, 2vw, 10px)',
+                                                padding: '4px 8px',
+                                                borderRadius: '6px',
+                                                background: '#8b5cf6',
+                                                color: 'white',
+                                                fontWeight: '800',
+                                                flexShrink: 0,
+                                                whiteSpace: 'nowrap',
+                                                boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                                            }}>
+                                                {leave.type || 'Leave'}
+                                            </span>
+                                        </div>
+                                        <div className="alert-type" style={{ color: 'white', marginBottom: '8px', fontSize: '11px' }}>
+                                            {formatDateIST(leave.startDate)} to {formatDateIST(leave.endDate)}
+                                        </div>
+                                        {leave.reason && (
+                                            <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', marginBottom: '12px' }}>
+                                                Reason: {leave.reason}
+                                            </div>
+                                        )}
+                                        <div style={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            alignItems: 'center',
+                                            flexWrap: 'wrap',
+                                            gap: '8px',
+                                            marginTop: '10px'
+                                        }}>
+                                            <button 
+                                                onClick={() => handleApproveRejectLeave(leave._id, 'Approved')}
+                                                style={{ background: '#10b981', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', cursor: 'pointer', flex: 1 }}
+                                            >
+                                                APPROVE
+                                            </button>
+                                            <button 
+                                                onClick={() => handleApproveRejectLeave(leave._id, 'Rejected')}
+                                                style={{ background: '#f43f5e', color: 'white', border: 'none', padding: '6px 12px', borderRadius: '6px', fontSize: '10px', fontWeight: '800', cursor: 'pointer', flex: 1 }}
+                                            >
+                                                REJECT
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
 
 
 
@@ -622,6 +752,108 @@ const AdminDashboard = () => {
                                     </div>
                                 </div>
                             )}
+
+                        {/* Active Border Taxes */}
+                        {stats.activeBorderTaxes && stats.activeBorderTaxes.length > 0 && (
+                            <div className="glass-card" style={{
+                                border: '1px solid rgba(16, 185, 129, 0.2)',
+                                background: 'linear-gradient(145deg, rgba(16, 185, 129, 0.05), rgba(15, 23, 42, 0.2))',
+                                marginBottom: 'clamp(20px, 4vw, 30px)',
+                                width: '100%',
+                                boxSizing: 'border-box'
+                            }}>
+                                <div style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '10px',
+                                    marginBottom: 'clamp(16px, 3.5vw, 20px)',
+                                    flexWrap: 'wrap',
+                                    padding: 'clamp(20px, 4vw, 32px) clamp(20px, 4vw, 32px) 0'
+                                }}>
+                                    <ShieldCheck color="#10b981" size={20} />
+                                    <h3 style={{
+                                        fontSize: 'clamp(13px, 3.2vw, 16px)',
+                                        fontWeight: '700',
+                                        color: 'white',
+                                        margin: 0,
+                                        textTransform: 'uppercase',
+                                        letterSpacing: '0.5px'
+                                    }}>
+                                        Active Border Taxes
+                                    </h3>
+                                </div>
+                                <div className="expiry-alerts-grid" style={{ padding: '0 clamp(20px, 4vw, 32px) clamp(20px, 4vw, 32px)' }}>
+                                    {stats.activeBorderTaxes.map((tax, index) => {
+                                        const validTillDate = new Date(tax.validTill);
+                                        const today = new Date(todayIST());
+                                        const diffDays = Math.ceil((validTillDate - today) / (1000 * 60 * 60 * 24));
+                                        
+                                        return (
+                                            <div
+                                                key={index}
+                                                className="alert-card glass-card-hover-effect"
+                                                style={{
+                                                    background: 'rgba(16, 185, 129, 0.1)',
+                                                    border: '1px solid rgba(16, 185, 129, 0.2)',
+                                                    position: 'relative',
+                                                    overflow: 'hidden'
+                                                }}
+                                            >
+                                                <div style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'flex-start',
+                                                    marginBottom: '10px',
+                                                    gap: '8px'
+                                                }}>
+                                                    <span className="alert-identifier" style={{
+                                                        color: 'rgba(255,255,255,0.9)',
+                                                        textTransform: 'uppercase',
+                                                        flex: 1,
+                                                        fontWeight: '700'
+                                                    }}>
+                                                        {tax.vehicle?.carNumber || 'Unknown Vehicle'}
+                                                    </span>
+                                                    <span style={{
+                                                        fontSize: 'clamp(9px, 2vw, 10px)',
+                                                        padding: '4px 8px',
+                                                        borderRadius: '6px',
+                                                        background: '#10b981',
+                                                        color: 'white',
+                                                        fontWeight: '800',
+                                                        flexShrink: 0,
+                                                        whiteSpace: 'nowrap',
+                                                        boxShadow: '0 2px 5px rgba(0,0,0,0.2)'
+                                                    }}>
+                                                        {diffDays}d left
+                                                    </span>
+                                                </div>
+                                                <div className="alert-type" style={{ color: 'white', marginBottom: '8px' }}>
+                                                    {tax.borderName || 'Border Tax'}
+                                                </div>
+                                                <div style={{
+                                                    display: 'flex',
+                                                    justifyContent: 'space-between',
+                                                    alignItems: 'flex-end',
+                                                    flexWrap: 'wrap',
+                                                    gap: '8px'
+                                                }}>
+                                                    <div className="alert-date" style={{
+                                                        color: 'rgba(255,255,255,0.6)',
+                                                        fontWeight: '500',
+                                                        fontSize: 'clamp(10px, 2.5vw, 12px)'
+                                                    }}>
+                                                        Valid Till: <span style={{ color: 'white', fontWeight: '700' }}>
+                                                            {formatDateIST(tax.validTill)}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
+                            </div>
+                        )}
                     </motion.div>
                 )}
             </div>

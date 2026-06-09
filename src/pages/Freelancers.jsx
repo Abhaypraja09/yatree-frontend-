@@ -2490,7 +2490,7 @@ const Freelancers = () => {
                                     <div key={i} style={{ background: 'rgba(255,255,255,0.03)', padding: '15px', borderRadius: '12px', display: 'flex', justifyContent: 'space-between' }}>
                                         <div>
                                             <p style={{ color: 'white', fontWeight: '700', margin: 0 }}>{doc.documentType}</p>
-                                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: 0 }}>{doc.expiryDate ? `Expires: ${new Date(doc.expiryDate).toLocaleDateString()}` : 'Lifetime'}</p>
+                                            <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', margin: 0 }}>{doc.expiryDate ? `Expires: ${new Date(doc.expiryDate).toLocaleDateString('en-GB', {day: '2-digit', month: '2-digit', year: '2-digit'})}` : 'Lifetime'}</p>
                                         </div>
                                         <a href={doc.imageUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--primary)', fontSize: '11px', fontWeight: '800' }}>VIEW</a>
                                     </div>

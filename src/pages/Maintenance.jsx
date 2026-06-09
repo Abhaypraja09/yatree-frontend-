@@ -178,6 +178,7 @@ const Maintenance = () => {
         'Suspension',
         'Steering',
         'Fuel',
+        'AD Blue',
         'Exhaust',
         'Clutch / Transmission',
         'Brake',

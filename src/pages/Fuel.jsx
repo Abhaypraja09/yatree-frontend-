@@ -556,10 +556,23 @@ const FuelPage = () => {
                             <select
                                 value={filterVehicle}
                                 onChange={(e) => setFilterVehicle(e.target.value)}
-                                style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '800', fontSize: '11px', outline: 'none', cursor: 'pointer', height: '100%', width: '100px', textTransform: 'uppercase', appearance: 'none', paddingRight: '20px' }}
+                                style={{ background: 'transparent', border: 'none', color: 'white', fontWeight: '800', fontSize: '11px', outline: 'none', cursor: 'pointer', height: '100%', width: '160px', textTransform: 'uppercase', appearance: 'none', paddingRight: '20px' }}
                             >
-                                <option value="All" style={{ background: '#0f172a' }}>All Vehicles</option>
-                                {vehicles.map(v => <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber}</option>)}
+                                <option value="All" style={{ background: '#0f172a', padding: '10px' }}>&nbsp;&nbsp;All Vehicles</option>
+                                {(() => {
+                                    const fuelCountsPerCar = entries.reduce((acc, e) => {
+                                        if (e.vehicle?._id) acc[e.vehicle._id] = (acc[e.vehicle._id] || 0) + 1;
+                                        return acc;
+                                    }, {});
+                                    return vehicles.map(v => {
+                                        const count = fuelCountsPerCar[v._id] || 0;
+                                        return (
+                                            <option key={v._id} value={v._id} style={{ background: '#0f172a', padding: '10px' }}>
+                                                &nbsp;&nbsp;{v.carNumber} {count > 0 ? `(${count})` : ''}
+                                            </option>
+                                        );
+                                    });
+                                })()}
                             </select>
                             <ChevronDown size={14} color="rgba(255,255,255,0.4)" style={{ position: 'absolute', right: '10px', pointerEvents: 'none' }} />
                         </div>

@@ -177,6 +177,106 @@ const AdminRoutes = () => {
 };
 
 function App() {
+  React.useEffect(() => {
+    // Intercept React programmatic value changes
+    const originalValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+    
+    Object.defineProperty(window.HTMLInputElement.prototype, 'value', {
+        set: function(val) {
+            originalValueSetter.call(this, val);
+            if (this.type === 'date') {
+                if (val) {
+                    const parts = val.split('-');
+                    if (parts.length === 3) {
+                        this.setAttribute('data-date', `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`);
+                    }
+                } else {
+                    this.setAttribute('data-date', 'DD/MM/YY');
+                }
+            } else if (this.type === 'datetime-local') {
+                if (val) {
+                    const [datePart, timePart] = val.split('T');
+                    if (datePart && timePart) {
+                        const parts = datePart.split('-');
+                        this.setAttribute('data-date', `${parts[2]}/${parts[1]}/${parts[0].slice(-2)} ${timePart}`);
+                    }
+                } else {
+                    this.setAttribute('data-date', 'DD/MM/YY --:--');
+                }
+            }
+        },
+        get: Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').get
+    });
+
+    const updateDateDisplay = (e) => {
+        const target = e.target;
+        if (target && target.type === 'date') {
+            if (target.value) {
+                const parts = target.value.split('-');
+                if(parts.length === 3) {
+                     target.setAttribute('data-date', `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`);
+                }
+            } else {
+                target.setAttribute('data-date', 'DD/MM/YY');
+            }
+        } else if (target && target.type === 'datetime-local') {
+            if (target.value) {
+                const [datePart, timePart] = target.value.split('T');
+                if (datePart && timePart) {
+                    const parts = datePart.split('-');
+                    target.setAttribute('data-date', `${parts[2]}/${parts[1]}/${parts[0].slice(-2)} ${timePart}`);
+                }
+            } else {
+                target.setAttribute('data-date', 'DD/MM/YY --:--');
+            }
+        }
+    };
+
+    const initInputs = () => {
+        document.querySelectorAll('input[type="date"], input[type="datetime-local"]').forEach(input => {
+            if (input.type === 'date') {
+                if (input.value) {
+                    const parts = input.value.split('-');
+                    if(parts.length === 3) {
+                         input.setAttribute('data-date', `${parts[2]}/${parts[1]}/${parts[0].slice(-2)}`);
+                    }
+                } else {
+                    input.setAttribute('data-date', 'DD/MM/YY');
+                }
+            } else if (input.type === 'datetime-local') {
+                if (input.value) {
+                    const [datePart, timePart] = input.value.split('T');
+                    if (datePart && timePart) {
+                        const parts = datePart.split('-');
+                        input.setAttribute('data-date', `${parts[2]}/${parts[1]}/${parts[0].slice(-2)} ${timePart}`);
+                    }
+                } else {
+                    input.setAttribute('data-date', 'DD/MM/YY --:--');
+                }
+            }
+        });
+    };
+
+    const observer = new MutationObserver(() => initInputs());
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    initInputs();
+
+    document.addEventListener('change', updateDateDisplay, true);
+    document.addEventListener('input', updateDateDisplay, true);
+
+    return () => {
+        observer.disconnect();
+        document.removeEventListener('change', updateDateDisplay, true);
+        document.removeEventListener('input', updateDateDisplay, true);
+        // Restore original setter (optional but good practice, though this is global)
+        Object.defineProperty(window.HTMLInputElement.prototype, 'value', {
+            set: originalValueSetter,
+            get: Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').get
+        });
+    };
+  }, []);
+
   return (
     <Router>
       <LanguageProvider>
