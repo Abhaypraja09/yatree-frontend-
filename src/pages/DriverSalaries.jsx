@@ -1156,6 +1156,33 @@ const DriverSalaries = ({ isSubComponent = false }) => {
             <div className="stats-grid">
                 <div
                     onClick={() => setActiveTab('payroll')}
+                    className="glass-card glass-card-hover-effect"
+                    style={{
+                        flex: '1',
+                        minWidth: '240px',
+                        maxWidth: '400px',
+                        padding: '24px',
+                        cursor: 'pointer',
+                        background: 'linear-gradient(135deg, rgba(168,85,247,0.2) 0%, rgba(168,85,247,0.1) 100%)',
+                        border: '1px solid rgba(168,85,247,0.2)',
+                        transition: 'all 0.3s ease'
+                    }}
+                >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <div>
+                            <p style={{ fontSize: '12px', fontWeight: '800', color: '#a855f7', marginBottom: '8px', textTransform: 'uppercase', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                Total Salary
+                            </p>
+                            <h3 style={{ fontSize: '28px', fontWeight: '950', color: 'white', margin: 0 }}>₹ {salaries.reduce((sum, s) => sum + (s.totalEarned || 0), 0).toLocaleString()}</h3>
+                        </div>
+                        <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: 'rgba(168,85,247,0.1)', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <IndianRupee size={20} color="#a855f7" />
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    onClick={() => setActiveTab('payroll')}
                     className={`glass-card ${activeTab === 'payroll' ? 'active-nav-card' : 'glass-card-hover-effect'}`}
                     style={{
                         flex: '1',
