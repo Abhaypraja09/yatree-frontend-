@@ -271,7 +271,9 @@ const FuelPage = () => {
             if (!userInfo?.token) return;
 
             const targetDate = overrideDate || toDate;
-            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&toDate=${targetDate}`, {
+            const isToday = targetDate === new Date().toLocaleDateString('en-CA');
+            const exactDateParam = !isToday ? '&exactDate=true' : '';
+            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&toDate=${targetDate}${exactDateParam}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setDrivers(data.drivers || []);
