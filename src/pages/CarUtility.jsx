@@ -90,6 +90,41 @@ const CarUtility = () => {
                 border-color: var(--primary) !important;
                 box-shadow: 0 0 10px var(--primary-glow) !important;
             }
+            .premium-input-container {
+                background: rgba(15, 23, 42, 0.4);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                border-radius: 16px;
+                padding: 10px 16px;
+                transition: all 0.3s ease;
+                display: flex;
+                flex-direction: column;
+                gap: 4px;
+            }
+            .premium-input-container:focus-within {
+                border-color: var(--primary);
+                background: rgba(15, 23, 42, 0.6);
+                box-shadow: 0 0 0 3px var(--primary-glow);
+            }
+            .premium-input-container label {
+                color: rgba(255, 255, 255, 0.4);
+                font-size: 10px;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+            .premium-input-container input, .premium-input-container select, .premium-input-container textarea {
+                background: transparent;
+                border: none;
+                color: #fff;
+                font-size: 15px;
+                font-weight: 600;
+                outline: none;
+                width: 100%;
+                padding: 0;
+            }
+            .premium-input-container input::placeholder, .premium-input-container textarea::placeholder {
+                color: rgba(255, 255, 255, 0.2);
+            }
         `;
         document.head.appendChild(style);
         return () => document.head.removeChild(style);
@@ -404,7 +439,7 @@ const CarUtility = () => {
     const detailVehicle = useMemo(() => vehicles.find(v => v._id === detailVehicleId), [vehicles, detailVehicleId]);
 
     return (
-        <div key={location.key} style={{ minHeight: '100vh', background: 'transparent', color: '#fff', padding: '30px' }}>
+        <div key={location.key} className="container-fluid" style={{ paddingBottom: '40px' }}>
             <SEO title="Car Utility" description="Fleet Accounts Hub" />
 
             <div style={{ maxWidth: '1440px', margin: '0 auto' }}>
@@ -1088,23 +1123,29 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
     };
 
     return (
-        <div className="manager-hub-container" style={{ color: '#fff' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '30px' }}>
-                <div className="entry-card premium-card" style={{ padding: '32px', borderRadius: '28px', background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)' }}>
-                    <h3 style={{ margin: '0 0 25px 0', fontSize: '20px', fontWeight: '950', color, display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <Plus size={22} /> {editingItem ? 'Edit' : 'New'} {type === 'fastag' ? 'Recharge' : type === 'border' ? 'Border Permit' : 'Other Service'}
-                    </h3>
+        <div className="manager-hub-container" style={{ color: '#fff', height: '100%' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '40px', height: '100%' }}>
+                {/* Form Side */}
+                <div style={{ padding: '10px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '15px', marginBottom: '30px' }}>
+                        <div style={{ width: '48px', height: '48px', borderRadius: '14px', background: `${color}15`, color: color, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                            <Plus size={24} />
+                        </div>
+                        <div>
+                            <h3 style={{ margin: '0 0 4px 0', fontSize: '24px', fontWeight: '950', letterSpacing: '-0.5px' }}>
+                                {editingItem ? 'Edit' : 'New'} {type === 'fastag' ? 'Recharge' : type === 'border' ? 'Border Permit' : 'Service Record'}
+                            </h3>
+                            <p style={{ margin: 0, fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '600' }}>
+                                Fill out the details below to log the utility entry.
+                            </p>
+                        </div>
+                    </div>
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
                         {!vehicle && (
-                            <div>
-                                <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', marginBottom: '8px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Select Vehicle</label>
-                                <select
-                                    value={form.vehicleId}
-                                    onChange={e => setForm({ ...form, vehicleId: e.target.value })}
-                                    className="premium-compact-input"
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '12px', color: '#fff' }}
-                                >
+                            <div className="premium-input-container">
+                                <label>Select Vehicle</label>
+                                <select value={form.vehicleId} onChange={e => setForm({ ...form, vehicleId: e.target.value })}>
                                     <option value="" style={{ background: '#1a1a1a' }}>Choose a car...</option>
                                     {allVehicles.map(v => (
                                         <option key={v._id} value={v._id} style={{ background: '#1a1a1a' }}>{v.carNumber} ({v.model})</option>
@@ -1113,133 +1154,88 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                             </div>
                         )}
 
-                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                            <div>
-                                <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', marginBottom: '8px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Amount (₹)</label>
-                                <input
-                                    type="number"
-                                    value={form.amount}
-                                    onChange={e => setForm({ ...form, amount: e.target.value })}
-                                    className="premium-compact-input"
-                                    placeholder="0"
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '12px', color: '#fff', fontSize: '18px', fontWeight: '900' }}
-                                />
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
+                            <div className="premium-input-container">
+                                <label>Amount (₹)</label>
+                                <input type="number" value={form.amount} onChange={e => setForm({ ...form, amount: e.target.value })} placeholder="0.00" style={{ fontSize: '20px', fontWeight: '800', color }} />
                             </div>
-                            <div>
-                                <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', marginBottom: '8px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment Mode</label>
-                                <select 
-                                    value={form.paymentMode} 
-                                    onChange={e => setForm({ ...form, paymentMode: e.target.value })} 
-                                    className="premium-compact-input"
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '12px', color: '#fff' }}
-                                >
-                                    <option value="UPI">UPI</option>
-                                    <option value="Cash">Cash</option>
-                                    <option value="Bank Transfer">Bank Transfer</option>
+                            <div className="premium-input-container">
+                                <label>Payment Mode</label>
+                                <select value={form.paymentMode} onChange={e => setForm({ ...form, paymentMode: e.target.value })}>
+                                    <option value="UPI" style={{ background: '#0f172a' }}>UPI</option>
+                                    <option value="Cash" style={{ background: '#0f172a' }}>Cash</option>
+                                    <option value="Bank Transfer" style={{ background: '#0f172a' }}>Bank Transfer</option>
                                 </select>
                             </div>
                         </div>
 
-                        <div>
-                            <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', marginBottom: '8px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Date</label>
-                            <div className="dual-date-input-container" style={{ position: 'relative' }}>
-                                <input
-                                    id="utility-date-picker"
-                                    type="date"
-                                    value={form.date || form.billDate}
-                                    onChange={e => setForm({ ...form, date: e.target.value, billDate: e.target.value })}
-                                    onClick={(e) => e.target.showPicker()}
-                                    className="premium-compact-input"
-                                    style={{ colorScheme: 'dark', width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '12px', color: '#fff', cursor: 'pointer' }}
-                                />
-                                <Calendar size={18} style={{ position: 'absolute', right: '15px', top: '50%', transform: 'translateY(-50%)', opacity: 0.5, pointerEvents: 'none' }} />
-                            </div>
+                        <div className="premium-input-container">
+                            <label>Date</label>
+                            <input type="date" value={form.date || form.billDate} onChange={e => setForm({ ...form, date: e.target.value, billDate: e.target.value })} style={{ colorScheme: 'dark', cursor: 'pointer' }} />
                         </div>
 
                         {type === 'border' && (
-                            <div>
-                                <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', marginBottom: '8px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Border Name</label>
-                                <input
-                                    type="text"
-                                    value={form.borderName}
-                                    onChange={e => setForm({ ...form, borderName: e.target.value })}
-                                    className="premium-compact-input"
-                                    placeholder="e.g. Delhi-Haryana"
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '12px', color: '#fff' }}
-                                />
+                            <div className="premium-input-container">
+                                <label>Border Name</label>
+                                <input type="text" value={form.borderName} onChange={e => setForm({ ...form, borderName: e.target.value })} placeholder="e.g. Delhi-Haryana" />
                             </div>
                         )}
 
                         {type === 'services' && (
-                            <div>
-                                <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', marginBottom: '8px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Service Category</label>
-                                <select 
-                                    value={form.category} 
-                                    onChange={e => setForm({ ...form, category: e.target.value })} 
-                                    className="premium-compact-input"
-                                    style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '12px', color: '#fff' }}
-                                >
-                                    <option>Car Wash</option>
-                                    <option>Puncture / Tyre</option>
-                                    <option>Cleaning Supplies</option>
-                                    <option>Periodic Service</option>
-                                    <option>Other Misc</option>
+                            <div className="premium-input-container">
+                                <label>Service Category</label>
+                                <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                                    <option style={{ background: '#0f172a' }}>Car Wash</option>
+                                    <option style={{ background: '#0f172a' }}>Puncture / Tyre</option>
+                                    <option style={{ background: '#0f172a' }}>Cleaning Supplies</option>
+                                    <option style={{ background: '#0f172a' }}>Periodic Service</option>
+                                    <option style={{ background: '#0f172a' }}>Other Misc</option>
                                 </select>
                             </div>
                         )}
 
-                        <div>
-                            <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', marginBottom: '8px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Remarks / Notes</label>
-                            <textarea
-                                value={form.remarks}
-                                onChange={e => setForm({ ...form, remarks: e.target.value })}
-                                className="premium-compact-input"
-                                style={{ width: '100%', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '14px', padding: '12px', color: '#fff', height: '80px', resize: 'none' }}
-                                placeholder="Add specific details..."
-                            />
+                        <div className="premium-input-container">
+                            <label>Remarks / Notes</label>
+                            <textarea value={form.remarks} onChange={e => setForm({ ...form, remarks: e.target.value })} placeholder="Add specific details..." style={{ height: '60px', resize: 'none' }} />
                         </div>
 
                         <div>
-                            <label className="premium-label" style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '900', marginBottom: '8px', display: 'block', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Attachment (Receipt/Bill)</label>
                             <div 
                                 className="upload-zone"
                                 onClick={() => document.getElementById('file-upload').click()}
                                 style={{ 
-                                    border: '2px dashed rgba(255,255,255,0.12)', 
-                                    borderRadius: '18px', 
-                                    padding: '20px', 
-                                    textAlign: 'center',
-                                    cursor: 'pointer',
-                                    background: file ? `${color}08` : 'transparent',
-                                    transition: 'all 0.3s ease'
+                                    background: file ? `${color}10` : 'rgba(15, 23, 42, 0.4)',
+                                    border: `1px dashed ${file ? color : 'rgba(255,255,255,0.15)'}`, 
+                                    borderRadius: '16px', padding: '24px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s ease'
                                 }}
                             >
                                 <input id="file-upload" type="file" hidden onChange={e => setFile(e.target.files[0])} />
-                                <Image size={24} style={{ color: file ? color : 'rgba(255,255,255,0.2)', marginBottom: '8px' }} />
-                                <div style={{ fontSize: '12px', fontWeight: '750', color: file ? '#fff' : 'rgba(255,255,255,0.4)' }}>
-                                    {file ? file.name : 'Click to upload image'}
+                                <Image size={28} style={{ color: file ? color : 'rgba(255,255,255,0.3)', marginBottom: '12px' }} />
+                                <div style={{ fontSize: '13px', fontWeight: '800', color: file ? '#fff' : 'rgba(255,255,255,0.5)' }}>
+                                    {file ? file.name : 'Click to attach receipt / bill'}
                                 </div>
                             </div>
                         </div>
 
-                        <button 
-                            onClick={handleSave} 
-                            disabled={submitting}
-                            className="btn-primary"
-                            style={{ background: color, color: '#000', padding: '16px', borderRadius: '18px', fontWeight: '1000', fontSize: '15px', marginTop: '10px', width: '100%', border: 'none', cursor: 'pointer', boxShadow: `0 8px 15px ${color}20` }}
-                        >
-                            {submitting ? 'PROCESSING...' : editingItem ? 'UPDATE RECORD' : 'SAVE ENTRY'}
-                        </button>
-                        {editingItem && (
+                        <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>
                             <button 
-                                onClick={() => {
-                                    setEditingItem(null);
-                                }}
-                                style={{ background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.4)', padding: '12px', borderRadius: '15px', fontWeight: '750', fontSize: '13px', cursor: 'pointer' }}
+                                onClick={handleSave} 
+                                disabled={submitting}
+                                style={{ flex: 1, background: color, color: '#000', padding: '16px', borderRadius: '16px', fontWeight: '900', fontSize: '14px', border: 'none', cursor: 'pointer', boxShadow: `0 8px 25px ${color}30`, transition: 'all 0.3s ease', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px' }}
                             >
-                                CANCEL EDIT
+                                {submitting ? <RefreshCw size={18} className="spin" /> : editingItem ? <CheckCircle2 size={18} /> : <Plus size={18} />}
+                                {submitting ? 'PROCESSING...' : editingItem ? 'UPDATE RECORD' : 'SAVE ENTRY'}
                             </button>
-                        )}
+                            
+                            {editingItem && (
+                                <button 
+                                    onClick={() => setEditingItem(null)}
+                                    style={{ background: 'rgba(255,255,255,0.05)', color: 'white', padding: '16px 24px', borderRadius: '16px', fontWeight: '800', fontSize: '13px', border: 'none', cursor: 'pointer', transition: 'background 0.2s' }}
+                                >
+                                    CANCEL
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </div>
 
