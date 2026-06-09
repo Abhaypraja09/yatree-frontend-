@@ -1555,6 +1555,7 @@ const Freelancers = () => {
                                                     d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                                     d.mobile?.includes(searchTerm)
                                                 )
+                                                .slice(0, searchTerm ? undefined : 10)
                                                 .length === 0 ? (
                                                 <tr>
                                                     <td colSpan="5" style={{ padding: '60px', textAlign: 'center', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>
@@ -1566,6 +1567,7 @@ const Freelancers = () => {
                                                     d.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                                                     d.mobile?.includes(searchTerm)
                                                 )
+                                                .slice(0, searchTerm ? undefined : 10)
                                                 .map(d => {
                                                     const dayAttendance = attendance.filter(a => a.driver?._id === d._id || a.driver === d._id);
                                                     const isOnDuty = d.tripStatus === 'active' || dayAttendance.some(a => a.status === 'incomplete');
