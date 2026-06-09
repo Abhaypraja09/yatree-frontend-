@@ -436,8 +436,9 @@ const DriverSalaries = ({ isSubComponent = false }) => {
 
     const handleEditClick = (advance) => {
         setEditingAdvanceId(advance._id);
+        const dInfo = selectedDriverDetails?.driver?.name ? selectedDriverDetails.driver : (selectedDriverDetails?.driver?.[0] || {});
         setAdvanceFormData({
-            driverId: advance.driver?._id || '',
+            driverId: advance.driver?._id || advance.driver || dInfo?._id || '',
             amount: advance.amount || '',
             date: advance.date ? toISTDateString(advance.date) : '',
             remark: advance.remark || ''
