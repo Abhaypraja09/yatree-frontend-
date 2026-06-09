@@ -2140,7 +2140,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>₹{al.amount}</td>
                                                             <td style={{ padding: '12px', textAlign: 'center' }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                                                                    <button onClick={() => { setShowDetailModal(false); handleEditAllowance(al); }} style={{ background: 'transparent', border: 'none', color: '#38bdf8', cursor: 'pointer' }}><Edit2 size={13} /></button>
+                                                                    <button onClick={() => { handleEditAllowance(al); }} style={{ background: 'transparent', border: 'none', color: '#38bdf8', cursor: 'pointer' }}><Edit2 size={13} /></button>
                                                                     <button onClick={() => { if (window.confirm('Delete this payout?')) handleDeleteAllowance(al._id); }} style={{ background: 'transparent', border: 'none', color: '#f43f5e', cursor: 'pointer' }}><X size={14} /></button>
                                                                 </div>
                                                             </td>
@@ -2173,7 +2173,7 @@ const DriverSalaries = ({ isSubComponent = false }) => {
                                                             <td style={{ padding: '12px', textAlign: 'right', color: '#f43f5e', fontWeight: '700' }}>₹{adv.amount}</td>
                                                             <td style={{ padding: '12px', textAlign: 'center' }}>
                                                                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px' }}>
-                                                                    <button onClick={() => { setShowDetailModal(false); handleEditClick(adv); }} style={{ background: 'transparent', border: 'none', color: '#38bdf8', padding: '4px', cursor: 'pointer' }} title="Edit"><Edit2 size={13} /></button>
+                                                                    <button onClick={() => { handleEditClick(adv); }} style={{ background: 'transparent', border: 'none', color: '#38bdf8', padding: '4px', cursor: 'pointer' }} title="Edit"><Edit2 size={13} /></button>
                                                                     <button onClick={() => handleDeleteAdvance(adv._id)} style={{ background: 'transparent', border: 'none', color: '#f43f5e', padding: '4px', cursor: 'pointer' }} title="Delete"><X size={14} /></button>
                                                                 </div>
                                                             </td>
