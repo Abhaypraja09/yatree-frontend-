@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
-import { User, Calendar, Plus, Trash2, AlertCircle, CheckCircle2, ShieldAlert, Edit2 } from 'lucide-react';
+import { User, Calendar, Plus, Trash2, AlertCircle, CheckCircle2, ShieldAlert, Edit2, Image as ImageIcon, X } from 'lucide-react';
 import { useCompany } from '../context/CompanyContext';
 
 const DriverPerformance = () => {
@@ -25,7 +25,20 @@ const DriverPerformance = () => {
     const [date, setDate] = useState(currentDate.toISOString().split('T')[0]);
     const [incidentType, setIncidentType] = useState('Late for Duty');
     const [remarks, setRemarks] = useState('');
+    const [photos, setPhotos] = useState([]);
+    const [isUploading, setIsUploading] = useState(false);
     const [editingId, setEditingId] = useState(null);
+    const [showImageModal, setShowImageModal] = useState(false);
+    const [selectedImage, setSelectedImage] = useState('');
+
+    const getImageUrl = (path) => {
+        if (!path) return '';
+        if (path.startsWith('http')) {
+            return path.replace(/^http:\/\//i, 'https://');
+        }
+        const baseUrl = import.meta.env.VITE_API_URL || '';
+        return `${baseUrl.replace(/\/+$/, '')}/${path.replace(/^\/+/, '')}`;
+    };
     
 
     
@@ -100,14 +113,16 @@ const DriverPerformance = () => {
                     driverId: selectedDriver,
                     date,
                     incidentType,
-                    remarks
+                    remarks,
+                    photos
                 });
             } else {
                 await axios.post(`/api/driver-performance`, {
                     driverId: selectedDriver,
                     date,
                     incidentType,
-                    remarks
+                    remarks,
+                    photos
                 });
             }
             
@@ -125,6 +140,7 @@ const DriverPerformance = () => {
         setDate(new Date(record.date).toISOString().split('T')[0]);
         setIncidentType(record.incidentType);
         setRemarks(record.remarks);
+        setPhotos(record.photos || []);
         setShowModal(true);
     };
 
@@ -134,6 +150,7 @@ const DriverPerformance = () => {
         setDate(currentDate.toISOString().split('T')[0]);
         setIncidentType('Late for Duty');
         setRemarks('');
+        setPhotos([]);
         setShowModal(true);
     };
 
@@ -142,7 +159,45 @@ const DriverPerformance = () => {
         setEditingId(null);
         setSelectedDriver('');
         setRemarks('');
+        setPhotos([]);
         setIncidentType('Late for Duty');
+    };
+
+    const handlePhotoUpload = async (e) => {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        setIsUploading(true);
+        try {
+            const userInfoStr = localStorage.getItem('userInfo');
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+            
+            const uploadedUrls = [];
+            for (const file of files) {
+                const uploadData = new FormData();
+                uploadData.append('file', file);
+                uploadData.append('upload_preset', 'fleet_crm');
+
+                const res = await axios.post('/api/admin/upload', uploadData, {
+                    headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${userInfo?.token}` }
+                });
+                uploadedUrls.push(res.data.url);
+            }
+            
+            setPhotos(prev => [...prev, ...uploadedUrls]);
+        } catch (err) {
+            console.error('Upload failed:', err);
+            alert('Image upload failed. Please try again.');
+        } finally {
+            setIsUploading(false);
+        }
+        
+        // Reset the input value so the same files can be selected again if needed
+        e.target.value = null;
+    };
+
+    const removePhoto = (index) => {
+        setPhotos(prev => prev.filter((_, i) => i !== index));
     };
 
     const handleDelete = async (id) => {
@@ -349,7 +404,20 @@ const DriverPerformance = () => {
                                         </span>
                                     </td>
                                     <td style={{ padding: '20px', color: 'rgba(255,255,255,0.7)', maxWidth: '300px', lineHeight: '1.5' }}>
-                                        {record.remarks}
+                                        <div>{record.remarks}</div>
+                                        {record.photos && record.photos.length > 0 && (
+                                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '10px' }}>
+                                                {record.photos.map((photo, i) => (
+                                                    <img 
+                                                        key={i}
+                                                        src={getImageUrl(photo)} 
+                                                        alt="Incident" 
+                                                        onClick={() => { setSelectedImage(photo); setShowImageModal(true); }}
+                                                        style={{ width: '40px', height: '40px', borderRadius: '6px', objectFit: 'cover', cursor: 'pointer', border: '1px solid rgba(255,255,255,0.1)' }}
+                                                    />
+                                                ))}
+                                            </div>
+                                        )}
                                     </td>
                                     <td style={{ padding: '20px' }}>
                                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: 'rgba(255,255,255,0.05)', padding: '6px 12px', borderRadius: '8px', fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>
@@ -517,6 +585,48 @@ const DriverPerformance = () => {
                                     }}
                                 />
                             </div>
+
+                            <div style={{ marginBottom: '30px' }}>
+                                <label style={{ display: 'block', marginBottom: '10px', color: 'rgba(255,255,255,0.8)', fontWeight: '600' }}>Incident Photos (Optional)</label>
+                                <div style={{ 
+                                    border: '1px dashed rgba(255,255,255,0.2)', 
+                                    padding: '20px', 
+                                    borderRadius: '12px', 
+                                    background: 'rgba(0,0,0,0.2)',
+                                    textAlign: 'center'
+                                }}>
+                                    <input 
+                                        type="file" 
+                                        multiple 
+                                        accept="image/*" 
+                                        onChange={handlePhotoUpload} 
+                                        style={{ display: 'none' }} 
+                                        id="incident-photo-upload" 
+                                    />
+                                    <label htmlFor="incident-photo-upload" style={{ 
+                                        display: 'inline-flex', alignItems: 'center', gap: '8px', 
+                                        padding: '10px 20px', background: 'rgba(255,255,255,0.1)', 
+                                        borderRadius: '8px', cursor: 'pointer', color: 'white', 
+                                        fontWeight: '600', transition: 'background 0.2s'
+                                    }}>
+                                        <ImageIcon size={18} />
+                                        {isUploading ? 'Uploading...' : 'Upload Photos'}
+                                    </label>
+                                    
+                                    {photos.length > 0 && (
+                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '15px', justifyContent: 'center' }}>
+                                            {photos.map((photo, i) => (
+                                                <div key={i} style={{ position: 'relative' }}>
+                                                    <img src={getImageUrl(photo)} alt="Preview" style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }} />
+                                                    <button type="button" onClick={() => removePhoto(i)} style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                                        <X size={12} />
+                                                    </button>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
                             
                             <div style={{ display: 'flex', gap: '15px', justifyContent: 'flex-end' }}>
                                 <button 
@@ -548,6 +658,16 @@ const DriverPerformance = () => {
                             </div>
                         </form>
                     </div>
+                </div>
+            )}
+            
+            {/* Fullscreen Image View Modal */}
+            {showImageModal && selectedImage && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.9)', backdropFilter: 'blur(5px)', zIndex: 1100, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }} onClick={() => setShowImageModal(false)}>
+                    <button style={{ position: 'absolute', top: '20px', right: '20px', background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '40px', height: '40px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                        <X size={24} />
+                    </button>
+                    <img src={getImageUrl(selectedImage)} style={{ maxWidth: '90%', maxHeight: '90%', borderRadius: '12px', objectFit: 'contain' }} alt="Full Incident View" />
                 </div>
             )}
             
