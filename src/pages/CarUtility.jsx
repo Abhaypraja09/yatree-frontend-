@@ -420,10 +420,15 @@ const CarUtility = () => {
         return logs.sort((a, b) => new Date(b.date || b.billDate) - new Date(a.date || a.billDate));
     }, [vehicles, getVehicleActivity]);
 
-    // Period Totals
+    // Period Totals (respects Vehicle Filter)
     const globalStats = useMemo(() => {
         let f = 0, b = 0, s = 0;
-        vehicles.forEach(v => {
+        
+        const vehiclesToProcess = filterVehicle === 'All' 
+            ? vehicles 
+            : vehicles.filter(v => v._id === filterVehicle);
+
+        vehiclesToProcess.forEach(v => {
             const act = getVehicleActivity(v._id);
             f += act.fastag; b += act.border; s += act.service;
         });
@@ -432,7 +437,7 @@ const CarUtility = () => {
             t: f + b + s,
             lowBalanceCount: vehicles.filter(v => (v.fastagBalance || 0) < 500).length
         };
-    }, [vehicles, getVehicleActivity]);
+    }, [vehicles, getVehicleActivity, filterVehicle]);
 
     // Active Filters on the combined logs
     const filteredUnifiedLogs = useMemo(() => {
@@ -594,9 +599,9 @@ const CarUtility = () => {
                                         style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', fontWeight: '800', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
                                     >
                                         <option value="All" style={{ background: '#0f172a' }}>All Utility Types</option>
-                                        <option value="fastag" style={{ background: '#0f172a' }}>Fastag tolls</option>
-                                        <option value="border" style={{ background: '#0f172a' }}>Border tax permits</option>
-                                        <option value="services" style={{ background: '#0f172a' }}>Driver services</option>
+                                        <option value="fastag" style={{ background: '#0f172a' }}>Fastag tolls {filterVehicle !== 'All' ? `(${unifiedUtilityLogs.filter(l => l.type === 'fastag' && l.vehicleId === filterVehicle).length})` : ''}</option>
+                                        <option value="border" style={{ background: '#0f172a' }}>Border tax permits {filterVehicle !== 'All' ? `(${unifiedUtilityLogs.filter(l => l.type === 'border' && l.vehicleId === filterVehicle).length})` : ''}</option>
+                                        <option value="services" style={{ background: '#0f172a' }}>Driver services {filterVehicle !== 'All' ? `(${unifiedUtilityLogs.filter(l => l.type === 'services' && l.vehicleId === filterVehicle).length})` : ''}</option>
                                     </select>
                                 </div>
 
@@ -609,9 +614,14 @@ const CarUtility = () => {
                                         style={{ width: '100%', background: 'transparent', border: 'none', color: 'white', fontWeight: '800', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
                                     >
                                         <option value="All" style={{ background: '#0f172a' }}>All Vehicles</option>
-                                        {vehicles.map(v => (
-                                            <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>{v.carNumber}</option>
-                                        ))}
+                                        {vehicles.map(v => {
+                                            const count = unifiedUtilityLogs.filter(l => l.vehicleId === v._id).length;
+                                            return (
+                                                <option key={v._id} value={v._id} style={{ background: '#0f172a' }}>
+                                                    {v.carNumber} {count > 0 ? `(${count})` : ''}
+                                                </option>
+                                            );
+                                        })}
                                     </select>
                                 </div>
                             </div>
@@ -626,6 +636,7 @@ const CarUtility = () => {
                                                 <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Vehicle</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Utility Type</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Details / Remarks</th>
+                                                <th style={{ padding: '18px 25px', textAlign: 'left', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Payment Mode</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Amount</th>
                                                 <th style={{ padding: '18px 25px', textAlign: 'right', fontSize: '11px', fontWeight: '900', color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '1px' }}>Actions</th>
                                             </tr>
@@ -633,13 +644,13 @@ const CarUtility = () => {
                                         <tbody>
                                             {loading ? (
                                                 <tr>
-                                                    <td colSpan="6" style={{ padding: '100px', textAlign: 'center' }}>
+                                                    <td colSpan="7" style={{ padding: '100px', textAlign: 'center' }}>
                                                         <div className="spinner" style={{ margin: '0 auto' }}></div>
                                                     </td>
                                                 </tr>
                                             ) : filteredUnifiedLogs.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan="6" style={{ padding: '80px', textAlign: 'center' }}>
+                                                    <td colSpan="7" style={{ padding: '80px', textAlign: 'center' }}>
                                                         <div style={{ opacity: 0.2, marginBottom: '15px' }}><History size={36} style={{ margin: '0 auto' }} /></div>
                                                         <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.4)', fontWeight: '700' }}>No utility logs recorded in this period matching filters.</span>
                                                     </td>
@@ -659,7 +670,13 @@ const CarUtility = () => {
                                                         </span>
                                                     </td>
                                                     <td style={{ padding: '18px 25px', fontSize: '13px', color: 'rgba(255,255,255,0.6)', fontWeight: '600' }}>
-                                                        {log.remarks} {log.borderName ? `(${log.borderName})` : ''} {log.category ? `[${log.category}]` : ''}
+                                                        {log.remarks ? <div style={{ color: 'white', marginBottom: '3px' }}>{log.remarks}</div> : null}
+                                                        {log.borderName ? <div style={{ color: '#fbbf24', fontSize: '11px', fontWeight: '800' }}>{log.borderName}</div> : null}
+                                                        {log.category ? <div style={{ color: '#10b981', fontSize: '11px', fontWeight: '800' }}>{log.category}</div> : null}
+                                                        {(!log.remarks && !log.borderName && !log.category) ? '-' : ''}
+                                                    </td>
+                                                    <td style={{ padding: '18px 25px', fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '700' }}>
+                                                        {log.paymentMode || 'Cash'}
                                                     </td>
                                                     <td style={{ padding: '18px 25px', textAlign: 'right', fontSize: '15px', fontWeight: '900', color: '#10b981' }}>
                                                         ₹{Number(log.amount).toLocaleString()}

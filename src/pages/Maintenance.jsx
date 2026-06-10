@@ -95,6 +95,7 @@ const Maintenance = () => {
     const [drillData, setDrillData] = useState({ vehicle: '', category: '', records: [] });
     const [expandedVehicle, setExpandedVehicle] = useState(null); // Added for Master Data Accordion
     const [showGarageSuggestions, setShowGarageSuggestions] = useState(false);
+    const [allGarages, setAllGarages] = useState([]);
 
     const shiftMonth = (amount) => {
         let newMonth = selectedMonth + amount;
@@ -216,9 +217,24 @@ const Maintenance = () => {
             fetchPending();
             fetchVehicles();
             fetchDrivers();
+            fetchAllGarages();
             if (viewMode === 'super') fetchAggregatedData();
         }
     }, [selectedCompany, selectedMonth, selectedYear, viewMode]);
+
+    const fetchAllGarages = async () => {
+        if (!selectedCompany?._id) return;
+        try {
+            const userInfoStr = localStorage.getItem('userInfo');
+            const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
+            if (!userInfo?.token) return;
+
+            const { data } = await axios.get(`/api/admin/maintenance/garages/${selectedCompany._id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setAllGarages(data || []);
+        } catch (err) { console.error('Error fetching garages:', err); }
+    };
 
     const fetchAggregatedData = async () => {
         if (!selectedCompany?._id) return;
@@ -1778,7 +1794,7 @@ const Maintenance = () => {
                                                         >
                                                             {(() => {
                                                                 const search = (formData.garageName || '').toLowerCase();
-                                                                const filtered = uniqueGarages.filter(g => g.toLowerCase().includes(search));
+                                                                const filtered = allGarages.filter(g => g.toLowerCase().includes(search));
 
                                                                 if (filtered.length === 0) return (
                                                                     <div style={{ padding: '12px 15px', color: 'rgba(255,255,255,0.3)', fontSize: '12px' }}>
