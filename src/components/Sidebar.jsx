@@ -374,9 +374,11 @@ const Sidebar = ({ isOpen, onClose }) => {
                                             alt="Logo"
                                             style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '4px' }}
                                             onError={(e) => {
-                                                e.target.style.display = 'none';
-                                                e.target.parentElement.innerText = user?.name?.charAt(0) || 'A';
-                                                e.target.parentElement.style.background = `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`;
+                                                const parent = e.target.parentElement;
+                                                if (parent) {
+                                                    parent.innerText = user?.name?.charAt(0) || 'A';
+                                                    parent.style.background = `linear-gradient(135deg, ${theme.primary}, ${theme.secondary || theme.primary})`;
+                                                }
                                             }}
                                         />
                                     ) : (
