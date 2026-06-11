@@ -22,6 +22,16 @@ import {
     currentTimeIST
 } from '../utils/istUtils';
 
+const renderTime = (t) => {
+    if (!t || t === 'undefined') return '—';
+    const [h, m] = t.split(':');
+    if (!h || !m) return t;
+    const hour = parseInt(h);
+    const ampm = hour >= 12 ? 'PM' : 'AM';
+    const hr12 = hour % 12 || 12;
+    return `${hr12}:${m} ${ampm}`;
+};
+
 const EventManagement = () => {
     const { selectedCompany } = useCompany();
     const location = useLocation();
@@ -34,7 +44,7 @@ const EventManagement = () => {
     const [clientFilter, setClientFilter] = useState('All');
     const [sourceFilter, setSourceFilter] = useState('All');
 
-    const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth() + 1); // 1-12 or 'All'
+    const [selectedMonth, setSelectedMonth] = useState('All'); // 1-12 or 'All'
     const [selectedYear, setSelectedYear] = useState(new Date().getMonth() < 3 ? new Date().getFullYear() - 1 : new Date().getFullYear());
     const [selectedDay, setSelectedDay] = useState('All');
     const [fromDate, setFromDate] = useState('');
@@ -103,7 +113,7 @@ const EventManagement = () => {
                 defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, 1));
             }
         }
-        setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: defaultDate, eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: currentTimeIST(), remarks: '', guestCount: '' });
+        setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: defaultDate, eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: currentTimeIST(), remarks: '', guestCount: '' });
         setShowDutyModal(true);
     };
 
@@ -126,6 +136,7 @@ const EventManagement = () => {
             date: defaultDate,
             location: '',
             description: '',
+            proformaAmount: '',
             status: 'Upcoming'
         });
         setShowEventModal(true);
@@ -140,6 +151,7 @@ const EventManagement = () => {
             date: toISTDateString(new Date(ev.date)),
             location: ev.location || '',
             description: ev.description || '',
+            proformaAmount: ev.proformaAmount || '',
             status: ev.status || 'Upcoming'
         });
         setShowEventModal(true);
@@ -158,11 +170,12 @@ const EventManagement = () => {
 
     const [eventFormData, setEventFormData] = useState({
         name: '', client: '', date: '', location: '', description: '',
+        proformaAmount: '',
         status: 'Upcoming'
     });
     const [dutyFormData, setDutyFormData] = useState({
         carNumber: '', model: '', dropLocation: '', date: '',
-        eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet',
+        eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet',
         dutyType: '', remarks: '', guestCount: ''
     });
 
@@ -384,9 +397,12 @@ const EventManagement = () => {
                     model: dutyFormData.model?.trim(),
                     dropLocation: dutyFormData.dropLocation?.trim() || '',
                     dutyAmount: Number(dutyFormData.dutyAmount) || 0,
+                    ownerName: dutyFormData.ownerName?.trim() || '',
+                    buyAmount: Number(dutyFormData.buyAmount) || 0,
                     eventId: dutyFormData.eventId,
                     companyId: selectedCompany._id,
                     isOutsideCar: true,
+                    transactionType: 'Buy',
                     createdAt: dutyFormData.date,
                     driverName: dutyFormData.driverName?.trim() || '',
                     vehicleSource: dutyFormData.vehicleSource,
@@ -411,7 +427,7 @@ const EventManagement = () => {
             if (showDetailsModal && selectedEventDetails?._id) {
                 fetchEventDetails(selectedEventDetails._id);
             }
-            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: '', eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestCount: '' });
+            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: '', eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestCount: '' });
         } catch (err) {
             console.error('Save Error:', err.response?.data || err.message);
             alert('Error saving duty entry: ' + (err.response?.data?.message || 'Check connection'));
@@ -447,6 +463,8 @@ const EventManagement = () => {
             date: v.carNumber?.split('#')[1] || getToday(),
             eventId: v.eventId || '',
             dutyAmount: v.dutyAmount || v.dailyWage || '',
+            ownerName: v.ownerName || '',
+            buyAmount: v.buyAmount || '',
             driverName: v.driverName || '',
             vehicleSource: v.vehicleSource || 'External',
             dutyType: v.dutyType || '',
@@ -508,6 +526,19 @@ const EventManagement = () => {
         const currentMonthData = vehicles.filter(v => (v.date || v.carNumber?.split('#')[1])?.startsWith(`${y}-${m}`));
         return [...new Set(currentMonthData.map(v => v.dropLocation).filter(Boolean))].sort();
     }, [vehicles, dutyFormData.date]);
+
+    const externalVehicleSuggestions = React.useMemo(() => {
+        const suggestions = new Set();
+        filteredMasterByDate.forEach(ev => {
+            if (ev.externalDuties) {
+                ev.externalDuties.forEach(d => {
+                    const vehNo = d.vehicle?.carNumber || d.vehicleNumber || d.carNumber?.split('#')[0];
+                    if (vehNo) suggestions.add(vehNo.toUpperCase());
+                });
+            }
+        });
+        return Array.from(suggestions).sort();
+    }, [filteredMasterByDate]);
 
     // OPTIMIZATION: Memoize statistics
     const stats = React.useMemo(() => {
@@ -878,15 +909,16 @@ const EventManagement = () => {
                     </div>
 
                     {/* Stats Grid - High Fidelity */}
-                    <div className="stats-grid" style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
-                        gap: '12px',
-                        flex: '1',
-                        maxWidth: '600px',
-                        width: '100%'
-                    }}>
-                        {[
+                    {statusTab === 'Close' && (
+                        <div className="stats-grid" style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                            gap: '12px',
+                            flex: '1',
+                            maxWidth: '600px',
+                            width: '100%'
+                        }}>
+                            {[
                             { label: 'Total Events', value: totalEvents, color: 'var(--primary)', icon: <Target size={18} /> },
                             { label: 'Total Revenue', value: `₹${totalAmount.toLocaleString()}`, color: '#10b981', icon: <Wallet size={18} /> },
                             { label: 'Fleet Amount', value: `₹${fleetAmount.toLocaleString()}`, color: '#38bdf8', icon: <Car size={18} /> },
@@ -913,6 +945,7 @@ const EventManagement = () => {
                             </motion.div>
                         ))}
                     </div>
+                    )}
                 </div>
             </div>
 
@@ -1024,6 +1057,7 @@ const EventManagement = () => {
                                 name: '',
                                 client: '',
                                 date: getToday(),
+                                proformaAmount: '',
                                 status: statusTab === 'Running' ? 'Running' : 'Upcoming'
                             });
                             setShowEventModal(true);
@@ -1044,7 +1078,7 @@ const EventManagement = () => {
                         <button onClick={() => {
                             setIsEditingDuty(false);
                             setDutyFormData({
-                                carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', remarks: '', guestCount: ''
+                                carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', remarks: '', guestCount: ''
                             });
                             setShowDutyModal(true);
                         }}
@@ -1057,18 +1091,7 @@ const EventManagement = () => {
                             <Car size={20} strokeWidth={2.5} /> Add Vehicle
                         </button>
                     )}
-                    {statusTab === 'Close' && (
-                        <button onClick={exportExcel}
-                            style={{
-                                height: '56px', padding: '0 18px', borderRadius: '18px', border: '1px solid rgba(56,189,248,0.2)', background: 'rgba(56,189,248,0.05)',
-                                color: '#38bdf8', fontSize: '13px', fontWeight: '950', display: 'flex', alignItems: 'center', gap: '10px',
-                                cursor: 'pointer', transition: '0.3s', letterSpacing: '0.5px', flex: 1
-                            }}
-                            title="Export all completed duties to Excel"
-                        >
-                            <Download size={20} strokeWidth={2.5} /> EXCEL
-                        </button>
-                    )}
+
                 </div>
             </div>
 
@@ -1094,8 +1117,12 @@ const EventManagement = () => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: i * 0.05 }}
-                        onClick={() => fetchEventDetails(ev._id)}
-                        className="event-row event-row-hover"
+                        onClick={() => {
+                            if (ev.visualStatus !== 'Upcoming') {
+                                fetchEventDetails(ev._id);
+                            }
+                        }}
+                        className={`event-row ${ev.visualStatus !== 'Upcoming' ? 'event-row-hover' : ''}`}
                         style={{
                             background: 'rgba(15, 23, 42, 0.4)',
                             border: '1px solid rgba(255,255,255,0.06)',
@@ -1139,6 +1166,9 @@ const EventManagement = () => {
                                 </div>
                             </div>
                             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.6)', fontSize: '13px', fontWeight: '800' }}>
+                                    <Calendar size={14} color="#10b981" /> {formatDateIST(ev.date)}
+                                </div>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'rgba(255,255,255,0.4)', fontSize: '13px', fontWeight: '700' }}>
                                     <Briefcase size={14} color="var(--primary)" /> {ev.client}
                                 </div>
@@ -1150,16 +1180,25 @@ const EventManagement = () => {
                             </div>
                         </div>
 
-                        {/* 3. Resource Matrix */}
-                        <div className="resource-matrix" style={{ display: 'flex', gap: '24px', alignItems: 'center', padding: '0 24px', borderLeft: '1px solid rgba(255,255,255,0.06)', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px', letterSpacing: '0.5px' }}>FLEET</div>
-                                <div style={{ color: '#38bdf8', fontSize: '16px', fontWeight: '950' }}>{ev.fleetCount || 0}</div>
-                            </div>
-                            <div style={{ textAlign: 'center' }}>
-                                <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px', letterSpacing: '0.5px' }}>EXTERNAL</div>
-                                <div style={{ color: '#a855f7', fontSize: '16px', fontWeight: '950' }}>{ev.externalCount || 0}</div>
-                            </div>
+                        {/* 3. Resource/Proforma Matrix */}
+                        <div className="resource-matrix" style={{ display: 'flex', gap: '24px', alignItems: 'center', padding: '0 24px', borderLeft: '1px solid rgba(255,255,255,0.06)', borderRight: '1px solid rgba(255,255,255,0.06)', minWidth: '150px', justifyContent: 'center' }}>
+                            {statusTab === 'Start' ? (
+                                <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px', letterSpacing: '0.5px' }}>PROFORMA</div>
+                                    <div style={{ color: '#10b981', fontSize: '16px', fontWeight: '950' }}>{ev.proformaAmount ? `₹${ev.proformaAmount.toLocaleString()}` : '-'}</div>
+                                </div>
+                            ) : (
+                                <>
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px', letterSpacing: '0.5px' }}>FLEET</div>
+                                        <div style={{ color: '#38bdf8', fontSize: '16px', fontWeight: '950' }}>{ev.fleetCount || 0}</div>
+                                    </div>
+                                    <div style={{ textAlign: 'center' }}>
+                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.2)', fontWeight: '900', marginBottom: '2px', letterSpacing: '0.5px' }}>EXTERNAL</div>
+                                        <div style={{ color: '#a855f7', fontSize: '16px', fontWeight: '950' }}>{ev.externalCount || 0}</div>
+                                    </div>
+                                </>
+                            )}
                         </div>
 
                         {/* 4. Settlement Summary */}
@@ -1206,7 +1245,7 @@ const EventManagement = () => {
             {/* ═══ DUTY LOG MODAL ═══ */}
             <AnimatePresence>
                 {showDutyModal && (
-                    <div className="modal-overlay" style={{ zIndex: 10000 }}>
+                    <div className="modal-overlay" style={{ zIndex: 10010 }}>
                         <motion.div
                             initial={{ y: 50, opacity: 0, scale: 0.95 }}
                             animate={{ y: 0, opacity: 1, scale: 1 }}
@@ -1289,17 +1328,38 @@ const EventManagement = () => {
                                                 </select>
                                             </div>
                                             <div className="premium-input-group">
-                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                    <Calendar size={12} color="var(--primary)" style={{ opacity: 0.7 }} />
-                                                    <label className="premium-label">Log Date</label>
-                                                </div>
-                                                <div style={{ position: 'relative' }}>
-                                                    <PremiumDateInput
-                                                        value={dutyFormData.date}
-                                                        onChange={val => setDutyFormData({ ...dutyFormData, date: val })}
-                                                        required
-                                                        style={{ colorScheme: 'dark', height: '50px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', borderRadius: '10px' }}
-                                                    />
+                                                <div style={{ display: 'flex', gap: '10px' }}>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                            <Calendar size={12} color="var(--primary)" style={{ opacity: 0.7 }} />
+                                                            <label className="premium-label">Log Date</label>
+                                                        </div>
+                                                        <div style={{ position: 'relative' }}>
+                                                            <PremiumDateInput
+                                                                value={dutyFormData.date}
+                                                                onChange={val => setDutyFormData({ ...dutyFormData, date: val })}
+                                                                align="right"
+                                                                required
+                                                                style={{ colorScheme: 'dark', height: '50px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', borderRadius: '10px' }}
+                                                            />
+                                                        </div>
+                                                    </div>
+                                                    <div style={{ flex: 1 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                                                            <Calendar size={12} color="var(--primary)" style={{ opacity: 0.7 }} />
+                                                            <label className="premium-label">Log Time</label>
+                                                        </div>
+                                                        <div style={{ position: 'relative' }}>
+                                                            <input
+                                                                type="time"
+                                                                value={dutyFormData.dutyTime}
+                                                                onChange={e => setDutyFormData({ ...dutyFormData, dutyTime: e.target.value })}
+                                                                className="premium-compact-input"
+                                                                required
+                                                                style={{ colorScheme: 'dark', height: '50px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', borderRadius: '10px' }}
+                                                            />
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -1313,10 +1373,14 @@ const EventManagement = () => {
                                                     <Car size={12} color="#10b981" />
                                                     <label className="premium-label">Vehicle Numbers</label>
                                                 </div>
-                                                <input type="text" list={dutyFormData.vehicleSource === 'Fleet' ? "masterCars" : undefined} required value={dutyFormData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} className="premium-compact-input" placeholder="Search Vehicle..." style={{ textTransform: 'uppercase', height: '50px' }} />
-                                                {dutyFormData.vehicleSource === 'Fleet' && (
+                                                <input type="text" list={dutyFormData.vehicleSource === 'Fleet' ? "masterCars" : "externalCars"} required value={dutyFormData.carNumber} onChange={e => handleCarNumberChange(e.target.value)} className="premium-compact-input" placeholder="Search Vehicle..." style={{ textTransform: 'uppercase', height: '50px' }} />
+                                                {dutyFormData.vehicleSource === 'Fleet' ? (
                                                     <datalist id="masterCars">
                                                         {allVehiclesMaster.map(v => <option key={v._id} value={v.carNumber} />)}
+                                                    </datalist>
+                                                ) : (
+                                                    <datalist id="externalCars">
+                                                        {externalVehicleSuggestions.map(v => <option key={v} value={v} />)}
                                                     </datalist>
                                                 )}
                                             </div>
@@ -1345,6 +1409,28 @@ const EventManagement = () => {
                                                 <input type="number" value={dutyFormData.guestCount} onChange={e => setDutyFormData({ ...dutyFormData, guestCount: e.target.value })} className="premium-compact-input" placeholder="e.g. 4" style={{ height: '50px' }} />
                                             </div>
                                         </div>
+                                        
+                                        {dutyFormData.vehicleSource === 'External' && (
+                                            <div className="form-grid-2">
+                                                <div className="premium-input-group">
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <User size={12} color="#a855f7" />
+                                                        <label className="premium-label" style={{ color: '#a855f7' }}>Vendor / Market Owner *</label>
+                                                    </div>
+                                                    <input type="text" required value={dutyFormData.ownerName || ''} onChange={e => setDutyFormData({ ...dutyFormData, ownerName: e.target.value })} className="premium-compact-input" placeholder="Vendor Name" style={{ height: '50px', borderColor: 'rgba(168,85,247,0.3)' }} />
+                                                </div>
+                                                <div className="premium-input-group">
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <Target size={12} color="#a855f7" />
+                                                        <label className="premium-label" style={{ color: '#a855f7' }}>Buy Amount (Vendor Payout) *</label>
+                                                    </div>
+                                                    <div style={{ position: 'relative' }}>
+                                                        <span style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', fontSize: '14px', fontWeight: '900', color: '#a855f7' }}>₹</span>
+                                                        <input type="number" required value={dutyFormData.buyAmount || ''} onChange={e => setDutyFormData({ ...dutyFormData, buyAmount: e.target.value })} className="premium-compact-input" placeholder="0" style={{ paddingLeft: '35px', color: '#a855f7', fontWeight: '800', height: '50px', borderColor: 'rgba(168,85,247,0.3)' }} />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
 
                                     </div>
 
@@ -1502,6 +1588,7 @@ const EventManagement = () => {
 
                             <div style={{ padding: 'clamp(16px, 4vw, 32px)', overflowY: 'auto' }} className="premium-scroll">
                                 {/* Stats Summary */}
+                                {selectedEventDetails.event?.status !== 'Upcoming' && (
                                 <div className="stats-grid" style={{
                                     display: 'grid',
                                     gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
@@ -1534,6 +1621,7 @@ const EventManagement = () => {
                                         </div>
                                     ))}
                                 </div>
+                                )}
 
                                 {/* ═══ CONSOLIDATED DUTY LOG ═══ */}
                                 <div style={{
@@ -1559,42 +1647,54 @@ const EventManagement = () => {
                                         <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                                             <thead>
                                                 <tr style={{ background: 'rgba(255,255,255,0.01)' }}>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>TIMELINE</th>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>VEHICLE / RESOURCE</th>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'left', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>LOGISTICS</th>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>SETTLEMENT</th>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'right', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>ACTIONS</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>TIMELINE</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>VEHICLE / RESOURCE</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>LOGISTICS</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>SETTLEMENT</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>ACTIONS</th>
                                                 </tr>
                                             </thead>
                                             <tbody>
                                                 {[...selectedEventDetails.fleetDuties, ...selectedEventDetails.externalDuties]
-                                                    .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+                                                    .sort((a, b) => {
+                                                        const dateA = new Date(a.date || a.createdAt);
+                                                        const dateB = new Date(b.date || b.createdAt);
+                                                        if (dateB.getTime() !== dateA.getTime()) return dateB - dateA;
+                                                        const timeA = a.dutyTime || '00:00';
+                                                        const timeB = b.dutyTime || '00:00';
+                                                        return timeB.localeCompare(timeA);
+                                                    })
                                                     .map((d) => (
                                                         <tr key={d._id} style={{ borderBottom: '1px solid rgba(255,255,255,0.03)' }} className="table-row-hover">
-                                                            <td style={{ padding: '16px 24px' }}>
-                                                                <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{formatDateIST(d.date || d.createdAt)}</div>
-                                                                <div style={{ color: 'var(--primary)', fontSize: '9px', fontWeight: '800', textTransform: 'uppercase' }}>{new Date(d.date || d.createdAt).toLocaleDateString('en-IN', { weekday: 'short' })}</div>
+                                                            <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                                    <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{formatDateIST(d.date || d.createdAt)}</div>
+                                                                    <div style={{ color: 'var(--primary)', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase', marginTop: '4px' }}>{renderTime(d.dutyTime)}</div>
+                                                                </div>
                                                             </td>
-                                                            <td style={{ padding: '16px 24px' }}>
-                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                                            <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                                                                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', justifyContent: 'center' }}>
                                                                     <div style={{ width: '36px', height: '36px', borderRadius: '10px', background: d.vehicleSource === 'Fleet' ? 'rgba(16,185,129,0.1)' : 'rgba(168,85,247,0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                                         <Car size={18} color={d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'} />
                                                                     </div>
-                                                                    <div>
+                                                                    <div style={{ textAlign: 'left' }}>
                                                                         <div style={{ color: 'white', fontWeight: '900', fontSize: '13px' }}>{d.vehicle?.carNumber || d.vehicleNumber || d.carNumber?.split('#')[0] || 'N/A'}</div>
                                                                         <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px' }}>{d.driver?.name || d.driverName || 'N/A'}</div>
                                                                     </div>
                                                                 </div>
                                                             </td>
-                                                            <td style={{ padding: '16px 24px' }}>
-                                                                <div className="badge-duty" style={{ fontSize: '10px' }}>{d.dutyType || 'General'}</div>
-                                                                <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '4px' }}>{d.dropLocation || '—'}</div>
+                                                            <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                                                                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                                    <div className="badge-duty" style={{ fontSize: '10px', display: 'inline-block' }}>{d.dutyType || 'General'}</div>
+                                                                    <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '4px' }}>{d.dropLocation || '—'}</div>
+                                                                    {d.remarks && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', marginTop: '4px', fontStyle: 'italic' }}>{d.remarks}</div>}
+                                                                </div>
                                                             </td>
-                                                            <td style={{ padding: '16px 24px', textAlign: 'right' }}>
+                                                            <td style={{ padding: '16px 24px', textAlign: 'center' }}>
                                                                 <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{Number(d.dutyAmount || 0).toLocaleString()}</div>
                                                             </td>
-                                                            <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                                                                <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                                                            <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                                                                <div style={{ display: 'inline-flex', gap: '6px', justifyContent: 'center' }}>
                                                                     <button onClick={(e) => { e.stopPropagation(); handleEditDuty(d); }} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', color: 'rgba(255,255,255,0.4)', cursor: 'pointer' }}><Edit size={14} /></button>
                                                                     <button onClick={(e) => { e.stopPropagation(); handleDeleteDuty(d._id, d.isAttendance); }} style={{ width: '30px', height: '30px', borderRadius: '8px', background: 'rgba(244,63,94,0.08)', border: '1px solid rgba(244,63,94,0.15)', color: '#f43f5e', cursor: 'pointer' }}><Trash2 size={14} /></button>
                                                                 </div>
@@ -1607,7 +1707,14 @@ const EventManagement = () => {
 
                                     <div className="show-mobile" style={{ padding: '16px' }}>
                                         {[...selectedEventDetails.fleetDuties, ...selectedEventDetails.externalDuties]
-                                            .sort((a, b) => new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt))
+                                            .sort((a, b) => {
+                                                const dateA = new Date(a.date || a.createdAt);
+                                                const dateB = new Date(b.date || b.createdAt);
+                                                if (dateB.getTime() !== dateA.getTime()) return dateB - dateA;
+                                                const timeA = a.dutyTime || '00:00';
+                                                const timeB = b.dutyTime || '00:00';
+                                                return timeB.localeCompare(timeA);
+                                            })
                                             .map((d) => (
                                                 <div key={d._id} style={{
                                                     background: 'rgba(255,255,255,0.02)',
@@ -1616,9 +1723,11 @@ const EventManagement = () => {
                                                     marginBottom: '12px',
                                                     border: '1px solid rgba(255,255,255,0.05)'
                                                 }}>
-                                                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '12px' }}>
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                                                         <div>
-                                                            <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{formatDateIST(d.date || d.createdAt)}</div>
+                                                            <div style={{ color: 'rgba(255,255,255,0.7)', fontWeight: '700', fontSize: '13px' }}>
+                                                                {formatDateIST(d.date || d.createdAt)} <span style={{ color: 'var(--primary)' }}>• {renderTime(d.dutyTime)}</span>
+                                                            </div>
                                                             <div style={{ color: 'var(--primary)', fontSize: '10px', fontWeight: '800' }}>{d.vehicleSource} Resource</div>
                                                         </div>
                                                         <div style={{ textAlign: 'right' }}>
@@ -1626,6 +1735,7 @@ const EventManagement = () => {
                                                             <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '8px', fontWeight: '900' }}>SETTLEMENT</div>
                                                         </div>
                                                     </div>
+
                                                     <div style={{ display: 'flex', gap: '12px', alignItems: 'center', background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '12px', marginBottom: '12px' }}>
                                                         <div style={{ width: '40px', height: '40px', borderRadius: '10px', background: d.vehicleSource === 'Fleet' ? '#10b98120' : '#a855f720', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                                                             <Car size={20} color={d.vehicleSource === 'Fleet' ? '#10b981' : '#a855f7'} />
@@ -1633,6 +1743,7 @@ const EventManagement = () => {
                                                         <div>
                                                             <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{d.vehicle?.carNumber || d.vehicleNumber || d.carNumber?.split('#')[0] || 'N/A'}</div>
                                                             <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>{d.driver?.name || d.driverName || 'N/A'}</div>
+                                                            {d.remarks && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', marginTop: '2px', fontStyle: 'italic' }}>{d.remarks}</div>}
                                                         </div>
                                                     </div>
                                                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
@@ -1750,6 +1861,16 @@ const EventManagement = () => {
                                             <option value="Running">Running</option>
                                             <option value="Closed">Closed</option>
                                         </select>
+                                    </div>
+                                </div>
+                                
+                                <div className="form-grid-2">
+                                    <div className="premium-input-group">
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <IndianRupee size={12} color="var(--primary)" />
+                                            <label className="premium-label">Proforma Amount</label>
+                                        </div>
+                                        <input type="number" value={eventFormData.proformaAmount} onChange={e => setEventFormData({ ...eventFormData, proformaAmount: e.target.value })} className="premium-compact-input" placeholder="e.g. 50000" style={{ height: '52px' }} />
                                     </div>
                                 </div>
 

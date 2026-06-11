@@ -683,12 +683,16 @@ const AdminDashboard = () => {
                                                 key={index}
                                                 className="alert-card glass-card-hover-effect"
                                                 style={{
-                                                    background: alert.status === 'Expired'
-                                                        ? 'rgba(244, 63, 94, 0.1)'
-                                                        : 'rgba(245, 158, 11, 0.1)',
-                                                    border: `1px solid ${alert.status === 'Expired'
-                                                        ? 'rgba(244, 63, 94, 0.2)'
-                                                        : 'rgba(245, 158, 11, 0.2)'}`,
+                                                    background: alert.type === 'Event'
+                                                        ? 'rgba(16, 185, 129, 0.1)'
+                                                        : (alert.status === 'Expired'
+                                                            ? 'rgba(244, 63, 94, 0.1)'
+                                                            : 'rgba(245, 158, 11, 0.1)'),
+                                                    border: `1px solid ${alert.type === 'Event'
+                                                        ? 'rgba(16, 185, 129, 0.3)'
+                                                        : (alert.status === 'Expired'
+                                                            ? 'rgba(244, 63, 94, 0.2)'
+                                                            : 'rgba(245, 158, 11, 0.2)')}`,
                                                     position: 'relative',
                                                     overflow: 'hidden'
                                                 }}
@@ -714,7 +718,7 @@ const AdminDashboard = () => {
                                                         borderRadius: '6px',
                                                         background: alert.daysLeft < 0
                                                             ? '#f43f5e'
-                                                            : (alert.daysLeft === 0 ? 'var(--primary)' : 'var(--primary)'),
+                                                            : (alert.type === 'Event' ? '#10b981' : 'var(--primary)'),
                                                         color: 'white',
                                                         fontWeight: '800',
                                                         flexShrink: 0,

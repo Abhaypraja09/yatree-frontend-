@@ -212,7 +212,7 @@ const OutsideCars = () => {
             doc.setLineWidth(0.5);
             doc.line(15, 68, 50, 68);
 
-            const totalAmount = filtered.reduce((sum, v) => sum + (Number(v.dutyAmount) || 0), 0);
+            const totalAmount = filtered.reduce((sum, v) => sum + (Number((v.transactionType === 'Buy' && v.buyAmount) ? v.buyAmount : v.dutyAmount) || 0), 0);
 
             doc.setFontSize(10);
             doc.setTextColor(100, 116, 139);
@@ -227,7 +227,7 @@ const OutsideCars = () => {
                 `${v.model} - ${v.carNumber?.split('#')[0]}`,
                 v.property || 'Direct',
                 v.dutyType || 'Standard',
-                `Rs. ${Number(v.dutyAmount || 0).toLocaleString('en-IN')}`
+                `Rs. ${Number(((v.transactionType === 'Buy' && v.buyAmount) ? v.buyAmount : v.dutyAmount) || 0).toLocaleString('en-IN')}`
             ]);
 
             autoTable(doc, {
@@ -474,7 +474,7 @@ const OutsideCars = () => {
         return new Date(b.createdAt) - new Date(a.createdAt);
     });
 
-    const totalPayable = filtered.reduce((sum, v) => sum + (v ? (Number(v.dutyAmount) || 0) : 0), 0);
+    const totalPayable = filtered.reduce((sum, v) => sum + (v ? (Number((v.transactionType === 'Buy' && v.buyAmount) ? v.buyAmount : v.dutyAmount) || 0) : 0), 0);
     const totalDutiesCount = filtered.reduce((sum, v) => sum + (v?.dutyType ? v.dutyType.split(' + ').filter(Boolean).length : 0), 0);
 
     // ── DYNAMIC FILTERS ──
@@ -482,7 +482,7 @@ const OutsideCars = () => {
         const owner = v.ownerName?.trim();
         const dutyDate = v.carNumber?.split('#')[1];
         if (owner && dutyDate >= fromDate && dutyDate <= toDate && (v.transactionType || 'Buy') === transactionFilter) {
-            acc[owner] = (acc[owner] || 0) + (Number(v.dutyAmount) || 0);
+            acc[owner] = (acc[owner] || 0) + (Number((v.transactionType === 'Buy' && v.buyAmount) ? v.buyAmount : v.dutyAmount) || 0);
         }
         return acc;
     }, {});
@@ -749,7 +749,7 @@ const OutsideCars = () => {
                                     <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '4px' }}>{v.dutyType} {v.dropLocation && <>➜ {v.dropLocation}</>}</div>
                                 </td>
                                 <td style={{ padding: '16px 24px', textAlign: 'right' }}>
-                                    <div style={{ fontSize: '16px', fontWeight: '1000', color: '#10b981' }}>₹{v.dutyAmount?.toLocaleString()}</div>
+                                    <div style={{ fontSize: '16px', fontWeight: '1000', color: '#10b981' }}>₹{((v.transactionType === 'Buy' && v.buyAmount) ? v.buyAmount : v.dutyAmount)?.toLocaleString()}</div>
                                 </td>
                                 <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                                     <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
@@ -776,7 +776,7 @@ const OutsideCars = () => {
                                 </div>
                             </div>
                             <div style={{ textAlign: 'right' }}>
-                                <div style={{ fontSize: '16px', fontWeight: '1000', color: '#10b981' }}>₹{v.dutyAmount?.toLocaleString()}</div>
+                                <div style={{ fontSize: '16px', fontWeight: '1000', color: '#10b981' }}>₹{((v.transactionType === 'Buy' && v.buyAmount) ? v.buyAmount : v.dutyAmount)?.toLocaleString()}</div>
                                 <span className={`badge-ext ${v.transactionType === 'Buy' ? 'bg-buy' : 'bg-sell'}`} style={{ fontSize: '6px', padding: '2px 6px' }}>{v.transactionType}</span>
                             </div>
                         </div>
