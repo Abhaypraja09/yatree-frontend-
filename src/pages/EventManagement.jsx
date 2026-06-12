@@ -1674,6 +1674,7 @@ const EventManagement = () => {
                                                     <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>TIMELINE</th>
                                                     <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>VEHICLE / RESOURCE</th>
                                                     <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>LOGISTICS</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>GUEST NAME</th>
                                                     <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>SETTLEMENT</th>
                                                     <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>ACTIONS</th>
                                                 </tr>
@@ -1713,6 +1714,9 @@ const EventManagement = () => {
                                                                     <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '10px', marginTop: '4px' }}>{d.dropLocation || '—'}</div>
                                                                     {d.remarks && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '10px', marginTop: '4px', fontStyle: 'italic' }}>{d.remarks}</div>}
                                                                 </div>
+                                                            </td>
+                                                            <td style={{ padding: '16px 24px', textAlign: 'center' }}>
+                                                                <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', fontWeight: '700' }}>{d.guestName || '-'}</div>
                                                             </td>
                                                             <td style={{ padding: '16px 24px', textAlign: 'center' }}>
                                                                 <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{Number(d.dutyAmount || 0).toLocaleString()}</div>
@@ -1767,6 +1771,7 @@ const EventManagement = () => {
                                                         <div>
                                                             <div style={{ color: 'white', fontWeight: '900', fontSize: '14px' }}>{d.vehicle?.carNumber || d.vehicleNumber || d.carNumber?.split('#')[0] || 'N/A'}</div>
                                                             <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px' }}>{d.driver?.name || d.driverName || 'N/A'}</div>
+                                                            {d.guestName && <div style={{ color: 'var(--primary)', fontSize: '11px', marginTop: '2px', fontWeight: '800' }}>{d.guestName}</div>}
                                                             {d.remarks && <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: '11px', marginTop: '2px', fontStyle: 'italic' }}>{d.remarks}</div>}
                                                         </div>
                                                     </div>
