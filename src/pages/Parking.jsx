@@ -260,7 +260,7 @@ const ParkingPage = () => {
         finally { setLoading(false); }
     };
 
-    const fetchDrivers = async (overrideDate = null) => {
+    const fetchDrivers = async (overrideDate = null, vehicleId = null) => {
         if (!selectedCompany?._id) return;
         try {
             const userInfoStr = localStorage.getItem('userInfo');
@@ -268,7 +268,10 @@ const ParkingPage = () => {
             if (!userInfo?.token) return;
 
             const targetDate = overrideDate || toDate;
-            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&toDate=${targetDate}`, {
+            const isToday = targetDate === new Date().toLocaleDateString('en-CA');
+            const exactDateParam = !isToday ? '&exactDate=true' : '';
+            const vehicleParam = vehicleId ? `&exactVehicleId=${vehicleId}` : '';
+            const { data } = await axios.get(`/api/admin/drivers/${selectedCompany._id}?usePagination=false&toDate=${targetDate}${exactDateParam}${vehicleParam}`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
             setDrivers(data.drivers || []);
@@ -277,10 +280,10 @@ const ParkingPage = () => {
 
     useEffect(() => {
         if (showModal && formData.date) {
-            fetchDrivers(formData.date);
+            fetchDrivers(formData.date, formData.vehicleId);
             fetchVehicles(formData.date);
         }
-    }, [formData.date, showModal]);
+    }, [formData.date, formData.vehicleId, showModal]);
 
     const fetchVehicles = async (overrideDate = null) => {
         if (!selectedCompany?._id) return;
