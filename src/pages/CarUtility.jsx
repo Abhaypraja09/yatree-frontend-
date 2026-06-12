@@ -12,6 +12,7 @@ import { useCompany } from '../context/CompanyContext';
 import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, formatDateIST, nowIST, toISTDateString } from '../utils/istUtils';
+import ImageUploader from '../components/common/ImageUploader';
 
 const CarUtility = () => {
     const { theme } = useTheme();
@@ -1274,21 +1275,7 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
                         </div>
 
                         <div>
-                            <div 
-                                className="upload-zone"
-                                onClick={() => document.getElementById('file-upload').click()}
-                                style={{ 
-                                    background: file ? `${color}10` : 'rgba(15, 23, 42, 0.4)',
-                                    border: `1px dashed ${file ? color : 'rgba(255,255,255,0.15)'}`, 
-                                    borderRadius: '16px', padding: '24px', textAlign: 'center', cursor: 'pointer', transition: 'all 0.3s ease'
-                                }}
-                            >
-                                <input id="file-upload" type="file" hidden onChange={e => setFile(e.target.files[0])} />
-                                <Image size={28} style={{ color: file ? color : 'rgba(255,255,255,0.3)', marginBottom: '12px' }} />
-                                <div style={{ fontSize: '13px', fontWeight: '800', color: file ? '#fff' : 'rgba(255,255,255,0.5)' }}>
-                                    {file ? file.name : 'Click to attach receipt / bill'}
-                                </div>
-                            </div>
+                            <ImageUploader file={file} onChange={setFile} label="Attach Receipt / Bill" color={color} />
                         </div>
 
                         <div style={{ display: 'flex', gap: '15px', marginTop: '10px' }}>

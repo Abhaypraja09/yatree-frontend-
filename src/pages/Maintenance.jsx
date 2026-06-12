@@ -38,6 +38,7 @@ import { useCompany } from '../context/CompanyContext';
 import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, formatDateIST, nowIST, formatDateTimeIST } from '../utils/istUtils';
+import ImageUploader from '../components/common/ImageUploader';
 
 const MAINTENANCE_CATEGORIES = [
     'Regular Service',
@@ -1878,8 +1879,7 @@ const Maintenance = () => {
                                                 </select>
                                             </div>
                                             <div>
-                                                <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Bill Photo</label>
-                                                <input type="file" onChange={(e) => setBillPhoto(e.target.files[0])} style={{ color: 'rgba(255,255,255,0.4)', fontSize: '12px', width: '100%' }} />
+                                                <ImageUploader file={billPhoto} onChange={setBillPhoto} label="Bill Photo" color="var(--primary)" />
                                             </div>
                                         </div>
                                     </div>

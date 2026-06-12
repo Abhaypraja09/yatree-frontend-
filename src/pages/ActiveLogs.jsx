@@ -23,6 +23,7 @@ import SEO from '../components/SEO';
 import { todayIST, toISTDateString, formatDateIST, nowIST } from '../utils/istUtils';
 import { ChevronLeft, ChevronRight, ShoppingCart, TrendingUp } from 'lucide-react';
 import PremiumDateInput from '../components/common/PremiumDateInput';
+import ImageUploader from '../components/common/ImageUploader';
 
 const ActiveLogs = () => {
     const { selectedCompany } = useCompany();
@@ -95,6 +96,16 @@ const ActiveLogs = () => {
     const [photos, setPhotos] = useState([]);
     const [submitting, setSubmitting] = useState(false);
 
+    const handlePhotoChange = (index, file) => {
+        const newPhotos = [...photos];
+        if (file) {
+            newPhotos[index] = file;
+        } else {
+            newPhotos.splice(index, 1);
+        }
+        setPhotos(newPhotos);
+    };
+
     useEffect(() => {
         if (selectedCompany && fromDate && toDate) {
             fetchLogs();
@@ -145,8 +156,8 @@ const ActiveLogs = () => {
             Object.keys(formData).forEach(key => fd.append(key, formData[key]));
             fd.append('companyId', selectedCompany._id);
 
-            Array.from(photos).forEach(file => {
-                fd.append('photos', file);
+            photos.forEach(file => {
+                if (file) fd.append('photos', file);
             });
 
             const userInfo = JSON.parse(localStorage.getItem('userInfo'));
@@ -650,8 +661,30 @@ const ActiveLogs = () => {
 
                                     <div>
                                         <label className="input-label" style={{ marginBottom: '10px', display: 'block' }}>Upload Evidence (Photos)</label>
-                                        <div style={{ position: 'relative' }}>
-                                            <input type="file" multiple onChange={e => setPhotos(e.target.files)} className="input-field" style={{ height: '54px', borderRadius: '15px', paddingTop: '15px', cursor: 'pointer', outline: 'none' }} />
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '15px' }}>
+                                            {photos.map((p, idx) => (
+                                                <ImageUploader 
+                                                    key={idx} 
+                                                    file={p} 
+                                                    onChange={(f) => {
+                                                        const newP = [...photos];
+                                                        if (f) newP[idx] = f; else newP.splice(idx, 1);
+                                                        setPhotos(newP);
+                                                    }} 
+                                                    label={`Photo ${idx + 1}`} 
+                                                    color="#ef4444" 
+                                                />
+                                            ))}
+                                            {photos.length < 5 && (
+                                                <ImageUploader 
+                                                    file={null} 
+                                                    onChange={(f) => {
+                                                        if (f) setPhotos([...photos, f]);
+                                                    }} 
+                                                    label={`Add Photo`} 
+                                                    color="#ef4444" 
+                                                />
+                                            )}
                                         </div>
                                     </div>
 

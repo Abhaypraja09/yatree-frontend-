@@ -8,6 +8,7 @@ import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
 import { todayIST, formatDateIST } from '../utils/istUtils';
+import ImageUploader from '../components/common/ImageUploader';
 
 const Vehicles = () => {
     const { theme } = useTheme();
@@ -934,8 +935,12 @@ const Vehicles = () => {
                                     </div>
                                 </div>
                                 <div>
-                                    <label style={{ display: 'block', fontSize: '11px', color: 'rgba(255,255,255,0.4)', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase' }}>Scan / Photo</label>
-                                    <input type="file" onChange={(e) => setDocToUpload({ ...docToUpload, file: e.target.files[0] })} style={{ color: 'white', fontSize: '12px', marginTop: '10px' }} />
+                                    <ImageUploader 
+                                        file={docToUpload.file} 
+                                        onChange={(file) => setDocToUpload({ ...docToUpload, file })} 
+                                        label="Scan / Photo" 
+                                        color="var(--primary)" 
+                                    />
                                 </div>
                                 <div style={{ display: 'flex', alignItems: 'flex-end' }}>
                                     <button

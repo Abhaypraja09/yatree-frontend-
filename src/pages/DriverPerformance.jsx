@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/axios';
 import { User, Calendar, Plus, Trash2, AlertCircle, CheckCircle2, ShieldAlert, Edit2, Image as ImageIcon, X } from 'lucide-react';
 import { useCompany } from '../context/CompanyContext';
+import ImageUploader from '../components/common/ImageUploader';
 
 const DriverPerformance = () => {
     const { selectedCompany } = useCompany();
@@ -163,37 +164,41 @@ const DriverPerformance = () => {
         setIncidentType('Late for Duty');
     };
 
-    const handlePhotoUpload = async (e) => {
-        const files = Array.from(e.target.files);
-        if (!files.length) return;
+    const handleSinglePhotoUpload = async (file, indexToReplace = null) => {
+        if (!file) return;
 
         setIsUploading(true);
         try {
             const userInfoStr = localStorage.getItem('userInfo');
             const userInfo = userInfoStr ? JSON.parse(userInfoStr) : null;
             
-            const uploadedUrls = [];
-            for (const file of files) {
-                const uploadData = new FormData();
-                uploadData.append('file', file);
-                uploadData.append('upload_preset', 'fleet_crm');
-
-                const res = await axios.post('/api/admin/upload', uploadData, {
-                    headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${userInfo?.token}` }
-                });
-                uploadedUrls.push(res.data.url);
-            }
+            const uploadData = new FormData();
+            uploadData.append('file', file);
             
-            setPhotos(prev => [...prev, ...uploadedUrls]);
+            const res = await axios.post('/api/admin/upload', uploadData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                    Authorization: `Bearer ${userInfo?.token}`
+                }
+            });
+
+            const uploadedUrl = res.data.url;
+            
+            if (indexToReplace !== null) {
+                setPhotos(prev => {
+                    const newArr = [...prev];
+                    newArr[indexToReplace] = uploadedUrl;
+                    return newArr;
+                });
+            } else {
+                setPhotos(prev => [...prev, uploadedUrl]);
+            }
         } catch (err) {
             console.error('Upload failed:', err);
             alert('Image upload failed. Please try again.');
         } finally {
             setIsUploading(false);
         }
-        
-        // Reset the input value so the same files can be selected again if needed
-        e.target.value = null;
     };
 
     const removePhoto = (index) => {
@@ -588,42 +593,30 @@ const DriverPerformance = () => {
 
                             <div style={{ marginBottom: '30px' }}>
                                 <label style={{ display: 'block', marginBottom: '10px', color: 'rgba(255,255,255,0.8)', fontWeight: '600' }}>Incident Photos (Optional)</label>
-                                <div style={{ 
-                                    border: '1px dashed rgba(255,255,255,0.2)', 
-                                    padding: '20px', 
-                                    borderRadius: '12px', 
-                                    background: 'rgba(0,0,0,0.2)',
-                                    textAlign: 'center'
-                                }}>
-                                    <input 
-                                        type="file" 
-                                        multiple 
-                                        accept="image/*" 
-                                        onChange={handlePhotoUpload} 
-                                        style={{ display: 'none' }} 
-                                        id="incident-photo-upload" 
-                                    />
-                                    <label htmlFor="incident-photo-upload" style={{ 
-                                        display: 'inline-flex', alignItems: 'center', gap: '8px', 
-                                        padding: '10px 20px', background: 'rgba(255,255,255,0.1)', 
-                                        borderRadius: '8px', cursor: 'pointer', color: 'white', 
-                                        fontWeight: '600', transition: 'background 0.2s'
-                                    }}>
-                                        <ImageIcon size={18} />
-                                        {isUploading ? 'Uploading...' : 'Upload Photos'}
-                                    </label>
-                                    
-                                    {photos.length > 0 && (
-                                        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '15px', justifyContent: 'center' }}>
-                                            {photos.map((photo, i) => (
-                                                <div key={i} style={{ position: 'relative' }}>
-                                                    <img src={getImageUrl(photo)} alt="Preview" style={{ width: '60px', height: '60px', borderRadius: '8px', objectFit: 'cover', border: '1px solid rgba(255,255,255,0.2)' }} />
-                                                    <button type="button" onClick={() => removePhoto(i)} style={{ position: 'absolute', top: '-5px', right: '-5px', background: '#f43f5e', color: 'white', border: 'none', borderRadius: '50%', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                                                        <X size={12} />
-                                                    </button>
-                                                </div>
-                                            ))}
-                                        </div>
+                                {isUploading && <div style={{ color: 'var(--primary)', marginBottom: '10px', fontSize: '13px', fontWeight: '800' }}>Uploading Photo...</div>}
+                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: '15px' }}>
+                                    {photos.map((photo, i) => (
+                                        <ImageUploader 
+                                            key={i} 
+                                            file={photo} 
+                                            onChange={(newFile) => {
+                                                if (!newFile) {
+                                                    removePhoto(i);
+                                                } else {
+                                                    handleSinglePhotoUpload(newFile, i);
+                                                }
+                                            }} 
+                                            label={`Photo ${i + 1}`} 
+                                            color="#f43f5e" 
+                                        />
+                                    ))}
+                                    {photos.length < 3 && (
+                                        <ImageUploader 
+                                            file={null} 
+                                            onChange={(f) => handleSinglePhotoUpload(f)} 
+                                            label={`Add Photo`} 
+                                            color="#f43f5e" 
+                                        />
                                     )}
                                 </div>
                             </div>
