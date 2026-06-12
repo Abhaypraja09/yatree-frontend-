@@ -391,111 +391,46 @@ const EventManagement = () => {
 
             const selectedDuty = isEditingDuty ? vehicles.find(v => v._id === selectedId) : null;
 
-            if (dutyFormData.vehicleSource === 'Fleet') {
-                const normVal = (dutyFormData.carNumber || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
-                const matchedFleet = allVehiclesMaster.find(v => (v.carNumber || '').toUpperCase().replace(/[^A-Z0-9]/g, '') === normVal);
-                
-                if (!isEditingDuty && !matchedFleet) {
-                    alert('Please select a valid Fleet Vehicle.');
-                    return;
-                }
-
-                if (isEditingDuty && selectedDuty?.isAttendance) {
-                    // Update Fleet Attendance Record
-                    const attendancePayload = {
-                        eventId: dutyFormData.eventId || undefined,
-                        dropLocation: dutyFormData.dropLocation,
-                        dutyType: dutyFormData.dutyType,
-                        dutyTime: dutyFormData.dutyTime,
-                        remarks: dutyFormData.remarks,
-                        guestName: dutyFormData.guestName?.trim() || '',
-                        dailyWage: Number(dutyFormData.dutyAmount) || 0
-                    };
-                    await axios.put(`/api/admin/attendance/${selectedId}`, attendancePayload, config);
-                } else if (isEditingDuty && !selectedDuty?.isAttendance) {
-                    // Fallback if they are editing a wrongly created outside car
-                    const vehiclePayload = {
-                        model: dutyFormData.model?.trim(),
-                        property: dutyFormData.dropLocation?.trim() || '',
-                        dropLocation: dutyFormData.dropLocation?.trim() || '',
-                        dutyAmount: Number(dutyFormData.dutyAmount) || 0,
-                        ownerName: dutyFormData.ownerName?.trim() || '',
-                        buyAmount: Number(dutyFormData.buyAmount) || 0,
-                        eventId: dutyFormData.eventId,
-                        driverName: dutyFormData.driverName?.trim() || '',
-                        vehicleSource: 'Fleet',
-                        dutyType: dutyFormData.dutyType,
-                        dutyTime: dutyFormData.dutyTime,
-                        remarks: dutyFormData.remarks,
-                        guestName: dutyFormData.guestName?.trim() || ''
-                    };
-                    await axios.put(`/api/admin/vehicles/${selectedId}`, vehiclePayload, config);
-                } else {
-                    // Create NEW Fleet Attendance Record via manual-duty
-                    const punchTime = `${dutyFormData.date}T${dutyFormData.dutyTime || '08:00'}`;
-                    const attendancePayload = {
-                        driverId: matchedFleet?.currentDriver?._id || matchedFleet?.currentDriver,
-                        vehicleId: matchedFleet?._id,
-                        companyId: selectedCompany._id,
-                        date: dutyFormData.date,
-                        punchInKM: 0,
-                        punchOutKM: 0,
-                        punchInTime: punchTime,
-                        punchOutTime: punchTime,
-                        pickUpLocation: dutyFormData.dropLocation,
-                        dropLocation: dutyFormData.dropLocation,
-                        fuelAmount: 0,
-                        parkingAmount: 0,
-                        dailyWage: Number(dutyFormData.dutyAmount) || 0,
-                        review: dutyFormData.remarks,
-                        eventId: dutyFormData.eventId,
-                        guestName: dutyFormData.guestName?.trim() || ''
-                    };
-                    await axios.post('/api/admin/manual-duty', attendancePayload, config);
-                }
+            let internalCarNumber = `${dutyFormData.carNumber}#${dutyFormData.date}`;
+            if (!isEditingDuty) {
+                internalCarNumber += `#${Math.random().toString(36).substring(2, 7)}`;
             } else {
-                // EXTERNAL DUTY (Vehicle with isOutsideCar: true)
-                let internalCarNumber = `${dutyFormData.carNumber}#${dutyFormData.date}`;
-                if (!isEditingDuty) {
+                const parts = selectedDuty?.carNumber?.split('#') || [];
+                if (dutyFormData.carNumber === parts[0] && dutyFormData.date === parts[1] && parts[2]) {
+                    internalCarNumber += `#${parts[2]}`;
+                } else {
                     internalCarNumber += `#${Math.random().toString(36).substring(2, 7)}`;
-                } else {
-                    const parts = selectedDuty?.carNumber?.split('#') || [];
-                    if (dutyFormData.carNumber === parts[0] && dutyFormData.date === parts[1] && parts[2]) {
-                        internalCarNumber += `#${parts[2]}`;
-                    } else {
-                        internalCarNumber += `#${Math.random().toString(36).substring(2, 7)}`;
-                    }
                 }
-                const vehiclePayload = {
-                    carNumber: internalCarNumber,
-                    model: dutyFormData.model?.trim(),
-                    property: dutyFormData.dropLocation?.trim() || '',
-                    dropLocation: dutyFormData.dropLocation?.trim() || '',
-                    dutyAmount: Number(dutyFormData.dutyAmount) || 0,
-                    ownerName: dutyFormData.ownerName?.trim() || '',
-                    buyAmount: Number(dutyFormData.buyAmount) || 0,
-                    eventId: dutyFormData.eventId,
-                    companyId: selectedCompany._id,
-                    isOutsideCar: true,
-                    transactionType: 'Buy',
-                    createdAt: dutyFormData.date,
-                    driverName: dutyFormData.driverName?.trim() || '',
-                    vehicleSource: 'External',
-                    dutyType: dutyFormData.dutyType,
-                    dutyTime: dutyFormData.dutyTime,
-                    remarks: dutyFormData.remarks,
-                    guestName: dutyFormData.guestName?.trim() || ''
-                };
+            }
+            const vehiclePayload = {
+                carNumber: internalCarNumber,
+                model: dutyFormData.model?.trim(),
+                property: dutyFormData.dropLocation?.trim() || '',
+                dropLocation: dutyFormData.dropLocation?.trim() || '',
+                dutyAmount: Number(dutyFormData.dutyAmount) || 0,
+                ownerName: dutyFormData.ownerName?.trim() || '',
+                buyAmount: Number(dutyFormData.buyAmount) || 0,
+                eventId: dutyFormData.eventId,
+                companyId: selectedCompany._id,
+                isOutsideCar: true,
+                transactionType: 'Buy',
+                createdAt: dutyFormData.date,
+                driverName: dutyFormData.driverName?.trim() || '',
+                vehicleSource: dutyFormData.vehicleSource,
+                dutyType: dutyFormData.dutyType,
+                dutyTime: dutyFormData.dutyTime,
+                remarks: dutyFormData.remarks,
+                guestName: dutyFormData.guestName?.trim() || ''
+            };
 
-                if (isEditingDuty && selectedId && !selectedDuty?.isAttendance) {
-                    await axios.put(`/api/admin/vehicles/${selectedId}`, vehiclePayload, config);
-                } else {
-                    const data = new FormData();
-                    Object.keys(vehiclePayload).forEach(key => data.append(key, vehiclePayload[key]));
-                    data.append('permitType', 'Contract');
-                    data.append('carType', 'Other');
-                    await axios.post('/api/admin/vehicles', data, config);
-                }
+            if (isEditingDuty && selectedId && !selectedDuty?.isAttendance) {
+                await axios.put(`/api/admin/vehicles/${selectedId}`, vehiclePayload, config);
+            } else {
+                const data = new FormData();
+                Object.keys(vehiclePayload).forEach(key => data.append(key, vehiclePayload[key]));
+                data.append('permitType', 'Contract');
+                data.append('carType', 'Other');
+                await axios.post('/api/admin/vehicles', data, config);
             }
             setShowDutyModal(false);
             fetchVehicles();
