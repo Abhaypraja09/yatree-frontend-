@@ -123,7 +123,7 @@ const OutsideCars = () => {
             const { data } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=outside&includeBlocked=true`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
             });
-            setVehicles(data.vehicles?.filter(v => v.isOutsideCar && !v.eventId) || []);
+            setVehicles(data.vehicles?.filter(v => v.isOutsideCar) || []);
 
             const { data: compData } = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false`, {
                 headers: { Authorization: `Bearer ${userInfo.token}` }
@@ -547,6 +547,18 @@ const OutsideCars = () => {
             <SEO title="Outside Fleet Command" description="Manage external vehicles and freelancer drivers for specific duties." />
 
             <style>{`
+                /* ===== MODAL BASE (GLOBAL OVERLAYS) ===== */
+                .modal-overlay { 
+                    position: fixed; inset: 0; 
+                    background: rgba(0,0,0,0.85); 
+                    backdrop-filter: blur(14px); 
+                    z-index: 2000; 
+                    display: flex; justify-content: center; align-items: center; 
+                    padding: clamp(10px, 3vw, 20px); 
+                }
+                @media (min-width: 1024px) {
+                    .modal-overlay { padding-left: calc(280px + clamp(10px, 3vw, 20px)); }
+                }
                 .bg-buy { 
                     background: linear-gradient(135deg, rgba(34, 197, 94, 0.15) 0%, rgba(20, 83, 45, 0.2) 100%) !important; 
                     color: #4ade80 !important; 
@@ -747,6 +759,7 @@ const OutsideCars = () => {
                                 <td style={{ padding: '16px 24px' }}>
                                     <div style={{ fontSize: '14px', fontWeight: '800', color: 'white' }}>{v.property || 'Direct'}</div>
                                     <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)', display: 'flex', alignItems: 'center', gap: '4px' }}>{v.dutyType} {v.dropLocation && <>➜ {v.dropLocation}</>}</div>
+                                    {v.remarks && <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.5)', marginTop: '4px', fontStyle: 'italic' }}>{v.remarks}</div>}
                                 </td>
                                 <td style={{ padding: '16px 24px', textAlign: 'right' }}>
                                     <div style={{ fontSize: '16px', fontWeight: '1000', color: '#10b981' }}>₹{((v.transactionType === 'Buy' && v.buyAmount) ? v.buyAmount : v.dutyAmount)?.toLocaleString()}</div>
@@ -791,7 +804,10 @@ const OutsideCars = () => {
                             </div>
                         </div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontWeight: '700' }}>{v.dutyType}</span>
+                            <div style={{ display: 'flex', flexDirection: 'column' }}>
+                                <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', fontWeight: '700' }}>{v.dutyType}</span>
+                                {v.remarks && <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', fontStyle: 'italic', marginTop: '2px' }}>{v.remarks}</span>}
+                            </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 <button onClick={() => handleEdit(v)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white' }}><Edit size={14} /></button>
                                 <button onClick={() => handleDelete(v._id)} style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(244, 63, 94, 0.1)', border: 'none', color: '#f43f5e' }}><Trash2 size={14} /></button>

@@ -55,21 +55,33 @@ const EventManagement = () => {
 
     useEffect(() => {
         if (selectedMonth === 'All') {
-            const start = `${selectedYear}-04-01`;
-            const end = `${selectedYear + 1}-03-31`;
+            const safeYear = isNaN(selectedYear) ? new Date().getFullYear() : selectedYear;
+            const start = `${safeYear}-04-01`;
+            const end = `${safeYear + 1}-03-31`;
             setFromDate(start);
             setToDate(end);
         } else {
-            const calendarYear = (selectedMonth >= 1 && selectedMonth <= 3) ? selectedYear + 1 : selectedYear;
-            if (selectedDay === 'All') {
-                const start = toISTDateString(new Date(calendarYear, selectedMonth - 1, 1));
-                const end = toISTDateString(new Date(calendarYear, selectedMonth, 0));
-                setFromDate(start);
-                setToDate(end);
-            } else {
-                const d = toISTDateString(new Date(calendarYear, selectedMonth - 1, parseInt(selectedDay)));
-                setFromDate(d);
-                setToDate(d);
+            const safeYear = isNaN(selectedYear) ? new Date().getFullYear() : selectedYear;
+            const safeMonth = isNaN(selectedMonth) ? new Date().getMonth() + 1 : selectedMonth;
+            const calendarYear = (safeMonth >= 1 && safeMonth <= 3) ? safeYear + 1 : safeYear;
+            
+            try {
+                if (selectedDay === 'All') {
+                    const start = toISTDateString(new Date(calendarYear, safeMonth - 1, 1));
+                    const end = toISTDateString(new Date(calendarYear, safeMonth, 0));
+                    setFromDate(start);
+                    setToDate(end);
+                } else {
+                    const safeDay = isNaN(parseInt(selectedDay)) ? 1 : parseInt(selectedDay);
+                    const d = toISTDateString(new Date(calendarYear, safeMonth - 1, safeDay));
+                    setFromDate(d);
+                    setToDate(d);
+                }
+            } catch (e) {
+                console.error("Date calculation error:", e);
+                const todayStr = toISTDateString(new Date());
+                setFromDate(todayStr);
+                setToDate(todayStr);
             }
         }
     }, [selectedMonth, selectedYear, selectedDay]);
@@ -113,7 +125,7 @@ const EventManagement = () => {
                 defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, 1));
             }
         }
-        setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: defaultDate, eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: currentTimeIST(), remarks: '', guestCount: '' });
+        setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: defaultDate, eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: currentTimeIST(), remarks: '', guestName: '' });
         setShowDutyModal(true);
     };
 
@@ -176,7 +188,7 @@ const EventManagement = () => {
     const [dutyFormData, setDutyFormData] = useState({
         carNumber: '', model: '', dropLocation: '', date: '',
         eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet',
-        dutyType: '', remarks: '', guestCount: ''
+        dutyType: '', remarks: '', guestName: ''
     });
 
     useEffect(() => {
@@ -201,9 +213,9 @@ const EventManagement = () => {
 
         if (searchParam) setSearchTerm(searchParam);
         if (clientParam) setClientFilter(clientParam);
-        if (monthParam) setSelectedMonth(parseInt(monthParam) - 1); // 0-indexed
-        if (yearParam) setSelectedYear(parseInt(yearParam));
-        if (dayParam) setSelectedDay(dayParam);
+        if (monthParam) setSelectedMonth(monthParam === 'All' ? 'All' : (parseInt(monthParam) || 'All'));
+        if (yearParam) setSelectedYear(parseInt(yearParam) || new Date().getFullYear());
+        if (dayParam) setSelectedDay(dayParam === 'All' ? 'All' : (parseInt(dayParam) || 'All'));
         if (tabParam) setStatusTab(tabParam);
     }, [location.search]);
 
@@ -277,7 +289,7 @@ const EventManagement = () => {
                     dutyType: a.dutyType || a.punchOut?.remarks || 'Fleet Duty',
                     dutyTime: a.dutyTime || '',
                     remarks: a.remarks || '',
-                    guestCount: a.guestCount || ''
+                    guestName: a.guestName || ''
                 }));
 
             setVehicles([...outsideDuties, ...attendanceDuties]);
@@ -320,13 +332,25 @@ const EventManagement = () => {
 
         const existingFleet = allVehiclesMaster.find(v => (v.carNumber || '').toUpperCase().replace(/[^A-Z0-9]/g, '') === normVal);
         if (existingFleet) {
-            setDutyFormData(prev => ({ ...prev, carNumber: upVal, model: existingFleet.model || prev.model, vehicleSource: 'Fleet' }));
+            setDutyFormData(prev => ({ 
+                ...prev, 
+                carNumber: upVal, 
+                model: existingFleet.model || prev.model, 
+                driverName: existingFleet.currentDriver?.name || prev.driverName,
+                vehicleSource: 'Fleet' 
+            }));
             return;
         }
 
         const existingDuty = vehicles.find(v => (v.carNumber || '').split('#')[0].toUpperCase().replace(/[^A-Z0-9]/g, '') === normVal);
         if (existingDuty) {
-            setDutyFormData(prev => ({ ...prev, carNumber: upVal, model: existingDuty.model || prev.model, vehicleSource: existingDuty.vehicleSource || 'External' }));
+            setDutyFormData(prev => ({ 
+                ...prev, 
+                carNumber: upVal, 
+                model: existingDuty.model || prev.model, 
+                driverName: existingDuty.driverName || existingDuty.ownerName || prev.driverName,
+                vehicleSource: existingDuty.vehicleSource || 'External' 
+            }));
         } else {
             setDutyFormData(prev => ({ ...prev, carNumber: upVal }));
         }
@@ -375,7 +399,7 @@ const EventManagement = () => {
                     dutyType: dutyFormData.dutyType,
                     dutyTime: dutyFormData.dutyTime,
                     remarks: dutyFormData.remarks,
-                    guestCount: Number(dutyFormData.guestCount) || 0,
+                    guestName: dutyFormData.guestName?.trim() || '',
                     dailyWage: Number(dutyFormData.dutyAmount) || 0
                 };
                 await axios.put(`/api/admin/attendance/${selectedId}`, attendancePayload, config);
@@ -395,6 +419,7 @@ const EventManagement = () => {
                 const vehiclePayload = {
                     carNumber: internalCarNumber,
                     model: dutyFormData.model?.trim(),
+                    property: dutyFormData.dropLocation?.trim() || '',
                     dropLocation: dutyFormData.dropLocation?.trim() || '',
                     dutyAmount: Number(dutyFormData.dutyAmount) || 0,
                     ownerName: dutyFormData.ownerName?.trim() || '',
@@ -409,7 +434,7 @@ const EventManagement = () => {
                     dutyType: dutyFormData.dutyType,
                     dutyTime: dutyFormData.dutyTime,
                     remarks: dutyFormData.remarks,
-                    guestCount: Number(dutyFormData.guestCount) || 0
+                    guestName: dutyFormData.guestName?.trim() || ''
                 };
 
                 if (isEditingDuty && selectedId) {
@@ -427,7 +452,7 @@ const EventManagement = () => {
             if (showDetailsModal && selectedEventDetails?._id) {
                 fetchEventDetails(selectedEventDetails._id);
             }
-            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: '', eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestCount: '' });
+            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: '', eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestName: '' });
         } catch (err) {
             console.error('Save Error:', err.response?.data || err.message);
             alert('Error saving duty entry: ' + (err.response?.data?.message || 'Check connection'));
@@ -470,7 +495,7 @@ const EventManagement = () => {
             dutyType: v.dutyType || '',
             dutyTime: v.dutyTime || '',
             remarks: v.remarks || '',
-            guestCount: v.guestCount || ''
+            guestName: v.guestName || ''
         });
         setSelectedId(v._id);
         setIsEditingDuty(true);
@@ -1078,7 +1103,7 @@ const EventManagement = () => {
                         <button onClick={() => {
                             setIsEditingDuty(false);
                             setDutyFormData({
-                                carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', remarks: '', guestCount: ''
+                                carNumber: '', model: '', dropLocation: '', date: getToday(), eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', remarks: '', guestName: ''
                             });
                             setShowDutyModal(true);
                         }}
@@ -1338,9 +1363,8 @@ const EventManagement = () => {
                                                             <PremiumDateInput
                                                                 value={dutyFormData.date}
                                                                 onChange={val => setDutyFormData({ ...dutyFormData, date: val })}
-                                                                align="right"
                                                                 required
-                                                                style={{ colorScheme: 'dark', height: '50px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', borderRadius: '10px' }}
+                                                                inputStyle={{ textAlign: 'left', colorScheme: 'dark', height: '50px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 40px 0 15px', borderRadius: '10px' }}
                                                             />
                                                         </div>
                                                     </div>
@@ -1356,7 +1380,7 @@ const EventManagement = () => {
                                                                 onChange={e => setDutyFormData({ ...dutyFormData, dutyTime: e.target.value })}
                                                                 className="premium-compact-input"
                                                                 required
-                                                                style={{ colorScheme: 'dark', height: '50px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', borderRadius: '10px' }}
+                                                                style={{ colorScheme: 'dark', height: '50px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 10px 0 15px', borderRadius: '10px' }}
                                                             />
                                                         </div>
                                                     </div>
@@ -1404,9 +1428,9 @@ const EventManagement = () => {
                                             <div className="premium-input-group">
                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                     <Users size={12} color="#10b981" />
-                                                    <label className="premium-label">Guest / Members Count</label>
+                                                    <label className="premium-label">Guest Name</label>
                                                 </div>
-                                                <input type="number" value={dutyFormData.guestCount} onChange={e => setDutyFormData({ ...dutyFormData, guestCount: e.target.value })} className="premium-compact-input" placeholder="e.g. 4" style={{ height: '50px' }} />
+                                                <input type="text" value={dutyFormData.guestName} onChange={e => setDutyFormData({ ...dutyFormData, guestName: e.target.value })} className="premium-compact-input" placeholder="e.g. Rahul Sharma" style={{ height: '50px' }} />
                                             </div>
                                         </div>
                                         
@@ -1847,7 +1871,7 @@ const EventManagement = () => {
                                                 value={eventFormData.date}
                                                 onChange={val => setEventFormData({ ...eventFormData, date: val })}
                                                 required
-                                                style={{ colorScheme: 'dark', height: '52px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 15px', borderRadius: '10px' }}
+                                                inputStyle={{ textAlign: 'left', colorScheme: 'dark', height: '52px', width: '100%', cursor: 'pointer', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', color: 'white', padding: '0 40px 0 15px', borderRadius: '10px' }}
                                             />
                                         </div>
                                     </div>
@@ -1958,6 +1982,9 @@ const EventManagement = () => {
                     z-index: 2000; 
                     display: flex; justify-content: center; align-items: center; 
                     padding: clamp(10px, 3vw, 20px); 
+                }
+                @media (min-width: 1024px) {
+                    .modal-overlay { padding-left: calc(280px + clamp(10px, 3vw, 20px)); }
                 }
 
                 .event-row-hover:hover { 

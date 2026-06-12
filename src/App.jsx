@@ -39,6 +39,20 @@ const Profile = lazy(() => import('./pages/Profile'));
 const DriverServices = lazy(() => import('./pages/DriverServices'));
 const DriversPanel = lazy(() => import('./pages/DriversPanel'));
 
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+
+  React.useEffect(() => {
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: 'smooth'
+    });
+  }, [pathname]);
+
+  return null;
+};
+
 const LoadingFallback = () => (
   <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', background: 'radial-gradient(circle at top right, #1e293b, #0f172a)', color: 'white' }}>
     <div className="spinner" style={{ width: '40px', height: '40px', border: '3px solid rgba(255,255,255,0.1)', borderTopColor: '#0ea5e9', borderRadius: '50%' }}></div>
@@ -279,6 +293,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <LanguageProvider>
         <AuthProvider>
           <ThemeSwitcher />
