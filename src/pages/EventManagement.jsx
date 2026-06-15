@@ -434,6 +434,7 @@ const EventManagement = () => {
             }
             setShowDutyModal(false);
             fetchVehicles();
+            fetchEvents();
             if (showDetailsModal && selectedEventDetails?._id) {
                 fetchEventDetails(selectedEventDetails._id);
             }
