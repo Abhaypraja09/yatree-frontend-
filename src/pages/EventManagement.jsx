@@ -435,8 +435,8 @@ const EventManagement = () => {
             setShowDutyModal(false);
             fetchVehicles();
             fetchEvents();
-            if (showDetailsModal && selectedEventDetails?._id) {
-                fetchEventDetails(selectedEventDetails._id);
+            if (showDetailsModal && selectedEventDetails?.event?._id) {
+                fetchEventDetails(selectedEventDetails.event._id);
             }
             setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: '', eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestName: '' });
         } catch (err) {
@@ -460,8 +460,8 @@ const EventManagement = () => {
                 await axios.delete(`/api/admin/vehicles/${id}`, { headers: { Authorization: `Bearer ${JSON.parse(localStorage.getItem('userInfo')).token}` } });
             }
             fetchVehicles();
-            if (showDetailsModal && selectedEventDetails?._id) {
-                fetchEventDetails(selectedEventDetails._id);
+            if (showDetailsModal && selectedEventDetails?.event?._id) {
+                fetchEventDetails(selectedEventDetails.event._id);
             }
         } catch (err) { alert('Error deleting'); }
     };
