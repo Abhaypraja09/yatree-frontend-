@@ -396,7 +396,7 @@ input[type="datetime-local"]::before {
   max-width: 100%;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 1025px) {
   .with-sidebar .main-content {
     margin-left: 280px;
     width: calc(100% - 280px);
@@ -1612,7 +1612,7 @@ header.dashboard-header {
    RESPONSIVE BREAKPOINTS
    ============================================ */
 
-@media (min-width: 1024px) {
+@media (min-width: 1025px) {
   .with-sidebar .main-content {
     margin-left: 280px;
     width: calc(100% - 280px);
@@ -1620,7 +1620,7 @@ header.dashboard-header {
   }
 }
 
-@media (max-width: 1023px) {
+@media (max-width: 1024px) {
   .container-fluid {
     padding: 0 12px !important;
   }
@@ -1925,6 +1925,15 @@ header.dashboard-header {
   .show-mobile-flex {
     display: flex !important;
   }
+  .show-tablet {
+    display: block !important;
+  }
+  .hide-tablet {
+    display: none !important;
+  }
+}
+.show-tablet {
+  display: none !important;
 }
 
 .table-responsive {

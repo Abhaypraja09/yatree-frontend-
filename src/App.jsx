@@ -101,7 +101,7 @@ const AdminLayout = ({ children }) => {
       <Sidebar isOpen={isSidebarOpen} onClose={() => setIsSidebarOpen(false)} />
 
       {isSidebarOpen && (
-        <div onClick={() => setIsSidebarOpen(false)} className="show-mobile" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 99999 }} />
+        <div onClick={() => setIsSidebarOpen(false)} className="show-tablet" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)', zIndex: 99999 }} />
       )}
 
       <main className="main-content" style={{ flex: '1', width: '100%', maxWidth: '100vw', overflowX: 'hidden', transition: 'padding 0.3s ease', padding: '0' }}>
