@@ -531,7 +531,7 @@ const CarUtility = () => {
                                     onChange={(e) => setSelectedYear(Number(e.target.value))}
                                     style={{ background: 'transparent', border: 'none', color: theme.primary || '#fbbf24', fontWeight: '900', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
                                 >
-                                    {[2023, 2024, 2025, 2026, 2027].map(y => (
+                                    {Array.from({ length: new Date().getFullYear() - 2023 + 5 }, (_, i) => 2023 + i).map(y => (
                                         <option key={y} value={y} style={{ background: '#0f172a' }}>{y}-{String(y + 1).slice(-2)}</option>
                                     ))}
                                 </select>
@@ -1305,3 +1305,4 @@ const ManagerHub = ({ type, color, act, drivers, onAdd, onUpdate, onDelete, setV
 };
 
 export default CarUtility;
+

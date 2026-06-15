@@ -341,7 +341,7 @@ const Advances = () => {
                                 className="input-field"
                                 style={{ height: '38px', fontSize: '12px', padding: '0 8px', width: '80px', background: 'transparent', border: 'none', marginBottom: 0 }}
                             >
-                                {[2023, 2024, 2025, 2026].map(y => (
+                                {Array.from({ length: new Date().getFullYear() - 2023 + 5 }, (_, i) => 2023 + i).map(y => (
                                     <option key={y} value={y} style={{ background: '#0f172a' }}>{y}</option>
                                 ))}
                             </select>
@@ -780,3 +780,4 @@ const Advances = () => {
 };
 
 export default Advances;
+

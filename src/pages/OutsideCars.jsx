@@ -707,7 +707,7 @@ const OutsideCars = () => {
                                 ))}
                             </select>
                             <select value={selectedYear} onChange={e => { setSelectedYear(Number(e.target.value)); setSelectedDay('All'); }} className="premium-compact-input" style={{ height: '40px', width: '85px', fontSize: '11px', padding: '0 10px' }}>
-                                {[2023, 2024, 2025, 2026, 2027].map(y => <option key={y} value={y}>{y}-{y + 1}</option>)}
+                                {Array.from({ length: new Date().getFullYear() - 2023 + 5 }, (_, i) => 2023 + i).map(y => <option key={y} value={y}>{y}-{y + 1}</option>)}
                             </select>
                         </div>
                     </div>
@@ -931,3 +931,4 @@ const OutsideCars = () => {
 };
 
 export default OutsideCars;
+

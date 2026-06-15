@@ -379,7 +379,7 @@ const AdminDashboard = () => {
                                         outline: 'none', cursor: 'pointer'
                                     }}
                                 >
-                                    {[2023, 2024, 2025, 2026, 2027].map(y => (
+                                    {Array.from({ length: new Date().getFullYear() - 2023 + 5 }, (_, i) => 2023 + i).map(y => (
                                         <option key={y} value={y} style={{ background: '#0f172a' }}>
                                             {y}-{y + 1}
                                         </option>
@@ -866,3 +866,4 @@ const AdminDashboard = () => {
 };
 
 export default AdminDashboard;
+

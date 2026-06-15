@@ -913,7 +913,7 @@ const EventManagement = () => {
                                     }}
                                     style={{ background: 'rgba(251,191,36,0.1)', border: '1px solid rgba(251,191,36,0.2)', color: 'white', height: '36px', borderRadius: '10px', padding: '0 8px', outline: 'none', fontWeight: '800', fontSize: '11px', cursor: 'pointer' }}
                                 >
-                                    {[2023, 2024, 2025, 2026, 2027].map(y => <option key={y} value={y} style={{ background: '#0a0f1d' }}>FY {y}-{y + 1}</option>)}
+                                    {Array.from({ length: new Date().getFullYear() - 2023 + 5 }, (_, i) => 2023 + i).map(y => <option key={y} value={y} style={{ background: '#0a0f1d' }}>FY {y}-{y + 1}</option>)}
                                 </select>
                             </div>
                         </div>
@@ -2034,3 +2034,4 @@ const EventManagement = () => {
 };
 
 export default EventManagement;
+

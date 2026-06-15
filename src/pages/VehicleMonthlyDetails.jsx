@@ -267,7 +267,7 @@ const VehicleMonthlyDetails = () => {
                                 onChange={(e) => setYear(Number(e.target.value))} 
                                 style={{ background: 'transparent', border: 'none', color: 'white', padding: '6px 4px', fontWeight: '900', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
                             >
-                                {[2023, 2024, 2025, 2026, 2027].map(y => (
+                                {Array.from({ length: new Date().getFullYear() - 2023 + 5 }, (_, i) => 2023 + i).map(y => (
                                     <option key={y} value={y} style={{ background: '#1e293b' }}>FY {y}-{y + 1}</option>
                                 ))}
                             </select>
@@ -631,3 +631,4 @@ const VehicleMonthlyDetails = () => {
 };
 
 export default VehicleMonthlyDetails;
+

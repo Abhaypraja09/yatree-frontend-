@@ -385,7 +385,7 @@ const ActiveLogs = () => {
                                 onChange={(e) => setSelectedYear(parseInt(e.target.value))}
                                 style={{ background: 'transparent', border: 'none', color: 'var(--primary)', padding: '8px 12px', fontWeight: '900', fontSize: '13px', outline: 'none', cursor: 'pointer' }}
                             >
-                                {[2023, 2024, 2025, 2026, 2027].map(y => (
+                                {Array.from({ length: new Date().getFullYear() - 2023 + 5 }, (_, i) => 2023 + i).map(y => (
                                     <option key={y} value={y} style={{ background: '#0f172a' }}>FY {y}-{String(y + 1).slice(-2)}</option>
                                 ))}
                             </select>
@@ -729,3 +729,4 @@ const ActiveLogs = () => {
 };
 
 export default ActiveLogs;
+
