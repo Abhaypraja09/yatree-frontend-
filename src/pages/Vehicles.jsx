@@ -104,6 +104,7 @@ const Vehicles = () => {
             });
             const allAlerts = data.expiringAlerts || [];
             const filteredAlerts = allAlerts.filter(alert => {
+                if (alert.type === 'Event') return false;
                 if (user?.role === 'Admin') return true;
                 if ((alert.type === 'Vehicle' || alert.type === 'Service') && !user?.permissions?.vehiclesManagement) return false;
                 if (alert.type === 'Driver' && !user?.permissions?.driversService) return false;
