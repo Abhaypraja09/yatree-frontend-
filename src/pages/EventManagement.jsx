@@ -262,7 +262,7 @@ const EventManagement = () => {
             const headers = { Authorization: `Bearer ${userInfo.token}` };
 
             // 1. Fetch Outside Duties
-            const outsideRes = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=outside&from=${fromDate}&to=${toDate}`, { headers });
+            const outsideRes = await axios.get(`/api/admin/vehicles/${selectedCompany._id}?usePagination=false&type=event_all&from=${fromDate}&to=${toDate}`, { headers });
             const outsideDuties = (outsideRes.data.vehicles || [])
                 .filter(v => v.eventId)
                 .map(v => ({
