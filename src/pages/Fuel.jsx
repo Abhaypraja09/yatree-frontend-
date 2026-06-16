@@ -791,11 +791,11 @@ const FuelPage = () => {
                                         </td>
                                         <td style={{ padding: '15px 25px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                                                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.1)', color: '#f59e0b', fontWeight: '900', textTransform: 'uppercase', border: '1px solid rgba(245,158,11,0.1)' }}>{e.fuelType}</span>
-                                                <span style={{ fontSize: '15px', color: 'white', fontWeight: '810' }}>{e.quantity} <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>LITERS</span></span>
+                                                <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '6px', background: e.fuelType === 'Electric' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)', color: e.fuelType === 'Electric' ? '#10b981' : '#f59e0b', fontWeight: '900', textTransform: 'uppercase', border: `1px solid ${e.fuelType === 'Electric' ? 'rgba(16,185,129,0.1)' : 'rgba(245,158,11,0.1)'}` }}>{e.fuelType}</span>
+                                                <span style={{ fontSize: '15px', color: 'white', fontWeight: '810' }}>{e.quantity} <span style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)' }}>{e.fuelType === 'Electric' ? 'UNITS' : 'LITERS'}</span></span>
                                             </div>
                                             <div style={{ color: 'rgba(255,255,255,0.3)', fontSize: '11px', marginTop: '5px', fontWeight: '700' }}>
-                                                @ ₹{e.rate}/L • {e.stationName || 'Local Station'}
+                                                @ ₹{e.rate}/{e.fuelType === 'Electric' ? 'kWh' : 'L'} • {e.stationName || 'Local Station'}
                                             </div>
                                         </td>
                                         <td style={{ padding: '15px 25px' }}>
@@ -915,7 +915,7 @@ const FuelPage = () => {
                                     </div>
                                     <div style={{ textAlign: 'right' }}>
                                         <div style={{ color: 'var(--primary)', fontWeight: '900', fontSize: '18px' }}>₹{e.amount.toLocaleString()}</div>
-                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{e.quantity} L @ ₹{e.rate}/Volume</div>
+                                        <div style={{ fontSize: '10px', color: 'var(--text-muted)' }}>{e.quantity} {e.fuelType === 'Electric' ? 'Units' : 'L'} @ ₹{e.rate}/{e.fuelType === 'Electric' ? 'kWh' : 'Volume'}</div>
                                         {e.createdBy?.name && (
                                             <div style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginTop: '4px', fontWeight: '800' }}>
                                                 Approved By: {e.createdBy.name}
@@ -937,7 +937,7 @@ const FuelPage = () => {
 
                                 <div style={{ marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                                        <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: e.fuelType === 'Diesel' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(14, 165, 233, 0.1)', color: e.fuelType === 'Diesel' ? 'var(--primary)' : 'var(--primary)', fontWeight: '800', textTransform: 'uppercase' }}>{e.fuelType}</span>
+                                        <span style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '4px', background: e.fuelType === 'Electric' ? 'rgba(16, 185, 129, 0.1)' : 'rgba(245, 158, 11, 0.1)', color: e.fuelType === 'Electric' ? '#10b981' : (e.fuelType === 'Diesel' ? 'var(--primary)' : 'var(--primary)'), fontWeight: '800', textTransform: 'uppercase' }}>{e.fuelType}</span>
                                         <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.4)' }}>• {e.stationName || 'Local Station'}</span>
                                     </div>
                                 </div>
@@ -1013,7 +1013,7 @@ const FuelPage = () => {
                                         <div>
                                             <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fuel Type</label>
                                             <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '5px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', height: '50px' }}>
-                                                {['Diesel', 'Petrol', 'CNG'].map(t => (
+                                                {['Diesel', 'Petrol', 'CNG', 'Electric'].map(t => (
                                                     <button
                                                         key={t} type="button"
                                                         onClick={() => setFormData({ ...formData, fuelType: t })}
@@ -1022,7 +1022,7 @@ const FuelPage = () => {
                                                             height: '100%',
                                                             borderRadius: '10px',
                                                             border: 'none',
-                                                            background: formData.fuelType === t ? (t === 'Diesel' ? 'var(--primary)' : 'var(--primary)') : 'transparent',
+                                                            background: formData.fuelType === t ? (t === 'Electric' ? '#10b981' : 'var(--primary)') : 'transparent',
                                                             color: formData.fuelType === t ? 'black' : 'rgba(255,255,255,0.5)',
                                                             fontWeight: '800',
                                                             fontSize: '12px',
@@ -1052,7 +1052,7 @@ const FuelPage = () => {
                                             <input type="number" className="input-field" placeholder="e.g. 5000" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} required style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
                                         </div>
                                         <div>
-                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Volume (L) *</label>
+                                            <label style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>{formData.fuelType === 'Electric' ? 'Units (kWh) *' : 'Volume (L) *'}</label>
                                             <input type="number" step="0.01" className="input-field" placeholder="e.g. 50" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} required style={{ width: '100%', height: '50px', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '12px', color: 'white', padding: '0 15px' }} />
                                         </div>
                                     </div>
@@ -1246,13 +1246,13 @@ const FuelPage = () => {
                                         <input type="number" className="input-field" value={formData.amount} onChange={(e) => setFormData({ ...formData, amount: e.target.value })} style={{ background: 'rgba(255,255,255,0.05)' }} />
                                     </div>
                                     <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Volume (L)</label>
+                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>{formData.fuelType === 'Electric' ? 'Units (kWh)' : 'Volume (L)'}</label>
                                         <input type="number" step="0.01" className="input-field" value={formData.quantity} onChange={(e) => setFormData({ ...formData, quantity: e.target.value })} />
                                     </div>
                                 </div>
                                 <div className="form-grid-2" style={{ marginTop: '15px' }}>
                                     <div>
-                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>Rate (₹/Volume)</label>
+                                        <label style={{ color: 'white', fontSize: '12px', marginBottom: '8px', display: 'block' }}>{formData.fuelType === 'Electric' ? 'Rate (₹/kWh)' : 'Rate (₹/Volume)'}</label>
                                         <input type="number" step="0.01" className="input-field" value={formData.rate} onChange={(e) => setFormData({ ...formData, rate: e.target.value })} />
                                     </div>
                                     <div>

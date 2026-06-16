@@ -2671,7 +2671,7 @@ const Freelancers = () => {
                                                 <div>
                                                     <label style={{ color: 'var(--text-muted)', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Fuel Type</label>
                                                     <div style={{ display: 'flex', gap: '8px', background: 'rgba(255,255,255,0.02)', padding: '5px', borderRadius: '14px', border: '1px solid rgba(255,255,255,0.05)', height: '52px' }}>
-                                                        {['Diesel', 'Petrol', 'CNG'].map((t) => (
+                                                        {['Diesel', 'Petrol', 'CNG', 'Electric'].map((t) => (
                                                             <button
                                                                 key={t}
                                                                 type="button"
@@ -2698,11 +2698,11 @@ const Freelancers = () => {
 
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
                                                 <Field label="Amount (₹) *" value={quickExpenseData.amount} onChange={v => setQuickExpenseData({ ...quickExpenseData, amount: v })} type="number" required placeholder="e.g. 5000" />
-                                                <Field label="Volume (L) *" value={quickExpenseData.quantity} onChange={v => setQuickExpenseData({ ...quickExpenseData, quantity: v })} type="number" required placeholder="e.g. 50" />
+                                                <Field label={quickExpenseData.fuelType === 'Electric' ? "Units (kWh) *" : "Volume (L) *"} value={quickExpenseData.quantity} onChange={v => setQuickExpenseData({ ...quickExpenseData, quantity: v })} type="number" required placeholder="e.g. 50" />
                                             </div>
 
                                             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
-                                                <Field label="Rate (₹/Volume)" value={quickExpenseData.rate} onChange={v => setQuickExpenseData({ ...quickExpenseData, rate: v })} placeholder="Auto-calculated" readOnly />
+                                                <Field label={quickExpenseData.fuelType === 'Electric' ? "Rate (₹/kWh)" : "Rate (₹/Volume)"} value={quickExpenseData.rate} onChange={v => setQuickExpenseData({ ...quickExpenseData, rate: v })} placeholder="Auto-calculated" readOnly />
                                                 <Field label="Date *" value={quickExpenseData.date} onChange={v => setQuickExpenseData({ ...quickExpenseData, date: v })} type="date" required />
                                             </div>
 

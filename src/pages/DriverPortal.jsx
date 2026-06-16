@@ -1654,11 +1654,11 @@ const DriverPortal = () => {
                                                                 {entry.type === 'fuel' && (
                                                                     <>
                                                                         <div className="input-wrapper-full">
-                                                                            <label className="input-label" style={{ fontSize: '10px' }}>{t('volume_optional')}</label>
+                                                                            <label className="input-label" style={{ fontSize: '10px' }}>{entry.fuelType === 'Electric' ? t('charging_units') : t('volume_optional')}</label>
                                                                             <input
                                                                                 type="number"
                                                                                 className="input-field"
-                                                                                placeholder="L"
+                                                                                placeholder={entry.fuelType === 'Electric' ? "kWh" : "L"}
                                                                                 value={entry.quantity || ''}
                                                                                 onChange={(e) => {
                                                                                     const newEntries = [...expenseEntries];
@@ -1674,11 +1674,11 @@ const DriverPortal = () => {
                                                                             />
                                                                         </div>
                                                                         <div className="input-wrapper-full">
-                                                                            <label className="input-label" style={{ fontSize: '10px' }}>{t('rate_per_l')} *</label>
+                                                                            <label className="input-label" style={{ fontSize: '10px' }}>{entry.fuelType === 'Electric' ? t('rate_per_kwh') : t('rate_per_l')} *</label>
                                                                             <input
                                                                                 type="number"
                                                                                 className="input-field"
-                                                                                placeholder="₹/L"
+                                                                                placeholder={entry.fuelType === 'Electric' ? "₹/kWh" : "₹/L"}
                                                                                 value={entry.rate || ''}
                                                                                 onChange={(e) => {
                                                                                     const newEntries = [...expenseEntries];
@@ -1718,8 +1718,8 @@ const DriverPortal = () => {
                                                                 <>
                                                                     <div className="input-wrapper-full" style={{ marginTop: '4px', marginBottom: '16px' }}>
                                                                         <label className="input-label" style={{ fontSize: '10px', marginBottom: '6px' }}>{t('fuelType')}</label>
-                                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                                                                            {['Diesel', 'Petrol', 'CNG'].map((type) => (
+                                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: '8px' }}>
+                                                                            {['Diesel', 'Petrol', 'CNG', 'Electric'].map((type) => (
                                                                                 <button
                                                                                     key={type}
                                                                                     type="button"
