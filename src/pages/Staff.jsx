@@ -792,12 +792,12 @@ const Staff = () => {
             const payload = {
                 ...formData,
                 companyId: selectedCompany._id,
-                officeLocation: {
+                officeLocation: formData.officeLocation ? {
                     ...formData.officeLocation,
                     latitude: formData.officeLocation.latitude ? Number(formData.officeLocation.latitude) : undefined,
                     longitude: formData.officeLocation.longitude ? Number(formData.officeLocation.longitude) : undefined,
                     radius: formData.officeLocation.radius ? Number(formData.officeLocation.radius) : 200
-                }
+                } : undefined
             };
 
 
