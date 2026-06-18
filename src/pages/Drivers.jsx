@@ -531,9 +531,9 @@ const Drivers = ({ isSubComponent = false }) => {
             }
             
             fetchDrivers();
-            toast.success(`Document ${status} successfully`);
+            alert(`Document ${status} successfully`);
         } catch (err) {
-            toast.error(err.response?.data?.message || 'Error verifying document');
+            alert(err.response?.data?.message || 'Error verifying document');
         }
     };
 
