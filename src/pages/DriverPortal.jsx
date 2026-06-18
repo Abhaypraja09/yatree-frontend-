@@ -23,7 +23,8 @@ import {
     ClipboardList,
     ArrowRight,
     Lock,
-    ShieldCheck
+    ShieldCheck,
+    Wind
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
@@ -881,6 +882,31 @@ const DriverPortal = () => {
                                     >
                                         <Car size={18} /> {t('parking')}
                                     </button>
+                                    <button
+                                        onClick={() => {
+                                            setExpenseEntries([{ type: 'air', amount: '0', quantity: '', km: '', fuelType: '', slip: null, preview: null }]);
+                                            setExpenseModalType('air');
+                                            setShowExpenseModal(true);
+                                        }}
+                                        style={{
+                                            background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+                                            color: 'white',
+                                            height: '42px',
+                                            padding: '0 14px',
+                                            borderRadius: '12px',
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            gap: '6px',
+                                            border: 'none',
+                                            boxShadow: '0 6px 16px rgba(14, 165, 233, 0.25)',
+                                            cursor: 'pointer',
+                                            fontWeight: '700',
+                                            fontSize: '13px'
+                                        }}
+                                    >
+                                        <Wind size={18} /> Air Check
+                                    </button>
                                     {showPunchOut && !showPunchOutForm && (
                                         <button
                                             onClick={() => setShowPunchOutForm(true)}
@@ -1535,8 +1561,9 @@ const DriverPortal = () => {
                                                 <h3 className="modal-title">
                                                     {expenseModalType === 'fuel' ? t('logFuel') :
                                                         expenseModalType === 'parking' ? t('logParking') :
-                                                            expenseModalType === 'special_pay' ? t('specialPay') :
-                                                                t('driverSeva')}
+                                                            expenseModalType === 'air' ? 'Air Check' :
+                                                                expenseModalType === 'special_pay' ? t('specialPay') :
+                                                                    t('driverSeva')}
                                                 </h3>
                                                 <p className="section-subtitle">{t('logExpense').toUpperCase()}</p>
                                             </div>
@@ -1623,11 +1650,11 @@ const DriverPortal = () => {
                                                         <div key={index} className="entry-card" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', padding: '16px', borderRadius: '16px' }}>
                                                             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                                                                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: entry.type === 'fuel' ? 'rgba(14, 165, 233, 0.15)' : (entry.type === 'parking' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(244, 63, 94, 0.15)'), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                                                        {entry.type === 'fuel' ? <Droplets size={16} color="var(--primary)" /> : (entry.type === 'parking' ? <Car size={16} color="var(--primary)" /> : <Wrench size={16} color="#f43f5e" />)}
+                                                                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: entry.type === 'fuel' ? 'rgba(14, 165, 233, 0.15)' : (entry.type === 'parking' ? 'rgba(245, 158, 11, 0.15)' : (entry.type === 'air' ? 'rgba(14, 165, 233, 0.15)' : 'rgba(244, 63, 94, 0.15)')), display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                                                        {entry.type === 'fuel' ? <Droplets size={16} color="var(--primary)" /> : (entry.type === 'parking' ? <Car size={16} color="var(--primary)" /> : (entry.type === 'air' ? <Wind size={16} color="var(--primary)" /> : <Wrench size={16} color="#f43f5e" />))}
                                                                     </div>
                                                                     <span style={{ fontWeight: '800', fontSize: '12px', color: 'white', textTransform: 'uppercase' }}>
-                                                                        {entry.type === 'fuel' ? t('logFuel') : (entry.type === 'parking' ? t('logParking') : (t(entry.type) || t('driverSeva')))}
+                                                                        {entry.type === 'fuel' ? t('logFuel') : (entry.type === 'parking' ? t('logParking') : (entry.type === 'air' ? 'Air Check' : (t(entry.type) || t('driverSeva'))))}
                                                                     </span>
                                                                 </div>
                                                                 <button onClick={() => setExpenseEntries(expenseEntries.filter((_, i) => i !== index))} style={{ color: '#f43f5e', background: 'rgba(244, 63, 94, 0.1)', padding: '6px', borderRadius: '6px' }}>
