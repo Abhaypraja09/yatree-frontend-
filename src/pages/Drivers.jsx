@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
 import { useTheme } from '../context/ThemeContext';
 import SEO from '../components/SEO';
+import ImageUploader from '../components/common/ImageUploader';
 import {
     todayIST,
     toISTDateString,
@@ -102,7 +103,8 @@ const Drivers = ({ isSubComponent = false }) => {
 
     // Documentation & Overtime States
     const [docs, setDocs] = useState({
-        aadharCard: null,
+        aadharCardFront: null,
+        aadharCardBack: null,
         drivingLicense: null,
         offerLetter: null
     });
@@ -339,7 +341,7 @@ const Drivers = ({ isSubComponent = false }) => {
             setNightStayBonus('');
             setSameDayReturnBonus('');
             setSameDayReturnEnabled(false);
-            setDocs({ aadharCard: null, drivingLicense: null, offerLetter: null });
+            setDocs({ aadharCardFront: null, aadharCardBack: null, drivingLicense: null, offerLetter: null });
             setOvertime({ enabled: false, threshold: 9, rate: 0 });
             setManualDutyForm({
                 date: '',
@@ -400,7 +402,8 @@ const Drivers = ({ isSubComponent = false }) => {
             formData.append('overtimeRate', overtime.rate);
 
             // Documents
-            if (docs.aadharCard) formData.append('aadharCard', docs.aadharCard);
+            if (docs.aadharCardFront) formData.append('aadharCardFront', docs.aadharCardFront);
+            if (docs.aadharCardBack) formData.append('aadharCardBack', docs.aadharCardBack);
             if (docs.drivingLicense) formData.append('drivingLicense', docs.drivingLicense);
             if (docs.offerLetter) formData.append('offerLetter', docs.offerLetter);
 
@@ -412,7 +415,7 @@ const Drivers = ({ isSubComponent = false }) => {
             });
             setShowModal(false);
             setName(''); setMobile(''); setUsername(''); setPassword(''); setLicenseNumber(''); setIsFreelancer(false); setDailyWage(''); setNightStayBonus(''); setSameDayReturnBonus('');
-            setDocs({ aadharCard: null, drivingLicense: null, offerLetter: null });
+            setDocs({ aadharCardFront: null, aadharCardBack: null, drivingLicense: null, offerLetter: null });
             setOvertime({ enabled: false, threshold: 9, rate: 0 });
             fetchDrivers();
             alert('Driver registered successfully');
@@ -472,7 +475,8 @@ const Drivers = ({ isSubComponent = false }) => {
             }
 
             // Documents
-            if (docs.aadharCard) formData.append('aadharCard', docs.aadharCard);
+            if (docs.aadharCardFront) formData.append('aadharCardFront', docs.aadharCardFront);
+            if (docs.aadharCardBack) formData.append('aadharCardBack', docs.aadharCardBack);
             if (docs.drivingLicense) formData.append('drivingLicense', docs.drivingLicense);
             if (docs.offerLetter) formData.append('offerLetter', docs.offerLetter);
 
@@ -485,7 +489,7 @@ const Drivers = ({ isSubComponent = false }) => {
             setShowEditModal(false);
             setEditingDriver(null);
             setEditForm({ name: '', mobile: '', username: '', password: '', licenseNumber: '', dailyWage: '', nightStayBonus: '', sameDayReturnBonus: '', sameDayReturnEnabled: false, isFreelancer: false, overtimeEnabled: false, overtimeThreshold: 9, overtimeRate: 0 });
-            setDocs({ aadharCard: null, drivingLicense: null, offerLetter: null });
+            setDocs({ aadharCardFront: null, aadharCardBack: null, drivingLicense: null, offerLetter: null });
             fetchDrivers();
             alert('Driver updated successfully');
         } catch (err) {
@@ -511,7 +515,7 @@ const Drivers = ({ isSubComponent = false }) => {
             overtimeThreshold: driver.overtime?.thresholdHours || 9,
             overtimeRate: driver.overtime?.ratePerHour || 0
         });
-        setDocs({ aadharCard: null, drivingLicense: null, offerLetter: null });
+        setDocs({ aadharCardFront: null, aadharCardBack: null, drivingLicense: null, offerLetter: null });
         setShowEditModal(true);
     };
 
@@ -1007,30 +1011,20 @@ const Drivers = ({ isSubComponent = false }) => {
                                         <p style={{ color: '#8b5cf6', fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                                             <FileText size={14} /> Documentation (Uploads)
                                         </p>
-                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+                                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                                             {[
-                                                { label: 'Aadhar Card', key: 'aadharCard' },
+                                                { label: 'Aadhar Front', key: 'aadharCardFront' },
+                                                { label: 'Aadhar Back', key: 'aadharCardBack' },
                                                 { label: 'License Copy', key: 'drivingLicense' },
                                                 { label: 'Offer Letter', key: 'offerLetter' }
                                             ].map(item => (
-                                                <label key={item.key} style={{
-                                                    display: 'flex',
-                                                    flexDirection: 'column',
-                                                    alignItems: 'center',
-                                                    gap: '8px',
-                                                    padding: '12px',
-                                                    background: docs[item.key] ? 'rgba(139, 92, 246, 0.1)' : 'rgba(255,255,255,0.03)',
-                                                    borderRadius: '12px',
-                                                    border: docs[item.key] ? '1px dashed #8b5cf6' : '1px dashed rgba(255,255,255,0.1)',
-                                                    cursor: 'pointer',
-                                                    transition: 'all 0.2s ease'
-                                                }}>
-                                                    <div style={{ color: docs[item.key] ? '#8b5cf6' : 'rgba(255,255,255,0.4)' }}>
-                                                        {docs[item.key] ? <CheckCircle size={20} /> : <Plus size={20} />}
-                                                    </div>
-                                                    <span style={{ fontSize: '10px', color: docs[item.key] ? '#8b5cf6' : 'white', fontWeight: '700', textAlign: 'center' }}>{docs[item.key] ? docs[item.key].name.substring(0, 15) + '...' : item.label}</span>
-                                                    <input type="file" hidden onChange={(e) => setDocs({ ...docs, [item.key]: e.target.files[0] })} />
-                                                </label>
+                                                <ImageUploader 
+                                                    key={item.key}
+                                                    label={item.label}
+                                                    file={docs[item.key]}
+                                                    onChange={(file) => setDocs({ ...docs, [item.key]: file })}
+                                                    color="#8b5cf6"
+                                                />
                                             ))}
                                         </div>
                                     </div>
@@ -1237,25 +1231,20 @@ const Drivers = ({ isSubComponent = false }) => {
 
                                             <div style={{ marginTop: '15px', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '15px' }}>
                                                 <label className="input-label" style={{ fontSize: '10px', color: 'rgba(255,255,255,0.4)', marginBottom: '8px', display: 'block' }}>Update Documents</label>
-                                                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                                                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
                                                     {[
-                                                        { label: '+ Aadhaar', key: 'aadharCard' },
-                                                        { label: '+ License', key: 'drivingLicense' },
-                                                        { label: '+ Offer Letter', key: 'offerLetter' }
+                                                        { label: 'Aadhaar Front', key: 'aadharCardFront' },
+                                                        { label: 'Aadhaar Back', key: 'aadharCardBack' },
+                                                        { label: 'License Copy', key: 'drivingLicense' },
+                                                        { label: 'Offer Letter', key: 'offerLetter' }
                                                     ].map(item => (
-                                                        <label key={item.key} style={{
-                                                            padding: '6px 12px',
-                                                            background: docs[item.key] ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255,255,255,0.05)',
-                                                            borderRadius: '8px',
-                                                            border: '1px solid rgba(255,255,255,0.1)',
-                                                            fontSize: '10px',
-                                                            color: docs[item.key] ? '#a78bfa' : 'white',
-                                                            cursor: 'pointer',
-                                                            fontWeight: '700'
-                                                        }}>
-                                                            {docs[item.key] ? 'File Ready' : item.label}
-                                                            <input type="file" hidden onChange={(e) => setDocs({ ...docs, [item.key]: e.target.files[0] })} />
-                                                        </label>
+                                                        <ImageUploader 
+                                                            key={item.key}
+                                                            label={item.label}
+                                                            file={docs[item.key]}
+                                                            onChange={(file) => setDocs({ ...docs, [item.key]: file })}
+                                                            color="#8b5cf6"
+                                                        />
                                                     ))}
                                                 </div>
                                             </div>

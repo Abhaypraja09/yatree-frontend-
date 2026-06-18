@@ -65,28 +65,28 @@ const ImageUploader = ({ file, onChange, label = 'Attach Receipt / Bill', color 
                     <div 
                         onClick={() => setActiveCamera(true)} 
                         style={{ 
-                            flex: 1, height: '100px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.4)', 
+                            flex: 1, height: '110px', borderRadius: '16px', background: '#121a2f', 
                             display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', 
                             cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.15)', transition: 'all 0.3s ease' 
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = color; e.currentTarget.style.background = `${color}10`; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = color; e.currentTarget.style.background = '#1a223a'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.background = '#121a2f'; }}
                     >
-                        <Camera size={26} color={color} style={{ marginBottom: '10px' }} />
-                        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontWeight: '800' }}>Camera</span>
+                        <Camera size={28} color="rgba(255,255,255,0.7)" style={{ marginBottom: '12px' }} strokeWidth={1.5} />
+                        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '600' }}>Camera</span>
                     </div>
 
                     <label 
                         style={{ 
-                            flex: 1, height: '100px', borderRadius: '16px', background: 'rgba(15, 23, 42, 0.4)', 
+                            flex: 1, height: '110px', borderRadius: '16px', background: '#121a2f', 
                             display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', 
                             cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.15)', transition: 'all 0.3s ease' 
                         }}
-                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = color; e.currentTarget.style.background = `${color}10`; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.background = 'rgba(15, 23, 42, 0.4)'; }}
+                        onMouseEnter={(e) => { e.currentTarget.style.borderColor = color; e.currentTarget.style.background = '#1a223a'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.background = '#121a2f'; }}
                     >
-                        <ImageIcon size={26} color={color} style={{ marginBottom: '10px' }} />
-                        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.5)', fontWeight: '800' }}>Gallery</span>
+                        <ImageIcon size={28} color="rgba(255,255,255,0.7)" style={{ marginBottom: '12px' }} strokeWidth={1.5} />
+                        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '600' }}>Gallery</span>
                         <input type="file" accept="image/*" onChange={handleGallerySelect} style={{ display: 'none' }} />
                     </label>
                 </div>
