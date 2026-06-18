@@ -29,7 +29,7 @@ const ImageUploader = ({ file, onChange, label = 'Attach Receipt / Bill', color 
             {file ? (
                 <div style={{ position: 'relative', width: '100%' }}>
                     <div style={{ 
-                        width: '100%', height: '140px', borderRadius: '16px', overflow: 'hidden', 
+                        width: '100%', height: '80px', borderRadius: '12px', overflow: 'hidden', 
                         border: `1px solid ${color}40`, position: 'relative' 
                     }}>
                         <img src={previewUrl} alt="Preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -46,16 +46,16 @@ const ImageUploader = ({ file, onChange, label = 'Attach Receipt / Bill', color 
                             <X size={16} />
                         </button>
                     </div>
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
+                    <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
                         <button 
                             type="button" 
                             onClick={() => setActiveCamera(true)} 
-                            style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}
+                            style={{ flex: 1, padding: '6px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}
                         >
-                            <Camera size={16} /> Retake
+                            <Camera size={14} /> Retake
                         </button>
-                        <label style={{ flex: 1, padding: '10px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                            <ImageIcon size={16} /> Replace
+                        <label style={{ flex: 1, padding: '6px', background: 'rgba(255,255,255,0.05)', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '8px', fontSize: '11px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                            <ImageIcon size={14} /> Replace
                             <input type="file" accept="image/*" onChange={handleGallerySelect} style={{ display: 'none' }} />
                         </label>
                     </div>
@@ -65,28 +65,28 @@ const ImageUploader = ({ file, onChange, label = 'Attach Receipt / Bill', color 
                     <div 
                         onClick={() => setActiveCamera(true)} 
                         style={{ 
-                            flex: 1, height: '110px', borderRadius: '16px', background: '#121a2f', 
-                            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', 
+                            flex: 1, height: '60px', borderRadius: '12px', background: '#121a2f', 
+                            display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: '6px',
                             cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.15)', transition: 'all 0.3s ease' 
                         }}
                         onMouseEnter={(e) => { e.currentTarget.style.borderColor = color; e.currentTarget.style.background = '#1a223a'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.background = '#121a2f'; }}
                     >
-                        <Camera size={28} color="rgba(255,255,255,0.7)" style={{ marginBottom: '12px' }} strokeWidth={1.5} />
-                        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '600' }}>Camera</span>
+                        <Camera size={18} color="rgba(255,255,255,0.7)" strokeWidth={1.5} />
+                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontWeight: '600' }}>Camera</span>
                     </div>
 
                     <label 
                         style={{ 
-                            flex: 1, height: '110px', borderRadius: '16px', background: '#121a2f', 
-                            display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', 
+                            flex: 1, height: '60px', borderRadius: '12px', background: '#121a2f', 
+                            display: 'flex', flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: '6px',
                             cursor: 'pointer', border: '1px dashed rgba(255,255,255,0.15)', transition: 'all 0.3s ease' 
                         }}
                         onMouseEnter={(e) => { e.currentTarget.style.borderColor = color; e.currentTarget.style.background = '#1a223a'; }}
                         onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)'; e.currentTarget.style.background = '#121a2f'; }}
                     >
-                        <ImageIcon size={28} color="rgba(255,255,255,0.7)" style={{ marginBottom: '12px' }} strokeWidth={1.5} />
-                        <span style={{ fontSize: '13px', color: 'rgba(255,255,255,0.8)', fontWeight: '600' }}>Gallery</span>
+                        <ImageIcon size={18} color="rgba(255,255,255,0.7)" strokeWidth={1.5} />
+                        <span style={{ fontSize: '11px', color: 'rgba(255,255,255,0.8)', fontWeight: '600' }}>Gallery</span>
                         <input type="file" accept="image/*" onChange={handleGallerySelect} style={{ display: 'none' }} />
                     </label>
                 </div>
