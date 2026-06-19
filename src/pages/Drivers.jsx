@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import axios from '../api/axios';
-import { Plus, Minus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, User as UserIcon, Users, Clock, FileText, CheckCircle, XCircle, Briefcase, IndianRupee, Eye, X, User } from 'lucide-react';
+import { Plus, Minus, Search, Filter, MoreVertical, Trash2, Edit2, ShieldAlert, User as UserIcon, Users, Clock, FileText, CheckCircle, XCircle, Briefcase, IndianRupee, Eye, X, User, AlertTriangle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCompany } from '../context/CompanyContext';
@@ -767,7 +767,21 @@ const Drivers = ({ isSubComponent = false }) => {
                                                 </span>
                                             </td>
                                             <td style={{ padding: '20px 25px', textAlign: 'right', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
-                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
+                                                <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+                                                    <div style={{ display: 'flex', gap: '8px', marginRight: 'auto' }}>
+                                                        {(!driver.documents || !driver.documents.some(d => ['Aadhaar Card', 'Aadhaar Front', 'Aadhaar Back'].includes(d.documentType) && d.imageUrl)) && (
+                                                            <div title="Aadhaar missing" style={{ display: 'flex', alignItems: 'center', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', padding: '6px 10px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                                                                <AlertTriangle size={14} style={{ marginRight: '6px' }} />
+                                                                <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase' }}>Missing Aadhaar</span>
+                                                            </div>
+                                                        )}
+                                                        {(!driver.documents || !driver.documents.some(d => d.documentType === 'Driving License' && d.imageUrl)) && (
+                                                            <div title="Driving License missing" style={{ display: 'flex', alignItems: 'center', color: '#f43f5e', background: 'rgba(244, 63, 94, 0.1)', padding: '6px 10px', borderRadius: '8px', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
+                                                                <AlertTriangle size={14} style={{ marginRight: '6px' }} />
+                                                                <span style={{ fontSize: '10px', fontWeight: '800', textTransform: 'uppercase' }}>Missing DL</span>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                     <button
                                                         onClick={() => navigate(`/admin/drivers-panel?tab=settlement&driver=${driver.name}`)}
                                                         className="glass-card-hover-effect"
@@ -891,7 +905,19 @@ const Drivers = ({ isSubComponent = false }) => {
                                         </div>
                                         <div style={{ background: 'rgba(0,0,0,0.2)', padding: '12px', borderRadius: '10px' }}>
                                             <div style={{ fontSize: '9px', color: 'var(--text-muted)', marginBottom: '4px', letterSpacing: '0.5px' }}>LICENSE</div>
-                                            <div style={{ color: 'white', fontWeight: '600', fontSize: '14px', fontFamily: 'monospace' }}>{driver.licenseNumber || 'N/A'}</div>
+                                            <div style={{ color: 'white', fontWeight: '600', fontSize: '14px', fontFamily: 'monospace', display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                                {driver.licenseNumber || 'N/A'}
+                                                {(!driver.documents || !driver.documents.some(d => ['Aadhaar Card', 'Aadhaar Front', 'Aadhaar Back'].includes(d.documentType) && d.imageUrl)) && (
+                                                    <span title="Aadhaar missing" style={{ display: 'flex', alignItems: 'center', color: '#f59e0b', background: 'rgba(245, 158, 11, 0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                                                        <AlertTriangle size={12} style={{ marginRight: '4px' }} /> NO AADHAAR
+                                                    </span>
+                                                )}
+                                                {(!driver.documents || !driver.documents.some(d => d.documentType === 'Driving License' && d.imageUrl)) && (
+                                                    <span title="Driving License missing" style={{ display: 'flex', alignItems: 'center', color: '#f43f5e', background: 'rgba(244, 63, 94, 0.1)', padding: '2px 6px', borderRadius: '4px', fontSize: '9px', border: '1px solid rgba(244, 63, 94, 0.2)' }}>
+                                                        <AlertTriangle size={12} style={{ marginRight: '4px' }} /> NO DL
+                                                    </span>
+                                                )}
+                                            </div>
                                         </div>
                                     </div>
 

@@ -52,6 +52,15 @@ const EventManagement = () => {
     const [statusTab, setStatusTab] = useState('Running');
     const [selectedEventDetails, setSelectedEventDetails] = useState(null);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    
+    // Rate Card State
+    const [showRateCardModal, setShowRateCardModal] = useState(false);
+    const [selectedEventForRates, setSelectedEventForRates] = useState(null);
+    const [isRateFormOpen, setIsRateFormOpen] = useState(false);
+    const [rateCardFormData, setRateCardFormData] = useState({
+        serviceName: '', vehicleType: '', vehicleModel: '', baseRate: '',
+        baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: ''
+    });
 
     useEffect(() => {
         if (selectedMonth === 'All') {
@@ -125,7 +134,7 @@ const EventManagement = () => {
                 defaultDate = toISTDateString(new Date(selectedYear, selectedMonth, 1));
             }
         }
-        setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: defaultDate, eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: currentTimeIST(), remarks: '', guestName: '' });
+        setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: defaultDate, eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: currentTimeIST(), remarks: '', guestName: '', serviceId: '' });
         setShowDutyModal(true);
     };
 
@@ -188,7 +197,7 @@ const EventManagement = () => {
     const [dutyFormData, setDutyFormData] = useState({
         carNumber: '', model: '', dropLocation: '', date: '',
         eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet',
-        dutyType: '', remarks: '', guestName: ''
+        dutyType: '', dutyTime: '', remarks: '', guestName: '', serviceId: ''
     });
 
     useEffect(() => {
@@ -383,6 +392,50 @@ const EventManagement = () => {
         } catch (err) { alert('Error deleting event'); }
     };
 
+    // --- Rate Card Handlers ---
+    const handleSaveRateCard = async (e) => {
+        e.preventDefault();
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            const config = { headers: { Authorization: `Bearer ${userInfo.token}` } };
+            
+            if (rateCardFormData._id) {
+                // Update existing rate card
+                await axios.put(`/api/admin/events/${selectedEventForRates._id}/ratecard/${rateCardFormData._id}`, rateCardFormData, config);
+            } else {
+                // Add new rate card
+                await axios.post(`/api/admin/events/${selectedEventForRates._id}/ratecard`, rateCardFormData, config);
+            }
+            fetchEvents();
+            // Refetch the selected event details so the modal updates immediately
+            const res = await axios.get(`/api/admin/events/details/${selectedEventForRates._id}`, config);
+            setSelectedEventForRates(res.data.event);
+            setRateCardFormData({ serviceName: '', vehicleType: '', vehicleModel: '', baseRate: '', baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: '' });
+            setIsRateFormOpen(false);
+        } catch (error) {
+            console.error('Error saving rate card', error);
+            alert('Error saving rate card');
+        }
+    };
+
+    const handleDeleteRateCard = async (rateId) => {
+        if (!window.confirm('Are you sure you want to delete this rate card?')) return;
+        try {
+            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
+            await axios.delete(`/api/admin/events/${selectedEventForRates._id}/ratecard/${rateId}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            fetchEvents();
+            const res = await axios.get(`/api/admin/events/details/${selectedEventForRates._id}`, {
+                headers: { Authorization: `Bearer ${userInfo.token}` }
+            });
+            setSelectedEventForRates(res.data.event);
+        } catch (error) {
+            console.error('Error deleting rate card', error);
+            alert('Error deleting rate card');
+        }
+    };
+
     const handleSubmitDuty = async (e) => {
         e.preventDefault();
         try {
@@ -423,6 +476,21 @@ const EventManagement = () => {
                 guestName: dutyFormData.guestName?.trim() || ''
             };
 
+            if (dutyFormData.serviceId && selectedEventDetails?.event?.rateCard) {
+                const service = selectedEventDetails.event.rateCard.find(r => r._id === dutyFormData.serviceId);
+                if (service) {
+                    vehiclePayload.billingDetails = JSON.stringify({
+                        serviceName: service.serviceName,
+                        baseRate: service.baseRate,
+                        baseKms: service.baseKms,
+                        baseHours: service.baseHours,
+                        extraKmRate: service.extraKmRate,
+                        extraHourRate: service.extraHourRate,
+                        driverAllowanceRate: service.driverAllowance
+                    });
+                }
+            }
+
             if (isEditingDuty && selectedId && !selectedDuty?.isAttendance) {
                 await axios.put(`/api/admin/vehicles/${selectedId}`, vehiclePayload, config);
             } else {
@@ -438,7 +506,7 @@ const EventManagement = () => {
             if (showDetailsModal && selectedEventDetails?.event?._id) {
                 fetchEventDetails(selectedEventDetails.event._id);
             }
-            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: '', eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestName: '' });
+            setDutyFormData({ carNumber: '', model: '', dropLocation: '', date: '', eventId: '', dutyAmount: '', ownerName: '', buyAmount: '', driverName: '', vehicleSource: 'Fleet', dutyType: '', dutyTime: '', remarks: '', guestName: '', serviceId: '' });
         } catch (err) {
             console.error('Save Error:', err.response?.data || err.message);
             alert('Error saving duty entry: ' + (err.response?.data?.message || 'Check connection'));
@@ -1225,6 +1293,17 @@ const EventManagement = () => {
 
                         {/* 5. Actions */}
                         <div className="actions-block" style={{ display: 'flex', gap: '8px' }}>
+                            <button onClick={(e) => { e.stopPropagation(); setSelectedEventForRates(ev); setShowRateCardModal(true); }}
+                                style={{
+                                    width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)',
+                                    border: '1px solid rgba(56, 189, 248, 0.2)', color: '#38bdf8', cursor: 'pointer',
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', transition: '0.2s'
+                                }}
+                                className="action-btn-list"
+                                title="Manage Tariffs / Rate Card"
+                            >
+                                <IndianRupee size={16} />
+                            </button>
                             <button onClick={(e) => { e.stopPropagation(); handleEditEvent(ev); }}
                                 style={{
                                     width: '38px', height: '38px', borderRadius: '12px', background: 'rgba(255,255,255,0.03)',
@@ -1338,6 +1417,37 @@ const EventManagement = () => {
                                                     {events.map(e => <option key={e._id} value={e._id}>{e.name} • {e.client}</option>)}
                                                 </select>
                                             </div>
+                                            
+                                            {dutyFormData.eventId && events.find(e => e._id === dutyFormData.eventId)?.rateCard?.length > 0 && (
+                                                <div className="premium-input-group">
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <Wallet size={12} color="var(--primary)" style={{ opacity: 0.7 }} />
+                                                        <label className="premium-label">Select Service / Tariff</label>
+                                                    </div>
+                                                    <select 
+                                                        value={dutyFormData.serviceId || ''} 
+                                                        onChange={e => {
+                                                            const svcId = e.target.value;
+                                                            const evnt = events.find(ev => ev._id === dutyFormData.eventId);
+                                                            const svc = evnt?.rateCard?.find(r => r._id === svcId);
+                                                            setDutyFormData({ 
+                                                                ...dutyFormData, 
+                                                                serviceId: svcId, 
+                                                                dutyAmount: svc ? svc.baseRate : dutyFormData.dutyAmount,
+                                                                dutyType: svc ? svc.serviceName : dutyFormData.dutyType,
+                                                                model: svc?.vehicleModel ? svc.vehicleModel : dutyFormData.model
+                                                            });
+                                                        }} 
+                                                        className="premium-compact-input" style={{ appearance: 'none', height: '50px' }}
+                                                    >
+                                                        <option value="">-- Custom / No Tariff --</option>
+                                                        {events.find(e => e._id === dutyFormData.eventId).rateCard.map(r => (
+                                                            <option key={r._id} value={r._id}>{r.serviceName} (₹{r.baseRate}) {r.vehicleModel ? ` - ${r.vehicleModel}` : ''}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
+                                            )}
+                                            
                                             <div className="premium-input-group">
                                                 <div style={{ display: 'flex', gap: '10px' }}>
                                                     <div style={{ flex: 1 }}>
@@ -1661,7 +1771,7 @@ const EventManagement = () => {
                                                     <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>VEHICLE / RESOURCE</th>
                                                     <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>LOGISTICS</th>
                                                     <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>GUEST NAME</th>
-                                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>SETTLEMENT</th>
+                                                    <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>SETTLEMENT / EXTRAS</th>
                                                     <th style={{ padding: '16px 24px', textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>ACTIONS</th>
                                                 </tr>
                                             </thead>
@@ -1706,6 +1816,15 @@ const EventManagement = () => {
                                                             </td>
                                                             <td style={{ padding: '16px 24px', textAlign: 'center' }}>
                                                                 <div style={{ color: '#10b981', fontWeight: '900', fontSize: '14px' }}>₹{Number(d.dutyAmount || 0).toLocaleString()}</div>
+                                                                {d.billingDetails && (
+                                                                    <div style={{ marginTop: '8px', padding: '6px', background: 'rgba(0,0,0,0.2)', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.05)', textAlign: 'left', display: 'inline-block' }}>
+                                                                        {d.billingDetails.serviceName && <div style={{ fontSize: '9px', color: '#38bdf8', fontWeight: '800', marginBottom: '2px' }}>{d.billingDetails.serviceName}</div>}
+                                                                        <div style={{ fontSize: '9px', color: 'rgba(255,255,255,0.5)' }}>Base: ₹{d.billingDetails.baseRate || 0}</div>
+                                                                        {Number(d.billingDetails.calculatedExtraKmsAmount) > 0 && <div style={{ fontSize: '9px', color: '#f59e0b' }}>+KM: ₹{d.billingDetails.calculatedExtraKmsAmount}</div>}
+                                                                        {Number(d.billingDetails.calculatedExtraHoursAmount) > 0 && <div style={{ fontSize: '9px', color: '#f59e0b' }}>+Hr: ₹{d.billingDetails.calculatedExtraHoursAmount}</div>}
+                                                                        {Number(d.billingDetails.driverAllowanceRate) > 0 && <div style={{ fontSize: '9px', color: '#10b981' }}>+DA: ₹{d.billingDetails.driverAllowanceRate}</div>}
+                                                                    </div>
+                                                                )}
                                                             </td>
                                                             <td style={{ padding: '16px 24px', textAlign: 'center' }}>
                                                                 <div style={{ display: 'inline-flex', gap: '6px', justifyContent: 'center' }}>
@@ -1747,6 +1866,13 @@ const EventManagement = () => {
                                                         <div style={{ textAlign: 'right' }}>
                                                             <div style={{ color: '#10b981', fontWeight: '950', fontSize: '16px' }}>₹{Number(d.dutyAmount || 0).toLocaleString()}</div>
                                                             <div style={{ color: 'rgba(255,255,255,0.2)', fontSize: '8px', fontWeight: '900' }}>SETTLEMENT</div>
+                                                            {d.billingDetails && (
+                                                                <div style={{ marginTop: '4px', textAlign: 'right' }}>
+                                                                    {Number(d.billingDetails.calculatedExtraKmsAmount) > 0 && <span style={{ fontSize: '9px', color: '#f59e0b', marginLeft: '4px' }}>+KM:₹{d.billingDetails.calculatedExtraKmsAmount}</span>}
+                                                                    {Number(d.billingDetails.calculatedExtraHoursAmount) > 0 && <span style={{ fontSize: '9px', color: '#f59e0b', marginLeft: '4px' }}>+Hr:₹{d.billingDetails.calculatedExtraHoursAmount}</span>}
+                                                                    {Number(d.billingDetails.driverAllowanceRate) > 0 && <span style={{ fontSize: '9px', color: '#10b981', marginLeft: '4px' }}>+DA:₹{d.billingDetails.driverAllowanceRate}</span>}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -1900,6 +2026,179 @@ const EventManagement = () => {
                                     }}>{isEditingEvent ? 'UPDATE' : 'SUBMIT'}</button>
                                 </div>
                             </form>
+                        </motion.div>
+                    </div>
+                )}
+            </AnimatePresence>
+
+            {/* ═══ RATE CARD MODAL ═══ */}
+            <AnimatePresence>
+                {showRateCardModal && selectedEventForRates && (
+                    <div className="modal-overlay" onClick={() => { setShowRateCardModal(false); setSelectedEventForRates(null); setRateCardFormData({ serviceName: '', vehicleType: '', vehicleModel: '', baseRate: '', baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: '' }); }}>
+                        <motion.div
+                            initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                            className="premium-scroll"
+                            onClick={(e) => e.stopPropagation()}
+                            style={{
+                                background: 'rgba(15, 23, 42, 0.95)', backdropFilter: 'blur(30px)', border: '1px solid rgba(255,255,255,0.1)',
+                                borderRadius: '24px', padding: 'clamp(20px, 5vw, 32px)', width: '100%', maxWidth: '900px',
+                                maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px rgba(0,0,0,0.5)', position: 'relative'
+                            }}
+                        >
+                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
+                                <div>
+                                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 12px', background: 'rgba(56, 189, 248, 0.1)', color: '#38bdf8', borderRadius: '8px', fontSize: '12px', fontWeight: '800', marginBottom: '8px' }}>
+                                        <Wallet size={14} /> TARIFFS & RATES
+                                    </div>
+                                    <h2 style={{ color: 'white', fontSize: 'clamp(20px, 4vw, 28px)', fontWeight: '900', margin: 0 }}>Rate Card: {selectedEventForRates.name}</h2>
+                                    <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: '4px 0 0 0' }}>Manage tariffs for different services and vehicles.</p>
+                                </div>
+                                <div style={{ display: 'flex', gap: '12px' }}>
+                                    <button onClick={() => { setIsRateFormOpen(true); setRateCardFormData({ serviceName: '', vehicleType: '', vehicleModel: '', baseRate: '', baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: '' }); }} style={{ height: '40px', padding: '0 16px', borderRadius: '12px', background: 'linear-gradient(to right, var(--primary), #f59e0b)', border: 'none', color: 'black', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                        <Plus size={16} /> Add New Rate
+                                    </button>
+                                    <button onClick={() => { setShowRateCardModal(false); setSelectedEventForRates(null); setIsRateFormOpen(false); }} style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                                        <X size={20} />
+                                    </button>
+                                </div>
+                            </div>
+
+                            <AnimatePresence>
+                            {isRateFormOpen && (
+                                <motion.form 
+                                    initial={{ opacity: 0, height: 0, overflow: 'hidden' }} 
+                                    animate={{ opacity: 1, height: 'auto', overflow: 'visible' }} 
+                                    exit={{ opacity: 0, height: 0, overflow: 'hidden' }}
+                                    onSubmit={handleSaveRateCard} 
+                                    style={{ background: 'rgba(251, 191, 36, 0.05)', padding: '24px', borderRadius: '20px', border: '1px solid rgba(251, 191, 36, 0.2)', marginBottom: '24px', boxShadow: '0 10px 30px rgba(0,0,0,0.2)' }}
+                                >
+                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                                        <h3 style={{ color: 'var(--primary)', fontSize: '16px', fontWeight: '900', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                            <Edit size={18} /> {rateCardFormData._id ? 'Edit Rate Details' : 'Configure New Rate'}
+                                        </h3>
+                                    </div>
+                                    <div className="form-grid-3">
+                                    <div className="input-group">
+                                        <label className="label-text">Service Name *</label>
+                                        <input required type="text" list="serviceOptions" className="premium-compact-input" placeholder="e.g. Airport Drop, 8Hr/80Km" value={rateCardFormData.serviceName} onChange={(e) => setRateCardFormData({ ...rateCardFormData, serviceName: e.target.value })} />
+                                        <datalist id="serviceOptions">
+                                            <option value="Airport Pickup" />
+                                            <option value="Airport Drop" />
+                                            <option value="Railway Station Pickup" />
+                                            <option value="Railway Station Drop" />
+                                            <option value="Bus Stand Pickup" />
+                                            <option value="Bus Stand Drop" />
+                                            <option value="Local 8Hr/80Km" />
+                                            <option value="Local 12Hr/120Km" />
+                                            <option value="Outstation" />
+                                            <option value="Udaipur Sightseeing" />
+                                        </datalist>
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="label-text">Vehicle Category</label>
+                                        <select className="premium-compact-input" value={rateCardFormData.vehicleType} onChange={(e) => setRateCardFormData({ ...rateCardFormData, vehicleType: e.target.value })}>
+                                            <option value="">Any</option>
+                                            <option value="Sedan">Sedan</option>
+                                            <option value="SUV">SUV</option>
+                                            <option value="Bus">Bus</option>
+                                            <option value="Tempo">Tempo Traveller</option>
+                                        </select>
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="label-text">Vehicle Model</label>
+                                        <input type="text" className="premium-compact-input" placeholder="e.g. Innova Crysta" value={rateCardFormData.vehicleModel} onChange={(e) => setRateCardFormData({ ...rateCardFormData, vehicleModel: e.target.value })} />
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="label-text">Base Rate (₹) *</label>
+                                        <input required type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.baseRate} onChange={(e) => setRateCardFormData({ ...rateCardFormData, baseRate: e.target.value })} />
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="label-text">Base Limit KMs</label>
+                                        <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.baseKms} onChange={(e) => setRateCardFormData({ ...rateCardFormData, baseKms: e.target.value })} />
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="label-text">Base Limit Hours</label>
+                                        <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.baseHours} onChange={(e) => setRateCardFormData({ ...rateCardFormData, baseHours: e.target.value })} />
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="label-text">Extra Rate / KM (₹)</label>
+                                        <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.extraKmRate} onChange={(e) => setRateCardFormData({ ...rateCardFormData, extraKmRate: e.target.value })} />
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="label-text">Extra Rate / Hr (₹)</label>
+                                        <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.extraHourRate} onChange={(e) => setRateCardFormData({ ...rateCardFormData, extraHourRate: e.target.value })} />
+                                    </div>
+                                    <div className="input-group">
+                                        <label className="label-text">Driver Allowance (₹)</label>
+                                        <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.driverAllowance} onChange={(e) => setRateCardFormData({ ...rateCardFormData, driverAllowance: e.target.value })} />
+                                    </div>
+                                </div>
+                                    <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+                                        <button type="button" onClick={() => { setIsRateFormOpen(false); setRateCardFormData({ serviceName: '', vehicleType: '', vehicleModel: '', baseRate: '', baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: '' }) }} className="secondary-btn" style={{ height: '40px', background: 'rgba(255,255,255,0.05)' }}>Cancel</button>
+                                        <button type="submit" className="primary-btn" style={{ height: '40px' }}>
+                                            <Save size={16} /> {rateCardFormData._id ? 'Update Rate' : 'Save Rate'}
+                                        </button>
+                                    </div>
+                                </motion.form>
+                            )}
+                            </AnimatePresence>
+
+                            <div className="rate-cards-list">
+                                {(!selectedEventForRates.rateCard || selectedEventForRates.rateCard.length === 0) ? (
+                                    <div style={{ padding: '40px', textAlign: 'center', background: 'rgba(255,255,255,0.02)', borderRadius: '20px', border: '1px dashed rgba(255,255,255,0.1)', marginTop: '20px' }}>
+                                        <Wallet size={32} style={{ opacity: 0.2, marginBottom: '10px' }} />
+                                        <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0, fontSize: '14px', fontWeight: '600' }}>No rate cards added yet.<br/>Click "Add New Rate" to begin.</p>
+                                    </div>
+                                ) : (
+                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '16px', marginTop: '10px' }}>
+                                        {selectedEventForRates.rateCard.map((rate) => (
+                                            <div key={rate._id} style={{
+                                                background: 'rgba(15, 23, 42, 0.6)', borderRadius: '20px', padding: '20px',
+                                                border: '1px solid rgba(255,255,255,0.08)', position: 'relative',
+                                                display: 'flex', flexDirection: 'column', gap: '16px',
+                                                boxShadow: '0 10px 20px rgba(0,0,0,0.2)'
+                                            }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                    <div>
+                                                        <div style={{ color: '#38bdf8', fontSize: '14px', fontWeight: '900', marginBottom: '4px' }}>{rate.serviceName}</div>
+                                                        <div style={{ color: 'white', fontSize: '18px', fontWeight: '900' }}>₹{Number(rate.baseRate).toLocaleString()}</div>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: '6px' }}>
+                                                        <button onClick={() => { setRateCardFormData(rate); setIsRateFormOpen(true); }} style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Edit size={14} /></button>
+                                                        <button onClick={() => handleDeleteRateCard(rate._id)} style={{ width: '32px', height: '32px', borderRadius: '10px', background: 'rgba(244,63,94,0.1)', border: 'none', color: '#f43f5e', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Trash2 size={14} /></button>
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', background: 'rgba(255,255,255,0.03)', padding: '8px 12px', borderRadius: '10px' }}>
+                                                    <Car size={16} color="rgba(255,255,255,0.4)" />
+                                                    <div>
+                                                        <div style={{ color: 'white', fontSize: '12px', fontWeight: '800' }}>{rate.vehicleModel || 'Any Model'}</div>
+                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '10px', fontWeight: '700' }}>{rate.vehicleType || 'Any Category'}</div>
+                                                    </div>
+                                                </div>
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '12px' }}>
+                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: '800', marginBottom: '4px' }}>LIMITS</div>
+                                                        <div style={{ color: 'white', fontSize: '11px', fontWeight: '700' }}>{rate.baseKms ? `${rate.baseKms} KM` : '--'} / {rate.baseHours ? `${rate.baseHours} Hr` : '--'}</div>
+                                                    </div>
+                                                    <div style={{ background: 'rgba(0,0,0,0.2)', padding: '10px', borderRadius: '12px' }}>
+                                                        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '9px', fontWeight: '800', marginBottom: '4px' }}>EXTRA CHARGES</div>
+                                                        <div style={{ color: '#f59e0b', fontSize: '11px', fontWeight: '700' }}>{rate.extraKmRate ? `₹${rate.extraKmRate}/KM` : '--'}</div>
+                                                        <div style={{ color: '#f59e0b', fontSize: '11px', fontWeight: '700' }}>{rate.extraHourRate ? `₹${rate.extraHourRate}/Hr` : '--'}</div>
+                                                    </div>
+                                                    {Number(rate.driverAllowance) > 0 && (
+                                                    <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '10px', borderRadius: '12px', gridColumn: 'span 2', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                        <div style={{ color: '#10b981', fontSize: '10px', fontWeight: '800' }}>DRIVER ALLOWANCE</div>
+                                                        <div style={{ color: '#10b981', fontSize: '12px', fontWeight: '900' }}>₹{rate.driverAllowance}</div>
+                                                    </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
                         </motion.div>
                     </div>
                 )}
