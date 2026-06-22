@@ -282,31 +282,46 @@ const DriverPortal = () => {
             }
         }
 
+        setIsSubmitting(true);
+
+        const compressImage = async (file) => {
+            return file; // Bypass compression as CameraModal already returns low-res, 0.6 quality JPEG. Prevents web worker hang.
+        };
+
         let longitude = 0;
         let latitude = 0;
         let address = 'Location Disabled (Permission Denied)';
 
         try {
             const pos = await new Promise((resolve, reject) => {
-                navigator.geolocation.getCurrentPosition(resolve, reject, {
-                    enableHighAccuracy: true,
-                    timeout: 5000
-                });
+                const timer = setTimeout(() => {
+                    reject(new Error("Geolocation timeout manually triggered"));
+                }, 4000);
+
+                navigator.geolocation.getCurrentPosition(
+                    (p) => { clearTimeout(timer); resolve(p); },
+                    (e) => { clearTimeout(timer); reject(e); },
+                    { enableHighAccuracy: true, maximumAge: 10000, timeout: 4000 }
+                );
             });
             latitude = pos.coords.latitude;
             longitude = pos.coords.longitude;
-            // Removed slow nominatim reverse geocoding API to speed up punch in/out
             address = `Tracked: ${latitude.toFixed(6)}, ${longitude.toFixed(6)}`;
         } catch (err) {
             console.warn('Location acquisition failed or timed out:', err);
-            // Don't block punch-in if location fails, just use 0,0
         }
+
+        const [compressedSelfie, compressedKmPhoto, compressedCarSelfie] = await Promise.all([
+            compressImage(selfie),
+            compressImage(kmPhoto),
+            compressImage(carSelfie)
+        ]);
 
         const formData = new FormData();
         formData.append('km', km);
-        formData.append('selfie', selfie);
-        formData.append('kmPhoto', kmPhoto);
-        formData.append('carSelfie', carSelfie);
+        formData.append('selfie', compressedSelfie);
+        formData.append('kmPhoto', compressedKmPhoto);
+        formData.append('carSelfie', compressedCarSelfie);
         formData.append('dutyCount', '1');
         formData.append('specialPay', '0');
         formData.append('specialPayRemark', '');
@@ -323,18 +338,22 @@ const DriverPortal = () => {
             formData.append('otherRemarks', otherRemarks);
             formData.append('fuelFilled', fuelFilled);
             if (fuelFilled) {
-                fuelEntries.forEach(entry => {
+                const fuelSlipsPromises = fuelEntries.map(entry => compressImage(entry.slip));
+                const compFuelSlips = await Promise.all(fuelSlipsPromises);
+                fuelEntries.forEach((entry, idx) => {
                     formData.append('fuelAmounts', entry.amount);
                     formData.append('fuelKMs', entry.km);
                     formData.append('fuelTypes', entry.fuelType);
-                    formData.append('fuelSlips', entry.slip);
+                    formData.append('fuelSlips', compFuelSlips[idx]);
                 });
             }
             formData.append('parkingPaid', parkingPaid);
             if (parkingPaid) {
-                parkingEntries.forEach((entry) => {
+                const parkingSlipsPromises = parkingEntries.map(entry => compressImage(entry.slip));
+                const compParkingSlips = await Promise.all(parkingSlipsPromises);
+                parkingEntries.forEach((entry, idx) => {
                     formData.append('parkingAmounts', entry.amount);
-                    formData.append('parkingSlips', entry.slip);
+                    formData.append('parkingSlips', compParkingSlips[idx]);
                 });
             }
             formData.append('outsideTripOccurred', outsideTripOccurred);

@@ -808,7 +808,7 @@ const ParkingPage = () => {
                                         <div style={{ position: 'relative', flexShrink: 0 }}>
                                             <img
                                                 src={getImageUrl(entry.slipPhoto)}
-                                                onClick={() => { setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
+                                                onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
                                                 style={{ width: '80px', height: '80px', borderRadius: '18px', objectFit: 'cover', cursor: 'pointer', border: '2px solid rgba(251, 191, 36, 0.3)', boxShadow: '0 8px 24px rgba(0,0,0,0.3)' }}
                                             />
                                             <div style={{ position: 'absolute', top: '-6px', right: '-6px', background: 'var(--primary)', color: 'black', width: '24px', height: '24px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '10px', fontWeight: '950', border: '3px solid #1a2233' }}>
@@ -982,7 +982,7 @@ const ParkingPage = () => {
                                                         <div style={{ position: 'relative', flexShrink: 0 }}>
                                                             <img
                                                                 src={getImageUrl(entry.slipPhoto)}
-                                                                onClick={() => { setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
+                                                                onPointerDown={(e) => { e.stopPropagation(); e.preventDefault(); setSelectedImage(entry.slipPhoto); setShowImageModal(true); }}
                                                                 style={{ width: '64px', height: '64px', borderRadius: '14px', objectFit: 'cover', cursor: 'pointer', border: '2px solid rgba(244,63,94,0.25)', filter: 'grayscale(10%)' }}
                                                                 alt="slip"
                                                             />
@@ -1208,7 +1208,7 @@ const ParkingPage = () => {
                                                     <td style={{ padding: '15px 25px', textAlign: 'right', borderTopRightRadius: '12px', borderBottomRightRadius: '12px' }}>
                                                         <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end' }}>
                                                             <button
-                                                                onClick={() => { setSelectedImage(e.receiptPhoto || ''); setShowImageModal(true); }}
+                                                                onPointerDown={(ev) => { ev.stopPropagation(); ev.preventDefault(); setSelectedImage(e.receiptPhoto || ''); setShowImageModal(true); }}
                                                                 className="btn-glass"
                                                                 style={{ padding: '8px', borderRadius: '8px', background: e.receiptPhoto ? 'rgba(16, 185, 129, 0.1)' : 'rgba(255,255,255,0.03)' }}
                                                             >
@@ -1326,7 +1326,7 @@ const ParkingPage = () => {
                                                 <div style={{ display: 'flex', gap: '8px' }}>
                                                     {e.receiptPhoto && (
                                                         <button
-                                                            onClick={() => { setSelectedImage(e.receiptPhoto); setShowImageModal(true); }}
+                                                            onPointerDown={(ev) => { ev.stopPropagation(); ev.preventDefault(); setSelectedImage(e.receiptPhoto); setShowImageModal(true); }}
                                                             style={{
                                                                 width: '32px',
                                                                 height: '32px',
