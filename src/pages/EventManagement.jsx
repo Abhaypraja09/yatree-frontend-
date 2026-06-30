@@ -58,9 +58,11 @@ const EventManagement = () => {
     const [selectedEventForRates, setSelectedEventForRates] = useState(null);
     const [isRateFormOpen, setIsRateFormOpen] = useState(false);
     const [rateCardFormData, setRateCardFormData] = useState({
-        serviceName: '', vehicleType: '', vehicleModel: '', baseRate: '',
+        serviceName: '', vehicleType: '', baseRate: '',
         baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: ''
     });
+    const [selectedVehicleTypes, setSelectedVehicleTypes] = useState([]);
+    const [multiRateCardsData, setMultiRateCardsData] = useState({});
 
     useEffect(() => {
         if (selectedMonth === 'All') {
@@ -403,14 +405,30 @@ const EventManagement = () => {
                 // Update existing rate card
                 await axios.put(`/api/admin/events/${selectedEventForRates._id}/ratecard/${rateCardFormData._id}`, rateCardFormData, config);
             } else {
-                // Add new rate card
-                await axios.post(`/api/admin/events/${selectedEventForRates._id}/ratecard`, rateCardFormData, config);
+                // Add new rate cards (multiple)
+                const promises = selectedVehicleTypes.map(type => {
+                    const data = multiRateCardsData[type];
+                    const payload = {
+                        serviceName: rateCardFormData.serviceName,
+                        vehicleType: type,
+                        baseRate: data.baseRate,
+                        baseKms: data.baseKms,
+                        baseHours: data.baseHours,
+                        extraKmRate: data.extraKmRate,
+                        extraHourRate: data.extraHourRate,
+                        driverAllowance: data.driverAllowance
+                    };
+                    return axios.post(`/api/admin/events/${selectedEventForRates._id}/ratecard`, payload, config);
+                });
+                await Promise.all(promises);
             }
             fetchEvents();
             // Refetch the selected event details so the modal updates immediately
             const res = await axios.get(`/api/admin/events/details/${selectedEventForRates._id}`, config);
             setSelectedEventForRates(res.data.event);
-            setRateCardFormData({ serviceName: '', vehicleType: '', vehicleModel: '', baseRate: '', baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: '' });
+            setRateCardFormData({ serviceName: '', vehicleType: '', baseRate: '', baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: '' });
+            setSelectedVehicleTypes([]);
+            setMultiRateCardsData({});
             setIsRateFormOpen(false);
         } catch (error) {
             console.error('Error saving rate card', error);
@@ -434,6 +452,219 @@ const EventManagement = () => {
             console.error('Error deleting rate card', error);
             alert('Error deleting rate card');
         }
+    };
+
+    const handleDownloadRateCardPDF = async () => {
+        if (!selectedEventForRates || !selectedEventForRates.rateCard || selectedEventForRates.rateCard.length === 0) {
+            alert('No rate cards available to download.');
+            return;
+        }
+
+        const loadImage = (url) => {
+            return new Promise((resolve, reject) => {
+                if (!url) return resolve(null);
+                const img = new Image();
+                img.crossOrigin = 'Anonymous';
+                const finalUrl = url.startsWith('/') ? `${axios.defaults.baseURL || ''}${url}` : url;
+                img.onload = () => resolve(img);
+                img.onerror = reject;
+                if (finalUrl.startsWith('http')) {
+                    img.src = `/api/admin/proxy-image?url=${encodeURIComponent(finalUrl)}`;
+                } else {
+                    img.src = finalUrl;
+                }
+            });
+        };
+
+        const vehicleTypes = [...new Set(selectedEventForRates.rateCard.map(r => r.vehicleType))];
+        
+        // If there are many vehicle types, landscape might be needed, but we try portrait first to match design
+        const orientation = vehicleTypes.length > 5 ? 'landscape' : 'portrait';
+        const doc = new jsPDF(orientation);
+        const pageWidth = doc.internal.pageSize.getWidth();
+        
+        // --- TOP HEADER SECTION ---
+        doc.setFillColor(15, 23, 42); // Dark blue background
+        doc.rect(0, 0, pageWidth, 45, 'F');
+        
+        let logoOffset = 14;
+        try {
+            const logoSrc = selectedCompany?.logoUrl || '/logos/logo.png';
+            const logoImg = await loadImage(logoSrc);
+            
+            if (logoImg) {
+                // Draw white rounded rectangle behind logo
+                doc.setFillColor(255, 255, 255);
+                doc.roundedRect(12, 8, 34, 34, 3, 3, 'F');
+                
+                // Draw logo inside the white box
+                doc.addImage(logoImg, 'PNG', 14, 10, 30, 30);
+                logoOffset = 52; // Shift text to the right
+            }
+        } catch (e) {
+            console.warn('Could not load logo image for PDF', e);
+        }
+
+        // Title Text
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(22);
+        doc.setFont('helvetica', 'bold');
+        doc.text((selectedCompany?.name || 'YATREEDESTINATION').toUpperCase(), logoOffset, 22);
+        
+        // Subtitle
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(200, 200, 200);
+        doc.text('Premium Fleet Management & Travel Solutions', logoOffset, 30);
+        
+        // Right side info
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text('EVENT RATE CARD', pageWidth - 14, 20, { align: 'right' });
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`DATE: ${new Date().toLocaleDateString('en-IN')}`, pageWidth - 14, 28, { align: 'right' });
+
+        // --- EVENT SPECIFICATIONS SECTION ---
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(15, 23, 42);
+        doc.text('EVENT SPECIFICATIONS', 14, 60);
+        
+        // Yellow underline
+        doc.setDrawColor(245, 158, 11); // Amber/Yellow
+        doc.setLineWidth(1);
+        doc.line(14, 63, 65, 63);
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.text('EVENT NAME', 14, 73);
+        doc.text('CLIENT', 14, 81);
+        doc.text('EVENT DATE', 14, 89);
+        
+        doc.setFont('helvetica', 'normal');
+        doc.text(selectedEventForRates.name.toUpperCase(), 50, 73);
+        doc.text((selectedEventForRates.client || 'N/A').toUpperCase(), 50, 81);
+        const eventDateStr = selectedEventForRates.date ? new Date(selectedEventForRates.date).toLocaleDateString('en-IN') : 'N/A';
+        doc.text(eventDateStr, 50, 89);
+
+        // Calculate total rate cards defined (just a stat)
+        doc.setFont('helvetica', 'bold');
+        doc.text('TOTAL SERVICES', pageWidth / 2, 73);
+        doc.setFont('helvetica', 'normal');
+        const uniqueServices = [...new Set(selectedEventForRates.rateCard.map(r => r.serviceName))];
+        doc.text(`${uniqueServices.length} Defined`, pageWidth / 2 + 40, 73);
+
+
+        // --- TABLE SECTION ---
+        // Define columns
+        const head = [['S.NO.', 'SERVICES / PARTICULARS', ...vehicleTypes.map(v => v === 'Tempo' ? 'TEMPO TRAVELLER' : v.toUpperCase())]];
+        
+        const body = [];
+        
+        // Add service rows
+        uniqueServices.forEach((service, index) => {
+            const row = [index + 1, service.toUpperCase()];
+            vehicleTypes.forEach(vType => {
+                const rate = selectedEventForRates.rateCard.find(r => r.serviceName === service && r.vehicleType === vType);
+                row.push(rate && rate.baseRate ? `Rs. ${rate.baseRate}` : '-');
+            });
+            body.push(row);
+        });
+
+        // Extra Rows (Extra KM, Extra Hr, Driver Allowance)
+        const extraKmRow = ['*', 'EXTRA KM RATE'];
+        const extraHrRow = ['*', 'EXTRA HOUR RATE'];
+        const driverAllowanceRow = ['*', 'DRIVER ALLOWANCE / NIGHT HOLD'];
+
+        let hasExtraKm = false;
+        let hasExtraHr = false;
+        let hasAllowance = false;
+
+        vehicleTypes.forEach(vType => {
+            const rates = selectedEventForRates.rateCard.filter(r => r.vehicleType === vType);
+            const rateKm = rates.find(r => r.extraKmRate)?.extraKmRate;
+            const rateHr = rates.find(r => r.extraHourRate)?.extraHourRate;
+            const rateAll = rates.find(r => r.driverAllowance)?.driverAllowance;
+
+            const extraKm = rateKm ? `Rs. ${rateKm}/Km` : '-';
+            const extraHr = rateHr ? `Rs. ${rateHr}/Hr` : '-';
+            const allowance = rateAll ? `Rs. ${rateAll}` : '-';
+
+            if (extraKm !== '-') hasExtraKm = true;
+            if (extraHr !== '-') hasExtraHr = true;
+            if (allowance !== '-') hasAllowance = true;
+
+            extraKmRow.push(extraKm);
+            extraHrRow.push(extraHr);
+            driverAllowanceRow.push(allowance);
+        });
+
+        if (hasExtraKm) body.push(extraKmRow);
+        if (hasExtraHr) body.push(extraHrRow);
+        if (hasAllowance) body.push(driverAllowanceRow);
+
+        autoTable(doc, {
+            startY: 105,
+            head: head,
+            body: body,
+            theme: 'grid',
+            headStyles: { 
+                fillColor: [15, 23, 42], 
+                textColor: [255, 255, 255], 
+                fontStyle: 'bold', 
+                halign: 'center', 
+                fontSize: 9, 
+                cellPadding: 6 
+            },
+            bodyStyles: { 
+                halign: 'center', 
+                fontSize: 9, 
+                cellPadding: 5, 
+                textColor: [40, 40, 40] 
+            },
+            columnStyles: { 
+                0: { halign: 'center', fontStyle: 'bold', cellWidth: 15 }, 
+                1: { halign: 'left', fontStyle: 'bold', cellWidth: orientation === 'portrait' ? 60 : 80 } 
+            },
+            alternateRowStyles: { fillColor: [248, 250, 252] }, // Light blue-gray alternate rows
+            didParseCell: function(data) {
+                // Style currency values with green if it's in the body and starts with Rs.
+                if (data.section === 'body' && data.column.index > 1) {
+                    if (data.cell.raw !== '-' && data.cell.raw.toString().includes('Rs.')) {
+                        data.cell.styles.textColor = [16, 185, 129]; // Emerald Green
+                        data.cell.styles.fontStyle = 'bold';
+                    }
+                }
+                // Highlight Extra rows
+                if (data.section === 'body' && data.row.raw[0] === '*') {
+                    data.cell.styles.fillColor = [255, 251, 235]; // Light amber background for extra charges
+                }
+            }
+        });
+
+        // Add Signature Section
+        const finalY = doc.lastAutoTable.finalY + 20; // 20 units below the table
+        
+        try {
+            const sigSrc = selectedCompany?.ownerSignatureUrl || '/logos/signature.png';
+            const sigImg = await loadImage(sigSrc);
+            if (sigImg) {
+                // Draw signature on the right side
+                doc.addImage(sigImg, 'PNG', pageWidth - 60, finalY, 40, 20);
+            }
+        } catch (e) {
+            console.warn('Could not load signature image for PDF', e);
+        }
+
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(15, 23, 42);
+        doc.text('AUTHORIZED SIGNATORY', pageWidth - 40, finalY + 25, { align: 'center' });
+
+        doc.save(`${selectedEventForRates.name.replace(/\s+/g, '_')}_Rate_Card.pdf`);
     };
 
     const handleSubmitDuty = async (e) => {
@@ -595,7 +826,7 @@ const EventManagement = () => {
 
     // SMART DYNAMIC SUGGESTIONS (SAME AS OUTSIDE CARS)
     const dutyTypeSuggestions = React.useMemo(() => {
-        return ['Airport PickUp', 'Airport Drop', 'RSD PickUp', 'RSD Drop', 'Bus Stand PickUp', 'Bus Stand Drop'].sort();
+        return ['Airport Pickup & Drop', 'RSD Pickup & Drop', 'Bus Stand Pickup & Drop'].sort();
     }, []);
 
     const dropLocationSuggestions = React.useMemo(() => {
@@ -1563,7 +1794,7 @@ const EventManagement = () => {
                                             </div>
                                             <input type="text" list="eventDutyTypes" value={dutyFormData.dutyType} onChange={e => setDutyFormData({ ...dutyFormData, dutyType: e.target.value })} className="premium-compact-input" placeholder="e.g. Airport Transfer" style={{ height: '50px' }} />
                                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '8px' }}>
-                                                {['Airport PickUp', 'Airport Drop', 'RSD PickUp', 'RSD Drop', 'Bus Stand PickUp', 'Bus Stand Drop'].map(t => (
+                                                {['Airport Pickup & Drop', 'RSD Pickup & Drop', 'Bus Stand Pickup & Drop'].map(t => (
                                                     <button
                                                         key={t}
                                                         type="button"
@@ -2054,7 +2285,10 @@ const EventManagement = () => {
                                     <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '13px', margin: '4px 0 0 0' }}>Manage tariffs for different services and vehicles.</p>
                                 </div>
                                 <div style={{ display: 'flex', gap: '12px' }}>
-                                    <button onClick={() => { setIsRateFormOpen(true); setRateCardFormData({ serviceName: '', vehicleType: '', vehicleModel: '', baseRate: '', baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: '' }); }} style={{ height: '40px', padding: '0 16px', borderRadius: '12px', background: 'linear-gradient(to right, var(--primary), #f59e0b)', border: 'none', color: 'black', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                                    <button onClick={handleDownloadRateCardPDF} style={{ height: '40px', padding: '0 16px', borderRadius: '12px', background: 'rgba(56, 189, 248, 0.1)', border: '1px solid rgba(56, 189, 248, 0.3)', color: '#38bdf8', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', transition: 'all 0.2s' }}>
+                                        <Download size={16} /> PDF Export
+                                    </button>
+                                    <button onClick={() => { setIsRateFormOpen(true); setRateCardFormData({ serviceName: '', vehicleType: '', baseRate: '', baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: '' }); }} style={{ height: '40px', padding: '0 16px', borderRadius: '12px', background: 'linear-gradient(to right, var(--primary), #f59e0b)', border: 'none', color: 'black', fontWeight: '900', display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
                                         <Plus size={16} /> Add New Rate
                                     </button>
                                     <button onClick={() => { setShowRateCardModal(false); setSelectedEventForRates(null); setIsRateFormOpen(false); }} style={{ width: '40px', height: '40px', borderRadius: '12px', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -2082,59 +2316,117 @@ const EventManagement = () => {
                                         <label className="label-text">Service Name *</label>
                                         <input required type="text" list="serviceOptions" className="premium-compact-input" placeholder="e.g. Airport Drop, 8Hr/80Km" value={rateCardFormData.serviceName} onChange={(e) => setRateCardFormData({ ...rateCardFormData, serviceName: e.target.value })} />
                                         <datalist id="serviceOptions">
-                                            <option value="Airport Pickup" />
-                                            <option value="Airport Drop" />
-                                            <option value="Railway Station Pickup" />
-                                            <option value="Railway Station Drop" />
-                                            <option value="Bus Stand Pickup" />
-                                            <option value="Bus Stand Drop" />
+                                            <option value="Airport Pickup & Drop" />
+                                            <option value="Railway Station Pickup & Drop" />
+                                            <option value="Bus Stand Pickup & Drop" />
                                             <option value="Local 8Hr/80Km" />
                                             <option value="Local 12Hr/120Km" />
                                             <option value="Outstation" />
-                                            <option value="Udaipur Sightseeing" />
                                         </datalist>
                                     </div>
-                                    <div className="input-group">
-                                        <label className="label-text">Vehicle Category</label>
-                                        <select className="premium-compact-input" value={rateCardFormData.vehicleType} onChange={(e) => setRateCardFormData({ ...rateCardFormData, vehicleType: e.target.value })}>
-                                            <option value="">Any</option>
-                                            <option value="Sedan">Sedan</option>
-                                            <option value="SUV">SUV</option>
-                                            <option value="Bus">Bus</option>
-                                            <option value="Tempo">Tempo Traveller</option>
-                                        </select>
-                                    </div>
-                                    <div className="input-group">
-                                        <label className="label-text">Vehicle Model</label>
-                                        <input type="text" className="premium-compact-input" placeholder="e.g. Innova Crysta" value={rateCardFormData.vehicleModel} onChange={(e) => setRateCardFormData({ ...rateCardFormData, vehicleModel: e.target.value })} />
-                                    </div>
-                                    <div className="input-group">
-                                        <label className="label-text">Base Rate (₹) *</label>
-                                        <input required type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.baseRate} onChange={(e) => setRateCardFormData({ ...rateCardFormData, baseRate: e.target.value })} />
-                                    </div>
-                                    <div className="input-group">
-                                        <label className="label-text">Base Limit KMs</label>
-                                        <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.baseKms} onChange={(e) => setRateCardFormData({ ...rateCardFormData, baseKms: e.target.value })} />
-                                    </div>
-                                    <div className="input-group">
-                                        <label className="label-text">Base Limit Hours</label>
-                                        <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.baseHours} onChange={(e) => setRateCardFormData({ ...rateCardFormData, baseHours: e.target.value })} />
-                                    </div>
-                                    <div className="input-group">
-                                        <label className="label-text">Extra Rate / KM (₹)</label>
-                                        <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.extraKmRate} onChange={(e) => setRateCardFormData({ ...rateCardFormData, extraKmRate: e.target.value })} />
-                                    </div>
-                                    <div className="input-group">
-                                        <label className="label-text">Extra Rate / Hr (₹)</label>
-                                        <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.extraHourRate} onChange={(e) => setRateCardFormData({ ...rateCardFormData, extraHourRate: e.target.value })} />
-                                    </div>
-                                    <div className="input-group">
-                                        <label className="label-text">Driver Allowance (₹)</label>
-                                        <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.driverAllowance} onChange={(e) => setRateCardFormData({ ...rateCardFormData, driverAllowance: e.target.value })} />
-                                    </div>
+                                    {rateCardFormData._id ? (
+                                        <>
+                                            <div className="input-group">
+                                                <label className="label-text">Vehicle Category</label>
+                                                <select className="premium-compact-input" value={rateCardFormData.vehicleType} onChange={(e) => setRateCardFormData({ ...rateCardFormData, vehicleType: e.target.value })}>
+                                                    <option value="">Any</option>
+                                                    <option value="Sedan">Sedan</option>
+                                                    <option value="SUV">SUV</option>
+                                                    <option value="Bus">Bus</option>
+                                                    <option value="Tempo">Tempo Traveller</option>
+                                                </select>
+                                            </div>
+                                            <div className="input-group">
+                                                <label className="label-text">Base Rate (₹) *</label>
+                                                <input required type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.baseRate} onChange={(e) => setRateCardFormData({ ...rateCardFormData, baseRate: e.target.value })} />
+                                            </div>
+                                            <div className="input-group">
+                                                <label className="label-text">Base Limit KMs</label>
+                                                <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.baseKms} onChange={(e) => setRateCardFormData({ ...rateCardFormData, baseKms: e.target.value })} />
+                                            </div>
+                                            <div className="input-group">
+                                                <label className="label-text">Base Limit Hours</label>
+                                                <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.baseHours} onChange={(e) => setRateCardFormData({ ...rateCardFormData, baseHours: e.target.value })} />
+                                            </div>
+                                            <div className="input-group">
+                                                <label className="label-text">Extra Rate / KM (₹)</label>
+                                                <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.extraKmRate} onChange={(e) => setRateCardFormData({ ...rateCardFormData, extraKmRate: e.target.value })} />
+                                            </div>
+                                            <div className="input-group">
+                                                <label className="label-text">Extra Rate / Hr (₹)</label>
+                                                <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.extraHourRate} onChange={(e) => setRateCardFormData({ ...rateCardFormData, extraHourRate: e.target.value })} />
+                                            </div>
+                                            <div className="input-group">
+                                                <label className="label-text">Driver Allowance (₹)</label>
+                                                <input type="number" className="premium-compact-input" placeholder="0" value={rateCardFormData.driverAllowance} onChange={(e) => setRateCardFormData({ ...rateCardFormData, driverAllowance: e.target.value })} />
+                                            </div>
+                                        </>
+                                    ) : (
+                                        <div className="input-group" style={{ gridColumn: '1 / -1' }}>
+                                            <label className="label-text" style={{ marginBottom: '10px', display: 'block' }}>Select Vehicle Categories *</label>
+                                            <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', padding: '10px 15px', background: 'rgba(0,0,0,0.2)', borderRadius: '12px' }}>
+                                                {['Sedan', 'SUV', 'Bus', 'Tempo'].map(type => (
+                                                    <label key={type} style={{ display: 'flex', alignItems: 'center', gap: '8px', color: 'white', cursor: 'pointer', fontWeight: '600' }}>
+                                                        <input 
+                                                            type="checkbox" 
+                                                            style={{ width: '18px', height: '18px', accentColor: 'var(--primary)' }}
+                                                            checked={selectedVehicleTypes.includes(type)}
+                                                            onChange={(e) => {
+                                                                if (e.target.checked) {
+                                                                    setSelectedVehicleTypes([...selectedVehicleTypes, type]);
+                                                                    setMultiRateCardsData({ ...multiRateCardsData, [type]: { baseRate: '', baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: '' } });
+                                                                } else {
+                                                                    setSelectedVehicleTypes(selectedVehicleTypes.filter(t => t !== type));
+                                                                    const newData = { ...multiRateCardsData };
+                                                                    delete newData[type];
+                                                                    setMultiRateCardsData(newData);
+                                                                }
+                                                            }}
+                                                        />
+                                                        {type === 'Tempo' ? 'Tempo Traveller' : type}
+                                                    </label>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
+
+                                {!rateCardFormData._id && selectedVehicleTypes.map(type => (
+                                    <div key={type} style={{ border: '1px solid rgba(255,255,255,0.1)', padding: '20px', borderRadius: '15px', marginTop: '20px', background: 'rgba(255,255,255,0.02)' }}>
+                                        <h4 style={{ color: 'var(--primary)', marginTop: 0, marginBottom: '15px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: 'var(--primary)' }}></div>
+                                            Pricing for {type === 'Tempo' ? 'Tempo Traveller' : type}
+                                        </h4>
+                                        <div className="form-grid-3">
+                                            <div className="input-group">
+                                                <label className="label-text">Base Rate (₹) *</label>
+                                                <input required type="number" className="premium-compact-input" placeholder="0" value={multiRateCardsData[type]?.baseRate || ''} onChange={(e) => setMultiRateCardsData({ ...multiRateCardsData, [type]: { ...multiRateCardsData[type], baseRate: e.target.value } })} />
+                                            </div>
+                                            <div className="input-group">
+                                                <label className="label-text">Base Limit KMs</label>
+                                                <input type="number" className="premium-compact-input" placeholder="0" value={multiRateCardsData[type]?.baseKms || ''} onChange={(e) => setMultiRateCardsData({ ...multiRateCardsData, [type]: { ...multiRateCardsData[type], baseKms: e.target.value } })} />
+                                            </div>
+                                            <div className="input-group">
+                                                <label className="label-text">Base Limit Hours</label>
+                                                <input type="number" className="premium-compact-input" placeholder="0" value={multiRateCardsData[type]?.baseHours || ''} onChange={(e) => setMultiRateCardsData({ ...multiRateCardsData, [type]: { ...multiRateCardsData[type], baseHours: e.target.value } })} />
+                                            </div>
+                                            <div className="input-group">
+                                                <label className="label-text">Extra Rate / KM (₹)</label>
+                                                <input type="number" className="premium-compact-input" placeholder="0" value={multiRateCardsData[type]?.extraKmRate || ''} onChange={(e) => setMultiRateCardsData({ ...multiRateCardsData, [type]: { ...multiRateCardsData[type], extraKmRate: e.target.value } })} />
+                                            </div>
+                                            <div className="input-group">
+                                                <label className="label-text">Extra Rate / Hr (₹)</label>
+                                                <input type="number" className="premium-compact-input" placeholder="0" value={multiRateCardsData[type]?.extraHourRate || ''} onChange={(e) => setMultiRateCardsData({ ...multiRateCardsData, [type]: { ...multiRateCardsData[type], extraHourRate: e.target.value } })} />
+                                            </div>
+                                            <div className="input-group">
+                                                <label className="label-text">Driver Allowance (₹)</label>
+                                                <input type="number" className="premium-compact-input" placeholder="0" value={multiRateCardsData[type]?.driverAllowance || ''} onChange={(e) => setMultiRateCardsData({ ...multiRateCardsData, [type]: { ...multiRateCardsData[type], driverAllowance: e.target.value } })} />
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
                                     <div style={{ marginTop: '20px', display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
-                                        <button type="button" onClick={() => { setIsRateFormOpen(false); setRateCardFormData({ serviceName: '', vehicleType: '', vehicleModel: '', baseRate: '', baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: '' }) }} className="secondary-btn" style={{ height: '40px', background: 'rgba(255,255,255,0.05)' }}>Cancel</button>
+                                        <button type="button" onClick={() => { setIsRateFormOpen(false); setRateCardFormData({ serviceName: '', vehicleType: '', baseRate: '', baseKms: '', baseHours: '', extraKmRate: '', extraHourRate: '', driverAllowance: '' }); setSelectedVehicleTypes([]); setMultiRateCardsData({}); }} className="secondary-btn" style={{ height: '40px', background: 'rgba(255,255,255,0.05)' }}>Cancel</button>
                                         <button type="submit" className="primary-btn" style={{ height: '40px' }}>
                                             <Save size={16} /> {rateCardFormData._id ? 'Update Rate' : 'Save Rate'}
                                         </button>
