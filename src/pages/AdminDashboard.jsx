@@ -6,7 +6,7 @@ import {
     Activity, Users, Car, CreditCard, AlertTriangle, ShieldAlert,
     TrendingUp, Wallet, ArrowUpRight, ArrowDownRight, Clock,
     ChevronLeft, ChevronRight, Filter, Search, MoreHorizontal,
-    Plus, Download, Wrench, Briefcase, Fuel, Calendar, X, IndianRupee, Camera, ShieldCheck, Shield, LogIn, Droplets, FileText, CalendarDays
+    Plus, Download, Wrench, Briefcase, Fuel, Calendar, X, IndianRupee, Camera, ShieldCheck, Shield, LogIn, Droplets, FileText, CalendarDays, CheckCircle
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCompany } from '../context/CompanyContext';
@@ -190,18 +190,22 @@ const AdminDashboard = () => {
 
     const handleApproveRejectLeave = async (leaveId, status) => {
         try {
-            const userInfo = JSON.parse(localStorage.getItem('userInfo'));
-            await axios.put(`/api/admin/staff-leaves/${leaveId}/status`, 
-                { status },
-                { headers: { Authorization: `Bearer ${userInfo.token}` } }
-            );
+            await axios.patch(`/api/admin/leaves/${leaveId}`, { status });
             fetchStats();
-            if (pendingLeaves.length === 1 && activeAlertModal === 'PendingLeave') {
-                setActiveAlertModal(null);
-            }
         } catch (error) {
             console.error('Error updating leave status:', error);
-            alert('Error updating leave status');
+            alert('Failed to update leave status');
+        }
+    };
+
+    const handleResolveAirCheck = async (vehicleId) => {
+        if (!window.confirm('Mark tire air check as completed?')) return;
+        try {
+            await axios.patch(`/api/admin/vehicles/${vehicleId}/resolve-air-check`);
+            fetchStats();
+        } catch (error) {
+            console.error('Error resolving air check:', error);
+            alert('Failed to resolve tire air check');
         }
     };
 
@@ -736,6 +740,27 @@ const AdminDashboard = () => {
                                                             <div className="alert-date" style={{ color: 'rgba(255,255,255,0.6)', fontWeight: '500', fontSize: 'clamp(10px, 2.5vw, 12px)' }}>
                                                                 Exp: <span style={{ color: 'white', fontWeight: '700' }}>{formatDateIST(alert.expiryDate)}</span>
                                                             </div>
+                                                            {alert.type === 'AirCheck' && (
+                                                                <button
+                                                                    onClick={() => handleResolveAirCheck(alert.id)}
+                                                                    style={{
+                                                                        background: 'rgba(16, 185, 129, 0.2)',
+                                                                        color: '#10b981',
+                                                                        border: '1px solid rgba(16, 185, 129, 0.3)',
+                                                                        padding: '6px 12px',
+                                                                        borderRadius: '8px',
+                                                                        fontSize: '11px',
+                                                                        fontWeight: '800',
+                                                                        cursor: 'pointer',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        gap: '6px',
+                                                                        textTransform: 'uppercase'
+                                                                    }}
+                                                                >
+                                                                    <CheckCircle size={14} /> Resolve
+                                                                </button>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 ))}
